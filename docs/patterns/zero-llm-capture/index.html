@@ -124,7 +124,7 @@ to prevent. Read the name as "zero LLM on the path that must not
 fail".</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Write a deterministic event envelope first:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;Hook, message,&lt;br/&gt;tool result&quot;] --&gt; B[&quot;Validate + redact&quot;]
     B --&gt; C[&quot;Durable scoped event&quot;]
     C --&gt; D[&quot;Lexical /&lt;br/&gt;metadata index&quot;]
@@ -133,7 +133,7 @@ fail".</p>
     C --&gt; G[&quot;Raw fallback&lt;br/&gt;recall&quot;]
     F --&gt; H[&quot;Derived recall&quot;]
     D --&gt; H
-    G --&gt; H</code></pre>
+    G --&gt; H</code></pre></details></figure>
 <p>The synchronous path may compute IDs, hashes, timestamps, scope, file
 paths, and a lexical index, but it makes no model call. Expensive
 compression, embedding, graph extraction, and consolidation run later
@@ -377,7 +377,16 @@ fusion</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

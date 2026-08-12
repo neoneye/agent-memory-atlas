@@ -172,7 +172,7 @@ window deeper and refills it."</p>
 <code>perf/</code> accumulates evidence. Session start injects a bounded
 excerpt; the agent then queries QMD by meaning and reads only what it
 needs.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     SS[&quot;SessionStart&quot;] --&gt; EL[&quot;eager layer: small excerpts,&lt;br/&gt;filenames, git summary&quot;]
     EL --&gt; BUD{&quot;over eager_layer_budget_bytes (80,000)?&quot;}
     BUD --&gt;|no| INJ[&quot;inject&quot;]
@@ -187,7 +187,7 @@ needs.</p>
     QMD --&gt; READ[&quot;read only the matching notes&quot;]
     W[&quot;Write / Edit a note&quot;] --&gt; VH[&quot;PostToolUse validate-write:&lt;br/&gt;frontmatter + wikilink hygiene warnings&quot;]
     VH --&gt; QR[&quot;QMD refresh rides this hook —&lt;br/&gt;one spawn per write&quot;]
-    MCP[&quot;om MCP server&quot;] --&gt; RE{&quot;resolveExposure:&lt;br/&gt;mcp_exposed_roots, then mcp_never_expose&quot;}</code></pre>
+    MCP[&quot;om MCP server&quot;] --&gt; RE{&quot;resolveExposure:&lt;br/&gt;mcp_exposed_roots, then mcp_never_expose&quot;}</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no engine — the vault <em>is</em> the system.
 <code>vault-manifest.json</code> is the configuration surface:
@@ -448,7 +448,16 @@ not examined.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

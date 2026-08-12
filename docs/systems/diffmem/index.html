@@ -160,7 +160,7 @@ a write primitive and a network client.</p>
 reads the present with <code>grep</code> and reaches into the past with
 <code>git log</code> and <code>git diff</code> when a question needs it.
 A writer agent edits; a consolidator reorganises.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;question&quot;] --&gt; RA[&quot;retrieval agent&quot;]
     RA --&gt; CR{&quot;command_router.run(command)&quot;}
     CR --&gt; SPL[&quot;split chain on ; &amp;&amp; ||, quote-aware&lt;br/&gt;then split each pipeline on |, quote-aware&quot;]
@@ -176,7 +176,7 @@ A writer agent edits; a consolidator reorganises.</p>
     WA --&gt; CMT[&quot;commit — the differential is the history&quot;]
     CON[&quot;consolidator: dedupe, link,&lt;br/&gt;reabsorb, redistribute&quot;] --&gt; CUR
     ONT[&quot;ontology: personal | corporate&quot;] --&gt; WA
-    ONT --&gt; CON</code></pre>
+    ONT --&gt; CON</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/diffmem/</code> holds <code>retrieval_agent</code> (agent,
 baseline, <code>command_router</code>, <code>resolver</code>, prompts),
@@ -498,7 +498,16 @@ finding is read from the source.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

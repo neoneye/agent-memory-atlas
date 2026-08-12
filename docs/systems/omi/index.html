@@ -227,7 +227,7 @@ How it stops being one: superseded by a newer fact with a validity
 interval, retracted, invalidated, or rejected in review — each of which
 is a typed mutation in the ledger and a status change on the
 projection.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Candidate: extraction from a transcript
     Candidate --&gt; Accepted: no conflict, or review accepts
     Candidate --&gt; PendingReview: conflicts with a high-veracity fact and impact clears 0.1
@@ -242,7 +242,7 @@ projection.</p>
     PendingReview: may answer, with a disclaimer
     Contradicted: uncertainty history only
     Rejected: audit and debug only
-    Retracted: no permitted use</code></pre>
+    Retracted: no permitted use</code></pre></details></figure>
 <p>The arrow from <code>Rejected</code> back to <code>Candidate</code>
 is the finding. Every other transition is a decision the system records;
 that one is a decision the system forgets, because the refusal is keyed
@@ -738,7 +738,16 @@ the Flutter app or the desktop clients.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

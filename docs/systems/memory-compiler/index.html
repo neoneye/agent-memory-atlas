@@ -197,7 +197,7 @@ reconciled.</p>
 <p>The state that governs everything is the session, not the memory. A
 session is <code>OPEN</code> or <code>CLOSED</code>, and the transition
 between them is where every check lives.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
   [*] --&gt; Blocked: unresolved recovery candidate
   Blocked --&gt; Open: person resolves with a note
   [*] --&gt; Open: --open, after canonical files and conflict-copy checks
@@ -209,7 +209,7 @@ between them is where every check lives.</p>
   Validate --&gt; Sealed: every finding is ok
   Open --&gt; Recovery: session crashes without closing
   Recovery --&gt; Blocked: candidate written, new sessions refused
-  Sealed --&gt; [*]</code></pre>
+  Sealed --&gt; [*]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no runtime. <code>memory_check.py</code> is a command-line
 program run twice per session — <code>--open</code> at the start,
@@ -604,7 +604,16 @@ own code.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

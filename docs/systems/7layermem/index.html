@@ -210,7 +210,7 @@ table</strong>. Nothing records where a fact came from, whether it was
 verified, or whether anything has contradicted it.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     C[&quot;caller picks the memory type&quot;] --&gt; W[&quot;insert into that table&quot;]
     W --&gt; CONV[&quot;CONVERSATIONAL&quot;]
     W --&gt; OTH[&quot;SEMANTIC · ENTITY · SUMMARY&lt;br/&gt;WORKFLOW · TOOLBOX · TOOL_LOG&quot;]
@@ -220,7 +220,7 @@ thing becomes a belief, and how it stops being one</h3>
     D -.-&gt;|&quot;the summary survives&lt;br/&gt;its own sources&quot;| S
     OTH -.-&gt;|&quot;no delete path exists&quot;| OTH
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Two dashed edges, and both are the finding. Six of the seven tables
 are write-and-read only: a row enters and no code path removes or
 changes it. And the one inter-layer link is also the one place a delete
@@ -469,7 +469,16 @@ href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

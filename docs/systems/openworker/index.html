@@ -161,7 +161,7 @@ memory was retired, and nothing detects when the model ignores the
 guidance. Retrieval is a filtered list with no ranking. And
 <code>memory_forget</code> is a hard delete with no trace.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     R[&quot;remember(content, scope)&quot;] --&gt; ROW[(&quot;memories(scope, key, content,&lt;br/&gt;workspace, session_id, created_at)&quot;)]
     ROW --&gt; LS[&quot;list(scope?, workspace?)&lt;br/&gt;&lt;i&gt;scope is GLOBAL, WORKSPACE or SESSION,&lt;br/&gt;applied when listing&lt;/i&gt;&quot;]
     LS --&gt; FM[&quot;format_memories() into the prompt&quot;]
@@ -169,7 +169,7 @@ guidance. Retrieval is a filtered list with no ranking. And
     ROW --&gt;|&quot;memory_forget(id)&quot;| FG[&quot;row deleted&quot;]
 
     style UP fill:#f4e2bd,stroke:#b8860b
-    style FG fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style FG fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Four verbs and a scope enum. Both mutating verbs are destructive —
 replaced in place, or deleted — so nothing records that a value was ever
 different.</p>
@@ -449,7 +449,16 @@ href="https://github.com/andrewyng/openworker/commit/d3863966c9de39140e7a28cffdc
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

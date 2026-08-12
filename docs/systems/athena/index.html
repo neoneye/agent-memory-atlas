@@ -218,7 +218,7 @@ it, the same position <a href="../cortexgraph/">CortexGraph</a>'s spec
 argues for.</p>
 <p>Sessions produce logs; generators produce insights and case studies;
 protocols and workflows are themselves Markdown the agent reads.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;session&quot;] --&gt; E[&quot;/end loop — capture&quot;]
     E --&gt; MD[&quot;Markdown on disk: session log, insight, case study&quot;]
     MD --&gt; IDX[&quot;SQLite index: files, tags, file_tags, links&quot;]
@@ -230,7 +230,7 @@ protocols and workflows are themselves Markdown the agent reads.</p>
     AUD --&gt; GC[&quot;graph coverage&quot;]
     CTX --&gt; GATE{&quot;Claude Code hook present?&quot;}
     GATE --&gt;|yes| K[&quot;anti-mirror interpreter kernel injected — code-enforced&quot;]
-    GATE --&gt;|&quot;Cursor, Gemini CLI, Antigravity&quot;| AD[&quot;agent-discretion: prose laws only&quot;]</code></pre>
+    GATE --&gt;|&quot;Cursor, Gemini CLI, Antigravity&quot;| AD[&quot;agent-discretion: prose laws only&quot;]</code></pre></details></figure>
 <p>The branch at the bottom is the project's own scope caveat, drawn
 where it puts it: "Portability of <em>memory</em> is structural and
 travels everywhere; portability of <em>governance</em> does not
@@ -506,7 +506,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

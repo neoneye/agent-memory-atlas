@@ -169,7 +169,7 @@ focus)";</li>
 </ul>
 <p>Underneath, MVCC gives every transaction a consistent snapshot and
 preserves older versions down to a retained floor.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;write in a transaction&quot;] --&gt; MV[&quot;anchored to an MVCC version&quot;]
     MV --&gt; C{&quot;constraints&quot;}
     C --&gt;|&quot;TEMPORAL: needs key, valid_from, valid_to&quot;| REJ[&quot;rejected if the shape is wrong&quot;]
@@ -181,7 +181,7 @@ preserves older versions down to a retained floor.</p>
     KAL --&gt; SC[&quot;knowledge-policy score&quot;]
     SC --&gt; VIS[&quot;visibility filter on results&quot;]
     ACC --&gt; DEC[&quot;temporal decay: pattern-aware&quot;]
-    SRCH[&quot;search paths&quot;] -.-&gt;|&quot;intentionally separate from historical MVCC state&quot;| SNAP</code></pre>
+    SRCH[&quot;search paths&quot;] -.-&gt;|&quot;intentionally separate from historical MVCC state&quot;| SNAP</code></pre></details></figure>
 <p>The two dotted edges are both stated in the README as deliberate: an
 out-of-retention historical read "fails safely with
 <code>ErrNotFound</code>", and "current search paths are intentionally
@@ -497,7 +497,16 @@ file.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

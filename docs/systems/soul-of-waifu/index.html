@@ -194,7 +194,7 @@ different lifecycles — which is the design's best idea:</p>
 </tr>
 </tbody>
 </table></div>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     B[&quot;every BATCH_SIZE (4) messages&quot;] --&gt; D[&quot;delta = last MAX_DELTA_MSGS (14) messages,&lt;br/&gt;overlapping the previous batch by MSG_OVERLAP (2)&quot;]
     D --&gt; R[&quot;Router sees: MEMORY.md + USER.md +&lt;br/&gt;RAG-selected topics + delta + world lore&quot;]
     R --&gt; J[&quot;JSON: character_memory, user_memory,&lt;br/&gt;topic_plan, healing_log&quot;]
@@ -203,7 +203,7 @@ different lifecycles — which is the design's best idea:</p>
     REN --&gt;|else| BK[&quot;backup, then atomic replace&quot;]
     R --&gt; TP[&quot;topic_plan actions —&lt;br/&gt;Archivist writes each topic file&quot;]
     TP --&gt;|&quot;filename in _BAD_TOPIC_NAMES,&lt;br/&gt;or starts diary_&quot;| SKIP[skipped]
-    R --&gt; DIA[&quot;Diary agent (concurrent task) —&lt;br/&gt;appends to today&#39;s diary&quot;]</code></pre>
+    R --&gt; DIA[&quot;Diary agent (concurrent task) —&lt;br/&gt;appends to today&#39;s diary&quot;]</code></pre></details></figure>
 <p>The state machine is short because there is only one transition:
 <strong>a memory is rewritten, or it is not.</strong> There is no
 supersession, no expiry, no decay of a record, and <strong>no deletion
@@ -224,7 +224,7 @@ drops the diary too; Diary only runs nothing but the diary.</p>
 <p>Python with a Qt desktop GUI. No server, no database, no queue — the
 store is a directory tree, which makes it one of the most operationally
 trivial systems in this atlas.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[Chat, every 4 messages] --&gt; D[delta: last 14, overlap 2]
     T[(topics/*.md)] --&gt; RAG[TopicRAG&lt;br/&gt;MiniLM cosine, above threshold]
     RAG --&gt; R
@@ -240,7 +240,7 @@ trivial systems in this atlas.</p>
     REN --&gt; LOG[(agent_logs.txt, append-only)]
     ARC --&gt; LOG
     IDX --&gt; PE[prompt_engine.py&lt;br/&gt;injected whole]
-    USR --&gt; PE</code></pre>
+    USR --&gt; PE</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to be running:</strong> the app. Storage is
@@ -682,7 +682,16 @@ href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

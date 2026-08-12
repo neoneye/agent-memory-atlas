@@ -148,7 +148,7 @@ namespace. A new fact is checked against existing facts about the
 <em>same property of the same entity</em>. Inferences become hypotheses
 with verification plans. Goals accumulate failures with lessons.
 Background passes consolidate all of it.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;remember&quot;] --&gt; F[&quot;facts: entity, property, value,&lt;br/&gt;confidence, valid_until&quot;]
     F --&gt; CD{&quot;DetectContradictions:&lt;br/&gt;WHERE namespace_id = $1&lt;br/&gt;AND entity = $2 AND property = $3&lt;br/&gt;AND id != $4 AND valid_until IS NULL&quot;}
     CD --&gt;|&quot;candidates found&quot;| REA[&quot;reasoner adjudicates&quot;]
@@ -164,7 +164,7 @@ Background passes consolidate all of it.</p>
     G[&quot;goals: status active / completed&quot;] --&gt; FA[&quot;failures: content, reason, lesson&quot;]
     D[&quot;decay run&quot;] --&gt; DR[&quot;FactsDecayed, FactsExpired&quot;]
     Q[&quot;recall&quot;] --&gt; F
-    HY -.-&gt;|&quot;a hypothesis is not a fact —&lt;br/&gt;different table, not read by recall&quot;| Q</code></pre>
+    HY -.-&gt;|&quot;a hypothesis is not a fact —&lt;br/&gt;different table, not read by recall&quot;| Q</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>internal/</code> splits into <code>brain</code> (the epistemic
 core), <code>reasoner</code> (the LLM adjudicator, with an
@@ -453,7 +453,16 @@ or run, and the hosted service was not used.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

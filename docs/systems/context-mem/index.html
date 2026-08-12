@@ -151,7 +151,7 @@ written to SQLite. A markdown vault is derived from that store — "the
 raw SQLite store is the authoritative record; the markdown vault is the
 derived, human-readable layer" — and can be read in Obsidian or
 grepped.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;tool call output&quot;] --&gt; NF[&quot;noise-filter&quot;]
     NF --&gt; IC[&quot;importance-classifier&quot;]
     IC --&gt; SUM[&quot;one of 14 content-aware summarizers&lt;br/&gt;(stack trace ≠ JSON config ≠ build output)&quot;]
@@ -167,7 +167,7 @@ grepped.</p>
     Q[&quot;query&quot;] --&gt; H[&quot;BM25 + vector&quot;]
     H --&gt; J[&quot;optional LLM judge, 50/50 blend&quot;]
     S[&quot;success event&quot;] --&gt; FP[&quot;regression fingerprint:&lt;br/&gt;knowledge_ids, recent_files,&lt;br/&gt;error_patterns_absent, entity_state&quot;]
-    E[&quot;errors appear later&quot;] --&gt; DIFF[&quot;diff against the fingerprint&quot;]</code></pre>
+    E[&quot;errors appear later&quot;] --&gt; DIFF[&quot;diff against the fingerprint&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/core</code> holds around fifty modules — the pipeline, the
 kernel, the adaptive compressor, an importance classifier, a noise
@@ -510,7 +510,16 @@ from the repository's own committed result files.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

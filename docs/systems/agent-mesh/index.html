@@ -240,7 +240,7 @@ before reprojection. <code>body_fidelity</code> admits the value
 <code>redacted</code>, and it is a label a caller may pass to
 <code>agent-mesh request --body-fidelity</code>; no code path produces
 it, and nothing removes the bytes it would describe.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Proposed: &quot;decision_proposed — verification, assumptions, checks and evidence all arrive empty&quot;
     Proposed --&gt; Accepted: &quot;decision_accepted, quorum met, ordinary tier&quot;
     Proposed --&gt; InForce: &quot;decision_accepted — architecture_contract, production_invariant or compliance_security&quot;
@@ -264,7 +264,7 @@ it, and nothing removes the bytes it would describe.</p>
         the tier, stored, and printed in a
         rendered Markdown view. No read path
         consults it.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing has to be running to store or read anything. A project is a
 <code>.agent-mesh/</code> directory holding <code>config.toml</code>,
@@ -904,7 +904,16 @@ examples were read rather than run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

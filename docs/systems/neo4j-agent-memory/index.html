@@ -203,7 +203,7 @@ being a single brain rather than silos.</p>
 <p>How a memory stops being current: a preference is superseded and its
 <code>valid_until</code> closes. Nothing else has a defined end state,
 and nothing records that a value was judged wrong.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Turn[&quot;Conversation turn&quot;] --&gt; Cap[&quot;Capture&quot;]
     Cap --&gt; GL[&quot;GLiNER extraction&quot;]
     GL --&gt; G[(&quot;One Neo4j graph&lt;br/&gt;shared across agents, not per-agent silos&quot;)]
@@ -212,7 +212,7 @@ and nothing records that a value was judged wrong.</p>
     Sup --&gt; G
     G --&gt; Q[&quot;Graph queries over entities&lt;br/&gt;and relationships; embeddings;&lt;br/&gt;reasoning steps with parent context&quot;]
     G -.-&gt;|&quot;multi-tenant mode raises when&lt;br/&gt;a user identifier is missing&quot;| Scope[&quot;fail-closed tenancy&quot;]
-    Sup -.-&gt;|&quot;covers preferences only&quot;| Gap[&quot;no value-level tombstone&quot;]</code></pre>
+    Sup -.-&gt;|&quot;covers preferences only&quot;| Gap[&quot;no value-level tombstone&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/neo4j_agent_memory/</code> —
 <code>memory/long_term.py</code> (2,357), <code>__init__.py</code>
@@ -479,7 +479,16 @@ href="https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -253,7 +253,7 @@ reality is the <code>ev:</code> anchor, which records a
 read can flag that the cited code moved. The README is precise about
 what that proves: <em>"It detects that the code changed — never that the
 claim became false."</em></p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Live: &quot;capture — marker grammar, no LLM&quot;
     Live --&gt; Live: &quot;~ update in place (overlap 0.45)&quot;
     Live --&gt; Resolved: &quot;✓ resolve (0.3) or a closes-link (0.6) — stamps ✅&quot;
@@ -282,7 +282,7 @@ claim became false."</em></p>
         merges — but the capture path never
         reads it, so the same claim can be
         re-asserted as a new card.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing has to be running. A brain is a file in a repository, and
 every mechanism in the package operates on that file directly.</p>
@@ -988,7 +988,16 @@ reproduced.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

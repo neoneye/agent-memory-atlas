@@ -197,7 +197,7 @@ user_preference, decision, lesson, handoff, constraint, fact) and a
 <code>MemoryDurability</code> (ephemeral, working, durable, locked).
 Retrieval reranks on those, and on whether the memory belongs to the
 repo or project you are currently in.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;session memory&quot;] --&gt;|&quot;memory_promote&quot;| P[&quot;BrokerPromotionProposal:&lt;br/&gt;type, durability, confidence,&lt;br/&gt;recall_count, unique_query_count,&lt;br/&gt;reasons[], duplicate_matches[]&quot;]
     P --&gt; AP{&quot;approve?&quot;}
     AP --&gt;|&quot;false — the default for memory_promote&quot;| RV[&quot;session event .promotionReviewed&lt;br/&gt;nothing written&quot;]
@@ -211,7 +211,7 @@ repo or project you are currently in.</p>
     H --&gt; RR[&quot;semanticMemoryRerank&quot;]
     RR --&gt; EXP{&quot;expired?&quot;}
     EXP --&gt;|&quot;adjustment = −10, guard drops it&quot;| GONE[&quot;not returned&quot;]
-    EXP --&gt;|no| BOOST[&quot;+0.9 same repo, +0.7 same project,&lt;br/&gt;+0.50 preference, +0.45 decision…&lt;br/&gt;reasons attached as explanations&quot;]</code></pre>
+    EXP --&gt;|no| BOOST[&quot;+0.9 same repo, +0.7 same project,&lt;br/&gt;+0.50 preference, +0.45 decision…&lt;br/&gt;reasons attached as explanations&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Thirteen Swift targets. <code>WaxCore</code> holds the file format
 and the <code>Wax</code> actor — "the file descriptor, lock, header,
@@ -546,7 +546,16 @@ built, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

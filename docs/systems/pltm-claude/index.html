@@ -155,7 +155,7 @@ only as prose inside the content a model will read back as fact.</p>
 before anything is stored. Conflicts against existing memories are
 detected by rules rather than by a model. Retrieval is per-user, ranked
 by strength with decay.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     IN[&quot;incoming content&quot;] --&gt; EX[&quot;extraction&quot;]
     EX --&gt; J[&quot;jury: memory, safety, time, consensus&quot;]
     J --&gt; V{&quot;verdict&quot;}
@@ -170,7 +170,7 @@ by strength with decay.</p>
     S2 --&gt; S3[&quot;stage 3: opposite-predicate detection&lt;br/&gt;&#39;likes&#39; vs &#39;hates&#39;&quot;]
     QRY[&quot;query&quot;] --&gt; RD[&quot;FTS + embeddings WHERE user_id = ?&quot;]
     RD --&gt; OUT[&quot;ranked by strength&quot;]
-    Q -. &quot;indistinguishable from a decayed memory&quot; .-&gt; OUT</code></pre>
+    Q -. &quot;indistinguishable from a decayed memory&quot; .-&gt; OUT</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> holds the engine: <code>core</code> (models,
 ontology), <code>storage</code> (<code>sqlite_store</code> with
@@ -503,7 +503,16 @@ installed, and no benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

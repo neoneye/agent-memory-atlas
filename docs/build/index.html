@@ -112,7 +112,7 @@ the order, and the fact that you can now reach it.</p>
 page does not give you</a> before you rely on it.</strong> Nothing here
 has been run against a working system by this project, and the page says
 so in the places where the omission matters.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;Does anything need to survive the session?&quot;]
     Q --&gt;|&quot;no&quot;| STOP[&quot;Build nothing.&lt;br/&gt;A prompt and a scratchpad are the answer&quot;]
     Q --&gt;|&quot;yes&quot;| P[&quot;1 · Pick the profile&lt;br/&gt;from the failure that hurts&quot;]
@@ -120,7 +120,7 @@ so in the places where the omission matters.</p>
     B --&gt; S[&quot;3 · Build in stages&lt;br/&gt;each one useful alone&quot;]
     S --&gt; T[&quot;4 · Verify by test id&lt;br/&gt;each says what it does not prove&quot;]
     T --&gt;|&quot;a test fails&quot;| S
-    T --&gt; C[&quot;5 · Close it out&lt;br/&gt;what is closed, what is open, what was deferred&quot;]</code></pre>
+    T --&gt; C[&quot;5 · Close it out&lt;br/&gt;what is closed, what is open, what was deferred&quot;]</code></pre></details></figure>
 <h2 id="1-pick-the-profile-from-the-failure-not-the-mechanism">1. Pick
 the profile from the failure, not the mechanism</h2>
 <p><strong>Start from the failure your product cannot tolerate.</strong>
@@ -462,7 +462,16 @@ quietly.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

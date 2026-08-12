@@ -222,7 +222,7 @@ are model-independent."</p>
 </tbody>
 </table></div>
 <p>Write lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;memory(action = add, replace or remove,&lt;br/&gt;target = memory or user)&quot;] --&gt; G{&quot;write gate&quot;}
     G --&gt;|block| B[&quot;refused&quot;]
     G --&gt;|stage| H[&quot;held for human approval&quot;]
@@ -236,7 +236,7 @@ are model-independent."</p>
     SESS --&gt; NEXT[&quot;next session start: the frozen snapshot&lt;br/&gt;is re-rendered into the system prompt&quot;]
 
     style REF fill:#e7efe9,stroke:#3d6b59
-    style SESS fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style SESS fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Two things this diagram makes plain. The budget is a <strong>hard
 refusal</strong> — a write that would overflow is rejected and
 consolidation demanded, rather than the file being silently trimmed. And
@@ -263,7 +263,7 @@ patterns, shared with the context-file scanner.</li>
 <code>tools/skill_provenance.py</code>, <code>agent/skill_*.py</code>:
 skills as procedural memory.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Model[&quot;Model&quot;] --&gt; Tool[&quot;memory tool&lt;br/&gt;(add/replace/remove)&quot;]
   Tool --&gt; Gate[&quot;write_approval gate&quot;]
   Gate --&gt;|stage| Human[&quot;Human approval&lt;br/&gt;queue&quot;]
@@ -274,7 +274,7 @@ skills as procedural memory.</li>
   Budget --&gt;|yes| Disk[&quot;atomic_replace&lt;br/&gt;MEMORY.md /&lt;br/&gt;USER.md&quot;]
   Disk -.-&gt;|next session start| Snapshot[&quot;frozen system-prompt&lt;br/&gt;block&quot;]
   Sessions[&quot;state.db +&lt;br/&gt;FTS5&quot;] --&gt; Search[&quot;session search&quot;]
-  Provider[&quot;one external&lt;br/&gt;MemoryProvider&quot;] --&gt; Prefetch[&quot;prefetch() block&quot;]</code></pre>
+  Provider[&quot;one external&lt;br/&gt;MemoryProvider&quot;] --&gt; Prefetch[&quot;prefetch() block&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-frozen-snapshot">The frozen snapshot</h3>
@@ -636,7 +636,16 @@ href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba14779
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

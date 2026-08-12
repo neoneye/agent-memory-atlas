@@ -171,7 +171,7 @@ same claim arriving from a second source accumulates evidence rather
 than duplicating.</p>
 <p>Belief lives above both. When a belief changes, the reconsolidation
 sweep runs, and memories move.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; PendingReview: claim extracted, claim_key unique, evidence_refs accumulate
     PendingReview --&gt; Approved: a person decides, review_event records actor and note
     PendingReview --&gt; ReviewRejected: a person decides
@@ -181,7 +181,7 @@ sweep runs, and memories move.</p>
     Sweep --&gt; Reaccepted: CONTESTED_BECAUSE the old belief — the reason is gone
     Sweep --&gt; NowContradicts: SUPPORTS the old belief — the support is gone
     Reaccepted --&gt; [*]
-    NowContradicts --&gt; [*]</code></pre>
+    NowContradicts --&gt; [*]</code></pre></details></figure>
 <p>The two arrows out of <code>Sweep</code> are the design. Correction
 here is not only forward — retiring a belief reopens what that belief
 closed.</p>
@@ -496,7 +496,16 @@ tree was read, never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

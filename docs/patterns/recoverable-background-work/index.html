@@ -114,14 +114,14 @@ job state is ephemeral, the session appears remembered while its durable
 memory is incomplete.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Persist work before acknowledging it:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;Capture input&quot;] --&gt; B[&quot;Durable inbox / event&quot;]
     B --&gt; C[&quot;Idempotent job&quot;]
     C --&gt; D{&quot;Processing succeeds?&quot;}
     D -- &quot;Yes&quot; --&gt; E[&quot;Atomic output + checkpoint&quot;]
     D -- &quot;No&quot; --&gt; F[&quot;Failure record + retained input&quot;]
     F --&gt; G[&quot;Bounded retry or operator review&quot;]
-    G --&gt; C</code></pre>
+    G --&gt; C</code></pre></details></figure>
 <p>Jobs carry stable IDs, input hashes, processor versions, attempt
 counts, and checkpoints. Outputs use deterministic identities or
 transactional upserts so retrying cannot duplicate memories. Poison
@@ -280,7 +280,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

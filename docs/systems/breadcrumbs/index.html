@@ -293,7 +293,7 @@ distinction, correctly reasoned, and it is why the two tiers are keyed
 differently — the hand-authored ledger on the record, the engine's
 semantic store on the value. Section 5 is where that split is worth
 arguing about.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     W[&quot;a session appends a line to CONCLUSIONS.jsonl&quot;] --&gt; S{&quot;who vouched for it&quot;}
     S --&gt;|&quot;nobody but the author&quot;| A[&quot;asserted&quot;]
     S --&gt;|&quot;verify_fact names a CI run, data assertion or operator ruling&quot;| V[&quot;verified&quot;]
@@ -316,7 +316,7 @@ arguing about.</p>
     T --&gt;|&quot;no, and a different value is held&quot;| SU[&quot;SUPERSEDED episode&lt;br/&gt;prior value + prior status, then overwrite at asserted&quot;]
     T --&gt;|&quot;no, and the same value is held&quot;| NO[&quot;no-op: status and evidence untouched&quot;]
     RJ[&quot;reject_fact(…, reason) — reason required&quot;] --&gt; T
-    RJ --&gt; EP[&quot;REJECTED episode; lift_tombstone logs TOMBSTONE_LIFTED&quot;]</code></pre>
+    RJ --&gt; EP[&quot;REJECTED episode; lift_tombstone logs TOMBSTONE_LIFTED&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no server, no database, no daemon and no external
 dependency. The runtime is <code>python3</code> and a git
@@ -1506,7 +1506,16 @@ stdlib-only and writes solely to <code>tempfile</code> directories.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

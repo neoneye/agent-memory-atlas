@@ -210,7 +210,7 @@ load-bearing property is stated in <code>policy.py</code> and guarded by
 tests: <em>"Estimator confidence is an input to evidence quality only
 and has no path to the outcome."</em> A model that is very sure of
 itself cannot buy authority with confidence.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   P[&quot;proposal to mutate&quot;] --&gt; PAMA{&quot;PAMA evaluates:&lt;br/&gt;target class, risk,&lt;br/&gt;downstream authority&quot;}
   PAMA --&gt;|allow / allow_with_ledger| W[&quot;substrate write&quot;]
   PAMA --&gt;|require_review| H[&quot;withheld pending a person&quot;]
@@ -223,7 +223,7 @@ itself cannot buy authority with confidence.</p>
   B --&gt; B2[&quot;declared residual, controlled&quot;]
   B --&gt; B3[&quot;declared residual, uncontrollable&quot;]
   S[&quot;independent_sweep re-derives&lt;br/&gt;from the freshness relation&quot;] --&gt; B4[&quot;undeclared residual&quot;]
-  B4 --&gt; G{&quot;hard gate:&lt;br/&gt;must be empty&quot;}</code></pre>
+  B4 --&gt; G{&quot;hard gate:&lt;br/&gt;must be empty&quot;}</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no service. The repository is a doctrine plus a reference
 implementation you run.</p>
@@ -711,7 +711,16 @@ imports <code>jsonschema</code> transitively.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

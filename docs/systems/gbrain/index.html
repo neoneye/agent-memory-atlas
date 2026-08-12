@@ -170,7 +170,7 @@ is what lets a query like "who works at Acme AI" resolve at all.</p>
 pages, grades the ones old enough to resolve, and folds the results into
 calibration profiles. Retrieval synthesises across pages, people and
 companies and states its own gaps.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     P[&quot;page write&quot;] --&gt; G[&quot;entity refs → typed edges, no LLM&quot;]
     P --&gt; PT[&quot;propose_takes phase&quot;]
     PT --&gt; K{&quot;kind&quot;}
@@ -182,7 +182,7 @@ companies and states its own gaps.</p>
     TS --&gt;|&quot;idempotency tuple recorded&quot;| NC[&quot;next cycle is a cache hit,&lt;br/&gt;no LLM re-spend&quot;]
     B --&gt; GR[&quot;grade_takes: resolved_at, resolved_outcome&quot;]
     GR --&gt; CP[&quot;calibration_profile per holder:&lt;br/&gt;Brier, accuracy, bias tags&quot;]
-    CP --&gt; E3[&quot;calibration-aware contradiction handling&quot;]</code></pre>
+    CP --&gt; E3[&quot;calibration-aware contradiction handling&quot;]</code></pre></details></figure>
 <p>The tombstone branch is a negative-result cache, and its comment
 explains the bug it fixes: without it "the idempotency tuple is never
 recorded, so every cycle re-spends an LLM call on unchanged zero-claim
@@ -507,7 +507,16 @@ installed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

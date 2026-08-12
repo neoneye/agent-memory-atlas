@@ -169,7 +169,7 @@ what the assistant is told.</p>
 corrected fact is a deletion and an insertion with a new date rather
 than an edit. The old text is gone; only the transcript remembers it
 existed.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[&quot;Model&quot;] --&gt;|&quot;memory tool&lt;br/&gt;action: remember&quot;| Add[&quot;append &#39;- [YYYY-MM-DD] fact&#39;&quot;]
     M --&gt;|&quot;action: forget&lt;br/&gt;match: substring&quot;| Del[&quot;remove EVERY matching line&lt;br/&gt;no receipt of what went&quot;]
     Add --&gt; F[(&quot;&amp;lt;project&amp;gt;/.juggler/MEMORY.md&lt;br/&gt;git-ignored: private to this checkout&quot;)]
@@ -177,7 +177,7 @@ existed.</p>
     F --&gt;|&quot;loose edit tidied back&lt;br/&gt;to canonical shape on next write&quot;| F
     F --&gt; Ctx[&quot;Injected whole as a context item&quot;]
     User[&quot;User&quot;] --&gt;|&quot;opens the file, or clicks&lt;br/&gt;a delete button per dated row&quot;| F
-    Both[&quot;Every remember/forget&lt;br/&gt;appears in the transcript&quot;] -.-&gt; F</code></pre>
+    Both[&quot;Every remember/forget&lt;br/&gt;appears in the transcript&quot;] -.-&gt; F</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing to run. A Markdown file in a git-ignored directory, read as a
 context item, written by one tool. No database, no embedding, no
@@ -394,7 +394,16 @@ href="https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

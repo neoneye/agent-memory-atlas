@@ -161,7 +161,7 @@ implementation in the atlas</strong> — section 5.</p>
 already known; only the unpredicted part becomes knowledge. Knowledge
 carries both when it was true and when the system stopped believing it,
 and queries can ask as of either.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     EX[&quot;add_exchange(user, assistant)&quot;] --&gt; EP[&quot;episode — title + original_messages&quot;]
     EP --&gt; P[&quot;stage 1: predict what this episode&lt;br/&gt;should contain, given existing knowledge&quot;]
     P --&gt; C[&quot;stage 2: calibrate — compare the prediction&lt;br/&gt;against the ORIGINAL MESSAGES, not the narrative&quot;]
@@ -173,7 +173,7 @@ and queries can ask as of either.</p>
     F --&gt; H[&quot;vector similarity + BM25,&lt;br/&gt;reciprocal rank fusion&quot;]
     H --&gt; R[&quot;result.to_prompt()&quot;]
     IE[&quot;include_expired = true&quot;] -.-&gt;|&quot;drops the expired_at clause —&lt;br/&gt;what did we once believe?&quot;| F
-    V[&quot;model validator&quot;] -.-&gt;|&quot;rejects invalid_at &amp;lt;= valid_at&quot;| K</code></pre>
+    V[&quot;model validator&quot;] -.-&gt;|&quot;rejects invalid_at &amp;lt;= valid_at&quot;| K</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/memv/</code> splits into <code>processing</code>
 (extraction, prompts), <code>memory</code> (the pipeline),
@@ -435,7 +435,16 @@ installed, and the LongMemEval harness was not run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -178,7 +178,7 @@ knowledge whose audit is the version-control system.</p>
 <code>archive-page</code> sets <code>status: archived</code> and can
 append a <code>kind: reversal</code> entry carrying why the page was
 overturned, then reindexes. Nothing is deleted.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;Agent, via brain-page skill&quot;] --&gt; CLI[&quot;brain CLI — the only write path&quot;]
     CLI --&gt; UT[&quot;update-truth&quot;]
     UT --&gt; CT[&quot;compiled_truth&lt;br/&gt;rewritten&quot;]
@@ -188,7 +188,7 @@ overturned, then reindexes. Nothing is deleted.</p>
     CT --&gt; LL{&quot;lint-links&quot;}
     RP[&quot;Six root pages&lt;br/&gt;no timeline — history is git&quot;] --&gt; LL
     TL -. &quot;deliberately not linted:&lt;br/&gt;provenance may be obsolete&quot; .-x LL
-    LL --&gt; HOOK[&quot;pre-commit: reindex, lint-links,&lt;br/&gt;blocks on a broken link&quot;]</code></pre>
+    LL --&gt; HOOK[&quot;pre-commit: reindex, lint-links,&lt;br/&gt;blocks on a broken link&quot;]</code></pre></details></figure>
 <p>The dotted edge is the design decision worth taking: the append-only
 layer is exempt from the check that keeps the current layer honest.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -455,7 +455,16 @@ tree.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

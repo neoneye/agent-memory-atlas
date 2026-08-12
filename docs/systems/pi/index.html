@@ -209,7 +209,7 @@ store:</p>
 <li><code>packages/coding-agent/src/core/extensions/types.ts</code> —
 the <code>ExtensionAPI</code>, including the event surface.</li>
 </ul>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
   Msgs[&quot;Messages, tool calls&quot;] --&gt; Tree[&quot;Session tree (id / parentId)&quot;]
   Tree --&gt; JSONL[&quot;JSONL storage&quot;]
   Tree --&gt; Fork[&quot;fork / clone / branch&quot;]
@@ -220,7 +220,7 @@ the <code>ExtensionAPI</code>, including the event surface.</li>
   Res[&quot;AGENTS.md / SYSTEM.md&quot;] --&gt; Ctx[&quot;context assembly&quot;]
   Tree --&gt; Ctx
   Ext[&quot;Extensions (context, session_* events)&quot;] --&gt; Ctx
-  Ctx --&gt; Provider[&quot;provider request&quot;]</code></pre>
+  Ctx --&gt; Provider[&quot;provider request&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-session-tree-harnesssession">The session tree
@@ -480,7 +480,16 @@ href="https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

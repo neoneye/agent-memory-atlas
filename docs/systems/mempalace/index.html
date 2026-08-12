@@ -160,7 +160,7 @@ rooms/wings.</li>
 SQLite.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     SRC[&quot;files, conversations,&lt;br/&gt;manual MCP writes&quot;] --&gt; N[&quot;normalize and chunk&lt;br/&gt;&lt;i&gt;verbatim text&lt;/i&gt;&quot;]
     N --&gt; W[&quot;assign wing + room + metadata&quot;]
     W --&gt; ID[&quot;deterministic drawer IDs&quot;]
@@ -172,7 +172,7 @@ SQLite.</li>
     RR --&gt; OUT[&quot;return verbatim drawer context&quot;]
 
     style N fill:#e7efe9,stroke:#3d6b59
-    style OUT fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style OUT fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Verbatim in, verbatim out — the two highlighted ends are the same
 commitment. Nothing between them rewrites the text, so retrieval returns
 what was stored rather than a model's account of it.</p>
@@ -214,7 +214,7 @@ cleanup.</li>
 repair utilities.</li>
 </ul>
 <p>Architecture:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Sources[&quot;Files / JSONL /&lt;br/&gt;conversations /&lt;br/&gt;MCP writes&quot;] --&gt; Miner[&quot;Miner /&lt;br/&gt;MCP add_drawer&quot;]
   Miner --&gt; Drawers[&quot;mempalace_drawers&quot;]
   Miner --&gt; Closets[&quot;closets&lt;br/&gt;pointer&lt;br/&gt;index&quot;]
@@ -224,7 +224,7 @@ repair utilities.</li>
   Search --&gt; Rank[&quot;Vector + BM25 +&lt;br/&gt;closet boost + metadata&lt;br/&gt;filters&quot;]
   Search --&gt; MCP[&quot;MCP /&lt;br/&gt;CLI /&lt;br/&gt;hooks&quot;]
   Drawers --&gt; KG[&quot;Knowledge&lt;br/&gt;graph / fact&lt;br/&gt;checker&quot;]
-  Drawers --&gt; Stack[&quot;L0-L3&lt;br/&gt;memory&lt;br/&gt;stack&quot;]</code></pre>
+  Drawers --&gt; Stack[&quot;L0-L3&lt;br/&gt;memory&lt;br/&gt;stack&quot;]</code></pre></details></figure>
 <p>The backend abstraction is unusually explicit.
 <code>BaseCollection</code> and <code>BaseBackend</code> define typed
 result shapes, error classes, health status, maintenance hooks, embedder
@@ -649,7 +649,16 @@ href="https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

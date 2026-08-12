@@ -214,7 +214,7 @@ event's address, not about its content.</p>
 a memory: there is no <code>remember</code> tool. The user cannot edit
 one except by editing an instruction file, which is a different lane.
 The hooks decide, and they decide by firing.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;tool call in any of 17 harnesses&quot;] --&gt; H[&quot;PostToolUse hook&quot;]
     H --&gt; E[&quot;extract.ts parses the payload&lt;br/&gt;no model involved&quot;]
     E --&gt; W[&quot;INSERT into session_events&lt;br/&gt;session_id, project_dir, priority&quot;]
@@ -225,7 +225,7 @@ The hooks decide, and they decide by firing.</p>
     DB --&gt; R
     R --&gt; B[&quot;render session_knowledge:&lt;br/&gt;last request, pending tasks,&lt;br/&gt;decisions, plan status&quot;]
     B --&gt; C[&quot;prepended to the new session&quot;]
-    P[&quot;ctx_purge(projectDir)&quot;] -.-&gt;|&quot;the only delete:&lt;br/&gt;whole store, sidecars included&quot;| DB</code></pre>
+    P[&quot;ctx_purge(projectDir)&quot;] -.-&gt;|&quot;the only delete:&lt;br/&gt;whole store, sidecars included&quot;| DB</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Two processes, and the split matters.</p>
 <p><strong>The hooks</strong> are plain <code>.mjs</code> files invoked
@@ -667,7 +667,16 @@ installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

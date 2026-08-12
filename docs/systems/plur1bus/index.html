@@ -250,7 +250,7 @@ candidate (<code>isInjectedContextText</code>,
 <code>neo-arch.js:1199</code> and <code>:1242</code>). Without it,
 recall output becomes next turn's memory, which the comment above the
 marker list dates to a performance analysis on 29 May 2026.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
   [*] --&gt; candidate: agent_end capture
   candidate --&gt; active: written to LanceDB
   active --&gt; promoted: person runs promote
@@ -263,7 +263,7 @@ marker list dates to a performance analysis on 29 May 2026.</p>
   pruned --&gt; [*]: score -Infinity
   tombstoned --&gt; [*]: score -Infinity
   conflict --&gt; conflict: ranked down 0.3, still injected
-  demoted --&gt; demoted: ranked down 0.35, still injected</code></pre>
+  demoted --&gt; demoted: ranked down 0.35, still injected</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>An OpenClaw v6 plugin, loaded from <code>index.js</code>, requiring
 Node ≥ 22.5 and a running OpenClaw gateway. Nothing else has to be stood
@@ -994,7 +994,16 @@ executed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

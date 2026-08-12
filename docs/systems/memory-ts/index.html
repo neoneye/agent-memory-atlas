@@ -156,7 +156,7 @@ Each carries a status, a confidence, a context type from a closed enum,
 and a headline separate from its body. Retrieval surfaces headlines,
 filters to <code>active</code>, and expands the body only when a rule
 says it matters.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;session ends&quot;] --&gt; CU[&quot;curator — reads the transcript,&lt;br/&gt;proposes memories with a session summary&lt;br/&gt;and an interaction tone&quot;]
     CU --&gt; M[&quot;memory: headline + content,&lt;br/&gt;confidence_score, context_type (11 values),&lt;br/&gt;status, importance_weight,&lt;br/&gt;sessions_since_surfaced = 0&quot;]
     Q[&quot;you type something&quot;] --&gt; R[&quot;semantic retrieval&quot;]
@@ -170,7 +170,7 @@ says it matters.</p>
     SUP[&quot;a memory replaces another&quot;] --&gt; SB[&quot;superseded_by → the replacement&quot;]
     SB --&gt; ST[&quot;old memory status = superseded&quot;]
     DEC[&quot;not surfaced this session&quot;] --&gt; CNT[&quot;sessions_since_surfaced += 1&quot;]
-    LNK[&quot;linked / replacement lookups&quot;] --&gt; EXC[&quot;skipped when status is&lt;br/&gt;&#39;archived&#39; or &#39;deprecated&#39;&quot;]</code></pre>
+    LNK[&quot;linked / replacement lookups&quot;] --&gt; EXC[&quot;skipped when status is&lt;br/&gt;&#39;archived&#39; or &#39;deprecated&#39;&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> splits into <code>core</code> (curator, retrieval,
 store, session-parser), <code>server</code>, <code>cli</code>,
@@ -424,7 +424,16 @@ installed, and no curation was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

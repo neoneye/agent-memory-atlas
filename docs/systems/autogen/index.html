@@ -152,13 +152,13 @@ cannot address, and treats scope as an adapter's business.</p>
 <code>Image</code>), a <code>MemoryMimeType</code>, and an optional
 <code>metadata</code> dict. That is the whole schema, and it is
 deliberately closer to "a piece of content" than to "a belief".</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;application, or a sample&#39;s learning loop&quot;] --&gt;|&quot;add(MemoryContent)&quot;| S[(&quot;memory store&quot;)]
     S --&gt;|&quot;query(q)&quot;| R[&quot;MemoryQueryResult&quot;]
     S --&gt;|&quot;update_context(model_context)&quot;| P[&quot;the memory writes itself&lt;br/&gt;into the prompt&quot;]
     S --&gt;|&quot;clear()&quot;| G[&quot;everything is gone&quot;]
 
-    style G fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style G fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Four verbs, and the fourth is the only removal the protocol has.
 <code>MemoryContent</code> carries no identifier, so there is nothing
 for a targeted delete to name — which is why <code>clear()</code> is
@@ -190,7 +190,7 @@ the <code>Memory</code> ABC with <code>update_context</code>,
 <li><code>autogen-ext/.../memory/</code> — <code>chromadb</code>,
 <code>redis</code>, <code>mem0</code>, <code>canvas</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     APP[Application] --&gt;|add| M[Memory ABC]
     M --&gt; L[ListMemory&lt;br/&gt;in-process list]
     M --&gt; C[(ChromaDB)]
@@ -198,7 +198,7 @@ the <code>Memory</code> ABC with <code>update_context</code>,
     M --&gt; M0[Mem0 adapter&lt;br/&gt;optional user_id]
     M --&gt; CV[TextCanvasMemory]
     M --&gt;|update_context| CTX[Model context]
-    M --&gt;|clear| Z[whole store emptied]</code></pre>
+    M --&gt;|clear| Z[whole store emptied]</code></pre></details></figure>
 <p><code>Memory</code> extends <code>ComponentBase</code>, so a memory
 is a declaratively configurable component — it can be serialised into a
 config and restored, which is a genuine ergonomic advantage over
@@ -509,7 +509,16 @@ href="https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -162,7 +162,7 @@ reasons to be retrieved, and <code>handoff</code> being a first-class
 kind matches <a href="../ai-memory/">ai-memory</a>'s observation that an
 interrupted task leaves behind a specific shape.</p>
 <p>The state machine, as implemented:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;ecc memory add&lt;br/&gt;memory_save&quot;] --&gt; W[&quot;write id.md into&lt;br/&gt;the scope&#39;s vault root&quot;]
     W --&gt; T[&quot;trust = unreviewed&lt;br/&gt;&lt;i&gt;the only permitted value&lt;/i&gt;&quot;]
     W --&gt; S[&quot;status = active&lt;br/&gt;&lt;i&gt;the only value ever written&lt;/i&gt;&quot;]
@@ -171,7 +171,7 @@ interrupted task leaves behind a specific shape.</p>
     S -.-&gt; SUP[&quot;superseded&quot;]
 
     style REJ fill:#f4e2bd,stroke:#b8860b
-    style SUP fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style SUP fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The dotted transitions are the finding: <code>rejected</code> and
 <code>superseded</code> are <strong>validated by the schema and honoured
 on the read path, and set by nothing</strong>. The vocabulary for
@@ -199,7 +199,7 @@ shape.</li>
 instructions.</li>
 <li><code>hooks/memory-persistence/</code> — lifecycle hooks.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     CLI[ecc memory CLI] --&gt; V[memory-vault]
     MCP[memory_save MCP tool] --&gt; V
     HK[session hooks] --&gt; V
@@ -210,7 +210,7 @@ instructions.</li>
     P --&gt; S[index / search&lt;br/&gt;status === &#39;active&#39;]
     T --&gt; S
     U --&gt; S
-    S --&gt; A[Agent]</code></pre>
+    S --&gt; A[Agent]</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to run:</strong> nothing. Markdown files on disk
@@ -505,7 +505,16 @@ href="https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

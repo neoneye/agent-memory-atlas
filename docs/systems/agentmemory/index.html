@@ -153,7 +153,7 @@ architecture decision, bug, or workflow.</li>
 profiles: additional projections over the same activity.</li>
 </ul>
 <p>Typical lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     H[&quot;agent hook&quot;] --&gt;|&quot;mem::observe&quot;| RO[&quot;raw observation + indexes&quot;]
     RO -.-&gt;|optional| CMP[&quot;compression&quot;]
     F[&quot;explicit fact&quot;] --&gt;|&quot;mem::remember&quot;| VM[&quot;versioned memory + indexes&quot;]
@@ -167,7 +167,7 @@ profiles: additional projections over the same activity.</li>
     CR --&gt;|&quot;selected ids&quot;| EXP[&quot;expand&quot;]
     EXP --&gt; CTX[&quot;context for the agent&quot;]
 
-    style CR fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style CR fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Retrieval returns <em>compact</em> results and expands only the ids
 the caller selects, so the cost of reading a memory in full is paid on
 demand rather than for every hit.</p>
@@ -179,7 +179,7 @@ observation rather than calling an LLM for every event.</p>
 <code>StateKV</code> adapts its state functions into a scoped key-value
 interface; higher-level modules build retrieval and lifecycle behavior
 on top.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Hooks[&quot;Agent hooks&quot;] --&gt; Observe[&quot;mem::observe&quot;]
   Tools[&quot;MCP / API / CLI&quot;] --&gt; Functions[&quot;Registered memory functions&quot;]
   Observe --&gt; State[&quot;iii StateModule / SQLite&quot;]
@@ -192,7 +192,7 @@ on top.</p>
   Graph --&gt; Hybrid
   Hybrid --&gt; Context[&quot;Compact search / context&quot;]
   Observe --&gt; Consolidate[&quot;Optional consolidation&quot;]
-  Consolidate --&gt; State</code></pre>
+  Consolidate --&gt; State</code></pre></details></figure>
 <p>The state schema has separate scopes for sessions, observations,
 memories, summaries, embeddings, relations, profiles, graph data,
 semantic and procedural memory, teams, lessons, audit events, and
@@ -542,7 +542,16 @@ href="https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad36193635
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

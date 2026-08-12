@@ -235,7 +235,7 @@ justified the removal</strong> to the skill's own
 <code>occurrences</code>, so the record carries the evidence for its own
 retirement. <code>purge</code> drops it from the dictionary
 entirely.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;run finishes: outcome + reflection&quot;] --&gt; M[&quot;model reads both&quot;]
     M --&gt; ADD[&quot;add_skill&quot;]
     M --&gt; UPD[&quot;update_skill&quot;]
@@ -252,7 +252,7 @@ entirely.</p>
     ASK --&gt;|&quot;KEEP&quot;| STORE[&quot;SimilarityDecision:&lt;br/&gt;reasoning + similarity_at_decision&quot;]
     STORE -.-&gt;|&quot;consulted next pass&quot;| K
     style SKIP fill:#14532d,color:#fff
-    style M fill:#7c5c1e,color:#fff</code></pre>
+    style M fill:#7c5c1e,color:#fff</code></pre></details></figure>
 <p>Green is the loop that closes. Amber is everything else: a model
 following a prompt.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -600,7 +600,16 @@ href="https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

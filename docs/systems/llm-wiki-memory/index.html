@@ -183,7 +183,7 @@ target. The store generally treats active memory as usable guidance, not
 as candidate evidence. A <code>priority</code> field models apply
 strength, but not truth.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Host[&quot;Agent host: Claude&lt;br/&gt;Code, Codex, Cursor,&lt;br/&gt;MCP client&quot;]
     Hooks[&quot;Lifecycle hooks&quot;]
     MCP[&quot;Local stdio&lt;br/&gt;MCP server&quot;]
@@ -215,7 +215,7 @@ strength, but not truth.</p>
     Store --&gt; Wiki
     Store --&gt; Cache
     Store --&gt; Index --&gt; Wiki
-    Store --&gt; Git</code></pre>
+    Store --&gt; Git</code></pre></details></figure>
 <p>Runtime components:</p>
 <ul>
 <li><code>mcp-server/index.mjs</code> starts a local stdio MCP server
@@ -916,7 +916,16 @@ href="https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

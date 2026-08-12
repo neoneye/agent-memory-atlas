@@ -178,7 +178,7 @@ interesting one — that the JWT subject <em>is not overridden by an
 OpenWebUI header</em>. Whose memory a call touches cannot be changed by
 a header a caller controls.</p>
 <p><strong>And the fingerprint travels with the turn.</strong></p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     O[&quot;Agent profile + backend options&quot;] --&gt; V[&quot;provider.validate_options&quot;]
     V --&gt; RP[&quot;resolve_policy → MemoryRuntimePolicy&lt;br/&gt;frozen, provider-neutral&quot;]
     RP --&gt; FP[&quot;fingerprint_policy:&lt;br/&gt;SHA-256 over backend, flags,&lt;br/&gt;options and instructions hash&quot;]
@@ -188,7 +188,7 @@ a header a caller controls.</p>
     JWT[&quot;Verified JWT subject&quot;] --&gt; ID[&quot;agent_id + user_email&lt;br/&gt;on every contract method&quot;]
     ID --&gt; R
     ID --&gt; W
-    R -. &quot;no status, provenance or trust&lt;br/&gt;crosses the boundary&quot; .-x HOST[&quot;Controller&quot;]</code></pre>
+    R -. &quot;no status, provenance or trust&lt;br/&gt;crosses the boundary&quot; .-x HOST[&quot;Controller&quot;]</code></pre></details></figure>
 <p>The dotted edge is the limit: everything about <em>whether</em>
 memory ran is recorded, and nothing about whether what it returned can
 be believed.</p>
@@ -466,7 +466,16 @@ contract rather than for a store it does not have.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

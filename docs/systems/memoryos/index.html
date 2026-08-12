@@ -175,14 +175,14 @@ href="../memos/">MemOS</a></strong>, a separate system by MemTensor also
 reviewed here. Different projects, different authors, similar names.</p>
 </blockquote>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     ST[&quot;short term&lt;br/&gt;&lt;i&gt;FIFO of dialogue QA pairs&lt;/i&gt;&quot;] --&gt;|&quot;capacity reached&quot;| MT
     MT[&quot;mid term&lt;br/&gt;&lt;i&gt;LLM segments dialogue into topic sessions,&lt;br/&gt;each carrying N_visit, L_interaction,&lt;br/&gt;last_visit_time, R_recency, H_segment&lt;/i&gt;&quot;]
     MT --&gt; HEAP[&quot;heap ordered by −H_segment&lt;br/&gt;&lt;i&gt;hottest first&lt;/i&gt;&quot;]
     HEAP --&gt;|&quot;at capacity&quot;| EV[&quot;evict_lfu() by access_frequency&quot;]
     MT --&gt;|&quot;hot enough&quot;| LT[&quot;long term&lt;br/&gt;&lt;i&gt;user_profiles[user_id] = one merged string;&lt;br/&gt;knowledge entries in bounded deques&lt;/i&gt;&quot;]
 
-    style LT fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style LT fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Promotion is driven by heat, and the destination is the problem: a
 user's profile is <strong>one merged string</strong>, so everything that
 gets hot enough is folded into a blob with no per-fact identity left to
@@ -477,7 +477,16 @@ href="https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

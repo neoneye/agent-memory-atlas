@@ -226,7 +226,7 @@ and decomposition.</li>
 <li><code>persona/prompt_template/run_gpt_prompt.py</code> (2,930) —
 every prompt, including poignancy scoring.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   World[&quot;Simulated world&quot;] --&gt; Perceive[&quot;perceive&quot;]
   Perceive --&gt; Poig[&quot;LLM poignancy 1-10&quot;]
   Poig --&gt; Stream[&quot;Associative memory stream&quot;]
@@ -236,7 +236,7 @@ every prompt, including poignancy scoring.</li>
   Focal[&quot;Focal points&quot;] --&gt; Retr[&quot;new_retrieve&quot;]
   Stream --&gt; Retr
   Retr --&gt; Score[&quot;0.5*recency + 3*relevance + 2*importance&quot;]
-  Score --&gt; Plan[&quot;plan / converse / act&quot;]</code></pre>
+  Score --&gt; Plan[&quot;plan / converse / act&quot;]</code></pre></details></figure>
 <p>There are three memory structures, not one: the associative stream,
 <code>scratch</code> (short-term working state), and
 <code>spatial_memory</code> (a tree of known locations). The spatial
@@ -488,7 +488,16 @@ href="https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

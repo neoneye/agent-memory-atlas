@@ -161,14 +161,14 @@ outlive that session. Its unit is <code>MemoryEntry</code>: a
 <code>types.Content</code>, plus optional <code>id</code>,
 <code>author</code>, <code>timestamp</code> and
 <code>custom_metadata</code>. That is the whole schema.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     S[&quot;session&lt;br/&gt;events + state&quot;] --&gt;|&quot;delete_session()&quot;| G[&quot;gone&quot;]
     S --&gt;|&quot;add_session_to_memory&lt;br/&gt;add_events_to_memory&lt;br/&gt;add_memory&quot;| M[&quot;memory&quot;]
     M --&gt;|&quot;search_memory(app_name, user_id, query)&quot;| R[&quot;SearchMemoryResponse&quot;]
     M --&gt; X[&quot;no removal path exists&quot;]
 
     style G fill:#e7efe9,stroke:#3d6b59
-    style X fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style X fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The asymmetry is the finding. A session has an explicit
 <code>delete_session()</code>; the memory derived from it has nothing —
 so the transient half of a user's data can be removed and the durable
@@ -191,7 +191,7 @@ deliberately replaceable part. The relevant modules are
 <code>memory/</code> (seven files, ~1,720 lines) and
 <code>sessions/</code>, with <code>tools/load_memory_tool.py</code> as
 the agent-facing surface.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[Agent] --&gt;|load_memory tool| R[Runner]
     APP[App author] --&gt;|add_session_to_memory| R
     R --&gt; BMS[BaseMemoryService]
@@ -203,7 +203,7 @@ the agent-facing surface.</p>
     BSS --&gt; S2[SQLite / database]
     BSS --&gt; S3[VertexAiSessionService]
     BSS -.-&gt;|delete_session exists| X[removal here]
-    BMS -.-&gt;|no delete method| Y[and not here]</code></pre>
+    BMS -.-&gt;|no delete method| Y[and not here]</code></pre></details></figure>
 <p>Three memory implementations ship:</p>
 <ul>
 <li><strong><code>InMemoryMemoryService</code></strong> — a
@@ -606,7 +606,16 @@ href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

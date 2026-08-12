@@ -203,7 +203,7 @@ row to <code>archived_memories</code>, and marks the L1 row
 <li><code>ProceduralEngine</code> inserts drafts and changes exactly one
 field per operation.</li>
 </ul>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Draft: extract_pattern persists review_state=draft
     Draft --&gt; Draft: re-extraction of the same sources makes a NEW draft
     Draft --&gt; HumanReviewed: approve_draft, non-empty review_token, SHA-256 stored
@@ -212,7 +212,7 @@ field per operation.</li>
     HumanReviewed --&gt; HumanReviewed: increment_success, approved rows only
     Draft --&gt; [*]: never returned by recommend_for_trigger
     Rejected --&gt; [*]: never returned by recommend_for_trigger, row kept for audit
-    HumanReviewed --&gt; [*]: the only state that can be recommended</code></pre>
+    HumanReviewed --&gt; [*]: the only state that can be recommended</code></pre></details></figure>
 <p>The self-loop on <code>Draft</code> is the gap. Everything else in
 the diagram is enforced in code; that arrow is the one the code does not
 close.</p>
@@ -643,7 +643,16 @@ surfaces. The tree was read, never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -197,7 +197,7 @@ be algebraically probed out of a fact — or out of a whole category bank
 — without keyword matching:</p>
 <pre class="text"><code>unbind(fact_vector, bind(entity, ROLE_ENTITY)) ≈ content_vector</code></pre>
 <p>Write lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;fact_store(action=add)&quot;] --&gt; AF
     B[&quot;on_memory_write mirror&quot;] --&gt; AF
     C[&quot;on_session_end regex extraction&quot;] --&gt; AF
@@ -206,19 +206,19 @@ be algebraically probed out of a fact — or out of a whole category bank
     EL --&gt; HRR[&quot;_compute_hrr_vector()&quot;]
     HRR --&gt; RB[&quot;_rebuild_bank(category)&lt;br/&gt;&lt;i&gt;full category re-bundle, on every write&lt;/i&gt;&quot;]
 
-    style RB fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style RB fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The highlighted step is the cost of the algebra: because a category
 bank is one bundled vector, adding a single fact re-bundles the
 <strong>whole category</strong>, so write cost grows with the category
 rather than with the write.</p>
 <p>Retrieval lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Q[&quot;fact_store(action = search, probe, related,&lt;br/&gt;reason or contradict), or prefetch(query)&quot;] --&gt; F[&quot;FTS5 candidates&lt;br/&gt;&lt;i&gt;limit×3, sanitized OR-query, trust ≥ min_trust&lt;/i&gt;&quot;]
     F --&gt; RR[&quot;rerank:&lt;br/&gt;0.4 × fts + 0.3 × jaccard + 0.3 × hrr_similarity&quot;]
     RR --&gt; SC[&quot;score = relevance × trust_score&lt;br/&gt;&lt;i&gt;× optional temporal decay&lt;/i&gt;&quot;]
     SC --&gt; TK[&quot;top-k, injected &lt;b&gt;unfenced&lt;/b&gt; into the prompt&quot;]
 
-    style TK fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style TK fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Trust multiplies relevance rather than gating it, so a low-trust fact
 is ranked down and never excluded. And the result is injected
 <strong>unfenced</strong> — compare <a href="../rainbox/">RainBox</a>,
@@ -245,7 +245,7 @@ sanitization and Jaccard reranking.</li>
 <code>MemoryProvider</code> ABC, tool schemas, and end-of-session regex
 extraction.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Tools[&quot;fact_store / fact_feedback&lt;br/&gt;tools&quot;] --&gt; Provider[&quot;HolographicMemoryProvider&quot;]
   Hooks[&quot;on_memory_write /&lt;br/&gt;on_session_end&quot;] --&gt; Provider
   Provider --&gt; Store[&quot;MemoryStore&lt;br/&gt;(SQLite)&quot;]
@@ -258,7 +258,7 @@ extraction.</li>
   Facts --&gt; Retr
   Vec --&gt; Retr
   Bank --&gt; Retr
-  Retr --&gt; Prompt[&quot;prefetch() -&gt;&lt;br/&gt;system prompt&quot;]</code></pre>
+  Retr --&gt; Prompt[&quot;prefetch() -&gt;&lt;br/&gt;system prompt&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="hrr-encoding-holographicpy">HRR encoding
@@ -711,7 +711,16 @@ href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba14779
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

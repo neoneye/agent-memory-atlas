@@ -150,7 +150,7 @@ similarity and can append linked neighbors.</p>
 reinforcement learning, factual verification, decay, or model-weight
 adaptation.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Caller[&quot;Python caller&quot;] --&gt; AMS[&quot;AgenticMemorySystem&quot;]
   AMS --&gt; Dict[&quot;In-process MemoryNote dictionary&quot;]
   AMS --&gt; Chroma[&quot;Chroma collection + sentence-transformer&quot;]
@@ -158,7 +158,7 @@ adaptation.</p>
   Neighbors --&gt; LLM[&quot;OpenAI or Ollama controller&quot;]
   LLM --&gt; Mutate[&quot;Link/tag/context mutation&quot;]
   Mutate --&gt; Dict
-  AMS --&gt; Search[&quot;Vector search + optional links&quot;]</code></pre>
+  AMS --&gt; Search[&quot;Vector search + optional links&quot;]</code></pre></details></figure>
 <p><code>AgenticMemorySystem</code> owns an in-memory dictionary and an
 ephemeral <code>ChromaRetriever</code>. A separate
 <code>PersistentChromaRetriever</code> exists, along with a
@@ -411,7 +411,16 @@ href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df6
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

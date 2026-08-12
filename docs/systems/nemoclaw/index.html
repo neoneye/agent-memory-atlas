@@ -179,7 +179,7 @@ destroy    every declared dir wiped from the durable volume</code></pre>
 <p>A memory's lifecycle at this layer is: exists in a directory, is
 copied, is copied back, or is wiped with everything else. There is no
 record, no identity, and no correction.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph Wrapped[&quot;A wrapped agent — Hermes, OpenClaw&quot;]
       Mem[(&quot;Its own memory&lt;br/&gt;NemoClaw never reads or writes it&quot;)]
     end
@@ -189,7 +189,7 @@ record, no identity, and no correction.</p>
     NC --&gt; Des[&quot;destroy — wipes declared dirs&quot;]
     Cred[&quot;Credentials&quot;] -.-&gt;|&quot;sanitized field by field on backup&quot;| Bkp
     Mem -.-&gt;|&quot;copied whole, no sanitization&quot;| Bkp
-    Rest -.-&gt;|&quot;a careful deletion above is&lt;br/&gt;undone by an ordinary restore below&quot;| Mem</code></pre>
+    Rest -.-&gt;|&quot;a careful deletion above is&lt;br/&gt;undone by an ordinary restore below&quot;| Mem</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>TypeScript under <code>src/</code>, with
 <code>src/lib/shields/</code> as the security surface —
@@ -418,7 +418,16 @@ href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb2339
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

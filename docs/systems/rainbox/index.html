@@ -213,7 +213,7 @@ columns are schema groundwork that the Tier-1 ranker does not yet use
     last_hit_at=...
 )</code></pre>
 <p>Write lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     IN[&quot;explicit human command,&lt;br/&gt;assistant remember,&lt;br/&gt;or the review UI&quot;] --&gt; RB[&quot;record_belief(actor, …)&quot;]
     RB --&gt; LOCK[&quot;under an advisory lock:&lt;br/&gt;dedupe → tombstone → conflict → create&quot;]
     LOCK --&gt; WHO{&quot;actor?&quot;}
@@ -223,13 +223,13 @@ columns are schema groundwork that the Tier-1 ranker does not yet use
     CAND --&gt; EV
     EV --&gt; EMB[&quot;refresh MemoryEmbedding&lt;br/&gt;&lt;i&gt;active and candidate&lt;/i&gt;&quot;]
 
-    style WHO fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style WHO fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Who wrote it decides its starting trust. A human's claim lands
 <strong>active</strong>; a model's lands <strong>candidate</strong> — so
 the same call produces different standing depending on the actor, and
 nothing a model says is believed on arrival.</p>
 <p>Correction lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[&quot;correct that OLD to NEW,&lt;br/&gt;or the /memory UI correct action&quot;] --&gt; CB[&quot;correct_belief(old_uuid, new_text,&lt;br/&gt;actor, evidence)&quot;]
     CB --&gt; L[&quot;advisory lock on both the old and new keys&quot;]
     L --&gt; SUP[&quot;supersede the old claim&quot;]
@@ -239,13 +239,13 @@ nothing a model says is believed on arrival.</p>
     TOMB --&gt; R
     NEW --&gt; R
 
-    style TOMB fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style TOMB fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Correction takes <strong>both</strong> locks and does three things
 atomically. The tombstone is the highlighted one: superseding alone
 would leave the old value re-assertable, which is the failure this atlas
 is organised around.</p>
 <p>Retrieval lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     T[&quot;user turn or assistant action&quot;] --&gt; Q[&quot;build query&quot;]
     Q --&gt; HF[&quot;hard_filtered_claims:&lt;br/&gt;active, non-expired,&lt;br/&gt;allowed sensitivity, matching scope&quot;]
     HF --&gt; RK[&quot;retrieve_memories_hybrid:&lt;br/&gt;vector + full-text&lt;br/&gt;+ subject/object entity boost&quot;]
@@ -254,7 +254,7 @@ is organised around.</p>
     INJ --&gt; LOG[(&quot;RetrievalEvent&lt;br/&gt;and/or a debug-memory row&quot;)]
 
     style HF fill:#e7efe9,stroke:#3d6b59
-    style FEN fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style FEN fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Two highlighted steps, both about containment. Filtering happens
 <strong>before</strong> ranking, so excluded material is never scored.
 And retrieved text is <strong>fenced</strong> with angle brackets
@@ -299,7 +299,7 @@ high-level design doc.</li>
 event semantics.</li>
 </ul>
 <p>Architecture:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   UI[&quot;Chat / Assistant / Memory UI&quot;] --&gt; Ops[&quot;memory.ops / assistant actions / memory_api&quot;]
   Ops --&gt; RecordBelief[&quot;record_belief / correct_belief&quot;]
   RecordBelief --&gt; Claims[&quot;MemoryClaim&quot;]
@@ -313,7 +313,7 @@ event semantics.</li>
   Retrieval --&gt; Events[&quot;RetrievalEvent&quot;]
   Prompt --&gt; Debug[&quot;debug-memory ChatMessage&quot;]
   Debug --&gt; Feedback[&quot;FeedbackEvent&quot;]
-  Events --&gt; Evals[&quot;EvalCase / EvalRun&quot;]</code></pre>
+  Events --&gt; Evals[&quot;EvalCase / EvalRun&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="schema">Schema</h3>
@@ -1020,7 +1020,16 @@ href="https://github.com/neoneye/RainBox/commit/0792f8a07f6ff728931e928b2bdf7460
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

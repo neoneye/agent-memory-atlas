@@ -215,7 +215,7 @@ only.</li>
 <li><code>agent_loop.py</code>, <code>llmcore.py</code> — the ~100-line
 loop and model layer.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Tools[&quot;Tool calls (shell,&lt;br/&gt;file_read, code&lt;br/&gt;run)&quot;] --&gt; Gate{&quot;succeeded?&quot;}
   Gate --&gt;|no| Drop[&quot;not memory&quot;]
   Gate --&gt;|yes| Write[&quot;may be&lt;br/&gt;written&quot;]
@@ -227,7 +227,7 @@ loop and model layer.</li>
   L3 --&gt; L1
   L1 --&gt; Prompt[&quot;always-injected context&quot;]
   SOP[&quot;memory_management_sop /&lt;br/&gt;memory_cleanup_sop&quot;] -.governs.-&gt; Write
-  SOP -.governs.-&gt; L1</code></pre>
+  SOP -.governs.-&gt; L1</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-write-gate-as-prose">The write gate, as prose</h3>
@@ -526,7 +526,16 @@ href="https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

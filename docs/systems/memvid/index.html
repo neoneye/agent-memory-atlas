@@ -161,7 +161,7 @@ artifacts appear. Beyond that: correction is frame-keyed rather than
 value-keyed, and the ACL module is thin relative to the rest.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>How a thing becomes a belief, and how it stops being one:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     direction LR
     [*] --&gt; Active: write — frame appended through the WAL,&lt;br/&gt;checksummed, committed
     Active --&gt; Superseded: correct — a NEW frame is appended,&lt;br/&gt;the old one linked by superseded_by
@@ -170,7 +170,7 @@ value-keyed, and the ACL module is thin relative to the rest.</p>
     note right of Deleted
         The frame remains in the file.
         Nothing is edited in place, ever.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p>Because nothing is overwritten, three different reads are possible:
 <code>get_current(entity, slot)</code> for what is believed now,
 <code>get_at_time(entity, slot, t)</code> for what was believed at
@@ -501,7 +501,16 @@ href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

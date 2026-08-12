@@ -168,7 +168,7 @@ regions — with no trust state and nothing recording that a digested
 claim was later judged wrong. And the surface is very large for what it
 does, with 61,000 lines of CLI.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     ST[(&quot;staging&lt;br/&gt;&lt;i&gt;entries land here first, undigested&lt;/i&gt;&quot;)]
     ST --&gt;|&quot;AddTheme folds a gist bullet into the root&#39;s&lt;br/&gt;Themes region, creating it if absent —&lt;br/&gt;&lt;b&gt;nothing moves out of staging&lt;/b&gt;&quot;| RD[(&quot;root document&lt;br/&gt;&lt;i&gt;Themes, then a region per theme;&lt;br/&gt;entries digested into place&lt;/i&gt;&quot;)]
 
@@ -184,7 +184,7 @@ does, with 61,000 lines of CLI.</p>
     AP --&gt; LG[(&quot;ledger, resumable&quot;)]
 
     style SG fill:#e7efe9,stroke:#3d6b59
-    style WG fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style WG fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Two gates in series, both highlighted, and they check different
 things. The schema gate requires <strong>provenance</strong> before a
 proposal is admitted at all; the write-scope guard then decides
@@ -206,7 +206,7 @@ excluding tests:</p>
 <p>The interesting logic is concentrated in the small packages:
 <code>dream</code>, <code>disclosure</code>, <code>drift</code>,
 <code>journal</code>, <code>entity</code>.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   E[&quot;entries&quot;] --&gt; Stage[&quot;staging&quot;]
   Theme[&quot;AddTheme:&lt;br/&gt;name a theme&lt;br/&gt;first&quot;] --&gt; Root[&quot;root doc&lt;br/&gt;## Themes&quot;]
   Stage --&gt; Dig[&quot;digest&lt;br/&gt;into region&quot;]
@@ -218,7 +218,7 @@ excluding tests:</p>
   WS --&gt;|dreams/ ideas/| Apply[&quot;apply&quot;]
   WS --&gt;|specs/ on promote| Apply
   WS --&gt;|elsewhere| Ref[&quot;refused&lt;br/&gt;with a&lt;br/&gt;reason&quot;]
-  Apply --&gt; Led[&quot;ledger —&lt;br/&gt;resumable&quot;]</code></pre>
+  Apply --&gt; Led[&quot;ledger —&lt;br/&gt;resumable&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="a-write-scope-for-the-consolidator">A write scope for the
@@ -508,7 +508,16 @@ href="https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

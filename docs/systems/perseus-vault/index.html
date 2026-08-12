@@ -233,7 +233,7 @@ the one to quote.</p>
 <code>status</code>, a boolean <code>verified</code>, and a
 <code>certainty</code> float — over a bi-temporal record that keeps its
 own history.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; candidate: trust admission
     candidate --&gt; active: accepted
     active: status active&lt;br/&gt;verified 0 or 1, certainty float
@@ -251,7 +251,7 @@ own history.</p>
         recorded_at / invalidated_at is
         transaction time. Both are columns,
         on entities and on entity_history.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p>The schema comments say it directly — <code>valid_from_unix_ms</code>
 is <em>"when the fact became true in the world"</em> and
 <code>recorded_at_unix_ms</code> is <em>"transaction time: when Mneme
@@ -868,7 +868,16 @@ returns 76 against a claim of 65.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -175,7 +175,7 @@ records nothing at all when a durable fact is deleted — and the deleting
 party is a language model.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two stores, one workspace, and no path between them.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     U[&quot;a turn of conversation&quot;] --&gt; E[&quot;event_log — append-only&lt;br/&gt;item.created / thread.renamed / turn.completed&lt;br/&gt;sequence per thread, replayable&quot;]
     E --&gt; S[&quot;SQLite: projects, threads, items&lt;br/&gt;~/.deepcode/state/deepcode.sqlite3&quot;]
     U --&gt; P[&quot;message_provenance&lt;br/&gt;ClientSurface + TurnInputSource&lt;br/&gt;automation distinguishable from a person&quot;]
@@ -189,7 +189,7 @@ party is a language model.</p>
     D[&quot;autodream — scheduled agent turn&quot;] --&gt; M
     D -. &quot;the only mechanical check:&lt;br/&gt;notes_before vs notes_after&quot; .-&gt; R[&quot;RunOutcome&quot;]
 
-    S -. &quot;session deletion quarantines to .trash&lt;br/&gt;and never touches the notes&quot; .-&gt; N</code></pre>
+    S -. &quot;session deletion quarantines to .trash&lt;br/&gt;and never touches the notes&quot; .-&gt; N</code></pre></details></figure>
 <p>The asymmetry is the whole mental model. Down the left, a mutation to
 the conversation store produces a sequenced, replayable,
 provenance-stamped event. Down the right, a mutation to the
@@ -672,7 +672,16 @@ the value-keyed kind.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

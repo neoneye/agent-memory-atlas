@@ -132,14 +132,14 @@ event boundary.</li>
 </ol>
 <p>Do not silently hard-delete the older edge merely because it is no
 longer current.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Ev[&quot;source event&quot;] --&gt; F1[&quot;fact: lives&lt;br/&gt;in Berlin&quot;]
     Ev2[&quot;later&lt;br/&gt;source&lt;br/&gt;event&quot;] --&gt; F2[&quot;fact: lives&lt;br/&gt;in Lisbon&quot;]
     F2 --&gt; C[&quot;close F1.invalid_at&lt;br/&gt;at the event boundary&quot;]
     C --&gt; F1
     Q1[&quot;as of&lt;br/&gt;last March&quot;] --&gt; F1
     Q2[&quot;as&lt;br/&gt;of&lt;br/&gt;now&quot;] --&gt; F2
-    F1 -. &quot;retained, not deleted&quot; .- H[&quot;history&quot;]</code></pre>
+    F1 -. &quot;retained, not deleted&quot; .- H[&quot;history&quot;]</code></pre></details></figure>
 <p>Two clocks, two questions. <em>What was true then</em> reads
 application time; <em>what did we believe then</em> reads system
 time.</p>
@@ -306,7 +306,16 @@ fusion</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

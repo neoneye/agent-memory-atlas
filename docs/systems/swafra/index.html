@@ -188,7 +188,7 @@ graph" is a separate list of directed edges between chunk IDs:</p>
 <li><code>cross_session</code>.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;MCP add_knowledge&quot;] --&gt; B[&quot;choose Leiden&lt;br/&gt;or fallback chunking&quot;]
     B --&gt; C[&quot;annotate and embed chunks&quot;]
     C --&gt; D[&quot;add within-source&lt;br/&gt;and cross-source edges&quot;]
@@ -199,7 +199,7 @@ graph" is a separate list of directed edges between chunk IDs:</p>
     H --&gt; I[&quot;best chunk per source&quot;]
     I --&gt; J[&quot;MCP result&quot;]
 
-    style E fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style E fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The highlighted step is the one worth noting: conflicting facts are
 <em>closed</em> on the write path rather than left for a reader to
 reconcile.</p>
@@ -218,11 +218,11 @@ triple carrying <code>chunk_id</code>, <code>source_id</code>,
 <code>created_at</code>, <code>confidence</code>, <code>evidence</code>
 (the original text span), <code>valid_until</code>, and
 <code>superseded_by</code>. Its states are exactly two:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     EX[&quot;extract_facts()&lt;br/&gt;regex patterns over chunk text&quot;] --&gt; ACTIVE[&quot;active fact&lt;br/&gt;valid_until = None&quot;]
     TR[&quot;a later &lt;i&gt;transition&lt;/i&gt; fact arrives —&lt;br/&gt;&amp;quot;I switched to X&amp;quot;, &amp;quot;changed to&amp;quot;, &amp;quot;stopped&amp;quot;, &amp;quot;replaced&amp;quot; —&lt;br/&gt;same subject, different value, slot similarity ≥ 0.65&quot;] --&gt; SUP
     ACTIVE --&gt; SUP[&quot;superseded fact&lt;br/&gt;valid_until = now, superseded_by = new id&lt;br/&gt;the row is kept, never deleted&quot;]
-    SUP --&gt; PEN[&quot;chunks whose facts are superseded&lt;br/&gt;get score × (1 − penalty × 0.85)&quot;]</code></pre>
+    SUP --&gt; PEN[&quot;chunks whose facts are superseded&lt;br/&gt;get score × (1 − penalty × 0.85)&quot;]</code></pre></details></figure>
 <p>Two deliberate limits are worth stating because they are documented
 choices rather than oversights. Only <strong>transition</strong> facts
 supersede — a plain "I use X" does not invalidate a prior state, on the
@@ -294,7 +294,7 @@ gated behind <code>is_llm_available()</code>);</li>
 deterministic signed hash vectors over words and character trigrams. If
 Leiden dependencies are unavailable, ingestion uses
 conversation/paragraph chunking.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Client[&quot;MCP client&quot;] --&gt; PyMCP[&quot;Python FastMCP server&quot;]
   Client --&gt; NodeMCP[&quot;Node MCP server&quot;]
   NodeMCP --&gt; RPC[&quot;JSON-line subprocess bridge&quot;]
@@ -306,7 +306,7 @@ conversation/paragraph chunking.</p>
   JSON --&gt; Hybrid[&quot;BM25 + vector + entity/date/preference + char n-gram&quot;]
   Hybrid --&gt; Walk[&quot;directed graph walk&quot;]
   Walk --&gt; Diverse[&quot;best chunk per source&quot;]
-  Diverse --&gt; Client</code></pre>
+  Diverse --&gt; Client</code></pre></details></figure>
 <p>There is no daemon, database, queue, background worker, hosted API,
 replication path, or multi-tenant service boundary.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
@@ -1078,7 +1078,16 @@ href="https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -160,7 +160,7 @@ href="../rejected-value-tombstone/">rejected-value tombstone</a>.</li>
 <p>Keep the detector's <em>recommendation</em> vocabulary narrower than
 the resolver's <em>action</em> vocabulary, so the model's framing does
 not bound the operator's options.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     D[&quot;detector&quot;] --&gt; F[&quot;typed finding:&lt;br/&gt;old id, new id,&lt;br/&gt;description&quot;]
     F --&gt; Q[&quot;queue — pending&lt;br/&gt;stays retrievable&quot;]
     Q --&gt; R{&quot;disposition&quot;}
@@ -169,7 +169,7 @@ not bound the operator's options.</p>
     R --&gt; T[&quot;remove_both:&lt;br/&gt;tombstone&quot;]
     R --&gt; H[&quot;manual:&lt;br/&gt;human writes&quot;]
     S --&gt; W[&quot;write path consults&lt;br/&gt;on next extraction&quot;]
-    T --&gt; W</code></pre>
+    T --&gt; W</code></pre></details></figure>
 <h2 id="why-it-works">Why it works</h2>
 <p>It converts a standing ambiguity into a decision with an owner.
 Retrieval stops handing the model two conflicting memories and hoping;
@@ -384,7 +384,16 @@ validity</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -222,7 +222,7 @@ store, serializer, recall, carry — derives its view from that table. The
 module docstring records why: the four hand-maintained copies had
 drifted, and one field was silently skipping first-seen stamping.</p>
 <h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     T[&quot;transcript span&quot;] --&gt; EX[&quot;LLM extraction, D-016 prompt&quot;]
     EX --&gt;|&quot;claims verbatim + quote&quot;| S[&quot;sanitize_source_ids&lt;br/&gt;pin_imperatives&quot;]
     EX --&gt;|&quot;claims inferred&quot;| INF[&quot;trust: inferred&lt;br/&gt;grounded: false&quot;]
@@ -239,7 +239,7 @@ drifted, and one field was silently skipping first-seen stamping.</p>
     GT --&gt; W[&quot;redact, stamp id, write&quot;]
     INF --&gt; W
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p><code>sanitize_source_ids</code> drops message ids the transcript
 cannot vouch for; <code>pin_imperatives</code> force-pins a "never" or
 "must" the model paraphrased away. Neither can reject an item — they
@@ -423,7 +423,7 @@ package whose only declared runtime dependency is a <code>tomli</code>
 backport on Python below 3.11, plus hook scripts the host invokes. The
 <code>pretty</code> extra pulls in <code>rich</code> for terminal output
 and is optional.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     subgraph Host[&quot;Agent host (Claude Code / Windsurf / Codex)&quot;]
         SS[&quot;SessionStart hook&quot;]
         UPS[&quot;UserPromptSubmit hook&quot;]
@@ -442,7 +442,7 @@ and is optional.</p>
     UPS --&gt; SUG[&quot;recall.suggest&quot;]
     IDX --&gt; SUG
     STORE -.-&gt;|&quot;opt-in&quot;| TEAM[&quot;team sidecar&lt;br/&gt;(private git remote)&quot;]
-    STORE -.-&gt;|&quot;opt-in&quot;| RCPT[&quot;vitni Ed25519 receipt&quot;]</code></pre>
+    STORE -.-&gt;|&quot;opt-in&quot;| RCPT[&quot;vitni Ed25519 receipt&quot;]</code></pre></details></figure>
 <p><strong>Persistence</strong> is a flat directory of
 <code>&lt;session_id&gt;.json</code> files plus pointer files: a global
 <code>latest.json</code> and one
@@ -1487,7 +1487,16 @@ href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad9
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

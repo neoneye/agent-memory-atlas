@@ -120,7 +120,7 @@ judgement a person could have made in one click.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Give the store an editor, and make every verb the automatic path has
 available to a person too:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;automatic path&lt;br/&gt;extract / summarise / score&quot;] --&gt; S[(&quot;the store&quot;)]
     S --&gt; P[prompt]
     S --&gt; E[&quot;editor over the same rows&quot;]
@@ -129,7 +129,7 @@ available to a person too:</p>
     E --&gt;|pin / protect| S
     E --&gt;|merge| S
     E --&gt;|&quot;regenerate, then accept or reject&quot;| S
-    E --&gt;|suppress without deleting| S</code></pre>
+    E --&gt;|suppress without deleting| S</code></pre></details></figure>
 <p>Five verbs distinguish an editor from a viewer:</p>
 <ol type="1">
 <li><strong>Edit the text</strong> in place — the stored value, not a
@@ -341,7 +341,16 @@ machinery this pattern partly substitutes for, and partly needs.</li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

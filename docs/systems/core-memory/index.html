@@ -235,7 +235,7 @@ CrewAI, Spring AI, an OpenClaw bridge.</li>
 <code>management/</code> (1,451), <code>write_pipeline/</code>
 (666).</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Turn[&quot;turn / connector&lt;br/&gt;ingest&quot;] --&gt; WP[&quot;write pipeline&quot;]
   WP --&gt; G{&quot;grounding\nby&lt;br/&gt;type or connector&quot;}
   G --&gt; Bead[&quot;bead: class&lt;br/&gt;floored by&lt;br/&gt;grounding&quot;]
@@ -251,7 +251,7 @@ CrewAI, Spring AI, an OpenClaw bridge.</li>
   Human --&gt; Bead
   Bead --&gt; Appr{&quot;approval_status&quot;}
   Appr --&gt;|approved| A[&quot;class A · authority=user_confirmed&quot;]
-  Appr --&gt;|rejected| Excl[&quot;excluded from&lt;br/&gt;truth, retained&lt;br/&gt;for audit&quot;]</code></pre>
+  Appr --&gt;|rejected| Excl[&quot;excluded from&lt;br/&gt;truth, retained&lt;br/&gt;for audit&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="grounding-as-a-ceiling-not-a-score">Grounding as a ceiling, not
@@ -762,7 +762,16 @@ href="https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda350538990443513
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

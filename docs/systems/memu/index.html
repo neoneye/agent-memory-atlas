@@ -186,7 +186,7 @@ tell you it is unsure about is whether it is installed correctly.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory becomes retrievable and stops being retrievable, and that is
 the whole state machine:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[&quot;commit_results&quot;] --&gt; RF[&quot;RecallFile&lt;br/&gt;&lt;i&gt;track: memory or skill&lt;/i&gt;&quot;]
     C --&gt; RS[&quot;Resource&lt;br/&gt;&lt;i&gt;track: workspace&lt;/i&gt;&quot;]
     RF --&gt;|sliced| SEG[&quot;RecallFileSegment ×n&lt;br/&gt;&lt;b&gt;the embed and search unit&lt;/b&gt;&quot;]
@@ -194,7 +194,7 @@ the whole state machine:</p>
     PR --&gt;|&quot;roll up&quot;| FILES[&quot;files, scored by&lt;br/&gt;max(segment score)&quot;]
     RS --&gt; WR[&quot;workspace resources,&lt;br/&gt;ranked separately&quot;]
 
-    style SEG fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style SEG fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Segments are the search unit and files are the answer unit, with a
 file scored by its <strong>best</strong> segment rather than its average
 — so one strong passage surfaces a long file instead of being diluted by
@@ -720,7 +720,16 @@ href="https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

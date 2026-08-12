@@ -166,7 +166,7 @@ section 9.</p>
 The engine extracts facts, links them, and consolidates them into
 observations. MemoMind adds a weekly job that exports everything and
 deletes the observations that never earned their keep.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     IMP[&quot;import_ai_chats.py — ChatGPT / Gemini archives&lt;br/&gt;import_daylife.py — planner data&quot;] --&gt; R[&quot;engine retain&quot;]
     R --&gt; F[&quot;world and experience facts&quot;]
     F --&gt; C[&quot;consolidation&quot;]
@@ -180,7 +180,7 @@ deletes the observations that never earned their keep.</p>
     WK --&gt; PR{&quot;type == observation&lt;br/&gt;AND proof_count &amp;le; 1&lt;br/&gt;AND older than 30 days?&quot;}
     PR --&gt;|yes| DEL[&quot;DELETE /memories/{id}&lt;br/&gt;recorded in the backup JSON&quot;]
     PR --&gt;|no| KEEP[&quot;exported&quot;]
-    WK --&gt; FG[&quot;filter_graph_edges:&lt;br/&gt;drop temporal (reconstructable),&lt;br/&gt;keep semantic &amp;gt; 0.3, keep all entity&quot;]</code></pre>
+    WK --&gt; FG[&quot;filter_graph_edges:&lt;br/&gt;drop temporal (reconstructable),&lt;br/&gt;keep semantic &amp;gt; 0.3, keep all entity&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>engine/</code> holds <code>hindsight</code> and
 <code>hindsight_api</code> — a reference copy of the upstream source
@@ -468,7 +468,16 @@ installed, and no patch effect was reproduced.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

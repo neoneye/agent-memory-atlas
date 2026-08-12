@@ -210,7 +210,7 @@ re-run does not duplicate.</p>
 (facts), <code>MESSAGE</code> (raw turns) — rather than a trust or
 provenance taxonomy.</p>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[&quot;client writes messages&quot;] --&gt; WM[(&quot;working memory&lt;br/&gt;Redis, TTL-expired&quot;)]
     WM --&gt; Q{&quot;should_extract_session_thread()?&quot;}
     Q --&gt;|yes| DB[&quot;debounce →&lt;br/&gt;schedule_trailing_extraction()&quot;]
@@ -223,7 +223,7 @@ provenance taxonomy.</p>
     LT --&gt; PER[&quot;periodic: compact_long_term_memories(),&lt;br/&gt;select_ids_for_forgetting() → delete&quot;]
     PER --&gt; LT
 
-    style PER fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style PER fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Three dedup passes in series — hash, then id, then semantic — is the
 most thorough dedup chain in the atlas. The highlighted loop is the
 other half: this is one of very few systems here with a
@@ -250,7 +250,7 @@ prompts.</li>
 <code>tasks.py</code> — schema migration and background task
 execution.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Client[&quot;REST / MCP /&lt;br/&gt;SDK client&quot;] --&gt; WM[&quot;Working memory&lt;br/&gt;(Redis + TTL)&quot;]
   WM --&gt; Debounce[&quot;extraction debounce +&lt;br/&gt;trailing schedule&quot;]
   Debounce --&gt; Strategy[&quot;MemoryStrategy (discrete/summary/preferences/custom)&quot;]
@@ -259,7 +259,7 @@ execution.</li>
   LTM --&gt; Search[&quot;search +&lt;br/&gt;recency&lt;br/&gt;rerank&quot;]
   Search --&gt; Access[&quot;update_last_accessed&quot;]
   LTM --&gt; Compact[&quot;compact_long_term_memories&quot;]
-  LTM --&gt; Forget[&quot;select_ids_for_forgetting -&gt;&lt;br/&gt;delete&quot;]</code></pre>
+  LTM --&gt; Forget[&quot;select_ids_for_forgetting -&gt;&lt;br/&gt;delete&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="working-memory-and-ttl">Working memory and TTL</h3>
@@ -607,7 +607,16 @@ href="https://github.com/redis/agent-memory-server/commit/886437963dc02289e82887
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

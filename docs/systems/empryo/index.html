@@ -252,7 +252,7 @@ time. Both are excluded from every read.</p>
 is more than several systems here manage. What it is not is a rejection:
 nothing records <em>that a value was wrong</em>, and the unique-hash
 upsert actively reverses a hide when the same content returns.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Live: an agent tool call saves a summary, details, topics and file paths
     Live --&gt; Live: the same content hash arrives again, topics merge
     Live --&gt; Hidden: a person soft-deletes it in the browser
@@ -264,7 +264,7 @@ upsert actively reverses a hide when the same content returns.</p>
     note right of Hidden
         Hiding is archival, not rejection.
         Nothing records that a value was wrong.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A single SQLite database per scope, no service, no network on the
 memory path. Four tables: <code>schema_version</code>,
@@ -573,7 +573,16 @@ href="https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

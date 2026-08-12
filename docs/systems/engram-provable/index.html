@@ -174,7 +174,7 @@ policy and can hold the write in <code>quarantine</code> — a binding
 excluded from every recall query — until an admin releases or rejects
 it. Everything that changes a memory appends a row to the chained
 mutation log.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;write: content + provenance + binding&quot;] --&gt; C{&quot;binding == canon?&quot;}
     C --&gt;|&quot;yes — operator-curated&quot;| ADMIT[&quot;admitted&quot;]
     C --&gt;|no| FW{&quot;ShouldQuarantine(provenance, explicit)&quot;}
@@ -192,7 +192,7 @@ mutation log.</p>
     ML --&gt; TRG[&quot;BEFORE INSERT trigger:&lt;br/&gt;advisory lock, seq+1, prev_hash, row_hash&quot;]
     TRG --&gt; HEAD[&quot;audit_chain_heads per tenant&quot;]
     ML --&gt; IMM[&quot;BEFORE UPDATE OR DELETE trigger: RAISE EXCEPTION&quot;]
-    SHRED[&quot;POST /admin/anchors/{id}/shred&quot;] --&gt; CS[&quot;content := AES-GCM ciphertext,&lt;br/&gt;key discarded; embedding := NULL;&lt;br/&gt;redaction appended to the chain&quot;]</code></pre>
+    SHRED[&quot;POST /admin/anchors/{id}/shred&quot;] --&gt; CS[&quot;content := AES-GCM ciphertext,&lt;br/&gt;key discarded; embedding := NULL;&lt;br/&gt;redaction appended to the chain&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>internal/</code> splits into <code>api</code> (chi router,
 handlers, middleware), <code>service</code>, <code>store</code>,
@@ -583,7 +583,16 @@ deployed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

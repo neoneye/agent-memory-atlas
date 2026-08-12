@@ -209,7 +209,7 @@ than the memory name alone."</em> That inverts the usual arrangement,
 where each memory carries its own retrieval metadata and a ranker
 compares them. Here the previous document decides what the next one is
 for.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;project activation&quot;] --&gt; B[&quot;agent is handed&lt;br/&gt;memory names only&quot;]
     B --&gt; C[&quot;read mem:core&lt;br/&gt;the declared root&quot;]
     C --&gt; D[&quot;follow a mem: link&lt;br/&gt;the referring text says why&quot;]
@@ -223,7 +223,7 @@ for.</p>
     Q -- &quot;no&quot; --&gt; ST[&quot;stale reference&lt;br/&gt;+ up to 3 ranked candidates&quot;]
     Q -- &quot;yes&quot; --&gt; U{&quot;bare name in prose&lt;br/&gt;matching a real memory?&quot;}
     U -- &quot;yes&quot; --&gt; UN[&quot;unmarked reference warning&lt;br/&gt;high or low confidence&quot;]
-    S -.-&gt;|&quot;nothing checks the&lt;br/&gt;reverse direction&quot;| ORPH[&quot;a memory nothing links to&quot;]</code></pre>
+    S -.-&gt;|&quot;nothing checks the&lt;br/&gt;reverse direction&quot;| ORPH[&quot;a memory nothing links to&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Python MCP server, installed and run with <code>uv</code>, whose
 memory subsystem is two modules with no external dependency beyond the
@@ -674,7 +674,16 @@ was executed and nothing was installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

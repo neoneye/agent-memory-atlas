@@ -148,7 +148,7 @@ scheduler -&gt; textual memory -&gt; activation cache / maintenance</code></pre>
 dumped locally, initialized from a directory, or loaded from a remote
 repository. This suggests sharing and composing memory resources
 independently from the agent process.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     In[&quot;Reader extraction&quot;] --&gt; Cube[(&quot;Memory cube&quot;)]
     Cube --&gt; T1[&quot;Textual item&quot;]
     Cube --&gt; T2[&quot;Graph tier&quot;]
@@ -157,7 +157,7 @@ independently from the agent process.</p>
     Cube --&gt; T5[&quot;LoRA — memory in weights&quot;]
     Sch[&quot;Scheduler&quot;] --&gt;|&quot;promotion: α·N_visit + β·L_interaction + γ·R_recency&lt;br/&gt;coefficients left at 1, 1, 1&quot;| Cube
     Cube --&gt; R[&quot;Direct vector, or graph + BM25&lt;br/&gt;+ rerank + reasoner&quot;]
-    Cube -.-&gt;|&quot;update, delete, soft-delete and dump&lt;br/&gt;all mean different things per module&quot;| Gap[&quot;no single correction contract&quot;]</code></pre>
+    Cube -.-&gt;|&quot;update, delete, soft-delete and dump&lt;br/&gt;all mean different things per module&quot;| Gap[&quot;no single correction contract&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Major layers:</p>
 <ul>
@@ -413,7 +413,16 @@ href="https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

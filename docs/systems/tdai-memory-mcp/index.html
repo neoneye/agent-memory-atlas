@@ -209,7 +209,7 @@ nothing populates.</p>
 becomes believed, since everything is equally believed the moment it is
 written. It is <strong>which memories a query can reach</strong>, and
 that is decided entirely by whether the caller named a scope.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;agent calls capture&quot;] --&gt; RD[&quot;redactor: 11 secret patterns&lt;br/&gt;plus entropy detector&quot;]
     RD --&gt; DH{&quot;content_hash&lt;br/&gt;already present&lt;br/&gt;in this session?&quot;}
     DH -- yes --&gt; SKIP[&quot;skipped as duplicate&quot;]
@@ -227,7 +227,7 @@ that is decided entirely by whether the caller named a scope.</p>
     ALL --&gt; F
 
     style L12 fill:#f4e2bd,stroke:#b8860b
-    style ALL fill:#f4c9c9,stroke:#a33</code></pre>
+    style ALL fill:#f4c9c9,stroke:#a33</code></pre></details></figure>
 <p>The two shaded boxes are the report. One is a schema promising a
 mechanism that does not exist; the other is a mechanism that exists and
 is bypassed by the only caller that ships.</p>
@@ -689,7 +689,16 @@ executed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

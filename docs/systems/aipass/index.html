@@ -169,7 +169,7 @@ over, searchable semantically across branches.</p>
 <p>A third layer sits beside them: <strong>symbolic fragments</strong>,
 LLM-extracted pieces stored and deduplicated separately, with a
 bootstrap path that populates them from session JSONLs.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     E[&quot;entry written to a branch memory file&quot;] --&gt; L{&quot;check_entry: over the character cap?&quot;}
     L --&gt;|yes| V[&quot;lint reports a violation — read-only&quot;]
     L --&gt; F[&quot;branch JSON file, hot tier&quot;]
@@ -185,7 +185,7 @@ bootstrap path that populates them from session JSONLs.</p>
     Q[&quot;query&quot;] --&gt; SR[&quot;semantic search over archives&quot;]
     SR --&gt; G{&quot;should_surface: threshold, session cap,&lt;br/&gt;message gap, cooldown&quot;}
     G --&gt;|&quot;refused, with a reason&quot;| NO[&quot;not surfaced&quot;]
-    G --&gt;|allowed| YES[&quot;surfaced; state updated&quot;]</code></pre>
+    G --&gt;|allowed| YES[&quot;surfaced; state updated&quot;]</code></pre></details></figure>
 <p>The <code>Delete</code> branch of the AUDN verdict is the one to
 watch: an LLM comparing a new fragment against similar existing ones may
 decide the correct action is to remove the old one.</p>
@@ -454,7 +454,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

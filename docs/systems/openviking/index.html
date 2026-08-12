@@ -204,7 +204,7 @@ authorization:</p>
 <code>user_space</code>, so "about me" and "about a peer" are one
 addressing scheme rather than two code paths.</p>
 <p>Retrieval lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Q[&quot;TypedQuery + RequestContext&lt;br/&gt;&lt;i&gt;tenant, permissions&lt;/i&gt;&quot;] --&gt; DIR[&quot;resolve start directories&lt;br/&gt;&lt;i&gt;explicit target_dirs, or defaults by context_type&lt;/i&gt;&quot;]
     DIR --&gt; EMB[&quot;embed the query &lt;b&gt;once&lt;/b&gt;&lt;br/&gt;&lt;i&gt;dense + optional sparse&lt;/i&gt;&quot;]
     EMB --&gt; WALK[&quot;recursive directory walk&lt;br/&gt;QUICK or THINKING&lt;br/&gt;&lt;i&gt;THINKING adds a rerank&lt;/i&gt;&quot;]
@@ -214,7 +214,7 @@ addressing scheme rather than two code paths.</p>
     BL --&gt; R[&quot;QueryResult&lt;br/&gt;&lt;i&gt;matched_contexts, searched_directories&lt;/i&gt;&quot;]
 
     style QUO fill:#e7efe9,stroke:#3d6b59
-    style R fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style R fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Two details worth taking. <strong>Per-type quotas</strong> stop one
 memory kind from filling the budget, which is the same problem <a
 href="../../patterns/source-diverse-context/">source-diverse context</a>
@@ -253,7 +253,7 @@ filtering.</li>
 <li><code>benchmark/</code>: LoCoMo, LongMemEval, tau2, SkillsBench,
 RAG, cuVS, and vector-DB performance harnesses.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Sessions[&quot;Session messages&quot;] --&gt; Extract[&quot;extract_loop /&lt;br/&gt;memory_updater&quot;]
   Extract --&gt; Isolation[&quot;MemoryIsolationHandler&lt;br/&gt;(user_space, peers)&quot;]
   Isolation --&gt; Files[&quot;Memory files&lt;br/&gt;(L0/L1/L2 +&lt;br/&gt;links)&quot;]
@@ -263,7 +263,7 @@ RAG, cuVS, and vector-DB performance harnesses.</li>
   Index --&gt; HR
   HR --&gt; Quota[&quot;type_quota_recall&quot;]
   Quota --&gt; Hot[&quot;hotness_score blend&quot;]
-  Hot --&gt; Result[&quot;QueryResult&quot;]</code></pre>
+  Hot --&gt; Result[&quot;QueryResult&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3
@@ -635,7 +635,16 @@ href="https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af89
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

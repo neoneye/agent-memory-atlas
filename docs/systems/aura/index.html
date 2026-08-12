@@ -262,7 +262,7 @@ contradicting value is appended to a list and the belief does not move.
 That is a strong stance, and its failure mode is the obvious one — a
 wrong belief that reached 0.75 can only be dislodged by
 <code>reconcile</code>, which nothing calls automatically.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;memory write&quot;] --&gt; P{&quot;which path?&quot;}
     P --&gt;|&quot;action executor&quot;| GW[&quot;MemoryWriteGateway&quot;]
     P --&gt;|&quot;legacy add_memory&quot;| FA[&quot;MemoryFacade&quot;]
@@ -283,7 +283,7 @@ wrong belief that reached 0.75 can only be dislodged by
     style DENY fill:#14532d,color:#fff
     style RB fill:#14532d,color:#fff
     style GONE fill:#7f1d1d,color:#fff
-    style X fill:#7f1d1d,color:#fff</code></pre>
+    style X fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <p>Green is the behaviour worth copying; red is where the epistemics
 leak out.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -896,7 +896,16 @@ href="https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

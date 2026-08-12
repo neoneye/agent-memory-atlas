@@ -125,7 +125,7 @@ conversation ID, reason, and relevant version identifiers. Derive
 counters and dashboards from events. Retention and privacy policies
 still apply; append-only means application code does not casually
 rewrite history, not that data can never be erased.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;write / correct /&lt;br/&gt;reject&quot;] --&gt; S[&quot;canonical memory&lt;br/&gt;state&quot;]
     W --&gt; M[&quot;memory_mutation&lt;br/&gt;events&quot;]
     R[&quot;retrieval&quot;] --&gt; S
@@ -133,7 +133,7 @@ rewrite history, not that data can never be erased.</p>
     S --&gt; A[&quot;answer&quot;]
     M --&gt; D[&quot;counters · dashboards ·&lt;br/&gt;investigations&quot;]
     RE --&gt; D
-    D -. &quot;never read back as truth&quot; .-x S</code></pre>
+    D -. &quot;never read back as truth&quot; .-x S</code></pre></details></figure>
 <p>The dashed edge is the whole discipline: events flow outward into
 observability and never back into belief.</p>
 <h2 id="why-it-works">Why it works</h2>
@@ -544,7 +544,16 @@ tombstone</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

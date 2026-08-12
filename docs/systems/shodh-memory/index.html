@@ -195,7 +195,7 @@ them.</p>
 <p>Nothing is a "claim" that can be true or false. A memory is an
 experience; a belief is an edge weight. That is a coherent position and
 it is why most of the atlas's seven marks do not apply.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;text&quot;] --&gt; NER[&quot;GLiNER NER, 141 fine labels&lt;br/&gt;sigmoid 0.3, confidence floor 0.6&quot;]
     T --&gt; Y[&quot;YAKE keywords, in parallel&quot;]
     NER --&gt; G14[&quot;14-gate entity filter&lt;br/&gt;blocklist, numerics, VERB_NOISE, fragments&quot;]
@@ -205,7 +205,7 @@ it is why most of the atlas's seven marks do not apply.</p>
     UP[&quot;POST /api/memory/upsert&lt;br/&gt;and webhook traffic&quot;] -.-&gt;|&quot;bypasses everything above&quot;| E
     E --&gt; H[&quot;Hebbian strengthening on co-activation&quot;]
     H --&gt; D[&quot;hybrid decay: exponential under 3 days, power-law after&quot;]
-    D --&gt; P[&quot;pruned below weight threshold&quot;]</code></pre>
+    D --&gt; P[&quot;pruned below weight threshold&quot;]</code></pre></details></figure>
 <p>The dotted arrow is the audit's finding 2.4, drawn where the code
 puts it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -530,7 +530,16 @@ harness was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

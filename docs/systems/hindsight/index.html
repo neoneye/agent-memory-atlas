@@ -146,7 +146,7 @@ prompt  -&gt; recall + reflections + disposition -&gt; reflect response</code></
 bottom-up, automatically maintained claims. Reflections are user-curated
 documents. This avoids collapsing every derived artifact into one
 ambiguous “memory” type.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Src[&quot;Source document&quot;] --&gt; Scr[&quot;Screen&quot;] --&gt; Chk[&quot;Chunk&quot;] --&gt; Emb[&quot;Embed&quot;]
     Emb --&gt; Fact[(&quot;World / experience fact&quot;)]
     Chk --&gt; Obs[(&quot;Observation&lt;br/&gt;create · update · history&quot;)]
@@ -157,7 +157,7 @@ ambiguous “memory” type.</p>
     Q --&gt; A4[&quot;temporal&quot;] --&gt; F
     Fact --&gt; A1
     Obs --&gt; A3
-    F --&gt; Out[&quot;Context&quot;]</code></pre>
+    F --&gt; Out[&quot;Context&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The main layers are:</p>
 <ul>
@@ -466,7 +466,16 @@ href="https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -167,7 +167,7 @@ Markdown file in a vault and sets <code>promoted_at</code> and
 <code>PROMOTED</code>, <code>ARCHIVED</code> — and the first is the only
 one retrieval considers (<code>relationship_discovery.py:117</code>
 filters <code>status == MemoryStatus.ACTIVE</code>).</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Active: created, strength 1.0
     Active --&gt; Active: retrieved — use_count up, last_used reset, strength restored
     Active --&gt; Decaying: time since last_used, Ebbinghaus curve
@@ -176,7 +176,7 @@ filters <code>status == MemoryStatus.ACTIVE</code>).</p>
     Active --&gt; Promoted: consolidated to a Markdown vault file, promoted_to set
     Active --&gt; Archived: manual
     Promoted --&gt; [*]: the durable tier — a file a human reads
-    Pruned --&gt; [*]: gone, no record kept</code></pre>
+    Pruned --&gt; [*]: gone, no record kept</code></pre></details></figure>
 <p>The arrow that matters is <code>Decaying → Pruned</code> with nothing
 after it. Forgetting here is real deletion, not suppression, and the
 design spec's argument is partly that the current storage makes that
@@ -459,7 +459,16 @@ no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

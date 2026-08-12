@@ -167,7 +167,7 @@ into summary as buckets fill.</p>
 <code>timestamp_ref</code>, and <code>source_turn_ids</code> pointing
 back at the turns it came from.</p>
 <p>Cutting across all three is the label that matters:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     U[&quot;user typed it&quot;] --&gt; I[&quot;MemoryTaint::Internal&quot;]
     S[&quot;synced from email,&lt;br/&gt;docs, MCP&quot;] --&gt; E[&quot;MemoryTaint::ExternalSync&quot;]
     UNK[&quot;unknown, corrupt, legacy&quot;] -.-&gt;|&quot;fails closed&quot;| E
@@ -176,7 +176,7 @@ back at the turns it came from.</p>
 
     style I fill:#e7efe9,stroke:#3d6b59
     style E fill:#f4e2bd,stroke:#b8860b
-    style NO fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style NO fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Note what this state machine is <em>not</em>. It has no
 <code>Candidate</code>, no <code>Verified</code>, no
 <code>Rejected</code>. A user's mistaken belief and a user's correct one
@@ -270,7 +270,7 @@ contacts</td>
 </tr>
 </tbody>
 </table></div>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     S[Sources: chat, email, docs, MCP, Composio] --&gt; ING[memory ingest_pipeline]
     ING --&gt; SAN[memory_store safety&lt;br/&gt;secret + PII scrub, taint preserved]
     SAN --&gt; CH[(chunks + vectors + FTS5)]
@@ -281,7 +281,7 @@ contacts</td>
     Q --&gt; TR
     Q --&gt; GATE{MemoryTaint}
     GATE --&gt;|Internal| OK[external-effect tools allowed]
-    GATE --&gt;|ExternalSync| NO[subconscious gate refuses]</code></pre>
+    GATE --&gt;|ExternalSync| NO[subconscious gate refuses]</code></pre></details></figure>
 <p><strong>A large share of the primitives live elsewhere.</strong>
 <code>memory/traits.rs</code> is 169 lines of which 28 are the module
 and the rest are tests, because <code>Memory</code>,
@@ -756,7 +756,16 @@ href="https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

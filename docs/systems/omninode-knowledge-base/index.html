@@ -207,7 +207,8 @@ receipt written by the party it certifies is not evidence"</em>. That is
 a rejected-value record kept in prose, keyed by nothing and consulted by
 nothing, which is the near-miss worth naming: the store knows what it
 ruled out and has no way to be asked.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the five checks a pull request must pass, beside the three invariants nothing checks</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the five checks a pull request must pass, beside the three invariants nothing checks
+flowchart TD
   PR[&quot;pull request&quot;] --&gt; CI{&quot;validate.py — five checks&quot;}
   CI --&gt;|&quot;frontmatter vs the&lt;br/&gt;per-type discriminated union&quot;| OK
   CI --&gt;|&quot;every refs: entry resolves&quot;| OK
@@ -217,7 +218,7 @@ ruled out and has no way to be asked.</p>
   OK --&gt; STORE[(&quot;56 artifacts:&lt;br/&gt;28 adr, 15 doctrine,&lt;br/&gt;7 deep-dive, 5 pivot, 1 architecture&quot;)]
   STORE --&gt; IDX[&quot;generate_indexes.py →&lt;br/&gt;chronological, by-topic, by-type&quot;]
   STORE -.-&gt;|&quot;stated in README, checked by nothing&quot;| GAPS[&quot;accepted ⇒ an evidence file exists&lt;br/&gt;adr_id is unique&lt;br/&gt;supersedes ⇔ superseded_by&quot;]
-  GAPS -.-&gt; E0[&quot;evidence/ holds 0 artifacts&lt;br/&gt;ADR-0010 is two records&lt;br/&gt;one supersession pair, by hand&quot;]</code></pre>
+  GAPS -.-&gt; E0[&quot;evidence/ holds 0 artifacts&lt;br/&gt;ADR-0010 is two records&lt;br/&gt;one supersession pair, by hand&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no runtime. The repository is the system, and four Python
 scripts, 735 lines in total, are the enforcement:</p>
@@ -614,7 +615,16 @@ the tree.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

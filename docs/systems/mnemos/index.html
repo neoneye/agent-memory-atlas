@@ -161,7 +161,7 @@ mechanism, and this atlas has not seen another scanner do it.</p>
 into a SQLite index under <code>.mnemos/</code>,
 <code>mnemos search</code> returns chunks with their locations, and the
 agent reads the cited section rather than being handed a summary.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     F[&quot;docs, ADRs, runbooks, source&quot;] --&gt; IN[&quot;mnemos ingest --collection X&quot;]
     IN --&gt; SEC{&quot;SecretScanner&quot;}
     SEC --&gt;|&quot;match&quot;| RPT[&quot;report Rule name only —&lt;br/&gt;matched value on an unexported field,&lt;br/&gt;never serialized to the agent&quot;]
@@ -175,7 +175,7 @@ agent reads the cited section rather than being handed a summary.</p>
     STRIP --&gt; EPH[&quot;ingest the held-out copy into an ephemeral DB&quot;]
     EPH --&gt; RUN[&quot;run every query through the Retriever&quot;]
     RUN --&gt; M[&quot;HitAt1, RecallAtK, MRRAtK, ExactChunk, N&quot;]
-    M --&gt; BASE[&quot;compare to versioned baseline JSON&lt;br/&gt;(missing baseline: print without deltas)&quot;]</code></pre>
+    M --&gt; BASE[&quot;compare to versioned baseline JSON&lt;br/&gt;(missing baseline: print without deltas)&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>internal/</code> is twenty focused packages:
 <code>ingest</code>, <code>chunk</code>, <code>parse</code>,
@@ -445,7 +445,16 @@ built, and no evaluation was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

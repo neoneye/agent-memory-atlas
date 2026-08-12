@@ -122,7 +122,7 @@ pass over the returned set. Those act on one turn at a time and cannot
 express "not again for a while."</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Attach activation state to the unit, and let firing mutate it:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Q[turn] --&gt; M{&quot;relevance /&lt;br/&gt;keyword match&quot;}
     M --&gt;|no| SKIP[not injected]
     M --&gt;|yes| D{&quot;delay elapsed?&quot;}
@@ -133,7 +133,7 @@ express "not again for a while."</p>
     S --&gt;|yes| SKIP
     S --&gt;|no| FIRE[injected]
     FIRE --&gt; SET[&quot;set sticky N — stays active for N turns&lt;br/&gt;set cooldown M — cannot fire for M turns&quot;]
-    SET -.-&gt; D</code></pre>
+    SET -.-&gt; D</code></pre></details></figure>
 <p>Four independent knobs, each one integer or one flag per unit:</p>
 <ul>
 <li><strong>Sticky</strong> — having fired, remain active for the next N
@@ -268,7 +268,16 @@ noticed the behaviour.</li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

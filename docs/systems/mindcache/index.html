@@ -191,7 +191,8 @@ any row in the cluster.</p>
 preference, a fact or an episode is written once and remains equally
 retrievable forever, which makes the decision path the only place in the
 system where a claim can stop being true.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — where a decision's status is applied, and what the read path never sees again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: where a decision&#39;s status is applied, and what the read path never sees again
+flowchart TD
   CONV[&quot;conversation turn&quot;] --&gt; DEN[&quot;input_denoiser&quot;]
   DEN --&gt; EX[&quot;LLM extraction into a Pydantic schema:&lt;br/&gt;reasoning step, then user / fact / epis / decision&quot;]
   EX --&gt; TREE[(&quot;topic tree — reorganized:&lt;br/&gt;split, merge, collapse, summarize&quot;)]
@@ -205,7 +206,7 @@ system where a claim can stop being true.</p>
   LIVE --&gt; RC
   TREE --&gt; RC
   RC -.-&gt;|&quot;before every cache build&quot;| REP[&quot;repair: re-anchor topic_id IS NULL&lt;br/&gt;by argmax, no similarity floor&quot;]
-  REP -.-&gt; TREE</code></pre>
+  REP -.-&gt; TREE</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <ul>
 <li><strong><code>Memory_extract/</code></strong> —
@@ -676,7 +677,16 @@ checked by reading and by parsing the JSON.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

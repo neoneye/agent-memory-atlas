@@ -204,7 +204,7 @@ href="../../patterns/promotion-between-tiers/">promotion between
 tiers</a> driven by use rather than by a scheduler.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     J[&quot;jot() / ingest()&quot;] --&gt; N[&quot;stability = base by origin&lt;br/&gt;episodic 7d, curated 30d&quot;]
     N --&gt; A[&quot;active&quot;]
     A --&gt;|&quot;recall() hit&quot;| R[&quot;stability x 1.5&lt;br/&gt;capped at 10x base&quot;]
@@ -217,7 +217,7 @@ thing becomes a belief, and how it stops being one</h3>
     C --&gt;|&quot;purge()&quot;| D
     D -.-&gt;|&quot;nothing records the value,&lt;br/&gt;so re-jotting re-admits it&quot;| J
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The loop on the left is the design's point: <strong>nothing leaves
 the store because it decayed.</strong> The only edge out is
 <code>purge()</code>, and it is a separate deliberate call. The dashed
@@ -563,7 +563,16 @@ href="https://github.com/acdesigntech/memory-project/commit/992dc090b347f3197631
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

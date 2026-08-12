@@ -208,7 +208,7 @@ module id <code>1_memory</code>, maintaining a rolling summary in chat
 metadata from one of several sources (a main-API call, WebLLM
 in-browser, or an Extras server).</li>
 </ul>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     U[User authors entries] --&gt; LB[(worlds/*.json lorebooks)]
     C[Chat messages] --&gt; SC[scan window&lt;br/&gt;depth-bounded]
     LB --&gt; SC
@@ -221,7 +221,7 @@ in-browser, or an Extras server).</li>
     BUD --&gt; P[Prompt]
     C --&gt; SUM[summarize extension&lt;br/&gt;rolling summary]
     SUM --&gt; MD[(chat metadata)]
-    MD --&gt; P</code></pre>
+    MD --&gt; P</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to be running:</strong> the SillyTavern server.
@@ -567,7 +567,16 @@ href="https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

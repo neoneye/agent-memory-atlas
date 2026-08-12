@@ -157,7 +157,7 @@ unchanged. The interesting engineering is in what happens when it breaks
 and dense retrieval fused with reciprocal rank fusion, and the winning
 <strong>original passages</strong> are handed to whatever LLM the agent
 already uses. Fidelis never rewrites them.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     N[&quot;~/notes markdown, Claude sessions&quot;] --&gt; W[&quot;fidelis watch — auto-ingest&quot;]
     W --&gt; WR{&quot;write succeeds?&quot;}
     WR --&gt;|&quot;Ollama or mem0 unreachable&quot;| DQ[&quot;JSONL dead-letter queue&lt;br/&gt;~/.cogito/queue, MAX_ATTEMPTS = 5&quot;]
@@ -171,7 +171,7 @@ already uses. Fidelis never rewrites them.</p>
     P --&gt; SC[&quot;Fidelis Scaffold:&lt;br/&gt;140–180-token system prompt,&lt;br/&gt;parameterised by qtype and&lt;br/&gt;retrieval-confidence score&quot;]
     SC --&gt; HEDGE[&quot;calibrated hedge invitation:&lt;br/&gt;&#39;If retrieval doesn&#39;t contain the answer,&lt;br/&gt;respond exactly: I cannot answer this&lt;br/&gt;from the retrieved memory.&#39;&quot;]
     SC --&gt; LLM[&quot;the agent&#39;s own LLM&quot;]
-    OPT[&quot;optional flagship tier&quot;] -.-&gt;|&quot;escalates ~80% of queries&lt;br/&gt;against an intended ~10%&quot;| RRF</code></pre>
+    OPT[&quot;optional flagship tier&quot;] -.-&gt;|&quot;escalates ~80% of queries&lt;br/&gt;against an intended ~10%&quot;| RRF</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/fidelis/</code> is about twenty modules:
 <code>recall</code>, <code>recall_b</code>, <code>recall_hybrid</code>,
@@ -591,7 +591,16 @@ from the repository's own committed evidence files.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

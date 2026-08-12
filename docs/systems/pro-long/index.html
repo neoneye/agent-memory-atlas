@@ -205,7 +205,8 @@ Ship floats to ceiling of water region. …
 is a trust state kept in prose by the memory's own author, read by
 nothing, enforced by nothing, and lost entirely in the stateless
 arm.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how the master log reaches the agent, and where an agent-written byte costs real history</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how the master log reaches the agent, and where an agent-written byte costs real history
+flowchart TD
   ENV[&quot;ARC-AGI-3 environment&quot;] --&gt;|&quot;board after each action&quot;| MASTER[(&quot;logs.txt on the host&lt;br/&gt;append-only, never rewritten&quot;)]
   AGENT[&quot;coding agent (fresh call each turn)&quot;] --&gt;|&quot;[PLAN] block&quot;| MASTER
   MASTER --&gt; W{&quot;--log-window&quot;}
@@ -215,7 +216,7 @@ arm.</p>
   SB --&gt;|&quot;grep, python, Read&quot;| AGENT
   AGENT --&gt;|&quot;writes notes.md, helpers&quot;| SB
   SB -.-&gt;|&quot;agent bytes inflate the offset,&lt;br/&gt;so the next sync skips real log&quot;| GAP[&quot;history the agent never receives&lt;br/&gt;— no checksum, no warning&quot;]
-  AGENT --&gt;|&quot;actions.json&quot;| ENV</code></pre>
+  AGENT --&gt;|&quot;actions.json&quot;| ENV</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Two backends implement one interface.
 <code>prolong_agent/agent/base.py</code> (190 lines) holds session-state
@@ -706,7 +707,16 @@ master, so the defect is latent rather than realised.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

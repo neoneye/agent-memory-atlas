@@ -179,7 +179,7 @@ section 9.</p>
 counter-arguments. Recall surfaces it, the agent must answer it, and the
 answer is recorded along with whether the resulting action
 succeeded.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     CL[&quot;create_learning(type=&#39;scar&#39;)&quot;] --&gt; V{&quot;validateScar&quot;}
     V --&gt;|&quot;no severity, or fewer than 2 counter_arguments&quot;| REJ[&quot;write refused, errors returned&quot;]
     V --&gt;|ok| INS[&quot;gitmem_learnings row&lt;br/&gt;counter_arguments folded into the embedding text&quot;]
@@ -196,7 +196,7 @@ succeeded.</p>
     HK --&gt;|confirmed| GO[&quot;allowed&quot;]
     GO --&gt; U[&quot;gitmem_scar_usage:&lt;br/&gt;reference_type explicit/implicit/acknowledged/refuted/none,&lt;br/&gt;surfaced_at, acknowledged_at, referenced, execution_successful&quot;]
     RM[&quot;the same mistake happens again&quot;] --&gt; RMF[&quot;repeat_mistake = true,&lt;br/&gt;related_scar_id, repeat_mistake_details&quot;]
-    RMF --&gt; AN[&quot;analytics: report the scars that failed to prevent recurrence&quot;]</code></pre>
+    RMF --&gt; AN[&quot;analytics: report the scars that failed to prevent recurrence&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> splits into <code>tools</code> (the MCP surface),
 <code>schemas</code> (Zod input schemas per tool),
@@ -542,7 +542,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

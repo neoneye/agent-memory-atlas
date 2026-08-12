@@ -182,7 +182,7 @@ materials, spelled out per path in <code>LICENSE.md</code>.</p>
 <p>A page's standing is four independent axes that a machine may lower
 and only a judgement may raise. The evidence ladder is the one this
 atlas cares about.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; signal: intake from a source
     signal --&gt; single_source: one source supports it
     single_source: single-source
@@ -199,7 +199,7 @@ atlas cares about.</p>
         a maintenance list and changes
         no axis. Nothing is promoted
         because a check passed.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p><code>authoring_status</code>
 (<code>unassessed → outline → drafted → reviewed</code>) runs beside it
 and may be downgraded <em>"when a regression, source invalidation, or
@@ -727,7 +727,16 @@ the exit codes are measured, not read.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

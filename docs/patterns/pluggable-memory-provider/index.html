@@ -146,7 +146,7 @@ Write        sync_turn(user, assistant, scope)
 Governance   forget(scope | id) -&gt; result               # &lt;-- usually missing
              scope on EVERY call                        # &lt;-- usually missing
              capabilities() -&gt; what this provider actually supports</code></pre>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     User[&quot;User: forget me&quot;] --&gt; Host[&quot;Host runtime&quot;]
     Host --&gt; Built[&quot;Built-in memory&quot;]
     Host --&gt; Iface[&quot;MemoryProvider&lt;br/&gt;interface&quot;]
@@ -154,7 +154,7 @@ Governance   forget(scope | id) -&gt; result               # &lt;-- usually miss
     Iface --&gt; P2[&quot;Hosted service&quot;]
     Iface --&gt; P3[&quot;Graph backend&quot;]
     Host -.-&gt;|&quot;no delete hook&lt;br/&gt;= request stops here&quot;| Iface
-    Built -.-&gt;|&quot;mirrored write,&lt;br/&gt;no reconciliation&quot;| P1</code></pre>
+    Built -.-&gt;|&quot;mirrored write,&lt;br/&gt;no reconciliation&quot;| P1</code></pre></details></figure>
 <p>The dotted edges are where real implementations break.</p>
 <h2 id="why-it-works">Why it works</h2>
 <p>A narrow interface at a real seam lets the host own conversation,
@@ -475,7 +475,16 @@ tombstone</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -178,7 +178,7 @@ embedding namespace, "the primary scoping mechanism for V2 search".</li>
 classifier improves, the source is still there to re-derive from. That
 is a property the <a href="../midas/">verbatim-recall</a> systems get by
 refusing extraction entirely, and CORE gets by keeping both.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     E[&quot;Episode — original content kept as source of truth&quot;] --&gt; X[&quot;extract statements&quot;]
     X --&gt; A{&quot;aspect classification, 12 values&quot;}
     A --&gt;|&quot;Identity, Knowledge, Decision,&lt;br/&gt;Event, Problem, Relationship&quot;| T[&quot;decompose to subject-predicate-object&lt;br/&gt;→ graph store&quot;]
@@ -189,7 +189,7 @@ refusing extraction entirely, and CORE gets by keeping both.</p>
     C --&gt;|no| CUR[&quot;current&quot;]
     I --&gt; CUR
     CUR --&gt; R[&quot;read: WHERE s.invalidAt IS NULL&quot;]
-    I -.-&gt;|&quot;history query&quot;| H[&quot;previously preferred REST&quot;]</code></pre>
+    I -.-&gt;|&quot;history query&quot;| H[&quot;previously preferred REST&quot;]</code></pre></details></figure>
 <p>The dotted edge is what makes the chain worth building: the
 superseded statement is not merely retained, it is reachable.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -517,7 +517,16 @@ installed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

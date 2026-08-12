@@ -204,7 +204,7 @@ recall hits against the canonical list. Visibility is enforced on the
 read path, which is the part several larger systems here get wrong.</p>
 <p>For a rejection: it ages out after three more rejections, or is wiped
 by the next success. There is no way to make one permanent.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Passage: memorize embeds the text under a content derived stable id
     Passage --&gt; Recalled: vector search, optional rerank, then canonicalisation
     Recalled --&gt; Passage: hidden and deleted state applied on the way out
@@ -217,7 +217,7 @@ by the next success. There is no way to make one permanent.</p>
     note right of Avoided
         Keyed on the proposal type, not the value.
         Durable, consulted, and three deep.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A desktop application. <code>packages/memory/</code> holds the
 drivers; <code>packages/protocol/</code> holds a <strong>memory
@@ -461,7 +461,16 @@ href="https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875c
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

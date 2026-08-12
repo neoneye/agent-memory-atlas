@@ -180,7 +180,7 @@ and shows the approver a sample, while ZeroStack approves the
 the second, because approving "may this tool run against this target" is
 not inspecting memory content — and the permission checker can be
 <code>None</code>, in which case the gate is skipped entirely.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph Store[&quot;MemoryStore { root, project, today }&quot;]
       G[(&quot;MEMORY.md&lt;br/&gt;GLOBAL — follows the agent&lt;br/&gt;across every project&quot;)]
       P[(&quot;project/SCRATCHPAD.md&lt;br/&gt;project/notes/*.md&lt;br/&gt;project/daily/YYYY-MM-DD.md&lt;br/&gt;scoped by slug, so projects&lt;br/&gt;don&#39;t pollute each other&quot;)]
@@ -193,7 +193,7 @@ not inspecting memory content — and the permission checker can be
     Op --&gt; AW[&quot;atomic_write&lt;br/&gt;temp file, then rename&quot;]
     AW --&gt; Store
     Store --&gt;|&quot;source=list composes&lt;br/&gt;global + current project&quot;| Inj[&quot;injection capped at 32 KB&quot;]
-    Op -.-&gt;|&quot;edit without old_str&lt;br/&gt;deletes a whole note&quot;| Bak</code></pre>
+    Op -.-&gt;|&quot;edit without old_str&lt;br/&gt;deletes a whole note&quot;| Bak</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Files under a store root, and nothing to run. The layout is
 <code>MEMORY.md</code> at the root, then a per-project directory holding
@@ -405,7 +405,16 @@ href="https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa6
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

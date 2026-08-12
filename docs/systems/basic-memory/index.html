@@ -147,13 +147,13 @@ owned by their source note.</p>
 <p>The direction also works in reverse: a file watcher parses external
 edits and reconciles projections. Database state is not allowed to
 silently outrank the file.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     H[&quot;Human editor&quot;] --&gt;|&quot;edits the file directly&quot;| F[(&quot;Canonical Markdown note&lt;br/&gt;the source of truth&quot;)]
     A[&quot;Agent via MCP/API&quot;] --&gt;|&quot;create · replace · edit · move · delete&lt;br/&gt;each a distinct operation&quot;| F
     F --&gt;|&quot;file watcher reconciles&lt;br/&gt;out-of-band edits&quot;| Idx[(&quot;Index: entity · observation · relation&quot;)]
     Idx --&gt; R[&quot;FTS5 / tsvector&lt;br/&gt;+ optional semantic chunks&lt;br/&gt;+ graph context, score-fused&quot;]
     Idx -.-&gt;|&quot;stable id survives a move&quot;| Idx
-    F -.-&gt;|&quot;correction is a file edit,&lt;br/&gt;then a transactional reindex&quot;| Idx</code></pre>
+    F -.-&gt;|&quot;correction is a file edit,&lt;br/&gt;then a transactional reindex&quot;| Idx</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Basic Memory has API, MCP, and CLI entrypoints, each with a
 composition root. Only those roots read global configuration; downstream
@@ -454,7 +454,16 @@ href="https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d8
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -244,7 +244,7 @@ deleted except by wiping an owner entirely.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Python 3, Django, MIT-licensed. <strong>No commit since
 2024-10-27.</strong></p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     E[exchange] --&gt; D[MemoryStorageDriver]
     D --&gt; ST[LocalStorage&lt;br/&gt;Django model]
     D --&gt;|enable_longMemory| SUM[MemorySummary&lt;br/&gt;LLM] --&gt; IMP[MemoryImportance&lt;br/&gt;LLM, 1–10] --&gt; LT[MilvusStorage]
@@ -255,7 +255,7 @@ deleted except by wiping an owner entirely.</p>
     RS --&gt; P[Prompt]
     RL --&gt; P
     BS[BaseStorage ABC&lt;br/&gt;search / pageQuery / save / clear] -.contract.-&gt; ST
-    BS -.contract.-&gt; LT</code></pre>
+    BS -.contract.-&gt; LT</code></pre></details></figure>
 <p><strong>Zep is present in the tree and is not a memory
 backend.</strong> <code>apps/chatbot/memory/zep/zep_memory.py</code>
 (168 lines) exports a <code>ChatHistroy</code> class — the spelling is
@@ -665,7 +665,16 @@ href="https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

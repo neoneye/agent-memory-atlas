@@ -201,7 +201,7 @@ chain:</p>
 bi-temporality was retrofitted is recoverable rather than silently
 assumed.</p>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     S[&quot;session&quot;] --&gt; CL[&quot;consolidator clusters&lt;br/&gt;related material&quot;]
     CL --&gt; ONE[&quot;ONE LLM call per cluster&lt;br/&gt;emits a lesson and, optionally, a procedure&quot;]
     ONE --&gt; LK[&quot;links generated between&lt;br/&gt;&lt;i&gt;surfaced ids only&lt;/i&gt;&quot;]
@@ -209,7 +209,7 @@ assumed.</p>
     RF --&gt; VE[&quot;vote_events appended&lt;br/&gt;vote_score derived&quot;]
     VE --&gt; DEP[&quot;deprecation flips status&lt;br/&gt;&lt;i&gt;the row is retained&lt;/i&gt;&quot;]
 
-    style ONE fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style ONE fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The highlighted step is invariant 21, cited by number in the source:
 <strong>at most one model call per cluster even when it produces both a
 lesson and a procedure.</strong> The cost bound is written down as a
@@ -234,7 +234,7 @@ evolution.</li>
 <li><code>notes-renderer.ts</code>, <code>profile-renderer.ts</code>,
 <code>memory-context-provider.ts</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Sess[&quot;Session&quot;] --&gt; Cons[&quot;consolidator: cluster&quot;]
   Cons --&gt;|&quot;1 LLM call (inv. 21)&quot;| Lesson[&quot;lesson&quot;]
   Cons --&gt;|same call| Proc[&quot;procedure&lt;br/&gt;(advisory,&lt;br/&gt;inv. 20)&quot;]
@@ -248,7 +248,7 @@ evolution.</li>
   Ctx --&gt; Refl[&quot;vote-aware reflection&lt;br/&gt;(separate slot, KV&lt;br/&gt;cache untouched)&quot;]
   Refl --&gt; VE[&quot;vote_events (append-only)&quot;]
   VE --&gt; Score[&quot;derived vote_score&quot;]
-  Score --&gt; Retr</code></pre>
+  Score --&gt; Retr</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="invariants-as-referenced-artifacts">Invariants as referenced
@@ -519,7 +519,16 @@ href="https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

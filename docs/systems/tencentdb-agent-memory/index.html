@@ -165,7 +165,7 @@ scenes.</li>
 database: it transforms conversational evidence into increasingly
 stable, compact files and records.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   OpenClaw[&quot;OpenClaw hooks&quot;] --&gt; Capture[&quot;Auto capture&quot;]
   Hermes[&quot;Hermes gateway&quot;] --&gt; Capture
   Capture --&gt; L0[&quot;L0 conversation&lt;br/&gt;JSONL&quot;]
@@ -179,7 +179,7 @@ stable, compact files and records.</p>
   Scene --&gt; Prompt
   Persona --&gt; Prompt
   Tools[&quot;Large&lt;br/&gt;tool output&quot;] --&gt; Offload[&quot;refs + summaries +&lt;br/&gt;Mermaid maps&quot;]
-  Offload --&gt; Prompt</code></pre>
+  Offload --&gt; Prompt</code></pre></details></figure>
 <p>Storage is pluggable through <code>IMemoryStore</code>. SQLite uses
 WAL, FTS5, and <code>sqlite-vec</code>; Tencent Cloud VectorDB provides
 the remote alternative. JSONL and Markdown retain human-readable
@@ -489,7 +489,16 @@ href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e6
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -213,7 +213,7 @@ while <code>delete_file_by_name</code> calls
 <code>session.delete(memory)</code> and removes the row outright. The
 state is declared and unused.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     UI[&quot;lpm_frontend&lt;br/&gt;Next.js&quot;] --&gt; API[&quot;Flask kernel&lt;br/&gt;lpm_kernel/api&quot;]
     API --&gt; L0[&quot;L0: document + chunk&lt;br/&gt;raw_content retained&quot;]
     L0 --&gt; CH[(&quot;ChromaDB&lt;br/&gt;document + chunk collections&quot;)]
@@ -222,7 +222,7 @@ state is declared and unused.</p>
     V --&gt; L2[&quot;L2: data synthesis&lt;br/&gt;subjective, preference,&lt;br/&gt;diversity, selfQA&quot;]
     L0 --&gt; L2
     L2 --&gt; T[&quot;LoRA SFT → DPO →&lt;br/&gt;merge_lora_weights → GGUF&quot;]
-    T --&gt; M[(&quot;local model&quot;)]</code></pre>
+    T --&gt; M[(&quot;local model&quot;)]</code></pre></details></figure>
 <ul>
 <li><strong>Kernel</strong> is Flask (<code>lpm_kernel/app.py</code>,
 <code>lpm_kernel/api/domains/</code>), with SQLite behind
@@ -607,7 +607,16 @@ href="https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

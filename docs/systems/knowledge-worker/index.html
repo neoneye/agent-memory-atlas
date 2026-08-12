@@ -153,7 +153,7 @@ and edges, each carrying a confidence. A validator gates them into the
 graph. Analytics then report what matters, what connects and what is
 weak, and a context export feeds a filtered subset back to an AI
 session.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;chats, notes, decisions, sources&quot;] --&gt; EX[&quot;extractor — LLM proposes nodes and edges&quot;]
     EX --&gt; V{&quot;validator&quot;}
     V --&gt;|&quot;id malformed&quot;| RJ1[&quot;rejected: id_format&quot;]
@@ -173,7 +173,7 @@ session.</p>
     AE --&gt; G
     G --&gt; AN[&quot;audit: analytics, read-only,&lt;br/&gt;provenance edges kept separate&lt;br/&gt;from semantic analytics&quot;]
     G --&gt; XP[&quot;export_context — decisions filtered to&lt;br/&gt;confidence != low, others marked&quot;]
-    V --&gt; MAN[&quot;manifest: accepted / rejected / demoted,&lt;br/&gt;each with its reason&quot;]</code></pre>
+    V --&gt; MAN[&quot;manifest: accepted / rejected / demoted,&lt;br/&gt;each with its reason&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>mygraph/</code> is a CLI-shaped package: <code>extractor</code>
 and <code>extractor_openai</code>, <code>validator</code>,
@@ -427,7 +427,16 @@ installed, and no check was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -209,7 +209,7 @@ by offset.</li>
 <li><code>repair</code>, <code>parse</code>, <code>records</code> —
 tolerance for partial writes.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   N[&quot;note &#39;...&#39;&quot;] --&gt; L[&quot;LOG.txt append&quot;]
   L --&gt; P{&quot;is a&lt;br/&gt;block&lt;br/&gt;due?&quot;}
   P --&gt;|yes| Req[&quot;print compression&lt;br/&gt;request&quot;]
@@ -221,7 +221,7 @@ tolerance for partial writes.</li>
   T --&gt; C
   C --&gt; Out[&quot;budgeted context:&lt;br/&gt;verbatim recent, collapsed&lt;br/&gt;ancient&quot;]
   F[&quot;forget lo-hi&quot;] --&gt; Drop[&quot;blank&lt;br/&gt;the summary&quot;]
-  Drop --&gt; A</code></pre>
+  Drop --&gt; A</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="consolidation-with-no-scheduler">Consolidation with no
@@ -535,7 +535,16 @@ href="https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

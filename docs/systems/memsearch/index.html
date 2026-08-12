@@ -164,7 +164,7 @@ watcher indexes them into Milvus. Recall proceeds in three widening
 layers. Alongside the episodic journals, durable <code>PROJECT.md</code>
 and <code>USER.md</code> notes hold the semantic layer, and repeated
 workflows can be distilled into a third, procedural one.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     C[&quot;conversation turn&quot;] --&gt; J[&quot;.memsearch/memory/YYYY-MM-DD.md&quot;]
     J --&gt; W[&quot;file watcher&quot;]
     W --&gt; H{&quot;SHA-256 content hash changed?&quot;}
@@ -179,7 +179,7 @@ workflows can be distilled into a third, procedural one.</p>
     ASK[&quot;&#39;make a skill out of what we just did&#39;&quot;] --&gt; CAND
     CAND -.-&gt;|&quot;inert — never written to the agent&#39;s&lt;br/&gt;skill directory by this module&quot;| AG[&quot;agent skills directory&quot;]
     INS[&quot;human runs install&quot;] --&gt; AG
-    AG --&gt; SLASH[&quot;a real /-command, Agent Skills standard&quot;]</code></pre>
+    AG --&gt; SLASH[&quot;a real /-command, Agent Skills standard&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/memsearch/</code> is compact and legible:
 <code>chunker</code>, <code>scanner</code>, <code>watcher</code>,
@@ -452,7 +452,16 @@ installed, and no evaluation was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

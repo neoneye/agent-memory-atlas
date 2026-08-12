@@ -186,7 +186,7 @@ a <em>character</em> profile), an <code>agent_id</code>, or a
 Anything written without a character lands in a shared
 <code>events</code> scope, and <code>search()</code> always includes
 that scope alongside the requested one.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;add(messages, …)&quot;] --&gt; SC{&quot;user_id, agent_id or run_id given?&quot;}
     SC --&gt;|none| ERR[&quot;Mem0ValidationError with a suggestion:&lt;br/&gt;&#39;Pass user_id (a character/user profile),&lt;br/&gt;agent_id, or run_id to scope the memory.&#39;&quot;]
     SC --&gt;|&quot;user_id&quot;| CH[&quot;metadata + filters user_id = character&quot;]
@@ -200,7 +200,7 @@ that scope alongside the requested one.</p>
     M --&gt; CAP[&quot;merged, capped to limit&quot;]
     M2 --&gt; CAP
     V[&quot;video&quot;] --&gt; FR[&quot;frames → captions → vector index&quot;]
-    FR --&gt; Q</code></pre>
+    FR --&gt; Q</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The package itself is small — <code>telemem/mem0.py</code> is the
 drop-in surface, <code>configs.py</code>, <code>utils.py</code>,
@@ -528,7 +528,16 @@ installed, no benchmark was run, and the tech report was not read.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -135,7 +135,7 @@ engine.</p>
 usually:</p>
 <pre class="python"><code>{&quot;content&quot;: &lt;string or JSON-serializable structured object&gt;}</code></pre>
 <p>The memory lifecycle has two main modes:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     A[&quot;agent&quot;] --&gt;|&quot;manage_memory tool&quot;| PUT[&quot;put / delete&quot;]
     A --&gt;|&quot;search_memory tool&quot;| SRCH[&quot;search&quot;]
     PUT --&gt; ST
@@ -150,7 +150,7 @@ usually:</p>
     ST[(&quot;BaseStore&lt;br/&gt;namespaced by tuple&quot;)]
 
     style A fill:#e7efe9,stroke:#3d6b59
-    style MM fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style MM fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Two owners, one store. The <strong>agent</strong> decides in the hot
 path and a <strong>model</strong> decides in the background, both
 writing through the same <code>BaseStore</code> with nothing arbitrating
@@ -166,14 +166,14 @@ can quietly restate something the agent deleted through the tool.</p>
 background manager path.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Runtime shape:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Agent[&quot;LangGraph&lt;br/&gt;agent&quot;] --&gt; Tools[&quot;LangMem&lt;br/&gt;tools&quot;]
   Tools --&gt; Store[&quot;LangGraph&lt;br/&gt;BaseStore&quot;]
   Conversation[&quot;Conversation&quot;] --&gt; Manager[&quot;MemoryManager&quot;]
   Manager --&gt; Trustcall[&quot;trustcall&lt;br/&gt;extractor&quot;]
   Manager --&gt; Store
   App[&quot;App thread&quot;] --&gt; Reflection[&quot;ReflectionExecutor&quot;]
-  Reflection --&gt; Manager</code></pre>
+  Reflection --&gt; Manager</code></pre></details></figure>
 <p>Key dependency choices:</p>
 <ul>
 <li><code>BaseStore</code> provides persistence and search.</li>
@@ -457,7 +457,16 @@ href="https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccc
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

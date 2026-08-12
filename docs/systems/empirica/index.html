@@ -180,7 +180,7 @@ claiming to know things it never looked up.</p>
 agent knows it does not know is a first-class row with its own
 resolution, so a session can hand over its open questions rather than
 only its answers.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Open: artifact recorded, tagged intuition / search / mixed
     Open --&gt; Resolved_stale: was true when written, has since aged out
     Open --&gt; Resolved_superseded: replaced by a NAMED artifact, superseded_by set
@@ -189,7 +189,7 @@ only its answers.</p>
     Open --&gt; Unclassified: resolution_kind NULL — not classified, never coerced
     Open --&gt; Deprecated: relevance score decays, tau 30 days modulated by longevity
     Deprecated --&gt; Open: high impact or recent reinforcement lifts it back
-    Resolved_retracted --&gt; [*]: the row the old vocabulary could not express</code></pre>
+    Resolved_retracted --&gt; [*]: the row the old vocabulary could not express</code></pre></details></figure>
 <p>The bottom transition is the one the measurement was about: before
 the vocabulary existed, that state had no name, so in 1,268 resolutions
 it was reached once.</p>
@@ -507,7 +507,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

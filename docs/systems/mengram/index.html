@@ -169,7 +169,7 @@ creates, section 9.</p>
 facts, <code>episodes()</code> for events, <code>procedures()</code> for
 workflows. A failed episode can evolve the procedure it was linked to,
 producing a new version — and that promotion is gated.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     EP[&quot;episode with an outcome&lt;br/&gt;linked_procedure_id, failed_at_step&quot;] --&gt; EV[&quot;evolve_procedure(old → new steps)&quot;]
     EV --&gt; NA{&quot;newly_added_preconditions(old, new)&quot;}
     NA --&gt;|&quot;none added&quot;| SAFE[&quot;no new demand — cannot newly break a dependent&quot;]
@@ -183,7 +183,7 @@ producing a new version — and that promotion is gated.</p>
     SAFE --&gt; PROM[&quot;old retired, new promoted is_current = TRUE&quot;]
     SKIP --&gt; PROM
     Q[&quot;procedures(query)&quot;] --&gt; CUR[&quot;current versions only&quot;]
-    GATE -. &quot;never reaches retrieval&quot; .-&gt; CUR</code></pre>
+    GATE -. &quot;never reaches retrieval&quot; .-&gt; CUR</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>cloud/</code> holds the store and the gate, <code>api/</code>
 the service, <code>engine/</code> the memory kinds, <code>sdk/</code>
@@ -515,7 +515,16 @@ the repository's own spec was found implemented and wired into
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

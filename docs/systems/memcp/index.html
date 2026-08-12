@@ -148,7 +148,7 @@ misleading insight usually sits in a misleading neighbourhood.</p>
 causal, entity. Co-retrieval strengthens edges, disuse decays them, and
 feedback moves both the node and its edges. Retrieval picks a traversal
 by the <em>intent</em> of the question.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;memcp_remember&quot;] --&gt; SEC{&quot;secret detection — 8 regex patterns&quot;}
     SEC --&gt;|&quot;match&quot;| BLK[&quot;blocked&quot;]
     SEC --&gt;|clean| DUP{&quot;optional embedding dedup&quot;}
@@ -167,7 +167,7 @@ by the <em>intent</em> of the question.</p>
     FB[&quot;memcp_reinforce(helpful)&quot;] --&gt;|&quot;+0.1 node, +0.02 edges&quot;| N
     FBM[&quot;memcp_reinforce(misleading)&quot;] --&gt;|&quot;−0.2 node, −0.05 edges&quot;| N
     CP[&quot;memcp_consolidation_preview&quot;] --&gt; CDO[&quot;memcp_consolidate&quot;]
-    CDO --&gt; N</code></pre>
+    CDO --&gt; N</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>"3-layer delegation: <code>server.py</code> (MCP endpoints) →
 <code>tools/*.py</code> (orchestration) → <code>core/*.py</code>
@@ -469,7 +469,16 @@ section 10 are read from the test source.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

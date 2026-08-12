@@ -202,7 +202,7 @@ records every turn without deciding anything.</p>
 <p>The mechanism worth drawing is not that lifecycle, which is short. It
 is what happens to the transcript when the conversation leaves the
 process.</p>
-<pre class="mermaid"><code>sequenceDiagram
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>sequenceDiagram
     participant Conv as Conversation (local)
     participant Ctx as LLMContext
     participant Cache as CacheConnector
@@ -225,7 +225,7 @@ process.</p>
     else
         Cache--&gt;&gt;Gen: ACLAccessDeniedError
     end
-    Note over Cache,Gen: under the default DummyAccount&lt;br/&gt;every candidate resolves to team &quot;default&quot;</code></pre>
+    Note over Cache,Gen: under the default DummyAccount&lt;br/&gt;every candidate resolves to team &quot;default&quot;</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>SRE is a <strong>library</strong>, not a service.
 <code>SmythRuntime.Instance</code> boots a singleton,
@@ -870,7 +870,16 @@ addressed to a reading agent and was treated as data.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

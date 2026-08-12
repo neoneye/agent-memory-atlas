@@ -180,7 +180,7 @@ The consolidator marks the older of a near-duplicate pair
 both superseded and soft-deleted rows, and
 <code>include_superseded</code> exists for the caller that wants
 history.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;remember&quot;] --&gt; H[&quot;normalize + content_hash&quot;]
     H --&gt; Q{&quot;existing node with&lt;br/&gt;this hash?&quot;}
     Q -- &quot;yes, live&quot; --&gt; DUP[&quot;refused as duplicate&quot;]
@@ -192,7 +192,7 @@ history.</p>
     N3 --&gt; S
     C[&quot;consolidate&quot;] -- &quot;superseded_by, never DELETE&quot; --&gt; N
     D[&quot;forget&quot;] -- &quot;deleted_at&quot; --&gt; N
-    D -. &quot;hash lookup filters deleted_at IS NULL&quot; .-x Q</code></pre>
+    D -. &quot;hash lookup filters deleted_at IS NULL&quot; .-x Q</code></pre></details></figure>
 <p>The dotted edge is the finding: the value-keyed lookup exists and
 excludes the rows a deletion produced.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -467,7 +467,16 @@ is an unrelated project.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

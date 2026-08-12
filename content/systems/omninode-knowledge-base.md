@@ -114,6 +114,7 @@ which is the near-miss worth naming: the store knows what it ruled out and has n
 way to be asked.
 
 ```mermaid
+%% caption: the five checks a pull request must pass, beside the three invariants nothing checks
 flowchart TD
   PR["pull request"] --> CI{"validate.py — five checks"}
   CI -->|"frontmatter vs the<br/>per-type discriminated union"| OK

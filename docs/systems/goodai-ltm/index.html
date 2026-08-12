@@ -149,7 +149,7 @@ scores.</p>
 <p>A memory is a <strong>chunk of text with a key</strong>.
 <code>add_text</code> returns a <code>TextKeyType</code>; every
 subsequent operation on that memory takes the key back.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     ADD[&quot;add_text(text, metadata, rewrite=False)&quot;] --&gt;|&quot;returns&quot;| K([&quot;text_key&quot;])
     ADD -.-&gt;|&quot;rewrite=True routes&lt;br/&gt;the text through an LLM first&quot;| CQ
     ADD --&gt; CQ[&quot;chunk queue&quot;] --&gt; EMB[&quot;embeddings&quot;] --&gt; DB[(&quot;simple vector db&quot;)]
@@ -162,7 +162,7 @@ subsequent operation on that memory takes the key back.</p>
 
     style K fill:#e7efe9,stroke:#3d6b59
     style R3 fill:#f4e2bd,stroke:#b8860b
-    style R4 fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style R4 fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The <code>text_key</code> is the whole interface: a write hands one
 back and every later operation takes one. The two highlighted operations
 are the state machine — <code>replace_text</code> overwrites and
@@ -184,7 +184,7 @@ retrieval.</p>
 <p>A Python library, MIT licence, with no server, no daemon, no MCP
 surface and no framework binding. Its consumers are the example agents
 in <code>examples/</code>.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[add_text] --&gt; RW{rewrite?}
     RW --&gt;|yes| LLM[rewrite_model]
     RW --&gt;|no| CQ[chunk_queue]
@@ -195,7 +195,7 @@ in <code>examples/</code>.</p>
     RR --&gt; R[RetrievedMemory]
     K[text_key] --&gt; GET[get_text]
     K --&gt; REP[replace_text]
-    K --&gt; DEL[delete_text]</code></pre>
+    K --&gt; DEL[delete_text]</code></pre></details></figure>
 <p>Modules: <code>goodai/ltm/mem/</code> (<code>base.py</code>,
 <code>default.py</code>, <code>auto.py</code>, <code>chunk.py</code>,
 <code>chunk_queue.py</code>, <code>mem_foundation.py</code>,
@@ -522,7 +522,16 @@ href="https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

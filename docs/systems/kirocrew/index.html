@@ -244,7 +244,7 @@ rather than on the record.</p>
 hides it, a person can delete it from the dashboard, and the conflict
 resolver can decline a replacement. Nothing marks a value as
 <em>wrong</em>, and nothing stops the same value arriving again.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Proposed: a write arrives with a source and a confidence
     Proposed --&gt; Refused: one of seven SemanticRejectCode checks fails
     Refused --&gt; Logged: four of the seven are auditable
@@ -252,7 +252,7 @@ resolver can decline a replacement. Nothing marks a value as
     Proposed --&gt; Stored: all checks pass
     Stored --&gt; Stored: conflict resolver may decline a replacement
     Stored --&gt; Hidden: is_deleted set, by a person on the dashboard
-    Logged --&gt; Rotated: oldest rows dropped past ten thousand</code></pre>
+    Logged --&gt; Rotated: oldest rows dropped past ten thousand</code></pre></details></figure>
 <p>The loop from <code>Logged</code> back to <code>Proposed</code> is
 the finding. Every other edge is a decision the system keeps; that one
 is a decision it writes down and then does not read.</p>
@@ -688,7 +688,16 @@ subsystem, not the desktop app, the scheduler or the Apps platform.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

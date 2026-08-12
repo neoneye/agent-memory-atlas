@@ -181,7 +181,7 @@ the two can disagree if the patterns change between them, and a memory
 whose sensitivity was misjudged at write is re-judged on the way out —
 which is the safer direction, and means the stored column is doing less
 than it appears.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Q[&quot;memory_search&quot;] --&gt; Ret[&quot;retrieve: vector + lexical&lt;br/&gt;optional AND em.session_id = ?&quot;]
     Ret --&gt; Tier[&quot;Tier filter&lt;br/&gt;(NOTE: reflection and graph&lt;br/&gt;both return semantic)&quot;]
     Tier --&gt; Cls[&quot;classifyContent(hit texts)&lt;br/&gt;public · normal · sensitive · secret&quot;]
@@ -192,7 +192,7 @@ than it appears.</p>
     App --&gt;|no| D2[&quot;Access denied by human approval&quot;]
     App --&gt;|yes| Out[&quot;Results returned&quot;]
     Hum --&gt;|no| Out
-    Priv[&quot;MemoryPrivacyPolicy&lt;br/&gt;allowedTiers · piiRedaction&lt;br/&gt;maxRetentionDays = 90&quot;] -.-&gt;|&quot;exported from mod.ts&lt;br/&gt;and called by NOTHING&quot;| Dead[&quot;no tier is filtered&lt;br/&gt;nothing expires at 90 days&quot;]</code></pre>
+    Priv[&quot;MemoryPrivacyPolicy&lt;br/&gt;allowedTiers · piiRedaction&lt;br/&gt;maxRetentionDays = 90&quot;] -.-&gt;|&quot;exported from mod.ts&lt;br/&gt;and called by NOTHING&quot;| Dead[&quot;no tier is filtered&lt;br/&gt;nothing expires at 90 days&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>libSQL/SQLite through <code>db/client.ts</code>, embeddings stored as
 blobs with <code>vectorToBlob</code>/<code>blobToVector</code>, and an
@@ -518,7 +518,16 @@ href="https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e09
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

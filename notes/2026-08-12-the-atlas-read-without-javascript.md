@@ -1,7 +1,9 @@
 # The atlas read without JavaScript — two confident criticisms, one root cause
 
-**Status:** proposed, and now twice-evidenced. Diagnosis is settled; the fix is
-not adopted.
+**Status:** the delivery fix shipped on 2026-08-13 — every diagram is now
+wrapped in a captioned figure with its source folded into a disclosure, guarded
+by `scripts/check_diagram_captions.py`. Pre-rendering the SVG remains declined,
+and the reason is below.
 **Origin:** an outside review (Qwen, 2026-08-12) of
 [`build.md`](../content/build.md), whose two structural findings were both wrong
 in the same way. The diagnosis is worth more than the findings.
@@ -76,7 +78,13 @@ are missing.
 
 Two changes, both small, in order of value.
 
-**1. Pre-render the diagrams at build time.** Add a build step that runs
+**1. Pre-render the diagrams at build time — declined.** `package.json` has no
+dependencies at all; `npm` is a task runner over bash and python here. Adding
+`@mermaid-js/mermaid-cli` means adding puppeteer and a headless Chromium as this
+repository's first Node dependency, to a build that currently installs nothing.
+That trade buys a rendered diagram for a reader without JavaScript; the caption
+buys them the claim the diagram makes, for no dependency. The proposal as
+written: Add a build step that runs
 `@mermaid-js/mermaid-cli` (or `mermaid` under a headless renderer) over each
 `pre.mermaid` block and inlines the resulting SVG, keeping the source in a
 `<details>` beside it. The client-side import then becomes a fallback rather than

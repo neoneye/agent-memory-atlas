@@ -158,7 +158,7 @@ precondition with a receipt.</p>
 <p>Every memory is versioned. Every version records both when it was
 written and when its content became true. Failed decisions are not just
 stored — they are revisited when the user goes idle.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;agent calls a mutating tool&quot;] --&gt; MW{&quot;CovenantMiddleware&quot;}
     MW --&gt;|&quot;no briefing&quot;| B1[&quot;blocked: COMMUNE first&quot;]
     MW --&gt;|&quot;no valid token&quot;| B2[&quot;blocked: SEEK COUNSEL first&quot;]
@@ -177,7 +177,7 @@ stored — they are revisited when the user goes idle.</p>
     REV --&gt; LM[&quot;learning memory, tag &#39;dream&#39;, evidence_ids as provenance&quot;]
     CF --&gt; LM
     Q[&quot;recall(as_of_time=…)&quot;] --&gt; VT[&quot;valid-time filter only, by design&quot;]
-    Q2[&quot;get_versions_at_time(valid, transaction)&quot;] --&gt; BT[&quot;both dimensions&quot;]</code></pre>
+    Q2[&quot;get_versions_at_time(valid, transaction)&quot;] --&gt; BT[&quot;both dimensions&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Fifty-odd modules under <code>daem0nmcp/</code>: retrieval
 (<code>fusion</code>, <code>bm25_index</code>, <code>vectors</code>,
@@ -541,7 +541,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

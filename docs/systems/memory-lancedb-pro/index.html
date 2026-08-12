@@ -171,7 +171,7 @@ whether a candidate is worth storing at all. Decay decides how a stored
 memory ranks over time. Tiering decides which store it lives in. The
 dreaming engine runs overnight and moves memories between tiers.</p>
 <p>The lifecycle has three exits and they are genuinely distinct:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Candidate: extractor proposes
     Candidate --&gt; [*]: admission veto — utility score at or below the floor
     Candidate --&gt; Active: admitted, state written as confirmed
@@ -181,7 +181,7 @@ dreaming engine runs overnight and moves memories between tiers.</p>
     Suppressed --&gt; Active: 24h with no injection resets bad_recall_count
     Active --&gt; Archived: dreaming engine tiers it out
     Invalidated --&gt; Active: as-of read before invalidated_at still returns it
-    Archived --&gt; [*]: excluded from recall</code></pre>
+    Archived --&gt; [*]: excluded from recall</code></pre></details></figure>
 <p>The arrow back from <code>Invalidated</code> is the point of the
 validity axis: an invalidated memory is not gone, it is <em>no longer
 current</em>, and a query anchored to an earlier time still sees it.</p>
@@ -558,7 +558,16 @@ never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

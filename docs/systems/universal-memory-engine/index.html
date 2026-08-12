@@ -219,7 +219,7 @@ it.</p>
 design decision worth copying. "This particular guess was wrong" and
 "stop proposing this thing" are different statements, and almost every
 system in this atlas offers only the first.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Candidate: extraction proposes an object with evidence and guesses
     Candidate --&gt; Node: a person promotes it through the review endpoint
     Candidate --&gt; Merged: promoted with merge, folded into an existing node
@@ -232,7 +232,7 @@ system in this atlas offers only the first.</p>
         memory_suppressions is checked at four
         points in the gate. A match is rejected
         as suppressed_blocked, never written.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Cloudflare all the way down: Workers for the API, D1 for relational
 storage, Durable Objects for coordination, an optional vector index that
@@ -511,7 +511,16 @@ href="https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

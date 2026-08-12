@@ -167,14 +167,14 @@ can I remember, and what must be true of it" is configuration, not
 code.</p>
 <p>The state machine is the shortest in this atlas, because there is no
 epistemic machinery at all:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     IN[&quot;a human types,&lt;br/&gt;or an agent calls upsertNodes&quot;] --&gt; N[&quot;node exists in the graph&quot;]
     N --&gt; FTS[&quot;indexed into FTS5&lt;br/&gt;&lt;i&gt;by trigger&lt;/i&gt;&quot;]
     N --&gt; VEC[&quot;embedded into the vector index&lt;br/&gt;&lt;i&gt;batched&lt;/i&gt;&quot;]
     N --&gt;|&quot;:add / :edit&quot;| REP[&quot;the value is simply replaced&quot;]
     N --&gt;|&quot;:db/retractEntity&quot;| DEL[&quot;gone, plus orphaned-page cleanup&quot;]
 
-    style REP fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style REP fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>A human and an agent enter through the same door, which is the whole
 point of an editor that acquired an agent rather than the reverse. The
 highlighted transition is the cost: an edit <strong>replaces</strong>
@@ -198,7 +198,7 @@ are the <code>deps/</code> workspace: <code>db</code> (schema,
 properties, malli validation), <code>outliner</code> (the block tree and
 its operations), <code>graph-parser</code>, <code>db-sync</code>
 (multi-device), <code>common</code>, and <code>publish</code>.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     U[Editor UI] --&gt; O[outliner core]
     M[MCP server&lt;br/&gt;6 tools] --&gt; API[HTTP API server]
     API --&gt; O
@@ -209,7 +209,7 @@ its operations), <code>graph-parser</code>, <code>db-sync</code>
     S[search-blocks] --&gt; FTS
     S --&gt; VEC
     S --&gt;|RRF fusion| R[Results]
-    DS &lt;--&gt; SY[db-sync worker]</code></pre>
+    DS &lt;--&gt; SY[db-sync worker]</code></pre></details></figure>
 <p>Persistence is a SQLite file per graph, read through DataScript, with
 a versioned schema (<code>65.33</code> at this commit, major/minor with
 a comparator and a migration path). Search indexes are maintained beside
@@ -636,7 +636,16 @@ href="https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc7735
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

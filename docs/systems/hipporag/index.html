@@ -205,7 +205,7 @@ backends.</li>
 <li><code>reproduce/</code> — benchmark reproduction harness and dataset
 scaffolding.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Docs[&quot;Documents&quot;] --&gt; Chunk[&quot;Chunking&quot;]
   Chunk --&gt; OpenIE[&quot;OpenIE triple&lt;br/&gt;extraction&lt;br/&gt;(LLM)&quot;]
   OpenIE --&gt; Graph[&quot;igraph: entity +&lt;br/&gt;passage nodes&quot;]
@@ -218,7 +218,7 @@ scaffolding.</li>
   DPR --&gt; Vec
   Vec --&gt; PPR[&quot;run_ppr (damping&lt;br/&gt;0.5, undirected)&quot;]
   Graph --&gt; PPR
-  PPR --&gt; Ranked[&quot;ranked passages&quot;]</code></pre>
+  PPR --&gt; Ranked[&quot;ranked passages&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3
@@ -529,7 +529,16 @@ href="https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

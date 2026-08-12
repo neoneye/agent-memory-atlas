@@ -116,9 +116,9 @@ pass, over a self-healing chunk index with hybrid search.</p>
 <code>chatgpt-on-wechat</code>), with a ~5,300-line memory subsystem
 under <code>agent/memory/</code>. Its design is the clearest
 <strong>time-boxed distillation pipeline</strong> in the atlas:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     ST[&quot;conversation context&lt;br/&gt;&lt;i&gt;short-term&lt;/i&gt;&quot;] --&gt; MID[(&quot;memory/YYYY-MM-DD.md&lt;br/&gt;&lt;i&gt;daily, mid-term&lt;/i&gt;&quot;)]
-    MID --&gt; LT[(&quot;MEMORY.md&lt;br/&gt;&lt;i&gt;long-term, about 30 entries&lt;/i&gt;&quot;)]</code></pre>
+    MID --&gt; LT[(&quot;MEMORY.md&lt;br/&gt;&lt;i&gt;long-term, about 30 entries&lt;/i&gt;&quot;)]</code></pre></details></figure>
 <p>Two things distinguish it from the other file-backed systems
 here.</p>
 <p><strong>Memory is bucketed by day before it is distilled.</strong>
@@ -170,7 +170,7 @@ them.</p>
 means chunks point back into the source Markdown at line granularity —
 the retrieval layer can always show where a result came from.</p>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph S1[&quot;Stage 1 — conversation to daily memory&quot;]
         TR[&quot;triggers: context trimming on turn or token limit,&lt;br/&gt;a 23:55 schedule, an API-overflow emergency save&quot;]
         TR --&gt; SUM[&quot;LLM summarizes into key events&quot;]
@@ -185,7 +185,7 @@ the retrieval layer can always show where a result came from.</p>
     DAILY --&gt; RD
     OW --&gt; INJ[&quot;Stage 3 — MEMORY.md goes into the system prompt&lt;br/&gt;for every conversation&quot;]
 
-    style OW fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style OW fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The highlighted step is the risk this system is the atlas's clearest
 example of. <code>MEMORY.md</code> is <strong>overwritten</strong> from
 itself plus one day's file, nightly, forever — so anything the
@@ -213,7 +213,7 @@ Dream distillation.</li>
 <code>context.mdx</code>, <code>deep-dream.mdx</code>,
 <code>self-evolution.mdx</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Conv[&quot;Conversation&quot;] --&gt; Trim[&quot;context trimming / 23:55 cron / overflow&quot;]
   Trim --&gt; Daily[&quot;memory/YYYY-MM-DD.md&quot;]
   Daily --&gt; Dream[&quot;Deep Dream distillation&quot;]
@@ -223,7 +223,7 @@ Dream distillation.</li>
   Mem --&gt; Prompt[&quot;system prompt (every conversation)&quot;]
   Files[&quot;memory files&quot;] --&gt; Chunk[&quot;chunker&quot;]
   Chunk --&gt; DB[&quot;chunks + embeddings + FTS5&quot;]
-  DB --&gt; Search[&quot;vector + keyword search&quot;]</code></pre>
+  DB --&gt; Search[&quot;vector + keyword search&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="three-triggers-into-the-daily-file">Three triggers into the
@@ -472,7 +472,16 @@ href="https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

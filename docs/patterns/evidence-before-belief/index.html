@@ -111,7 +111,7 @@ the source event is discarded, correction becomes guesswork and a new
 extractor cannot repair old state.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Write evidence first, then derive memory:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;Message, file, tool result&quot;] --&gt; B[&quot;Durable event&quot;]
     B --&gt; C[&quot;Evidence chunks + source spans&quot;]
     C --&gt; D[&quot;Candidate facts, profile, summary&quot;]
@@ -119,7 +119,7 @@ extractor cannot repair old state.</p>
     D --&gt; F[&quot;Trust and conflict policy&quot;]
     E --&gt; G[&quot;Recall&quot;]
     F --&gt; G
-    G --&gt; H[&quot;Source-linked context&quot;]</code></pre>
+    G --&gt; H[&quot;Source-linked context&quot;]</code></pre></details></figure>
 <p>Evidence needs stable identity, scope, actor, timestamp, source
 location, and content hash. Derived records reference evidence IDs
 rather than copying an unattributed excerpt into a mutable field.</p>
@@ -405,7 +405,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

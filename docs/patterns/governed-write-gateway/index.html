@@ -113,14 +113,14 @@ active fact, and a background worker bypasses all three. Policy then
 depends on which interface happened to receive the write.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Expose narrow adapters but converge on one governed command:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;User command&quot;] --&gt; G[&quot;Governed write gateway&quot;]
     B[&quot;Agent tool&quot;] --&gt; G
     C[&quot;Review UI&quot;] --&gt; G
     D[&quot;Background&lt;br/&gt;extractor&quot;] --&gt; G
     G --&gt; P[&quot;Actor + scope +&lt;br/&gt;trust policy&quot;]
     P --&gt; K[&quot;Dedupe, conflict,&lt;br/&gt;tombstone checks&quot;]
-    K --&gt; T[&quot;Atomic claim, evidence,&lt;br/&gt;relation, audit write&quot;]</code></pre>
+    K --&gt; T[&quot;Atomic claim, evidence,&lt;br/&gt;relation, audit write&quot;]</code></pre></details></figure>
 <p>The gateway accepts an explicit actor, scope, candidate value,
 evidence, source, and intent. Inside one transaction it:</p>
 <ol type="1">
@@ -366,7 +366,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -102,6 +102,7 @@ have been read wrong — so the harness treats the agent's own context as the
 unreliable medium and the file as the reliable one.
 
 ```mermaid
+%% caption: why the log is complete — the broker holds the key, so no action reaches the game off-record
 flowchart TD
   AGENT["stock coding agent<br/>context compacts, counted in games.compactions"]
   AGENT -->|"./act do --plan '…'"| BROKER["broker: holds the key,<br/>plays the action, writes the log"]

@@ -228,7 +228,7 @@ scheduler          → dream reports, nudges</code></pre>
 <li><code>mateclaw-server/src/main/resources/prompts/memory/</code> —
 externalized prompts.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Turn[&quot;TurnStartedEvent&quot;] --&gt; Med[&quot;MemoryLifecycleMediator&quot;]
   Med --&gt; Mgr[&quot;MemoryManager&quot;]
   Mgr --&gt; Dec[&quot;decorators: Metrics,&lt;br/&gt;Retryable&quot;]
@@ -242,7 +242,7 @@ externalized prompts.</li>
   Facts --&gt; Proj[&quot;fact/projection&quot;]
   Sched[&quot;scheduler&quot;] --&gt; Dream[&quot;DreamReportEntity&quot;]
   Sched --&gt; Nudge[&quot;MemoryNudgeService&quot;]
-  Proj --&gt; UI[&quot;Vue Memory&lt;br/&gt;views&quot;]</code></pre>
+  Proj --&gt; UI[&quot;Vue Memory&lt;br/&gt;views&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="a-provider-contract-that-carries-scope">A provider contract that
@@ -497,7 +497,16 @@ href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

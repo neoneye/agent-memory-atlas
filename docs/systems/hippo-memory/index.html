@@ -192,7 +192,7 @@ reinforcement</a> exists to separate.</p>
 badly count for more than outcomes that went well.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     C[&quot;capture / CLI / HTTP / MCP write&quot;] --&gt; S[&quot;stored with confidence:&lt;br/&gt;verified, observed or inferred&quot;]
     S --&gt; R{&quot;read&quot;}
     R --&gt;|&quot;pinned or verified&quot;| K[&quot;returned as stored&quot;]
@@ -203,7 +203,7 @@ thing becomes a belief, and how it stops being one</h3>
     S --&gt;|&quot;forget()&quot;| D[[&quot;DELETE FROM memories&quot;]]
     S --&gt;|&quot;sleep phase 3&lt;br/&gt;quality audit grades error&quot;| D
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The two edges into the deletion box are the finding. One is a user
 asking to forget; the other is a background quality audit deciding a
 memory is junk, and it runs host-wide. The dashed edge is the correction
@@ -540,7 +540,16 @@ href="https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

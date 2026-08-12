@@ -180,7 +180,7 @@ page.</p>
 <p>A claim becomes a belief by passing a gate and stops being one by
 being superseded — with how easily depending on what kind of claim it
 is:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Rejected: quality gate — noise, too short, credential, not novel
     [*] --&gt; Stored: admitted, typed schema validated, stability tier assigned
     Stored --&gt; Superseded: Ephemeral tier — silently
@@ -190,7 +190,7 @@ is:</p>
     AwaitingReview --&gt; Stored: a person dismisses it, resolved_at stamped
     Stored --&gt; Decayed: effective_confidence falls with disuse
     Decayed --&gt; Stored: confirmed or pinned sets the decay rate to zero
-    Superseded --&gt; [*]: hidden or archived by supersede_mode</code></pre>
+    Superseded --&gt; [*]: hidden or archived by supersede_mode</code></pre></details></figure>
 <p>The page-map tombstone is a second, disjoint state machine over the
 same material: a node is <code>suggested</code>, <code>active</code>,
 <code>pinned</code> or <code>dismissed</code>, and only the last is
@@ -629,7 +629,16 @@ eval was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

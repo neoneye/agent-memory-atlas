@@ -175,7 +175,7 @@ from the shared wiki and the agent's own archive — the README's example
 output is "Last week you tried adding an index on orders.user_id; that
 didn't help." — and <code>end_session</code> archives what happened and
 promotes findings.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Unverified: write, evidence pointers optional
     Unverified --&gt; Verified: verify, logged with verifier and note
     Unverified --&gt; Contradicted: contradict, requires an existing contradicting entry
@@ -186,7 +186,7 @@ promotes findings.</p>
     Contradicted --&gt; RolledBack: the only transition out of contradicted
     RolledBack --&gt; [*]: terminal, no transition out
     Verified --&gt; Superseded: lifecycle only, trust unchanged
-    Unverified --&gt; Superseded: lifecycle only, trust unchanged</code></pre>
+    Unverified --&gt; Superseded: lifecycle only, trust unchanged</code></pre></details></figure>
 <p>The two lower arrows are the point. Superseding does not touch
 <code>verified</code>, and verifying does not touch
 <code>lifecycle</code>; a verified-and-superseded entry is a sentence
@@ -563,7 +563,16 @@ never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

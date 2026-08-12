@@ -183,7 +183,7 @@ holding LLM-extracted self-contained facts with their own vectors, and a
 knowledge graph of <code>entities</code> and <code>relationships</code>
 with a confidence float. Beside them sits an observability tier — the
 audit chain and a rule-based loop detector.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;remember(name, data)&quot;] --&gt; FX{&quot;fact extraction configured?&quot;}
     FX --&gt;|&quot;platform / ollama / openai / anthropic&quot;| F[&quot;decompose into self-contained facts&quot;]
     FX --&gt;|none| E[&quot;embed the raw text&quot;]
@@ -194,7 +194,7 @@ audit chain and a rule-based loop detector.</p>
     RLS --&gt;|no| REJ[&quot;Postgres rejects the write&quot;]
     RLS --&gt;|yes| OK[&quot;stored&quot;]
     OK --&gt; R[&quot;every read: USING policy plus AND valid_until = 0&quot;]
-    R --&gt; H[&quot;the closed versions are retained&lt;br/&gt;and no query ever asks for them&quot;]</code></pre>
+    R --&gt; H[&quot;the closed versions are retained&lt;br/&gt;and no query ever asks for them&quot;]</code></pre></details></figure>
 <p>The last box is the finding. The write path is careful to preserve
 history; no read path in the tree asks for it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -522,7 +522,16 @@ not obtained.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

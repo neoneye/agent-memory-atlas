@@ -219,7 +219,7 @@ true.</p>
 <p>Nothing supersedes. Nothing records that a value was rejected. A
 memory a user deleted through the UI is one conversation away from being
 extracted again, and the system has no way to know it ever existed.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Item: gpt-4o-mini extracts a turn, or the agent calls memory_remember
     Item --&gt; Keyworded: a Postgres trigger derives the keyword array from the content
     Keyworded --&gt; Keyworded: the same fact next week inserts a second row beside it
@@ -232,7 +232,7 @@ extracted again, and the system has no way to know it ever existed.</p>
     note right of Keyworded
         score, usage_count and expires_at all live
         on this row. Nothing writes any of them.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One Supabase project and one Docker container. There is no separate
 memory service, no queue and no worker — the whole subsystem is server
@@ -660,7 +660,16 @@ href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf1
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

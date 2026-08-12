@@ -180,7 +180,7 @@ query is assessed for complexity, context is retrieved, the query is
 decomposed into subgoals, the decomposition is verified, subgoals are
 routed to agents, results collected and synthesised, and the outcome
 recorded back.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;query&quot;] --&gt; A[&quot;1 Assess — complexity&quot;]
     A --&gt; R[&quot;2 Retrieve — activation-weighted chunks&quot;]
     R --&gt; D[&quot;3 Decompose — subgoals&quot;]
@@ -193,7 +193,7 @@ recorded back.</p>
     RT --&gt; C[&quot;6 Collect&quot;]
     C --&gt; S[&quot;7 Synthesize&quot;]
     S --&gt; REC[&quot;8 Record — activation updated&quot;]
-    REC --&gt; RESP[&quot;9 Respond&quot;]</code></pre>
+    REC --&gt; RESP[&quot;9 Respond&quot;]</code></pre></details></figure>
 <p>The dotted edge is the gap in section 1, drawn where the README puts
 it.</p>
 <p>The <code>Record</code> phase is worth its own note: the pipeline's
@@ -437,7 +437,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -210,7 +210,7 @@ memory entities"</em>, with a branch registry carrying a
 <code>015_memory_intelligence.sql</code>. Branching memory is an idea
 nothing else in this atlas has; whether it is wired to anything at this
 commit is in section 14.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     H1[&quot;agent tool call hook&quot;] --&gt; DB[(&quot;SQLite&quot;)]
     H2[&quot;bash command hook&quot;] --&gt; DB
     H3[&quot;git post-commit hook&quot;] --&gt; DB
@@ -221,7 +221,7 @@ commit is in section 14.</p>
     ORD --&gt; OUT[&quot;rows: solution + solution_code + solution_worked&quot;]
     OUT -.-&gt;|&quot;the failed fix is row two,&lt;br/&gt;in the same shape as row one&quot;| RISK[&quot;the model must read the flag&quot;]
     style H3 fill:#14532d,color:#fff
-    style RISK fill:#7f1d1d,color:#fff</code></pre>
+    style RISK fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <p>Green is deterministic capture. Red is the gap between demoting a
 failure and withholding it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -557,7 +557,16 @@ href="https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -155,13 +155,13 @@ from episodes. It is a four-part tuple — <code>category</code>,
 <code>metadata.citations</code>, a list of the episode IDs that produced
 it (<code>semantic_memory/semantic_model.py</code>).</p>
 <p>The state machine is shallow, and the shallowness is the finding:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[message arrives] --&gt; E[&quot;Episode (is_ingested = false)&lt;br/&gt;retained forever&quot;]
     E --&gt;|background loop, every 2s, 5 per set| L[&quot;LLM emits SemanticCommand: ADD or DELETE&quot;]
     L --&gt;|ADD| SF[&quot;SemanticFeature + citations&quot;]
     SF --&gt;|once a tag group reaches 20 features| CON[&quot;consolidation: LLM merges,&lt;br/&gt;citations unioned&quot;]
     L --&gt;|DELETE| GONE[&quot;row gone — no record that it was ever asserted,&lt;br/&gt;no record that it was rejected&quot;]
-    L --&gt; ING[&quot;Episode marked is_ingested = true —&lt;br/&gt;never reconsidered&quot;]</code></pre>
+    L --&gt; ING[&quot;Episode marked is_ingested = true —&lt;br/&gt;never reconsidered&quot;]</code></pre></details></figure>
 <p><code>SemanticCommandType</code> has exactly two members,
 <code>ADD</code> and <code>DELETE</code>. There is no supersede, no
 reject, no confidence, no candidate state. A feature is either in the
@@ -186,7 +186,7 @@ server splits into <code>episodic_memory</code>,
 <code>semantic_memory</code>, a <code>retrieval_agent</code>, and a
 <code>main</code> orchestrator (<code>main/memmachine.py</code>, 1,671
 lines) that every entry point goes through.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[REST v2 / MCP stdio / MCP HTTP / SDKs] --&gt; MM[MemMachine orchestrator]
     MM --&gt;|synchronous| ES[(Episode store&lt;br/&gt;SQLite or Postgres)]
     MM --&gt; EM[Episodic memory&lt;br/&gt;short-term + long-term]
@@ -198,7 +198,7 @@ lines) that every entry point goes through.</p>
     MM --&gt; RA[Retrieval agent] --&gt; ES
     RA --&gt; SF
     DQ[Session deletion queue] --&gt; W[Delete worker]
-    MM --&gt; DQ</code></pre>
+    MM --&gt; DQ</code></pre></details></figure>
 <p>Persistence is pluggable at three layers: episodes through
 SQLAlchemy, semantic features through either
 <code>neo4j_semantic_storage.py</code> or
@@ -707,7 +707,16 @@ href="https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

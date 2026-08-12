@@ -302,7 +302,7 @@ dial one — and journalled as an <code>auto_tuned</code> row.
 field lesson behind it is written down in the project's own chronicle:
 <em>"register-dependent score scales — absolute thresholds don't
 transfer between graphs, relative mechanisms do."</em></p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Unseen: created_at only, trust starts low
     Unseen --&gt; Confirmed: a deliberate update or Confirm still true
     Unseen --&gt; Approved: explicit approval, higher start, ramps to a floor
@@ -314,7 +314,7 @@ transfer between graphs, relative mechanisms do."</em></p>
     Confirmed --&gt; Stale: trust falls below the floor, buried not deleted
     Stale --&gt; Confirmed: reviewed and confirmed in the pane
     Confirmed --&gt; Archived: valid_until set
-    Unseen --&gt; Unseen: retrieval stamps last_seen and moves nothing</code></pre>
+    Unseen --&gt; Unseen: retrieval stamps last_seen and moves nothing</code></pre></details></figure>
 <p>The self-loop at the bottom is the design. Retrieval touches the
 graph and changes no trust, so a note cannot certify itself by being
 popular.</p>
@@ -1149,7 +1149,16 @@ regenerated.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

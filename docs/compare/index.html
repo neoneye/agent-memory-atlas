@@ -10921,7 +10921,7 @@ thin. The reason is structural rather than a matter of care: capture
 creates one row, while consolidation and indexing create copies of it
 that no longer look like it, and a correction is only finished when it
 has reached every one of them.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     EV[&quot;Evidence&lt;br/&gt;transcripts, files, tool output&quot;]
     EV --&gt; CAP[&quot;Capture&quot;]
     CAP --&gt; EXT[&quot;Extraction&quot;]
@@ -10936,7 +10936,7 @@ has reached every one of them.</p>
     COR --&gt; DER
     FOR --&gt; DER
     FOR -.-&gt;|&quot;the step most often missing&quot;| EV
-    COR -.-&gt;|&quot;the step most often missing&quot;| EV</code></pre>
+    COR -.-&gt;|&quot;the step most often missing&quot;| EV</code></pre></details></figure>
 <p>The dotted edge back to evidence is the one worth checking in your
 own system. If the transcript that produced a belief is retained and the
 extractor is ever re-run over it, a correction that stopped at the
@@ -12157,7 +12157,7 @@ a report's <code>matrix.storage</code> — the reproducible definition,
 since a passing mention in prose is not a dependency — pgvector backs 15
 systems, Chroma 12, Qdrant 11 and LanceDB 5; counting any mention
 anywhere in a report gives 19, 13, 12 and 6.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;User: forget that&quot;] --&gt; B[&quot;Memory system delete&lt;br/&gt;row, edge, chunk&quot;]
     B --&gt; C{&quot;Storage engine&quot;}
     C --&gt; D[&quot;Query filter&lt;br/&gt;MVCC, deleted mark, bitslice, new version&quot;]
@@ -12165,7 +12165,7 @@ anywhere in a report gives 19, 13, 12 and 6.</p>
     C --&gt; F[&quot;Bytes on disk&lt;br/&gt;embedding intact&quot;]
     D --&gt; G[&quot;Not returned&lt;br/&gt;true in all four&quot;]
     E --&gt; H[&quot;Recall of surviving&lt;br/&gt;memories degrades&quot;]
-    F --&gt; I[&quot;Erased only by vacuum,&lt;br/&gt;optimize or prune&quot;]</code></pre>
+    F --&gt; I[&quot;Erased only by vacuum,&lt;br/&gt;optimize or prune&quot;]</code></pre></details></figure>
 <p><strong>The vector is not returned by search.</strong> This is worth
 stating first because it is the failure most often assumed. It does not
 happen in any of the four. pgvector hands a heap TID to the executor and
@@ -17945,7 +17945,16 @@ so read it as magnitude.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

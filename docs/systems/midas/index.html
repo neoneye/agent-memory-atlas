@@ -185,7 +185,7 @@ lifecycle is a stamp applied at capture and never upgraded: an
 observation does not become a confirmation by being useful, or old, or
 recalled often. The only way to gain authority is for the user to
 confirm something, which creates a new record.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;recalled evidence set&quot;] --&gt; U{&quot;intended_use?&quot;}
     U --&gt;|planning| P[&quot;allowed: any provenance&quot;]
     U --&gt;|answer| A{&quot;provenance in action, observation, user_confirmation?&quot;}
@@ -201,7 +201,7 @@ confirm something, which creates a new record.</p>
     F --&gt;|no| X{&quot;actor == acting agent?&quot;}
     X --&gt;|no| B6[&quot;blocked: another agent&#39;s evidence&quot;]
     X --&gt;|yes| OK[&quot;allowed, with evidence refs returned&quot;]
-    S1 --&gt;|yes| OK</code></pre>
+    S1 --&gt;|yes| OK</code></pre></details></figure>
 <p>Every terminal node returns a <code>MemoryUseDecision</code> carrying
 the reason, the required provenances, the evidence considered and the
 ids that were blocked — so a refusal is explainable to the agent and to
@@ -585,7 +585,16 @@ benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

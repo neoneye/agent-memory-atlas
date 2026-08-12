@@ -196,7 +196,7 @@ model call.</p>
 <code>handleDeleteEngram</code> on REST, and
 <code>handleListDeleted</code> will tell you what went — deletion is
 something the system expects to be asked about afterwards.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;Write via MCP / REST / gRPC / MBP&quot;] --&gt; E[(&quot;Engram&lt;br/&gt;TrustLevel, importance,&lt;br/&gt;ValidFrom / ValidUntil&quot;)]
     W --&gt; P[(&quot;Provenance log, per engram&lt;br/&gt;source, agent, operation, reason&quot;)]
     EV[&quot;evolve&quot;] --&gt; S[&quot;Successor engram&quot;]
@@ -208,7 +208,7 @@ something the system expects to be asked about afterwards.</p>
     G -- &quot;above&quot; --&gt; R[&quot;Recall&quot;]
     R --&gt; H[&quot;Hebbian worker:&lt;br/&gt;co-activation strengthens edges&quot;]
     H --&gt; E
-    T[&quot;Transition worker&quot;] --&gt; PAS[&quot;Sequential activation pairs&quot;]</code></pre>
+    T[&quot;Transition worker&quot;] --&gt; PAS[&quot;Sequential activation pairs&quot;]</code></pre></details></figure>
 <p>The loop from recall back into edge weights is the design: use
 changes reachability, and the trust label stays out of it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -512,7 +512,16 @@ code.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

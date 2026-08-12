@@ -191,7 +191,7 @@ or <code>search_memory</code>. Model-written content is structurally
 marked as model-written and can never silently occupy the whole context.
 That is a smaller claim than most systems here make and a much more
 defensible one.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     App[&quot;Application code&quot;] --&gt;|&quot;namespace: str or Callable&lt;br/&gt;never a tool argument&quot;| Scope[&quot;resolve_scope()&lt;br/&gt;{namespace}/{agent_name}&quot;]
     Model[&quot;Model&quot;] --&gt;|&quot;write_memory / read_memory&lt;br/&gt;search_memory / delete_memory&quot;| Tool[&quot;MemoryToolset&quot;]
     Scope --&gt; Tool
@@ -199,7 +199,7 @@ defensible one.</p>
     Store --&gt;|&quot;returns paths&quot;| Check{&quot;every path&lt;br/&gt;inside the prefix?&quot;}
     Check --&gt;|no| Raise[&quot;RuntimeError:&lt;br/&gt;backend returned a path&lt;br/&gt;outside the requested scope&quot;]
     Check --&gt;|yes| Ctx[&quot;Bounded excerpt&lt;br/&gt;in a user-role part&quot;]
-    Store -.-&gt;|&quot;receipt already seen&quot;| Replay[&quot;replayed: true&lt;br/&gt;not a second append&quot;]</code></pre>
+    Store -.-&gt;|&quot;receipt already seen&quot;| Replay[&quot;replayed: true&lt;br/&gt;not a second append&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is nothing to operate.
 <code>Memory(FileStore('.agent-memory'))</code> is the whole deployment
@@ -485,7 +485,16 @@ href="https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

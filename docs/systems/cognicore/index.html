@@ -200,7 +200,7 @@ which is provenance as a first-class column rather than a metadata
 blob.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     E[&quot;extraction and categorisation&quot;] --&gt; C[&quot;state: candidate&quot;]
     C --&gt;|&quot;evidence&quot;| V[&quot;state: verified&quot;]
     V --&gt; A[&quot;state: active&quot;]
@@ -213,7 +213,7 @@ thing becomes a belief, and how it stops being one</h3>
     A --&gt;|&quot;a newer entry replaces it&quot;| S[&quot;supersedes = old entry_id,&lt;br/&gt;queryable in the Chroma backend&quot;]
     S -.-&gt;|&quot;keyed on the record,&lt;br/&gt;so the value can return&quot;| E
 
-    style AR fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style AR fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The left column is the part worth copying: a memory earns its way
 from candidate to active, and its usefulness is measured rather than
 assumed. The dashed edge is the familiar gap.</p>
@@ -491,7 +491,16 @@ href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

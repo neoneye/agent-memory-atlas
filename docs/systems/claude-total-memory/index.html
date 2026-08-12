@@ -178,7 +178,7 @@ appends the new. Invalidation without replacement sets
 evidence supports an answer at all, retrieve negatively against an
 inverted query, score the conflict, and let a hard contradiction
 override the answer.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;tool output&quot;] --&gt; CF{&quot;content filter, safety=strict&quot;}
     CF --&gt; W[&quot;stash URLs, abs paths, ~/paths,&lt;br/&gt;inline code, fences&quot;]
     CF --&gt; P[&quot;strip_ansi → replace → strip_lines →&lt;br/&gt;keep_lines → truncate → head/tail → max_lines&quot;]
@@ -197,7 +197,7 @@ override the answer.</p>
     NEG --&gt; SC[&quot;score every positive x negative pair, clipped 5x5&quot;]
     SC --&gt;|&quot;max &amp;lt; 0.30&quot;| OK[&quot;no_contradiction — answer&quot;]
     SC --&gt;|&quot;0.30 to 0.60&quot;| HG[&quot;soft_contradict — hedge&quot;]
-    SC --&gt;|&quot;&amp;ge; 0.60&quot;| IDK[&quot;hard_contradict — emit IDK&quot;]</code></pre>
+    SC --&gt;|&quot;&amp;ge; 0.60&quot;| IDK[&quot;hard_contradict — emit IDK&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> holds 68 modules outside tests:
 <code>memory_core</code> (with <code>temporal</code> and
@@ -505,7 +505,16 @@ installed, and no benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -198,7 +198,7 @@ elsewhere, the other means it was set aside where it is. And
 an explicit soft-delete state rather than an implied one — a memory in
 that state is gone from the agent's view and still present for whatever
 needs to clean it up.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; active: added through the MemoryManager, routed to a tier
     active --&gt; decaying: natural decay, strength falling
     decaying --&gt; active: reinforced by access
@@ -206,7 +206,7 @@ needs to clean it up.</p>
     consolidated --&gt; [*]: the promoted copy lives in a higher tier
     active --&gt; archived: no longer active, preserved in place
     decaying --&gt; forgotten: marked for deletion, not yet removed
-    forgotten --&gt; [*]: removed by maintenance</code></pre>
+    forgotten --&gt; [*]: removed by maintenance</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Three tiers (<code>tiers/stm</code>, <code>mtm</code>,
 <code>ltm</code>) over pluggable backends
@@ -451,7 +451,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

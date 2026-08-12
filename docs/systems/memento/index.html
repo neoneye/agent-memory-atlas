@@ -209,7 +209,7 @@ the first value in each case.</p>
 becomes wrong is deleted, and the next reflection pass over the same
 indexed entries can derive it again — the deletion is not recorded
 anywhere the derivation consults.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Created: a log is recorded
     Created --&gt; Sealed: the journaller sets a delivery date
     Sealed --&gt; Uploaded: deliver_on arrives and the worker flips the status
@@ -223,7 +223,7 @@ anywhere the derivation consults.</p>
         Outside transcription, indexing and the
         timeline. Unreachable by construction,
         not by a filter someone must remember.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Next.js web application over Postgres, with a Python worker beside
 it. No vector store — retrieval is Postgres full-text over
@@ -471,7 +471,16 @@ href="https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

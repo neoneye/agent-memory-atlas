@@ -187,7 +187,7 @@ replace, and rebuilds the index best-effort.</li>
 <p>Retrieval is the part that barely exists, and deliberately: the store
 is small enough that the whole thing is rendered into the prompt, so the
 ordinary case needs no recall call at all.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;Session transcript&lt;br/&gt;last 30 turns&quot;] --&gt; RED[&quot;redact_memory_unsafe_text&lt;br/&gt;before anything leaves the machine&quot;]
     RED --&gt; LLM[&quot;Classification model&lt;br/&gt;returns a JSON array, max 5&quot;]
     LLM --&gt; TY{&quot;type in the four?&quot;}
@@ -204,7 +204,7 @@ ordinary case needs no recall call at all.</p>
     IDX --&gt; P[&quot;Every chat and action prompt&quot;]
     P -.-&gt; T
     FG[&quot;memory_forget&lt;br/&gt;/memory forget&quot;] --&gt;|&quot;unlink, no record kept&quot;| F
-    FG -.-&gt;|&quot;the statement is still in the transcript&quot;| T</code></pre>
+    FG -.-&gt;|&quot;the statement is still in the transcript&quot;| T</code></pre></details></figure>
 <p>The dotted loop is the design's open edge. Nothing that leaves
 through <code>memory_forget</code> leaves a mark, and the transcript
 that justified the memory is still inside the window the next extraction
@@ -749,7 +749,16 @@ followed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

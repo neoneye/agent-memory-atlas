@@ -173,7 +173,7 @@ vault."</p>
 secrets, classified cheaply, distilled expensively, deduplicated, and
 written as typed notes into a vault the user owns. A separate command
 offers the best of them back to <code>CLAUDE.md</code>.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;~/.claude/projects transcripts&quot;] --&gt; CL{&quot;classifyTranscript by layout&quot;}
     CL --&gt;|&quot;&lt;sid&gt;/subagents/…&quot;| SC[&quot;sidechain — skipped&quot;]
     CL --&gt;|&quot;…/workflows/wf_*/…&quot;| WF[&quot;workflow — skipped&quot;]
@@ -194,7 +194,7 @@ offers the best of them back to <code>CLAUDE.md</code>.</p>
     W --&gt; SY[&quot;vir sync-claude&quot;]
     SY --&gt; DF[&quot;diff: added / removed, top 5 per category&quot;]
     DF --&gt; CONF{&quot;user confirms&quot;}
-    CONF --&gt;|yes| CM[&quot;written between VIR:START and VIR:END&lt;br/&gt;in CLAUDE.md — the rest of the file untouched&quot;]</code></pre>
+    CONF --&gt;|yes| CM[&quot;written between VIR:START and VIR:END&lt;br/&gt;in CLAUDE.md — the rest of the file untouched&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/pipeline/</code> is the engine and it is unusually well
 factored — <code>scanner</code>, <code>projects</code>,
@@ -468,7 +468,16 @@ reported from one machine.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

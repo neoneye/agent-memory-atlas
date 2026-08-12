@@ -161,7 +161,7 @@ gets.</p>
 facts and graph triples, chunked and embedded locally, and the most
 relevant material is prepended to the next prompt — in the browser or in
 the coding tool.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;browser extension:&lt;br/&gt;Claude · ChatGPT · Gemini · DeepSeek ·&lt;br/&gt;Grok · Copilot · Mistral&quot;] --&gt; RES{&quot;multi-strategy selector resolver —&lt;br/&gt;ordered strategies, first match wins&quot;}
     RES --&gt; CAP[&quot;captured conversation&quot;]
     M[&quot;MCP: Claude Code · Cursor ·&lt;br/&gt;Windsurf · Claude Desktop&quot;] --&gt; CAP
@@ -175,7 +175,7 @@ the coding tool.</p>
     H --&gt; TRIM[&quot;sentence-level trimming&quot;]
     TRIM --&gt; INJ[&quot;prepended to the prompt&quot;]
     CI[&quot;weekly Playwright job, Mondays 09:00 UTC&quot;] -.-&gt;|&quot;selector fails →&lt;br/&gt;auto-file issue: bug + selector-stale&quot;| RES
-    IT[&quot;mcp-stress-test: 10 projects,&lt;br/&gt;a named secret in each,&lt;br/&gt;live process, concurrent JSON-RPC&quot;] -.-&gt;|&quot;success = forbidden key absent&quot;| DB</code></pre>
+    IT[&quot;mcp-stress-test: 10 projects,&lt;br/&gt;a named secret in each,&lt;br/&gt;live process, concurrent JSON-RPC&quot;] -.-&gt;|&quot;success = forbidden key absent&quot;| DB</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>backend/</code>, <code>extension/</code>,
 <code>dashboard/</code>, <code>bin/</code>, <code>scripts/</code>, with
@@ -441,7 +441,16 @@ network behaviour were not examined.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

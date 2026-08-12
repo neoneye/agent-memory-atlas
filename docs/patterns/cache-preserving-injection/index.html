@@ -178,7 +178,7 @@ index of the store in the prefix and load an item's body on demand. This
 is the cheapest of the three where the unit is large and individually
 addressable, and it is described under <em>Why it works</em> below
 because its cost curve differs from the other two.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;session start&quot;] --&gt; B[&quot;render stable memory&lt;br/&gt;into system prompt&quot;]
     B --&gt; C[&quot;prefix cached&quot;]
     D[&quot;turn N&quot;] --&gt; E{&quot;material varies&lt;br/&gt;with this turn?&quot;}
@@ -186,7 +186,7 @@ because its cost curve differs from the other two.</p>
     E -- &quot;yes&quot; --&gt; F[&quot;append to the user turn&quot;]
     F --&gt; G[&quot;prefix cache still hits&quot;]
     H[&quot;mid-session write&quot;] --&gt; I[&quot;persist to disk&quot;]
-    I -.-&gt;|&quot;deliberately not re-rendered&quot;| C</code></pre>
+    I -.-&gt;|&quot;deliberately not re-rendered&quot;| C</code></pre></details></figure>
 <h2 id="why-it-works">Why it works</h2>
 <p>Caching is a prefix property, so the only thing that matters is
 <em>where the first difference falls</em>. Moving the volatile block
@@ -408,7 +408,16 @@ reports say so.</li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

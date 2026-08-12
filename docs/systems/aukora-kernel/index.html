@@ -172,7 +172,7 @@ explicit that the promotion between the first two is not implemented:
 (that is an operator-gated step, not done here)."</em> The tier is a
 caller-supplied argument defaulting to <code>episodic</code>, and — see
 §5 — <code>recall</code> never reads it.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     R[&quot;remember(content, tier)&quot;] --&gt; G[&quot;aukoraGovernAsk&lt;br/&gt;permission: memory, diff: content&quot;]
     G --&gt;|session LOCKED| PAUSE[&quot;PAUSE — no write&quot;]
     G --&gt;|apparent secret in content| DENY[&quot;DENY — no write&quot;]
@@ -180,7 +180,7 @@ caller-supplied argument defaulting to <code>episodic</code>, and — see
     REC --&gt; ROW[&quot;append ROW to the chain, fsync&lt;br/&gt;hash covers contentHash&quot;]
     RC[&quot;recall(chainKey)&quot;] --&gt;|ADVISORY banner| ACT[&quot;entries where status = active&quot;]
     F[&quot;forget(hash or contentHash)&quot;] --&gt; FR[&quot;append forget RECEIPT, then:&lt;br/&gt;content = null, status = tombstoned,&lt;br/&gt;push a tier:tombstone entry with covers&quot;]
-    FR --&gt; DUR[&quot;the rejection is now durable, auditable —&lt;br/&gt;and never read again&quot;]</code></pre>
+    FR --&gt; DUR[&quot;the rejection is now durable, auditable —&lt;br/&gt;and never read again&quot;]</code></pre></details></figure>
 <p>The epistemic stance is stated rather than implied, and it is
 unusual: <strong>memory navigates, it does not authorize.</strong>
 <code>recall</code> returns a banner saying so on every call —
@@ -211,7 +211,7 @@ and therefore one serializable transaction</strong>. A use is spent if
 and only if the whole mutation commits, and two concurrent writes on the
 same <code>useSeq</code> conflict on the manifest row so exactly one
 commits.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[Model proposes] --&gt; G{aukoraGate&lt;br/&gt;AUMLOK + secret classifier}
     G --&gt;|pause / deny| X[no write]
     G --&gt;|allow| R[(receipts.jsonl&lt;br/&gt;append + fsync FIRST)]
@@ -220,7 +220,7 @@ commits.</p>
     C[Delegation manifest] --&gt; CM[consumeManifestUseCore&lt;br/&gt;PoP, breakers, OCC useSeq]
     CM --&gt; GR[one-shot grant] --&gt; IN[intent + decision token] --&gt; RC[receipt binds manifest] --&gt; AM[(aukora_memory)]
     S --&gt; RE[recall — advisory only]
-    AM --&gt; RE2[recall — reader PoP required]</code></pre>
+    AM --&gt; RE2[recall — reader PoP required]</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to run:</strong> for path 1, nothing — two JSONL
@@ -634,7 +634,16 @@ href="https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae95
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

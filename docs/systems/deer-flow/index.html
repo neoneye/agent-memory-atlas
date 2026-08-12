@@ -193,7 +193,7 @@ however it likes; the write path is <code>add</code>, likewise.
 Everything between — search, export, clear, per-fact CRUD — is a
 capability a backend may or may not have, and the caller learns which by
 catching <code>NotImplementedError</code> rather than by asking.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;agent turn&quot;] --&gt; M[&quot;MemoryManager (pydantic ABC)&quot;]
     M --&gt;|&quot;tier 1: add, get_context&quot;| B{&quot;configured backend&quot;}
     B --&gt; DM[&quot;deermem — structured facts, JSON&quot;]
@@ -207,7 +207,7 @@ catching <code>NotImplementedError</code> rather than by asking.</p>
     OV --&gt; SHAPE
     SHAPE -.-&gt;|&quot;unknown fields dropped silently&quot;| LOSS[&quot;what the backend modelled&lt;br/&gt;and DeerMem does not&quot;]
     style LOSS fill:#7f1d1d,color:#fff
-    style UI fill:#14532d,color:#fff</code></pre>
+    style UI fill:#14532d,color:#fff</code></pre></details></figure>
 <p>Green is the human surface. Red is the cost of one implementation's
 schema becoming the interface.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -527,7 +527,16 @@ href="https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

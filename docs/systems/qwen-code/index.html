@@ -198,7 +198,7 @@ are refused write access to it by the permission layer. So the state
 machine has two entrances and only one of them is automatic — and the
 manual entrance is the only place a memory is safe from
 consolidation.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     S[&quot;session&quot;] --&gt; EX[&quot;extraction&lt;br/&gt;&lt;i&gt;cursor: sessionId + processedOffset&lt;/i&gt;&quot;]
     EX --&gt; R1[&quot;records: updated or noop,&lt;br/&gt;touched topics, session id&quot;]
     R1 --&gt; E[(&quot;entries&quot;)]
@@ -214,7 +214,7 @@ consolidation.</p>
     DR -. &quot;write denied&quot; .-&gt; P
 
     style NK fill:#f4e2bd,stroke:#b8860b
-    style P fill:#d8ecd8,stroke:#4a7c4a</code></pre>
+    style P fill:#d8ecd8,stroke:#4a7c4a</code></pre></details></figure>
 <p>Three ways to forget and none of them records <em>what</em> was
 rejected, so the next extraction can re-derive it from the same session.
 <code>pinned/</code> is the exception that proves the shape: the only
@@ -747,7 +747,16 @@ href="https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce57b0b48cd3d6a8f4f7f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

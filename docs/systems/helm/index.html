@@ -198,7 +198,7 @@ free text per notable turn, with a channel tag and a timestamp. Episodes
 are the raw stream; facts are what survives it.</p>
 <p>Confidence is a float, not a state. But there are effectively two
 grades, distinguished by who wrote the row and how it was tagged:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     direction TB
     [*] --&gt; Provisional: remember --source observed&lt;br/&gt;conf capped at 0.70, evidence 1
     [*] --&gt; Asserted: remember untagged or --force&lt;br/&gt;conf as requested, 1.0 by default
@@ -230,7 +230,7 @@ grades, distinguished by who wrote the row and how it was tagged:</p>
         filters on id alone, expired rows included.
         Hard DELETE either way, with no record of
         the value that was removed.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p>Decay is <code>conf *= 0.9</code> per stale week, with
 <code>log1p(access_count)</code> subtracted from the week count first,
 so retrieval slows the fall without ever reversing it.</p>
@@ -286,7 +286,7 @@ cognition as a long-lived process under launchd/systemd
 SQLite file mapping the single key <code>'owner'</code> to a Claude Code
 session id for <code>--resume</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph FE[&quot;Front doors (owner-locked)&quot;]
         D[&quot;Discord DM&quot;]
         IM[&quot;iMessage&quot;]
@@ -326,7 +326,7 @@ session id for <code>--resume</code>.</li>
         CX[&quot;cortex.* — 12 tools&lt;br/&gt;backend gitignored, absent&quot;]
     end
     CC -.-&gt;|&quot;tool call&quot;| VAULT
-    CC -.-&gt;|&quot;tool call, fails closed&quot;| CX</code></pre>
+    CC -.-&gt;|&quot;tool call, fails closed&quot;| CX</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>This is the cheapest memory deployment in the atlas that still has an
 epistemic model. What has to be running: <strong>nothing</strong>. The
@@ -1303,7 +1303,16 @@ href="https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb657
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

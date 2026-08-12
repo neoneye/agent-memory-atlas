@@ -199,7 +199,7 @@ tool-result content"</em>, and the system prompt repeats the same thing
 to the model — <em>"Skills only provide instructions; use ordinary tools
 for filesystem or network access, with their normal approval
 rules."</em> Saying it twice, in two audiences, is the design.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R1[&quot;~/.agents/skills&quot;] --&gt; C
     R2[&quot;~/.ollama/skills&quot;] --&gt; C
     R3[&quot;&amp;lt;project&amp;gt;/.agents/skills&quot;] --&gt; C
@@ -211,7 +211,7 @@ rules."</em> Saying it twice, in two audiences, is the design.</p>
     H -- &quot;approved&quot; --&gt; A
     H -- &quot;denied&quot; --&gt; S
     A --&gt; T[&quot;body sits in the transcript&lt;br/&gt;no unload&quot;]
-    E[&quot;new or edited SKILL.md&quot;] -.-&gt;|&quot;not seen until&lt;br/&gt;the next agent session&quot;| C</code></pre>
+    E[&quot;new or edited SKILL.md&quot;] -.-&gt;|&quot;not seen until&lt;br/&gt;the next agent session&quot;| C</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no memory service, no database and no background process.
 The whole subsystem is four files in one Go package:</p>
@@ -591,7 +591,16 @@ installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -173,7 +173,7 @@ resonance with active memory, promotes the ones that resonate and
 discards the ones that never did.</p>
 <p>Active engrams accumulate Hebbian associations, decay, and can be
 superseded by concept match or retracted as wrong.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;memory_write&quot;] --&gt; SAL{&quot;salience threshold&quot;}
     SAL --&gt;|below| ST[&quot;staging buffer&quot;]
     ST --&gt; RES{&quot;resonance with active memory?&quot;}
@@ -192,7 +192,7 @@ superseded by concept match or retracted as wrong.</p>
     COH --&gt;|&quot;sparse, divergent tags&quot;| P05[&quot;penalty × ~0.5&quot;]
     COH --&gt;|&quot;cross-domain bridge&quot;| PBR[&quot;bridge weight reduced,&lt;br/&gt;far side barely affected&quot;]
     Q[&quot;search&quot;] --&gt; F[&quot;WHERE agent_id = $1 AND retracted = FALSE&quot;]
-    M1 -.-&gt;|&quot;invisible unless retracted: true&quot;| F</code></pre>
+    M1 -.-&gt;|&quot;invisible unless retracted: true&quot;| F</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/core</code> holds the write-side machinery —
 <code>salience</code>, <code>write-pipeline</code>,
@@ -505,7 +505,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

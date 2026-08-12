@@ -171,7 +171,7 @@ distributed-systems problem. Read against the corpus it is the mirror
 image of <a href="../rainbox/">RainBox</a> or <a
 href="../verel/">Verel</a>, which govern what may be believed and say
 nothing about what happens when the store is overloaded.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     N[&quot;Neuron&quot;] --&gt;|recall| CS{&quot;can_serve(query)?&quot;}
     CS --&gt;|false| Skip[&quot;hosting Dendrite&lt;br/&gt;skips responding&quot;]
     CS --&gt;|true| R[&quot;recall with deadline&quot;]
@@ -181,7 +181,7 @@ nothing about what happens when the store is overloaded.</p>
     W --&gt; J[&quot;_saga_journal&lt;br/&gt;a dict on the instance&quot;]
     J --&gt;|&quot;workflow FINAL&quot;| Commit[&quot;commit(trace_id)&lt;br/&gt;discard journal&quot;]
     J --&gt;|&quot;workflow failed&quot;| Comp[&quot;compensate(trace_id)&lt;br/&gt;replay inverses LIFO&quot;]
-    J -.-&gt;|&quot;worker dies&quot;| Lost[&quot;journal gone&lt;br/&gt;provisional writes&lt;br/&gt;become permanent&quot;]</code></pre>
+    J -.-&gt;|&quot;worker dies&quot;| Lost[&quot;journal gone&lt;br/&gt;provisional writes&lt;br/&gt;become permanent&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>Engram</code> is an ABC; <code>InMemoryEngram</code> (407
 lines) is the dict-backed default for tests and dev,
@@ -433,7 +433,16 @@ href="https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -180,7 +180,7 @@ vocabulary for prospective memory — <code>COMMITMENT</code> and
 href="../nooa-memory/">NOOA</a> and <a href="../gobii/">Gobii</a> give
 them an open/done state. It is the third arrangement of that category's
 three requirements and it satisfies none of them.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     In[&quot;remember()&quot;] --&gt; Ty[&quot;Regex type patterns&lt;br/&gt;→ one of 14 types + priority&lt;br/&gt;(no model call)&quot;]
     Ty --&gt; Wb[&quot;Weibull curve per type&lt;br/&gt;profile k=0.3 η=8760&lt;br/&gt;fact k=0.8 η=720&lt;br/&gt;observation k=0.9 η=480&quot;]
     Ty --&gt; Ver[&quot;Veracity weight&lt;br/&gt;stated 1.0 · unknown 0.8&lt;br/&gt;inferred 0.7 · imported 0.6 · tool 0.5&quot;]
@@ -192,7 +192,7 @@ three requirements and it satisfies none of them.</p>
     P --&gt; V3[&quot;fact&quot;] --&gt; Comb
     P --&gt; V4[&quot;temporal&quot;] --&gt; Comb
     Bank -.-&gt;|&quot;sleep(dryRun)&quot;| Sl[&quot;SHMR clustering&lt;br/&gt;similarity + harmony thresholds&quot;]
-    Ver -.-&gt;|&quot;unknown 0.8 outranks tool 0.5&quot;| Inv[&quot;labelling provenance&lt;br/&gt;honestly lowers standing&quot;]</code></pre>
+    Ver -.-&gt;|&quot;unknown 0.8 outranks tool 0.5&quot;| Inv[&quot;labelling provenance&lt;br/&gt;honestly lowers standing&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Bun's built-in SQLite, one database per <strong>bank</strong> under
 <code>~/.hermes/mnemopi/data/banks/</code>, selected by
@@ -513,7 +513,16 @@ href="https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

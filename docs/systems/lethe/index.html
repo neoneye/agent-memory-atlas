@@ -188,7 +188,7 @@ rejected or verified; a memory is deep or shallow, and depth is about
 float is not a state — and it is worth saying that the omission is
 coherent here: a system whose subject is deletion durability has chosen
 not to model belief, and says so by having one column.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Surface: inscribe — depth 1.0
     Surface --&gt; Sinking: gravity over time
     Sinking --&gt; Surface: recall touches it
@@ -200,7 +200,7 @@ not to model belief, and says so by having one column.</p>
     Submerged --&gt; Purged: purge
     Purged --&gt; [*]: rowid retired by AUTOINCREMENT&lt;br/&gt;so a later inscribe cannot impersonate it
     Purged --&gt; Receipt: purge_with_receipt
-    Receipt --&gt; [*]: Ed25519 signature over a Merkle root&lt;br/&gt;of the append-only event log</code></pre>
+    Receipt --&gt; [*]: Ed25519 signature over a Merkle root&lt;br/&gt;of the append-only event log</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One SQLite file, three tables kept in sync by the application:
 <code>memory</code> for rows, <code>memory_vec</code> (a
@@ -492,7 +492,16 @@ href="https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32eda
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

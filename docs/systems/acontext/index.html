@@ -186,7 +186,7 @@ though the codebase is full of statuses, and the distinction is worth
 keeping in mind when reading any system: a status on the process is not
 a status on the belief.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     AG[&quot;agent (Claude Code,&lt;br/&gt;OpenClaw, SDK)&quot;] --&gt; API[&quot;FastAPI server&quot;]
     API --&gt; PG[(&quot;Postgres&lt;br/&gt;sessions, messages,&lt;br/&gt;tasks, agent_skills&quot;)]
     API --&gt; MQ[&quot;message queue&quot;]
@@ -195,7 +195,7 @@ a status on the belief.</p>
     MQ2 --&gt; SA[&quot;process_skill_agent&quot;]
     SA --&gt; DISK[(&quot;disk&lt;br/&gt;skill files&quot;)]
     AG --&gt;|get_skill / get_skill_file| API
-    DASH[&quot;dashboard&quot;] --&gt; API</code></pre>
+    DASH[&quot;dashboard&quot;] --&gt; API</code></pre></details></figure>
 <ul>
 <li><strong>Server</strong> is
 <code>src/server/core/acontext_core/</code> — <code>schema/orm/</code>
@@ -599,7 +599,16 @@ href="https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc06
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -185,7 +185,7 @@ it.</p>
 repeated and down when contradicted, plus a trust level that only a
 person can raise to the top. There are two doors into the store, and
 they treat a rejected value completely differently.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;memory_add / memory_add_many&lt;br/&gt;the extractor&#39;s door&quot;] --&gt; G{&quot;suppression on this&lt;br/&gt;normalised value + project?&quot;}
     G -- &quot;yes&quot; --&gt; R[&quot;refused: rejected = true&lt;br/&gt;no row, no fade&quot;]
     G -- &quot;no&quot; --&gt; K{&quot;a live row with the same&lt;br/&gt;subject + predicate?&quot;}
@@ -201,7 +201,7 @@ they treat a rejected value completely differently.</p>
     D -- &quot;approve&quot; --&gt; W
     D -- &quot;reject&quot; --&gt; T[&quot;memory_suppressions&lt;br/&gt;subject + predicate + object + project&lt;br/&gt;normalised, durable, audited&quot;]
     T --&gt; G
-    T -. &quot;memory_unsuppress&lt;br/&gt;explicit, audited&quot; .-&gt; G</code></pre>
+    T -. &quot;memory_unsuppress&lt;br/&gt;explicit, audited&quot; .-&gt; G</code></pre></details></figure>
 <p>The two doors are the whole report. The reviewer's door ends in a
 value-keyed record that the write path consults and obeys — the durable
 constraint the <a
@@ -1058,7 +1058,16 @@ the built module rather than read.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

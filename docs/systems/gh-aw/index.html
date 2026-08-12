@@ -205,7 +205,7 @@ asked to decide <em>when</em> to persist will forget. The human's
 control is exercised at compile time, in frontmatter, through limits —
 and, for repo memory, afterwards, because the store is a git branch a
 person can open a pull request against.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;cache restored from a previous run&quot;] --&gt; H[&quot;delete .git/hooks/*&lt;br/&gt;core.hooksPath = /dev/null&quot;]
     H --&gt; F{&quot;git fsck clean?&quot;}
     F -- &quot;no&quot; --&gt; RI[&quot;rm -rf .git, reinitialise&lt;br/&gt;working tree preserved&quot;]
@@ -216,7 +216,7 @@ person can open a pull request against.</p>
     S --&gt; A[&quot;agent reads and edits files&quot;]
     A --&gt; C[&quot;commit run-$GITHUB_RUN_ID&lt;br/&gt;on the same integrity branch&quot;]
     C --&gt; SV[&quot;save cache&quot;]
-    L[&quot;legacy flat files, trust unknown&quot;] -.-&gt;|&quot;committed to &#39;none&#39; only,&lt;br/&gt;to prevent trust escalation&quot;| CO</code></pre>
+    L[&quot;legacy flat files, trust unknown&quot;] -.-&gt;|&quot;committed to &#39;none&#39; only,&lt;br/&gt;to prevent trust escalation&quot;| CO</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>gh-aw</code> is a <strong>compiler and a CLI</strong>, not a
 runtime. <code>gh aw compile</code> reads a Markdown workflow, resolves
@@ -700,7 +700,16 @@ installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

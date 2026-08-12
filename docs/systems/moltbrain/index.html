@@ -147,7 +147,7 @@ wrong</strong> — section 9, and it is the whole of the assessment.</p>
 typed observations and one structured summary. Both go to SQLite, and a
 background service mirrors them into ChromaDB so semantic search works.
 The web viewer reads SQLite.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;agent session&quot;] --&gt; X[&quot;XML blocks in the SDK response&quot;]
     X --&gt; P[&quot;parser.ts&quot;]
     P --&gt; O[&quot;ParsedObservation:&lt;br/&gt;type, title, subtitle, facts[],&lt;br/&gt;narrative, concepts[],&lt;br/&gt;files_read[], files_modified[]&quot;]
@@ -159,7 +159,7 @@ The web viewer reads SQLite.</p>
     CS --&gt; CH[&quot;ChromaDB&quot;]
     Q[&quot;semantic search via MCP&quot;] --&gt; CH
     L[&quot;listings&quot;] --&gt; W[&quot;SQL: WHERE project = ?&lt;br/&gt;indexed on project, type, created_at_epoch&quot;]
-    DUP[&quot;cleanup-duplicates.ts&quot;] -.-&gt;|&quot;the only deletion path,&lt;br/&gt;run by hand&quot;| DB</code></pre>
+    DUP[&quot;cleanup-duplicates.ts&quot;] -.-&gt;|&quot;the only deletion path,&lt;br/&gt;run by hand&quot;| DB</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/core</code> splits into <code>storage</code> (DataStore,
 Observations, Sessions, Summaries, Timeline, Prompts, migrations,
@@ -427,7 +427,16 @@ lives in a separate repository and was not read.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

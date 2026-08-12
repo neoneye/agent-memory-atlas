@@ -166,7 +166,7 @@ different form: a rewritten chain leaves the old commits reachable until
 garbage collection, and a forked branch may still hold them. "Delete
 what the agent learned about me" is a git history rewrite across every
 branch, which is a category of operation rather than a call.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     U[&quot;User turn&quot;] --&gt; C[&quot;_commit_turn()&quot;]
     A[&quot;Assistant turn&quot;] --&gt; C
     T[&quot;Tool call turn&quot;] --&gt; C
@@ -174,7 +174,7 @@ branch, which is a category of operation rather than a call.</p>
     G --&gt;|&quot;rebuild_from_log()&quot;| Idx[&quot;DedupIndex&lt;br/&gt;a PROJECTION, regenerable&quot;]
     Idx --&gt; Asm[&quot;ContextAssembler&lt;br/&gt;token-bounded&quot;]
     G --&gt;|&quot;re-parent a chain&quot;| Fork[&quot;Fork: replay onto&lt;br/&gt;a different history&quot;]
-    G -.-&gt;|&quot;records what HAPPENED&quot;| Note[&quot;a correction and the mistake&lt;br/&gt;are both in the log, in order,&lt;br/&gt;with nothing preferring either&quot;]</code></pre>
+    G -.-&gt;|&quot;records what HAPPENED&quot;| Note[&quot;a correction and the mistake&lt;br/&gt;are both in the log, in order,&lt;br/&gt;with nothing preferring either&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A git repository, <code>litellm</code> for model access (imported
 behind a <code>HAS_LITELLM</code> guard so the package works without
@@ -413,7 +413,16 @@ href="https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

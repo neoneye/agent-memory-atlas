@@ -167,7 +167,7 @@ thrown away and by which model.</p>
 <code>source_segment_refs</code> and <code>source_turn_numbers</code> —
 so a per-tag summary knows exactly which material it covers and where it
 stops.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;completed turn&quot;] --&gt; LT[&quot;LLM tagger — semantic tags&quot;]
     LT --&gt; VF[&quot;vocabulary feedback loop:&lt;br/&gt;reuse &#39;storage&#39;, do not invent &#39;data-persistence&#39;&quot;]
     VF --&gt; CAN[&quot;canonicaliser — synonyms folded&quot;]
@@ -179,7 +179,7 @@ stops.</p>
     AL --&gt; CONT[&quot;old queries still resolve&quot;]
     Q[&quot;incoming request&quot;] --&gt; ET[&quot;local embedding tagger, milliseconds, no LLM&quot;]
     ET --&gt; R[&quot;tag-directed retrieval&quot;]
-    F[&quot;new fact contradicts an old one&quot;] --&gt; SS[&quot;supersession checker marks it&quot;]</code></pre>
+    F[&quot;new fact contradicts an old one&quot;] --&gt; SS[&quot;supersession checker marks it&quot;]</code></pre></details></figure>
 <p>The two paths into retrieval are the design: the expensive tagger
 runs after the response, the cheap one before it, and the vocabulary
 they share is the same.</p>
@@ -463,7 +463,16 @@ installed, and no benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

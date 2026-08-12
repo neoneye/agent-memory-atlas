@@ -160,13 +160,13 @@ BufferZone      blobs awaiting processing</code></pre>
 <p>The life of a memo is a three-way decision made by one LLM call, and
 the vocabulary comes straight from
 <code>src/server/api/memobase_server/prompts/merge_profile.py</code>:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     N[&quot;new information about&lt;br/&gt;(topic, subtopic)&quot;] --&gt; M{&quot;merge_profile&quot;}
     M --&gt;|APPEND| A[&quot;the memo did not exist,&lt;br/&gt;or this is additive&quot;]
     M --&gt;|UPDATE| U[&quot;rewrite the memo —&lt;br/&gt;&lt;b&gt;old text ceases to exist&lt;/b&gt;&quot;]
     M --&gt;|ABORT| AB[&quot;discard the new information&quot;]
 
-    style U fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style U fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Three verdicts from one model call. <code>UPDATE</code> is the lossy
 one: the memo is rewritten and the previous wording is gone, so a wrong
 merge cannot be walked back.</p>
@@ -191,7 +191,7 @@ validity</a> is about — when it was said versus when it was true — and
 it lives inside a text string, maintained by asking a language model
 nicely, queryable by nothing.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     APP[&quot;app / SDK / MCP&quot;] --&gt;|insert blob| API[&quot;FastAPI&lt;br/&gt;memobase_server&quot;]
     API --&gt; BLOB[(&quot;general_blobs&quot;)]
     API --&gt; BUF[(&quot;buffer_zones&quot;)]
@@ -201,7 +201,7 @@ nicely, queryable by nothing.</p>
     EX -.-&gt;|delete unless&lt;br/&gt;persistent_chat_blobs| BLOB
     API --&gt;|get_user_context| CTX[&quot;context assembly&lt;br/&gt;profile + events,&lt;br/&gt;token-budgeted&quot;]
     PROF --&gt; CTX
-    EV --&gt; CTX</code></pre>
+    EV --&gt; CTX</code></pre></details></figure>
 <ul>
 <li><strong>Runtime</strong> is a single FastAPI service plus Postgres
 with <code>pgvector</code>. Redis appears for buffer coordination. There
@@ -605,7 +605,16 @@ href="https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a1
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

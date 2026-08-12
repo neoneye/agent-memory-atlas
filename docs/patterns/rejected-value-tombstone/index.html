@@ -203,14 +203,14 @@ rejected value:</p>
 <p>The tombstone records why, when, and by whom the value was rejected,
 plus the claim or evidence that triggered the decision. Normal retrieval
 suppresses it. Every automated write checks it before activation.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;Candidate value&quot;] --&gt; B[&quot;Normalize key and value&quot;]
     B --&gt; C{&quot;Rejected tombstone exists?&quot;}
     C -- &quot;No&quot; --&gt; D[&quot;Run dedupe and conflict policy&quot;]
     C -- &quot;Yes&quot; --&gt; E[&quot;Block, quarantine, or require review&quot;]
     F[&quot;Human rejection or correction&quot;] --&gt; G[&quot;Write tombstone&quot;]
     G --&gt; H[&quot;Reject or supersede active claim&quot;]
-    H --&gt; C</code></pre>
+    H --&gt; C</code></pre></details></figure>
 <h2 id="why-it-works">Why it works</h2>
 <p>A tombstone changes correction from a point-in-time mutation into a
 durable constraint. It prevents repeat failures across extraction runs
@@ -995,7 +995,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

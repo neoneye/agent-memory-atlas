@@ -163,7 +163,7 @@ repository came from as open-source, is <strong>not open source</strong>
 character turn — stored twice: as raw text in
 <code>history_database</code>, and as a pruned list of word ids in
 <code>histories_word_id_database</code>.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph W[&quot;after every exchange&quot;]
         TK[&quot;tokenise both halves into the word table (counts += 1)&quot;]
         TK --&gt; PC[&quot;prune_common: drop word ids above 0.000937 corpus share&quot;]
@@ -176,7 +176,7 @@ character turn — stored twice: as raw text in
         SC --&gt; BEST[&quot;best pair, excluding the last history_demarc (20) pairs —&lt;br/&gt;they are already in the context window&quot;]
         BEST --&gt; INJ[&quot;inject that pair and its two neighbours as [System M]&quot;]
     end
-    PC -.-&gt;|&quot;the corpus every query scores against&quot;| SC</code></pre>
+    PC -.-&gt;|&quot;the corpus every query scores against&quot;| SC</code></pre></details></figure>
 <p>There is no state a memory can be in. It is stored, it is scored, it
 is retrieved or it is not. Nothing expires, nothing is superseded,
 nothing is verified, and — apart from an undo of the most recent turn —
@@ -198,7 +198,7 @@ a field; its semantics were deleted, and the 7 is now an arbitrary
 nonzero.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Python, no server, no database. Three JSON files:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[message pair] --&gt; P[parse_words_to_database&lt;br/&gt;tokenise, count]
     P --&gt; WD[(LiveRAG_Words.json&lt;br/&gt;word / count / value)]
     P --&gt; HW[(LiveRAG_HistoryWordID.json&lt;br/&gt;me / her / scores)]
@@ -212,7 +212,7 @@ nonzero.</p>
     HW --&gt; EV
     EV --&gt; BEST[best pair, past demarc 20]
     HD --&gt; BEST
-    BEST --&gt; INJ[&quot;[System M] block: pair − 1, pair, pair + 1&quot;]</code></pre>
+    BEST --&gt; INJ[&quot;[System M] block: pair − 1, pair, pair + 1&quot;]</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to be running:</strong> the app. Storage is three
@@ -652,7 +652,16 @@ href="https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

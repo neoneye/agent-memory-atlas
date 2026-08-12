@@ -114,7 +114,7 @@ retrieved errors become stronger merely because the system keeps seeing
 them.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Separate lifecycle strength from truth and relevance:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     A[&quot;Memory + evidence&quot;] --&gt; B[&quot;Epistemic confidence / trust&quot;]
     A --&gt; C[&quot;Retrieval strength&quot;]
     A --&gt; D[&quot;Validity and retention policy&quot;]
@@ -124,7 +124,7 @@ them.</p>
     G --&gt; D
     B --&gt; H[&quot;Recall policy&quot;]
     C --&gt; H
-    D --&gt; H</code></pre>
+    D --&gt; H</code></pre></details></figure>
 <p>Decay only the dimension it is meant to control:</p>
 <ul>
 <li><strong>Retrieval-strength decay</strong> lowers default
@@ -439,7 +439,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

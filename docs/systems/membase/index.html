@@ -210,7 +210,7 @@ The response is stripped of code fences and stored whole as the
 <code>memory_level</code> appears exactly twice in the repository, both
 times inside the prompt string. The grading exists as an instruction to
 a model and never as a field anything can filter on.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;agent calls add(msg)&quot;] --&gt; B[&quot;SQLite row: memory_index = MAX+1&quot;]
     A --&gt; C[&quot;Chroma document, doc_id = msg.id&quot;]
     B --&gt; D{&quot;16 new stm since last ltm?&quot;}
@@ -224,7 +224,7 @@ a model and never as a field anything can filter on.</p>
     L[&quot;delete(memory_index)&quot;] --&gt;|&quot;DELETE&quot;| B
     L -.-&gt;|&quot;never called&quot;| C
     style G fill:#7f1d1d,color:#fff
-    style K fill:#7f1d1d,color:#fff</code></pre>
+    style K fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <p>The two red boxes are the report. The dotted edge is the third
 finding: delete reaches the record and not the index.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -753,7 +753,16 @@ href="https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed35392794
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

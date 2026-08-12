@@ -185,7 +185,7 @@ SQLite table <em>"so it survives graph pruning and is queryable
 independently"</em>. Most correction records in this atlas store the
 fact of a replacement; this one stores the argument for it, and puts it
 somewhere the garbage collector cannot reach.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; PENDING: extracted from the session
     PENDING --&gt; IN_PROGRESS
     IN_PROGRESS --&gt; COMPLETED: active — rendered in the resume block
@@ -202,7 +202,7 @@ somewhere the garbage collector cannot reach.</p>
     SUPERSEDED --&gt; [*]: hidden from query and context block
     INVALIDATED --&gt; [*]: hidden, and kept as a warning
     ARCHIVED --&gt; [*]: hidden
-    CONTESTED --&gt; [*]: BOTH sides stay visible&lt;br/&gt;joined by a CONFLICTS_WITH edge</code></pre>
+    CONTESTED --&gt; [*]: BOTH sides stay visible&lt;br/&gt;joined by a CONFLICTS_WITH edge</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>SQLite, with nodes and edges plus a separate
 <code>decision_transitions</code> table, and a per-project graph cache
@@ -493,7 +493,16 @@ href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

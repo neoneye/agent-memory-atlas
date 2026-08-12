@@ -237,7 +237,7 @@ archive."</em> Archiving a lesson frees its address. An agent that
 archives "never use the bulk-insert path here" and then re-derives it
 tomorrow writes it back into the same slot, and nothing in the system
 records that a human once removed it.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Active: memory.write upserts on scope plus key
     [*] --&gt; Active: a PR comment passes the deterministic signal filter
     Active --&gt; Active: a later write overwrites the value, no version kept
@@ -250,7 +250,7 @@ records that a human once removed it.</p>
     note right of Gone
         Every transition is logged. None of them
         preserves the value that was there.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>An NX monorepo shipping five packages and three plugins.</p>
 <p><strong>Storage</strong> is Supabase Postgres: a
@@ -709,7 +709,16 @@ href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cb
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

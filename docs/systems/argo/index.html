@@ -157,7 +157,7 @@ a review process rather than of the store.</p>
 <p>A fact about the architecture is written to a schema-validated JSON
 file, projected into a graph that is rebuilt from scratch, and served
 only if the index is qualified.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     LOOP[&quot;delivery loop&lt;br/&gt;business-partner → task-tidy → emit&quot;] --&gt; JSON[(&quot;design/KG/&lt;br/&gt;SystemArchitecture.json&lt;br/&gt;&lt;b&gt;canonical&lt;/b&gt;&quot;)]
     JSON --&gt; VAL[&quot;validateSystemArchitecture&lt;br/&gt;+ ArchiMate 3.2 rules&quot;]
     VAL --&gt; SYNC[&quot;syncSystemArchitectureToNeo4j&quot;]
@@ -169,7 +169,7 @@ only if the index is qualified.</p>
     GATE --&gt;|&quot;not qualified&quot;| CLOSED[&quot;fail closed —&lt;br/&gt;no degraded answer&quot;]
     GATE --&gt;|&quot;qualified&quot;| Q[&quot;queryNodes(index, topK, vector)&lt;br/&gt;WHERE node.channel = $channel&quot;]
 
-    style JSON fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style JSON fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>The shaded node is the memory. Everything to its right is derived and
 disposable, which is why the delete path is a wipe rather than a
 correction: there is nothing in the graph worth preserving that is not
@@ -590,7 +590,16 @@ approver.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

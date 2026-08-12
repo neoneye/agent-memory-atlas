@@ -180,7 +180,7 @@ line of SQL.</p>
 Behavioural analyses run as scheduled tasks over the audit history and
 write a new <code>behavioral_profiles</code> row, version incremented.
 That profile is the only thing that survives the session.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     TC[&quot;Tool call&quot;] --&gt; CL{&quot;Classifier:&lt;br/&gt;read-only allowlist?&quot;}
     CL -- &quot;yes&quot; --&gt; OK[&quot;Approved, sub-millisecond&quot;]
     CL -- &quot;no&quot; --&gt; P[&quot;Precedent match:&lt;br/&gt;capability family + scope&quot;]
@@ -195,7 +195,7 @@ That profile is the only thing that survives the session.</p>
     AL -- &quot;within this session only&quot; --&gt; P
     AL --&gt; AN[&quot;Background analyzer&quot;]
     AN --&gt; BP[(&quot;behavioral_profiles&lt;br/&gt;(user_id, agent_id)&lt;br/&gt;risk_level, version&quot;)]
-    BP --&gt; J</code></pre>
+    BP --&gt; J</code></pre></details></figure>
 <p>The two edges out of <code>audit_log</code> are the design: one feeds
 the current session and expires with it, the other feeds a profile that
 does not.</p>
@@ -469,7 +469,16 @@ this atlas whose subject is the actor.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

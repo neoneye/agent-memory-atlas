@@ -185,7 +185,7 @@ none" gives the model something to reason with instead of silent
 absence. It is attached only to <code>final_results[0]</code>, so a
 per-match field is carrying a per-query fact — a small structural oddity
 in an otherwise good idea.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph Tree[&quot;Scope as a path&quot;]
       A[&quot;/company&quot;] --&gt; B[&quot;/company/engineering&quot;] --&gt; C[&quot;/company/engineering/alice&quot;]
     end
@@ -195,7 +195,7 @@ in an otherwise good idea.</p>
     Plan --&gt;|keep| Keep[&quot;existing row unchanged&quot;]
     Plan --&gt;|update| Upd[&quot;existing row rewritten&quot;]
     Plan --&gt;|delete| Del[&quot;existing row destroyed&lt;br/&gt;no tombstone · no audit · no review&quot;]
-    Plan --&gt;|insert_new| Ins[&quot;new row&quot;]</code></pre>
+    Plan --&gt;|insert_new| Ins[&quot;new row&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A vector store and an embedder, and that is the bill. LanceDB is the
 default and is embedded, so a local install needs no service;
@@ -515,7 +515,16 @@ href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffc
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -178,7 +178,7 @@ actor id the calibration keys on; unspoofable once signed";</li>
 graph. A cell's <code>effective</code> score folds its stated
 confidence, its actor's calibration, and the mass of supporting versus
 challenging neighbours.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     P[&quot;WriteProposal: kind, title, body, confidence&quot;] --&gt; V{&quot;validate — v5 schema&quot;}
     V --&gt;|structural issue| REJ[&quot;rejected&quot;]
     V --&gt; F{&quot;firewall: screenFindings&quot;}
@@ -193,7 +193,7 @@ challenging neighbours.</p>
     OUT --&gt;|&quot;contradicted by an edge&quot;| L0[&quot;ActorOutcome: confidence, contradicted = true&quot;]
     OUT --&gt;|survived| L1[&quot;ActorOutcome: confidence, contradicted = false&quot;]
     L0 --&gt; C
-    L1 --&gt; C</code></pre>
+    L1 --&gt; C</code></pre></details></figure>
 <p>The loop from outcome back to calibration is the design. Every claim
 an actor makes is eventually graded against reality, and the grade
 prices their next one.</p>
@@ -520,7 +520,16 @@ read, never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

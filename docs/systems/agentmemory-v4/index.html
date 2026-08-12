@@ -164,7 +164,7 @@ settle it.</p>
 <p>Sessions are ingested into a fresh store per case, passed through
 extraction, classification and consolidation, indexed for dense
 retrieval, and answered under a per-question-type token budget.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     DS[&quot;dataset file&quot;] --&gt; ING[&quot;ingest case[&#39;haystack_sessions&#39;]&lt;br/&gt;into a fresh MemoryStore&quot;]
     ING --&gt; EX[&quot;extraction → classification →&lt;br/&gt;consolidation → calibration&quot;]
     EX --&gt; IDX[&quot;ANN index, all-mpnet-base-v2 dense embedder&quot;]
@@ -174,7 +174,7 @@ retrieval, and answered under a per-question-type token budget.</p>
     RR --&gt; BUD[&quot;token budget by question type:&lt;br/&gt;SSU 1500 · KU 2500 · SSA/SSP 3500&lt;br/&gt;TR 5000 · MS 7500&quot;]
     BUD --&gt; GEN[&quot;generate — claude-opus-4-6,&lt;br/&gt;gold answer never in scope&quot;]
     GEN --&gt; J[&quot;judge — gpt-4o, seed=42,&lt;br/&gt;prompts verbatim from evaluate_qa.py&quot;]
-    DC[&quot;USE_DIRECT_CONTEXT&quot;] -.-&gt;|&quot;False, with assert not …&lt;br/&gt;— run crashes if set True&quot;| RET</code></pre>
+    DC[&quot;USE_DIRECT_CONTEXT&quot;] -.-&gt;|&quot;False, with assert not …&lt;br/&gt;— run crashes if set True&quot;| RET</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>agentmemory/</code> is about 12,000 lines: <code>core</code>,
 <code>extraction</code>, <code>classification</code>,
@@ -471,7 +471,16 @@ is not committed and was not obtained.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

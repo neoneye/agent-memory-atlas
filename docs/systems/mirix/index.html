@@ -206,7 +206,7 @@ in its own right, so a bad extraction into <code>semantic_memory</code>
 does not destroy the material it came from. Little else in the
 typed-memory family keeps this.</p>
 <p>The state machine is short, which is the point:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     direction TB
     [*] --&gt; Exists: message → accumulator → meta agent&lt;br/&gt;→ specialist agent → typed row
     Exists --&gt; Gone: per-type update / replace&lt;br/&gt;(&lt;code&gt;semantic_memory_update&lt;/code&gt;,&lt;br/&gt;&lt;code&gt;episodic_memory_replace&lt;/code&gt;, …)&lt;br/&gt;hard delete + insert
@@ -216,7 +216,7 @@ typed-memory family keeps this.</p>
         Two states, and no vocabulary for a third.
         Not candidate, not disputed, not rejected,
         not superseded — none of these exist in the schema.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p>There is no state between "exists" and "gone". A row is never a
 candidate, never disputed, never rejected, never superseded — the
 vocabulary does not exist in the schema. Memory is
@@ -230,7 +230,7 @@ sentence, not a link to the <code>raw_memory</code> row it came
 from.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Four services, all in <code>docker-compose.yml</code>:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     C[&quot;client / SDK&quot;] --&gt; API[&quot;FastAPI server&lt;br/&gt;:8531&quot;]
     D[&quot;React dashboard&lt;br/&gt;:5173&quot;] --&gt; API
     API --&gt; ACC[&quot;TemporaryMessageAccumulator&quot;]
@@ -241,7 +241,7 @@ from.</p>
     A1 --&gt; R[(&quot;Redis Stack&lt;br/&gt;cache + vector index&quot;)]
     DREAM[&quot;auto_dream_manager&quot;] --&gt; A1
     API --&gt; PG
-    API --&gt; R</code></pre>
+    API --&gt; R</code></pre></details></figure>
 <ul>
 <li><strong>Persistence</strong> is Postgres with <code>pgvector</code>
 (<code>ankane/pgvector:v0.5.1</code>) when <code>MIRIX_PG_URI</code> is
@@ -703,7 +703,16 @@ href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e03232
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

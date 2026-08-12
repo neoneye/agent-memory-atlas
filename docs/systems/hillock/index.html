@@ -212,7 +212,7 @@ hypervector is a different random vector in every run. This does not
 affect correctness — similarity is computed between vectors from the
 same run — but it means the vector layer holds no memory in the sense
 this atlas uses the word.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Q[&quot;user turn&quot;] --&gt; L[&quot;link_entities:&lt;br/&gt;string match to entity ids&quot;]
   L --&gt; F[&quot;SQL: every triple where the entity&lt;br/&gt;is subject or object&quot;]
   F --&gt; M[&quot;bundle query tokens · bundle each fact&lt;br/&gt;as exactly 3 components · cosine&quot;]
@@ -222,7 +222,7 @@ this atlas uses the word.</p>
   H --&gt; P[&quot;render prompt = matched facts&lt;br/&gt;+ primed associations&quot;]
   P --&gt; O[&quot;Ollama renders the answer&quot;]
   S[&quot;reservoir state&quot;] -. &quot;decay·state + token + roll(state)·token&quot; .-&gt; S
-  S -.-&gt;|&quot;top-1 codebook match&quot;| PR[&quot;pronoun resolution&lt;br/&gt;when no entity linked&quot;]</code></pre>
+  S -.-&gt;|&quot;top-1 codebook match&quot;| PR[&quot;pronoun resolution&lt;br/&gt;when no entity linked&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A console program. <code>python main.py</code> opens a REPL against a
 local Ollama endpoint; there is no server, no API and no importable
@@ -801,7 +801,16 @@ separate code rather than by importing the modules.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

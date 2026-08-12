@@ -167,14 +167,14 @@ is no tombstone. And the personas are synthetic, so the eval measures
 retrieval over generated material rather than over anything a person
 actually said.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     T[&quot;turn&quot;] --&gt; EP[(&quot;episodic event — &lt;i&gt;what happened&lt;/i&gt;&lt;br/&gt;atlas_memory_episodic&quot;)]
     EP --&gt;|&quot;consolidation: one model pass&quot;| SE[(&quot;semantic fact — &lt;i&gt;what&#39;s true&lt;/i&gt;&lt;br/&gt;atlas_memory_semantic, deduped&quot;)]
     EP --&gt;|&quot;consolidation: one model pass&quot;| PR[(&quot;procedural playbook — &lt;i&gt;what works&lt;/i&gt;&lt;br/&gt;atlas_memory_procedural, updated&quot;)]
     SE --&gt; RC[&quot;recall: RRF over BM25 and semantic,&lt;br/&gt;filtered by user_id&quot;]
     EP --&gt; RC
 
-    style EP fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style EP fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>One model pass produces both derived kinds, and the episodic event it
 came from is kept — so the three tables are what happened, what is true,
 and what works, with the first remaining the evidence for the other
@@ -403,7 +403,16 @@ href="https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

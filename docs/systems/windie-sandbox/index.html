@@ -210,7 +210,7 @@ value, but it gates whether a <em>tool call</em> proceeds, not whether a
 memory may be believed. A message that the user rewrote and a message
 the model produced are the same kind of row afterwards, and nothing
 records which is which.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     R[&quot;root A&quot;] --&gt; B[&quot;B&quot;]
     B --&gt; C[&quot;C — selected head&quot;]
     B --&gt; D[&quot;D — sibling branch&quot;]
@@ -227,7 +227,7 @@ records which is which.</p>
     F[&quot;user forks at B&quot;] --&gt; NB[&quot;new child of B&lt;br/&gt;&lt;i&gt;A and B untouched&lt;/i&gt;&quot;]
 
     style U fill:#f4c9c9,stroke:#a33
-    style NB fill:#d8ecd8,stroke:#4a7c4a</code></pre>
+    style NB fill:#d8ecd8,stroke:#4a7c4a</code></pre></details></figure>
 <p>The two shaded boxes are the same promise resolved two ways. A fork
 is additive and the original is intact. An edit is destructive, and
 because the edited node is <em>shared by every branch below it</em>, it
@@ -681,7 +681,16 @@ not enter.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

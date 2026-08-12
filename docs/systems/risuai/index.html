@@ -169,7 +169,7 @@ messages</strong>:</p>
 }</code></pre>
 <p>The state machine is short, and the interesting transitions are the
 ones that kill a memory:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     OV[context overflows] --&gt; RUN[a run of messages is summarized]
     RUN --&gt; S[&quot;Summary — text + chatMemos&quot;]
     S --&gt;|user pins it| PIN[&quot;isImportant: always selected first&quot;]
@@ -179,7 +179,7 @@ ones that kill a memory:</p>
     SRC[a source message is deleted from the chat] --&gt; SUB[&quot;isSubset(chatMemos, currentMemos) fails&quot;]
     S --&gt; SUB
     SUB --&gt; DROP[&quot;the summary is dropped —&lt;br/&gt;&lt;b&gt;deletion propagates&lt;/b&gt;&quot;]
-    S --&gt;|budget pressure| RES[&quot;re-summarization: summaries of summaries&lt;br/&gt;chatMemos preserved through the merge&quot;]</code></pre>
+    S --&gt;|budget pressure| RES[&quot;re-summarization: summaries of summaries&lt;br/&gt;chatMemos preserved through the merge&quot;]</code></pre></details></figure>
 <p>Memory is <strong>hybrid</strong>: an LLM writes it, the token budget
 decides when, and a person can overrule any of it through the review
 modal. Nothing is treated as verified — <code>isImportant</code> records
@@ -191,7 +191,7 @@ was ever asserted.</p>
 <p>TypeScript and Svelte, GPL-3.0, running as a web app and a Tauri
 desktop build. It is a client: there is no server, no database process
 and no worker queue. Everything below runs in the user's browser.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[Chat messages] --&gt; OV{context&lt;br/&gt;overflow?}
     OV --&gt;|no| P[Prompt]
     OV --&gt;|yes| SUM[summarize&lt;br/&gt;LLM or local WebLLM]
@@ -204,7 +204,7 @@ and no worker queue. Everything below runs in the user's browser.</p>
     SEL --&gt; P
     S --&gt; MOD[HypaV3 review modal&lt;br/&gt;edit / delete / merge / reroll / pin]
     MOD --&gt; S
-    EMB[HypaProcessorV2&lt;br/&gt;cached embeddings] --&gt; SIM</code></pre>
+    EMB[HypaProcessorV2&lt;br/&gt;cached embeddings] --&gt; SIM</code></pre></details></figure>
 <p><strong>Six files, three eras.</strong> <code>hypamemory.ts</code>
 (2023-06-29) is <code>HypaProcesser</code>, the original in-memory
 vector store, still used by SupaMemory and by
@@ -671,7 +671,16 @@ href="https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff8
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

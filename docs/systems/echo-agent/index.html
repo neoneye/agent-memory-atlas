@@ -186,7 +186,7 @@ rather than one cliff, and <code>run_decay_pass</code> applies them in
 the background.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;write path assigns source&lt;br/&gt;user_stated 3, consolidated 2,&lt;br/&gt;model_inferred 1, legacy 0&quot;] --&gt; G{&quot;provenance_guard:&lt;br/&gt;actor rank &gt;= target rank?&quot;}
     G -- &quot;no&quot; --&gt; REJ[&quot;write refused&quot;]
     G -- &quot;yes&quot; --&gt; S[&quot;stored in a tier&quot;]
@@ -198,7 +198,7 @@ thing becomes a belief, and how it stops being one</h3>
     AR --&gt;|&quot;past forget threshold&quot;| F[[&quot;forgotten&quot;]]
     SUP -.-&gt;|&quot;nothing keys the value,&lt;br/&gt;so a ranked path re-admits it&quot;| W
 
-    style F fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style F fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The diamond at the top is the design. Most systems in this atlas let
 any writer overwrite any memory and then try to sort out the mess
 downstream; this one refuses the write. The dashed edge is what the
@@ -494,7 +494,16 @@ href="https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

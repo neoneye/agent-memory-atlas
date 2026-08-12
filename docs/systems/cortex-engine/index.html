@@ -168,7 +168,7 @@ evaluated</strong> — section 10.</p>
 namespaced graph. Writing a belief appends to a belief log and updates
 the memory atomically. Contradicting one goes through adjudication
 first. Background "dreaming" consolidates in two phases.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     O[&quot;observe(evidence)&quot;] --&gt; NEAR{&quot;nearest existing memory&quot;}
     NEAR --&gt;|&quot;temporal succession detected&quot;| MSG[&quot;message: revise with believe(valid_from);&lt;br/&gt;TENSION signal tracks the pending revision&quot;]
     C[&quot;contradict(evidence, belief)&quot;] --&gt; ADJ{&quot;adjudicate: NLI cross-encoder,&lt;br/&gt;LLM fallback&quot;}
@@ -183,7 +183,7 @@ first. Background "dreaming" consolidates in two phases.</p>
     TX --&gt; PB[&quot;putBelief: old_definition, new_definition,&lt;br/&gt;reason, changed_at, valid_from, valid_to&quot;]
     TX --&gt; UM[&quot;updateMemory: definition, embedding, updated_at&quot;]
     D[&quot;dream&quot;] --&gt; NREM[&quot;NREM: cluster, refine, create&quot;]
-    D --&gt; REM[&quot;REM: connect, score, abstract&quot;]</code></pre>
+    D --&gt; REM[&quot;REM: connect, score, abstract&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> splits into <code>core</code>, <code>engines</code>
 (cognition, graph-metrics, adjudicate), <code>tools</code> (the 60 MCP
@@ -490,7 +490,16 @@ recorded as documented rather than verified in source.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -156,7 +156,7 @@ session/entity scope.</li>
 <code>expiration_date</code>.</li>
 </ul>
 <p>The lifecycle is:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[&quot;messages&quot;] --&gt; P[&quot;parse, vision handling&quot;]
     P --&gt; N[&quot;retrieve nearby existing memories&quot;]
     N --&gt; X[&quot;LLM additive extraction&quot;]
@@ -169,7 +169,7 @@ session/entity scope.</li>
     S --&gt; R[&quot;optional rerank&quot;]
     R --&gt; F[&quot;result formatting&quot;]
 
-    style X fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style X fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The highlighted step is where the V3 change lands. Extraction is
 <strong>additive</strong>: it proposes new facts given the nearby ones,
 and the default <code>add(..., infer=True)</code> no longer asks the
@@ -198,14 +198,14 @@ helpers.</li>
 <code>MemoryItem</code> types.</li>
 </ul>
 <p>Runtime shape:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
   App[&quot;App / Agent SDK&quot;] --&gt; Memory[&quot;Memory&quot;]
   Memory --&gt; LLM[&quot;LLM extractor&quot;]
   Memory --&gt; Embedder[&quot;Embedder&quot;]
   Memory --&gt; VS[&quot;Vector store&quot;]
   Memory --&gt; EntVS[&quot;Entity vector collection&quot;]
   Memory --&gt; SQLite[&quot;SQLite history + recent messages&quot;]
-  Memory --&gt; Reranker[&quot;Optional reranker&quot;]</code></pre>
+  Memory --&gt; Reranker[&quot;Optional reranker&quot;]</code></pre></details></figure>
 <p>The vector store is the authoritative memory store. SQLite tracks
 <code>history</code> and <code>messages</code>; it does not store full
 active memory rows except operation history.</p>
@@ -543,7 +543,16 @@ href="https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

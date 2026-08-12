@@ -192,7 +192,7 @@ lifted.</p>
 <p>Nova has two memories that never touch. Events are what happened;
 concepts are what is true. The second one is the interesting one, and
 its state machine has an entrance, a gate, and no exit.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Unknown: word encountered
     Unknown: definition &quot;unknown&quot;&lt;br/&gt;confidence 0.1
     Unknown --&gt; Defined: teach or wikipedia auto_learn
@@ -212,7 +212,7 @@ its state machine has an entrance, a gate, and no exit.</p>
     Rejected: status rejected&lt;br/&gt;reason and time in the audit log
     Rejected --&gt; Rejected: auto re-extraction lands here&lt;br/&gt;and cannot lift it
     Rejected --&gt; Believed: only a person re-teaching it
-    Rejected --&gt; [*]: hard_delete, refused until everything is rejected</code></pre>
+    Rejected --&gt; [*]: hard_delete, refused until everything is rejected</code></pre></details></figure>
 <p>The gate between <code>Pending</code> and <code>Believed</code> is
 the design's best idea: a parsed relation is not a belief, and a person
 decides which it becomes. That is <a
@@ -769,7 +769,16 @@ href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae573
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

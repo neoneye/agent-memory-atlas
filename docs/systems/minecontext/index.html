@@ -224,7 +224,7 @@ candidate, verified, rejected or superseded state, and
 recording; the system decides what is worth extracting, what to merge it
 into, and what they have committed to.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     SC[&quot;screenshot.py&quot;] --&gt; P[&quot;context_processing&lt;br/&gt;chunker → processor → merger&quot;]
     FM[&quot;folder_monitor.py&quot;] --&gt; P
     VD[&quot;vault_document_monitor.py&quot;] --&gt; P
@@ -235,7 +235,7 @@ into, and what they have committed to.</p>
     GR[&quot;generation_report&lt;br/&gt;daily / weekly&quot;] --&gt; SQ
     API[&quot;FastAPI routes&quot;] --&gt; SQ
     API --&gt; VEC
-    UI[&quot;Electron desktop app&quot;] --&gt; API</code></pre>
+    UI[&quot;Electron desktop app&quot;] --&gt; API</code></pre></details></figure>
 <ul>
 <li><strong>Capture</strong> is
 <code>opencontext/context_capture/</code>: <code>screenshot.py</code>,
@@ -626,7 +626,16 @@ href="https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

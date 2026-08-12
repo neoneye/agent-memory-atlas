@@ -185,7 +185,7 @@ resolution does not.</li>
 changed gets a score and a reason. Read-side only: ranking consults it,
 nothing writes it.</li>
 </ul>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Active: extraction pipeline writes a learning
     Active --&gt; Superseded: trust below 3.0, superseded_by set, valid_until stamped
     Active --&gt; PendingConfirmation: trust &gt;= 3.0, supersede downgraded to a proposal
@@ -194,7 +194,7 @@ nothing writes it.</li>
     Active --&gt; Quarantined: quarantine_session marks the whole session
     Quarantined --&gt; Active: unquarantine_session
     Superseded --&gt; [*]: excluded from every read path
-    Quarantined --&gt; [*]: excluded from search, associations and embedding</code></pre>
+    Quarantined --&gt; [*]: excluded from search, associations and embedding</code></pre></details></figure>
 <p>The self-loop is the finding. A learning that reaches
 <code>pending_confirmation</code> stays active and stays uncorrected,
 and the only trace of the attempted correction is a line in the daemon
@@ -613,7 +613,16 @@ benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

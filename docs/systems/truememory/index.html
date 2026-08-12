@@ -162,7 +162,7 @@ changes" (<code>"not X anymore"</code>, <code>"no longer X"</code>),
 "invalidations" (<code>"that's wrong"</code>) and "retractions"
 (<code>"changed my mind about X"</code>, <code>"scratch that"</code>),
 and writes what it finds into <code>fact_timeline</code>.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     M[&quot;messages — the log, append-only&quot;] --&gt; P1[&quot;phase 1: read all messages chronologically&quot;]
     P1 --&gt; P2[&quot;phase 2: compute contradictions in memory&lt;br/&gt;regex — corrections, negations,&lt;br/&gt;invalidations, retractions&lt;br/&gt;(no write lock held)&quot;]
     P2 --&gt; P3[&quot;phase 3: one SAVEPOINT&quot;]
@@ -173,7 +173,7 @@ and writes what it finds into <code>fact_timeline</code>.</p>
     FT --&gt; CUR{&quot;current = not superseded_by&lt;br/&gt;AND status != &#39;superseded&#39;&quot;}
     CUR --&gt;|&quot;found&quot;| L[&quot;latest current fact&quot;]
     CUR --&gt;|&quot;none&quot;| H[&quot;fall back to the latest of history&quot;]
-    H --&gt; HALF[&quot;relevance × 0.5 — still retrievable, ranked lower&quot;]</code></pre>
+    H --&gt; HALF[&quot;relevance × 0.5 — still retrievable, ranked lower&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One package, thirty-odd modules, one SQLite file. The retrieval side
 is unusually built out for a local system: <code>fts_search</code>,
@@ -531,7 +531,16 @@ checked against the README's stated mean and agree.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

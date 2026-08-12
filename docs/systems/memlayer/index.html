@@ -157,7 +157,7 @@ comments rather than a configuration guide.</p>
 passes is extracted into facts and entities, held in a vector store and
 a graph, and retrieved by similarity plus traversal at a latency tier
 the caller chooses.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     M[&quot;message&quot;] --&gt; RX{&quot;NON_SALIENT_PATTERNS —&lt;br/&gt;bare &#39;hi&#39;, &#39;thanks&#39;, &#39;ok&#39;, &#39;bye&#39;&quot;}
     RX --&gt;|match| DROP[&quot;dropped, no embedding computed&quot;]
     RX --&gt;|no match| MODE{&quot;SalienceMode&quot;}
@@ -178,7 +178,7 @@ the caller chooses.</p>
     V --&gt; F
     G --&gt; B
     G --&gt; D
-    OBS[&quot;observability: per-search traces and metrics&quot;] -.-&gt; T</code></pre>
+    OBS[&quot;observability: per-search traces and metrics&quot;] -.-&gt; T</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nine modules: <code>client</code>, <code>services</code>,
 <code>ml_gate</code>, <code>embedding_models</code>,
@@ -395,7 +395,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

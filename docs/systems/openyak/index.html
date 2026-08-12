@@ -198,7 +198,7 @@ and whatever it returns becomes the document.</p>
 <p>Beside that, a person can edit the text directly in the settings tab,
 or delete the row entirely. Both are immediate and neither is
 recorded.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Queued: a conversation ends in a workspace
     Queued --&gt; Queued: another session in the same directory joins the same pending entry
     Queued --&gt; Rewritten: after the debounce, an LLM merges the old document with the conversation
@@ -211,7 +211,7 @@ recorded.</p>
         There is no unit below the document.
         Nothing here can be addressed, so nothing
         here can be superseded or rejected.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A FastAPI backend with SQLAlchemy and a React frontend, shipped as a
 desktop application. The memory subsystem is seven files under
@@ -502,7 +502,16 @@ href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

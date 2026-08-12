@@ -131,7 +131,7 @@ lexical arm rather than for expecting an embedding to grow one.</p>
 <p>Apply hard filters first, retrieve candidates through independent
 channels, normalize or rank their outputs, then fuse and cap the final
 context:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;Query&quot;] --&gt; F[&quot;Hard scope, lifecycle,&lt;br/&gt;sensitivity filters&quot;]
     F --&gt; V[&quot;Vector&lt;br/&gt;candidates&quot;]
     F --&gt; L[&quot;BM25 / FTS&lt;br/&gt;candidates&quot;]
@@ -140,7 +140,7 @@ context:</p>
     L --&gt; R
     E --&gt; R
     R --&gt; X[&quot;Optional reranker&quot;]
-    X --&gt; B[&quot;Diversity +&lt;br/&gt;token budget&quot;]</code></pre>
+    X --&gt; B[&quot;Diversity +&lt;br/&gt;token budget&quot;]</code></pre></details></figure>
 <p>Reciprocal-rank fusion is a useful baseline because it combines
 rankings without pretending incomparable scores share a calibrated scale
 — the property its authors claim for it, "without regard to the
@@ -389,7 +389,16 @@ key</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -210,7 +210,7 @@ current behaviour so that changing it is a visible diff.</p>
 <p>Control is the operator's and the model's, not the user's. There is
 no end-user surface; memories are produced automatically from traffic
 and removed through an admin API.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;chat completion through Envoy&quot;] --&gt; J{&quot;jailbreak classifier&lt;br/&gt;on the request path&quot;}
     J -- &quot;blocked&quot; --&gt; D[&quot;no memory produced&quot;]
     J -- &quot;clean&quot; --&gt; S[&quot;sanitize: valid UTF-8,&lt;br/&gt;non-empty, cap 16 KB&quot;]
@@ -224,7 +224,7 @@ and removed through an admin API.</p>
     RET -.-&gt;|&quot;AccessCount++&lt;br/&gt;LastAccessed = now&quot;| V
     C[&quot;consolidation goroutine&quot;] --&gt; CG[&quot;group by Jaccard 0.60,&lt;br/&gt;merge, delete originals&quot;]
     CG --&gt; V
-    X[&quot;two contradicting facts&quot;] -.-&gt;|&quot;soft insert:&lt;br/&gt;both stored, both retrievable&quot;| V</code></pre>
+    X[&quot;two contradicting facts&quot;] -.-&gt;|&quot;soft insert:&lt;br/&gt;both stored, both retrievable&quot;| V</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The router is an <strong>Envoy external-processing (ext_proc)
 filter</strong> written in Go, sitting in the data path of every
@@ -680,7 +680,16 @@ was installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

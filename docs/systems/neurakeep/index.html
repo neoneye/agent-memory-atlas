@@ -208,7 +208,7 @@ durable event, fact or failure that does not pass through that row.</p>
 true, <code>created_at</code> says when the store learned it, and
 <code>review_after</code> schedules a date to look again — a memory that
 asks to be re-examined rather than waiting to be contradicted.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   I[&quot;ingest: file, PDF, session&quot;] --&gt; SC[&quot;safety scan&quot;]
   SC --&gt;|poisoning pattern| DT[&quot;trust_level forced to untrusted&quot;]
   SC --&gt; SEC[&quot;sections + FTS5&quot;]
@@ -222,7 +222,7 @@ asks to be re-examined rather than waiting to be contradicted.</p>
   P --&gt; R{&quot;a person applies it&quot;}
   R --&gt;|apply| D[&quot;durable event · fact · failure&quot;]
   D --&gt; A[&quot;governor audit: before, after, undoable&quot;]
-  A -.-&gt;|undo restores before| D</code></pre>
+  A -.-&gt;|undo restores before| D</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A single Node process over one SQLite file, plus a browser UI served
 locally.</p>
@@ -677,7 +677,16 @@ network call to it.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

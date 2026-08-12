@@ -169,7 +169,7 @@ mechanism, not as a general memory design.</p>
                                                                     ▲
                                                             population diversity</code></pre>
 <p>Selection lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     P[&quot;population of scored solutions&quot;] --&gt; D[&quot;_calculate_diversity&lt;br/&gt;&lt;i&gt;samples 50 pairs → 0 identical .. 1 max&lt;/i&gt;&quot;]
     D --&gt; T[&quot;_adaptive_temperature_by_diversity&lt;br/&gt;(current, min, max, base)&lt;br/&gt;&lt;i&gt;blends 20% of the current temperature&lt;br/&gt;for stability&lt;/i&gt;&quot;]
     T --&gt; B[&quot;_boltzmann_selection_with_weights(scores, temperature)&quot;]
@@ -180,7 +180,7 @@ mechanism, not as a general memory design.</p>
     NX --&gt; AP[&quot;the new solution is appended with its score&quot;]
     AP -.-&gt; P
 
-    style T fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style T fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>An explicit exploration/exploitation trade applied to recall, with no
 counterpart anywhere else in this atlas. Diversity drives temperature,
 temperature drives how greedily a parent is chosen, and the new
@@ -201,7 +201,7 @@ temperature), <code>base_memory.py</code> (<code>Solution</code>,
 <code>compressor/</code>, <code>storage/</code>.</li>
 <li><code>README.md</code> in the memory package.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Att[&quot;Attempt&quot;] --&gt; Sol[&quot;Solution&lt;br/&gt;{text, score,&lt;br/&gt;ts}&quot;]
   Sol --&gt; Pop[&quot;population&lt;br/&gt;(in-memory&lt;br/&gt;| redis)&quot;]
   Pop --&gt; Div[&quot;_calculate_diversity&lt;br/&gt;(50 sampled pairs)&quot;]
@@ -214,7 +214,7 @@ temperature), <code>base_memory.py</code> (<code>Solution</code>,
   STM --&gt; Comp[&quot;Compressor&quot;]
   Comp --&gt; MTM[&quot;MediumTermMemory&quot;]
   MTM --&gt; Comp
-  Comp --&gt; LTM[&quot;LongTermMemory&quot;]</code></pre>
+  Comp --&gt; LTM[&quot;LongTermMemory&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="temperature-from-diversity">Temperature from diversity</h3>
@@ -450,7 +450,16 @@ href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

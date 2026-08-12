@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 <p>That distinction runs through the whole site, and it is worth seeing
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;264 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
@@ -141,7 +141,7 @@ can carry:</p>
     CI --&gt; CONST
     HAND --&gt; TODAY[&quot;Complete as a fact about today&lt;br/&gt;a new report shows up only if someone writes the paragraph&quot;]
     CHK[&quot;check_verdict_anchors.py&lt;br/&gt;check_homepage.py&quot;] -.-&gt;|&quot;catches a dead link or a stale count&quot;| TODAY
-    CHK -.-&gt;|&quot;cannot notice a verdict nobody wrote&quot;| TODAY</code></pre>
+    CHK -.-&gt;|&quot;cannot notice a verdict nobody wrote&quot;| TODAY</code></pre></details></figure>
 <p>The dotted edges are the honest part. A check can tell you that
 something written went wrong; nothing tells you that something was never
 written. So the generated pages are a guarantee and this one is a report
@@ -7254,7 +7254,16 @@ path.</li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

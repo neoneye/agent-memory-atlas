@@ -114,14 +114,14 @@ also ambiguous: they often mix truth, retrieval relevance, and model
 certainty.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Start with a small state machine:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Candidate
     Candidate --&gt; Verified: trusted source or corroboration
     Candidate --&gt; Rejected: review or contradiction
     Verified --&gt; Stale: age or superseding evidence
     Verified --&gt; Rejected: correction
     Stale --&gt; Verified: revalidation
-    Rejected --&gt; Candidate: explicit reactivation</code></pre>
+    Rejected --&gt; Candidate: explicit reactivation</code></pre></details></figure>
 <p>Keep separate dimensions for:</p>
 <ul>
 <li><strong>Trust state:</strong> whether the memory may be treated as
@@ -473,7 +473,16 @@ reinforcement</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

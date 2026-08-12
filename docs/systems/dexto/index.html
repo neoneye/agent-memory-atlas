@@ -184,7 +184,7 @@ and there are tests for both cases.</p>
 — the previous content of an updated memory is gone. For a store this
 small, curated by hand, that is a defensible trade rather than an
 oversight; the memory a person edits is one they are looking at.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Stored: a person or a tool calls create with validated content
     Stored --&gt; Stored: update rewrites in place and bumps updatedAt
     Stored --&gt; Pinned: a person pins it
@@ -195,7 +195,7 @@ oversight; the memory a person edits is one they are looking at.</p>
     note right of Injected
         There is no query. What reaches the prompt
         is a filter and a sort, never a match.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A library inside a framework. <code>MemoryManager</code> wraps a
 <code>MemoryStore</code>, and two implementations ship:
@@ -445,7 +445,16 @@ href="https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -190,7 +190,8 @@ context."</em> The argument given is transcription error — a grid read
 by eye is a grid that may have been read wrong — so the harness treats
 the agent's own context as the unreliable medium and the file as the
 reliable one.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — why the log is complete — the broker holds the key, so no action reaches the game off-record</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: why the log is complete — the broker holds the key, so no action reaches the game off-record
+flowchart TD
   AGENT[&quot;stock coding agent&lt;br/&gt;context compacts, counted in games.compactions&quot;]
   AGENT --&gt;|&quot;./act do --plan &#39;…&#39;&quot;| BROKER[&quot;broker: holds the key,&lt;br/&gt;plays the action, writes the log&quot;]
   BROKER --&gt; GAME[&quot;ARC-AGI-3&quot;]
@@ -203,7 +204,7 @@ reliable one.</p>
   NOTES --&gt; MIRROR
   MIRROR --&gt;|&quot;yes&quot;| PG[(&quot;Postgres: runs, games,&lt;br/&gt;actions, artifacts by name&quot;)]
   MIRROR --&gt;|&quot;same length&quot;| MISS[&quot;edit never reaches the record&quot;]
-  PG --&gt; AUDIT[&quot;audit.py re-grades stored sessions&lt;br/&gt;verdict → games.reaudit, beside games.audit&quot;]</code></pre>
+  PG --&gt; AUDIT[&quot;audit.py re-grades stored sessions&lt;br/&gt;verdict → games.reaudit, beside games.audit&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <ul>
 <li><strong><code>act.py</code></strong> (580 lines) is the actuator and
@@ -594,7 +595,16 @@ committed session workspaces and <code>docs/failure-modes.md</code>.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

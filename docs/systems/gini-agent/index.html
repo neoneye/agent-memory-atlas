@@ -200,7 +200,7 @@ validity</a> — the pattern the atlas credits to <a
 href="../graphiti/">Graphiti</a>, implemented here as ordinary
 columns.</p>
 <p>Recall:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     Q[&quot;query&quot;] --&gt; SEM[&quot;semantic&lt;br/&gt;&lt;i&gt;cosine vs query embedding, Eqs. 9–10&lt;/i&gt;&quot;]
     Q --&gt; BM[&quot;bm25&lt;br/&gt;&lt;i&gt;FTS5 MATCH on memory_units_fts, Eq. 11&lt;/i&gt;&quot;]
     Q --&gt; GR[&quot;graph&lt;br/&gt;&lt;i&gt;spreading activation from top semantic hits,&lt;br/&gt;decay δ=0.5, per-channel multipliers, Eq. 12&lt;/i&gt;&quot;]
@@ -211,7 +211,7 @@ columns.</p>
     TM --&gt; RRF
     RRF --&gt; RK[&quot;rerank&quot;] --&gt; OUT[&quot;results&quot;]
 
-    style GR fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style GR fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Four channels, and the <code>agent_id</code> filter applies
 throughout rather than at the end. The graph channel is the unusual one:
 it is <strong>seeded from the top semantic hits</strong> rather than run
@@ -234,7 +234,7 @@ UI.</li>
 <li><code>docs/memory.md</code> and an extensive <code>docs/adr/</code>
 corpus.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Task[&quot;Task /&lt;br/&gt;session&quot;] --&gt; Retain[&quot;retain.ts&quot;]
   Retain --&gt; Units[&quot;memory_units&lt;br/&gt;(banks, agent_id)&quot;]
   Units --&gt; Ent[&quot;entities / entity_mentions /&lt;br/&gt;memory_links&quot;]
@@ -250,7 +250,7 @@ corpus.</li>
   RRF --&gt; Rank[&quot;reranker.ts&quot;]
   Rank --&gt; Ctx[&quot;recalled context&quot;]
   Ctx --&gt; Reinf[&quot;reinforce.ts&quot;]
-  Units --&gt; Refl[&quot;reflect.ts&quot;]</code></pre>
+  Units --&gt; Refl[&quot;reflect.ts&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="four-channels-fused">Four channels, fused</h3>
@@ -514,7 +514,16 @@ href="https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

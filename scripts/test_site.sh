@@ -279,6 +279,15 @@ if ! python3 "$project_dir/scripts/check_mermaid.py" "$project_dir/content"; the
   exit 1
 fi
 
+# The diagrams render client-side, so an unrendered page delivers their source.
+# Two outside reviews read that source as broken page layout and opened with it,
+# which makes the wrapper a delivery guarantee rather than a nicety: every
+# diagram ships inside a captioned figure, and the written-caption count only
+# rises.
+if ! python3 "$project_dir/scripts/check_diagram_captions.py"; then
+  exit 1
+fi
+
 # Heading ids are generated from heading text, so a numbered section changes its
 # anchor whenever sections are renumbered. Catch fragment links that no longer land.
 broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"

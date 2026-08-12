@@ -150,7 +150,7 @@ provide higher-level organization and summaries.</p>
 </ul>
 <p>That distinction makes backfilled and corrected history representable
 without pretending ingestion time equals event time.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Ep[&quot;Episode ingested&quot;] --&gt; Ext[&quot;Entity and edge extraction&quot;]
     Ext --&gt; Res[&quot;Entity resolution&lt;br/&gt;against existing nodes&quot;]
     Res --&gt; Edge[(&quot;Temporal relationship edge&lt;br/&gt;valid_at … invalid_at&quot;)]
@@ -158,7 +158,7 @@ without pretending ingestion time equals event time.</p>
     Inv --&gt; Edge
     Edge --&gt; Q[&quot;BM25 + cosine + BFS over&lt;br/&gt;edges, nodes, episodes, communities&lt;br/&gt;→ RRF / MMR / cross-encoder&quot;]
     Edge -.-&gt;|&quot;history retained, so &#39;what did we&lt;br/&gt;believe last March&#39; is answerable&quot;| Hist[&quot;the strongest temporal&lt;br/&gt;correction model in the atlas&quot;]
-    Edge -.-&gt;|&quot;and no claim is marked&lt;br/&gt;verified or rejected&quot;| Gap[&quot;no trust state&quot;]</code></pre>
+    Edge -.-&gt;|&quot;and no claim is marked&lt;br/&gt;verified or rejected&quot;| Gap[&quot;no trust state&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core areas:</p>
 <ul>
@@ -426,7 +426,16 @@ href="https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af0917991
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

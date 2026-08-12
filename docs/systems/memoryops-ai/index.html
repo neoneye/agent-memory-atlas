@@ -177,7 +177,7 @@ wide.</p>
 <p>A candidate is judged before it is stored, stored under a scope the
 database enforces, and every transition is chained into an audit that
 can be verified.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     IN[&quot;candidate&quot;] --&gt; ADM{&quot;admission gate&quot;}
     ADM --&gt;|&quot;block / drop&quot;| NO[&quot;never stored&lt;br/&gt;&lt;i&gt;audited with a reason&lt;/i&gt;&quot;]
     ADM --&gt;|&quot;sensitive&quot;| PEND[&quot;status: pending&lt;br/&gt;governance approve / reject&quot;]
@@ -195,7 +195,7 @@ can be verified.</p>
     PEND --&gt; AUD
     NO --&gt; AUD
 
-    style DEL fill:#f5e9e7,stroke:#a4553f</code></pre>
+    style DEL fill:#f5e9e7,stroke:#a4553f</code></pre></details></figure>
 <p>Every solid arrow is governed. The dotted one is not: nothing
 consults the deleted row when the same value arrives again, because the
 lookup that would is filtered to <code>active</code>.</p>
@@ -600,7 +600,16 @@ observed, and the eval sets remain unrun.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

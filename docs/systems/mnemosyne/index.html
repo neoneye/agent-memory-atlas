@@ -271,7 +271,7 @@ validation"</em> and <em>"any agent can validate any memory"</em>, and a
 SQLite trigger trims each memory's validation history to the most recent
 three entries. It is agents attesting to each other, with a three-deep
 memory of having done so.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Working: remember commits the row
     Working --&gt; Episodic: sleep summarizes and keeps the original
     Working --&gt; Expired: valid_until passes
@@ -282,7 +282,7 @@ memory of having done so.</p>
     Episodic --&gt; LiveFact: extraction, keyed by sha256 of the triple
     LiveFact --&gt; LiveFact: re-mention raises confidence
     LiveFact --&gt; DeadFact: loses a conflict, superseded_by set
-    DeadFact --&gt; DeadFact: re-extraction lands here and cannot revive it</code></pre>
+    DeadFact --&gt; DeadFact: re-extraction lands here and cannot revive it</code></pre></details></figure>
 <p>The inner loop is the mechanism worth reading twice. Every other
 arrow in this diagram can be walked backwards by asserting the same
 thing again; that one cannot.</p>
@@ -967,7 +967,16 @@ every claim here is from source at this commit.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

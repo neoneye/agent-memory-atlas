@@ -200,7 +200,7 @@ at read time: a retrieved chunk can be <strong>annotated
 unsafe</strong>, and in strict mode removed from the result set. That
 judgement is not written back — the entry in the store is unchanged, so
 the same chunk is re-screened on every retrieval.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     I[&quot;insight recorded&quot;] --&gt; B[&quot;AutoMemoryBridge&lt;br/&gt;bidirectional sync&quot;]
     B --&gt; MD[(&quot;Claude Code auto-memory&lt;br/&gt;MEMORY.md + topic files&quot;)]
     B --&gt; H[(&quot;HybridBackend&lt;br/&gt;SQLite + AgentDB/HNSW&quot;)]
@@ -215,7 +215,7 @@ the same chunk is re-screened on every retrieval.</p>
     SC -- &quot;default&quot; --&gt; ANN[&quot;chunk annotated, passed through&quot;]
     ANN --&gt; CTX
     C[&quot;consolidator: sweep → dedup → compact&quot;] --&gt; H
-    SC -.-&gt;|&quot;verdict is not written back;&lt;br/&gt;re-scanned every retrieval&quot;| H</code></pre>
+    SC -.-&gt;|&quot;verdict is not written back;&lt;br/&gt;re-scanned every retrieval&quot;| H</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>@claude-flow/memory</code> is one workspace package inside a
 monorepo of 5,491 files. It is consumed by the swarm layer
@@ -617,7 +617,16 @@ as data. Nothing was executed and nothing was installed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

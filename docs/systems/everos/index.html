@@ -159,7 +159,7 @@ plus the <code>approach</code> taken.</li>
 repeated cases.</li>
 <li><strong>Daily log</strong> — a time-bucketed base handler.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     MD[(&quot;Markdown in the memory root&quot;)] --&gt;|&quot;watcher → scanner → worker&quot;| H[&quot;handlers:&lt;br/&gt;episode, atomic_fact, agent_case,&lt;br/&gt;agent_skill, daily_log&quot;]
     H --&gt; ROWS[(&quot;rows in SQLite + LanceDB&lt;br/&gt;&lt;i&gt;each carrying owner_id, owner_type,&lt;br/&gt;app_id, project_id&lt;/i&gt;&quot;)]
     ROWS --&gt; RD[&quot;/search and /get&lt;br/&gt;&lt;i&gt;base filter pins all four,&lt;br/&gt;plus deprecated_by IS NULL&lt;/i&gt;&quot;]
@@ -167,7 +167,7 @@ repeated cases.</li>
     REF --&gt; STOP[&quot;the row stops being returned&quot;]
     STOP -.-&gt;|&quot;unchanged&quot;| MD
 
-    style STOP fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style STOP fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The dotted edge back to the top is the gap. Deprecation reaches the
 <em>rows</em> and the Markdown that produced them is untouched — so the
 watcher can re-ingest a deprecated claim from a file that was never
@@ -185,7 +185,7 @@ about files as much as about rows.</p>
 <p>Python, Apache 2.0, ~645 source files with ~13,800 lines in the
 memory package alone. Active — the pinned commit is dated 29 July 2026,
 the day it was read.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     MD[(Markdown memory root)] --&gt; W[watcher]
     W --&gt; SC[scanner] --&gt; WK[worker]
     WK --&gt; H1[episode] &amp; H2[atomic_fact] &amp; H3[agent_case] &amp; H4[agent_skill]
@@ -193,7 +193,7 @@ the day it was read.</p>
     R[reconciler / backfill] --&gt; DB
     Q[/search and /get/] --&gt; F[filters.compile]
     F --&gt;|owner_id, owner_type,&lt;br/&gt;app_id, project_id,&lt;br/&gt;deprecated_by IS NULL| DB
-    DB --&gt; BR[case → skill bridge] --&gt; RES[results]</code></pre>
+    DB --&gt; BR[case → skill bridge] --&gt; RES[results]</code></pre></details></figure>
 <p><code>memory/</code> holds <code>cascade/</code> (orchestrator,
 watcher, scanner, worker, reconciler, registry, backfill, handlers),
 <code>extract/</code>, <code>search/</code>, <code>get/</code>,
@@ -515,7 +515,16 @@ href="https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

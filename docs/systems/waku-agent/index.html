@@ -233,7 +233,7 @@ self-management tools.</li>
 whose <code>memory_action</code> handler is human CRUD over the same
 store.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Msg[&quot;User message&quot;] --&gt; Gate{&quot;should_retrieve?&lt;br/&gt;small model&quot;}
   Gate --&gt;|false| Answer[&quot;answer&lt;br/&gt;without&lt;br/&gt;memory&quot;]
   Gate --&gt;|&quot;true + query&quot;| Sem[&quot;semantic store&quot;]
@@ -249,7 +249,7 @@ store.</li>
   Cons --&gt; Epi
   Admin[&quot;manage_memory tool&lt;br/&gt;dashboard /api/memory&quot;] --&gt;|&quot;update / delete&lt;br/&gt;in place&quot;| Sem
   Admin --&gt;|&quot;update / delete&lt;br/&gt;in place&quot;| Epi
-  Sem -.-&gt;|&quot;nothing records&lt;br/&gt;the removed value&quot;| Cons</code></pre>
+  Sem -.-&gt;|&quot;nothing records&lt;br/&gt;the removed value&quot;| Cons</code></pre></details></figure>
 <p>The dotted edge is the gap. Correction reaches the store, and the
 store has nothing to hand back to the pass that will re-read the same
 conversation log.</p>
@@ -667,7 +667,16 @@ href="https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

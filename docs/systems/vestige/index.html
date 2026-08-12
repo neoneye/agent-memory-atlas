@@ -179,7 +179,7 @@ own words, the root cause is one "a vector search structurally cannot
 surface because it isn't similar to the failure, only causally
 upstream". It is described as a faithful port of Cai 2024 and is
 backward-only by construction.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Active: captured
     Active --&gt; Dormant: time_decay
     Dormant --&gt; Active: access or cue_reactivation
@@ -193,7 +193,7 @@ backward-only by construction.</p>
     Active --&gt; Merged: plan classified possible, applied with confirm=true
     Merged --&gt; Active: undo, from the stored undo_payload
     Active --&gt; Purged: irreversible, content-free tombstone row remains
-    Purged --&gt; [*]</code></pre>
+    Purged --&gt; [*]</code></pre></details></figure>
 <p>Every transition on that diagram writes a
 <code>state_transitions</code> row with a <code>reason_type</code> from
 a nine-value vocabulary — the labels on the arrows are the literal
@@ -621,7 +621,16 @@ benchmark is on a different branch and was not obtained.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

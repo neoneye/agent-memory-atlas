@@ -154,7 +154,7 @@ and memory <em>policy</em> is left to the application. There is no trust
 state, no provenance, no correction path, and no scope key — the same
 limitation the atlas records for langmem.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     TL([&quot;token_limit&quot;]) --- SPLIT{{&quot;split by chat_history_token_ratio&lt;br/&gt;default 0.7&quot;}}
     SPLIT --&gt; CH[&quot;chat history&lt;br/&gt;&lt;i&gt;0.7 of the budget&lt;/i&gt;&quot;]
     SPLIT --&gt; MB[&quot;memory blocks&lt;br/&gt;&lt;i&gt;the remaining budget, split among them&lt;/i&gt;&quot;]
@@ -165,7 +165,7 @@ limitation the atlas records for langmem.</p>
     SB --&gt; ASM
     VB --&gt; ASM
     FB --&gt; ASM
-    CH --&gt; ASM[&quot;assembled prompt&lt;br/&gt;insert_method: SYSTEM or USER&quot;]</code></pre>
+    CH --&gt; ASM[&quot;assembled prompt&lt;br/&gt;insert_method: SYSTEM or USER&quot;]</code></pre></details></figure>
 <p>The arrow from chat history into the blocks is the design. One budget
 is divided by ratio, and messages evicted from the conversation half are
 <strong>handed to the blocks rather than discarded</strong> — so a block
@@ -197,7 +197,7 @@ excludes from scope; the newer <code>Memory</code> plus blocks is what
 makes LlamaIndex reviewable here. Both ship, which is worth knowing when
 reading the docs — "memory" in LlamaIndex means two quite different
 things depending on which API you land on.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Msgs[&quot;Chat messages&quot;] --&gt; Hist[&quot;short-term history&lt;br/&gt;(0.7 of budget)&quot;]
   Hist --&gt;|overflow: token_flush_size| Flush[&quot;flush&quot;]
   Flush --&gt; Static[&quot;StaticMemoryBlock&quot;]
@@ -207,7 +207,7 @@ things depending on which API you land on.</p>
   Vec --&gt; Assemble
   Fact --&gt; Assemble
   Hist --&gt; Assemble
-  Assemble --&gt; Prompt[&quot;prompt (insert_method:&lt;br/&gt;SYSTEM | USER)&quot;]</code></pre>
+  Assemble --&gt; Prompt[&quot;prompt (insert_method:&lt;br/&gt;SYSTEM | USER)&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="budget-arithmetic-with-guards">Budget arithmetic with
@@ -473,7 +473,16 @@ href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

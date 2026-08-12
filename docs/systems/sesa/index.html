@@ -183,7 +183,7 @@ advantage estimate depend on the order rollouts finished. The design
 keeps the read path frozen for the duration of a step and does all
 mutation at the boundary, which is the same discipline a serving system
 needs for a different reason.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;Proposer question&quot;] --&gt; RET[&quot;SkillBank.retrieve&lt;br/&gt;e5-base-v2 cosine, top 3, no floor&quot;]
     RET --&gt;|&quot;string-prepended to the solver prompt&quot;| SOL[&quot;Solver rollout&quot;]
     SOL --&gt; SC{&quot;token_level_scores&quot;}
@@ -199,7 +199,7 @@ needs for a different reason.</p>
     HURT --&gt; EV
     EV --&gt;|&quot;and not is_seed&quot;| GONE[&quot;removed, nothing left behind&quot;]
     ADD --&gt; PER[(&quot;skills.jsonl&lt;br/&gt;skills_step_N.jsonl&lt;br/&gt;meta.json&quot;)]
-    GONE --&gt; PER</code></pre>
+    GONE --&gt; PER</code></pre></details></figure>
 <p>The dashed truth of that diagram is the missing edge: nothing runs
 from <code>GONE</code> back to <code>DEDUP</code>. Deletion and the
 duplicate check do not know about each other.</p>
@@ -754,7 +754,16 @@ than permissive.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

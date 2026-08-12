@@ -148,7 +148,7 @@ source of truth; Chroma is a rebuildable semantic index.</p>
 observer model's memory session. Project and platform source provide the
 main retrieval boundaries.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Agent[&quot;Claude, Codex,&lt;br/&gt;Cursor, etc.&quot;] --&gt; Hooks[&quot;Lifecycle hooks / transcript&lt;br/&gt;adapters&quot;]
   Hooks --&gt; Worker[&quot;Bun worker&lt;br/&gt;daemon&quot;]
   Worker --&gt; Queue[&quot;SQLite pending_messages&quot;]
@@ -160,7 +160,7 @@ main retrieval boundaries.</p>
   SQLite --&gt; Chroma[&quot;Best-effort Chroma&lt;br/&gt;projection&quot;]
   Chroma --&gt; Search[&quot;Semantic&lt;br/&gt;search&quot;]
   Context --&gt; Agent
-  Search --&gt; MCP[&quot;HTTP / MCP /&lt;br/&gt;UI&quot;]</code></pre>
+  Search --&gt; MCP[&quot;HTTP / MCP /&lt;br/&gt;UI&quot;]</code></pre></details></figure>
 <p>The worker owns local session lifecycle, capture, generation,
 storage, search, context, and synchronization. <code>SessionStore</code>
 contains a long migration chain; <code>DatabaseManager</code> composes
@@ -469,7 +469,16 @@ href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

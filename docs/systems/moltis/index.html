@@ -192,7 +192,7 @@ wants neither compiles neither.</p>
 <p>Design plans are committed alongside:
 <code>plans/postgres-pgvector-memory-backend.md</code> and
 <code>plans/core-memory-lifecycle-unification.md</code>.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Notes[&quot;Markdown corpus&quot;] --&gt; Chunk[&quot;chunker.rs&quot;]
   Sess[&quot;Chat session&quot;] --&gt; San[&quot;session_export.rs (sanitize)&quot;]
   San --&gt; Notes
@@ -203,7 +203,7 @@ wants neither compiles neither.</p>
   Q[&quot;Query&quot;] --&gt; Search[&quot;search.rs hybrid&quot;]
   DB --&gt; Search
   Search --&gt; Rerank[&quot;reranking.rs (optional LLM)&quot;]
-  Rerank --&gt; Cite[&quot;citations per CitationMode&quot;]</code></pre>
+  Rerank --&gt; Cite[&quot;citations per CitationMode&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="sanitized-session-export">Sanitized session export</h3>
@@ -449,7 +449,16 @@ href="https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

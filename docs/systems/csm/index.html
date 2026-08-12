@@ -313,7 +313,7 @@ text fallback (<code>src/memory-manager.ts:795</code>). The re-entry
 path is stricter — <code>agent-onboarding.ts:364</code> does filter
 <code>archived_at IS NULL</code> — so the same store answers two
 different questions depending on which door you knock on.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Packet: tool.execute.after hook
     Packet --&gt; Distilled: deterministic distiller, confidence fixed at 0.92
     Distilled --&gt; Memory: auto-approved, no reviewable queue exists
@@ -335,7 +335,7 @@ different questions depending on which door you knock on.</p>
         Two disconnects, one picture. Corrections
         do not reach recall; beliefs never reach
         the agent at all.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>CSM is a <strong>library that runs inside the agent host</strong>.
 There is no daemon, no queue and no worker process. Everything — hooks,
@@ -1041,7 +1041,16 @@ href="https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

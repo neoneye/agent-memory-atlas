@@ -174,14 +174,14 @@ score</strong>. Above it sit two distilled layers:</p>
 backend.</p>
 <p>The state machine is entirely quantitative, and this is the design's
 defining choice:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     M[&quot;memory&quot;] --&gt;|&quot;retrieved → reinforce()&quot;| RET[&quot;retention rises&quot;]
     RET --&gt;|&quot;should_promote()&quot;| PRO[&quot;promoted&quot;]
     RET --&gt;|&quot;should_archive()&quot;| ARC[&quot;archived&quot;]
     M --&gt;|&quot;time passes&quot;| DEC[&quot;R = e^(−t/S)&quot;]
     DEC --&gt;|&quot;should_forget()&quot;| UNR[&quot;unreachable&quot;]
 
-    style DEC fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style DEC fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Retrieval and time pull in opposite directions on one number — the <a
 href="../../patterns/decay-and-reinforcement/">decay and
 reinforcement</a> pattern, with an explicit exponential rather than a
@@ -206,7 +206,7 @@ stands in for a trust model it is not.</p>
 <p>Memory is background-managed. There is no human review surface and no
 tool by which the model marks something wrong.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     SDK[&quot;SDK / MCP / CLI / HTTP&quot;] --&gt; M[&quot;Memory / AsyncMemory&quot;]
     M --&gt; IA[&quot;_intelligent_add&lt;br/&gt;LLM extraction&quot;]
     M --&gt; SA[&quot;_simple_add&quot;]
@@ -218,7 +218,7 @@ tool by which the model marks something wrong.</p>
     S --&gt; V
     S --&gt; EB[&quot;EbbinghausAlgorithm&quot;]
     EB --&gt;|update_memory| V
-    SK[&quot;skill_manager&quot;] --&gt; SKS[(&quot;skill_store&lt;br/&gt;OceanBase only&quot;)]</code></pre>
+    SK[&quot;skill_manager&quot;] --&gt; SKS[(&quot;skill_store&lt;br/&gt;OceanBase only&quot;)]</code></pre></details></figure>
 <ul>
 <li><strong>Storage</strong> is pluggable —
 <code>storage/sqlite/</code>, <code>storage/pgvector/</code>,
@@ -641,7 +641,16 @@ href="https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

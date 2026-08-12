@@ -175,13 +175,13 @@ it, and follows with the rest of the recent history. That ordering is a
 deliberate decision about where recalled material sits relative to the
 live conversation, and it is written in one line with no comment
 explaining it.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Msg[&quot;MemoryRecord&lt;br/&gt;message + role + uuid + agent_id&quot;] --&gt; W[&quot;write_records()&quot;]
     W --&gt; KV[(&quot;ChatHistoryBlock&lt;br/&gt;key-value store&quot;)]
     W --&gt; VDB[(&quot;VectorDBBlock&lt;br/&gt;Qdrant&quot;)]
     KV --&gt;|&quot;storage.load()&lt;br/&gt;returns the whole store&quot;| Ctx[&quot;Context&quot;]
     VDB --&gt;|&quot;VectorDBQuery(vector, top_k)&lt;br/&gt;NO filter argument&quot;| Ctx
-    Msg -.-&gt;|&quot;agent_id is written, serialised,&lt;br/&gt;printed — and read by no query&quot;| Gap[&quot;Isolation actually comes from&lt;br/&gt;giving each agent its own&lt;br/&gt;storage object&quot;]</code></pre>
+    Msg -.-&gt;|&quot;agent_id is written, serialised,&lt;br/&gt;printed — and read by no query&quot;| Gap[&quot;Isolation actually comes from&lt;br/&gt;giving each agent its own&lt;br/&gt;storage object&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing to run for the default case: <code>ChatHistoryMemory</code>
 with <code>InMemoryKeyValue Storage</code> needs no service, and
@@ -429,7 +429,16 @@ href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

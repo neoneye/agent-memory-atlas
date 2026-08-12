@@ -213,7 +213,7 @@ surface.</li>
 <li><code>ui/src/pages/brain/Memory.tsx</code> — the operator review
 page.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Conv[&quot;Conversation&quot;] --&gt; Cand[&quot;UserMemoryCandidate&quot;]
   Cand --&gt; Store[&quot;UserMemoryStore&quot;]
   Store --&gt; DB[&quot;second-brain-db&quot;]
@@ -223,7 +223,7 @@ page.</li>
   Retr --&gt; Used[&quot;record lastUsedAt +&lt;br/&gt;lastUsedQuery&quot;]
   DB --&gt; UI[&quot;brain/Memory.tsx&lt;br/&gt;review page&quot;]
   UI --&gt; Dismiss[&quot;dismissed /&lt;br/&gt;supersededBy&quot;]
-  Pause[&quot;learningPaused&quot;] -.blocks.-&gt; Cand</code></pre>
+  Pause[&quot;learningPaused&quot;] -.blocks.-&gt; Cand</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="three-scores-instead-of-one">Three scores instead of one</h3>
@@ -461,7 +461,16 @@ href="https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc7
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

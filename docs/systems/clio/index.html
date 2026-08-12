@@ -281,7 +281,7 @@ decayed out because nobody corroborated it is indistinguishable from one
 that never existed, and the next session's agent is free to rediscover
 and re-assert it — at which point it is new, unverified, and starts the
 30-day clock again.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Unverified: an agent calls add_discovery or add_solution
     Unverified --&gt; Unverified: a corroboration arrives with a source key already seen
     Unverified --&gt; Trusted: two distinct agent-session sources corroborate
@@ -296,7 +296,7 @@ and re-assert it — at which point it is new, unverified, and starts the
         Both source ids default to unknown, and
         nothing in the repository assigns them,
         so the dedup blocks the second source.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A single Perl program. <code>clio</code> is the entrypoint;
 <code>lib/CLIO/</code> holds 160 modules covering providers, tools,
@@ -790,7 +790,16 @@ href="https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb61613045791
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

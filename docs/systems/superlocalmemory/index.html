@@ -166,7 +166,7 @@ write passes through a <strong>trust gate</strong> before it lands;
 access passes through <strong>ABAC</strong>; expiry is decided by
 <strong>named retention rules</strong> bound to a profile; and every
 operation lands in the audit chain.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;write / delete&quot;] --&gt; TG{&quot;trust gate:&lt;br/&gt;score above threshold?&quot;}
     TG --&gt;|no| DENY[&quot;refused&quot;]
     TG --&gt;|yes| AB{&quot;ABAC: agent, profile, action&quot;}
@@ -178,7 +178,7 @@ operation lands in the audit chain.</p>
     RR[&quot;named retention rule, per profile&quot;] --&gt; ACT{&quot;action&quot;}
     ACT --&gt;|archive| ARCH[&quot;lifecycle = archived&quot;]
     ACT --&gt;|tombstone| TS[&quot;lifecycle = archived&lt;br/&gt;archive_status = tombstoned, purgeable&quot;]
-    ACT --&gt;|notify| N[&quot;count surfaced only — an operator acts&quot;]</code></pre>
+    ACT --&gt;|notify| N[&quot;count surfaced only — an operator acts&quot;]</code></pre></details></figure>
 <p>The three retention actions are the model in miniature: two mutate
 and one deliberately does not.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -482,7 +482,16 @@ installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

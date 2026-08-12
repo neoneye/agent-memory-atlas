@@ -162,7 +162,7 @@ tombstone</a> pattern.</p>
     detail_json=...
 )</code></pre>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     direction LR
     [*] --&gt; CANDIDATE: extraction, proposal,&lt;br/&gt;or induced rule
     CANDIDATE --&gt; VERIFIED: promote
@@ -172,7 +172,7 @@ tombstone</a> pattern.</p>
         Terminal. approve() refuses a
         REJECTED record; resurrection
         means writing a NEW fact.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <p>Three states, and three ways into <code>VERIFIED</code>:
 multi-principal corroboration, the held-out attestation gate, and a
 human <code>approve()</code> that is CLI-only so an agent cannot promote
@@ -216,7 +216,7 @@ replicated memory.</li>
 <li><code>src/verel/mcp_server.py</code>: MCP integration.</li>
 </ul>
 <p>Architecture:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Agent[&quot;Agent loop /&lt;br/&gt;MCP&quot;] --&gt; MemoryAPI[&quot;Memory&lt;br/&gt;helpers&quot;]
   MemoryAPI --&gt; View[&quot;MemoryView&lt;br/&gt;protocol&quot;]
   View --&gt; Local[&quot;LocalMemory&lt;br/&gt;SQLite&quot;]
@@ -225,7 +225,7 @@ replicated memory.</li>
   MemoryAPI --&gt; Remember[&quot;Trust-gated&lt;br/&gt;remember&quot;]
   MemoryAPI --&gt; Consolidate[&quot;Consolidation&quot;]
   Consolidate --&gt; Promotion[&quot;Held-out promotion&lt;br/&gt;gate&quot;]
-  Promotion --&gt; Verdict[&quot;Verdict bus&lt;br/&gt;attestation&quot;]</code></pre>
+  Promotion --&gt; Verdict[&quot;Verdict bus&lt;br/&gt;attestation&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p>Record/trust model:</p>
@@ -798,7 +798,16 @@ href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

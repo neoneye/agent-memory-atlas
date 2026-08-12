@@ -221,7 +221,7 @@ replay reports.</li>
 <p>Plus <code>openclaw-metaclaw-memory/</code> — the OpenClaw plugin
 with its own sidecar manager (~5,000 lines), a plugin spec, and a plan
 document.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Conv[&quot;Conversations&quot;] --&gt; Store[&quot;MemoryStore (units,&lt;br/&gt;scopes)&quot;]
   Store --&gt; Retr[&quot;retriever (under&lt;br/&gt;live policy)&quot;]
   Retr --&gt; Inject[&quot;injected&lt;br/&gt;context&quot;]
@@ -235,7 +235,7 @@ document.</p>
   Replay --&gt; Gate[&quot;should_promote (8&lt;br/&gt;deltas, n&gt;=10)&quot;]
   Gate --&gt;|pass| Promote[&quot;new live&lt;br/&gt;policy&quot;]
   Gate --&gt;|fail| Keep[&quot;keep incumbent&quot;]
-  Gate --&gt; Report[&quot;write_replay_report&quot;]</code></pre>
+  Gate --&gt; Report[&quot;write_replay_report&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="candidate-generation-candidatepy">Candidate generation
@@ -555,7 +555,16 @@ href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8a
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

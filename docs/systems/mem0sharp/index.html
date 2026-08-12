@@ -234,7 +234,7 @@ text survives. In a design whose central risk is an extractor
 overwriting a good memory with a worse paraphrase, being able to read
 what was there before is a meaningful partial answer, and it is
 available by query rather than by log-grepping.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     In[&quot;Conversation&quot;] --&gt; Ex[&quot;LlmMemoryExtractor&quot;]
     Ex --&gt; Cand[&quot;Candidate memories&quot;]
     Cand --&gt; Res[&quot;LLM conflict resolver&lt;br/&gt;vs existing rows&quot;]
@@ -242,7 +242,7 @@ available by query rather than by log-grepping.</p>
     Apply --&gt; Hist[(&quot;{table}_history&lt;br/&gt;INSERT only&lt;br/&gt;event · old_memory · new_memory&quot;)]
     Q[&quot;Search&quot;] --&gt;|&quot;WHERE built from the scope columns&quot;| Apply
     Apply --&gt;|&quot;cosine ORDER BY distance&quot;| Hits[&quot;Hits → optional LlmReranker&quot;]
-    Hist -.-&gt;|&quot;the record of what was removed exists&lt;br/&gt;and the write path never reads it&quot;| Gap[&quot;no tombstone&quot;]</code></pre>
+    Hist -.-&gt;|&quot;the record of what was removed exists&lt;br/&gt;and the write path never reads it&quot;| Gap[&quot;no tombstone&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Postgres with pgvector for real deployments, an 80-line in-memory
 store for tests, and a <code>PostgresRelationshipStores</code> (250
@@ -505,7 +505,16 @@ href="https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

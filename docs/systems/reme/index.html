@@ -192,7 +192,7 @@ is free-form; wikilinks make the corpus a graph.</p>
 split — how to do something, what is true of this person, what is true
 in general — and each bucket gets its own integration prompt.</p>
 <p>The lifecycle is where the design is unusual:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     C[&quot;conversation&quot;] --&gt;|auto_memory| DN[&quot;daily note&quot;]
     R[&quot;resource&quot;] --&gt;|auto_resource| DN
     DN --&gt; EX[&quot;auto_dream: extract&lt;br/&gt;&lt;i&gt;cross-file DreamUnits, with source paths&lt;/i&gt;&quot;]
@@ -206,7 +206,7 @@ in general — and each bucket gets its own integration prompt.</p>
     RF --&gt; FI
     CX --&gt; FI
 
-    style CX fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style CX fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Nothing is deleted by that path. Correction is an annotation that
 sits beside what it corrects, and the contradiction points at the note
 that caused it, so the disagreement remains legible in the corpus rather
@@ -220,7 +220,7 @@ processing." No code in <code>reme/</code> reads or writes a
 <code>status</code> key. The design has left room for a trust state and
 has not built one.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;agent / CLI / service&quot;] --&gt; S[&quot;reme.Application&lt;br/&gt;step pipelines&quot;]
     S --&gt; AM[&quot;auto_memory&quot;]
     S --&gt; AR[&quot;auto_resource&quot;]
@@ -233,7 +233,7 @@ has not built one.</p>
     IDX --&gt; K[(&quot;keyword index&quot;)]
     Q[&quot;search_v2&quot;] --&gt; V
     Q --&gt; K
-    Q --&gt; T[&quot;traverse&lt;br/&gt;wikilinks&quot;]</code></pre>
+    Q --&gt; T[&quot;traverse&lt;br/&gt;wikilinks&quot;]</code></pre></details></figure>
 <ul>
 <li><strong>Components</strong> are registered by enum
 (<code>ComponentEnum</code>) and swappable: <code>as_llm</code>,
@@ -664,7 +664,16 @@ href="https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

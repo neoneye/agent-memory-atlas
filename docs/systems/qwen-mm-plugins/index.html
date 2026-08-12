@@ -212,7 +212,7 @@ becomes a belief, because everything in the store has identical standing
 the moment it is written. It is what the <em>reader</em> is told to do
 about that, and here the design does something unusual: it puts the
 correction outside the memory entirely.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     V[&quot;long video, 30+ min&quot;] --&gt; P1[&quot;phase 1: segment into MacroEvents&lt;br/&gt;JSONL checkpoint per macro&quot;]
     P1 --&gt; P2[&quot;phase 2: workers build Subgraphs&lt;br/&gt;entities, micro-events, OCR, edges&quot;]
     P2 --&gt; G[(&quot;graph_memory.json&lt;br/&gt;+ embeddings.npz&quot;)]
@@ -229,7 +229,7 @@ correction outside the memory entirely.</p>
     G -.-&gt; NC[&quot;no delete, no update,&lt;br/&gt;no supersede, no tombstone&quot;]
 
     style NC fill:#f4e2bd,stroke:#b8860b
-    style RV fill:#d8ecd8,stroke:#4a7c4a</code></pre>
+    style RV fill:#d8ecd8,stroke:#4a7c4a</code></pre></details></figure>
 <p>The green box is the design's answer to the amber one. Memory is not
 trusted to be right; it is trusted to be <em>approximately where to
 look</em>, and the authoritative read is always a fresh look at the
@@ -689,7 +689,16 @@ present and were read as data.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

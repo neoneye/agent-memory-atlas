@@ -171,7 +171,7 @@ history preserves what was deleted; it does not refuse it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>The agent's own configuration is the store, and the write path is a
 proposal that must survive three checks before it lands.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;conversation trajectory&quot;] --&gt; RV{&quot;auto-refine review&lt;br/&gt;cheap model: is there evidence?&lt;br/&gt;local or global?&quot;}
     RV -- &quot;shouldRefine = false&quot; --&gt; STOP[&quot;nothing written&quot;]
     RV -- &quot;true&quot; --&gt; PL[&quot;planRefinement&lt;br/&gt;must return parseable JSON&quot;]
@@ -187,7 +187,7 @@ proposal that must survive three checks before it lands.</p>
     AP --&gt; H[&quot;refinements.jsonl — append-only&lt;br/&gt;evidence, outcome, before/after per edit&quot;]
     H -. &quot;rollbackProposal inverts it,&lt;br/&gt;from any later session&quot; .-&gt; PR
 
-    ST --&gt; INJ[&quot;system prompt: capped overview&lt;br/&gt;6 entries per kind, 180 chars each&lt;br/&gt;&#39;routing hints, not full descriptions&#39;&quot;]</code></pre>
+    ST --&gt; INJ[&quot;system prompt: capped overview&lt;br/&gt;6 entries per kind, 180 chars each&lt;br/&gt;&#39;routing hints, not full descriptions&#39;&quot;]</code></pre></details></figure>
 <p>Read the two rejection paths as the design. A proposal is not a
 mutation — it is a request that the contract, and then the world, can
 refuse. And read the dotted line as the other half: the log is not a
@@ -632,7 +632,16 @@ pass can propose it again as a fresh <code>create</code>.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

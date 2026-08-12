@@ -103,6 +103,7 @@ an episode is written once and remains equally retrievable forever, which makes
 the decision path the only place in the system where a claim can stop being true.
 
 ```mermaid
+%% caption: where a decision's status is applied, and what the read path never sees again
 flowchart TD
   CONV["conversation turn"] --> DEN["input_denoiser"]
   DEN --> EX["LLM extraction into a Pydantic schema:<br/>reasoning step, then user / fact / epis / decision"]

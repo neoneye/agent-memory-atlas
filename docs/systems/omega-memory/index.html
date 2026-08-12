@@ -165,7 +165,7 @@ changes and temporal override markers — with a cross-encoder similarity
 gate and a Jaccard fallback. The module header names all three call
 sites and explicitly notes which one does <em>not</em> use it, which is
 unusually good navigational documentation for a heuristic engine.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Stored: conflict gate, then contradiction scoring against candidates
     Stored --&gt; Superseded: valid_until stamped, status set, in one UPDATE
     Stored --&gt; Expired: valid_until passes, point-in-time filter drops it
@@ -174,7 +174,7 @@ unusually good navigational documentation for a heuristic engine.</p>
     Flagged --&gt; Deleted: the only exit
     Stored --&gt; Deleted: decay, TTL, dedup or a maintenance pass
     Superseded --&gt; Retrievable: a valid_at query before valid_until still returns it
-    Deleted --&gt; [*]: forgetting_log keeps node_id, preview and reason</code></pre>
+    Deleted --&gt; [*]: forgetting_log keeps node_id, preview and reason</code></pre></details></figure>
 <p>Two arrows carry the report. The one from <code>Superseded</code>
 back to retrievable is what the validity interval buys. The self-loop on
 <code>Flagged</code> is the defect.</p>
@@ -509,7 +509,16 @@ installed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

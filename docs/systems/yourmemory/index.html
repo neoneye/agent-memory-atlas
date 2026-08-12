@@ -161,7 +161,7 @@ corpus</strong> — section 10.</p>
 Writing one compares it against what exists and takes one of four
 actions by similarity band. Retrieval is lexical plus semantic, then a
 graph walk. A nightly job prunes what has decayed below threshold.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;POST /memories&quot;] --&gt; SIM{&quot;cosine against existing&quot;}
     SIM --&gt;|&quot;≥ 0.92&quot;| RE[&quot;reinforce — paraphrase,&lt;br/&gt;bump recall_count only&quot;]
     SIM --&gt;|&quot;0.85–0.92 + contradiction&quot;| RP[&quot;replace — overwrite with incoming&quot;]
@@ -174,7 +174,7 @@ graph walk. A nightly job prunes what has decayed below threshold.</p>
     D[&quot;Ebbinghaus decay&lt;br/&gt;strength = importance · e^(−λ_eff·days) · (1 + recall_count·0.2)&lt;br/&gt;λ_eff = base_λ · (1 − importance·0.8)&lt;br/&gt;fact 0.16 · strategy 0.10 · assumption 0.20 · failure 0.35&quot;] --&gt; PR[&quot;24h prune at strength &amp;lt; 0.05&quot;]
     D --&gt; GS[&quot;graph node scores&quot;]
     D -.-&gt;|&quot;deliberately NOT an input&quot;| H
-    ANY[&quot;read | write | delete | admin&quot;] --&gt; AU[&quot;audit_log:&lt;br/&gt;row_hash = sha256(prev_hash ‖ canonical(fields))&lt;br/&gt;ids and counts only — never content or query text&lt;br/&gt;retention floored at 90 days&quot;]</code></pre>
+    ANY[&quot;read | write | delete | admin&quot;] --&gt; AU[&quot;audit_log:&lt;br/&gt;row_hash = sha256(prev_hash ‖ canonical(fields))&lt;br/&gt;ids and counts only — never content or query text&lt;br/&gt;retention floored at 90 days&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/services/</code> is the engine — <code>retrieve</code>,
 <code>resolve</code> (and a fallback), <code>extract</code> (and a
@@ -496,7 +496,16 @@ from the repository's own <code>BENCHMARKS.md</code>.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

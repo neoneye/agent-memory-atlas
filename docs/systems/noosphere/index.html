@@ -186,7 +186,7 @@ subject kind (capture, session, scope, principal),
 Revocation is expressed against a <em>lineage</em>, not a row, which is
 why revoking a session or a scope propagates to everything derived from
 it.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     C[&quot;capture arrives&quot;] --&gt; LK[&quot;lock lineage rows, serializable&quot;]
     LK --&gt; RV{&quot;lineage revoked?&quot;}
     RV --&gt;|yes| E1[&quot;409 — lineage has been revoked&quot;]
@@ -198,7 +198,7 @@ it.</p>
     REV[&quot;revocation: capture_deleted, principal_revoked,&lt;br/&gt;session_deleted, scope_deleted, consent_revoked, expired&quot;] --&gt; TS[&quot;tombstone: subjectHash, hmacKeyVersion,&lt;br/&gt;generation, reasonCode, expiresAt&quot;]
     REV --&gt; PR[&quot;privacy review row, status OPEN&quot;]
     REV --&gt; JOB[&quot;durable cleanup job, idempotency key&quot;]
-    TS -.-&gt;|&quot;90-day TTL&quot;| GONE[&quot;tombstone expires; the refusal lapses&quot;]</code></pre>
+    TS -.-&gt;|&quot;90-day TTL&quot;| GONE[&quot;tombstone expires; the refusal lapses&quot;]</code></pre></details></figure>
 <p>The three parallel writes on revocation are the design: a record that
 blocks re-entry, a review row for a person, and a job that does the
 cleanup — none of them depending on the other two succeeding.</p>
@@ -499,7 +499,16 @@ read, never installed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

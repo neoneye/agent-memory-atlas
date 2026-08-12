@@ -243,7 +243,7 @@ Nothing on the read path consults a confidence level, so a claim tagged
 as a claim tagged <code>high</code> is. That is why
 <code>trust_state</code> is withheld: the levels are a discretised
 self-assessment with no state that withholds anything from use.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     RAW[&quot;raw/ — immutable sources&quot;] --&gt; ING[&quot;wiki_ingest&quot;]
     ING --&gt; INSTR[&quot;returns a numbered list&lt;br/&gt;to the model&quot;]
     INSTR -.-&gt;|&quot;step 3-6: extract, index, log&quot;| MODEL[&quot;the model does it,&lt;br/&gt;or does not&quot;]
@@ -256,7 +256,7 @@ self-assessment with no state that withholds anything from use.</p>
     CONTRA[&quot;wiki/contradictions.md&lt;br/&gt;&#39;It STOPS and asks you&#39;&quot;] -.-&gt;|&quot;no tool touches this&quot;| NONE[&quot;&amp;nbsp;&quot;]
     style INSTR fill:#7c5c1e,color:#fff
     style NONE fill:#7f1d1d,color:#fff
-    style S fill:#7f1d1d,color:#fff</code></pre>
+    style S fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <p>Solid arrows are code. Dotted arrows are conventions the design
 relies on and the code does not implement.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -725,7 +725,16 @@ href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee27
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

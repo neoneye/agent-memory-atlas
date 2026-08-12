@@ -184,7 +184,7 @@ its own index.</p>
 is the unusual one and it is a good idea: a memory temporarily withheld
 from recall without being archived or deleted, which is the state most
 stores express as a tag or not at all.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; active: written, version 1
     active --&gt; paused: withheld from recall, not archived
     paused --&gt; active
@@ -196,7 +196,7 @@ stores express as a tag or not at all.</p>
         The committed CRDT suite asserts a
         dominating clock revives this state.
         No clock exists in the published server.
-    end note</code></pre>
+    end note</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Go server with a repository interface and <strong>three backend
 implementations</strong> — <code>repository/postgres</code>,
@@ -432,7 +432,16 @@ server.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

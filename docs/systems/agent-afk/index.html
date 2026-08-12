@@ -181,7 +181,7 @@ time from <code>evidence IS NULL</code> rather than stored as a status,
 so the mark is withheld and the near-miss is that the
 <em>presentation</em> layer carries an epistemic distinction the
 <em>schema</em> does not.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Cited: convention written WITH a citation&lt;br/&gt;(a file and line, a SHA, a trace id)
     [*] --&gt; Uncited: convention written without&lt;br/&gt;(warns on write)
     [*] --&gt; Exempt: preference, decision or learning&lt;br/&gt;never gated, never warns
@@ -195,7 +195,7 @@ so the mark is withheld and the near-miss is that the
 
     Cited --&gt; [*]: recalled plainly
     Stale --&gt; [*]: recalled, staleness warned
-    Uncited --&gt; [*]: recalled as &quot;[unverified]&quot;&lt;br/&gt;in the text the model reads</code></pre>
+    Uncited --&gt; [*]: recalled as &quot;[unverified]&quot;&lt;br/&gt;in the text the model reads</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One SQLite file and a Markdown file. <code>SCHEMA_VERSION = 4</code>
 is guarded in both directions — the constructor refuses a database
@@ -449,7 +449,16 @@ href="https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954ba
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

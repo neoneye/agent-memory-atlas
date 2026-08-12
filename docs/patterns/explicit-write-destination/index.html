@@ -122,14 +122,14 @@ provenance, access control, and the mutation audit.</p>
 <p>Agent tools should make the target visible in their arguments.
 Defaults are acceptable only when they are safe, obvious, and surfaced
 to the user; shared writes often deserve confirmation.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Q[&quot;read&quot;] --&gt; RS[&quot;read_scopes:&lt;br/&gt;private + project&lt;br/&gt;+ org&quot;]
     RS --&gt; Merge[&quot;merge by locality&lt;br/&gt;/ precedence&quot;]
     Merge --&gt; Out[&quot;results, each&lt;br/&gt;labelled with&lt;br/&gt;its scope&quot;]
     W[&quot;write&quot;] --&gt; T{&quot;write_target&lt;br/&gt;resolved?&quot;}
     T -- &quot;no&quot; --&gt; Rej[&quot;reject:&lt;br/&gt;ambiguous&lt;br/&gt;destination&quot;]
     T -- &quot;yes, private&quot; --&gt; P[&quot;private&lt;br/&gt;store&quot;]
-    T -- &quot;yes, shared&quot; --&gt; Conf[&quot;confirm, then&lt;br/&gt;shared store&quot;]</code></pre>
+    T -- &quot;yes, shared&quot; --&gt; Conf[&quot;confirm, then&lt;br/&gt;shared store&quot;]</code></pre></details></figure>
 <p>Reads fan out; writes converge on exactly one named destination, and
 an unresolved destination is an error rather than a default.</p>
 <h2 id="why-it-works">Why it works</h2>
@@ -259,7 +259,16 @@ audit</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

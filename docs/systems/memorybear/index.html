@@ -166,7 +166,7 @@ associated into a Neo4j graph. Every node and every relationship carries
 (<code>access_history_manager.py</code>), activation is computed from
 it, and the scheduler runs cycles that fuse the bottom of the
 distribution.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     P[&quot;perceive: conversation in&quot;] --&gt; X[&quot;extract: Statements + Entities&quot;]
     X --&gt; A[&quot;associate: graph edges, end_user_id stamped&quot;]
     A --&gt; AH[&quot;access history per node&quot;]
@@ -178,7 +178,7 @@ distribution.</p>
     FUSE --&gt; DF[&quot;MERGE (source)-[:DERIVED_FROM]-&gt;(ms)&lt;br/&gt;original ids recorded&quot;]
     DF --&gt; DEL[&quot;originals deleted&quot;]
     FUSE -.-&gt;|&quot;fusion fails&quot;| FC[&quot;counted in failed_count&quot;]
-    DEL --&gt; H[&quot;forgetting_cycle_history row:&lt;br/&gt;merged, failed, avg activation, duration, trigger&quot;]</code></pre>
+    DEL --&gt; H[&quot;forgetting_cycle_history row:&lt;br/&gt;merged, failed, avg activation, duration, trigger&quot;]</code></pre></details></figure>
 <p>The <code>offset</code> term is worth its own sentence. Because
 activation is floored, a memory never decays to zero — the curve
 asymptotes to a minimum retention rate. Combined with fusion rather than
@@ -449,7 +449,16 @@ installed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

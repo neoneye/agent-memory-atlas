@@ -161,7 +161,7 @@ which is what this does.</p>
 <p>Memory is a graph of URI-addressed nodes inside a namespace. An agent
 boots by reading a system view, navigates by URI or searches by text,
 and edits by quoting the passage it wants to change.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     B[&quot;read_memory(&#39;system://boot&#39;)&quot;] --&gt; SV[&quot;system_views.generate_boot_view&quot;]
     SV --&gt; G[&quot;memory graph, scoped to namespace&quot;]
     IDX[&quot;system://index/&amp;lt;domain&amp;gt;&quot;] --&gt; SV
@@ -178,7 +178,7 @@ and edits by quoting the passage it wants to change.</p>
     M2 --&gt;|no| FAIL[&quot;no edit&quot;]
     NS[&quot;namespace&quot;] -.-&gt;|&quot;equality predicate on every graph&lt;br/&gt;and glossary query&quot;| G
     SSE[&quot;GET /sse?namespace=X&quot;] --&gt; CAP[&quot;intercept the outgoing endpoint event,&lt;br/&gt;parse session_id, store _sse_sessions[sid] = ns&quot;]
-    POST[&quot;POST /messages/?session_id=…&quot;] --&gt; LOOK[&quot;look up the namespace by session id&quot;]</code></pre>
+    POST[&quot;POST /messages/?session_id=…&quot;] --&gt; LOOK[&quot;look up the namespace by session id&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>backend/</code> holds <code>mcp_server.py</code>,
 <code>mcp_wrapper.py</code>, <code>run_sse.py</code> (SSE and streamable
@@ -426,7 +426,16 @@ and the committed <code>demo.db</code> was not opened.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

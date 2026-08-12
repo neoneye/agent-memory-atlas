@@ -147,7 +147,7 @@ observations.</li>
 <li>Sync mutation: durable local change journal.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     A[&quot;agent decides something&quot;] --&gt; B[&quot;mem_save&quot;]
     B --&gt; C[&quot;AddObservation&quot;]
     C --&gt; D{&quot;topic_key present?&quot;}
@@ -163,7 +163,7 @@ observations.</li>
     CC --&gt; J[&quot;optional mem_judge relation&quot;]
     J --&gt; R[&quot;mem_search / mem_context / mem_timeline&quot;]
 
-    style CC fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style CC fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Conflict detection is a step, and <code>mem_judge</code> is
 <em>optional</em> — so a conflict is surfaced and then usually left
 standing.</p>
@@ -188,14 +188,14 @@ replication/server/dashboard.</li>
 detection/similarity.</li>
 </ul>
 <p>Architecture:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Agent[&quot;MCP agent&quot;] --&gt; MCP[&quot;internal/mcp&quot;]
   CLI[&quot;CLI/TUI&quot;] --&gt; Store[&quot;internal/store&quot;]
   HTTP[&quot;HTTP server&quot;] --&gt; Store
   MCP --&gt; Store
   Store --&gt; SQLite[&quot;SQLite WAL +&lt;br/&gt;FTS5&quot;]
   Store --&gt; Sync[&quot;sync_mutations&lt;br/&gt;journal&quot;]
-  Sync --&gt; Cloud[&quot;optional cloud/git&lt;br/&gt;sync&quot;]</code></pre>
+  Sync --&gt; Cloud[&quot;optional cloud/git&lt;br/&gt;sync&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p>Schema/migrations:</p>
@@ -520,7 +520,16 @@ href="https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4b
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

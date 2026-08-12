@@ -183,7 +183,7 @@ mnemory has chosen the first.</p>
 <p>Death is by TTL (<code>ttl_days</code>, <code>expires_at</code>), by
 batch delete, by a person in the UI, or by maintenance pruning rows that
 consolidation superseded.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Extracted: one LLM call extracts, classifies and dedups
     Extracted --&gt; Raw: stored with memory_layer raw
     Raw --&gt; Consolidated: consolidation merges related memories
@@ -194,7 +194,7 @@ consolidation superseded.</p>
     Flagged --&gt; Reviewed: a person inspects the cached issue list
     Reviewed --&gt; Fixed: apply_fsck applies the selected fixes
     Superseded --&gt; [*]: maintenance prunes
-    Consolidated --&gt; [*]: TTL expiry or a delete</code></pre>
+    Consolidated --&gt; [*]: TTL expiry or a delete</code></pre></details></figure>
 <p>The arrow worth noticing is <code>Superseded → Superseded</code>. In
 most systems here a superseded row leaves the read path; here it stays
 in it, discounted. That is a deliberate softness, and it is the reason a
@@ -617,7 +617,16 @@ Nothing was installed, built or run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -173,7 +173,7 @@ that <em>"verifies there's no API-key SDK path installed at all"</em>. A
 cost claim with a check that the expensive path is absent is a shape
 this atlas keeps asking for and rarely finds.</p>
 <p><strong>Forgetting is a queue with a cancel.</strong></p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     C[&quot;Verbatim capture&quot;] --&gt; E[(&quot;Episodes&lt;br/&gt;SQLite, AES-256-GCM&quot;)]
     E --&gt; S[&quot;Sleep cycle:&lt;br/&gt;community detection, summaries,&lt;br/&gt;decay unreinforced, reinforce co-retrieved&quot;]
     S --&gt; E
@@ -182,7 +182,7 @@ this atlas keeps asking for and rarely finds.</p>
     Q -- &quot;rescue, while the ring flashes&quot; --&gt; E
     Q --&gt; S
     E -- &quot;superseded version archived,&lt;br/&gt;still retrievable&quot; --&gt; H[&quot;Historical wording&quot;]
-    E --&gt; MP[&quot;Memory pack at session start&quot;]</code></pre>
+    E --&gt; MP[&quot;Memory pack at session start&quot;]</code></pre></details></figure>
 <p>The rescue edge is the mechanism: forgetting is a queued intention
 with a window, not an immediate act.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -461,7 +461,16 @@ running them requires embedding a 500-question set locally.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

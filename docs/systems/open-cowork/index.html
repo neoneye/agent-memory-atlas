@@ -191,7 +191,7 @@ capture ahead of extraction), <code>memory-navigator.ts</code>,
 <p><code>src/main/memory/</code> — about 4,100 lines across eighteen
 modules, plus tests under <code>src/tests/memory</code> and
 <code>docs/memory-live-smoke-checklist.md</code>.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Sess[&quot;Session messages&quot;] --&gt; Queue[&quot;memory-ingestion-queue&quot;]
   Queue --&gt; CoreX[&quot;core-memory-extractor&quot;]
   Queue --&gt; ExpX[&quot;experience-memory-extractor&quot;]
@@ -206,7 +206,7 @@ modules, plus tests under <code>src/tests/memory</code> and
   Opt --&gt; ExpX
   Eval[&quot;memory-eval-harness&quot;] --&gt; Prefix
   Prefix --&gt; Score[&quot;scorePromptPrefix + LLM judge&quot;]
-  Score --&gt; Report[&quot;MemoryEvalReport + artifacts&quot;]</code></pre>
+  Score --&gt; Report[&quot;MemoryEvalReport + artifacts&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="forbidden-hits">Forbidden hits</h3>
@@ -465,7 +465,16 @@ href="https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

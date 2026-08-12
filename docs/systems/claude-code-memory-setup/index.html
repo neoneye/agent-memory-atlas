@@ -183,7 +183,7 @@ the finding is delegated to Obsidian's search, its graph view, and the
 links the importer guessed. That is a coherent bet — it cannot lose
 information to a bad extractor — and the cost is that the vault grows
 with every session and nothing ever prunes it.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     E[&quot;exported chat .md&quot;] --&gt; S[&quot;strip existing frontmatter&quot;]
     S --&gt; O[&quot;detect origin: code | web&quot;]
     O --&gt; T[&quot;extract_tags: 66-entry keyword map&lt;br/&gt;whole-word match for 10 short keys&quot;]
@@ -192,7 +192,7 @@ with every session and nothing ever prunes it.</p>
     L --&gt; F[&quot;frontmatter + rewritten body&quot;]
     F --&gt; W[&quot;vault/chats/&amp;lt;origin&amp;gt;/name.md&quot;]
     E -.-&gt;|&quot;--move: original unlinked&quot;| X[&quot;gone&quot;]
-    W --&gt; R[&quot;Obsidian search, graph view,&lt;br/&gt;or the agent reading the vault&quot;]</code></pre>
+    W --&gt; R[&quot;Obsidian search, graph view,&lt;br/&gt;or the agent reading the vault&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Six files. <code>scripts/claude_to_obsidian.py</code> is the whole
 implementation; <code>scripts/sync_claude_obsidian.sh</code> is a
@@ -536,7 +536,16 @@ no cooldown or pinning findings. Nothing was executed.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -192,13 +192,13 @@ rather than an epistemology: <code>archived</code> and
 is doubted, and the <code>confidence</code> default of 0.7 is never
 revised by corroboration. No <code>trust_state</code> mark, and the
 near-miss is that the field exists and answers a different question.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     Dlg[&quot;Dialogue window&quot;] --&gt; Ext[&quot;LLM extraction&lt;br/&gt;Φ_coref: pronouns resolved&lt;br/&gt;Φ_time: timestamps absolutised&quot;]
     Ext --&gt; Entry[&quot;MemoryEntry&lt;br/&gt;semantic + lexical + symbolic layers&lt;br/&gt;timestamp = when it HAPPENED&quot;]
     Entry --&gt; Store[(&quot;LanceDB&lt;br/&gt;add_entries only&quot;)]
     Store --&gt; Recall[&quot;Query analysis → parallel search&lt;br/&gt;→ adequacy check → more rounds&quot;]
     Store -.-&gt;|&quot;the only removal verb&quot;| Clear[&quot;clear()&lt;br/&gt;wipes everything&quot;]
-    Entry -.-&gt;|&quot;no user id, no scope key,&lt;br/&gt;so nothing to delete BY&quot;| Store</code></pre>
+    Entry -.-&gt;|&quot;no user id, no scope key,&lt;br/&gt;so nothing to delete BY&quot;| Store</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The text pillar needs a vector database and a model provider.
 <code>VectorStore</code> wraps LanceDB with a pluggable backend module
@@ -532,7 +532,16 @@ href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

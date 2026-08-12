@@ -120,6 +120,7 @@ state kept in prose by the memory's own author, read by nothing, enforced by
 nothing, and lost entirely in the stateless arm.
 
 ```mermaid
+%% caption: how the master log reaches the agent, and where an agent-written byte costs real history
 flowchart TD
   ENV["ARC-AGI-3 environment"] -->|"board after each action"| MASTER[("logs.txt on the host<br/>append-only, never rewritten")]
   AGENT["coding agent (fresh call each turn)"] -->|"[PLAN] block"| MASTER

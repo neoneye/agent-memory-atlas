@@ -215,7 +215,7 @@ Qdrant a <code>must_not</code> range on
 <code>include_superseded: true</code> lifts it for archaeology. The old
 text stays addressable through <code>palace_recall</code>, so a
 correction hides a memory without destroying it.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     S[&quot;palace_store(text, wing/room/hall)&quot;] --&gt; E[&quot;embed 768-dim&quot;]
     E --&gt; D{&quot;top-1 cosine &gt;= 0.95&lt;br/&gt;AND text identical?&quot;}
     D --&gt;|&quot;yes&quot;| EX[&quot;return the existing id, write nothing&quot;]
@@ -229,7 +229,7 @@ correction hides a memory without destroying it.</p>
     LS --&gt;|&quot;yes&quot;| GONE[&quot;Qdrant delete, vectors unrecoverable&quot;]
     D -.-&gt;|&quot;probe excludes superseded points,&lt;br/&gt;so a re-store cannot resurrect one&quot;| FIL
     style ABORT fill:#14532d,color:#fff
-    style GONE fill:#7f1d1d,color:#fff</code></pre>
+    style GONE fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <p>The dotted edge on the left is a decision worth naming on its own.
 The duplicate probe filters out superseded points before comparing, and
 says why (<code>src/mcp.rs:450</code>):</p>
@@ -769,7 +769,16 @@ href="https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

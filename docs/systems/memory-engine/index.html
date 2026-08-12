@@ -218,7 +218,7 @@ middleware.</li>
 <li><code>queries/</code> — seventeen numbered psql benchmark files plus
 tuned variants.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Cred[&quot;OAuth ·&lt;br/&gt;api key ·&lt;br/&gt;cookie&quot;] --&gt; MW[&quot;middleware&lt;br/&gt;resolves principal&quot;]
   MW --&gt; BTA[&quot;core.build_tree_access(principal, space)&quot;]
   BTA --&gt; TA[&quot;_tree_access&lt;br/&gt;jsonb: paths +&lt;br/&gt;levels&quot;]
@@ -228,7 +228,7 @@ tuned variants.</li>
   RRF --&gt; Out[&quot;visible,&lt;br/&gt;ranked results&quot;]
   Agent[&quot;agent principal&quot;] --&gt; Clamp[&quot;agent_tree_access&lt;br/&gt;= least(agent,&lt;br/&gt;owner)&quot;]
   Clamp --&gt; TA
-  W[&quot;memory.create —&lt;br/&gt;tree required&quot;] --&gt; Mem</code></pre>
+  W[&quot;memory.create —&lt;br/&gt;tree required&quot;] --&gt; Mem</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="agents-as-principals-clamped-to-their-owner">Agents as
@@ -593,7 +593,16 @@ href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618e
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

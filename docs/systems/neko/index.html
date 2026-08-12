@@ -185,7 +185,7 @@ not a storage field"</em>, and that archival additionally requires
 <code>sub_zero_days &gt;= EVIDENCE_ARCHIVE_DAYS</code> — an entry must
 stay negative for a sustained period, not merely dip.</p>
 <p>The lifecycle, with the two unusual things marked:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     U[&quot;utterance&quot;] --&gt; EX[&quot;extraction&quot;]
     EX --&gt; OB[&quot;outbox&quot;] --&gt; DD[&quot;dedup&quot;] --&gt; ST[(&quot;facts / reflections / persona&quot;)]
     ST --&gt;|&quot;every mutation&quot;| EL[(&quot;event_log&lt;br/&gt;append-only&quot;)]
@@ -197,12 +197,12 @@ stay negative for a sustained period, not merely dip.</p>
     BT --&gt; UD[(&quot;user_directives.json&lt;br/&gt;keyed on kind + term.casefold()&lt;br/&gt;TTL 3 days&quot;)]
     UD --&gt;|&quot;spliced in at cold start&quot;| SP[&quot;system prompt&quot;]
 
-    style DC fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style DC fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The two decay clocks are the point: reinforcement and disputation are
 separate counters, so "long confirmed, recently disputed" is a state
 this system can hold and a single confidence float cannot.</p>
 <p>Recall runs in one direction with two gates that both matter:</p>
-<pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
     Q[&quot;query&quot;] --&gt; SF[&quot;scope filter&quot;]
     SF --&gt; BM[&quot;BM25 + cosine&quot;] --&gt; RRF[&quot;RRF fusion&quot;] --&gt; HF[&quot;hard filter&quot;] --&gt; RR[&quot;LLM rerank&quot;]
     SF -.- N1[&quot;before ranking,&lt;br/&gt;never after&quot;]
@@ -210,7 +210,7 @@ this system can hold and a single confidence float cannot.</p>
 
     style HF fill:#f4e2bd,stroke:#b8860b
     style N1 fill:#f7f4ec,stroke:#cfcfcf
-    style N2 fill:#f7f4ec,stroke:#cfcfcf</code></pre>
+    style N2 fill:#f7f4ec,stroke:#cfcfcf</code></pre></details></figure>
 <p>Scope filters <strong>before</strong> ranking, so excluded material
 is never ranked rather than ranked and hidden. The hard filter sits
 <strong>before</strong> the LLM rerank, so disputed material the model
@@ -267,7 +267,7 @@ and about 24,000 lines:</p>
 </tr>
 </tbody>
 </table></div>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     U[Utterance] --&gt; EX[extraction]
     U --&gt; UD[user_directives&lt;br/&gt;ban-topic, TTL 3d]
     EX --&gt; OB[outbox] --&gt; DD[fact_dedup] --&gt; V[(facts / reflections / persona JSON)]
@@ -277,7 +277,7 @@ and about 24,000 lines:</p>
     H --&gt; HF[hard filter&lt;br/&gt;score &lt; 0, suppressed]
     HF --&gt; RR[LLM rerank] --&gt; OUT[recall]
     UD --&gt; PR[system prompt at cold start]
-    AR[anti_repeat BM25&lt;br/&gt;over recent AI output] --&gt; GEN[generation]</code></pre>
+    AR[anti_repeat BM25&lt;br/&gt;over recent AI output] --&gt; GEN[generation]</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to run:</strong> the companion app. Storage is
@@ -647,7 +647,16 @@ href="https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb0803
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

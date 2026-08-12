@@ -166,7 +166,7 @@ namespaces carry system state: <code>status:</code> (canonical / draft /
 deprecated), <code>volatility:</code> (durable / state / volatile), and
 <code>stale:as-of</code>. Recall filters on those tags, and a nightly
 pass writes them.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     CAP[&quot;capture entry&quot;] --&gt; CD{&quot;contradiction with an existing entry?&quot;}
     CD --&gt;|yes| LOSE[&quot;loser tagged status:deprecated (row kept)&lt;br/&gt;vector_ids cleared in D1&lt;br/&gt;Vectorize deleteByIds on the old vectors&lt;br/&gt;contradiction_losses += 1&quot;]
     CD --&gt; WIN[&quot;winner stored, contradiction_wins += 1&quot;]
@@ -181,7 +181,7 @@ pass writes them.</p>
     DEC --&gt; D6[&quot;state, or unclassified → 0.6&quot;]
     DEC --&gt; D15[&quot;volatile, or task → 0.15&quot;]
     DEC --&gt; MMR[&quot;MMR λ = 0.7&quot;]
-    G[&quot;graph expansion&quot;] --&gt; GX[&quot;deprecated neighbours skipped by default&quot;]</code></pre>
+    G[&quot;graph expansion&quot;] --&gt; GX[&quot;deprecated neighbours skipped by default&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> is organised by concern: <code>capture</code>,
 <code>entries</code>, <code>recall</code> (search, math, distill),
@@ -528,7 +528,16 @@ deployed, and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

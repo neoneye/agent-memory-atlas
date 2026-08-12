@@ -157,7 +157,7 @@ right — section 10.</p>
 Retrieval fuses lexical, semantic and graph signals; a bandit decides
 which of those stages to run; vitality and importance scores decay and
 reinforce from access.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     N[&quot;markdown notes in a vault&quot;] --&gt; WL[&quot;wiki-links → graph edges&quot;]
     N --&gt; IDX[&quot;SQLite index&quot;]
     Q[&quot;query&quot;] --&gt; SL{&quot;stage-learner: LinUCB per query type&lt;br/&gt;MIN_SAMPLES = 15 before acting&quot;}
@@ -174,7 +174,7 @@ reinforce from access.</p>
     W --&gt; R[&quot;results&quot;]
     R --&gt; HEB[&quot;Hebbian co-occurrence&lt;br/&gt;from retrieval patterns&quot;]
     HEB --&gt; WL
-    ACC[&quot;access&quot;] --&gt; V[&quot;vitality = base·exp(−t/decayDays)&lt;br/&gt;ACT-R B_i = ln(n/(1−d)) − d·ln(L)&quot;]</code></pre>
+    ACC[&quot;access&quot;] --&gt; V[&quot;vitality = base·exp(−t/decayDays)&lt;br/&gt;ACT-R B_i = ln(n/(1−d)) − d·ln(L)&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/core/</code> holds the engine: <code>vitality</code>,
 <code>ranking</code>, <code>noteindex</code>, <code>importance</code>,
@@ -458,7 +458,16 @@ here is between two documents in the repository.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

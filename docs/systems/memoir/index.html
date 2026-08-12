@@ -159,7 +159,7 @@ side-effect-free and testable.</p>
 what happens on collision. The store underneath is content-addressed and
 versioned, so every prior value is a commit away and <code>blame</code>
 will tell you who wrote it.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     W[&quot;remember(path, content, confidence)&quot;] --&gt; T{&quot;memory_type_for_key(path)&quot;}
     T --&gt;|&quot;context.current, metrics.turn&quot;| WK[&quot;WORKING → REPLACE&quot;]
     T --&gt;|&quot;experience, metrics.code&quot;| EP[&quot;EPISODIC → APPEND (capped)&quot;]
@@ -177,7 +177,7 @@ will tell you who wrote it.</p>
     PT --&gt; GS[&quot;harden_git_config: gc.auto=0, gc.pruneExpire=never&lt;br/&gt;applied on create AND on every open&quot;]
     PT --&gt; BL[&quot;memoir blame key → commit, author, date, message&quot;]
     PT --&gt; PF[&quot;memoir proof / verify → Merkle inclusion proof&quot;]
-    BR[&quot;branch merge conflict&quot;] --&gt; H409[&quot;HTTP 409 — &#39;Please resolve manually&#39;&quot;]</code></pre>
+    BR[&quot;branch merge conflict&quot;] --&gt; H409[&quot;HTTP 409 — &#39;Please resolve manually&#39;&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/memoir/</code>: <code>store</code> (the ProllyTree adapter,
 backend resolution, a cwd-locked tree, git safety),
@@ -565,7 +565,16 @@ installed, and no benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

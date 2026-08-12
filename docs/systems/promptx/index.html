@@ -178,7 +178,7 @@ with the model, since spreading activation is a theory about
 <em>reachability</em> rather than about truth.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;remember operation&quot;] --&gt; E[&quot;engram written:&lt;br/&gt;content, schema, type,&lt;br/&gt;timestamp, strength&quot;]
     E --&gt; CI[&quot;cue_index rows,&lt;br/&gt;one per cue word&quot;]
     Q[&quot;prime or recall&quot;] --&gt; C[&quot;cue lookup&quot;]
@@ -189,7 +189,7 @@ thing becomes a belief, and how it stops being one</h3>
     S -.-&gt;|&quot;a wrong engram and an unused one&lt;br/&gt;decay identically&quot;| N
     E --&gt;|&quot;delete&quot;| D[[&quot;engram gone,&lt;br/&gt;cues cascade with it&quot;]]
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The dashed edge is the design's blind spot: strength is the only
 lever, and it answers "how reachable" rather than "how true".</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -426,7 +426,16 @@ href="https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

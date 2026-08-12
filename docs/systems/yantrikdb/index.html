@@ -179,7 +179,7 @@ database thinks about what it holds.</p>
 place: the original is tombstoned, a new version is created, "entity
 relationships are transferred to the new memory", and an optional
 <code>correction_note</code> records why.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     R[&quot;remember / correct / forget / relate&quot;] --&gt; CL[&quot;commit substrate — one mutation grammar,&lt;br/&gt;idempotent on op_id, per-tenant log_index&quot;]
     CL --&gt; AP[&quot;applier → storage + HNSW index&quot;]
     CL --&gt; IB[&quot;invalidation bus&quot;]
@@ -189,7 +189,7 @@ relationships are transferred to the new memory", and an optional
     T1 --&gt; RET[&quot;retention: tombstone kept in the log until&lt;br/&gt;every replica watermark has passed it&quot;]
     RET --&gt; RNR[&quot;restore cannot resurrect it&quot;]
     T1 -.-&gt;|&quot;snapshots already shipped to S3&quot;| CS[&quot;crypto-shred: destroy the tenant DEK&quot;]
-    CS -.-&gt;|&quot;no caller, no encryption layer — stated in the header&quot;| GAP[&quot;not wired at this commit&quot;]</code></pre>
+    CS -.-&gt;|&quot;no caller, no encryption layer — stated in the header&quot;| GAP[&quot;not wired at this commit&quot;]</code></pre></details></figure>
 <p>The dotted path is the one the module documents as incomplete, drawn
 where its own header puts it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -509,7 +509,16 @@ tree was read, never built, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

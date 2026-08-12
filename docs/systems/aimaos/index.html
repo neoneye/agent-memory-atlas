@@ -189,7 +189,7 @@ relations and its template, then rewrites the category file. The inbound
 index means a removed belief stops being reachable from the beliefs that
 pointed at it, which is the thing a store keyed on cross-references has
 to remember to do.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     T[&quot;Thought or turn&quot;] --&gt; RAW[(&quot;memory.json&lt;br/&gt;raw chunks, decay-exempt&quot;)]
     RAW --&gt; N[&quot;Nightly review&quot;]
     N --&gt; C{&quot;merge_or_add_belief&quot;}
@@ -200,7 +200,7 @@ to remember to do.</p>
     M --&gt; Q{&quot;Salient tokens&lt;br/&gt;on both sides?&quot;}
     Q -- &quot;no — paraphrase&quot; --&gt; CORR[&quot;Corroborate:&lt;br/&gt;confidence up, verifications +1&quot;]
     Q -- &quot;yes — contradiction&quot; --&gt; SUP[&quot;Supersede:&lt;br/&gt;adopt newer wording&lt;br/&gt;previous_content = old&lt;br/&gt;verifications reset to 1&quot;]
-    SUP -. &quot;read by nothing&quot; .-x PREV[&quot;previous_content&quot;]</code></pre>
+    SUP -. &quot;read by nothing&quot; .-x PREV[&quot;previous_content&quot;]</code></pre></details></figure>
 <p>The dotted edge is the finding: the value that was judged wrong is
 stored, and no write path consults it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -547,7 +547,16 @@ memory package.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

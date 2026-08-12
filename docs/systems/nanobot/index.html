@@ -173,7 +173,7 @@ keep them small.</p>
     ├── .dream_cursor    # Dream consumption cursor
     └── .git/            # version history for the durable files</code></pre>
 <p>Two stages, deliberately separated:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph S1[&quot;Stage 1 — Consolidator, pressure-driven&quot;]
         P[&quot;context window under pressure&quot;] --&gt; SL[&quot;summarize the oldest safe slice&quot;]
         SL --&gt; AP[&quot;append one JSON line&lt;br/&gt;to history.jsonl&quot;]
@@ -190,7 +190,7 @@ keep them small.</p>
     C1 --&gt; RD
 
     style C2 fill:#e7efe9,stroke:#3d6b59
-    style HOLD fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style HOLD fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>Two cursors, and the second one is the interesting piece.
 <code>.dream_cursor</code> advances <strong>only if the pass had no tool
 errors</strong>, so a run that half-worked is retried rather than banked
@@ -215,7 +215,7 @@ template.</li>
 <li>Workspace <code>prompts/dream.md</code> — user-editable instructions
 steering Dream's behaviour.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   Conv[&quot;session.messages&quot;] --&gt; Cons[&quot;Consolidator (on&lt;br/&gt;context pressure)&quot;]
   Cons --&gt; Hist[&quot;history.jsonl&lt;br/&gt;(append-only)&quot;]
   Cons --&gt; C1[&quot;.cursor&quot;]
@@ -229,7 +229,7 @@ steering Dream's behaviour.</li>
   Edit --&gt; Git[&quot;GitStore commit (delta-grounded&lt;br/&gt;message)&quot;]
   Dream --&gt; Guard{&quot;tool errors?&quot;}
   Guard --&gt;|yes| Hold[&quot;do not advance&lt;br/&gt;.dream_cursor&quot;]
-  Guard --&gt;|no| Adv[&quot;advance .dream_cursor&quot;]</code></pre>
+  Guard --&gt;|no| Adv[&quot;advance .dream_cursor&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-dual-cursor-split">The dual-cursor split</h3>
@@ -486,7 +486,16 @@ href="https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b154
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -142,14 +142,14 @@ so is its inverse — a record that never promotes is invisible, and
    ├─ inputs that are separately meaningful, not one blended score
    ├─ a ceiling: what a record&#39;s provenance forbids, regardless of use
    └─ a record of why this one promoted, queryable later</code></pre>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     Rec[&quot;record in the lower tier&quot;] --&gt; Rule[&quot;written rule, computed from stored fields&quot;]
     In[&quot;separable inputs:&lt;br/&gt;frequency · recency · importance · corroboration&quot;] --&gt; Rule
     Rule --&gt; Cap{&quot;does provenance justify the climb?&quot;}
     Cap -- &quot;no&quot; --&gt; Stay[&quot;stays — capped by its source,&lt;br/&gt;however often it is used&quot;]
     Cap -- &quot;yes&quot; --&gt; Up[&quot;promoted to the upper tier&quot;]
     Up --&gt; Why[&quot;decision recorded: inputs, rule, actor&quot;]
-    In -. &quot;blended into one score&quot; .-&gt; Opaque[&quot;cannot attribute&lt;br/&gt;the promotion&quot;]</code></pre>
+    In -. &quot;blended into one score&quot; .-&gt; Opaque[&quot;cannot attribute&lt;br/&gt;the promotion&quot;]</code></pre></details></figure>
 <p>Four requirements:</p>
 <ol type="1">
 <li><strong>Write the rule down</strong>, as something a program
@@ -321,7 +321,16 @@ path</a></li>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

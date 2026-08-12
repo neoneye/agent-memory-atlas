@@ -172,7 +172,7 @@ from the project — and each shard is a Turso database with vectors
 stored inline. Retrieval is an approximate nearest-neighbour scan
 followed by a scope filter. A user profile is learned separately and
 versioned.</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     P[&quot;prompt / session&quot;] --&gt; AC[&quot;auto-capture: structured extraction&quot;]
     AC --&gt; PR[&quot;privacy: &amp;lt;private&amp;gt;…&amp;lt;/private&amp;gt; → [REDACTED]&lt;br/&gt;depth counter, unclosed tag redacts to end&quot;]
     PR --&gt; DD[&quot;deduplication-service: cosine over stored vectors&quot;]
@@ -185,7 +185,7 @@ versioned.</p>
     CL --&gt; RET[&quot;cleanupOldChangelogs:&lt;br/&gt;keep the newest N versions, delete the rest&quot;]
     API[&quot;/api/*&quot;] --&gt; TOK{&quot;x-opencode-mem-token&quot;}
     TOK --&gt;|missing| REJ[&quot;rejected&quot;]
-    TOK --&gt;|valid| API2[&quot;handlers&quot;]</code></pre>
+    TOK --&gt;|valid| API2[&quot;handlers&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/services/</code> is where everything lives:
 <code>turso/</code> (shard manager, connection manager, vector search,
@@ -489,7 +489,16 @@ to an earlier commit than the one pinned here.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

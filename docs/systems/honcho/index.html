@@ -147,7 +147,7 @@ from an observer's perspective.</li>
 deductive observations.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     ADD[&quot;session.add_messages&quot;] --&gt; MT[(&quot;messages table&quot;)]
     ADD -.-&gt;|optional| PE[&quot;pending embeddings&quot;]
     MT --&gt; ENQ[&quot;enqueue representation tasks&quot;]
@@ -157,7 +157,7 @@ deductive observations.</li>
     RM --&gt; DOC[(&quot;documents table&lt;br/&gt;+ vector store&quot;)]
     DOC --&gt; QRY[&quot;query: representation, session,&lt;br/&gt;search, chat, context endpoints&quot;]
     PE --&gt; ME[(&quot;message embeddings&quot;)]
-    ME --&gt; QRY</code></pre>
+    ME --&gt; QRY</code></pre></details></figure>
 <p>Two paths reach a query and they hold different things. The messages
 table plus its embeddings is what was <em>said</em>; the documents table
 is what was <em>inferred about a peer by another peer</em>. A collection
@@ -188,7 +188,7 @@ memory.</li>
 <li><code>honcho/src/reconciler/*</code>: vector reconciliation.</li>
 </ul>
 <p>Architecture:</p>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   API[&quot;FastAPI routers&quot;] --&gt; CRUD[&quot;CRUD layer&quot;]
   CRUD --&gt; PG[&quot;Postgres + pgvector&quot;]
   CRUD --&gt; Queue[&quot;queue table&quot;]
@@ -197,7 +197,7 @@ memory.</li>
   Deriver --&gt; RepMgr[&quot;RepresentationManager&quot;]
   RepMgr --&gt; Docs[&quot;documents / collections&quot;]
   Docs --&gt; Query[&quot;context/search/chat&quot;]
-  PG --&gt; Reconciler[&quot;external vector reconciler&quot;]</code></pre>
+  PG --&gt; Reconciler[&quot;external vector reconciler&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p>Message capture:</p>
@@ -507,7 +507,16 @@ href="https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

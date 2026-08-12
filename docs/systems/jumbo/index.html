@@ -172,7 +172,7 @@ the fold.</p>
 <code>IN_PROGRESS_STATES</code> as declared sets rather than inline
 conditions, and rules as their own classes (<code>CanSubmitRule</code>,
 <code>CanCodifyRule</code>, <code>CanCloseRule</code>).</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; defined
     defined --&gt; refined
     refined --&gt; submitted
@@ -185,7 +185,7 @@ conditions, and rules as their own classes (<code>CanSubmitRule</code>,
     doing --&gt; blocked: note populated
     blocked --&gt; unblocked: lastWaitingStatus remembers where it came from
     doing --&gt; codifying
-    codifying --&gt; done</code></pre>
+    codifying --&gt; done</code></pre></details></figure>
 <p>Two details on that machine are the kind of thing event sourcing
 makes cheap and most state columns get wrong. <code>reviewIssues</code>
 is "populated when rejected with review findings" and explicitly cleared
@@ -456,7 +456,16 @@ run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

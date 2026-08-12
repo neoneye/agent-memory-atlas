@@ -104,6 +104,12 @@ render_document() {
     --variable="capability_strip:$capability_strip" \
     --variable="stance_label:$stance_label" \
     --output="$destination"
+
+  # The diagrams render client-side, so an unrendered page hands a reader the
+  # Mermaid source. Wrapping it in a captioned <figure> means that source
+  # arrives labelled instead of as loose edge labels — twice now, an outside
+  # review has read it as broken page layout.
+  python3 "$project_dir/scripts/wrap_diagrams.py" "$destination"
 }
 
 render_document "$project_dir/content/overview.md" "$output_dir/compare/index.html"

@@ -176,7 +176,7 @@ page can be re-derived. And the surface is large — 39,000 lines of CLI
 and 23,000 of MCP — for a system whose distinctive idea is a few hundred
 lines.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     H[&quot;harness lifecycle hooks&lt;br/&gt;&lt;i&gt;SessionStart, UserPrompt, PreToolUse, PostToolUse,&lt;br/&gt;PreCompact, PostCompaction, Notification, Stop, SessionEnd&lt;/i&gt;&quot;]
     H --&gt; OB[&quot;observations&lt;br/&gt;&lt;i&gt;raw, captured without an LLM call&lt;/i&gt;&quot;]
     OB --&gt;|&quot;opt-in consolidation&quot;| MD[(&quot;Markdown pages in git&lt;br/&gt;&lt;b&gt;the human source of truth&lt;/b&gt;&lt;br/&gt;&lt;i&gt;editable, diffable&lt;/i&gt;&quot;)]
@@ -187,7 +187,7 @@ lines.</p>
     OPEN --&gt; EXP[&quot;expired&lt;br/&gt;&lt;i&gt;nobody did&lt;/i&gt;&quot;]
 
     style MD fill:#e7efe9,stroke:#3d6b59
-    style HO fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style HO fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>The Markdown is the source of truth and SQLite is a
 <strong>projection</strong> of it, so the index can be rebuilt and the
 human-editable layer is the authority. The handoff is the atlas's rare
@@ -209,7 +209,7 @@ later session either accepts or lets expire.</p>
 <code>active_project.rs</code>, <code>routing_skills.rs</code>,
 <code>sanitize.rs</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   H[&quot;harness hooks&lt;br/&gt;(8 agents)&quot;] --&gt; Obs[&quot;observations&quot;]
   Obs --&gt; Cons[&quot;opt-in consolidation&quot;]
   Cons --&gt; Pages[&quot;Markdown pages&lt;br/&gt;in git&quot;]
@@ -219,7 +219,7 @@ later session either accepts or lets expire.</p>
   Sess1[&quot;session A ·&lt;br/&gt;Claude Code&quot;] --&gt; HO[&quot;handoff: summary, open_questions,\nnext_steps,&lt;br/&gt;files_touched&quot;]
   HO --&gt; St{&quot;state&quot;}
   St --&gt;|accepted| Sess2[&quot;session B ·&lt;br/&gt;Codex&quot;]
-  St --&gt;|expired| Gone[&quot;decays&lt;br/&gt;out&quot;]</code></pre>
+  St --&gt;|expired| Gone[&quot;decays&lt;br/&gt;out&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-handoff-as-a-memory-type">The handoff as a memory type</h3>
@@ -517,7 +517,16 @@ href="https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

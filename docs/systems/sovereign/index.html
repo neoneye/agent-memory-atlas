@@ -170,7 +170,7 @@ reach.</p>
 <p>An episode enters only if the runtime has the energy to accept it,
 and once in, it is immutable, unaddressable, and eventually evicted
 without a record.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     IN[&quot;heartbeat(payload, origin, priority)&quot;] --&gt; SOV{&quot;SovereigntyArtery&lt;br/&gt;energy − cost×priority&quot;}
     SOV --&gt;|&quot;energy ≤ 0.2&quot;| REF[&quot;&lt;b&gt;refused&lt;/b&gt;&lt;br/&gt;reason string returned&lt;br/&gt;boundary_active = true&quot;]
     SOV --&gt;|&quot;above threshold&quot;| ART[&quot;arteries: sensory · emotional · memory&quot;]
@@ -183,7 +183,7 @@ without a record.</p>
 
     REF -.-&gt;|&quot;recover past 0.2 + 0.1&quot;| SOV
 
-    style REF fill:#e7efe9,stroke:#3d6b59</code></pre>
+    style REF fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <p>The dotted edge is the hysteresis and the shaded node is the idea.
 Everything below <code>EP</code> is the gap: no branch leaves the deque
 except eviction, and no arrow points back into an episode to change
@@ -541,7 +541,16 @@ independently prevent it running from inside.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

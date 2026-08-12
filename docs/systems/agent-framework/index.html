@@ -183,7 +183,7 @@ consolidation compress the topic, delete the topic if you no longer want
 it. Correction is compression — a bullet stops being true by being
 rewritten out of the file by an LLM, with no record that it was
 there.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     subgraph Contract[&quot;ContextProvider — the whole contract&quot;]
       BR[&quot;before_run()&quot;] --- AR[&quot;after_run()&quot;] --- SID[&quot;source_id&quot;]
       Note[&quot;no add · no query · no delete · no scope&quot;]
@@ -196,7 +196,7 @@ there.</p>
     Root --&gt; Contain{&quot;is_relative_to(base)?&quot;}
     Contain --&gt;|no| E3[&quot;raise: path escaped base_path&quot;]
     Contain --&gt;|yes| Topics[(&quot;One markdown file per topic&lt;br/&gt;+ session_ids provenance&quot;)]
-    Topics --&gt;|&quot;sessions_since_consolidation&quot;| Consol[&quot;LLM rewrites the topic&lt;br/&gt;into a tighter form&lt;br/&gt;(no diff, no prior version)&quot;]</code></pre>
+    Topics --&gt;|&quot;sessions_since_consolidation&quot;| Consol[&quot;LLM rewrites the topic&lt;br/&gt;into a tighter form&lt;br/&gt;(no diff, no prior version)&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>For the file-backed case, nothing to run: a base path and a model.
 The tree is <code>{base}/{source}/{owner}/{kind}/</code> holding a
@@ -471,7 +471,16 @@ href="https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

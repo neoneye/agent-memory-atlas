@@ -165,14 +165,14 @@ memory.</p>
 with no way to say "not now" gets answered carelessly, and the loop
 treats deferral as a distinct outcome in its statistics rather than as a
 skip.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; pending_approval: background extraction&lt;br/&gt;from conversation
     pending_approval --&gt; human_approved: reviewer presses a
     pending_approval --&gt; human_approved: reviewer presses e&lt;br/&gt;edits the text first
     pending_approval --&gt; human_rejected: reviewer presses r
     pending_approval --&gt; pending_approval: skip or defer&lt;br/&gt;asked again next session
     human_approved --&gt; [*]: the ONLY status&lt;br/&gt;build_context reads
-    human_rejected --&gt; [*]: recorded, and never&lt;br/&gt;consulted by extraction again</code></pre>
+    human_rejected --&gt; [*]: recorded, and never&lt;br/&gt;consulted by extraction again</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A JSON-backed store per directory plus a knowledge graph, and no
 service to run. The memory processor uses a <code>queue</code> and a
@@ -398,7 +398,16 @@ href="https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

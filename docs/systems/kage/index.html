@@ -186,7 +186,7 @@ the checkout contains Kage's own memories, including one whose current
 state is
 <code>"stale": true, "stale_reasons": ["linked path changed since memory was verified: mcp/kernel.ts, mcp/kernel.test.ts"], "suggested_action": "update"</code>.
 The system's own store demonstrates its own withholding.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Rejected: strict capture, cited path does not exist
     [*] --&gt; Pending: captured, fingerprints taken per path and per symbol
     Pending --&gt; Approved: review at the git or PR boundary
@@ -198,7 +198,7 @@ The system's own store demonstrates its own withholding.</p>
     Approved --&gt; Superseded: another packet supersedes it
     Deprecated --&gt; Deleted: garbage collector, after the retention window
     Superseded --&gt; Deleted: garbage collector, after the retention window
-    Deleted --&gt; [*]: file unlinked, git history is the only record</code></pre>
+    Deleted --&gt; [*]: file unlinked, git history is the only record</code></pre></details></figure>
 <p>The loop from <code>Withheld</code> back to <code>Approved</code> is
 the design: staleness is not a demotion in ranking, it is removal from
 the result set with an explicit count in the receipt, and the way back
@@ -623,7 +623,16 @@ tree was read, never installed, and no test or benchmark was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

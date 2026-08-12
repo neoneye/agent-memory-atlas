@@ -237,7 +237,7 @@ D1.</li>
 <li><code>cloud_sync.py</code>, <code>schema.py</code> (332),
 <code>cli.py</code>.</li>
 </ul>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
   In[&quot;MCP writes · documents ·&lt;br/&gt;images&quot;] --&gt; Mem[&quot;memories (+fts,&lt;br/&gt;embeddings)&quot;]
   Mem --&gt; Rank[&quot;retrieval: FTS +&lt;br/&gt;vectors&quot;]
   Rank --&gt; Imp[&quot;importance decay:&lt;br/&gt;age + access_count&quot;]
@@ -252,7 +252,7 @@ D1.</li>
   Dry --&gt;|no| Edge[&quot;supersedes edge&quot;]
   Edge --&gt; Cross[&quot;memories_crossrefs&quot;]
   Cross --&gt; Fol
-  Mem --&gt; Ev[&quot;memories_events ·&lt;br/&gt;memories_actions&quot;]</code></pre>
+  Mem --&gt; Ev[&quot;memories_events ·&lt;br/&gt;memories_actions&quot;]</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="a-correction-pass-you-can-preview">A correction pass you can
@@ -721,7 +721,16 @@ href="https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

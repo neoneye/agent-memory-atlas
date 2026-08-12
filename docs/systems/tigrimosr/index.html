@@ -205,7 +205,7 @@ decisions in a process that forgets them.</p>
 <p>The skill lifecycle is the interesting one. It belongs to the desktop
 and headless binaries; in the CLI a folder's skills are seeded once and
 no state in this diagram is ever entered.</p>
-<pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
     SRC[&quot;finished sessions&lt;br/&gt;+ user feedback&lt;br/&gt;+ subagent traces&quot;]
     SRC --&gt;|&quot;scheduler runs run_synthesis&quot;| PR[&quot;Proposal&lt;br/&gt;kind: create or update&lt;br/&gt;name, content, rationale, based_on&quot;]
     PR --&gt; GATE{&quot;require_approval?&quot;}
@@ -219,7 +219,7 @@ no state in this diagram is ever entered.</p>
     DEL --&gt; NOTHING[&quot;nothing recorded,&lt;br/&gt;nothing remembered&quot;]
 
     style THRU fill:#f4e2bd,stroke:#b8860b
-    style NOTHING fill:#f4e2bd,stroke:#b8860b</code></pre>
+    style NOTHING fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Two highlighted boxes, two different gaps. Turning off
 <code>require_approval</code> writes a model-authored skill straight to
 <code>approved</code>, and a rejection leaves <strong>no trace at
@@ -243,7 +243,7 @@ written whole by <code>PUT /:id/memory</code>, mirrored to
 <code>Project memory/context:</code>. No entries, no identity below the
 project, no review.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     UI[&quot;native Rust UI /&lt;br/&gt;embedded web UI /&lt;br/&gt;Telegram, LINE&quot;] --&gt; SRV[&quot;axum server&lt;br/&gt;src/server/routes&quot;]
     SRV --&gt; AL[&quot;agent_loop&lt;br/&gt;+ toolbox, mcp, graph&quot;]
     SRV --&gt; D[(&quot;JSON on disk&lt;br/&gt;projects.json, skills.json,&lt;br/&gt;chat history, settings&quot;)]
@@ -251,7 +251,7 @@ project, no review.</p>
     SY --&gt; D
     SY --&gt; SK[(&quot;skills/&amp;lt;slug&amp;gt;/&lt;br/&gt;SKILL.md&lt;br/&gt;SKILL.md.proposed&quot;)]
     AL --&gt; SK
-    AL --&gt; CMP[&quot;compact&lt;br/&gt;track_file_read, track_invoked_skill&quot;]</code></pre>
+    AL --&gt; CMP[&quot;compact&lt;br/&gt;track_file_read, track_invoked_skill&quot;]</code></pre></details></figure>
 <ul>
 <li><strong>One crate, now two binaries</strong>, roughly 67,700 lines
 across 77 source files. A <code>refactor:</code> commit split the crate
@@ -815,7 +815,16 @@ href="https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba31
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

@@ -187,7 +187,7 @@ has armed it, <code>invalidated_at</code> is set.</li>
 <p>The third path is the only one where the system claims something is
 <em>wrong</em> rather than gone, and it is the one that requires an
 external model to be configured before it will run at all.</p>
-<pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Indexed: file written or observer extracts
     Indexed --&gt; Retrievable: embed daemon syncs vector
     Retrievable --&gt; Eroded: judge says contradiction, confidence minus 0.25
@@ -197,7 +197,7 @@ external model to be configured before it will run at all.</p>
     Floored --&gt; Invalidated: invalidated_at set, opt-in flag only
     Invalidated --&gt; [*]: absent from both retrieval legs, no query-time notice
     Retrievable --&gt; Deactivated: file deleted or lifecycle archival
-    Deactivated --&gt; Retrievable: file returns, or restore from archive</code></pre>
+    Deactivated --&gt; Retrievable: file returns, or restore from archive</code></pre></details></figure>
 <p>The diagram's asymmetry is the design: erosion is a ranking signal
 and fully reversible with one <code>UPDATE</code>; invalidation is a
 hard predicate and reversible only by someone who already knows to look
@@ -687,7 +687,16 @@ and never installed and no test was run.</p>
         const holder = document.createElement("div");
         holder.className = "mermaid";
         holder.textContent = pre.textContent;
-        pre.replaceWith(holder);
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
       });
       if (diagrams.length) {
         mermaid.initialize({

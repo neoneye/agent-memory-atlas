@@ -18,13 +18,16 @@ when the work happens.
   before answering one of coverage. Also corrects the claim that PRO-LONG's
   missing test suite is buried in section 10 — it is in section 1, though as the
   closing line, which is the version of the criticism worth keeping.
-- [2026-08-13-the-marks-are-invisible-on-the-page-that-earns-them.md](2026-08-13-the-marks-are-invisible-on-the-page-that-earns-them.md) —
-  `rg 'trust_state|scope_enforced' docs/systems/mindcache/index.html` returns
-  nothing: the capability marks feed the index, the grid and the matrix, and
-  never reach the report a reader lands on. Proposes rendering all seven in the
-  header — earned and withheld distinctly, each linked to its own rubric anchor —
-  so that `capabilities: ""` reads as *assessed and carries none* rather than as
-  *nobody looked*, which is the distinction the rubric exists to protect.
+- [2026-08-13-the-rubric-definitions-are-in-a-tooltip.md](2026-08-13-the-rubric-definitions-are-in-a-tooltip.md) —
+  every report page already carries the seven mechanisms as marked chips with a
+  legend distinguishing *assessed and carries none* from *nobody looked*. What
+  does not arrive is the definitions: they live in `title` attributes, so they
+  are invisible to a text extractor, a printed copy, Reader mode, a keyboard and
+  a touch screen — which is why a reviewer could name all seven and still call
+  the criteria a black box. Proposes linking each chip to a stable per-mark
+  rubric anchor. Also records the correction: the first version of this note
+  claimed the marks were absent, from a grep for the frontmatter keys on a page
+  that renders the display names.
 - [2026-08-13-enforce-where-the-writer-cannot-reach.md](2026-08-13-enforce-where-the-writer-cannot-reach.md) —
   a pattern page proposal with six candidate instances already in the corpus:
   an invariant enforced by the party it constrains is a policy, and one enforced
@@ -103,7 +106,9 @@ when the work happens.
   construction, and a timeout treated as a result rather than an error.
 
 - [2026-08-12-the-atlas-read-without-javascript.md](2026-08-12-the-atlas-read-without-javascript.md) —
-  an outside review reported floating `no`/`yes`/`a test fails` text and missing
+  **the delivery fix shipped 2026-08-13**; pre-rendering stays declined because
+  it would add puppeteer to a build with no Node dependencies at all.
+  An outside review reported floating `no`/`yes`/`a test fails` text and missing
   linked documents on the build page. Both were artifacts of reading it without
   JavaScript and with anchors stripped: the text is a Mermaid flowchart's edge
   labels, and the three "missing" documents are hyperlinks in the sentences that
