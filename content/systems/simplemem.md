@@ -280,8 +280,9 @@ text path, and no rejection to assert about.
   Ship a delete before you ship a skill.
 - **Publishing the harness and withholding the results.** Six numbers with a
   reproduce section and no committed artifact puts the entire verification cost
-  on every reader, and it is the failure mode this atlas has now recorded four
-  times.
+  on every reader, and it is the failure the atlas collects under [published
+  benchmark numbers without committed
+  artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts).
 - **Annotations nothing reads.** An `author` column and a note that never
   reaches ranking, retrieval or lifecycle is a comment field, and calling it
   review would be generous.

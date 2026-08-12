@@ -160,15 +160,16 @@ holds <code>attempted</code>, <code>failed_because</code>,
 <code>do_not_repeat</code> and <code>revisit_condition</code> — a memory
 of what did not work, with the condition under which to reconsider it.
 Most systems here record successes and infer the rest.</p>
-<p>The defect is the one this atlas has now found five times in a
-fortnight. The read path filters by <code>space</code>, and the filter
-is written <code>AND (? IS NULL OR sections.space = ?)</code>. The MCP
-tool the agent calls passes <code>optionalString(args.space)</code>, so
-a model that omits the argument — which nothing requires it to supply —
-searches every space at once. The <code>failures</code> query in the
-same file takes <code>WHERE space = ?</code> with no null branch, so the
-system contains both the safe and the unsafe form of its own scope
-check.</p>
+<p>The defect is the one collected on the <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> page, and this repository holds both halves of it. The read path
+filters by <code>space</code>, and the filter is written
+<code>AND (? IS NULL OR sections.space = ?)</code>. The MCP tool the
+agent calls passes <code>optionalString(args.space)</code>, so a model
+that omits the argument — which nothing requires it to supply — searches
+every space at once. The <code>failures</code> query in the same file
+takes <code>WHERE space = ?</code> with no null branch, so the system
+contains both the safe and the unsafe form of its own scope check.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Four durable kinds, and which table a memory lands in is most of what
 it means.</p>

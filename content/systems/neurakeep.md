@@ -49,7 +49,7 @@ Three more things are worth the reading.
 
 **A dedicated failures table.** `failures` holds `attempted`, `failed_because`, `do_not_repeat` and `revisit_condition` — a memory of what did not work, with the condition under which to reconsider it. Most systems here record successes and infer the rest.
 
-The defect is the one this atlas has now found five times in a fortnight. The read path filters by `space`, and the filter is written `AND (? IS NULL OR sections.space = ?)`. The MCP tool the agent calls passes `optionalString(args.space)`, so a model that omits the argument — which nothing requires it to supply — searches every space at once. The `failures` query in the same file takes `WHERE space = ?` with no null branch, so the system contains both the safe and the unsafe form of its own scope check.
+The defect is the one collected on the [scope as a first-class key](../../patterns/scope-as-a-first-class-key/) page, and this repository holds both halves of it. The read path filters by `space`, and the filter is written `AND (? IS NULL OR sections.space = ?)`. The MCP tool the agent calls passes `optionalString(args.space)`, so a model that omits the argument — which nothing requires it to supply — searches every space at once. The `failures` query in the same file takes `WHERE space = ?` with no null branch, so the system contains both the safe and the unsafe form of its own scope check.
 
 ## 2. Mental Model
 

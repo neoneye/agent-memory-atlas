@@ -174,7 +174,7 @@ So the strongest correction the system offers — a person naming a pattern and 
 
 ### Outcome feedback — `node_enforcement_feedback_effect`
 
-The rule here is the one this atlas has been asking for and has not previously found stated in code. A violation only counts as negative evidence when the agent was **both** warned and observed to correct:
+The rule here is the one this atlas asks for and finds stated in code nowhere else. A violation only counts as negative evidence when the agent was **both** warned and observed to correct:
 
 ```python
 return [v for v in violations if v.was_warned and v.was_corrected]
