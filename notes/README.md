@@ -8,6 +8,20 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-12-deletion-harness-level-1-and-level-2.md](2026-08-12-deletion-harness-level-1-and-level-2.md) —
+  the implementation plan for the thirteen-step sequence. **Level 1** is the
+  harness running against itself: an adapter Protocol, steps 1–10, and two
+  reference stores where the validation criterion is that the leaky one fails
+  *exactly* the four steps it was built to fail. **Level 2a** points it at Memory
+  Compiler, chosen because it installs nothing and carries a falsifiable
+  prediction — a 10-character canary should fail step 6 where a 12-character one
+  passes, because its collision scan ignores values below twelve characters, and
+  the spec's own default token sits exactly on that boundary. **Level 2b** adds
+  steps 11–13 and replaces step 9's boolean with MythologIQ's four-way residue
+  partition, which turns a step almost everything fails into one that
+  discriminates. The fleet is explicitly not proposed, with reasons. Also records
+  three defects in the published spec that only building surfaces.
+
 - [2026-08-12-what-would-make-rollback-a-mark.md](2026-08-12-what-would-make-rollback-a-mark.md) —
   the rubric declined to score recoverability partly because almost nothing
   implements it. NeuraKeep ships a working undo and MythologIQ specifies rollback
