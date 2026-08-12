@@ -333,32 +333,44 @@ fixed yet.
   works.** *Always-On Agents* ([arXiv:2606.30306](https://arxiv.org/abs/2606.30306),
   29 June 2026) reads persistent state along six axes — authority, scope,
   mutability, provenance, recoverability, actionability — of which four map onto
-  marks here and two do not. **Authority** asks who or what licenses a record to
-  influence an action, as distinct from the agent merely holding it; the nearest
-  thing on this page is `human_review`, which asks whether a person can inspect,
-  not whether a grant exists and is still current. **Recoverability** asks
-  whether a decision taken on a bad record can be traced and repaired; nothing
-  here scores rollback at all. The survey finds both are the field's thinnest
-  regions — authority is its rarest axis at 72 of 435 works, and rollback its
-  rarest lifecycle stage at 27 — so the omission is not obviously costing this
-  corpus many marks. It is still an omission, and the honest reading is that the
-  seven were chosen against failures found by reading implementations, which
-  under-weights a failure whose implementations largely do not exist yet.
+  marks here and two do not.
 
-  **The rarity argument has started to fail on the recoverability half.**
-  [NeuraKeep](../../systems/neurakeep/) ships a working rollback — an append-only
-  audit carrying `before` and `after` per mutation, an `undoable` flag derived
-  from whether a `before` exists, and an undo that restores the prior rows and
-  records its own reversal — and [MythologIQ's Agent
-  Memory](../../systems/agent-memory-doctrine/) specifies rollback traceability
-  as one of five invariants and implements the residue half of it. Two is not
-  many, but it is no longer none, and "nobody satisfies it" stops being a reason
-  the day something does. The counter-argument that survives is narrower: a mark
-  is a claim about a mechanism, and this atlas has read rollback in two systems
-  without yet establishing what would distinguish a real one from an undo button
-  over a log nobody keeps. That definition is the work, not the count. Adding
-  a mark is not the obvious fix: a mark nobody satisfies discriminates nothing.
-  Recording the gap is.
+  **Authority** asks who or what licenses a record to influence an action, as
+  distinct from the agent merely holding it. The nearest thing on this page is
+  `human_review`, which asks whether a person can inspect, not whether a grant
+  exists and is still current. The nearest thing in the corpus is
+  [AgentRecall-X](../../systems/agentrecall-x/), where a human correction marked
+  `authoritative` returns `verdict: "blocked"` against a proposed action and
+  loses that standing when its measured precision falls. One instance is not
+  enough to define a mark against, and the survey
+  ([arXiv:2606.30306](https://arxiv.org/abs/2606.30306)) puts the axis at 72 of
+  435 works — its rarest.
+
+  **Recoverability** asks whether a decision taken on a bad record can be traced
+  and repaired. Two systems here carry it:
+  [NeuraKeep](../../systems/neurakeep/), whose append-only audit stores `before`
+  and `after` per mutation, derives an `undoable` flag from whether a `before`
+  exists, and restores the prior rows through an undo that records its own
+  reversal; and [MythologIQ's Agent
+  Memory](../../systems/agent-memory-doctrine/), which names rollback
+  traceability as one of five invariants and implements the residue half of it.
+
+  So rarity is not what keeps recoverability off the list: the 27 of 435 that
+  same survey ([arXiv:2606.30306](https://arxiv.org/abs/2606.30306)) reports is a
+  fact about the field rather than a reason here. What keeps it off is
+  that two readings are not enough to say what separates a rollback from an undo
+  button over a log nobody keeps, and a mark awarded on a loose definition is the
+  failure this page records below for `audit_log`. The definition is the work,
+  not the count;
+  [a proposal](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-12-what-would-make-rollback-a-mark.md)
+  states one in three clauses and the corpus sweep that would test it before
+  anything is added.
+
+  Both omissions have one origin: the seven were chosen against failures found by
+  reading implementations, which under-weights a failure whose implementations
+  are rare. Recording the gap is the answer while the definitions are missing;
+  adding a column that reads `—` for 258 rows is not.
+
 - **No second reader.** Every mark on every report comes from one LLM reviewer
   directed by one person, with no blinded re-review and no inter-rater agreement
   figure. The [methodology hazards

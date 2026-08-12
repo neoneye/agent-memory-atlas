@@ -264,7 +264,7 @@ self-evolving agents and 14 borrowed from adjacent evaluation. It is the right
 place to start, and none of it was inspected here. The entries closest to this
 page's concerns, by the survey's own one-line descriptions: **HaluMem** (memory
 hallucinations), **MemoryAgentBench** and **Evo-Memory** (test-time and
-multi-episode learning — MemoryAgentBench has since been read directly, above),
+multi-episode learning — MemoryAgentBench is read directly above),
 **PersonaMem** and **PrefEval** (dynamic user profiles
 and stated preferences), **LifelongAgentBench** and **StreamBench** (continual
 and online learning), **MemoryBank** (user memory updating). What that table does
