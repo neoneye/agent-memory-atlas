@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 258 reports.**
+**This page covers all 259 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["258 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["259 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2240,3 +2240,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 294 files — 22,400 lines of doctrine, 25 ADRs, 36 fixtures and a 10,400-line executable reference implementation with a Graphiti driver and a comparator that runs Mem0 at a pinned version. No dependency manifest anywhere; CI declares what to install. The README's own counts understate the tree (26 fixtures claimed, 36 shipped and validated; 21 ADRs claimed, 25 present), which is the rarer direction of drift.
 - Study when: you are designing deletion for a system with derived state, or you need the vocabulary to argue about what a deletion guarantee even means. It is the most developed treatment of residue, scope derivation and mutation authority in this atlas.
 - Do not copy when: you want a store. There is nothing to install, no agent integration, and no production evidence — this is a specification with a demonstration attached.
+
+### [`ods`](../systems/ods/)
+
+- Best idea: the authority boundary is a position in a file, enforced by overwriting it. `MEMORY.md` is split by a `---` — operator baseline above, agent scratch below — and every few hours the scratch is archived to a timestamped file and the baseline is restored verbatim. An agent that rewrites its own rules loses the edit on the next cycle, with no permissions model, no validation and no trust field. Its baseline template also discloses the policy to the agent writing into it, and redirects anything durable to the project repo.
+- Biggest risk: the separator is located with `grep -n "^---$" | tail -1`, the *last* match. A bare `---` is an ordinary Markdown horizontal rule and a YAML fence, so an agent that writes one moves the boundary: only text below its own rule is archived, the reset overwrites the file anyway, and the run logs a success with the line count it did capture. Finding *no* separator triggers a full-file backup and a warning — the design knows an unexpected file shape should be preserved, and applies that to zero separators but not to two.
+- Most reusable component: the refusal to reset against a degenerate baseline. A minimum-size check on the baseline file is two lines and prevents the one unrecoverable failure — resetting an agent to an empty identity. Beside it, archive-then-clear with a thirty-day prune, which makes scheduled forgetting arguable after the fact.
+- Maturity impression: Apache-2.0, 3,181 commits since 9 February 2026, 1,339 files — and the memory component is 1,070 lines of it. The wider project is a well-tested deployment system for a local AI stack (27 services, a fleet-and-distro release lab); the reset logic itself has no test beyond a BSD/GNU `stat` compatibility check. Across the whole tree `agent memory` and `memory system` appear zero times in code and every `forget` is `wifi-forget`.
+- Study when: you run long-lived agents and have been bitten by role drift, and want the cheapest mechanism in this atlas for an agent editing its own instructions — a shell script and a timer, adoptable independently of ODS.
+- Do not copy when: you need memory that survives, ranks or corrects. There is nothing to retrieve, nothing to correct and nothing to scope; the design's claim is that agent-written state should not accumulate, so take the baseline/scratch split as a layer over a real store rather than as one.

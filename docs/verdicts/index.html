@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 258 reports.</strong></p>
+<p><strong>This page covers all 259 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;258 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;259 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6952,6 +6952,48 @@ scope derivation and mutation authority in this atlas.</li>
 <li>Do not copy when: you want a store. There is nothing to install, no
 agent integration, and no production evidence — this is a specification
 with a demonstration attached.</li>
+</ul>
+<h3 id="ods"><a href="../systems/ods/"><code>ods</code></a></h3>
+<ul>
+<li>Best idea: the authority boundary is a position in a file, enforced
+by overwriting it. <code>MEMORY.md</code> is split by a <code>---</code>
+— operator baseline above, agent scratch below — and every few hours the
+scratch is archived to a timestamped file and the baseline is restored
+verbatim. An agent that rewrites its own rules loses the edit on the
+next cycle, with no permissions model, no validation and no trust field.
+Its baseline template also discloses the policy to the agent writing
+into it, and redirects anything durable to the project repo.</li>
+<li>Biggest risk: the separator is located with
+<code>grep -n "^---$" | tail -1</code>, the <em>last</em> match. A bare
+<code>---</code> is an ordinary Markdown horizontal rule and a YAML
+fence, so an agent that writes one moves the boundary: only text below
+its own rule is archived, the reset overwrites the file anyway, and the
+run logs a success with the line count it did capture. Finding
+<em>no</em> separator triggers a full-file backup and a warning — the
+design knows an unexpected file shape should be preserved, and applies
+that to zero separators but not to two.</li>
+<li>Most reusable component: the refusal to reset against a degenerate
+baseline. A minimum-size check on the baseline file is two lines and
+prevents the one unrecoverable failure — resetting an agent to an empty
+identity. Beside it, archive-then-clear with a thirty-day prune, which
+makes scheduled forgetting arguable after the fact.</li>
+<li>Maturity impression: Apache-2.0, 3,181 commits since 9 February
+2026, 1,339 files — and the memory component is 1,070 lines of it. The
+wider project is a well-tested deployment system for a local AI stack
+(27 services, a fleet-and-distro release lab); the reset logic itself
+has no test beyond a BSD/GNU <code>stat</code> compatibility check.
+Across the whole tree <code>agent memory</code> and
+<code>memory system</code> appear zero times in code and every
+<code>forget</code> is <code>wifi-forget</code>.</li>
+<li>Study when: you run long-lived agents and have been bitten by role
+drift, and want the cheapest mechanism in this atlas for an agent
+editing its own instructions — a shell script and a timer, adoptable
+independently of ODS.</li>
+<li>Do not copy when: you need memory that survives, ranks or corrects.
+There is nothing to retrieve, nothing to correct and nothing to scope;
+the design's claim is that agent-written state should not accumulate, so
+take the baseline/scratch split as a layer over a real store rather than
+as one.</li>
 </ul>
         </article>
       </div>
