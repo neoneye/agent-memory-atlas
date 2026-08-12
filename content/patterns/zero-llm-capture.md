@@ -147,8 +147,8 @@ sanitizing before export, and CowAgent's distillation rules. If you capture
 without a model, capture cheaply enough that everything flows in — which means
 something must decide what does not.
 
-[Helm](../../systems/helm/) is the smallest instance and demonstrates a failure
-this page had not recorded: the problem is not only *what* you capture without a
+[Helm](../../systems/helm/) is the smallest instance and demonstrates a second
+failure mode: the problem is not only *what* you capture without a
 model, it is *what you key it on*. One regex on the reply path — `remember that`,
 `note that`, `for the record`, `fyi` — lifts the following span into a durable
 fact with no model call and no latency on the turn. The key is

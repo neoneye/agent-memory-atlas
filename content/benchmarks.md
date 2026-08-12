@@ -1553,9 +1553,10 @@ returned session — 35 on average — while truncating only the displayed list.
 The published number was not measuring what it said.
 
 **Commit the results, not just the harness.** A reproducible harness with no
-committed results reads as measured and is not. This atlas has now found that
-pattern in several repositories, including some of the most carefully
-engineered ones.
+committed results reads as measured and is not. The repositories that do it are
+collected under [published benchmark numbers without committed
+artifacts](../compare/#published-benchmark-numbers-without-committed-artifacts),
+and they include some of the most carefully engineered ones.
 
 **And [memsem](../systems/memsem/) is the small counter-example that shows the
 price of doing all three.** Its `DESIGN.md` publishes P@3 0.958 over 51 facts and

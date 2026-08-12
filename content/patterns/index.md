@@ -183,8 +183,8 @@ Where the atlas has an exact count — the seven mechanisms on
 
 Read the bottom two rows as what they are. A mechanism present in seventeen
 systems of two hundred and sixty — or in nine — is **not a best
-practice**. There is no consensus behind it, no library that gives it to you, no
-shared vocabulary, and nobody to ask when your implementation has a hole.
+practice**. There is no consensus behind it, no library that gives it to you, and nobody to
+ask when your implementation has a hole.
 Adopting it means building it.
 
 And in the tombstone's case the provenance is narrower still. It was not
@@ -202,12 +202,10 @@ field's most comprehensive survey of itself
 ([arXiv:2512.13564](https://arxiv.org/abs/2512.13564), 107 pages, 47 authors)
 does not contain the words *tombstone*, *rejected* or *negative* anywhere, while
 its trustworthy-memory section asks for "verifiable forgetting and auditable
-updates" as future work. So this is not a practice the atlas is reporting late.
-It is a mechanism three small repositories have and the literature has not
-named — which is either the atlas being early or the atlas being wrong about
-what matters, and one survey cannot tell you which.
+updates" as future work. Three small repositories have the mechanism; the
+field's own account of itself has no name for it.
 
-**Eight months later the literature named it, and the atlas should say so.**
+**Where the literature does name it is one vision paper.**
 *Is Agent Memory a Database? Rethinking Data Foundations for Long-Term AI Agent
 Memory* ([arXiv:2605.26252](https://arxiv.org/abs/2605.26252), 25 May 2026)
 argues that agent memory is a data-management workload whose correctness is "a
@@ -224,11 +222,9 @@ an impossibility the atlas has only ever argued empirically: append-only storage
 cannot satisfy C2, so supersession chains are structurally insufficient no
 matter how carefully they are kept.
 
-What that changes here is narrow and worth being precise about. The tombstone
-page said there is "no shared vocabulary" for the mechanism; there is now one,
-in a vision paper with a prototype (MemState, on an embedded property graph)
-rather than in a shipped library — which is a different thing from consensus and
-from adoption. The four failure modes that paper opens with — unregulated
+The vocabulary that exists is therefore a paper's, backed by a prototype
+(MemState, on an embedded property graph) rather than by a shipped library —
+which is a different thing from consensus and from adoption. The four failure modes that paper opens with — unregulated
 growth, missing semantic revision, capacity-driven rather than importance-driven
 forgetting, and read-only retrieval — are the same four this atlas keeps
 reporting, arrived at from the database side by people who did not read these
@@ -286,9 +282,9 @@ mostly offer approval of a queue rather than an editor over the store.
 
 That is a different epistemic situation from a mechanism three repositories
 invented. These are known solutions to problems the rest of the field has, sitting
-in codebases the rest of the field does not read — which is worth stating plainly,
-because it was a reader pointing out the atlas had described these mechanisms six
-times without ever collecting them that produced both pages.
+in codebases the rest of the field does not read. Both pages exist because the
+mechanisms appear six times across the reports and were never collected in one
+place.
 
 ## Stacks, by what you are building
 
@@ -421,8 +417,7 @@ token budgets, and this library is about what survives a session with an
 identity. [Gate the expensive path](./gate-the-expensive-path/) covers the
 adjacent decision not to retrieve at all.
 
-**Prompt-cache preservation was bundled with the above and has since been
-separated**, because the two are not the same claim. Pruning is about how many
+**Prompt-cache preservation is a separate claim from pruning.** Pruning is about how many
 tokens you can afford; caching is about *where* a memory may be placed, and that
 turns out to constrain what a memory system is allowed to be — Hermes Agent's
 hard character caps, its refusal to accept an over-budget write, and its
