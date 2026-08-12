@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twelve systems of two hundred and sixty
+> **This is not an established best practice.** Twelve systems of two hundred and sixty-one
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, three built it after

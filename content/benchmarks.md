@@ -1558,6 +1558,14 @@ collected under [published benchmark numbers without committed
 artifacts](../compare/#published-benchmark-numbers-without-committed-artifacts),
 and they include some of the most carefully engineered ones.
 
+**Match the budget before you compare the arms.** Two conditions that differ in
+your mechanism *and* in how long each was allowed to run measure both at once.
+[PRO-LONG](../systems/pro-long/) is the instance worth copying: its memory arm
+ran to 1,000 actions and its no-memory arm to 500, and rather than publish the
+50.2%-against-24.7% that gave, it committed a third scorecard re-scoring the
+memory arm at the 500-action cutoff — 45.6%, still a large margin and 4.6 points
+smaller. Nobody outside the project would have known the file was missing.
+
 **And [memsem](../systems/memsem/) is the small counter-example that shows the
 price of doing all three.** Its `DESIGN.md` publishes P@3 0.958 over 51 facts and
 20 queries; `scripts/bench.mjs` is committed; `npm test` runs it; and from a
@@ -1702,7 +1710,7 @@ not publish, is still the right order to do these things in.
   descriptions, not from re-reading their datasets here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 259 repositories,
+  [comparative report](../compare/). It is a statement about 260 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

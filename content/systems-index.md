@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **260 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **261 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -250,6 +250,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`plur1bus`](../systems/plur1bus/) **PLUR1BUS** — OpenClaw memory plugin · `Cyb3rb1ade/openclaw-plur1bus-memory` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
 - [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
+- [`pro-long`](../systems/pro-long/) **PRO-LONG** — The log is the memory · `alexisfox7/PRO-LONG`
 - [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
 - [`promptx`](../systems/promptx/) **PromptX** — An engram network per role · `deepractice/promptx` · Scope enforced
 - [`provem`](../systems/provem/) **Provem** — Governance as the product · `BernhardJackiewicz/provem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals

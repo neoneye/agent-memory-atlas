@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 260 reports.</strong></p>
+<p><strong>This page covers all 261 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;260 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;261 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7043,6 +7043,52 @@ what the row was.</li>
 a durable fact without a person applying a proposal — that is the
 design, not an oversight, and it is either exactly what you want or
 immediately disqualifying.</li>
+</ul>
+<h3 id="pro-long"><a
+href="../systems/pro-long/"><code>pro-long</code></a></h3>
+<ul>
+<li>Best idea: the ablation is a command-line flag, and the arm that
+removes the memory is committed beside the arm that keeps it.
+<code>--log-window</code> takes the full log, the last N action
+sections, the newest section only, or nothing at all, and
+<code>--workspace stateless</code> wipes everything the agent wrote and
+strips its own <code>[PLAN]</code> from the log — so "does the memory
+help?" is a configuration rather than an argument. Two of the four
+committed scorecards are the same model at the same effort differing in
+that one flag: 50.2% mean against 24.7% over the 25 ARC-AGI-3 public
+games.</li>
+<li>Biggest risk: the incremental log sync takes its offset from
+<code>dest.stat().st_size</code> — the size of the copy sitting in a
+writable workspace the system prompt invites the agent to save notes
+into. Every byte the agent adds to that file is a byte of real log the
+harness then skips. Re-deriving the routine over scratch files, 32
+agent-written bytes cost two of four board states with nothing reporting
+a gap. It has not fired: in all 25 committed runs the agent's copy is an
+exact byte prefix of the host master, so what protects it is a
+convention no code states.</li>
+<li>Most reusable component: <code>utils/log_parser.py</code>, which
+reconstructs the executed action list from the log's own headers so
+<code>--resume</code> can replay a run against a fresh environment. One
+plain-text artifact serves as the agent's memory and the harness's
+recovery journal, which means a format change that breaks the parser
+breaks the resume path immediately instead of rotting quietly.</li>
+<li>Maturity impression: 4,355 lines of Python, an MIT trove classifier
+in <code>pyproject.toml</code> with no <code>LICENSE</code> file in the
+tree, a paper (<a
+href="https://arxiv.org/abs/2607.20064">arXiv:2607.20064</a>), four
+committed scorecards with per-game replay links on
+<code>arcprize.org</code>, 25 full agent workspaces — and no tests at
+all. The evaluation is far better evidenced than the code.</li>
+<li>Study when: your observations are machine-generated and exactly
+checkable — grids, diffs, traces — and you want to know whether a
+verbatim log plus <code>grep</code> beats a summarizing memory before
+you build the summarizer. Also study the scorecards: the budget-matched
+rerun that cuts its own headline is the honesty this atlas asks of
+benchmark publishers.</li>
+<li>Do not copy when: memories are claims about the world. There is no
+correction path, no trust state, no provenance and no scope key applied
+on a read path, and the agent's hypotheses sit in the same
+undifferentiated stream as the board states that would refute them.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 260 reports.**
+**This page covers all 261 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["260 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["261 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2258,3 +2258,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, v0.1.0, 10,626 lines of TypeScript over one SQLite vault with FTS5 maintained by triggers, an MCP server, a CLI and a local review app — and three commits, so nothing about how it arrived is inspectable. Retrieval is BM25 with an eight-component rank breakdown returned per hit; there are no embeddings and it does not pretend otherwise. A commercial hosted tier exists; the local core reviewed here makes no call to it.
 - Study when: you want the strictest provenance gate in this atlas, or a worked example of an undo that is auditable because the audit stores what the row was.
 - Do not copy when: memory must accumulate unattended. Nothing becomes a durable fact without a person applying a proposal — that is the design, not an oversight, and it is either exactly what you want or immediately disqualifying.
+
+### [`pro-long`](../systems/pro-long/)
+
+- Best idea: the ablation is a command-line flag, and the arm that removes the memory is committed beside the arm that keeps it. `--log-window` takes the full log, the last N action sections, the newest section only, or nothing at all, and `--workspace stateless` wipes everything the agent wrote and strips its own `[PLAN]` from the log — so "does the memory help?" is a configuration rather than an argument. Two of the four committed scorecards are the same model at the same effort differing in that one flag: 50.2% mean against 24.7% over the 25 ARC-AGI-3 public games.
+- Biggest risk: the incremental log sync takes its offset from `dest.stat().st_size` — the size of the copy sitting in a writable workspace the system prompt invites the agent to save notes into. Every byte the agent adds to that file is a byte of real log the harness then skips. Re-deriving the routine over scratch files, 32 agent-written bytes cost two of four board states with nothing reporting a gap. It has not fired: in all 25 committed runs the agent's copy is an exact byte prefix of the host master, so what protects it is a convention no code states.
+- Most reusable component: `utils/log_parser.py`, which reconstructs the executed action list from the log's own headers so `--resume` can replay a run against a fresh environment. One plain-text artifact serves as the agent's memory and the harness's recovery journal, which means a format change that breaks the parser breaks the resume path immediately instead of rotting quietly.
+- Maturity impression: 4,355 lines of Python, an MIT trove classifier in `pyproject.toml` with no `LICENSE` file in the tree, a paper ([arXiv:2607.20064](https://arxiv.org/abs/2607.20064)), four committed scorecards with per-game replay links on `arcprize.org`, 25 full agent workspaces — and no tests at all. The evaluation is far better evidenced than the code.
+- Study when: your observations are machine-generated and exactly checkable — grids, diffs, traces — and you want to know whether a verbatim log plus `grep` beats a summarizing memory before you build the summarizer. Also study the scorecards: the budget-matched rerun that cuts its own headline is the honesty this atlas asks of benchmark publishers.
+- Do not copy when: memories are claims about the world. There is no correction path, no trust state, no provenance and no scope key applied on a read path, and the agent's hypotheses sit in the same undifferentiated stream as the board states that would refute them.
