@@ -480,6 +480,26 @@ third. Reading the function that enforces scope tells you nothing about whether 
 runs. Read the call site, the signature the model is shown, and the surface a
 remote caller actually has.
 
+**Somebody has now built the defect on purpose, which is the strongest evidence
+available that it is a class rather than three coincidences.**
+[MythologIQ's Agent Memory](../../systems/agent-memory-doctrine/) ships a
+substrate stub that deliberately reproduces the permissive semantics of the
+system it maps, and its search signature is
+`search(self, query, group_ids: list[str] | None = UNFILTERED)` above a docstring
+naming the hazard rather than fixing it: *"`group_ids` defaults to unfiltered, so
+a caller that forgets the argument reads across every partition."* The reasoning
+is that a safe stub proves nothing — *"the negative paths need something real to
+escape through"* — so the governance layer above it has to supply the partition
+on every read and is tested against a substrate that will happily answer without
+one.
+
+Two things follow for anyone implementing this pattern. The unfiltered default is
+common enough in real substrates to be worth modelling as an adversary rather
+than assuming away, which is what a scope filter in the layer above is actually
+defending against. And the test that matters is not "does my filter work" but
+"what happens when my caller forgets" — a question you can only ask if something
+underneath you is willing to say yes.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

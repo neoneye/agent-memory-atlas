@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A governed-memory reference
+architecture whose deletion metric is a four-way residue partition with
+one cell that must stay empty, verified by a sweep that refuses to ask
+the purge whether it finished.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory
+(MythologIQ) — Agent Memory Atlas">
+    <meta property="og:description" content="A governed-memory reference
+architecture whose deletion metric is a four-way residue partition with
+one cell that must stay empty, verified by a sweep that refuses to ask
+the purge whether it finished.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory
+(MythologIQ) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A governed-memory
+reference architecture whose deletion metric is a four-way residue
+partition with one cell that must stay empty, verified by a sweep that
+refuses to ask the purge whether it finished.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory (MythologIQ) — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Deletion residue as a partition</p>
+          <h1>Agent Memory (MythologIQ)</h1>
+          <p class="document-deck">A governed-memory reference
+architecture whose deletion metric is a four-way residue partition with
+one cell that must stay empty, verified by a sweep that refuses to ask
+the purge whether it finished.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MythologIQ-Labs-LLC/agent-memory">
+              <span>Source</span>
+              <strong>MythologIQ-Labs-LLC/agent-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/bba0aa4cab8e04d11f5380b215b3eea6998fe119" title="bba0aa4cab8e04d11f5380b215b3eea6998fe119">
+              <span>Analyzed revision</span>
+              <code>bba0aa4c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-11</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent Memory is a reference architecture for governed memory,
+Apache-2.0, from MythologIQ Labs. It is 294 files: 134 Markdown
+documents totalling around 22,400 lines, 25 ADRs, JSON schemas, 36
+conformance fixtures, and — the part this report is mostly about — a
+10,400-line Python reference implementation under
+<code>reference/</code> with conformance runners, a Graphiti driver and
+an adversarial comparator that executes Mem0.</p>
+<p>Its thesis is a sentence this atlas could have written:
+<em>"Probabilistic epistemics. Governed consequences. Uncertainty may
+propose. Authority constrains."</em> What makes it worth a report rather
+than a citation is that the interesting parts are executable.</p>
+<p><strong>The deletion model is the most developed in this
+corpus.</strong> <code>residue.py</code> treats deletion completeness
+not as a volume of removed bytes but as a four-way partition of
+everything derived from a purged source: <code>purged</code>,
+<code>declared_residual_controlled</code>,
+<code>declared_residual_uncontrollable</code>,
+<code>undeclared_residual</code> — with
+<code>undeclared_residual = 0</code> as a hard invariant, described in
+its own docstring as <em>"disqualifying and un-averageable"</em>. You
+are permitted to leave residue. You are not permitted to leave residue
+you did not report.</p>
+<p>Two honesty constraints hold that up. <em>"Unknown is not a fourth
+bucket"</em> — state whose derivation cannot be enumerated is declared
+uncontrollable, never omitted because it was inconvenient to find. And
+<em>"traversal completeness is itself the measurement"</em>:
+<code>independent_sweep</code> does not ask the purge whether it
+finished, it re-derives residual status from the freshness relation over
+every retained declaration including superseded versions. I ran that
+path against their own modules with my own driver, and a purge that
+traversed one hop is caught rather than believed — the
+projection-of-a-projection comes back as
+<code>undeclared_residual</code> and the hard gate fails.</p>
+<p><strong>The substrate stub is deliberately unsafe, and says
+so.</strong> <code>InMemoryTemporalGraph</code> reproduces the
+<em>verified permissive</em> semantics of the mapped substrate: identity
+is not a content address, supersession marks validity fields rather than
+deleting, deletion is physical and leaves no tombstone, no operation
+checks actor identity, and partition filtering <em>"is an optional query
+argument that defaults to unfiltered"</em>. The comment explains why:
+<em>"A stub that were already safe would prove nothing about the
+governance layer under test: the negative paths need something real to
+escape through."</em></p>
+<p>That unfiltered default deserves its own sentence, because this atlas
+has now documented the same defect in three live systems in a single
+round — a retrieval argument whose omission means <em>everything</em>.
+Here somebody has built it on purpose, as a hazard for the governance
+layer to catch.</p>
+<p>Where it is weakest is the ratio. Twenty-five ADRs and 22,000 lines
+of doctrine sit above a reference implementation whose substrate is a
+dictionary, and the repository is careful to say so itself: <em>"Passing
+fixture validation is not the same thing as proving a production memory
+system behaves correctly."</em> Nothing here is a deployable memory
+system, and it does not claim to be.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two kinds of thing are stored, and the second is where the design
+departs from the corpus.</p>
+<p><strong>Tier-1 canonical state</strong> is a <code>Fact</code> in a
+temporal graph, carrying <code>valid_at</code> and
+<code>invalid_at</code> — when the claim was true — separately from
+<code>created_at</code> and <code>expired_at</code>, when the store
+learned and retired it. Correction is supersession, which ADR-023 states
+as a title: <em>corrections are supersession, not deletion</em>.</p>
+<p><strong>Tier-3 derived state</strong> — indices, embeddings, caches,
+materialized views — is the part the architecture argues everyone else
+drops. <code>projections.py</code> opens with the finding: those
+artifacts <em>"are not memory units, so nothing obliges them to declare
+what they were built from, and that is exactly where deletion residue
+hides."</em> A <code>Projection</code> therefore declares a
+<code>basis</code> mapping each source to the version read at build
+time, plus a <code>transform</code>, a <code>content_class</code>, a
+<code>rebuild</code> class and a <code>reachable</code> flag.</p>
+<p>From that declaration a <strong>freshness relation is computed rather
+than flagged</strong>:</p>
+<pre class="text"><code>current    basis versions match canonical
+stale      a basis source moved      → a correctness problem recomputation may fix
+residual   a basis source was tombstoned or purged → a governance problem only
+           the deletion authority may resolve</code></pre>
+<p>Nothing sets a <code>stale</code> bit, which is the point: <em>"a
+substrate that never self-invalidates is still governable."</em> And
+stale and residual are kept apart deliberately — collapsing them would
+lose the distinction the architecture exists to protect.</p>
+<p>Whether a memory may <em>change</em> is a separate axis entirely.
+Every mutation is a <code>Proposal</code> evaluated by PAMA into one of
+five outcomes ordered by strictness — <code>allow</code>,
+<code>allow_with_ledger</code>, <code>require_review</code>,
+<code>require_external_verification</code>, <code>block</code>. The
+load-bearing property is stated in <code>policy.py</code> and guarded by
+tests: <em>"Estimator confidence is an input to evidence quality only
+and has no path to the outcome."</em> A model that is very sure of
+itself cannot buy authority with confidence.</p>
+<pre class="mermaid"><code>flowchart TD
+  P[&quot;proposal to mutate&quot;] --&gt; PAMA{&quot;PAMA evaluates:&lt;br/&gt;target class, risk,&lt;br/&gt;downstream authority&quot;}
+  PAMA --&gt;|allow / allow_with_ledger| W[&quot;substrate write&quot;]
+  PAMA --&gt;|require_review| H[&quot;withheld pending a person&quot;]
+  PAMA --&gt;|require_external_verification| V[&quot;withheld pending evidence&quot;]
+  PAMA --&gt;|block| X[&quot;refused&quot;]
+  W --&gt; R[&quot;receipt + audit event&lt;br/&gt;the substrate does not persist&quot;]
+  D[&quot;deletion of a source&quot;] --&gt; C[&quot;derivation_closure — transitive&quot;]
+  C --&gt; B[&quot;classify each projection&quot;]
+  B --&gt; B1[&quot;purged&quot;]
+  B --&gt; B2[&quot;declared residual, controlled&quot;]
+  B --&gt; B3[&quot;declared residual, uncontrollable&quot;]
+  S[&quot;independent_sweep re-derives&lt;br/&gt;from the freshness relation&quot;] --&gt; B4[&quot;undeclared residual&quot;]
+  B4 --&gt; G{&quot;hard gate:&lt;br/&gt;must be empty&quot;}</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no service. The repository is a doctrine plus a reference
+implementation you run.</p>
+<ul>
+<li><strong><code>docs/</code></strong> — 134 Markdown files, including
+the layer model, lifecycle state machine, threat model, source trust,
+privacy classifier, retention and deletion, actor scope and tenancy,
+governed recall planner, and a research bibliography.</li>
+<li><strong><code>docs/adr/</code></strong> — 25 architecture decision
+records. ADR-015 requires tombstones, ADR-016 requires actor scope and
+tenancy, ADR-017 requires audit events, ADR-023 makes corrections
+supersession, ADR-025 requires explicit authority to overwrite a durable
+decision.</li>
+<li><strong><code>reference/agentmem_ref/</code></strong> — 27 modules:
+<code>substrate.py</code> (the port and its permissive stub),
+<code>adapter.py</code> (the governing layer), <code>policy.py</code>
+(PAMA), <code>projections.py</code> and <code>residue.py</code> (tier-3
+and deletion), <code>receipts.py</code>,
+<code>scope_governance.py</code>, <code>shared_revocation.py</code>,
+<code>interchange.py</code>, <code>portable_evidence.py</code>,
+<code>mem0_comparator.py</code>, <code>graphiti_driver.py</code>.</li>
+<li><strong><code>reference/tests/</code></strong> — 24 test
+modules.</li>
+<li><strong><code>schemas/</code>, <code>fixtures/</code></strong> —
+JSON schemas for PAMA decisions, decision receipts and audit events; 36
+scenario fixtures with names like <code>authority-laundering</code>,
+<code>cross-tenant-relevance-trap</code>,
+<code>same-agent-cross-project-isolation</code>,
+<code>confidently-wrong-memory</code>.</li>
+<li><strong><code>scripts/</code></strong> — seven stdlib-only
+validators for fixtures, schemas, links, visual assets and doctrine
+boundaries.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to deploy. The cost is reading: 22,000 lines of doctrine is a
+substantial commitment, and the repository organises it with a "start
+here" table routing by role, which helps.</p>
+<p><strong>There is no dependency manifest</strong> — no
+<code>requirements.txt</code>, no <code>pyproject.toml</code> — which is
+why the screen returned <code>NOTHING SCANNED</code>. Dependencies are
+declared in CI instead: <code>jsonschema==4.26.0</code> pinned for the
+validation job, <code>graphiti-core</code> and <code>kuzu</code>
+unpinned for the substrate-conformance job, and <code>mem0ai</code>
+pinned in code at <code>2.0.18</code>. <code>CONTRIBUTING</code> states
+the policy the code follows — fixture and link validation stay
+standard-library, schema validation may use <code>jsonschema</code> —
+and the split is real: I ran the seven <code>scripts/</code> validators
+and the residue path with no installation at all.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="deletion--residuepy-and-what-i-ran">Deletion —
+<code>residue.py</code>, and what I ran</h3>
+<p><code>plan_purge</code> walks
+<code>store.derivation_closure(source_id)</code> and sorts each
+projection: reference-only state is purged because it carries no content
+past its source; unreachable content — <em>"exports, third-party copies,
+model weights"</em> — becomes declared uncontrollable; policy-retained
+state becomes declared controlled; everything else is purged.</p>
+<p><code>apply_purge</code> then does something most supersession
+designs would not:</p>
+<blockquote>
+<p><em>"Deletion dominates correction: a superseded version retained for
+reconstructability is, once its basis is purged, exactly the recoverable
+residue the deletion was meant to eliminate."</em></p>
+</blockquote>
+<p>That is a claim this atlas has not previously found stated anywhere:
+the version history you keep for auditability is a deletion hazard, and
+the two goods are in direct conflict. Purged identifiers are recorded so
+that a projection built on a purged projection is <em>residual</em>
+rather than merely stale — <em>"without that, a partial purge would look
+like a correctness problem instead of a governance one."</em></p>
+<p><code>independent_sweep</code> is the verification. It iterates
+<code>store.all_versions()</code>, keeps anything content-bearing whose
+freshness is <code>RESIDUAL</code>, subtracts what the receipt declared,
+and returns the remainder as undeclared.</p>
+<p>I exercised this directly, importing <code>projections</code> and
+<code>residue</code> into a driver of my own on a scratch copy rather
+than running their tests, because the package <code>__init__</code>
+eagerly imports <code>receipts</code> and therefore
+<code>jsonschema</code>:</p>
+<pre class="text"><code>derivation_closure(m1) = (&#39;p1&#39;, &#39;p2&#39;)          # transitive, two hops
+full plan_purge.purged = [&#39;p1&#39;, &#39;p2&#39;]
+
+--- a purge that traversed ONE hop only ---
+undeclared_residual    = [&#39;p2&#39;]                # re-derived, not reported by the purge
+hard gate passed?       False</code></pre>
+<p>The mechanism does what the docstring says. A purge that stops at the
+first hop is caught by the sweep rather than believed.</p>
+<h3 id="authority--policypy">Authority — <code>policy.py</code></h3>
+<p>Five outcomes with a strictness ordering, so composing constraints
+takes a maximum rather than a vote. The separation the module exists to
+hold is that estimator confidence feeds <em>evidence quality</em> and
+never the outcome — which is the executable form of "uncertainty may
+propose, authority constrains", and is what stops a confident model from
+laundering its confidence into permission.
+<code>fixtures/authority-laundering.json</code> is named for the
+attack.</p>
+<h3 id="scope--adapterpy">Scope — <code>adapter.py</code></h3>
+<p>The adapter checks a fact against the requesting context and returns
+named refusals the substrate cannot produce: <code>out_of_scope</code>,
+<code>project_scope_mismatch</code>, and a task-level equivalent,
+against <code>domain_refs</code>, <code>required_domain_refs</code>,
+<code>project_ref</code> and <code>task_ref</code>.
+<code>scope_governance.py</code> adds a second idea — scope is
+<em>derived</em> from a memory's sources, and
+<code>scope_broadens</code> plus <code>evaluate_scope_promotion</code>
+route a widening through PAMA. Scope that can only narrow without
+authority is a stronger property than a scope key applied as a filter,
+and it is the answer to consolidation quietly producing a wider-scoped
+summary.</p>
+<h3 id="the-stub-that-is-unsafe-on-purpose--substratepy">The stub that
+is unsafe on purpose — <code>substrate.py</code></h3>
+<p><code>search()</code> takes
+<code>group_ids: list[str] | None = UNFILTERED</code>, and the docstring
+names the hazard rather than fixing it:</p>
+<blockquote>
+<p><em>"<code>group_ids</code> defaults to unfiltered, so a caller that
+forgets the argument reads across every partition"</em></p>
+</blockquote>
+<p>Reproducing that is the design. It is also, precisely, the defect
+this atlas documented in three separate live systems in one round — <a
+href="../memora/">Memora</a>'s <code>follow</code>, <a
+href="../tdai-memory-mcp/">tdai-memory-mcp</a>'s
+<code>session_key</code>, and <a
+href="../omniintelligence/">OmniIntelligence</a>'s
+<code>project_scope</code> — where an omitted retrieval argument means
+<em>everything</em>. Seeing it built deliberately, as a fixture for a
+governance layer to catch, is the strongest argument available that the
+pattern is a class rather than three coincidences.</p>
+<h3 id="evidence--receiptspy-and-portable_evidencepy">Evidence —
+<code>receipts.py</code> and <code>portable_evidence.py</code></h3>
+<p>The adapter emits three artifacts against schemas already canonical
+in the repository: a PAMA decision record, a decision receipt, and audit
+events. The justification is one line: <em>"The substrate under
+evaluation persists none of this, which is precisely why the adapter
+must."</em></p>
+<p><code>deletion_completeness.py</code> then composes the residue
+partition into portable evidence, and the seam is the interesting part:
+the public measurement carries <em>counts and cryptographic references,
+not projection identifiers or memory content</em>, so that <em>"a
+content-free third party can distinguish those lifecycle outcomes
+without receiving the deleted memory."</em> Proving a deletion happened
+without disclosing what was deleted is the problem an append-only or
+tamper-evident store makes harder, and this is the only design in the
+corpus that addresses it directly.</p>
+<h3 id="the-comparator--mem0_comparatorpy">The comparator —
+<code>mem0_comparator.py</code></h3>
+<p>It executes Mem0's real <code>Memory</code> class with a
+Qdrant-backed local vector store and SQLite history at
+<code>mem0ai==2.0.18</code>, replacing only the model-construction seams
+with deterministic doubles so CI needs no credentials and does not
+measure model variance. Observations are classified
+<code>NATIVE | CONFIGURABLE | WRAPPER_REQUIRED | NOT_REPRESENTABLE | UNKNOWN_NEEDS_TEST</code>,
+and the module states the fairness constraint itself: <em>"A gap against
+Agent Memory is not automatically a Mem0 bug."</em></p>
+<p>That is a third-party, pinned, credential-free, executable governance
+evaluation of a system this atlas reports on — the shape the <a
+href="../../benchmarks/">benchmarks page</a> keeps asking for. No output
+is committed, so what exists is the harness and the CI job, not a
+published result.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Fact</code> carries <code>uuid</code>,
+<code>fact_text</code>, <code>group_id</code>, and the four temporal
+fields; an <code>Episode</code> retains raw source material verbatim. A
+<code>Projection</code> carries <code>projection_id</code>,
+<code>basis</code>, <code>transform</code> (<code>deterministic</code>
+or <code>estimator_mediated</code>), <code>content_class</code>
+(<code>reference_only</code>, <code>derived_content</code>,
+<code>recoverable_content</code>), <code>rebuild</code>
+(<code>reproducible</code>, <code>approximable</code>,
+<code>irreproducible</code>), <code>scope</code>, <code>version</code>,
+<code>superseded_by</code>, <code>reachable</code>.</p>
+<p><code>requires_authority_to_rebuild</code> is a small, sharp piece of
+that model: a rebuild is categorically authorizable only when the
+transform is deterministic <em>and</em> reproducible, because
+<em>"everything else commits estimator-derived content and must pass
+through governance, or invalidation becomes a write channel."</em>
+Invalidating a cache as a way to smuggle a write is not a threat most
+designs here have considered.</p>
+<p>What is absent: <strong>no rejected-value tombstone.</strong> The
+adapter keeps <code>self._tombstones[fact_uuid]</code> — keyed on the
+record, existing to give the substrate the delete marker it lacks — and
+neither the code nor
+<code>docs/28-retention-deletion-and-tombstones.md</code> uses the
+vocabulary of a value that must not be re-asserted. The residue
+machinery attacks the adjacent problem from the other end, ensuring a
+deleted value does not survive in derived state; nothing here stops the
+same value being written again from a new source. And there is
+<strong>no discrete epistemic status on a memory</strong> — the
+three-valued freshness relation describes derived state's relationship
+to canonical state, not whether a claim is believed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical overlap in the reference substrate, scored by token
+intersection, with the two modelled hazards named above: unfiltered
+partition default, and event-invalid facts remaining retrievable,
+<em>"matching the conservative reading of an open question the source
+review could not settle"</em> — an honest way to encode uncertainty
+about somebody else's system.</p>
+<p>The governing read happens in the adapter, where isolation domains,
+required domains, project and task are checked and a refusal is returned
+by name. Ranking quality is explicitly not the point.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a proposal through PAMA, then a substrate mutation,
+then a receipt and audit event. <code>shared_revocation.py</code> and
+<code>interchange_propagation.py</code> handle the harder cases —
+revoking a memory shared into another domain, and propagating that
+across an interchange boundary — and ADR-024 requires pre-write claims
+for shared memory, which is the lost-update problem this atlas has found
+answered in only a handful of systems.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Nothing is asynchronous.</strong> There is no background
+pass, no scheduler, and no consolidation job; the residue sweep runs
+when called.</li>
+<li><strong>The sweep is a full scan</strong> over every retained
+version, which is the price of not trusting the purge's own
+traversal.</li>
+<li><strong>Evidence is emitted per decision</strong>, so the audit
+volume scales with mutations rather than with the corpus.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None ships. There is no MCP server, no plugin, no client library and
+no packaging — <code>reference/</code> is imported by its own tests and
+runners. The architecture is meant to be implemented rather than
+installed, and the repository is consistent about that.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Undeclared residue is a hard gate</strong>, and the
+docstring refuses to let it be averaged into a score.</li>
+<li><strong>The sweep re-derives rather than asks</strong>, catching a
+purge that traversed one hop.</li>
+<li><strong>The closure is transitive</strong>, with the one-hop failure
+named in the comment.</li>
+<li><strong>Unknown is declared, not omitted</strong> — uncontrollable
+is a reported bucket, not a silence.</li>
+<li><strong>Deletion dominates correction</strong>, a conflict between
+auditability and erasure that is stated rather than finessed.</li>
+<li><strong>Bi-temporal facts</strong> with validity and record time
+separated.</li>
+<li><strong>Scope narrows freely and widens only through
+authority.</strong></li>
+<li><strong>Confidence cannot reach an authority outcome</strong>,
+guarded by negative-path tests.</li>
+<li><strong>Invalidation is treated as a potential write
+channel.</strong></li>
+<li><strong>Evidence is content-free by construction</strong>, so a
+third party can verify a lifecycle without receiving the deleted
+memory.</li>
+<li><strong>The substrate stub is unsafe on purpose</strong>, so the
+negative paths have something real to escape through.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No rejected-value tombstone</strong>; the tombstone here is
+record-keyed.</li>
+<li><strong>No epistemic status on a memory unit.</strong></li>
+<li><strong>The reference substrate is a dictionary.</strong> Every
+property above is demonstrated against an in-memory graph plus a
+Graphiti driver, not against a production store under load.</li>
+<li><strong>No committed run output</strong> for the conformance suite,
+the Mem0 comparator or the deletion-completeness chain.</li>
+<li><strong>No dependency manifest</strong>, so reproducing the full
+suite means reading CI to discover what to install, and two of those
+installs are unpinned.</li>
+<li><strong>The doctrine outruns the badges</strong>: the README states
+26 validated fixtures and 19 accepted plus 2 proposed ADRs; the tree
+holds 36 fixtures, all of which its own validator accepts, and 25 ADRs.
+The drift is in the harmless direction — the prose understates what
+ships — which is the rarer direction and still worth reconciling.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>What I ran, with nothing installed:</strong> the seven
+<code>scripts/</code> validators, of which
+<code>validate_fixtures.py fixtures</code> reports
+<code>Validated 36 fixture(s)</code>; and the residue partition path,
+through a driver of my own over copied <code>projections.py</code> and
+<code>residue.py</code>, reproducing the transitive closure and the
+one-hop-purge catch quoted in section 4. <strong>What I did not
+run:</strong> the 24-module <code>reference/tests</code> suite, the
+conformance runner, the Mem0 comparator and the Graphiti substrate job,
+all of which need <code>jsonschema</code>, <code>cryptography</code>,
+<code>referencing</code>, <code>rfc8785</code>,
+<code>graphiti-core</code>, <code>kuzu</code> or <code>mem0ai</code>.
+With no manifest in the tree the screen could establish no dependency
+ages, so nothing was installed.</p>
+<p>The test design is the part worth studying. Nineteen of the 24
+modules are named for a negative path —
+<code>test_scope_reduction</code>, <code>test_isolation_domains</code>,
+<code>test_shared_revocation_propagation</code>,
+<code>test_boundary_crossing</code>,
+<code>test_stochastic_containment</code> — and the substrate they run
+against is deliberately permissive so those paths have something to
+catch. That is the inverse of the failure this atlas has repeatedly
+documented, where an integration test passes because the harness
+supplies the safe behaviour the shipped code omits.</p>
+<p>The <strong>negative retrieval assertions</strong> are the isolation
+fixtures and their tests:
+<code>same-agent-cross-project-isolation</code>,
+<code>cross-tenant-relevance-trap</code>, and
+<code>test_isolation_domains</code> asserting that a fact outside the
+requesting context's domains is refused by name. These are the
+scope-boundary kind rather than the corrected-value kind, and the
+distinction is worth stating for a strict reader.</p>
+<p>What is missing is any result. The conformance suite, the comparator
+and the evidence chain all produce artifacts, and <code>reports/</code>
+contains two files, both named <code>.example.</code>. A CI badge
+records that the doctrine-evidence workflow passes; a published run of
+the Mem0 comparator would be the more interesting artifact and does not
+exist here.</p>
+<p><strong>A <code>CITATION.cff</code> is present</strong> — <em>"Agent
+Memory: A Reference Architecture for Governed Agentic Memory"</em>,
+Kevin R. Knapp — but it cites the repository as software. No paper,
+arXiv reference or DOI appears.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make deletion completeness a partition, not a
+volume.</strong> Purged, declared-controlled, declared-uncontrollable,
+undeclared — and make the last cell a hard gate. It converts "did the
+deletion work" from an unanswerable question into a checkable one, and
+it lets a system be honest about the residue it genuinely cannot
+reach.</li>
+<li><strong>Declare the unreachable rather than omitting it.</strong>
+Exports, third-party copies and model weights are real residue; a design
+that only counts what it can delete is measuring its own reach.</li>
+<li><strong>Verify the deletion by re-deriving, never by asking the
+deleter.</strong> A sweep that recomputes residual status from a basis
+relation catches a one-hop purge; a receipt that reports its own
+traversal cannot.</li>
+<li><strong>Give derived state a declaration surface.</strong> Indices,
+caches and embeddings are where residue hides precisely because nothing
+obliges them to say what they were built from. A <code>basis</code> map
+is the whole mechanism.</li>
+<li><strong>Compute freshness, do not flag it.</strong> A
+<code>stale</code> bit needs a writer that remembers; a relation derived
+at read time governs a substrate that never self-invalidates.</li>
+<li><strong>Keep stale and residual apart.</strong> One is a correctness
+problem recomputation may fix; the other is a governance problem only
+the deletion authority may resolve.</li>
+<li><strong>Bar confidence from reaching authority.</strong> Let
+estimator confidence inform evidence quality and nothing else, and write
+the negative test that holds the separation in place.</li>
+<li><strong>Treat invalidation as a write channel.</strong> If
+rebuilding a projection commits estimator-derived content, the rebuild
+needs authority — otherwise cache invalidation is an ungoverned
+write.</li>
+<li><strong>Build the unsafe stub on purpose.</strong> A test double
+that is already safe proves nothing about the layer under test.
+Reproduce the real substrate's permissive defaults and let the
+governance layer earn its keep.</li>
+<li><strong>Emit content-free evidence.</strong> Counts and hashes let a
+third party verify a deletion lifecycle without receiving the deleted
+memory.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A one-hop purge.</strong> Projections are built from
+projections; a closure that is not transitive measures its own
+optimism.</li>
+<li><strong>Retaining superseded versions without asking what deletion
+means for them.</strong> Reconstructability and erasure are in direct
+conflict, and the conflict has to be resolved explicitly in favour of
+one.</li>
+<li><strong>Averaging a safety invariant into a score.</strong>
+Undeclared residue is disqualifying; a system that mixes it with
+everything else can pass while failing the only cell that matters.</li>
+<li><strong>A retrieval argument whose omission means
+everything.</strong> This repository builds that defect deliberately as
+a hazard; three live systems in this atlas ship it by accident.</li>
+<li><strong>Doctrine that outpaces its own badges.</strong> Counts in
+prose drift; generate them or reconcile them.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for someone designing a memory system rather than choosing
+one. There is nothing to install and nothing to run in production; what
+you get is a vocabulary, twenty-five decisions with their reasoning, a
+schema set, and about ten thousand lines of executable demonstration
+that the hard properties are implementable. If you are building governed
+memory for a regulated or multi-tenant setting, the deletion and scope
+material is the most developed treatment in this corpus and worth the
+reading time on its own.</p>
+<p>Walk away if you want a store. The substrate is a dictionary, the
+retrieval is token overlap, and the repository says plainly that passing
+fixture validation is not evidence a production system behaves
+correctly. The risk in adopting the doctrine wholesale is the ratio it
+invites: 22,000 lines of prose is a lot of design to carry into a system
+that has not yet met production data, and the ADRs the repository itself
+marks Proposed are the ones whose acceptance criteria require exactly
+the runtime evidence that does not exist here yet.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the Mem0 comparator actually report? The harness is
+committed, pinned and credential-free; the result is not in the
+repository.</li>
+<li>Has the residue sweep been run against a real substrate with derived
+state at scale, or only against the in-memory graph and the Graphiti
+driver?</li>
+<li>Why do the README's fixture and ADR counts understate the tree, and
+are the badges generated or hand-maintained?</li>
+<li>Is a rejected-value tombstone out of scope by decision or simply not
+reached yet? ADR-015 requires tombstones, and the implementation's are
+record-keyed.</li>
+<li>What would ADR-020 and ADR-021 need to move from Proposed to
+Accepted, and is that evidence expected to come from adopters?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Deletion and derived state:
+<code>reference/agentmem_ref/residue.py</code>,
+<code>projections.py</code>, <code>deletion_completeness.py</code>,
+<code>portable_evidence.py</code>.</li>
+<li>Governance: <code>reference/agentmem_ref/policy.py</code>,
+<code>adapter.py</code>, <code>scope_governance.py</code>,
+<code>shared_revocation.py</code>, <code>receipts.py</code>.</li>
+<li>Substrate and comparators:
+<code>reference/agentmem_ref/substrate.py</code>,
+<code>graphiti_driver.py</code>, <code>mem0_comparator.py</code>,
+<code>systems_characterization.py</code>.</li>
+<li>Runners: <code>reference/run_conformance.py</code>,
+<code>run_deletion_completeness.py</code>,
+<code>run_mem0_comparator.py</code>,
+<code>run_concurrency_evidence.py</code>.</li>
+<li>Doctrine: <code>docs/28-retention-deletion-and-tombstones.md</code>,
+<code>docs/29-actor-scope-consent-and-tenancy.md</code>,
+<code>docs/04-governance-and-pama.md</code>,
+<code>docs/24-determinism-probability-and-governed-uncertainty.md</code>,
+<code>docs/adr/</code> (ADR-015, ADR-016, ADR-017, ADR-023, ADR-024,
+ADR-025).</li>
+<li>Schemas and fixtures:
+<code>schemas/pama-decision.schema.json</code>,
+<code>decision-receipt.schema.json</code>,
+<code>memory-audit-event.schema.json</code>; <code>fixtures/</code> (36
+files).</li>
+<li>Validators: <code>scripts/validate_fixtures.py</code>,
+<code>validate_schemas.py</code>,
+<code>validate_doctrine_boundaries.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-11</strong> — <a
+href="https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/bba0aa4cab8e04d11f5380b215b3eea6998fe119"><code class="commit-id" title="bba0aa4cab8e04d11f5380b215b3eea6998fe119">bba0aa4c…</code></a>
+— first reading, on the <code>main</code> default branch, 331 commits
+from a repository created 6 July 2026. Screened before reading:
+<code>screen_repo.py</code> reported <code>NOTHING SCANNED</code>
+because the tree carries no dependency manifest at all, so the execution
+surface was established by hand — dependencies are declared in
+<code>.github/workflows/</code> and pinned in code. Nothing was
+installed. The seven <code>scripts/</code> validators were run as
+shipped, and the residue partition was exercised through a driver
+written for this review over copies of <code>projections.py</code> and
+<code>residue.py</code>, because the package <code>__init__</code>
+imports <code>jsonschema</code> transitively.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

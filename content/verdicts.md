@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 257 reports.**
+**This page covers all 258 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["257 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["258 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2231,3 +2231,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 1,432 lines across eleven files, three commits all uploaded on 11 August 2026, self-described as a reference implementation rather than a maintained product. No test suite for the 848-line compiler that enforces every rule, and no agent integration ships — the README says the glue is yours to write, so every guarantee holds exactly as often as a harness remembers to call `--close`.
 - Study when: you want the smallest complete demonstration that correction can be made to fail loudly, or you are designing a reassertion check and want to see where a length-based noise floor puts the hole.
 - Do not copy when: memory has to be shared, scoped, queried, or extracted automatically. There is no retrieval here at all — everything durable is meant to fit in a prompt, and the design is honest that this is the trade.
+
+### [`agent-memory-doctrine`](../systems/agent-memory-doctrine/)
+
+- Best idea: deletion completeness as a four-way residue partition — purged, declared-controlled, declared-uncontrollable, undeclared — where the last cell is a hard gate the docstring calls *"disqualifying and un-averageable"*. Residue is permitted; residue you did not report is a failed deletion however much it removed. Beside it, `independent_sweep`, which re-derives residual status from a basis relation rather than asking the purge whether it finished: run against a one-hop purge it returns the projection-of-a-projection as undeclared and fails the gate.
+- Biggest risk: everything is demonstrated against a dictionary. The reference substrate is in-memory, retrieval is token overlap, no run output is committed for the conformance suite or the Mem0 comparator, and the two ADRs the repository marks Proposed are exactly the ones needing runtime evidence that does not exist here. The README says it plainly — *"passing fixture validation is not the same thing as proving a production memory system behaves correctly."*
+- Most reusable component: the tier-3 projection declaration. Indices, caches and embeddings are where deletion residue hides precisely because nothing obliges them to say what they were built from; a `basis` map plus a computed freshness relation — `current`, `stale`, `residual`, with stale and residual deliberately kept apart — is the whole mechanism. Beside it, a test posture worth copying: the substrate stub reproduces the mapped system's *unsafe* defaults on purpose, because *"the negative paths need something real to escape through."*
+- Maturity impression: Apache-2.0, 294 files — 22,400 lines of doctrine, 25 ADRs, 36 fixtures and a 10,400-line executable reference implementation with a Graphiti driver and a comparator that runs Mem0 at a pinned version. No dependency manifest anywhere; CI declares what to install. The README's own counts understate the tree (26 fixtures claimed, 36 shipped and validated; 21 ADRs claimed, 25 present), which is the rarer direction of drift.
+- Study when: you are designing deletion for a system with derived state, or you need the vocabulary to argue about what a deletion guarantee even means. It is the most developed treatment of residue, scope derivation and mutation authority in this atlas.
+- Do not copy when: you want a store. There is nothing to install, no agent integration, and no production evidence — this is a specification with a demonstration attached.

@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **257 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **258 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -21,6 +21,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`aeris`](../systems/aeris/) **Aeris** — The model never touches the state · `Cedrick-Coto/Aeris` · Trust state, Scope enforced, Negative evals
 - [`agent-afk`](../systems/agent-afk/) **agent-afk** — A citation or an [unverified] tag · `griffinwork40/agent-afk` · Negative evals
 - [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
+- [`agent-memory-doctrine`](../systems/agent-memory-doctrine/) **Agent Memory (MythologIQ)** — Deletion residue as a partition · `MythologIQ-Labs-LLC/agent-memory` · Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced
 - [`agent-mesh`](../systems/agent-mesh/) **Agent Mesh** — The schema for a verified decision, and no way to write one · `cbalgeman/agent-mesh` · Trust state, Mutation audit, Human review
 - [`agent-working-memory`](../systems/agent-working-memory/) **AgentWorkingMemory** — Retracting a fact should shake its whole story · `CompleteIdeas/agent-working-memory` · Trust state, Scope enforced, Negative evals
