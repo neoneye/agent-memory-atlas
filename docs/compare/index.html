@@ -5781,7 +5781,8 @@ weight between two entities</td>
 <td>One SQLite file with three tables — entities, relations,
 hebbian_weights; the 10,000-dimensional codebook is in-process only</td>
 <td>String entity linking, a one-hop SQL fetch, then cosine over bundled
-±1 hypervectors against a fixed 0.42 threshold</td>
+±1 hypervectors against a fixed 0.72 threshold; every vector is derived
+from the string's character n-grams rather than drawn at random</td>
 <td>An LLM extracts triples from ingested text or from a conversational
 assertion; there is no admission gate</td>
 <td><code>update_relation</code> deletes prior rows only for five named
@@ -5797,8 +5798,8 @@ fact</td>
 <td>The refusal is a return statement — the model is never asked a
 question the symbolic layer could not answer</td>
 <td>The gate's threshold is fixed while its similarity falls with query
-length, and correction reaches only one of the predicates the extractor
-produces</td>
+length, and at 0.72 none of the benchmark's own answerable questions
+clears it</td>
 </tr>
 <tr>
 <td><code>hindsight</code></td>
@@ -16220,11 +16221,11 @@ framework dependencies</li>
 <li><a
 href="https://github.com/roandejager/Hillock">roandejager/Hillock</a> at
 <a
-href="https://github.com/roandejager/Hillock/commit/a0499a55d0e44787dc0df03f4661dd9b0e7c9480"><code class="commit-id" title="a0499a55d0e44787dc0df03f4661dd9b0e7c9480">a0499a55…</code></a>
-— read only; its benchmark needs a local Ollama model, so the published
-numbers were read rather than reproduced, and the reservoir and
-gate-geometry findings were checked by reproducing the arithmetic in
-separate code</li>
+href="https://github.com/roandejager/Hillock/commit/976780453be026a32acbd5ee92cf4fe2adaf6c3f"><code class="commit-id" title="976780453be026a32acbd5ee92cf4fe2adaf6c3f">97678045…</code></a>
+— read only; its benchmark needs a local Ollama model and its first
+launch fetches 822 MB of GloVe vectors, so the published numbers were
+read rather than reproduced, and the encoder and gate-geometry findings
+were checked by reimplementing the arithmetic in separate code</li>
 <li><a
 href="https://github.com/KTVSUN/memory-compiler">KTVSUN/memory-compiler</a>
 at <a
@@ -16323,6 +16324,17 @@ on the checked-out code in this workspace.</p>
 <li>Supermemory's hosted backend implementation was not visible in this
 checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph
 UI.</li>
+<li><strong>A Hillock claim was imprecise when published rather than
+overtaken.</strong> The report described a third monkey-patch in
+<code>talon_engine.py</code> as overriding
+<code>GLiREL._from_pretrained</code> <em>"similarly"</em> to the
+<code>check_torch_load_is_safe</code> bypass beside it. At every commit
+the atlas has read, that patch defaults two keyword arguments for Hub
+compatibility and the one beside it supplies missing tied-weight
+attributes to an older <code>fastcoref</code> class. There is one
+deserialization bypass, applied to two module paths, and the body now
+says so. The error inflated a security finding, which is the direction a
+reader is least likely to check.</li>
 <li>Some mem0 advanced capabilities appear to be managed-platform-only
 in the inspected OSS code.</li>
 <li>This is an implementation-oriented static review, not a runtime

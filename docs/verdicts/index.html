@@ -6835,13 +6835,14 @@ model is invoked only inside the branch that has already matched a
 stored fact above threshold, so a question with no evidence behind it
 never reaches it — a structural property where almost everything else in
 this atlas has a prompt asking the model to say "I don't know".</li>
-<li>Biggest risk: the gate's threshold is fixed at 0.42 while its
+<li>Biggest risk: the gate's threshold is fixed at 0.72 while its
 similarity falls with query length. Facts are bundled from exactly three
 components and queries from all their surviving tokens, so holding
-overlap constant, the same fact passes at six components and is blocked
-at eight. A two-character token filter removes nothing from three of the
-benchmark's own four sample phrasings. Admission depends on phrasing,
-which nothing in the repository states.</li>
+overlap constant, a two-component match survives only a two-token
+question. Reimplementing the arithmetic, all four of the benchmark's own
+answerable sample questions score between 0.367 and 0.450 against the
+exact triple they ask about, and none clears the gate. Admission depends
+on phrasing, which nothing in the repository states.</li>
 <li>Most reusable component: the ten committed hard negatives, each
 annotated inline with why the source text does not support an answer —
 <em>"Newton is 1600s, Tesla is 1800s"</em>, <em>"Enigma is target
@@ -6849,20 +6850,24 @@ object, testing link-routing direction"</em>. The reasoning beside the
 case is what lets a later reader check the test rather than trust
 it.</li>
 <li>Maturity impression: AGPL-3.0 with a CLA held for possible
-commercial dual-licensing, around 1,760 lines across eight files, no
-test suite, self-described as a research prototype that "isn't all that
-yet". It publishes four scores under 31% on its README with a diagnosis
-of each — and they describe a prior version, since three of their inputs
-changed at v0.2.3 while the README did not. Correction reaches five
+commercial dual-licensing, 1,827 lines across eight files, no test suite
+for four releases across which the gate threshold moved three times. Its
+README publishes a seven-row version table that keeps the rows where its
+own numbers fell — gate accuracy peaked at 60.0% two releases before the
+current 43.3% — which almost nothing in this corpus does; the prose
+beneath it names only the columns that rose. Correction reaches five
 named functional predicates, of which one is ever produced by the
-extractor's normaliser. <code>talon_engine.py</code>, absent from the
-README's file list, disables a HuggingFace <code>torch.load</code>
-safety check to load a remote checkpoint.</li>
+extractor's normaliser. <code>talon_engine.py</code> disables a
+HuggingFace <code>torch.load</code> safety check to load a remote
+checkpoint, on the path the README's architecture diagram and CUDA
+prerequisite point at while <code>requirements.txt</code> names none of
+its five imports.</li>
 <li>Study when: you want the smallest complete demonstration that "will
 not answer without evidence" can be control flow rather than instruction
 — or a live example of a benchmark whose gate metric pools blocking with
-answering, where the published numbers imply three of ten hard negatives
-were actually blocked.</li>
+answering, where the published numbers imply four of ten hard negatives
+were actually blocked after a recalibration whose stated purpose was to
+eliminate the leaks.</li>
 <li>Do not copy when: memory has to be corrected later. Three strings
 per fact with no time, source or status is below the floor, and whether
 a correction takes effect depends on a five-string allowlist meeting a
