@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 265 reports.**
+**This page covers all 266 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["265 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["266 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2303,3 +2303,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 43,590 lines with the server in the tree, 134 tests across 15 files, a public API that answers without a token, an installer for nine MCP clients, and a benchmark committed in full — harness, judge, four task files and 175 result artifacts. Sanitisation is behind an optional `nh3` import whose fallback serves markdown unsanitised with a log warning, and that dependency is pinned only with `>=`.
 - Study when: you are building memory that outlives the agent that wrote it and is read by agents that cannot ask it anything — the review vocabulary, the consolidation verdicts and the lineage links are the most developed answer in this atlas. Also study the README, which publishes a controlled follow-up that found no significant lift in the same sentence as the result it qualifies.
 - Do not copy when: you need a tenant boundary or a delete. There is no owner, user or tenant column on any table — that is the design, not an oversight — revision rewrites a shared body in place with only a counter to show it, and nothing records that a capsule changed or what it said before.
+
+### [`otis`](../systems/otis/)
+
+- Best idea: compaction that is lossy for the model and lossless for the store. When the context passes 250k tokens the summary replaces the messages in the model's view, and the session log appends `{ type: "compacted", summary, messages, toolActivities }` — the event that performs the compaction carries the material it compacted, so a resumed session can still be read in full. Most systems in this atlas compact by destroying the source.
+- Biggest risk: a skill is procedural memory pinned to a URL rather than to a revision. `git clone -- <url>` takes the default branch, `otis skills update` is `git pull --ff-only`, and the manifest type — `{ id, url, skills: [{ name, relativePath }] }` — has no field for a commit or a hash. A skill is instructions the model reads and follows, so an audit performed today covers a moving target, and nothing reports that it moved. Two files away the project aborts its own binary update on a sha256 mismatch, and `skills-lock.json` carries a `computedHash` that appears exactly once in the tree.
+- Most reusable component: `readSkillResource`. It refuses absolute paths, asserts containment against the skill root, calls `realpath`, asserts containment *again* so a symlink cannot escape, and decodes with `TextDecoder("utf-8", { fatal: true })`. The double check is two lines and closes the gap a single check leaves open.
+- Maturity impression: MIT, v0.1.20, 11,531 lines of TypeScript, 42 test files under vitest with CI, files 0600 and directories 0700 throughout, atomic manifest writes, a PID-and-token mutex with a staleness rule, and `--` before every git URL. No benchmark and no accuracy claim, which for a coding agent is the honest posture. Eight floating dependency ranges with no lockfile.
+- Study when: you want a local agent whose session history is a plain readable log, or a worked example of context compaction that does not destroy its own evidence.
+- Do not copy when: you need a memory layer. There is no fact store, no epistemic state, no correction path and no retrieval over history — a session is resumed whole and a skill is loaded by exact name. Adopt the skill manager only after adding the revision field its own updater demonstrates the standard for.

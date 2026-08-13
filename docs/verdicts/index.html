@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 265 reports.</strong></p>
+<p><strong>This page covers all 266 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-    R[&quot;265 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;266 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7266,6 +7266,47 @@ no owner, user or tenant column on any table — that is the design, not
 an oversight — revision rewrites a shared body in place with only a
 counter to show it, and nothing records that a capsule changed or what
 it said before.</li>
+</ul>
+<h3 id="otis"><a href="../systems/otis/"><code>otis</code></a></h3>
+<ul>
+<li>Best idea: compaction that is lossy for the model and lossless for
+the store. When the context passes 250k tokens the summary replaces the
+messages in the model's view, and the session log appends
+<code>{ type: "compacted", summary, messages, toolActivities }</code> —
+the event that performs the compaction carries the material it
+compacted, so a resumed session can still be read in full. Most systems
+in this atlas compact by destroying the source.</li>
+<li>Biggest risk: a skill is procedural memory pinned to a URL rather
+than to a revision. <code>git clone -- &lt;url&gt;</code> takes the
+default branch, <code>otis skills update</code> is
+<code>git pull --ff-only</code>, and the manifest type —
+<code>{ id, url, skills: [{ name, relativePath }] }</code> — has no
+field for a commit or a hash. A skill is instructions the model reads
+and follows, so an audit performed today covers a moving target, and
+nothing reports that it moved. Two files away the project aborts its own
+binary update on a sha256 mismatch, and <code>skills-lock.json</code>
+carries a <code>computedHash</code> that appears exactly once in the
+tree.</li>
+<li>Most reusable component: <code>readSkillResource</code>. It refuses
+absolute paths, asserts containment against the skill root, calls
+<code>realpath</code>, asserts containment <em>again</em> so a symlink
+cannot escape, and decodes with
+<code>TextDecoder("utf-8", { fatal: true })</code>. The double check is
+two lines and closes the gap a single check leaves open.</li>
+<li>Maturity impression: MIT, v0.1.20, 11,531 lines of TypeScript, 42
+test files under vitest with CI, files 0600 and directories 0700
+throughout, atomic manifest writes, a PID-and-token mutex with a
+staleness rule, and <code>--</code> before every git URL. No benchmark
+and no accuracy claim, which for a coding agent is the honest posture.
+Eight floating dependency ranges with no lockfile.</li>
+<li>Study when: you want a local agent whose session history is a plain
+readable log, or a worked example of context compaction that does not
+destroy its own evidence.</li>
+<li>Do not copy when: you need a memory layer. There is no fact store,
+no epistemic state, no correction path and no retrieval over history — a
+session is resumed whole and a skill is loaded by exact name. Adopt the
+skill manager only after adding the revision field its own updater
+demonstrates the standard for.</li>
 </ul>
         </article>
       </div>
