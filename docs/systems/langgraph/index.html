@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A namespaced key-value memory
+store with TTL and semantic search behind three backends — shipped
+beside a portable conformance suite that validates the thread-scoped
+checkpointer and not the store, which is where the three backends
+disagree.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LangGraph — Agent Memory Atlas">
+    <meta property="og:description" content="A namespaced key-value
+memory store with TTL and semantic search behind three backends —
+shipped beside a portable conformance suite that validates the
+thread-scoped checkpointer and not the store, which is where the three
+backends disagree.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LangGraph — Agent Memory Atlas">
+    <meta name="twitter:description" content="A namespaced key-value
+memory store with TTL and semantic search behind three backends —
+shipped beside a portable conformance suite that validates the
+thread-scoped checkpointer and not the store, which is where the three
+backends disagree.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LangGraph — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A conformance suite for the other half</p>
+          <h1>LangGraph</h1>
+          <p class="document-deck">A namespaced key-value memory store
+with TTL and semantic search behind three backends — shipped beside a
+portable conformance suite that validates the thread-scoped checkpointer
+and not the store, which is where the three backends disagree.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/langchain-ai/langgraph">
+              <span>Source</span>
+              <strong>langchain-ai/langgraph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b" title="644815f9e5bc52ad8f7a5227a456227e9c3e639b">
+              <span>Analyzed revision</span>
+              <code>644815f9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-14</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LangGraph is an agent runtime, and most of it is out of this atlas's
+scope. Two of its persistence layers are not, and telling them apart is
+the first thing a reader needs.</p>
+<p>The <strong>checkpointer</strong> (<code>BaseCheckpointSaver</code>)
+snapshots graph state per thread so a run can be resumed, time-travelled
+or replayed. That is session state: durable across processes, but scoped
+to one conversation and not a claim anybody believes. The
+<strong>store</strong> (<code>BaseStore</code>) is the long-term memory:
+a hierarchical namespace tuple, a key, a JSON value,
+<code>created_at</code>/<code>updated_at</code>, optional TTL, and
+optional semantic search over selected fields. It survives threads,
+users and deployments, and it is what LangGraph means when its
+documentation says "memory". The store is the subject here.</p>
+<p>It is a good design, and deliberately unopinionated. There is no
+extraction, no consolidation, no scoring, no forgetting policy and no
+notion of what a memory <em>is</em> — you write dicts under namespaces
+and read them back by prefix, filter or similarity. Everything this
+atlas usually analyses as memory semantics is left to the application.
+What LangGraph provides is the substrate, and the substrate gets two
+things right that most do not: <strong>the scope is half the primary
+key</strong>, so a read cannot omit it, and <strong>TTL refreshes on
+read</strong>, so a last-touched expiry falls out of ordinary use rather
+than needing a job.</p>
+<p>The finding worth the report is a mismatch. LangGraph ships
+<code>langgraph-checkpoint-conformance</code>, a published, installable,
+capability-aware conformance suite so that anyone writing a third-party
+<code>BaseCheckpointSaver</code> can prove it satisfies the contract —
+nine capabilities, five mandatory, a report generator, the whole
+apparatus. Nothing equivalent exists for <code>BaseStore</code>. And the
+store is where the three first-party backends visibly disagree with each
+other: on whether <code>created_at</code> survives an update (Postgres
+yes, SQLite and in-memory no), and on whether deleting an item deletes
+its embeddings (Postgres yes by an enforced foreign key, SQLite no
+because the identical <code>ON DELETE CASCADE</code> is declared and
+SQLite's foreign keys are never switched on). Both divergences are in
+the half of the persistence layer that has no spec to fail.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <code>Item</code>:
+<code>{namespace: tuple[str, ...], key: str, value: dict, created_at, updated_at}</code>.
+That is the whole ontology. LangGraph takes no position on whether the
+dict is a fact, a preference, a summary, a document or a scratch note;
+<code>value</code>'s keys are filterable and its selected paths are
+embeddable, and beyond that it is opaque.</p>
+<p>Consequently there is <strong>no epistemic state machine to
+describe</strong>, and that is the honest finding rather than a gap in
+the reading. An item is present or absent. It has no status, no
+confidence, no provenance, no supersession chain, and no relationship to
+any other item. Nothing marks a claim as candidate, verified or
+rejected, so a wrong value is corrected only by an application writing
+the same <code>(namespace, key)</code> again — and the old value is
+gone, not superseded.</p>
+<p>The three ways an item can stop existing are all destructive:</p>
+<pre class="text"><code>put(ns, key, value)         -&gt;  present
+put(ns, key, None)          -&gt;  hard delete, row removed
+                                (this is what .delete() compiles to)
+ttl elapses without a read  -&gt;  omit_expired hides it, sweeper deletes it</code></pre>
+<p>There is one temporal mechanism and it is a good one: <strong>TTL is
+refreshed on read</strong>, controlled by
+<code>TTLConfig.refresh_on_read</code> (default true) and overridable
+per operation with <code>refresh_ttl</code>. A memory nobody has
+consulted for <code>default_ttl</code> minutes expires; a memory that
+keeps being retrieved never does. That is last-touched decay obtained
+for free from ordinary traffic, without a background scorer and without
+an LLM deciding what matters — the cheapest useful forgetting policy in
+this atlas, and the one most systems here reimplement badly. Its limit
+is that it decays by <em>access recency alone</em>: an item read once a
+month because it is genuinely needed once a month survives, and so does
+an item read constantly because it sits in a namespace someone scans on
+every turn.</p>
+<p><code>created_at</code> and <code>updated_at</code> are both record
+time. Nothing tracks when the content was true, so the
+<code>bitemporal</code> mark is withheld.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the store's whole lifecycle: present or absent, with TTL as the only thing that decides which</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the store&#39;s whole lifecycle: present or absent, with TTL as the only thing that decides which
+flowchart TB
+    Put[&quot;put(namespace, key, value, ttl?, index?)&quot;] --&gt; Key[(&quot;PRIMARY KEY (prefix, key)&lt;br/&gt;value as JSON&lt;br/&gt;created_at, updated_at, expires_at&quot;)]
+    Put --&gt;|&quot;index selects JSON paths&quot;| Vec[(&quot;store_vectors&lt;br/&gt;(prefix, key, field_name, embedding)&quot;)]
+    Key --&gt; Get[&quot;get(namespace, key)&quot;]
+    Key --&gt; Search[&quot;search(namespace_prefix,&lt;br/&gt;query?, filter?, limit, offset)&quot;]
+    Vec -.-&gt;|&quot;cosine, only when a query is given&quot;| Search
+    Get --&gt;|&quot;refresh_on_read&quot;| Bump[&quot;expires_at = now + ttl_minutes&quot;]
+    Search --&gt;|&quot;refresh_on_read&quot;| Bump
+    Bump --&gt; Key
+    Key --&gt;|&quot;put(value=None)&quot;| Hard[&quot;hard delete, no tombstone&quot;]
+    Key --&gt;|&quot;expires_at &lt; now&quot;| Sweep[&quot;TTL sweeper thread deletes&quot;]
+    Sweep -.-&gt;|&quot;Postgres: FK cascade removes vectors&lt;br/&gt;SQLite: foreign keys never enabled,&lt;br/&gt;embeddings orphaned&quot;| Vec
+    Key -.-&gt;|&quot;no status, no confidence,&lt;br/&gt;no provenance, no supersession&quot;| Flat[&quot;an item is present or absent&lt;br/&gt;and nothing else&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The store is defined in <code>langgraph-checkpoint</code> and
+implemented three times.</p>
+<ul>
+<li><strong><code>libs/checkpoint/langgraph/store/base/__init__.py</code></strong>
+(1,322 lines) — the contract: <code>Item</code>,
+<code>SearchItem</code>, the five op types (<code>GetOp</code>,
+<code>SearchOp</code>, <code>PutOp</code>,
+<code>ListNamespacesOp</code>, <code>MatchCondition</code>),
+<code>TTLConfig</code>, <code>IndexConfig</code>, and
+<code>BaseStore</code> with
+<code>get</code>/<code>search</code>/<code>put</code>/<code>delete</code>/<code>list_namespaces</code>
+layered over one abstract <code>batch(ops)</code>.</li>
+<li><strong><code>store/base/embed.py</code></strong> (433 lines) —
+<code>get_text_at_path</code>, a small JSON-path evaluator supporting
+<code>field</code>, <code>parent.child</code>,
+<code>array[*].field</code> and <code>context[0].text</code>, plus
+<code>ensure_embeddings</code> which resolves a provider string like
+<code>"openai:text-embedding-3-small"</code>.</li>
+<li><strong><code>store/base/batch.py</code></strong> (371 lines) —
+<code>AsyncBatchedBaseStore</code>, which coalesces concurrent
+operations into one <code>abatch</code> call.</li>
+<li><strong><code>store/memory/__init__.py</code></strong> (592 lines) —
+<code>InMemoryStore</code>: nested dicts, brute-force cosine.</li>
+<li><strong><code>libs/checkpoint-postgres/.../store/postgres/base.py</code></strong>
+(1,480 lines) — Postgres with pgvector, HNSW or IVFFlat, cosine / L2 /
+inner-product distance.</li>
+<li><strong><code>libs/checkpoint-sqlite/.../store/sqlite/base.py</code></strong>
+(1,514 lines) — SQLite, embeddings as BLOBs with the distance computed
+in a registered user function.</li>
+</ul>
+<p>Two SQL tables in both server backends:
+<code>store (prefix, key, value, created_at, updated_at, expires_at, ttl_minutes)</code>
+with <code>PRIMARY KEY (prefix, key)</code>, and
+<code>store_vectors (prefix, key, field_name, embedding, …)</code> with
+<code>PRIMARY KEY (prefix, key, field_name)</code> and a foreign key
+back to <code>store</code>. One item can carry several embeddings — one
+per indexed JSON path — and search deduplicates them back to one row per
+key with a window function.</p>
+<p>The store reaches a graph three ways: <code>compile(store=…)</code>
+or <code>@entrypoint(store=…)</code> at build time,
+<code>get_store()</code> from inside a node (a contextvar, so Python ≥
+3.11 for async), and <code>Annotated[BaseStore, InjectedStore()]</code>
+on a tool argument, which <code>ToolNode</code> fills in and strips from
+the schema the model sees.</p>
+<p><strong>No memory tools are prebuilt.</strong>
+<code>langgraph-prebuilt</code> ships the injection machinery and not a
+single <code>save_memory</code> or <code>search_memory</code> tool;
+every application writes its own.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Nothing has to be running for the default.</strong>
+<code>InMemoryStore()</code> needs no service and no key, and dies with
+the process — fine for tests, not memory.</li>
+<li><strong>Durability means Postgres or SQLite.</strong> SQLite is a
+file; Postgres needs pgvector for semantic search and
+<code>CREATE INDEX CONCURRENTLY</code> at setup.</li>
+<li><strong>Semantic search requires an embedding provider</strong>, so
+the moment you turn it on there is an API key and a per-write network
+call in the path. Without <code>IndexConfig</code> the store is a
+filtered key-value scan and needs no key at all — a genuinely usable
+degraded mode rather than a broken one.</li>
+<li><strong>The store is inspectable and repairable by hand</strong>:
+two ordinary tables, or one SQLite file, with values as JSON.</li>
+<li>Install is <code>pip install langgraph-checkpoint-postgres</code> or
+<code>-sqlite</code>; first run is <code>store.setup()</code>.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surfaces, 41 dependency
+surfaces inside the seven-day cooldown, 15 build-time execution points
+and 17 unpinned surfaces across 86 files, plus <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> — agent-directed instruction files, read here
+as data. Nothing was installed and nothing was run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write</strong> — <code>BaseStore.put()</code> at
+<code>store/base/__init__.py:856</code>. Validates the namespace,
+resolves the TTL against <code>ttl_config</code>, raises if a TTL is
+given to a backend whose <code>supports_ttl</code> is false, and emits
+one <code>PutOp</code> into <code>batch()</code>.</li>
+<li><strong>Delete</strong> — <code>BaseStore.delete()</code> at
+<code>:937</code>, whose entire body is
+<code>self.batch([PutOp(namespace, str(key), None, ttl=None)])</code>. A
+delete is a put of <code>None</code>; backends branch on
+<code>op.value is None</code>.</li>
+<li><strong>Read by key</strong> — <code>get()</code> at
+<code>:756</code>, one <code>GetOp</code> carrying the resolved
+<code>refresh_ttl</code>.</li>
+<li><strong>Search</strong> — <code>search()</code> at
+<code>:779</code>. <code>namespace_prefix</code> is positional-only and
+required; <code>query</code>, <code>filter</code>, <code>limit</code>,
+<code>offset</code> and <code>refresh_ttl</code> are keyword.</li>
+<li><strong>Namespace listing</strong> — <code>list_namespaces()</code>
+at <code>:946</code>, with prefix and suffix
+<code>MatchCondition</code>s and a <code>max_depth</code>
+truncation.</li>
+<li><strong>Namespace validation</strong> —
+<code>_validate_namespace()</code> at <code>:1263</code>: rejects empty
+tuples, non-string labels, empty labels, labels containing
+<code>.</code>, and any namespace whose first label is
+<code>langgraph</code> — a reserved root.</li>
+<li><strong>Text extraction for embedding</strong> —
+<code>get_text_at_path()</code> in <code>store/base/embed.py</code>,
+driven by <code>IndexConfig.fields</code> (default <code>["$"]</code>,
+the whole document) and overridable per put with <code>index=[…]</code>
+or disabled with <code>index=False</code>.</li>
+<li><strong>Postgres upsert</strong> —
+<code>_prepare_batch_PUT_queries</code> in
+<code>store/postgres/base.py:402</code>:
+<code>INSERT … ON CONFLICT (prefix, key) DO UPDATE SET value, updated_at, expires_at, ttl_minutes</code>.</li>
+<li><strong>SQLite upsert</strong> —
+<code>store/sqlite/base.py:421</code>:
+<code>INSERT OR REPLACE INTO store (…, created_at, updated_at, …) VALUES (…, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, …)</code>.</li>
+<li><strong>TTL sweeper</strong> — <code>sweep_ttl()</code> and
+<code>start_ttl_sweeper()</code> at
+<code>store/postgres/base.py:834</code> and
+<code>store/sqlite/base.py:1134</code>, a daemon thread issuing
+<code>DELETE FROM store WHERE expires_at IS NOT NULL AND expires_at &lt; NOW()</code>
+on an interval.</li>
+<li><strong>Read-time TTL refresh</strong> — the
+<code>UPDATE store SET expires_at = NOW() + (s.ttl_minutes || ' minutes')::interval</code>
+folded into the get and search queries at
+<code>store/postgres/base.py:285</code> and <code>:573</code>.</li>
+<li><strong>Tool injection</strong> — <code>InjectedStore</code> at
+<code>prebuilt/tool_node.py:1829</code> and the injection walk at
+<code>:2016</code>.</li>
+<li><strong>Checkpointer conformance</strong> —
+<code>libs/checkpoint-conformance/</code>, with
+<code>capabilities.py</code>, <code>validate.py</code>,
+<code>report.py</code> and ten spec modules.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<pre class="sql"><code>CREATE TABLE store (
+    prefix      text NOT NULL,   -- the namespace tuple, joined
+    key         text NOT NULL,
+    value       jsonb NOT NULL,
+    created_at  timestamptz DEFAULT CURRENT_TIMESTAMP,
+    updated_at  timestamptz DEFAULT CURRENT_TIMESTAMP,
+    expires_at  timestamptz,
+    ttl_minutes real,
+    PRIMARY KEY (prefix, key)
+);
+
+CREATE TABLE store_vectors (
+    prefix text, key text, field_name text, embedding vector(N),
+    created_at timestamptz, updated_at timestamptz,
+    PRIMARY KEY (prefix, key, field_name),
+    FOREIGN KEY (prefix, key) REFERENCES store(prefix, key) ON DELETE CASCADE
+);</code></pre>
+<p><strong>Scoping is structural, and this is the design's best
+decision.</strong> The namespace is not a column you may remember to
+filter on — it is the left half of the primary key, it is a required
+argument on <code>get</code>, <code>put</code>, <code>delete</code> and
+<code>search</code>, and it is validated on the way in. A read that
+omits the scope does not compile. That is what earns
+<code>scope_enforced</code>, and the reserved <code>langgraph</code>
+root is a nice extra: the framework keeps a private namespace and
+refuses to let applications write into it.</p>
+<p>The hierarchy is a tuple, so
+<code>("memories", "user_123", "preferences")</code> is a real tree, and
+<code>list_namespaces</code> can enumerate it with prefix and suffix
+matching and a depth cap. Applications get per-user, per-org, per-agent
+or per-topic partitioning by naming convention, with the framework
+enforcing the shape but not the meaning.</p>
+<p>Metadata and provenance are whatever the application puts in
+<code>value</code>. There is no author field, no source, no version and
+no correction chain. <code>created_at</code> and <code>updated_at</code>
+are the only structure the framework adds — which makes the following
+worth stating precisely.</p>
+<p><strong>The three backends disagree on <code>created_at</code> across
+an update.</strong> Postgres's <code>ON CONFLICT DO UPDATE</code> sets
+<code>value</code>, <code>updated_at</code>, <code>expires_at</code> and
+<code>ttl_minutes</code>, and leaves <code>created_at</code> alone, so
+the original creation time survives. SQLite uses
+<code>INSERT OR REPLACE</code> — which deletes the row and inserts a new
+one — with <code>CURRENT_TIMESTAMP</code> in the <code>created_at</code>
+position, so it resets. <code>InMemoryStore._apply_put_ops</code>
+constructs a fresh <code>Item</code> with
+<code>created_at=datetime.now(timezone.utc)</code>, so it resets too.
+The base class documents the field as "Timestamp of item creation". An
+application that ages memories by <code>created_at</code> gets true ages
+on Postgres and false ones on the two backends people develop
+against.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are two read paths and they are not a hybrid.</p>
+<p>Without a <code>query</code>, <code>search</code> is a filtered scan:
+namespace-prefix match, optional <code>filter</code> on
+<code>value</code>'s keys — supporting <code>$eq</code>,
+<code>$ne</code>, <code>$gt</code>, <code>$gte</code>, <code>$lt</code>,
+<code>$lte</code> — ordered by <code>updated_at DESC</code>, with
+<code>limit</code> and <code>offset</code>. No relevance, no text
+matching.</p>
+<p>With a <code>query</code>, the same prefix and filter constrain a
+cosine ranking over <code>store_vectors</code>. Because one item can
+have several embeddings — one per indexed path — the query scores all of
+them, then
+<code>ROW_NUMBER() OVER (PARTITION BY prefix, key ORDER BY score DESC)</code>
+keeps the best per item. The inner CTE fetches <code>limit * 2</code>
+before deduplication, commented "Expanded limit for better results",
+which is a heuristic rather than a guarantee: an item embedded across
+many fields can consume several of those <code>2 × limit</code> slots
+and push a distinct item out of the result set entirely.</p>
+<p>There is <strong>no lexical arm</strong> — no BM25, no full-text
+index, no trigram fallback — so an exact-token query (an error code, an
+identifier, a filename) has only embedding similarity to find it with,
+and only if the field was indexed. Nothing reranks, nothing fuses, and
+there is no query transformation.</p>
+<p>Retrieval is entirely application-driven. LangGraph will not inject
+anything: a node or a tool must call <code>search</code> and decide what
+to do with the result, and there is no token budget, no context
+formatter and no automatic assembly. That is consistent with the
+framework's position — it owns the substrate, the application owns the
+policy — and it means none of the ranking failure modes this atlas
+usually catalogues are LangGraph's to have.</p>
+<p>The one it does have is the field-selection cliff.
+<code>IndexConfig.fields</code> defaults to <code>["$"]</code>,
+embedding the entire JSON document as one vector. For an item that is
+one sentence this is right; for an item that is a sentence plus fifteen
+metadata keys, the metadata dominates the vector and semantic search
+quietly stops working. Per-put <code>index=["text"]</code> fixes it, and
+nothing warns you.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous. <code>put()</code> builds a
+<code>PutOp</code> and calls <code>batch()</code>, which issues SQL
+immediately; when indexing is configured, the embedding call happens
+inside the same operation, so <strong>a node writing a memory blocks on
+an embedding round trip</strong>. <code>AsyncBatchedBaseStore</code>
+coalesces concurrent operations into one <code>abatch</code>, which
+amortizes but does not remove the wait.</p>
+<p>The lag before a memory is retrievable is therefore zero —
+read-your-writes is immediate, in the same transaction — which is
+unusual in this atlas and worth crediting: most systems here defer
+extraction and owe the caller a poll loop. The price is that the write
+path has an LLM-provider dependency on it.</p>
+<p>Update is upsert by <code>(namespace, key)</code>. There is no append
+mode, no versioning and no merge: writing the same key replaces the
+value wholesale, and the previous value is unrecoverable. A caller
+wanting history must encode it in the key.</p>
+<p>Deletion is a hard delete. <code>delete()</code> is a
+<code>PutOp</code> with <code>value=None</code>; Postgres and SQLite
+issue <code>DELETE FROM store WHERE prefix = ? AND key IN (…)</code>,
+and <code>InMemoryStore</code> pops from a dict. Nothing records that a
+key existed, so <code>tombstone</code> is withheld — an application that
+re-derives a deleted memory from the same source will write it straight
+back.</p>
+<p><strong>The delete is complete on Postgres and incomplete on
+SQLite.</strong> Both declare
+<code>FOREIGN KEY (prefix, key) REFERENCES store(prefix, key) ON DELETE CASCADE</code>
+on <code>store_vectors</code>. Postgres enforces it, so removing an item
+removes its embeddings. SQLite enforces foreign keys only when
+<code>PRAGMA foreign_keys = ON</code> is issued per connection, and that
+pragma appears nowhere in <code>libs/checkpoint-sqlite</code>, so the
+cascade never fires: every deleted and every TTL-swept item leaves its
+embeddings behind in <code>store_vectors</code> forever. The
+consequences are bounded but real — the search query joins
+<code>store</code> to <code>store_vectors</code>, so orphans cannot
+surface deleted content, but they are the largest rows in the database,
+they grow without limit, and <code>sweep_ttl()</code> returns a
+deleted-row count that does not include them. A SQLite store running a
+TTL policy for a year is mostly embeddings of things it has
+forgotten.</p>
+<p>There is no deduplication, no conflict detection, no consolidation
+pass and no filtering of written content. The background work in the
+system is exactly one thing: the TTL sweeper thread.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three ways in, and the differences matter for how much agency the
+model gets.</p>
+<p><code>compile(store=…)</code> binds a store to a graph;
+<code>get_store()</code> reads it from a contextvar inside a node —
+documented as unavailable for async on Python &lt; 3.11, which is the
+kind of caveat that becomes a production bug report.
+<code>Annotated[BaseStore, InjectedStore()]</code> on a tool parameter
+causes <code>ToolNode</code> to pass the store at call time and to strip
+the argument from the schema the model sees, so a tool can touch memory
+without the model knowing the store exists.</p>
+<p>That last mechanism is the interesting one, because it decides where
+memory policy lives. With <code>InjectedStore</code>, the application
+author writes a tool with a narrow signature —
+<code>save_preference(text: str)</code> — and the namespace, the key
+scheme and the TTL are chosen in code the model cannot influence. The
+model gets agency over <em>content</em> and none over <em>scope</em>,
+which is the correct split and the one most MCP memory servers get wrong
+by exposing a namespace parameter.</p>
+<p>Against that: <strong>LangGraph ships no memory tools at
+all.</strong> There is no <code>save_memory</code>, no
+<code>search_memory</code>, no profile updater, no summarizer — the
+prebuilt package contains the injection plumbing and nothing to plug
+into it. Every application invents its own tool surface, its own
+namespace convention and its own decision about when to write. The
+framework's memory story is consequently a substrate plus documentation,
+and two teams using it will not have built the same thing.</p>
+<p>Session lifecycle is the checkpointer's, not the store's, and the two
+are deliberately unconnected: nothing summarizes a thread into the store
+at a compaction boundary, and nothing garbage-collects store items when
+their thread is deleted. <code>delete_thread</code> removes checkpoints;
+anything the application wrote to the store on that thread's behalf
+stays.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance is the application's problem. An <code>Item</code> carries
+no author, no source and no run id, so a memory written by a tool the
+model called and a memory written by an administrator are
+indistinguishable once stored. There is no representation of uncertainty
+and no way to mark a value as unverified, which means a prompt-injected
+memory — a tool call the model was talked into making — lands in the
+store as an ordinary item and reads back with the same authority as any
+other. Nothing in the framework mitigates this; the
+<code>InjectedStore</code> pattern limits the <em>scope</em> an attacker
+can reach, not the <em>content</em> they can write into the scope they
+have.</p>
+<p>The scoping guarantees are structural and good, with one gap.
+Namespace is part of the key, required on reads, validated for shape,
+and the <code>langgraph</code> root is reserved. But namespaces are
+caller-supplied strings, and nothing binds a namespace to an
+authenticated identity — a node that computes
+<code>("memories", user_id)</code> from state will read whatever
+<code>user_id</code> the state contains. The framework makes it
+impossible to <em>forget</em> the scope and does not make it hard to
+<em>forge</em> one.</p>
+<p>Concurrency is handled at the SQL level by upsert, so two writers to
+one key produce last-write-wins with no detection. The batching layer
+deduplicates operations within a batch. The TTL sweeper runs in a daemon
+thread whose lifecycle the application owns; nothing restarts it if it
+dies, and a store configured with <code>default_ttl</code> but never
+<code>start_ttl_sweeper()</code> will hide expired items only if
+<code>omit_expired</code> is set, and otherwise will keep serving
+them.</p>
+<p>That last combination deserves naming: <code>TTLConfig</code> has
+both <code>omit_expired</code> (filter at read time) and
+<code>sweep_interval_minutes</code> (delete on a timer), both default
+off, and <code>default_ttl</code> works without either. A store can
+therefore be configured to expire memories and, absent a second and
+third opt-in, expire nothing at all — the <code>expires_at</code> column
+fills in and no read or sweep ever consults it.</p>
+<p>Backup and replication are the database's. Data-loss risk is
+ordinary.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test coverage of the store is substantial and backend-parallel: 24
+tests in <code>libs/checkpoint/tests/test_store.py</code>, 31 plus 22
+async in <code>libs/checkpoint-postgres/tests/</code>, 37 plus 18 async
+in <code>libs/checkpoint-sqlite/tests/</code>, and 4 SDK integration
+tests. These cover round-trips, namespace listing with prefix and suffix
+matching, filter operators, TTL refresh, vector search and batching.</p>
+<p><strong>The conformance suite is the artifact worth studying, and it
+is pointed at the checkpointer.</strong>
+<code>langgraph-checkpoint-conformance</code> is a separately published
+package that a third-party persistence implementer installs, registers
+their class with via <code>@checkpointer_test</code>, and runs
+<code>validate()</code> against. It defines nine capabilities as an enum
+— <code>PUT</code>, <code>PUT_WRITES</code>, <code>GET_TUPLE</code>,
+<code>LIST</code>, <code>DELETE_THREAD</code> as
+<code>BASE_CAPABILITIES</code>, and <code>DELETE_FOR_RUNS</code>,
+<code>COPY_THREAD</code>, <code>PRUNE</code>,
+<code>DELTA_CHANNEL_HISTORY</code> as <code>EXTENDED_CAPABILITIES</code>
+— detects which the implementation supports by looking for the async
+method, runs the matching spec modules, and emits a report. Its README
+describes validating "blob round-trips, metadata preservation, namespace
+isolation, incremental channel updates".</p>
+<p>That is the shape this atlas keeps arguing for: a contract expressed
+as runnable tests with stable capability names, so an implementation's
+claim can be checked rather than believed. It is unusual and it is well
+built.</p>
+<p>And <code>BaseStore</code> has none of it. There is no store
+conformance package, no capability enum for <code>supports_ttl</code> or
+vector search, and no portable suite a third-party store implementer can
+run. The three first-party backends are each tested against their own
+file, in parallel test suites that were written separately — which is
+exactly how two of them came to reset <code>created_at</code> on update
+while the third preserves it, and how one of them came to leave orphaned
+embeddings behind a foreign key it declares and does not enforce. Both
+are one-line assertions in a shared suite; neither has a place to
+live.</p>
+<p>No benchmarks. No retrieval-quality evaluation of any kind — no
+dataset, no recall measurement, no negative case asserting that a
+deleted or scoped-out item must not be returned. That is defensible for
+a substrate whose ranking is "cosine over what you told us to embed",
+but it means the framework makes no measured claim about retrieval and a
+reader should not infer one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Put the scope in the primary key.</strong>
+<code>PRIMARY KEY (prefix, key)</code>, with the namespace as a required
+positional argument on every read, converts cross-tenant leakage from a
+filter someone forgot into an argument the call site cannot omit. It
+costs nothing and it is the single highest-value line in this
+design.</p>
+<p><strong>Refresh TTL on read, and make it configurable per
+operation.</strong> Last-touched expiry gives you a forgetting policy
+driven by real usage, with no scorer, no LLM and no background pass to
+tune. <code>refresh_ttl=False</code> on a bulk export or an admin scan
+then keeps housekeeping traffic from resurrecting dead memories — which
+is the detail that makes the pattern usable rather than a footgun.</p>
+<p><strong>Ship a conformance suite for every interface you expect
+others to implement.</strong> Not a test helper: a published package
+with a capability enum, detection, and a report.
+<code>@checkpointer_test</code> plus <code>validate()</code> is the
+whole developer experience, and it converts "our store is compatible"
+from a claim into a run.</p>
+<p><strong>Inject the store into tools and strip it from the
+schema.</strong> <code>InjectedStore</code> lets the model choose what
+to save and never what scope to save it under. Expose
+<code>save_note(text)</code>, not
+<code>save(namespace, key, value)</code>.</p>
+<p><strong>Let semantic search be optional.</strong> Without
+<code>IndexConfig</code> the store is a filtered key-value scan that
+needs no embedding provider and no API key. A memory layer that still
+works with the model provider unreachable is worth designing for.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not test parallel backends with parallel test
+suites.</strong> Divergence is the default outcome, and it shows up in
+exactly the places nobody thought to assert: a timestamp's semantics
+across an update, whether a delete reaches the sidecar table. One shared
+suite run against every implementation is the only thing that holds them
+together.</p>
+<p><strong>Do not declare a constraint the engine will not
+enforce.</strong> <code>ON DELETE CASCADE</code> in a SQLite schema is
+documentation until <code>PRAGMA foreign_keys = ON</code> is issued on
+the connection, and the failure is silent, cumulative and invisible
+until someone measures the database.</p>
+<p><strong>Do not let expiry require three opt-ins.</strong> A TTL that
+is set, not swept and not filtered is a column that fills in while
+nothing expires. Pick a default that means what the feature's name
+says.</p>
+<p><strong>Do not default a semantic index to "embed the whole
+document".</strong> It is right for one-sentence items and quietly wrong
+for anything with metadata, and the degradation looks like bad search
+rather than bad configuration.</p>
+<p><strong>Do not make a delete a <code>put(None)</code> without
+deciding what it means.</strong> It is a tidy way to route one op type,
+and it means the layer that would record a tombstone never sees a
+distinct delete to record.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that already knows what its memories are and wants
+somebody else to own the table, the migrations, the TTL thread and the
+pgvector index. It does not decide anything for you: no extraction, no
+consolidation, no correction, no trust. If you are hoping to get memory
+<em>semantics</em> from your agent framework, this is not that, and
+building them on top is most of the work the systems in this atlas exist
+to do.</p>
+<p>It fits worst where scope must be trustworthy rather than merely
+mandatory — namespaces are strings a node computes, so a genuine
+multi-tenant boundary needs a layer above this one. And a reader
+deploying on SQLite specifically should plan for the two divergences in
+section 5 and 7 rather than assume the backends are interchangeable,
+which is what a substrate with three implementations otherwise invites
+you to assume.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the <code>created_at</code> divergence intentional? Nothing
+documents per-backend timestamp semantics, and the base class's
+docstring describes one behaviour.</li>
+<li>Is <code>PRAGMA foreign_keys</code> set anywhere outside
+<code>libs/checkpoint-sqlite</code> — by a connection factory a caller
+is expected to supply? Nothing in the package requires it, and the
+schema's cascade reads as though it were.</li>
+<li>Why does the vector search CTE fetch <code>limit * 2</code> before
+deduplicating? The comment says "better results"; whether it is
+sufficient depends on how many fields an item indexes, and nothing
+bounds that.</li>
+<li>Is a store conformance suite planned? The checkpointer package's
+structure would transfer almost unchanged.</li>
+<li>Does LangGraph Platform's hosted store share these implementations,
+or is it a fourth backend with its own semantics? Not answerable from
+this tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Contract and data model</strong></p>
+<ul>
+<li><code>libs/checkpoint/langgraph/store/base/__init__.py</code> —
+<code>Item</code>, <code>SearchItem</code>, <code>GetOp</code>,
+<code>SearchOp</code>, <code>PutOp</code>,
+<code>ListNamespacesOp</code>, <code>TTLConfig</code>,
+<code>IndexConfig</code>, <code>BaseStore</code>,
+<code>_validate_namespace</code>.</li>
+<li><code>libs/checkpoint/langgraph/store/base/embed.py</code> —
+<code>get_text_at_path</code>, <code>tokenize_path</code>,
+<code>ensure_embeddings</code>.</li>
+<li><code>libs/checkpoint/langgraph/store/base/batch.py</code> —
+<code>AsyncBatchedBaseStore</code>.</li>
+</ul>
+<p><strong>Backends</strong></p>
+<ul>
+<li><code>libs/checkpoint/langgraph/store/memory/__init__.py</code> —
+<code>InMemoryStore</code>, <code>_apply_put_ops</code>.</li>
+<li><code>libs/checkpoint-postgres/langgraph/store/postgres/base.py</code>
+— schema, upsert, vector search, <code>sweep_ttl</code>,
+<code>start_ttl_sweeper</code>.</li>
+<li><code>libs/checkpoint-sqlite/langgraph/store/sqlite/base.py</code> —
+<code>MIGRATIONS</code>, <code>VECTOR_MIGRATIONS</code>,
+<code>INSERT OR REPLACE</code>, the namespace-match user function.</li>
+</ul>
+<p><strong>Agent integration</strong></p>
+<ul>
+<li><code>libs/langgraph/langgraph/config.py</code> —
+<code>get_store()</code>.</li>
+<li><code>libs/langgraph/langgraph/graph/state.py</code> —
+<code>compile(store=…)</code>.</li>
+<li><code>libs/prebuilt/langgraph/prebuilt/tool_node.py</code> —
+<code>InjectedStore</code>, <code>ToolNode</code> injection.</li>
+</ul>
+<p><strong>Conformance (checkpointer)</strong></p>
+<ul>
+<li><code>libs/checkpoint-conformance/langgraph/checkpoint/conformance/capabilities.py</code>
+— the <code>Capability</code> enum and detection.</li>
+<li><code>libs/checkpoint-conformance/langgraph/checkpoint/conformance/validate.py</code>,
+<code>report.py</code>.</li>
+<li><code>libs/checkpoint-conformance/langgraph/checkpoint/conformance/spec/</code>
+— ten spec modules.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>libs/checkpoint/tests/test_store.py</code>,
+<code>libs/checkpoint-postgres/tests/test_store.py</code> and
+<code>test_async_store.py</code>,
+<code>libs/checkpoint-sqlite/tests/test_store.py</code> and
+<code>test_async_store.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b"><code class="commit-id" title="644815f9e5bc52ad8f7a5227a456227e9c3e639b">644815f9…</code></a>
+— first reading, at a commit dated 11 August 2026. Screened before
+opening: no auto-run surfaces, 41 dependency surfaces inside the
+cooldown, 15 build-time execution points, 17 unpinned surfaces, and two
+agent-instruction files read as data. Nothing was installed or run; the
+backend divergences in sections 5 and 7 were read from the SQL and the
+pragma's absence, not observed in a running store.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

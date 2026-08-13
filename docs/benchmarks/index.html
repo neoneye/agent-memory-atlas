@@ -123,10 +123,15 @@ memory layer is one of six things that determine the number.</li>
 benchmarking.</strong> A benchmark ranks systems on a task. A stress
 test finds the input that breaks one. You need both, and the second is
 cheaper.</li>
-<li><strong>Cost and latency are barely measured.</strong> One system in
-this atlas records token volume in its harness. One measures retrieval
-latency. None reports bytes on disk per memory. The exception is a
-<em>benchmark</em> rather than a system: <a
+<li><strong>Cost and latency are barely measured, with one system doing
+it properly.</strong> <a href="../systems/zep/">Zep</a>'s committed
+LoCoMo runs report context tokens and retrieval latency together —
+median, p95 and p99, per run and pooled — beside accuracy, so the price
+of each retrieval budget is on the same page as what it bought: 347
+median context tokens at the smallest setting against 1,997 at the
+largest, for 10.7 points of accuracy. Two other systems record one of
+the two in a harness; none reports bytes on disk per memory. The other
+exception is a <em>benchmark</em> rather than a system: <a
 href="#forgeteval--the-benchmark-this-page-said-did-not-exist">ForgetEval</a>
 puts both in its abstract — <code>$0.17</code> per 385-case run, and 2.3
 s per case for the LLM mutation hook against 64–191 ms per case for the
@@ -643,6 +648,27 @@ prompt, and answer formatting all move the number, and few published
 results state a judge seed or report agreement with human labels. Two
 runs of the same system on the same data are not guaranteed to produce
 the same score.</p>
+<p><strong>One repository in this atlas measures that variance instead
+of asserting it.</strong> <a href="../systems/zep/">Zep</a> commits five
+LoCoMo experiments of ten runs each — 1,540 questions per run, both
+answering and grading at <code>gpt-4o-mini</code> temperature 0 — and
+publishes the per-run spread. The run-to-run standard deviation of
+accuracy is 0.33 to 0.47 points. That is small, and it is exactly the
+number a reader needs, because the top two configurations in that sweep
+differ by 0.26 points: without the repeats the step reads as an
+improvement, and with them it does not. A single run of a memory
+benchmark can support a claim about a five-point gap and cannot support
+a claim about a one-point gap, and almost nobody publishes enough to
+tell you which kind of gap you are looking at.</p>
+<p>The same harness makes a second move worth copying, described in that
+report: it grades <strong>whether the retrieved context contained the
+answer</strong> as a separate judgement from whether the answer was
+right. Accuracy conditioned on a complete context is flat at 0.92 across
+a 5.8x swing in retrieved tokens — so in that sweep every point of
+end-to-end gain came from retrieval completeness rising, and none from
+the reader improving. That decomposition is what turns an end-to-end
+score back into evidence about the memory layer, which is the complaint
+this whole page is making.</p>
 <h3 id="the-model-may-already-know-the-answer">The model may already
 know the answer</h3>
 <p>The trap that invalidates a memory benchmark outright: if a question
@@ -892,7 +918,7 @@ are retrieval-only, which is honest but partial</td>
 <tr>
 <td>Negative precision (forbidden hits)</td>
 <td>Whether the <em>wrong</em> memory stayed out</td>
-<td>Sixty-eight of two hundred and seventy. <a
+<td>Sixty-eight of two hundred and seventy-six. <a
 href="../systems/open-cowork/">open-cowork</a>, <a
 href="../systems/verel/">Verel</a>, <a href="../systems/neko/">Project
 N.E.K.O.</a>, <a href="../systems/helm/">Helm</a> and <a
@@ -2239,7 +2265,7 @@ published descriptions, not from re-reading their datasets
 here.</p></li>
 <li><p>"Measured nowhere" in §5 means <em>not found in the systems this
 atlas has reviewed</em>, at the pinned commits listed in the <a
-href="../compare/">comparative report</a>. It is a statement about 270
+href="../compare/">comparative report</a>. It is a statement about 275
 repositories, not about the whole field. That number read
 <strong>46</strong> until 2026-08-07, having been written when the
 corpus was that size and never revised as it more than tripled — the

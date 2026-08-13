@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **271 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **276 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -142,6 +142,8 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`knowledge-worker`](../systems/knowledge-worker/) **knowledge-worker** — The excerpt has to appear in the source · `rahulmranga/knowledge-worker` · Trust state
 ## L
 
+- [`langchain`](../systems/langchain/) **LangChain** — The memory it deprecated · `langchain-ai/langchain`
+- [`langgraph`](../systems/langgraph/) **LangGraph** — A conformance suite for the other half · `langchain-ai/langgraph` · Scope enforced
 - [`langmem`](../systems/langmem/) **LangMem** — Library primitives · `langchain-ai/langmem` · Scope enforced
 - [`lethe`](../systems/lethe/) **Lethe** — Verified forgetting, signed · `deeplethe/lethe` · Mutation audit, Negative evals
 - [`letta`](../systems/letta/) **Letta** — Agent-runtime memory · `letta-ai/letta` · Scope enforced
@@ -182,6 +184,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memory-palace`](../systems/memory-palace/) **Memory Palace** — Draft-by-default procedural memory · `agi-is-going-to-arrive/memory-palace` · Trust state, Human review
 - [`memory-project`](../systems/memory-project/) **memory-project** — Associative decay memory for a coding agent · `acdesigntech/memory-project` · Mutation audit, Human review
 - [`memory-ts`](../systems/memory-ts/) **memory-ts** — A schema that deleted its own dead fields, with receipts · `rlabs-inc/memory-ts` · Trust state
+- [`memorybank`](../systems/memorybank/) **MemoryBank** — The forgetting curve, inverted · `zhongwanjun/MemoryBank-SiliconFriend`
 - [`memorybear`](../systems/memorybear/) **MemoryBear** — Forgetting that fuses rather than deletes · `SuanmoSuanyangTechnology/MemoryBear` · Scope enforced, Mutation audit
 - [`memoryops-ai`](../systems/memoryops-ai/) **MemoryOps AI** — Governed memory as a runtime · `patibandlavenkatamanideep/memoryops-ai` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`
@@ -274,6 +277,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`rainbox`](../systems/rainbox/) **RainBox** — Operator-governed memory · `neoneye/RainBox` · Tombstone, Trust state, Scope enforced, Human review
 - [`recall-substrate`](../systems/recall-substrate/) **Recall** — Push memory with an integrity gate · `H-XX-D/recall-memory-substrate` · Trust state
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
+- [`reflexion`](../systems/reflexion/) **Reflexion** — Memory as a plan after failure · `noahshinn/reflexion`
 - [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
 - [`ruflo`](../systems/ruflo/) **ruflo** — A guard on the retrieval path, off by default · `ruvnet/ruflo`
@@ -332,4 +336,5 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## Z
 
 - [`z-waif`](../systems/z-waif/) **Z-Waif** — It caps its own voice in its own query · `SugarcaneDefender/z-waif`
+- [`zep`](../systems/zep/) **Zep** — Fifty runs of a closed graph · `getzep/zep` · Bi-temporal, Scope enforced
 - [`zerostack`](../systems/zerostack/) **ZeroStack** — One global file, one project slug · `gi-dellav/zerostack`

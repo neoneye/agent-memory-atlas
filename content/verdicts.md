@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 271 reports.**
+**This page covers all 276 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["271 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["Every report<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2357,3 +2357,48 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, v1.45.0, 190,847 lines of TypeScript against 172,320 lines across 1,031 test files — a ratio at the top of anything here — 175 commits since 6 May 2026, ten contributors. Local-first in the user's own Obsidian vault, so the memory outlives the tool. Two committed git hooks activated by the package `prepare` script run fmt, lint and typecheck only. No lockfile beside `package.json` at this commit.
 - Study when: you are designing promotion and demotion and want both to be defensible. The asymmetric `quarantine` probation — still active and injected, flagged separately in the digest, retired by one further violation, restored by one application — is the answer to rules that oscillate under symmetric thresholds.
 - Do not copy when: you need memory to hold facts, or to serve more than one person. The unit is a behavioural rule with an application rate, and a claim that is simply true has no `applied_count`; scope is owner/session/project inside one vault, with no tenancy and a trust model assuming the evidence reporter and the beneficiary are the same well-meaning agent.
+
+### [`zep`](../systems/zep/)
+
+- Best idea: grading retrieval sufficiency and answer correctness as two independent judgements of the same question. `benchmarks/locomo/evaluation.py` fires a CORRECT/WRONG grader and a COMPLETE/PARTIAL/INSUFFICIENT context grader concurrently, records `missing_elements` per question, and derives `accuracy_with_complete_context`. That last number is flat at 0.92 across a 5.8x swing in retrieved tokens, which says every point the retrieval sweep buys comes from completeness rising and none from the reader improving — an attribution almost no memory benchmark in this atlas can make.
+- Biggest risk: the mechanism is not here. Extraction, entity resolution, edge invalidation and ranking are Zep Cloud's, and the repository is the client contract plus the measurement apparatus. The one durable error a client can cause it documents itself: an episode submitted with no `created_at` is silently dated to ingestion time, "which corrupts fact validity timelines and invalidation ordering on backfills".
+- Most reusable component: `AliasCanonicalizer`. Pre-ingestion entity-name rewriting with a 150-word risky-words deny-list, URL and code-span protection, punctuation-safe boundaries instead of `\b`, and per-alias replacement counts surfaced in a preview that makes no API calls. Six anticipated failure modes in 227 lines, in a transform most teams write as a `str.replace` loop.
+- Maturity impression: Apache-2.0, thirteen independently released integration packages across Python, TypeScript and Go, about 4,900 lines of well-tested ingestion library with roughly thirty test modules, and fifty committed benchmark runs. The Community Edition is deprecated in `legacy/`, and the MCP server has thirteen documented tools and no source in this tree.
+- Study when: you are choosing a retrieval budget and want to know where the knee is. 20/20 to 30/30 costs 45% more context tokens for 0.26 points of accuracy — inside one standard deviation — while accuracy-given-complete-context falls slightly, the shape a mild distraction effect makes.
+- Do not copy when: you need to inspect, repair or run the store. There is no local mode, an API key is required before a single fact is written, and the documented MCP surface is thirteen read tools — the application ingests and the model only asks.
+
+### [`memorybank`](../systems/memorybank/)
+
+- Best idea: recall-strengthened decay as a first-class primitive. A per-item `memory_strength` counter, a `last_recall_date`, and a retention probability that should rise with strength and fall with elapsed time is the only mechanism in wide circulation that sheds material without asking a language model what matters. This is where the field got it.
+- Biggest risk: the formula is inverted. `math.exp(-t / 5*S)` parses as `((-t)/5)*S`, so higher strength means faster forgetting — 82% one-day retention at strength 1, 13.5% at strength 10 — while the docstring directly above promises the opposite. Since retrieval increments strength, recalling a memory is what destroys it. The deletion is stochastic, in place, against the only copy, unlogged, and applied to every user in the file because the per-user guard at `forget_memory.py:88` is commented out.
+- Most reusable component: `eval_data/`. Fifteen ChatGPT-simulated personas with ten days of history each and roughly a hundred hand-written probing questions, in parallel English and Chinese — an MIT-licensed bilingual recall fixture that costs a week to build yourself. The runner that consumed it is not in the tree.
+- Maturity impression: a 2023 research artifact. About 3,300 lines, MIT, no commit since 24 May 2023, no tests anywhere, a committed `__pycache__`, and dependencies (`langchain.vectorstores`, `GPTSimpleVectorIndex`, `openai.ChatCompletion`) that no longer exist upstream. `screen_repo.py` returned NOTHING SCANNED.
+- Study when: you are implementing a forgetting curve, or you cited this paper's curve as prior art and want to check whether you inherited the expression along with the idea. The fifty lines around the formula are a compact catalogue of what to get right.
+- Do not copy when: always, as code. The pattern travelled widely and the file is short enough to copy whole, which is the specific outcome to avoid.
+
+### [`reflexion`](../systems/reflexion/)
+
+- Best idea: separating the acting model from the reflecting model. Two prompts, two calls, two jobs — the agent that just failed never decides what the lesson was while still holding the failed context, and the reflector never acts. The write trigger is an outcome the harness actually observes (`is_success`), which is more grounding than most memory systems here have for deciding when to write anything.
+- Biggest risk: the store grows forever behind a fixed three-item read window. `memory[-3:]` at injection and again at reflection means an environment that failed eleven times has eleven plans on disk and three that can be read; if the useful one was written first, nothing can surface it again. Nothing is ever retracted, only sunk, and a plan built on a wrong diagnosis is context for the next three plans written.
+- Most reusable component: the resumable env-config array. `{name, memory, is_success, skip}` dumped after every trial and reloaded by `--is_resume` is the minimum viable durable agent memory — no schema, no index, no identity beyond a list position — and it is enough to take AlfWorld from 62.7% to 100% over fifteen trials in the committed logs.
+- Maturity impression: NeurIPS 2023 reference code, MIT, four unpackaged sibling harnesses with duplicated utilities, no tests, last commit 13 January 2025. Two of the four harnesses keep reflections only in process and are out of this atlas's scope entirely.
+- Study when: your task is retried — same environment, same goal, an observable success signal, a bounded attempt count. Coding agents retrying a failing test and any loop with a verifier are the natural fit.
+- Do not copy when: you are building a long-lived assistant. Tasks are not repeated, there is no success signal to gate the write, the scope is a user rather than an environment, and the corpus outgrows a three-item window on day one. Note also what the committed logs cannot settle: the "base" run's env configs also carry memory, and the format records no flags, so the tree holds two runs that differ and cannot say in what.
+
+### [`langgraph`](../systems/langgraph/)
+
+- Best idea: the scope is half the primary key. `PRIMARY KEY (prefix, key)`, with the namespace tuple a required positional argument on `get`, `put`, `delete` and `search`, and validated on the way in — labels cannot be empty, contain a period, or start with the reserved `langgraph` root. Cross-tenant leakage stops being a filter someone forgot and becomes a call that does not compile.
+- Biggest risk: the conformance suite covers the other half. `langgraph-checkpoint-conformance` is a published, capability-aware, installable suite for third-party checkpointers; `BaseStore` has no equivalent, and the store is where the three first-party backends visibly disagree — Postgres preserves `created_at` across an update while SQLite and the in-memory store reset it, and Postgres cascades a delete to `store_vectors` while SQLite declares the identical foreign key and never issues `PRAGMA foreign_keys = ON`, so every deleted and every expired item leaves its embeddings behind forever.
+- Most reusable component: TTL refreshed on read, with `refresh_ttl` overridable per operation. Last-touched expiry falls out of ordinary traffic with no scorer, no LLM and no background pass, and the per-operation override keeps a bulk export or an admin scan from resurrecting dead memories — the detail that makes the pattern usable rather than a footgun.
+- Maturity impression: MIT, a mature monorepo, three store backends with 90-plus store tests between them, and a conformance package published to PyPI. `InjectedStore` hands a store to a tool and strips it from the schema the model sees, which is the right agency split; no memory tools are prebuilt, so every application invents its own.
+- Study when: you know what your memories are and want somebody else to own the table, the migrations, the TTL thread and the pgvector index.
+- Do not copy when: you were hoping to get memory *semantics* from your framework. There is no extraction, no consolidation, no correction, no trust and no state machine — an item is present or absent. And namespaces are strings a node computes, so a genuine multi-tenant boundary needs a layer above this one.
+
+### [`langchain`](../systems/langchain/)
+
+- Best idea: drawing the window/memory boundary in the package structure. Version 1 owns no store at all — `store` appears in `agents/factory.py` as a parameter forwarded to LangGraph and nowhere else — while the ten classic memory classes sit in `langchain_classic` under `@deprecated(since="0.3.1", removal="2.0.0")`. Seven of the ten were conversation-window management the whole time, and naming them "memory" is why the word is ambiguous; the deprecation is the clearest statement anyone in this ecosystem has made about which is which.
+- Biggest risk: an empty summary deletes the entity. `SQLiteEntityStore.set()` opens with `if not value: return self.delete(key)`, so a summarizer returning an empty string — the natural output when a model decides there is nothing to say — silently destroys everything known about that entity. The summary slot is single and overwritten with no history, so a correction and a corruption are the same write.
+- Most reusable component: the two prompts in `memory/prompt.py`, and specifically the sentence that makes the summarizer safe to run every turn — "If there is no new information about the provided entity or the information is not worth noting, return the existing summary unchanged." An explicit permitted no-op is the difference between an extractor that consolidates and one that churns. The five-method `BaseEntityStore` has aged better than the class using it.
+- Maturity impression: `langchain` 1.0.8, fully lockfiled with zero unpinned dependency surfaces — the rare monorepo here where that is true. The memory package is 2,201 lines under a removal notice, and its window-management classes are better tested than its durable ones.
+- Study when: you are designing entity memory and want a reference for the prompts and the store interface, both small and widely copied. Also read `SQLiteEntityStore` for the one design in this atlas that scopes by DDL — a table per session, physically unreachable from another session's queries.
+- Do not copy when: you need a session id that is a UUID or an email. `session_id.isidentifier()` rejects both, because the scope key becomes part of a table name. And nobody should build on this package at all: the official replacement is a different one.

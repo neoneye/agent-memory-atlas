@@ -24,10 +24,15 @@ Six things are worth knowing before reading further.
 3. **Stress testing is a different activity from benchmarking.** A benchmark
    ranks systems on a task. A stress test finds the input that breaks one. You
    need both, and the second is cheaper.
-4. **Cost and latency are barely measured.** One system in this atlas records
-   token volume in its harness. One measures retrieval latency. None reports
-   bytes on disk per memory. The exception is a *benchmark* rather than a
-   system: [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist)
+4. **Cost and latency are barely measured, with one system doing it properly.**
+   [Zep](../systems/zep/)'s committed LoCoMo runs report context tokens and
+   retrieval latency together — median, p95 and p99, per run and pooled — beside
+   accuracy, so the price of each retrieval budget is on the same page as what it
+   bought: 347 median context tokens at the smallest setting against 1,997 at the
+   largest, for 10.7 points of accuracy. Two other systems record one of the two
+   in a harness; none reports bytes on disk per memory. The other exception is a
+   *benchmark* rather than a system:
+   [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist)
    puts both in its abstract — `$0.17` per 385-case run, and 2.3 s per case for
    the LLM mutation hook against 64–191 ms per case for the deterministic
    configurations — which is the shape of reporting this bullet is asking for,
@@ -389,6 +394,26 @@ answer formatting all move the number, and few published results state a judge
 seed or report agreement with human labels. Two runs of the same system on the
 same data are not guaranteed to produce the same score.
 
+**One repository in this atlas measures that variance instead of asserting it.**
+[Zep](../systems/zep/) commits five LoCoMo experiments of ten runs each — 1,540
+questions per run, both answering and grading at `gpt-4o-mini` temperature 0 —
+and publishes the per-run spread. The run-to-run standard deviation of accuracy
+is 0.33 to 0.47 points. That is small, and it is exactly the number a reader
+needs, because the top two configurations in that sweep differ by 0.26 points:
+without the repeats the step reads as an improvement, and with them it does not.
+A single run of a memory benchmark can support a claim about a five-point gap
+and cannot support a claim about a one-point gap, and almost nobody publishes
+enough to tell you which kind of gap you are looking at.
+
+The same harness makes a second move worth copying, described in that report:
+it grades **whether the retrieved context contained the answer** as a separate
+judgement from whether the answer was right. Accuracy conditioned on a complete
+context is flat at 0.92 across a 5.8x swing in retrieved tokens — so in that
+sweep every point of end-to-end gain came from retrieval completeness rising,
+and none from the reader improving. That decomposition is what turns an
+end-to-end score back into evidence about the memory layer, which is the
+complaint this whole page is making.
+
 ### The model may already know the answer
 
 The trap that invalidates a memory benchmark outright: if a question can be
@@ -602,7 +627,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixty-eight of two hundred and seventy. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixty-eight of two hundred and seventy-six. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1710,7 +1735,7 @@ not publish, is still the right order to do these things in.
   descriptions, not from re-reading their datasets here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 270 repositories,
+  [comparative report](../compare/). It is a statement about 275 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

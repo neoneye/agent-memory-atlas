@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of two
-hundred and seventy-one agent memory architectures, their retrieval
+hundred and seventy-six agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of two hundred and seventy-one agent memory architectures, their
+of two hundred and seventy-six agent memory architectures, their
 retrieval mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of two hundred and seventy-one agent memory architectures, their
+of two hundred and seventy-six agent memory architectures, their
 retrieval mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -81,7 +81,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of two
-hundred and seventy-one agent memory architectures, their retrieval
+hundred and seventy-six agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                                       </div>
         <div class="hero-contours" aria-hidden="true">
@@ -98,7 +98,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>271 memory systems with publicly readable source, each read at a
+<p>276 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. Not all 165 are open source — see <a
 href="#what-the-licences-actually-say">what the licences actually
@@ -106,7 +106,7 @@ say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 14
-systems of 271 carry a rejected-value tombstone — a record keyed on the
+systems of 276 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -119,17 +119,17 @@ the embedding survives the delete until an unscheduled compaction — see
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 147 of 271 apply a scope key as a filter on the
+shallowest.</strong> 149 of 276 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 68 of 271
+<li><strong>Negative evidence is almost never tested.</strong> 68 of 276
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. A 2026-08-08 re-score puts 27 of the then-37 on a
 <strong>read path</strong>; the rest keep material out of a projection,
 a preamble, a summarization or a write, which is a different and weaker
 thing. Use 27 for the strict reading.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 55 of 271
+<li><strong>Trust is usually a number, not a state.</strong> 55 of 276
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -199,13 +199,13 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>271 reports across 270 repositories</strong>:
+<strong>276 reports across 275 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
 href="../systems/holographic/">Holographic</a>. It is the only
-repository reviewed twice, so a count of <em>systems</em> is 248 and a
-count of <em>repositories</em> is 247 — the gap is one, and it is that
+repository reviewed twice, so a count of <em>systems</em> is 276 and a
+count of <em>repositories</em> is 275 — the gap is one, and it is that
 one.</p>
 <p><strong>How systems were selected.</strong> Opportunistically:
 repositories encountered, suggested, or found while looking for the ones
@@ -337,8 +337,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 147 of
-271 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 149 of
+276 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -357,7 +357,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Two hundred and seventy-one systems do not fall into one hundred and
+<p>Two hundred and seventy-six systems do not fall into one hundred and
 seventy categories. They cluster around eight architectural commitments,
 and most systems belong to more than one — a coding-agent memory can
 also be verification-first, and a host runtime's plugin can also be a
@@ -3412,7 +3412,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 271 systems by the seven mechanisms judged against strict
+filters all 276 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -6400,6 +6400,61 @@ manifest</td>
 context</td>
 </tr>
 <tr>
+<td><code>langchain</code></td>
+<td>In the deprecated package, an entity name mapped to an
+LLM-maintained summary string, or a turn stored as a vector-store
+document; in version 1, nothing</td>
+<td>SQLite, Redis or Upstash behind BaseEntityStore; any LangChain
+VectorStore for the retriever memory; version 1 delegates to LangGraph's
+Store</td>
+<td>Exact key lookup on an extracted entity name, or top-k similarity
+over past turns; no ranking, no fusion</td>
+<td>Synchronous on save_context — one extraction call plus one
+summarization call per entity, on the turn</td>
+<td>The summarizer rewrites an entity's summary in place with no
+history; set() with a falsy value silently deletes the entity</td>
+<td>session_id, realized as a separate table or key prefix per session,
+and required to be a valid Python identifier</td>
+<td>BaseMemory on legacy chains; in version 1, middleware plus a store
+passed through to LangGraph</td>
+<td>None in either package</td>
+<td>None. An entity summary is a string with no provenance, confidence
+or status</td>
+<td>The clearest published statement of where the window/memory boundary
+falls, made by deprecating one side of it and delegating the other</td>
+<td>Every durable class here is under a removal notice, and the entity
+summarizer overwrites with no history while an empty summary erases the
+entity</td>
+</tr>
+<tr>
+<td><code>langgraph</code></td>
+<td>An Item — a JSON dict under a hierarchical namespace tuple and a
+key, with created_at and updated_at</td>
+<td>One store table keyed on (prefix, key) plus a store_vectors table,
+in Postgres, SQLite, or an in-process dict</td>
+<td>Namespace-prefix scan with dict-path filters, optionally reranked by
+cosine over per-field embeddings; no lexical arm</td>
+<td>Synchronous put through a batched op queue; embeddings computed in
+the same call</td>
+<td>Upsert by (namespace, key); delete is a put of None and is a hard
+delete with no tombstone</td>
+<td>The namespace tuple is half the primary key, required on every read,
+and validated — labels cannot be empty, contain a period, or start with
+'langgraph'</td>
+<td>store= on compile(), get_store() from a node, and InjectedStore to
+hand it to a tool; no memory tools are prebuilt</td>
+<td>An optional TTL sweeper thread deletes expired items on an
+interval</td>
+<td>None. An Item is an opaque dict with two timestamps and no status,
+confidence or provenance</td>
+<td>A published conformance suite third-party persistence
+implementations can run, and namespace scoping enforced in the key
+rather than by convention</td>
+<td>The conformance suite covers the checkpointer, not the store, and
+the three store backends disagree on created_at and on whether deletion
+removes the embeddings</td>
+</tr>
+<tr>
 <td><code>langmem</code></td>
 <td>Store item, usually JSON memory</td>
 <td>LangGraph <code>BaseStore</code></td>
@@ -7353,6 +7408,34 @@ filtered on retrieval</td>
 evidence for each</td>
 <td>The curator is a subprocess call to a CLI, with one ad-hoc test
 script in the tree</td>
+</tr>
+<tr>
+<td><code>memorybank</code></td>
+<td>One dialogue turn — query, response, memory_strength,
+last_recall_date, memory_id — plus a per-day summary and a per-user
+personality portrait</td>
+<td>A single JSON file keyed by user name, and a FAISS index rebuilt
+from it</td>
+<td>Cosine top-6 over HuggingFace embeddings, with a monkeypatched
+neighbour-expansion that assigns every result the same score</td>
+<td>Append the turn to today's list and rewrite the whole JSON file;
+summarization and personality analysis are separate manual passes</td>
+<td>Recall increments memory_strength; startup deletes turns at random
+against a retention probability and rewrites the file in place</td>
+<td>memory_bank[user_name], but the per-user filter in the forgetting
+pass is commented out and the FAISS index is built from every user's
+turns</td>
+<td>Two Gradio demos and two CLIs, for ChatGLM, BELLE and ChatGPT; no
+library, API or MCP surface</td>
+<td>None. The forgetting pass runs synchronously when a user logs
+in</td>
+<td>None. No provenance, no confidence, no status</td>
+<td>The first and clearest statement of recall-strengthened decay as an
+agent-memory primitive, with a committed bilingual probing-question
+dataset</td>
+<td>The retention formula is inverted, forgetting is destructive and
+stochastic against the only copy, and logging in as one user deletes
+other users' memories</td>
 </tr>
 <tr>
 <td><code>memorybear</code></td>
@@ -9614,6 +9697,31 @@ semantic merge</td>
 reinforcement</td>
 </tr>
 <tr>
+<td><code>reflexion</code></td>
+<td>A natural-language plan of action written after a failed attempt at
+one task, prefixed 'Plan' and stored as a string</td>
+<td>A JSON array of env_configs on disk, one entry per task environment,
+rewritten after every trial</td>
+<td>None. The last three plans for that environment are concatenated
+into the prompt verbatim; there is no query and no search</td>
+<td>Synchronous between trials — one LLM call per failed environment,
+appended to that environment's list</td>
+<td>Neither. A plan is never edited, corrected or removed; it falls out
+of the read window when three newer ones arrive</td>
+<td>By containment — memory lives inside the env_config it belongs to,
+so there is no key to filter on and no way to cross environments</td>
+<td>Four standalone research harnesses (AlfWorld, WebShop, HotPotQA,
+code generation); no library, package or API</td>
+<td>None. Reflection runs between trials while the harness waits</td>
+<td>None. A plan derived from a wrong diagnosis is stored and reused
+with the same authority as a correct one</td>
+<td>Committed run logs for 15 AlfWorld trials over 134 environments,
+showing the success curve as memory accumulates</td>
+<td>Only failures are recorded, nothing is ever retracted, and the
+persisted store grows unboundedly behind a fixed three-item read
+window</td>
+</tr>
+<tr>
 <td><code>reme</code></td>
 <td>A Markdown note with YAML frontmatter and wikilinks, chunked for
 indexing</td>
@@ -10783,6 +10891,31 @@ character's own words steering retrieval — all derived from scratch</td>
 is not open source</td>
 </tr>
 <tr>
+<td><code>zep</code></td>
+<td>An episode submitted to a hosted graph, and the typed fact edge it
+later becomes — carrying valid_at, invalid_at and created_at</td>
+<td>Zep Cloud's hosted graph; nothing local. The deprecated Community
+Edition in legacy/ is a Go server on Postgres</td>
+<td>graph.search over edges, nodes or episodes, limit 50, reranked by
+rrf, mmr, node_distance, episode_mentions or cross_encoder</td>
+<td>Asynchronous end to end — submit returns a task id, wait() returns
+before the fact is searchable, and a poll helper absorbs the rest</td>
+<td>invalid_at closes a fact's validity interval; the ingestion library
+has no delete path at all</td>
+<td>Destination requires exactly one of graph_id or user_id, and every
+read carries it</td>
+<td>Nine Python framework packages, three TypeScript, one Go, plus an
+MCP server documented in this tree but not implemented in it</td>
+<td>All extraction is the vendor's; the client sees only task ids and an
+indexing lag it polls through</td>
+<td>min_fact_rating is a hosted score on a fact, not a state; nothing is
+candidate, verified or rejected</td>
+<td>A committed retrieval-budget ablation with ten runs per point that
+isolates memory failure from answering failure</td>
+<td>The mechanism is a closed hosted service, and an episode submitted
+without created_at is silently dated to ingestion time</td>
+</tr>
+<tr>
 <td><code>zerostack</code></td>
 <td>A Markdown file — the global <code>MEMORY.md</code>, a per-project
 <code>SCRATCHPAD.md</code>, project notes, and a daily log per date</td>
@@ -10889,7 +11022,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>14 of 271:</em> <a
+<p><em>14 of 276:</em> <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
@@ -10907,7 +11040,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>55 of 271:</em> <a
+<p><em>55 of 276:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -10969,7 +11102,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>30 of 271:</em> <a
+<p><em>31 of 276:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -11000,13 +11133,14 @@ href="../systems/ostk-recall/"><code>ostk-recall</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
-href="../systems/vestige/"><code>vestige</code></a></p>
+href="../systems/vestige/"><code>vestige</code></a>, <a
+href="../systems/zep/"><code>zep</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>147 of 271:</em> <a
+<p><em>149 of 276:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -11068,6 +11202,7 @@ href="../systems/hindsight/"><code>hindsight</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a
 href="../systems/intaris/"><code>intaris</code></a>, <a
+href="../systems/langgraph/"><code>langgraph</code></a>, <a
 href="../systems/langmem/"><code>langmem</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
 href="../systems/livingfeed/"><code>livingfeed</code></a>, <a
@@ -11155,12 +11290,13 @@ href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
 <a href="../systems/wenlan/"><code>wenlan</code></a>, <a
 href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
 href="../systems/yesmem/"><code>yesmem</code></a>, <a
-href="../systems/yourmemory/"><code>yourmemory</code></a></p>
+href="../systems/yourmemory/"><code>yourmemory</code></a>, <a
+href="../systems/zep/"><code>zep</code></a></p>
 <p><strong>Append-only mutation audit</strong> — A named append-only
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>77 of 271:</em> <a
+<p><em>77 of 276:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -11242,7 +11378,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>71 of 271:</em> <a
+<p><em>71 of 276:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -11318,7 +11454,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>68 of 271:</em> <a
+<p><em>68 of 276:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -11407,7 +11543,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-Sixty-eight repositories of two hundred and seventy-one assert that
+Sixty-eight repositories of two hundred and seventy-six assert that
 particular material must <em>not</em> be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests
 on. Read together rather than one at a time, they split cleanly in two,
@@ -11479,7 +11615,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Twelve of two hundred and seventy-one is the real figure for the second
+Twelve of two hundred and seventy-six is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -15013,7 +15149,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across two hundred
-and seventy-one systems, almost none can explain why they are shaped the
+and seventy-six systems, almost none can explain why they are shaped the
 way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -16638,6 +16774,41 @@ href="https://github.com/itechmeat/open-second-brain/commit/8d05a62a329dc650113f
 <code>prepare</code> script and were read first (fmt, lint, typecheck
 only, no network), and two dependency surfaces sit inside the cooldown,
 so nothing was installed and no test was run</li>
+<li><a href="https://github.com/getzep/zep">getzep/zep</a> at <a
+href="https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb"><code class="commit-id" title="be263ee23085410185835e0d8508b47fd35e9abb">be263ee2…</code></a>
+— read only; 47 dependency surfaces sit inside the cooldown, so nothing
+was installed. The committed LoCoMo experiments were read from git
+rather than rerun</li>
+<li><a
+href="https://github.com/zhongwanjun/MemoryBank-SiliconFriend">zhongwanjun/MemoryBank-SiliconFriend</a>
+at <a
+href="https://github.com/zhongwanjun/MemoryBank-SiliconFriend/commit/cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9"><code class="commit-id" title="cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9">cf61c419…</code></a>
+— read only; the screen returned NOTHING SCANNED, so the execution
+surface was read by hand. The forgetting curve's behaviour was
+established by evaluating the expression, not by running the
+repository</li>
+<li><a
+href="https://github.com/noahshinn/reflexion">noahshinn/reflexion</a> at
+<a
+href="https://github.com/noahshinn/reflexion/commit/218cf0ef1df84b05ce379dd4a8e47f17766733a0"><code class="commit-id" title="218cf0ef1df84b05ce379dd4a8e47f17766733a0">218cf0ef…</code></a>
+— read only; <code>.gitmodules</code> pulls further trees on a recursive
+clone and <code>human-eval/setup.py</code> executes at install time, so
+neither was done. The AlfWorld success trajectories were computed from
+the committed JSON</li>
+<li><a
+href="https://github.com/langchain-ai/langgraph">langchain-ai/langgraph</a>
+at <a
+href="https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b"><code class="commit-id" title="644815f9e5bc52ad8f7a5227a456227e9c3e639b">644815f9…</code></a>
+— read only; 41 dependency surfaces sit inside the cooldown. The backend
+divergences reported were read from the SQL and from the absence of a
+pragma, not observed in a running store</li>
+<li><a
+href="https://github.com/langchain-ai/langchain">langchain-ai/langchain</a>
+at <a
+href="https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5"><code class="commit-id" title="f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5">f9ee55d9…</code></a>
+— read only; 42 dependency surfaces sit inside the cooldown, and the
+monorepo is the rare fully lockfiled tree here, with zero unpinned
+surfaces</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
