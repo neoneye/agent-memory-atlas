@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 276 reports.</strong></p>
+<p><strong>This page covers all 277 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7768,6 +7768,50 @@ another session's queries.</li>
 <code>session_id.isidentifier()</code> rejects both, because the scope
 key becomes part of a table name. And nobody should build on this
 package at all: the official replacement is a different one.</li>
+</ul>
+<h3 id="agent-memory-techniques"><a
+href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a></h3>
+<ul>
+<li>Best idea: decay parameterized by half-life, with archival instead
+of deletion and strength folded into the ranking.
+<code>decay_rate = math.log(2) / half_life_hours</code> gives an
+operator a number they can defend, <code>similarity * strength</code>
+makes forgetting gradual rather than a cliff at the prune threshold, and
+<code>prune()</code> sets <code>archived = True</code> and moves the
+record rather than destroying it. On the one mechanism it shares with <a
+href="../systems/memorybank/">MemoryBank</a> — the paper it cites — the
+teaching implementation is the correct one.</li>
+<li>Biggest risk: the contradiction rate divides by pairs it never
+compared. <code>ContradictionDetector.scan</code> finds contradictions
+only within batches of fifteen and then divides by every pair in the
+corpus, so at a hundred memories roughly 735 examined pairs are reported
+against a denominator of 4,950. The metric falls as the store grows even
+when the true density is constant, which means a dashboard built on it
+reports improving consistency while conflicts accumulate.</li>
+<li>Most reusable component:
+<code>TieredMemorySystem.delete_user</code>. Four stores named in one
+function — hot cache, warm vector store, cold archive, relationship
+graph — each returning a count, each writing a timestamped audit entry.
+The graph filter works on <code>user_id</code> rather than edge
+direction, so it does not have the asymmetry that catches most graph
+deletions, and the per-store counts are what make the erasure claim
+checkable.</li>
+<li>Maturity impression: Apache-2.0, 14,277 lines across thirty
+self-contained notebooks with a per-technique README, a thirty-row
+comparison table, and CI that validates cell structure and prose style.
+Nineteen unpinned requirements, no tests of any memory behaviour, and an
+evaluation harness in notebook 28 that is never pointed at the other
+twenty-nine notebooks.</li>
+<li>Study when: you are about to build a memory layer and want thirty
+implementations of the decisions you are facing, small enough to read in
+one sitting. Notebooks 19, 20, 28 and 30 repay reading even after you
+have built something.</li>
+<li>Do not copy when: you are lifting one notebook into a product. The
+corpus is internally inconsistent by construction — notebook 30 requires
+a <code>user_id</code> on the read path and notebook 06 has no tenant
+concept at all — and nothing warns you which one you picked. Six of the
+thirty techniques are conversation-window management filed under the
+word memory.</li>
 </ul>
         </article>
       </div>

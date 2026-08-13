@@ -216,8 +216,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of two hundred and seventy-six
-would suggest a hard idea that a few teams reach independently. One of two hundred and seventy-six, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of two hundred and seventy-seven
+would suggest a hard idea that a few teams reach independently. One of two hundred and seventy-seven, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 276 reports.**
+**This page covers all 277 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2402,3 +2402,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: `langchain` 1.0.8, fully lockfiled with zero unpinned dependency surfaces — the rare monorepo here where that is true. The memory package is 2,201 lines under a removal notice, and its window-management classes are better tested than its durable ones.
 - Study when: you are designing entity memory and want a reference for the prompts and the store interface, both small and widely copied. Also read `SQLiteEntityStore` for the one design in this atlas that scopes by DDL — a table per session, physically unreachable from another session's queries.
 - Do not copy when: you need a session id that is a UUID or an email. `session_id.isidentifier()` rejects both, because the scope key becomes part of a table name. And nobody should build on this package at all: the official replacement is a different one.
+
+### [`agent-memory-techniques`](../systems/agent-memory-techniques/)
+
+- Best idea: decay parameterized by half-life, with archival instead of deletion and strength folded into the ranking. `decay_rate = math.log(2) / half_life_hours` gives an operator a number they can defend, `similarity * strength` makes forgetting gradual rather than a cliff at the prune threshold, and `prune()` sets `archived = True` and moves the record rather than destroying it. On the one mechanism it shares with [MemoryBank](../systems/memorybank/) — the paper it cites — the teaching implementation is the correct one.
+- Biggest risk: the contradiction rate divides by pairs it never compared. `ContradictionDetector.scan` finds contradictions only within batches of fifteen and then divides by every pair in the corpus, so at a hundred memories roughly 735 examined pairs are reported against a denominator of 4,950. The metric falls as the store grows even when the true density is constant, which means a dashboard built on it reports improving consistency while conflicts accumulate.
+- Most reusable component: `TieredMemorySystem.delete_user`. Four stores named in one function — hot cache, warm vector store, cold archive, relationship graph — each returning a count, each writing a timestamped audit entry. The graph filter works on `user_id` rather than edge direction, so it does not have the asymmetry that catches most graph deletions, and the per-store counts are what make the erasure claim checkable.
+- Maturity impression: Apache-2.0, 14,277 lines across thirty self-contained notebooks with a per-technique README, a thirty-row comparison table, and CI that validates cell structure and prose style. Nineteen unpinned requirements, no tests of any memory behaviour, and an evaluation harness in notebook 28 that is never pointed at the other twenty-nine notebooks.
+- Study when: you are about to build a memory layer and want thirty implementations of the decisions you are facing, small enough to read in one sitting. Notebooks 19, 20, 28 and 30 repay reading even after you have built something.
+- Do not copy when: you are lifting one notebook into a product. The corpus is internally inconsistent by construction — notebook 30 requires a `user_id` on the read path and notebook 06 has no tenant concept at all — and nothing warns you which one you picked. Six of the thirty techniques are conversation-window management filed under the word memory.
