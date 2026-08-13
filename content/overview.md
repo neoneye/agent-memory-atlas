@@ -2094,6 +2094,47 @@ an optimisation whose loss costs latency, and a memory is a claim whose loss
 costs correctness. Deleting a cache entry is free; deleting a memory is the
 hardest problem on this page.
 
+**The sharpest test of that distinction is a paper, and it comes at the boundary
+from the other side.** *Do Language Models Need Sleep? Offline Recurrence for
+Improved Online Inference* ([arXiv:2605.26099](https://arxiv.org/abs/2605.26099),
+Lee, McLeish, Goldstein and Fanti, 25 May 2026) proposes exactly what its
+vocabulary suggests: a model that periodically **sleeps**, running N offline
+recurrent passes over the accumulated context to update *fast weights* in its
+SSM blocks through a learned local rule, and then **evicts the KV cache** and
+carries on. The abstract calls the result "persistent fast weights", the
+mechanism "consolidation", and the paper's own framing is that computation moves
+to sleep so that wake-time latency is preserved. Every noun on this page's list
+appears, and the reported gains are real if modest — on GSM-Infinite, Jet-Nemotron
+2B goes from 0.742 to 0.812 on six-operation problems and 0.351 to 0.388 on
+eight-operation ones as N rises from 1 to 6; Ouro 1.4B goes from 0.419 to 0.615
+and 0.210 to 0.272 at N=4 — with the largest gains on the instances needing the
+deepest reasoning, which is the interesting part.
+
+It is out of scope on three independent grounds, and the first is the one that
+settles it: **Algorithm 1 begins by zero-initialising the fast weights.** They
+are per-sequence. Nothing consolidated during one example is present at the start
+of the next, so "persistent" means persistent past a cache eviction, not past a
+session. Second, **nothing stored has an identity.** The update is a gated
+Hebbian rule that overwrites a fixed-size state matrix continuously; there is no
+item to retrieve by name, no claim to correct, and no way to forget one thing
+rather than everything — the same reason [MemAgent](https://github.com/BytedTsinghua-SIA/MemAgent)
+is excluded above, one architectural level deeper. Third, **there is no
+artifact**: no code, no checkpoints and no released data, so nothing here could
+be read at a pinned commit even if the first two answers went the other way.
+
+What makes it worth recording rather than passing over is that it is the cleanest
+demonstration of why this section exists. A KV cache is state an agent's turns
+reuse; these fast weights are what you get when you *train* a model to compress
+that state well instead of storing it. Both are optimisations whose loss costs
+latency and accuracy, and neither can answer "why do you believe that" or "forget
+what I told you last week", because neither ever claimed anything. The field is
+converging on the word *sleep* for this — a second paper by an entirely different
+group, [arXiv:2606.03979](https://arxiv.org/abs/2606.03979) (Behrouz, Hashemi,
+Javanmard and Mirrokni, 2 June 2026), is titled *Language Models Need Sleep:
+Learning to Self-Modify and Consolidate Memories* and also ships no code — so a
+reader meeting either should check which sense of consolidation is meant, and
+whether anything survives the example.
+
 ### Not in scope: the semantic response cache
 
 The third collision is a **semantic cache**: a store of past question/answer
