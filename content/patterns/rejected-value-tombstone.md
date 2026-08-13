@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twelve systems of two hundred and seventy
+> **This is not an established best practice.** Fourteen systems of two hundred and seventy-one
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, three built it after
@@ -15,9 +15,9 @@ stance: advocacy
 > lookup that forgot to exclude the rejected row**, one made that same collision
 > deliberate, one built it as ordinary plumbing in its write gate, and one
 > hardened it against key rotation.
-> Sorted by mechanism rather than by mark, **seven of the twelve** refuse the write
+> Sorted by mechanism rather than by mark, most refuse the write
 > — [the table below](#sorted-by-what-actually-stops-the-value) says
-> which, and what the other five do instead.
+> which, and what the rest do instead.
 > There is no consensus
 > behind this page and no library that provides the mechanism. There is now a
 > **vocabulary**: [arXiv:2605.26252](https://arxiv.org/abs/2605.26252) states it
@@ -126,7 +126,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirteen systems in the atlas have this.** That is still the most striking
+**Fourteen systems in the atlas have this.** That is still the most striking
 negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -726,6 +726,33 @@ complete instance of the pattern in the atlas *and* an unusable one. Read it as
 the strongest available evidence that the idea is reachable by reasoning rather
 than by a red team, and as a reminder that a mechanism is only as real as its
 narrowest surface.
+
+[Open Second Brain](../../systems/open-second-brain/) is the newest independent
+arrival and the first with a **scope dimension**, which is this page's standing
+objection answered in code. Its nightly consolidation pass promotes repeated
+corrections into preferences; `o2b brain reject --reason <text>` retires one and
+writes `user_rejected_reason` into the retired file — set *only* for a user
+rejection and left undefined for the automatic retirements beside it. On the next
+pass that retired rule becomes a **suppressor**: signals on its topic are
+swallowed before candidate planning, with the reasoning in the source — *"the
+user explicitly rejected the rule — re-growing it from fresh signals is exactly
+what they were asking us not to do."*
+
+Three details are worth taking. **The block is scoped rather than blanket**: an
+unscoped suppressor swallows every signal on the topic, a scoped one only signals
+sharing its scope, and a signal carrying no scope matches an unscoped suppressor
+but never a scoped one — so a rejection in one project does not silence the same
+topic everywhere, which is the tradeoff this page lists third. **Non-matching
+signals fall through** and stay eligible for candidate planning, so the tombstone
+narrows rather than closes the topic. And **every suppression emits an event**
+naming the retired rule and the reason, so a refusal is visible to the user whose
+rejection caused it — the answer to a tombstone that silently swallows input and
+is indistinguishable from a bug.
+
+What it does not have is a lift. `user_rejected_reason` arms the suppressor
+permanently and nothing found removes it short of hand-editing the retired file,
+which is the expiry problem this page's tradeoff list names and which most
+implementations here also leave open.
 
 ## Tests to require
 

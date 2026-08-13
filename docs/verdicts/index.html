@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 270 reports.</strong></p>
+<p><strong>This page covers all 271 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-    R[&quot;270 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;271 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7521,6 +7521,51 @@ built-ins first, with no cap on the set — and the file format carries no
 timestamp, author, confidence or status, so a correction is an overwrite
 and the only history anywhere is 30 retained backups of one synced
 slug.</li>
+</ul>
+<h3 id="open-second-brain"><a
+href="../systems/open-second-brain/"><code>open-second-brain</code></a></h3>
+<ul>
+<li>Best idea: confidence as a lower bound rather than an average.
+<code>value = wilson_low(applied, applied + violated) × freshness</code>
+— a 95% Wilson lower bound at z = 1.96 times a term decaying linearly to
+zero across the staleness window — so three-for-three cannot outrank
+ninety-for-a-hundred and an unused rule fades without a sweep. Ninety
+lines, no dependencies, and it makes "measurable confidence" a claim a
+reader can check.</li>
+<li>Biggest risk: the counters are self-reported. <code>applied</code>
+and <code>violated</code> are emitted by the agent about its own
+behaviour, so a rigorous statistic sits on an input nothing
+independently samples; a compliant reporter can manufacture confidence
+the Wilson bound will then present as rigour.
+<code>self-approval-guardrail.ts</code> bounds who may confirm a
+cluster, not whether the evidence is real.</li>
+<li>Most reusable component: <code>user_rejected_reason</code>. One
+optional frontmatter field, written only by
+<code>o2b brain reject --reason</code>, converts a retired rule into a
+suppressor that swallows the signals which would regrow it —
+scope-aware, so an unscoped rejection covers the topic everywhere and a
+scoped one only its own scope, with a <code>signal-suppressed</code>
+event emitted per swallowed signal naming the rule and the reason. It is
+the rejected-value tombstone arrived at independently, with a scope
+dimension no other instance in the atlas carries.</li>
+<li>Maturity impression: MIT, v1.45.0, 190,847 lines of TypeScript
+against 172,320 lines across 1,031 test files — a ratio at the top of
+anything here — 175 commits since 6 May 2026, ten contributors.
+Local-first in the user's own Obsidian vault, so the memory outlives the
+tool. Two committed git hooks activated by the package
+<code>prepare</code> script run fmt, lint and typecheck only. No
+lockfile beside <code>package.json</code> at this commit.</li>
+<li>Study when: you are designing promotion and demotion and want both
+to be defensible. The asymmetric <code>quarantine</code> probation —
+still active and injected, flagged separately in the digest, retired by
+one further violation, restored by one application — is the answer to
+rules that oscillate under symmetric thresholds.</li>
+<li>Do not copy when: you need memory to hold facts, or to serve more
+than one person. The unit is a behavioural rule with an application
+rate, and a claim that is simply true has no <code>applied_count</code>;
+scope is owner/session/project inside one vault, with no tenancy and a
+trust model assuming the evidence reporter and the beneficiary are the
+same well-meaning agent.</li>
 </ul>
         </article>
       </div>

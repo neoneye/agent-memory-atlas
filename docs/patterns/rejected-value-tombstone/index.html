@@ -103,20 +103,19 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Twelve
-systems of two hundred and seventy carry it, and almost no two arrived
-the same way: one invented it under adversarial pressure, one adopted it
-from the first, one arrived at a weaker form independently, one was
-driven to it by a regulation, three built it after this page named its
-absence in their report, <strong>two have it as a side effect of a
-lookup that forgot to exclude the rejected row</strong>, one made that
-same collision deliberate, one built it as ordinary plumbing in its
+<p><strong>This is not an established best practice.</strong> Fourteen
+systems of two hundred and seventy-one carry it, and almost no two
+arrived the same way: one invented it under adversarial pressure, one
+adopted it from the first, one arrived at a weaker form independently,
+one was driven to it by a regulation, three built it after this page
+named its absence in their report, <strong>two have it as a side effect
+of a lookup that forgot to exclude the rejected row</strong>, one made
+that same collision deliberate, one built it as ordinary plumbing in its
 write gate, and one hardened it against key rotation. Sorted by
-mechanism rather than by mark, <strong>seven of the twelve</strong>
-refuse the write — <a
+mechanism rather than by mark, most refuse the write — <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a> says
-which, and what the other five do instead. There is no consensus behind
-this page and no library that provides the mechanism. There is now a
+which, and what the rest do instead. There is no consensus behind this
+page and no library that provides the mechanism. There is now a
 <strong>vocabulary</strong>: <a
 href="https://arxiv.org/abs/2605.26252">arXiv:2605.26252</a> states it
 as a correctness condition — <em>no superseded value becomes
@@ -249,7 +248,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Thirteen systems in the atlas have this.</strong> That is
+<p><strong>Fourteen systems in the atlas have this.</strong> That is
 still the most striking negative result in the atlas, and it is the
 reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -967,6 +966,35 @@ which makes this the most complete instance of the pattern in the atlas
 evidence that the idea is reachable by reasoning rather than by a red
 team, and as a reminder that a mechanism is only as real as its
 narrowest surface.</p>
+<p><a href="../../systems/open-second-brain/">Open Second Brain</a> is
+the newest independent arrival and the first with a <strong>scope
+dimension</strong>, which is this page's standing objection answered in
+code. Its nightly consolidation pass promotes repeated corrections into
+preferences; <code>o2b brain reject --reason &lt;text&gt;</code> retires
+one and writes <code>user_rejected_reason</code> into the retired file —
+set <em>only</em> for a user rejection and left undefined for the
+automatic retirements beside it. On the next pass that retired rule
+becomes a <strong>suppressor</strong>: signals on its topic are
+swallowed before candidate planning, with the reasoning in the source —
+<em>"the user explicitly rejected the rule — re-growing it from fresh
+signals is exactly what they were asking us not to do."</em></p>
+<p>Three details are worth taking. <strong>The block is scoped rather
+than blanket</strong>: an unscoped suppressor swallows every signal on
+the topic, a scoped one only signals sharing its scope, and a signal
+carrying no scope matches an unscoped suppressor but never a scoped one
+— so a rejection in one project does not silence the same topic
+everywhere, which is the tradeoff this page lists third.
+<strong>Non-matching signals fall through</strong> and stay eligible for
+candidate planning, so the tombstone narrows rather than closes the
+topic. And <strong>every suppression emits an event</strong> naming the
+retired rule and the reason, so a refusal is visible to the user whose
+rejection caused it — the answer to a tombstone that silently swallows
+input and is indistinguishable from a bug.</p>
+<p>What it does not have is a lift. <code>user_rejected_reason</code>
+arms the suppressor permanently and nothing found removes it short of
+hand-editing the retired file, which is the expiry problem this page's
+tradeoff list names and which most implementations here also leave
+open.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 270 reports.**
+**This page covers all 271 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["270 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["271 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2348,3 +2348,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 127,468 lines across a backend, React frontend, Electron shell, TUI and browser extension, 1,131 commits since 19 June 2026, 14 contributors, 40 assert-based test scripts. Agents are Claude Code and Codex driven by tmux scraping. The `skills` table in `schema.sql` is dead — its repository file says the store moved to the filesystem and exists "only as a compatibility layer" — so the first artifact a reader opens describes a system that no longer exists. Licensed source-available for non-commercial use only, which the README calls open source.
 - Study when: you are building multi-tenant memory and need the access model rather than the trust model — ACL rows, per-user hides that suppress without deleting, context whitelists, and a platform-wide copy catalogue filtered by a visibility function before it returns.
 - Do not copy when: you need memory to be found or judged. There is no retrieval at all — every in-scope memory is injected wholesale, built-ins first, with no cap on the set — and the file format carries no timestamp, author, confidence or status, so a correction is an overwrite and the only history anywhere is 30 retained backups of one synced slug.
+
+### [`open-second-brain`](../systems/open-second-brain/)
+
+- Best idea: confidence as a lower bound rather than an average. `value = wilson_low(applied, applied + violated) × freshness` — a 95% Wilson lower bound at z = 1.96 times a term decaying linearly to zero across the staleness window — so three-for-three cannot outrank ninety-for-a-hundred and an unused rule fades without a sweep. Ninety lines, no dependencies, and it makes "measurable confidence" a claim a reader can check.
+- Biggest risk: the counters are self-reported. `applied` and `violated` are emitted by the agent about its own behaviour, so a rigorous statistic sits on an input nothing independently samples; a compliant reporter can manufacture confidence the Wilson bound will then present as rigour. `self-approval-guardrail.ts` bounds who may confirm a cluster, not whether the evidence is real.
+- Most reusable component: `user_rejected_reason`. One optional frontmatter field, written only by `o2b brain reject --reason`, converts a retired rule into a suppressor that swallows the signals which would regrow it — scope-aware, so an unscoped rejection covers the topic everywhere and a scoped one only its own scope, with a `signal-suppressed` event emitted per swallowed signal naming the rule and the reason. It is the rejected-value tombstone arrived at independently, with a scope dimension no other instance in the atlas carries.
+- Maturity impression: MIT, v1.45.0, 190,847 lines of TypeScript against 172,320 lines across 1,031 test files — a ratio at the top of anything here — 175 commits since 6 May 2026, ten contributors. Local-first in the user's own Obsidian vault, so the memory outlives the tool. Two committed git hooks activated by the package `prepare` script run fmt, lint and typecheck only. No lockfile beside `package.json` at this commit.
+- Study when: you are designing promotion and demotion and want both to be defensible. The asymmetric `quarantine` probation — still active and injected, flagged separately in the digest, retired by one further violation, restored by one application — is the answer to rules that oscillate under symmetric thresholds.
+- Do not copy when: you need memory to hold facts, or to serve more than one person. The unit is a behavioural rule with an application rate, and a claim that is simply true has no `applied_count`; scope is owner/session/project inside one vault, with no tenancy and a trust model assuming the evidence reporter and the beneficiary are the same well-meaning agent.
