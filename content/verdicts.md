@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 269 reports.**
+**This page covers all 270 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["269 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["270 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2339,3 +2339,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 564,122 lines of TypeScript over 2,578 files and roughly fifty Cordis plugin families, 692 spec files, 44 subsystem docs and dated architecture notes that state the alternative rejected. Also a developer preview whose README promises compatibility-breaking changes, published to GitHub the day of this reading with 12,293 commits of prior private history — so 97 unpinned manifests and all 244 dependency surfaces sit inside the seven-day cooldown by construction.
 - Study when: you are building a history layer and want the seams done properly — `SessionPersistence` with interchangeable JSONL and SQLite backends, a provider-owned FTS index, batched durable writes whose window later events join without resetting, and a crash repair that closes an interrupted turn with a reason no live path can emit.
 - Do not copy when: you need memory in the belief sense, or more than one user. Nothing stored is a claim, so there is no confidence, verification or correction; `surface` says whether the model sees an event, not whether it is true. The scope keys are workspace and session, and there is no user, tenant or org column to add one to.
+
+### [`mobius`](../systems/mobius/)
+
+- Best idea: one on-disk format for procedural and declarative memory. A skill and a memory are the same markdown-plus-frontmatter file through the same `parseFrontmatter`, stored under the same scoped directory shape, so both got a full CRUD surface, an import path, a cross-team copy catalogue and an access model at a size where most projects build one of them. The id is reversible — `project:${userId}:${projectId}:${slug}` — so the filesystem stays authoritative without the database, and the slug is generated separately from the display name so renaming never breaks a reference.
+- Biggest risk: scope is a directory segment composed from a caller-supplied id. The repository's own comment records that `user:../../..:x` resolves through `userDefaultDir` to a path outside the root and yields "arbitrary .md file read" — and that the write and delete paths already carried `withinRoot` protection while the read path originally lacked it. Both branches are guarded at this commit and no test pins either, so nothing would fail if the check were removed again.
+- Most reusable component: that comment. It names the exact malicious id, the exact composition that escapes the root, and which paths were already covered — which is the shape of hazard documentation worth copying, and more useful than the fix it explains.
+- Maturity impression: 127,468 lines across a backend, React frontend, Electron shell, TUI and browser extension, 1,131 commits since 19 June 2026, 14 contributors, 40 assert-based test scripts. Agents are Claude Code and Codex driven by tmux scraping. The `skills` table in `schema.sql` is dead — its repository file says the store moved to the filesystem and exists "only as a compatibility layer" — so the first artifact a reader opens describes a system that no longer exists. Licensed source-available for non-commercial use only, which the README calls open source.
+- Study when: you are building multi-tenant memory and need the access model rather than the trust model — ACL rows, per-user hides that suppress without deleting, context whitelists, and a platform-wide copy catalogue filtered by a visibility function before it returns.
+- Do not copy when: you need memory to be found or judged. There is no retrieval at all — every in-scope memory is injected wholesale, built-ins first, with no cap on the set — and the file format carries no timestamp, author, confidence or status, so a correction is an overwrite and the only history anywhere is 30 retained backups of one synced slug.
