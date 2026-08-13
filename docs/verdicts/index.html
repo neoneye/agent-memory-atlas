@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 268 reports.</strong></p>
+<p><strong>This page covers all 269 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-    R[&quot;268 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;269 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7426,6 +7426,55 @@ filter despite the format defining one; and an auto-captured decision is
 distinguished from a user's own only by the string
 <code>auto-captured:</code> prefixed onto its prose rationale — the
 extractor computes a type and discards it before the write.</li>
+</ul>
+<h3 id="deepseek-harness"><a
+href="../systems/deepseek-harness/"><code>deepseek-harness</code></a></h3>
+<ul>
+<li>Best idea: compaction shadows instead of deleting, and the shadow is
+queryable. <code>{ op: 'replace', start, end }</code> marks a range of
+surface entries replaced and inserts the summary in their place; every
+event carries a <code>surface</code> of <code>current</code>,
+<code>shadowed</code> or <code>log-only</code>, indexed as an FTS5
+column, so what the model used to see stays searchable and
+<code>session_event_trace</code> walks from a summary back to the events
+it replaced. One column buys the thing most systems lose at every
+compaction.</li>
+<li>Biggest risk: no delete a person can reach. The four
+<code>DELETE FROM</code> statements maintain the query index, the
+model's five tools are read-only by construction, and the spill seam
+says outright it "does not define a per-session cleanup policy". Nothing
+scans event content before it is written or indexed either, so a
+credential that reaches a transcript reaches the full-text index and is
+findable by every authorized caller in that workspace, forever.</li>
+<li>Most reusable component: the authorization tests on
+<code>tool-session-query</code>. They assert the failure directions
+rather than the success one — fail closed with no agent and for
+cross-workspace targets, allow only self for a null-<code>cwd</code>
+caller, reject records the provider returned unrequested — and the
+sharpest asserts that a hidden parent session and a nonexistent one are
+indistinguishable <em>without search being called</em>, with a fixture
+whose text is <code>must not be discoverable</code>. Protecting the
+existence of a record, not only its contents, is a bar almost nothing
+else here clears.</li>
+<li>Maturity impression: MIT, 564,122 lines of TypeScript over 2,578
+files and roughly fifty Cordis plugin families, 692 spec files, 44
+subsystem docs and dated architecture notes that state the alternative
+rejected. Also a developer preview whose README promises
+compatibility-breaking changes, published to GitHub the day of this
+reading with 12,293 commits of prior private history — so 97 unpinned
+manifests and all 244 dependency surfaces sit inside the seven-day
+cooldown by construction.</li>
+<li>Study when: you are building a history layer and want the seams done
+properly — <code>SessionPersistence</code> with interchangeable JSONL
+and SQLite backends, a provider-owned FTS index, batched durable writes
+whose window later events join without resetting, and a crash repair
+that closes an interrupted turn with a reason no live path can
+emit.</li>
+<li>Do not copy when: you need memory in the belief sense, or more than
+one user. Nothing stored is a claim, so there is no confidence,
+verification or correction; <code>surface</code> says whether the model
+sees an event, not whether it is true. The scope keys are workspace and
+session, and there is no user, tenant or org column to add one to.</li>
 </ul>
         </article>
       </div>

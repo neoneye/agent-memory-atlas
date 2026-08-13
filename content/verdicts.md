@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 268 reports.**
+**This page covers all 269 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["268 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["269 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2330,3 +2330,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, v3.11.3, 11,932 lines of JavaScript, 111 commits since 3 March 2026, seventeen test suites run by an aggregating runner that no longer short-circuits on the first failure. Eight floating dependency ranges with a lockfile. A 27-pattern secret scanner with a per-pattern length floor added because a global floor of eight let `password: s3cr3t` into a backup. `server.json` still declares version 3.2.2 against a 3.11.3 package, and `cleanupOldBackups` prunes a Pro account to 50 backups where free gets 100.
 - Study when: you are replicating a store across machines and have to make deletion survive a union merge. Section 5 of the spec is separable from the implementation and is the most transferable artifact in this repository — a reader who implements it against their own store gets most of the value without adopting any of the rest.
 - Do not copy when: you need retrieval, scope, or provenance. Search is a substring term-count over whole file contents plus a depth-3 crawl of `$HOME` on every query, with no index and no project filter despite the format defining one; and an auto-captured decision is distinguished from a user's own only by the string `auto-captured:` prefixed onto its prose rationale — the extractor computes a type and discards it before the write.
+
+### [`deepseek-harness`](../systems/deepseek-harness/)
+
+- Best idea: compaction shadows instead of deleting, and the shadow is queryable. `{ op: 'replace', start, end }` marks a range of surface entries replaced and inserts the summary in their place; every event carries a `surface` of `current`, `shadowed` or `log-only`, indexed as an FTS5 column, so what the model used to see stays searchable and `session_event_trace` walks from a summary back to the events it replaced. One column buys the thing most systems lose at every compaction.
+- Biggest risk: no delete a person can reach. The four `DELETE FROM` statements maintain the query index, the model's five tools are read-only by construction, and the spill seam says outright it "does not define a per-session cleanup policy". Nothing scans event content before it is written or indexed either, so a credential that reaches a transcript reaches the full-text index and is findable by every authorized caller in that workspace, forever.
+- Most reusable component: the authorization tests on `tool-session-query`. They assert the failure directions rather than the success one — fail closed with no agent and for cross-workspace targets, allow only self for a null-`cwd` caller, reject records the provider returned unrequested — and the sharpest asserts that a hidden parent session and a nonexistent one are indistinguishable *without search being called*, with a fixture whose text is `must not be discoverable`. Protecting the existence of a record, not only its contents, is a bar almost nothing else here clears.
+- Maturity impression: MIT, 564,122 lines of TypeScript over 2,578 files and roughly fifty Cordis plugin families, 692 spec files, 44 subsystem docs and dated architecture notes that state the alternative rejected. Also a developer preview whose README promises compatibility-breaking changes, published to GitHub the day of this reading with 12,293 commits of prior private history — so 97 unpinned manifests and all 244 dependency surfaces sit inside the seven-day cooldown by construction.
+- Study when: you are building a history layer and want the seams done properly — `SessionPersistence` with interchangeable JSONL and SQLite backends, a provider-owned FTS index, batched durable writes whose window later events join without resetting, and a crash repair that closes an interrupted turn with a reason no live path can emit.
+- Do not copy when: you need memory in the belief sense, or more than one user. Nothing stored is a claim, so there is no confidence, verification or correction; `surface` says whether the model sees an event, not whether it is true. The scope keys are workspace and session, and there is no user, tenant or org column to add one to.

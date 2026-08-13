@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent harness whose durable
+memory is an append-only session log, indexed for full-text search
+across past sessions and handed to the model through five tools that
+fail closed on workspace authorization and are tested against a probing
+caller.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DeepSeek
+Harness — Agent Memory Atlas">
+    <meta property="og:description" content="An agent harness whose
+durable memory is an append-only session log, indexed for full-text
+search across past sessions and handed to the model through five tools
+that fail closed on workspace authorization and are tested against a
+probing caller.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DeepSeek
+Harness — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent harness whose
+durable memory is an append-only session log, indexed for full-text
+search across past sessions and handed to the model through five tools
+that fail closed on workspace authorization and are tested against a
+probing caller.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DeepSeek Harness — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">History you can search, and cannot
+probe</p>
+          <h1>DeepSeek Harness</h1>
+          <p class="document-deck">An agent harness whose durable memory
+is an append-only session log, indexed for full-text search across past
+sessions and handed to the model through five tools that fail closed on
+workspace authorization and are tested against a probing caller.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/deepseek-ai/deepseek-harness">
+              <span>Source</span>
+              <strong>deepseek-ai/deepseek-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a" title="47f943859bef60e4160492346772ded9b24f765a">
+              <span>Analyzed revision</span>
+              <code>47f94385…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-13</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DeepSeek Harness (<code>dsh</code>) is an agent harness from DeepSeek
+AI — 564,122 lines of TypeScript across 2,578 files, MIT, built on the
+<a href="https://github.com/cordiverse/cordis">Cordis</a> plugin runtime
+under a stated thesis that <strong>everything is a plugin</strong>. The
+repository appeared on GitHub on 13 August 2026 carrying 12,293 commits
+of prior history from 10 June, so its public life is hours old and its
+own README says so plainly: <em>"currently in developer preview and is
+iterating rapidly. THERE WILL BE COMPATIBILITY-BREAKING CHANGES."</em>
+Read this report as a snapshot of a fast-moving tree, which is what the
+pin is for.</p>
+<p>Its memory is a <strong>session event log</strong> — append-only, one
+per session, the source of truth from which the model's message history
+is derived. That much is the shape <a href="../otis/">Otis</a> and most
+local coding agents share. Two things lift it out of that group.</p>
+<p><strong>The log is a searchable corpus, and the model is given the
+search.</strong> A SQLite FTS5 index covers two virtual tables —
+<code>persisted_docs</code> for the durable corpus and a
+<code>temp.live_docs</code> for sessions still in memory — unioned
+live-preferred, so a search reaches a session whose last turn has not
+been flushed. Five tools expose it: <code>session_search</code> across
+prior sessions, <code>session_event_search</code> within one,
+<code>session_trace</code> for a session's ancestors and descendants,
+<code>session_event_trace</code> for every direct replacement of one
+event, and <code>session_event_read</code> for the full unabridged text.
+Almost nothing else in this corpus lets an agent ask its own history a
+question rather than being handed a slice of it.</p>
+<p><strong>Nothing is overwritten, and what was replaced stays
+searchable.</strong> Compaction does not delete; it issues
+<code>{ op: 'replace', start, end }</code>, which shadows the surface
+entries in that range and inserts the summary in their place. Every
+event carries a <code>surface</code> of <code>current</code>,
+<code>shadowed</code> or <code>log-only</code>, indexed as a column, so
+the corpus distinguishes what the model sees now from what it used to
+see from what never entered its context at all — and
+<code>session_event_trace</code> walks from a summary back to the events
+it replaced.</p>
+<p><strong>The authorization is the part worth stealing, and it is
+tested against an adversary rather than a user.</strong> Search is
+filtered by the caller's workspace <code>cwd</code> and by per-session
+authorization, and the committed tests assert the failure directions:
+<em>"fails closed without an agent and for direct cross-workspace
+targets"</em>, <em>"allows only self for a null-cwd caller and denies
+cross-session search"</em>, <em>"rejects unrequested or unauthorized
+records returned during parent preauthorization"</em> — that last one
+distrusting its own provider's return values — and, the sharpest,
+<em>"makes hidden and nonexistent parent guesses indistinguishable
+without calling search"</em>, whose fixture text is the string
+<code>must not be discoverable</code>. A memory search surface that
+treats <em>the existence of a record</em> as something to protect is
+rare here.</p>
+<p>Where it is weakest is the ordinary place. There is no epistemic
+state anywhere: <code>surface</code> is about context membership, not
+truth, and nothing stored carries confidence, verification, or a
+provenance beyond which component emitted it. There is no user-facing
+forgetting — the model cannot delete, and the delete statements that
+exist serve index maintenance rather than a person's request. And the
+dependency surface is enormous and new: 97 unpinned manifests, 244 of
+them touched inside the seven-day cooldown, because the whole tree
+is.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong><code>SessionEvent</code></strong>: one
+entry in one session's append-only log, with a sequence number, a type
+from a closed vocabulary, and a payload. The log is the source of truth;
+the model's message history is <em>derived</em> from it by
+<code>deriveMessages()</code>, and storage metadata is deliberately kept
+out of the event vocabulary in a separate <code>SessionHeader</code>
+carrying the format version, <code>cwd</code>, lineage and the seed
+boundary — <em>"storage concerns, not conversation events."</em></p>
+<p>An event becomes a memory by being appended, and there is no
+admission gate: the loop emits, persistence copies. What an event does
+<em>not</em> get is a truth value. The one discrete status it carries is
+<code>SessionEventSurface</code>:</p>
+<ul>
+<li><strong><code>current</code></strong> — part of the model's context
+now.</li>
+<li><strong><code>shadowed</code></strong> — it was, and a replacement
+has taken its place.</li>
+<li><strong><code>log-only</code></strong> — it never entered the
+model's context.</li>
+</ul>
+<p>That is a genuine three-state field on every event, and it is not a
+trust state. It answers "will the model see this" rather than "is this
+so", and the report withholds the mark for exactly that reason — but it
+does the job most systems here need a second table for, because it makes
+<em>what the model used to believe</em> queryable rather than lost.</p>
+<p>A memory stops being current in one way and stops existing in almost
+none. Compaction issues <code>{ op: 'replace', start, end }</code>,
+which <em>"shadows surface entries from <code>start</code> through
+<code>end</code> inclusive and inserts the new event in their
+place"</em>. The shadowed events remain in the log, remain in the FTS
+index, and remain reachable through <code>session_event_trace</code>,
+which reads <em>"every direct replacement and relationship to a cited
+source event"</em>. Nothing in the model-facing surface deletes. A
+session forked from another inherits its parent's events as a
+<strong>seed</strong> — everything before a marked boundary — and spill
+artifacts from the parent are inherited by locator rather than copied or
+re-owned.</p>
+<p>So the epistemic posture is: <strong>everything that happened is
+kept, some of it is in view, and the boundary between those two is a
+first-class queryable fact.</strong> That is a coherent position for a
+harness, and it is a different one from a memory store — nothing here is
+a claim that could be false, which is why the trust column is empty and
+why the interesting engineering is all in access rather than in
+belief.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — what compaction does to an event, and which of the three surfaces a search can still reach</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: what compaction does to an event, and which of the three surfaces a search can still reach
+stateDiagram-v2
+    [*] --&gt; Current: loop appends a SessionEvent
+    [*] --&gt; LogOnly: emitted outside model context
+
+    Current --&gt; Shadowed: compaction replaces a surface range
+    Shadowed --&gt; Shadowed: stays in the log and in the index
+
+    Current --&gt; Seed: inherited by a forked or resumed session
+    Seed --&gt; Current: seed boundary marks where live work begins
+
+    state &quot;reachable by session_event_search&quot; as Reachable
+    Current --&gt; Reachable
+    Shadowed --&gt; Reachable
+    LogOnly --&gt; Reachable
+    Reachable --&gt; Denied: caller workspace or session not authorized
+    Denied --&gt; [*]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A pnpm monorepo of roughly fifty package families under
+<code>packages/</code>, each a Cordis plugin registering against a
+shared <code>ctx</code>. The families the memory story runs through are
+<code>core/session</code>, <code>session</code> (persistence and
+projection), <code>session-query</code>, <code>compaction</code>,
+<code>spill</code>, <code>storage</code>, <code>skill</code> and
+<code>core/scope</code>. The pattern is consistent enough to describe
+once: a <strong>Service Definition</strong> package owns the abstract
+seam and its vocabulary, one or more <strong>Provider</strong> packages
+implement it, and a <strong>Consumer</strong> package exposes it to the
+model or the human.</p>
+<p>Durable state lands in three places:</p>
+<ul>
+<li><strong>The session log.</strong> <code>SessionPersistence</code>
+(<code>ctx.sessionPersistence</code>) defines locate/create/append with
+two interchangeable backends — <code>session-persistence-jsonl</code>,
+which writes a transcript per session inside a project directory and
+returns its absolute path from <code>locate()</code>, and
+<code>session-persistence-sqlite</code>, which shares one database and
+returns <code>undefined</code> because there is no per-session
+artifact.</li>
+<li><strong>The query index.</strong> <code>session-query-sqlite</code>
+owns a separate FTS5 lifecycle: <code>persisted_sessions</code> and
+<code>persisted_docs</code> on disk, <code>live_sessions</code> and
+<code>temp.live_docs</code> in the connection's temp schema. Session
+rows carry <code>cwd</code>, <code>parent_session</code>,
+<code>seed_length</code>, <code>delegation_depth</code>,
+<code>agent_preset</code>, <code>fingerprint</code> and
+<code>generation</code>; doc rows carry <code>session_id</code>,
+<code>seq</code>, <code>type</code>, <code>time</code>,
+<code>surface</code> and <code>codepoint_length</code>, all
+<code>UNINDEXED</code> beside the tokenized <code>text</code>, with
+<code>tokenize = 'unicode61'</code>.</li>
+<li><strong>Spill files.</strong> Oversized tool output is written under
+<code>&lt;root&gt;/session-&lt;sha256(sessionId)&gt;/&lt;random&gt;-&lt;safeName&gt;</code>
+in a private <code>0700</code> root with
+<code>open(path, 'wx', 0o600)</code> — an exclusive owner-only create,
+chosen so <em>"a planted symlink cannot redirect it"</em> — and the
+inline result is replaced by a head/tail preview plus a locator the
+model is told to <code>read</code> or <code>grep</code>.</li>
+</ul>
+<p>There is also a <code>native/landlock-run</code> package, so
+subprocess isolation on Linux uses the kernel's Landlock LSM rather than
+a wrapper convention.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npx @deepseek-ai/dsh web</code> starts a web UI on
+<code>127.0.0.1:3080</code>; from source it is
+<code>pnpm install &amp;&amp; pnpm run build &amp;&amp; pnpm dsh web</code>.
+No daemon to operate, no database to provision — SQLite is embedded and
+the JSONL backend needs only a directory. It runs local; what degrades
+offline is the model call, not the store.</p>
+<p>Two costs an operator should weigh. The dependency surface is large
+and, at this commit, entirely new: the screen counts 97 unpinned
+manifests and 244 files inside the seven-day cooldown, which is
+unavoidable for a tree whose public history began the same day and is
+exactly the window the cooldown exists for. And the JSONL backend is
+human-readable and repairable by hand while the SQLite one is not — a
+real choice, not a default, and the seam is built so it is one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>session/event</code> is a
+<em>synchronous</em> notification; persistence plugins copy the event
+into a per-session controller without blocking the producer. The first
+pending event opens a fixed batching window and later events join it
+<em>without resetting the deadline</em>; expiry starts one durable
+batch, and events admitted during that write get their own deadline and
+form a follow-up batch. <code>session/flush</code> cancels the wait and
+drains through quiescence, and the loop uses it as the ordering and
+error-observation checkpoint before claiming the next turn.</p>
+<p><strong>Failure.</strong> A rejected background write <em>retains its
+events and pauses automatic retry</em>; a new event opens a fresh
+window, explicit flush retries immediately, and failure is reported
+through <code>agent/error</code> and the logger — <em>"never as a
+session event past the closed turn"</em>, which keeps the log from
+acquiring entries about its own persistence.</p>
+<p><strong>Crash recovery.</strong> A backend reloading a log crashed
+mid-turn finds an open <code>turn/start</code> with no
+<code>turn/end</code>, and <em>does not truncate</em> — the reasoning is
+that one turn can be huge in a long-horizon task and those events were
+durably appended. It closes the orphan with a synthetic
+<code>turn/end { reason: { kind: 'interrupted' } }</code>, and
+<code>interrupted</code> is the one <code>TurnEndReason</code> no loop
+emits, so a synthetic boundary is always distinguishable from a real
+one. Repair applies to cold sessions only; a live id waits until the
+in-memory snapshot is durable and rejects rather than receiving
+synthetic boundaries.</p>
+<p><strong>Replacement.</strong>
+<code>{ op: 'replace', start, end }</code> on the surface, both
+endpoints valid surface seqs, <code>start === end</code> replacing a
+single entry. Used by compaction and available to <em>"any
+surface-replacing producer"</em>.</p>
+<p><strong>Retrieval.</strong> <code>session-query-sqlite</code> runs
+<code>WHERE persisted_docs MATCH ?</code> and
+<code>WHERE live_docs MATCH ?</code> and merges live-preferred, with a
+documented <em>"outer-predicate budget that keeps SQLite FTS5 MATCH
+usable"</em> bounding how much filtering can be pushed around the
+match.</p>
+<p><strong>Model surface.</strong> <code>tool-session-query</code>
+registers five tools whose prompt states that results are
+<em>"cursor-free and workspace-scoped"</em>.</p>
+<p><strong>Index maintenance.</strong>
+<code>DELETE FROM persisted_docs WHERE session_id = ?</code> and its
+three siblings drop a session's rows from both the durable and temp
+tables — the index-side removal that keeps the corpus consistent, not a
+user-facing forget.</p>
+<p><strong>Spill.</strong> <code>SpillStore.saveText</code> persists the
+full content and <em>rejects on a real storage failure</em>; the policy
+consumer replaces an over-<code>maxInlineBytes</code> plain-text result
+best-effort, so <em>"a save failure keeps the original inline result
+rather than turning a successful call into an
+<code>isError</code>"</em>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The event log has no columns — it is a typed union,
+<code>SessionEventMap</code>, with a generated catalog. What has a
+schema is the query index, and its shape is the data model worth
+reading:</p>
+<p>Session rows carry <code>id</code>, <code>version</code>,
+<code>created_at</code>, <code>cwd</code>, <code>parent_session</code>,
+<code>seed_length</code>, <code>delegation_depth</code>,
+<code>agent_preset</code>,
+<code>revision</code>/<code>fingerprint</code> and
+<code>generation</code>, <code>STRICT</code>. Doc rows carry the
+tokenized <code>text</code> plus <code>session_id</code>,
+<code>seq</code>, <code>type</code>, <code>time</code>,
+<code>surface</code> and <code>codepoint_length</code>.</p>
+<p>Three of those are doing real work. <strong><code>cwd</code></strong>
+is the scope key: stored per session, applied as the workspace filter on
+the model-facing read path. <strong><code>parent_session</code> with
+<code>delegation_depth</code></strong> is lineage — a forked or
+delegated session knows its ancestor, which is what
+<code>session_trace</code> walks. And
+<strong><code>seed_length</code></strong> marks the boundary between
+inherited history and live work; the session doc is explicit that a
+resumed or forked log needs it because <em>"seed history and live work
+are otherwise"</em> indistinguishable, and that the boundary must be
+located as the <strong>last</strong> such marker or <em>"every live
+bracket before it"</em> gets misclassified as seed.</p>
+<p>Temporal fields are single-axis: <code>created_at</code> on a
+session, <code>time</code> on an event. There is no validity time, no
+expiry, no TTL on a memory. Scoping is workspace and session; there is
+no user, tenant or org column, which is consistent with a locally-run
+harness and is the boundary an adopter would have to add.</p>
+<p>The one deliberately identity-free structure is worth noting because
+it is argued: the <code>todo/write</code> event carries a whole-list
+snapshot with <em>"a <code>content</code> line and a three-state
+<code>status</code> (no id, priority, or <code>activeForm</code>): the
+list is replaced wholesale on every write, so entries need no stable
+identity."</em> That is the correct call for a scratchpad and the wrong
+one for anything that must be corrected later, and the repository says
+which it is building.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical only. FTS5 with the <code>unicode61</code> tokenizer over the
+event text, no embeddings, no vector store, no reranker, no LLM judge
+over results. Given that the corpus is an agent's own transcripts and
+the queries come from a model that can iterate, that is a defensible
+choice rather than a gap — and it is the choice the atlas keeps finding
+works well enough in coding agents.</p>
+<p>The design decisions that matter are around the match rather than in
+it. <strong>Live-preferred union</strong>: a query hits both the
+persisted table and the temp table for sessions still in memory, so a
+session whose last turn has not flushed is not invisible to search.
+<strong>Surface is a column</strong>, so a caller can ask for current
+context, or for what compaction shadowed, without a second pass.
+<strong><code>session_search</code> returns the strongest matching event
+from each session</strong> rather than a flat ranked list, which is the
+right unit when the follow-up is "now search inside that one" — and the
+tool prompt says so, telling the model to follow a useful hit with a
+narrower call.</p>
+<p>Retrieval is entirely tool-mediated. There is no automatic injection
+of retrieved history into the prompt; the model asks or it does not.
+What <em>is</em> automatic is compaction, which is a different mechanism
+with a different failure mode — it decides what leaves the window, not
+what comes back.</p>
+<p>The failure modes are the ones lexical search has. A concept the
+transcript phrased differently is unreachable; a common token matches
+everything; and the <code>codepoint_length</code> column suggests the
+size guard a caller needs, since an event can be enormous. Against that,
+<code>session_event_read</code> exists precisely so a search hit can be
+expanded to <em>"one full unabridged event"</em> rather than being
+trusted in excerpt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous into memory and batched to
+disk</strong>, and the seam is explicit that these are different
+guarantees. The producer never blocks: a persistence plugin copies the
+event and returns. Durability arrives on a bounded timer, and the loop's
+contract with it is <code>session/flush</code> — the checkpoint it waits
+on before claiming the next ordinary turn. So a memory is retrievable
+immediately from the in-memory session and from
+<code>temp.live_docs</code>, and durable within the batching window.</p>
+<p>The batching rule is stated carefully enough to be worth copying:
+later events join the first pending event's window <em>without resetting
+its deadline</em>, so a busy turn cannot starve durability by
+continuously extending the wait — the failure a naive debounce has.
+Events admitted during a write get their own window rather than joining
+the one in flight.</p>
+<p>There is no extraction, no summarization on the write path, and no
+dedup: the log records what happened. The only thing that rewrites the
+model's view is compaction, and it does so by shadowing rather than
+replacing bytes.</p>
+<p>Deletion is the honest gap. The four <code>DELETE FROM</code>
+statements drop a session's rows from the index tables; nothing in the
+model-facing tool set deletes, and the spill seam says outright that it
+<em>"does not define a per-session cleanup policy"</em>, deferring to a
+retention period that may expire old locators with other old session
+artifacts. For a store whose whole content is transcripts of a user's
+work, "no delete a user can reach" is the thing an adopter should notice
+first.</p>
+<p>Malicious input gets one real defence and one boundary. The spill
+writer's <code>open(path, 'wx', 0o600)</code> under a <code>0700</code>
+root is chosen against symlink planting, and the exclusive flag means a
+pre-existing path fails rather than being followed. The boundary is that
+nothing scans event content for secrets before it is written or indexed
+— a credential pasted into a session is in the log, in the FTS index,
+and searchable by any authorized caller in that workspace.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five tools, and the interesting thing is what is missing from them:
+there is no <code>session_write</code>, no <code>session_delete</code>,
+no memory the model curates. The model can <strong>search</strong> prior
+sessions in its workspace, <strong>search within</strong> an authorized
+session, <strong>trace</strong> a session's lineage,
+<strong>trace</strong> an event's replacements, and
+<strong>read</strong> one event in full. Memory is written by the loop
+as a consequence of what happened, and the model's agency over it is
+entirely on the read side.</p>
+<p>That asymmetry is a design position and a defensible one for a
+harness — an agent that cannot write to its own history cannot poison it
+— and it is the mirror image of <a href="../memoir-cli/">memoir</a>,
+where the model can add and cannot retract. Between them they mark the
+two ways to make the write path safe by removing half of it.</p>
+<p>The tools are one plugin among fifty families, registered on
+<code>ctx.tools</code> like any other, which is what the
+everything-is-a-plugin thesis buys: the memory search surface is
+removable, and a different provider could implement the same seam.</p>
+<p>Adapting the mechanism elsewhere means taking the seam rather than
+the code — <code>SessionPersistence</code> with two backends and
+<code>SessionQuery</code> with a provider-owned index are both small
+interfaces with the hard parts written down in the subsystem docs.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Authorization is the strongest work here, and it is written
+as a threat model rather than a feature.</strong> Search is
+workspace-scoped by <code>cwd</code> and per-session authorized. The
+committed tests state the failure directions rather than the success
+one: fail closed with no agent and for direct cross-workspace targets;
+allow only self for a null-<code>cwd</code> caller; reject records the
+provider returned that were not requested or not authorized. The last is
+a system distrusting its own component's output, which is the check most
+layered designs omit.</p>
+<p>The sharpest is <em>"makes hidden and nonexistent parent guesses
+indistinguishable without calling search"</em>. A caller who guesses a
+parent session id must not be able to tell "exists but you may not see
+it" from "does not exist", and the assertion is that search is not even
+called — so the answer cannot leak through timing or through the
+provider. Almost every memory system in this atlas would fail that test,
+because almost none of them treats record existence as confidential.</p>
+<p><strong>Uncertainty cannot be represented at all.</strong> There is
+no confidence, no verification, no trust state; <code>surface</code> is
+context membership. That is correct for a transcript and it is the
+ceiling on what this layer can be asked to do: it can tell you what was
+said and when it stopped being in view, and it cannot tell you whether
+it was right.</p>
+<p><strong>Consistency</strong> is handled with the same care as
+authorization: a generation counter on session rows, <code>STRICT</code>
+tables, replay validation on load, a bounded LRU holding the exact cold
+unpublished session so repeated history reads share one
+read/decompress/validate/freeze, and <code>inspect()</code>
+distinguished from <code>load()</code> so reading history never commits
+recovery.</p>
+<p>Three gaps. <strong>No secret scanning</strong> on the write or index
+path. <strong>No user-facing delete</strong>, so correcting or removing
+a memory is a filesystem operation against the JSONL backend and not
+available at all against SQLite. And <strong>format version rejection
+without migration</strong> — a backend <em>"rejects any other version on
+load (no migration)"</em>, which is the safe direction and means an
+upgrade can strand a corpus.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>692 spec files. The memory-relevant ones are concentrated where the
+risk is:
+<code>packages/session/session-persistence/tests/persistence.spec.ts</code>,
+<code>packages/session/session-projection-cache/tests/cache.spec.ts</code>,
+and the two under
+<code>packages/session-query/tool-session-query/tests/</code>.</p>
+<p><code>tool-session-query.spec.ts</code> is the one to read, and it is
+a <strong>negative retrieval assertion</strong> suite in the sense this
+atlas counts. Its authorization cases assert absence rather than
+presence — the hidden-parent case uses a fixture whose text is literally
+<code>must not be discoverable</code> — and the timestamp cases go after
+the boundary arithmetic with unusual seriousness: exact same-millisecond
+decimal bounds mapped to adjacent numeric values <em>without collapsing
+the interval</em>, bounds reversed only below one millisecond rejected
+before the provider is called, unequal-length fractional remainders
+compared with implicit trailing zeroes, and fractional bounds across
+zero and pre-epoch. That is the class of bug that silently drops a
+matching memory, and it is pinned.</p>
+<p>What is absent is any retrieval-quality measurement. There is no
+fixture corpus with expected hits, no precision or recall number, and no
+benchmark of any kind in the tree — so nothing would notice if the index
+started returning worse results, only if it started returning
+unauthorized ones. For a system whose memory contribution is search,
+that is the eval this atlas would want first.</p>
+<p><strong>No paper, arXiv reference or citation file exists in this
+repository.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make "what the model used to see" a queryable state rather
+than a deletion.</strong> A <code>current</code> / <code>shadowed</code>
+/ <code>log-only</code> field on every event, indexed as a column, gives
+compaction somewhere to put what it removed and gives a later reader a
+way to ask what the context held three summaries ago. It costs one
+column.</p>
+<p><strong>Let replacement be a range operation on a surface, not a
+rewrite.</strong> <code>{ op: 'replace', start, end }</code> over
+surface sequence numbers keeps the replaced material addressable and
+lets any producer — not just the summarizer — shadow a span. The
+alternative, editing the history in place, loses the thing you would
+need to debug the summary.</p>
+<p><strong>Protect the existence of a record, not only its
+contents.</strong> The test that a hidden session and a nonexistent one
+are indistinguishable <em>without the search being called</em> is the
+strongest access-control assertion in this atlas. If your memory is
+multi-tenant or multi-workspace, an id-guessing caller learning which
+ids are real is a leak your read filter does not close.</p>
+<p><strong>Distrust your own provider's return values.</strong>
+Rejecting records that came back unrequested or unauthorized costs a
+filter and closes the case where the authorization lives in one layer
+and the query in another.</p>
+<p><strong>Batch durably without letting a busy producer starve the
+write.</strong> Later events join the first pending event's window
+rather than resetting it, so the deadline is bounded by arrival of the
+first event, not the last. A plain debounce has the opposite behaviour
+and it fails exactly under load.</p>
+<p><strong>Close an interrupted turn instead of truncating it, with a
+reason no live path emits.</strong> <code>interrupted</code> being
+unreachable from the normal loop means a synthetic boundary is always
+distinguishable from a real one, which is what makes the repair
+auditable rather than invisible.</p>
+<p><strong>Create spill artifacts with <code>wx</code> under a private
+root.</strong> Exclusive create at <code>0600</code> inside a
+<code>0700</code> directory means a planted symlink fails the write
+rather than redirecting it — two flags, and it closes a real local
+attack.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not ship a memory layer with no delete a person can
+reach.</strong> A store whose content is transcripts of someone's work
+needs a removal path before it needs another index. Index-maintenance
+<code>DELETE</code>s are not that, and deferring to an unspecified
+retention period is not either.</p>
+<p><strong>Do not index content you never scanned.</strong> Putting
+event text into a full-text index makes anything in it findable by every
+authorized caller forever. If a credential can reach the log, it can
+reach the index, and the search surface is now the fastest way to find
+it.</p>
+<p><strong>Do not let a status field that means "visible" be mistaken
+for one that means "true".</strong> Three surfaces is a real epistemic
+improvement over none, and it still answers a different question than
+trust does. Say which one you built, or the next contributor will read
+the field as a confidence.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone building an agent harness who wants the history
+layer solved properly and is comfortable tracking a developer preview.
+The seams are the product — <code>SessionPersistence</code>,
+<code>SessionQuery</code>, <code>SpillStore</code>, the scope registry —
+and they are documented to a standard the atlas rarely sees: 44
+subsystem pages, dated architecture notes for individual decisions, and
+prose that states the alternative that was rejected.</p>
+<p>It does not suit anyone who needs a <em>memory</em> in the belief
+sense. Nothing here is a claim, so there is no correction, no
+verification and no forgetting; an adopter wanting those is building
+them on top, and the transcript layer underneath them is the right
+foundation rather than a substitute. It also does not suit a multi-user
+deployment: the scope keys are workspace and session, and a user or
+tenant boundary would have to be added to a schema that has no column
+for it.</p>
+<p>The maintenance budget it assumes is a team's, not a person's.
+564,000 lines and fifty package families is a lot of surface to track
+through a preview that promises breaking changes — which is an argument
+for taking the seam designs and the two or three mechanisms above,
+rather than the dependency.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a user-facing session delete planned, and would it remove the FTS
+rows, the JSONL transcript and the spill directory together? The
+index-side deletes exist and nothing reaches them from the model or, as
+far as the tree shows, from the UI.</li>
+<li>How does search behave at a realistic corpus size — thousands of
+sessions and millions of events — given that <code>persisted_docs</code>
+is one FTS5 table with no partitioning and the documented
+outer-predicate budget bounds what can be filtered around the
+match?</li>
+<li>Does the retention period the spill doc defers to exist anywhere,
+and what owns it?</li>
+<li>Does anything scan event content before it is indexed? Nothing found
+does, and a harness that records shell output will eventually record a
+token.</li>
+<li>The 12,293 commits predate the public repository; whether the
+pre-publication history is complete or squashed affects nothing in the
+mechanism but changes what a reader can audit.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Session and event model</strong> —
+<code>packages/core/session/src/types.ts</code>,
+<code>docs/subsystems/session.md</code>,
+<code>docs/persistence-catalog.md</code>.</p>
+<p><strong>Durability</strong> —
+<code>packages/session/session-persistence/</code>
+(<code>src/coordinator.ts</code>),
+<code>packages/session/session-persistence-jsonl/</code>,
+<code>packages/session/session-persistence-sqlite/</code>,
+<code>docs/subsystems/persistence.md</code>.</p>
+<p><strong>Retrieval</strong> —
+<code>packages/session-query/session-query/src/types.ts</code>,
+<code>packages/session-query/session-query-sqlite/src/schema.ts</code>
+(FTS5 tables), <code>src/index.ts</code> (<code>MATCH</code>, the four
+<code>DELETE</code>s), <code>src/query.ts</code>,
+<code>docs/subsystems/session-query.md</code>.</p>
+<p><strong>Model surface</strong> —
+<code>packages/session-query/tool-session-query/src/index.ts</code>.</p>
+<p><strong>Compaction and spill</strong> —
+<code>packages/compaction/</code>,
+<code>packages/spill/spill/src/index.ts</code>,
+<code>packages/spill/spill-local/</code>,
+<code>docs/subsystems/compaction.md</code>,
+<code>docs/subsystems/spill.md</code>.</p>
+<p><strong>Scope</strong> —
+<code>packages/core/scope/src/index.ts</code>,
+<code>src/store.ts</code>, <code>docs/subsystems/scope.md</code>.</p>
+<p><strong>Skills</strong> — <code>packages/skill/</code>,
+<code>docs/subsystems/skills.md</code>.</p>
+<p><strong>Sandboxing</strong> — <code>native/landlock-run/</code>,
+<code>docs/subsystems/sandbox.md</code>.</p>
+<p><strong>Tests</strong> —
+<code>packages/session-query/tool-session-query/tests/tool-session-query.spec.ts</code>,
+<code>packages/session-query/tool-session-query/tests/sqlite-integration.spec.ts</code>,
+<code>packages/session/session-persistence/tests/persistence.spec.ts</code>.</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-13</strong> — <a
+href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a"><code class="commit-id" title="47f943859bef60e4160492346772ded9b24f765a">47f94385…</code></a>
+— first reading, hours after the repository became public. The GitHub
+repository was created at 11:56 UTC on the day of the reading carrying
+12,293 commits dated from 10 June 2026, so the tree is old and its
+publication is not. Screened before reading: 0 auto-run surfaces, 2
+build-time exec surfaces (a <code>postinstall</code> that chmods
+node-pty's prebuilt spawn helper, and an 845-line lefthook git-hooks
+installer that spawns only <code>git</code> and a local binary and
+reaches no network), 97 unpinned manifests, and 244 dependency surfaces
+inside the seven-day cooldown — which is every manifest in the tree,
+because the publication is younger than the window. Nothing was
+installed and nothing was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
