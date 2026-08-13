@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-14-a-teaching-corpus-and-the-prior-art-it-was-citing.md](2026-08-14-a-teaching-corpus-and-the-prior-art-it-was-citing.md) —
+  a thirty-notebook cookbook's reading list named 21 systems, 15 already
+  reported, and the six that were left had been cited in 5 to 16 `content/`
+  files each *before* anybody read them. The gap a `source_url` join cannot see
+  is not an uncovered repository but a covered report leaning on an unread one,
+  and a probe for it is proposed. Also reverses the 2026-08-09 disposition of
+  `getzep/zep` — the row was correct that the engine is Graphiti and wrong to
+  stop there, because the client repository is where the vendor keeps fifty
+  committed LoCoMo runs. Records two arithmetic bugs of the same shape found in
+  one sitting, both in metrics rather than stores, and the `--only` argument
+  `screen_corpus.py` needs before a batch's own checkouts can reach the ledger.
 - [2026-08-13-the-fourth-review-and-the-second-broken-diagram.md](2026-08-13-the-fourth-review-and-the-second-broken-diagram.md) —
   a fourth outside review opened with "the Mental Model table has completely lost
   its markdown rendering", quoting three edge labels from the PRO-LONG report's
