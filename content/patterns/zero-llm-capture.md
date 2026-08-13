@@ -215,6 +215,40 @@ judged the material on the way in, nothing can judge it later either — there i
 tends to arrive with a zero-correction store, and the two are the same decision
 seen twice.
 
+**[memoir](../../systems/memoir-cli/) shows what the pattern costs when the
+input is prose rather than a typed hook payload, and it is the best-documented
+instance of paying that cost.** Its capture pass parses Claude Code's own JSONL
+transcripts and mints decisions from seven regexes over the conversation, behind
+a nine-rule quality gate — reject under 15 or over 200 characters, containing a
+pipe (a table cell), under three words, opening with a pronoun or filler,
+containing a question mark, with unbalanced brackets, or 140+ characters not
+ending in terminal punctuation. Every rule cites the junk that caused it. The
+last two are **truncation signatures**: a capture cut off by a length cap ends
+mid-thought, so an unbalanced closing paren means *"the opening '(' was in the
+text BEFORE the capture started"*. The refinements to the patterns themselves
+carry the same evidence — `going` was dropped from a bare alternation because
+*"going on Monday to the office"* minted a decision, with the live store's
+`"going on PostDash"` quoted as proof, and the explicit remember-this pattern was
+anchored to message start after a phrase like "note that" matched mid-paragraph
+inside a long pasted spec.
+
+Two transfers. **Anchor an instruction pattern to the start of a message, and
+scope it to the first few hundred characters** — a genuine "remember that X"
+opens a turn, while the same words deep inside pasted content were never an
+instruction. And **run the quality gate once, before every persistence sink**:
+this codebase had two sinks filtering independently, so junk reached one of them
+after the other was fixed.
+
+What it does not do is the thing this page's other instances also miss, and here
+the fix was one field. The extractor computes a `type` for every match —
+`user-note` for the explicit instruction path, `rename`/`tech`/`design`/`stack`
+for the inferential ones — and discards it at the write, encoding provenance
+instead as the string `auto-captured:` prefixed onto the entry's prose rationale.
+The inferential patterns also run over the assistant's text joined with the
+user's, so the model's own suggestion can mint a durable decision. A zero-LLM
+extractor is cheap enough to run on everything, which is exactly why it needs to
+record *whose sentence* each memory came from.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

@@ -104,7 +104,7 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong> Twelve
-systems of two hundred and sixty-seven carry it, and almost no two
+systems of two hundred and sixty-eight carry it, and almost no two
 arrived the same way: one invented it under adversarial pressure, one
 adopted it from the first, one arrived at a weaker form independently,
 one was driven to it by a regulation, three built it after this page
@@ -371,8 +371,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-two hundred and sixty-seven would suggest a hard idea that a few teams
-reach independently. One of two hundred and sixty-seven, plus one
+two hundred and sixty-eight would suggest a hard idea that a few teams
+reach independently. One of two hundred and sixty-eight, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -923,6 +923,50 @@ crosses that line without the schema changing, and nothing signals the
 crossing. That is a better argument for the pattern than a prevalence
 count, and it came from the project that stated the objection to it
 best.</p>
+<p><strong>And then there is the case that argues this page's thesis
+better than any system carrying the mark, and does not carry
+it.</strong> <a href="../../systems/memoir-cli/">memoir</a> publishes a
+format spec whose merge section derives the mechanism from first
+principles, for the reason this page states in its intent: under
+union-by-identity across replicas, <em>removal cannot be an
+absence</em>, because any replica still holding the item re-unions it on
+the next merge. So a removal must be a record — and the spec gets the
+hard half right, which most implementations do not. <strong>The record
+must be monotonic and date-independent.</strong> If either side of a
+merge carries <code>hidden: true</code>, the merged copy carries it
+<em>regardless of which copy has the newer date</em>, because
+tombstoning legitimately does not touch the item's date and the
+tombstoned copy therefore usually <em>loses</em> the newest-wins
+comparison. <em>"Suppression must be monotonic or it is not
+suppression."</em> The implementation matches: <code>unionByText</code>
+resolves by date, then makes a second pass re-applying the tombstone
+from the losing copy onto the winner, and partitions tombstones out of
+the visible cap so a suppression cannot evict a live memory while
+enforcing itself.</p>
+<p>It then splits the mechanism in two, which nothing else here does and
+which the tradeoff list above implies. A suppressed decision gets an
+<strong>absolute</strong> tombstone because the text is junk
+permanently; a completed action gets a <strong>temporal</strong> one,
+suppressed only against copies whose <code>added</code> predates the
+<code>done_at</code>, because <em>"'Fix the flaky test' can legitimately
+be finished and later added again."</em> <strong>"Implementations MUST
+NOT substitute one class for the other."</strong> That distinction is
+the answer to the objection that a value-keyed tombstone is too blunt
+for anything that can recur.</p>
+<p>The mark is withheld because <strong>no shipped surface can create
+the absolute one.</strong> The only assignment of
+<code>hidden = true</code> outside the merge function is a dated one-off
+script whose own header says it is not wired into any command, whose
+match strings are placeholders, and which the package manifest excludes
+from publication. Fourteen MCP tools write memory and none retracts it.
+Everything downstream of the writer is built — three read paths filter
+it, the validator enforces its timestamp by spec section number, a test
+asserts its exclusion at three surfaces including a live protocol call —
+which makes this the most complete instance of the pattern in the atlas
+<em>and</em> an unusable one. Read it as the strongest available
+evidence that the idea is reachable by reasoning rather than by a red
+team, and as a reminder that a mechanism is only as real as its
+narrowest surface.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

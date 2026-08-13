@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 267 reports.**
+**This page covers all 268 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["267 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["268 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2321,3 +2321,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, v0.51.3, 310,000 lines of Python across 573 modules, 2,072 commits since 21 January 2026, 15,650 test functions and nine CI workflows including bespoke gates for module size and a max-turns envelope. Twelve runtime dependencies with bounded ranges; optional extras exact-pinned on purpose, with the March 2026 litellm incident named in the manifest as the reason and a test enforcing the distinction. Its own `.mcp.json` still starts the server from an unversioned `uvx --from ouroboros-ai[mcp]`.
 - Study when: you have a trust field you are not sure how to populate. The four enums in `auto/ledger.py` and `core/requirement_candidate.py` are about two hundred lines and separate what a value rests on from how the decision was reached, and separate content source from confirmation authority — more careful epistemic modelling than most dedicated memory stores here manage across a whole schema. Also read `tests/canonical/evidence/`, which commits a paired experiment whose verdict is `inconclusive` and which declines to report cost because it "cannot be reported without fabrication".
 - Do not copy when: you want a store for what an agent has learned about a user or a domain. There is no retrieval of any kind — no index, no embeddings, no ranking — because there is nothing to search; state is replayed by aggregate id or loaded by key. Also do not assume an interview answer is safe at rest: length validation is not redaction, and a credential pasted into one is written to disk in the clear at 0600 and travels into the Seed.
+
+### [`memoir-cli`](../systems/memoir-cli/)
+
+- Best idea: a merge spec where every normative rule names the production bug it exists to prevent. Under union-by-identity a removal cannot be an absence, so it is a record — and the record is monotonic and **date-independent**, because tombstoning does not touch the item's date and the tombstoned copy therefore usually loses the newest-wins comparison. "Suppression must be monotonic or it is not suppression." The spec then splits the mechanism in two and forbids substituting one for the other: a suppressed decision is junk permanently, a completed action can legitimately recur, so the second class compares `added` against `done_at` and lets a genuine revival through.
+- Biggest risk: the absolute tombstone has no writer any user can reach. The only assignment of `hidden = true` outside `unionByText` is `scripts/cleanup-junk-decisions-2026-07.mjs`, whose header says "NOT wired into any CLI command or package.json script", whose match strings are placeholders, and which `package.json`'s `files` array excludes from the npm package. Three read paths filter it, the validator enforces `hidden_at` by spec section number, a test asserts its exclusion at three surfaces — and none of the fourteen MCP tools can create one. An agent can add to memory and cannot retract from it.
+- Most reusable component: the test runner's real-state tripwire. After a suite imported a `./src` module before shimming `$HOME` — `state.js` binds its paths at module load — a fixture write landed on the developer's live `session.json` and destroyed real data twice. The backstop scans the real store for known fixture strings after every suite, matching markers rather than diffing, because a concurrent `memoir push` can legitimately rewrite the file mid-run and a hash compare would false-positive.
+- Maturity impression: MIT, v3.11.3, 11,932 lines of JavaScript, 111 commits since 3 March 2026, seventeen test suites run by an aggregating runner that no longer short-circuits on the first failure. Eight floating dependency ranges with a lockfile. A 27-pattern secret scanner with a per-pattern length floor added because a global floor of eight let `password: s3cr3t` into a backup. `server.json` still declares version 3.2.2 against a 3.11.3 package, and `cleanupOldBackups` prunes a Pro account to 50 backups where free gets 100.
+- Study when: you are replicating a store across machines and have to make deletion survive a union merge. Section 5 of the spec is separable from the implementation and is the most transferable artifact in this repository — a reader who implements it against their own store gets most of the value without adopting any of the rest.
+- Do not copy when: you need retrieval, scope, or provenance. Search is a substring term-count over whole file contents plus a depth-3 crawl of `$HOME` on every query, with no index and no project filter despite the format defining one; and an auto-captured decision is distinguished from a user's own only by the string `auto-captured:` prefixed onto its prose rationale — the extractor computes a type and discards it before the write.

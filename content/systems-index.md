@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **267 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **268 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -171,6 +171,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memmachine`](../systems/memmachine/) **MemMachine** — Episode-preserving dual memory · `MemMachine/MemMachine` · Scope enforced
 - [`memobase`](../systems/memobase/) **Memobase** — Structured user profiles · `memodb-io/memobase` · Scope enforced
 - [`memoir`](../systems/memoir/) **Memoir** — The collision policy is chosen by memory type · `zhangfengcdt/memoir` · Scope enforced, Mutation audit, Human review
+- [`memoir-cli`](../systems/memoir-cli/) **memoir-cli** — The tombstone nothing can create · `camgitt/memoir` · Mutation audit, Human review, Negative evals
 - [`memomind`](../systems/memomind/) **MemoMind** — Four defects found by running someone else's engine · `24kchengYe/MemoMind`
 - [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review, Negative evals
 - [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced

@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twelve systems of two hundred and sixty-seven
+> **This is not an established best practice.** Twelve systems of two hundred and sixty-eight
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, three built it after
@@ -216,8 +216,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of two hundred and sixty-seven
-would suggest a hard idea that a few teams reach independently. One of two hundred and sixty-seven, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of two hundred and sixty-eight
+would suggest a hard idea that a few teams reach independently. One of two hundred and sixty-eight, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -687,6 +687,45 @@ hand-curated ledger crosses that line without the schema changing, and nothing
 signals the crossing. That is a better argument for the pattern than a
 prevalence count, and it came from the project that stated the objection to it
 best.
+
+**And then there is the case that argues this page's thesis better than any
+system carrying the mark, and does not carry it.**
+[memoir](../../systems/memoir-cli/) publishes a format spec whose merge section
+derives the mechanism from first principles, for the reason this page states in
+its intent: under union-by-identity across replicas, *removal cannot be an
+absence*, because any replica still holding the item re-unions it on the next
+merge. So a removal must be a record — and the spec gets the hard half right,
+which most implementations do not. **The record must be monotonic and
+date-independent.** If either side of a merge carries `hidden: true`, the merged
+copy carries it *regardless of which copy has the newer date*, because
+tombstoning legitimately does not touch the item's date and the tombstoned copy
+therefore usually *loses* the newest-wins comparison. *"Suppression must be
+monotonic or it is not suppression."* The implementation matches: `unionByText`
+resolves by date, then makes a second pass re-applying the tombstone from the
+losing copy onto the winner, and partitions tombstones out of the visible cap so
+a suppression cannot evict a live memory while enforcing itself.
+
+It then splits the mechanism in two, which nothing else here does and which the
+tradeoff list above implies. A suppressed decision gets an **absolute**
+tombstone because the text is junk permanently; a completed action gets a
+**temporal** one, suppressed only against copies whose `added` predates the
+`done_at`, because *"'Fix the flaky test' can legitimately be finished and later
+added again."* **"Implementations MUST NOT substitute one class for the other."**
+That distinction is the answer to the objection that a value-keyed tombstone is
+too blunt for anything that can recur.
+
+The mark is withheld because **no shipped surface can create the absolute one.**
+The only assignment of `hidden = true` outside the merge function is a dated
+one-off script whose own header says it is not wired into any command, whose
+match strings are placeholders, and which the package manifest excludes from
+publication. Fourteen MCP tools write memory and none retracts it. Everything
+downstream of the writer is built — three read paths filter it, the validator
+enforces its timestamp by spec section number, a test asserts its exclusion at
+three surfaces including a live protocol call — which makes this the most
+complete instance of the pattern in the atlas *and* an unusable one. Read it as
+the strongest available evidence that the idea is reachable by reasoning rather
+than by a red team, and as a reminder that a mechanism is only as real as its
+narrowest surface.
 
 ## Tests to require
 

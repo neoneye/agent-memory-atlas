@@ -307,6 +307,44 @@ Because nothing judged the material on the way in, nothing can judge it
 later either — there is no <code>UPDATE</code> on the event table and no
 confidence to revise. A zero-LLM capture path tends to arrive with a
 zero-correction store, and the two are the same decision seen twice.</p>
+<p><strong><a href="../../systems/memoir-cli/">memoir</a> shows what the
+pattern costs when the input is prose rather than a typed hook payload,
+and it is the best-documented instance of paying that cost.</strong> Its
+capture pass parses Claude Code's own JSONL transcripts and mints
+decisions from seven regexes over the conversation, behind a nine-rule
+quality gate — reject under 15 or over 200 characters, containing a pipe
+(a table cell), under three words, opening with a pronoun or filler,
+containing a question mark, with unbalanced brackets, or 140+ characters
+not ending in terminal punctuation. Every rule cites the junk that
+caused it. The last two are <strong>truncation signatures</strong>: a
+capture cut off by a length cap ends mid-thought, so an unbalanced
+closing paren means <em>"the opening '(' was in the text BEFORE the
+capture started"</em>. The refinements to the patterns themselves carry
+the same evidence — <code>going</code> was dropped from a bare
+alternation because <em>"going on Monday to the office"</em> minted a
+decision, with the live store's <code>"going on PostDash"</code> quoted
+as proof, and the explicit remember-this pattern was anchored to message
+start after a phrase like "note that" matched mid-paragraph inside a
+long pasted spec.</p>
+<p>Two transfers. <strong>Anchor an instruction pattern to the start of
+a message, and scope it to the first few hundred characters</strong> — a
+genuine "remember that X" opens a turn, while the same words deep inside
+pasted content were never an instruction. And <strong>run the quality
+gate once, before every persistence sink</strong>: this codebase had two
+sinks filtering independently, so junk reached one of them after the
+other was fixed.</p>
+<p>What it does not do is the thing this page's other instances also
+miss, and here the fix was one field. The extractor computes a
+<code>type</code> for every match — <code>user-note</code> for the
+explicit instruction path,
+<code>rename</code>/<code>tech</code>/<code>design</code>/<code>stack</code>
+for the inferential ones — and discards it at the write, encoding
+provenance instead as the string <code>auto-captured:</code> prefixed
+onto the entry's prose rationale. The inferential patterns also run over
+the assistant's text joined with the user's, so the model's own
+suggestion can mint a durable decision. A zero-LLM extractor is cheap
+enough to run on everything, which is exactly why it needs to record
+<em>whose sentence</em> each memory came from.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>
