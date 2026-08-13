@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 266 reports.**
+**This page covers all 267 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["266 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["267 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2312,3 +2312,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, v0.1.20, 11,531 lines of TypeScript, 42 test files under vitest with CI, files 0600 and directories 0700 throughout, atomic manifest writes, a PID-and-token mutex with a staleness rule, and `--` before every git URL. No benchmark and no accuracy claim, which for a coding agent is the honest posture. Eight floating dependency ranges with no lockfile.
 - Study when: you want a local agent whose session history is a plain readable log, or a worked example of context compaction that does not destroy its own evidence.
 - Do not copy when: you need a memory layer. There is no fact store, no epistemic state, no correction path and no retrieval over history — a session is resumed whole and a skill is loaded by exact name. Adopt the skill manager only after adding the revision field its own updater demonstrates the standard for.
+
+### [`ouroboros-agent-os`](../systems/ouroboros-agent-os/)
+
+- Best idea: an adopted fact is structurally barred from becoming a requirement. `classify_answer_provenance` settles an interview answer's provenance once, where it enters, on an advertised prefix — `[from-code]`, `[from-repo]`, `[from-research]`, `[from-data]` mark something the caller *adopted* rather than *decided* — and the content is withheld from the answer slot while staying intact in the question slot, because sharpening the next question is what the observation was collected for. The rule is per-role, not per-string, and the module names the drift it removes: a second classifier elsewhere in the same tree reads `[from-research]` as human.
+- Biggest risk: the belief has a horizon of one build. The ledger is per-session, the lineage per-task, and no path carries a settled decision from a finished run into a new one — every project starts from an empty ledger and re-derives what the last one settled. The front page reads "It gets smarter on its own"; the accumulation happens within a lineage and not across them, and no committed artifact measures the headline. Separately, `~/.ouroboros/ouroboros.db` collects events from every project on the machine forever with no retention path, while the content those events audit lives in files `ooo cleanup` can delete.
+- Most reusable component: `resolve_conflict` in `auto/ledger.py`. Same-key contradictions resolve against a fixed ten-entry source-priority ladder, then confidence, and return `CONFLICTING` only on an exact tie — at which point the driver blocks rather than invent a merge. No model in the loop, reproducible, free, and the loser is demoted to `WEAK` keeping both its old value and a written rationale naming what displaced it.
+- Maturity impression: MIT, v0.51.3, 310,000 lines of Python across 573 modules, 2,072 commits since 21 January 2026, 15,650 test functions and nine CI workflows including bespoke gates for module size and a max-turns envelope. Twelve runtime dependencies with bounded ranges; optional extras exact-pinned on purpose, with the March 2026 litellm incident named in the manifest as the reason and a test enforcing the distinction. Its own `.mcp.json` still starts the server from an unversioned `uvx --from ouroboros-ai[mcp]`.
+- Study when: you have a trust field you are not sure how to populate. The four enums in `auto/ledger.py` and `core/requirement_candidate.py` are about two hundred lines and separate what a value rests on from how the decision was reached, and separate content source from confirmation authority — more careful epistemic modelling than most dedicated memory stores here manage across a whole schema. Also read `tests/canonical/evidence/`, which commits a paired experiment whose verdict is `inconclusive` and which declines to report cost because it "cannot be reported without fabrication".
+- Do not copy when: you want a store for what an agent has learned about a user or a domain. There is no retrieval of any kind — no index, no embeddings, no ranking — because there is nothing to search; state is replayed by aggregate id or loaded by key. Also do not assume an interview answer is safe at rest: length validation is not redaction, and a credential pasted into one is written to disk in the clear at 0600 and travels into the Seed.

@@ -232,6 +232,30 @@ nothing can enter. Evidence-before-belief has a last mile that is easy to leave
 unbuilt precisely because the interesting work is upstream of it: if you build
 the ladder, commit a test that something can climb it.
 
+[Ouroboros](../../systems/ouroboros-agent-os/) supplies the rule this pattern
+usually leaves implicit: **not all evidence is allowed to become a belief.** Its
+interview answers arrive with an advertised prefix, and
+`classify_answer_provenance` settles at the point of entry whether an answer is a
+decision the caller *made* or a fact the caller *adopted* — `[from-code]`,
+`[from-repo]`, `[from-research]`, `[from-data]`. An adopted fact is evidence in
+the fullest sense of this page and is deliberately **withheld from the slot
+requirements are extracted from**, while staying intact in the question slot,
+because sharpening the next question is what collecting it was for. The rule is
+scoped per role rather than per string, so the same text plays both parts
+without the redaction destroying the second one.
+
+Two details make it transferable. The classification is **decided once and
+carried as a typed field** rather than re-derived per consumer, and the module
+names the drift that motivated it — a second classifier in the same repository
+reads `[from-research]` as human. And the withholding is enforced structurally
+rather than in a prompt: one requirement path emits a specification with no LLM
+in it at all, so a redaction living in a prompt template would never have reached
+it. A single parametrized test asserts across all four requirement-consuming
+render surfaces that the adopted fact's content is absent, with a companion test
+pinning the intentional *non*-redaction of the question line as *"intended
+behavior, not a conceded leak"* — which is the sentence that stops a later
+contributor from finishing the job.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

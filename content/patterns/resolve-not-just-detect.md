@@ -226,6 +226,24 @@ and is never written where a later write can see it leaves the store in the stat
 this page's first group ends in** — ambiguity resolved, and nothing durable to
 show for it.
 
+[Ouroboros](../../systems/ouroboros-agent-os/) is the version where the
+disposition ladder is complete, and it is worth reading even though its subject
+is a specification rather than a knowledge store. `resolve_conflict` on a
+same-key contradiction returns one of five outcomes: identical normalized values
+are `SAME_VALUE` and not a conflict at all; a blocked entry is a human-decision
+surface in both directions; otherwise a **fixed ten-entry source-priority
+ladder** decides, then confidence, and `CONFLICTING` is returned only on an exact
+tie of both. No model is consulted anywhere in that function. The outcome is then
+written where the next write can see it — the loser's status becomes `WEAK` and
+its `rationale` field gains a sentence naming the reason, so the store carries
+both the surviving value and why the other one lost. The residual human decision
+is the exact-tie case, which the ladder is designed to make rare, and it blocks
+the interview driver rather than sitting in a queue. Two properties this page
+argues for and rarely finds together: **the automatic disposition is
+deterministic and free**, so it does not degrade when nobody is looking, and **a
+blocker is retirable** — an earlier transient block is cleared by a later
+non-blocked same-key answer rather than needing a human to remember it exists.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

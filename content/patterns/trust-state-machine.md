@@ -287,6 +287,24 @@ and never checked against each other, so the corpus's single supersession pair i
 reciprocal by hand. A state machine enforced at the boundary and nowhere else is
 a vocabulary, not a machine.
 
+[Ouroboros](../../systems/ouroboros-agent-os/) splits the axis one further step
+than this page usually argues for, and the reason is recorded in the code. Its
+ledger carries `LedgerSource` — what *kind of authority* a value rests on, from
+`USER_GOAL` down through `REPO_FACT`, `CONSERVATIVE_DEFAULT` and `ASSUMPTION` —
+and, orthogonally, `DecisionProvenance`: how the decision was *reached*, from
+`USER_CONFIRMED`, `MODEL_INFERRED`, `TIMEOUT_DEFAULT`, `LATERAL_CONSENSUS` and
+`MAINTAINER_POLICY`. The module says the second axis was added because a
+timeout-defaulted decision had been indistinguishable from a user-confirmed one,
+so degraded specifications executed silently — the failure this page's
+confidence-versus-status split exists to prevent, found one level up. Only the
+two model-derived provenances face a clarity gate before the state may execute;
+the three grounded ones pass unconditionally, which is a machine rather than a
+vocabulary because the gate is where the states are read. Its pre-commit form
+repeats the split under different names: `CandidateContentSource` for where
+content came from, `ConfirmationAuthority` for who signed off, and
+`CandidateResolution` for where it stands, so "why do you believe that" and "who
+approved it" have separate answers and both are stored.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.
