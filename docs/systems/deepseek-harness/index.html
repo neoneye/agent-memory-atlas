@@ -5,29 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="An agent harness whose durable
-memory is an append-only session log, indexed for full-text search
-across past sessions and handed to the model through five tools that
-fail closed on workspace authorization and are tested against a probing
-caller.">
+memory is an append-only session log where nothing is overwritten — and
+whose cross-session full-text search and five model-facing history tools
+are both real, both carefully authorized, and both absent from every
+shipped composition.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="DeepSeek
 Harness — Agent Memory Atlas">
     <meta property="og:description" content="An agent harness whose
-durable memory is an append-only session log, indexed for full-text
-search across past sessions and handed to the model through five tools
-that fail closed on workspace authorization and are tested against a
-probing caller.">
+durable memory is an append-only session log where nothing is
+overwritten — and whose cross-session full-text search and five
+model-facing history tools are both real, both carefully authorized, and
+both absent from every shipped composition.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DeepSeek
 Harness — Agent Memory Atlas">
     <meta name="twitter:description" content="An agent harness whose
-durable memory is an append-only session log, indexed for full-text
-search across past sessions and handed to the model through five tools
-that fail closed on workspace authorization and are tested against a
-probing caller.">
+durable memory is an append-only session log where nothing is
+overwritten — and whose cross-session full-text search and five
+model-facing history tools are both real, both carefully authorized, and
+both absent from every shipped composition.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>DeepSeek Harness — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -83,13 +83,13 @@ probing caller.">
       <section class="document-hero">
         <div class="document-hero-inner">
           <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
-          <p class="eyebrow">History you can search, and cannot
-probe</p>
+          <p class="eyebrow">The search it ships turned off</p>
           <h1>DeepSeek Harness</h1>
           <p class="document-deck">An agent harness whose durable memory
-is an append-only session log, indexed for full-text search across past
-sessions and handed to the model through five tools that fail closed on
-workspace authorization and are tested against a probing caller.</p>
+is an append-only session log where nothing is overwritten — and whose
+cross-session full-text search and five model-facing history tools are
+both real, both carefully authorized, and both absent from every shipped
+composition.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/deepseek-ai/deepseek-harness">
               <span>Source</span>
@@ -103,7 +103,7 @@ workspace authorization and are tested against a probing caller.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-13</strong>
+              <strong>2026-08-14</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -136,18 +136,49 @@ pin is for.</p>
 per session, the source of truth from which the model's message history
 is derived. That much is the shape <a href="../otis/">Otis</a> and most
 local coding agents share. Two things lift it out of that group.</p>
-<p><strong>The log is a searchable corpus, and the model is given the
-search.</strong> A SQLite FTS5 index covers two virtual tables —
-<code>persisted_docs</code> for the durable corpus and a
-<code>temp.live_docs</code> for sessions still in memory — unioned
+<p><strong>The log is a searchable corpus, the model can be given the
+search, and as shipped it is not.</strong> A SQLite FTS5 index covers
+two virtual tables — <code>persisted_docs</code> for the durable corpus
+and a <code>temp.live_docs</code> for sessions still in memory — unioned
 live-preferred, so a search reaches a session whose last turn has not
 been flushed. Five tools expose it: <code>session_search</code> across
 prior sessions, <code>session_event_search</code> within one,
 <code>session_trace</code> for a session's ancestors and descendants,
 <code>session_event_trace</code> for every direct replacement of one
-event, and <code>session_event_read</code> for the full unabridged text.
-Almost nothing else in this corpus lets an agent ask its own history a
-question rather than being handed a slice of it.</p>
+event, and <code>session_event_read</code> for the full unabridged
+text.</p>
+<p><strong>Both halves are off by default, independently.</strong>
+<code>packages/bundle/base/cordis.patch.yml</code> mounts
+<code>session-query-sqlite</code> with <code>path: ':memory:'</code> and
+<code>openAt: never</code>, so <code>searchSessions</code> and
+<code>searchEvents</code> fail with
+<code>SESSION_QUERY_SEARCH_DISABLED</code> before request normalization
+and <code>node:sqlite</code> is never opened; the web-app bundle
+restates it. And <code>tool-session-query</code> — the package holding
+all five tools — is mounted by no bundle at all: it appears in
+<code>examples/acp-agent/</code> and in tests, and its own README says
+<em>"shipped host compositions do not mount it by default."</em> A
+default <code>dsh</code> therefore gives the model <strong>no history
+tools</strong>, and gives the deployment <strong>no content
+search</strong>.</p>
+<p>What survives that default is stated precisely in the bundle's own
+comment, and it is more than nothing: exact reads, titles, and lineage
+traces stay on <code>ctx.sessionQuery</code>, which is what session
+export and subagent-fork workspace inheritance run on, <em>"while the
+Web sidebar search matches titles and workspace names only."</em> So the
+shipped product has durable, append-only, compaction-safe history with
+cross-session <em>lineage</em> — and no cross-session <em>content</em>
+recall by anyone, model or user.</p>
+<p>That posture is the finding, and it is a deliberate one rather than
+an oversight: the search path is one config key away, the tool package
+is one mount away, and both defaults are pinned by a test
+(<code>apps/cli/tests/lazy-search-startup.compat.spec.ts</code> asserts
+<code>openAt</code> is <code>never</code> on both layers). A harness
+that builds a carefully authorized cross-session search and then ships
+it disabled has decided that history recall is a deployment's choice
+rather than a product default — which is the opposite of nearly every
+system in this atlas, and worth more attention than the mechanism it
+withholds.</p>
 <p><strong>Nothing is overwritten, and what was replaced stays
 searchable.</strong> Compaction does not delete; it issues
 <code>{ op: 'replace', start, end }</code>, which shadows the surface
@@ -343,7 +374,20 @@ usable"</em> bounding how much filtering can be pushed around the
 match.</p>
 <p><strong>Model surface.</strong> <code>tool-session-query</code>
 registers five tools whose prompt states that results are
-<em>"cursor-free and workspace-scoped"</em>.</p>
+<em>"cursor-free and workspace-scoped"</em>. The package is opt-in and
+absent from
+<code>packages/bundle/{base,headless,web-app}/cordis.patch.yml</code>;
+the only compositions that mount it are
+<code>examples/acp-agent/session-query.cordis.yml</code> and
+<code>packages/examples/acp-demo/tests/load-path.e2e.ts</code>.</p>
+<p><strong>Search gate.</strong> <code>SqliteSessionQueryEngine</code>
+accepts <code>openAt</code> of <code>startup</code>,
+<code>first-search</code> or <code>never</code>, schema-defaulting to
+<code>startup</code>
+(<code>packages/session-query/session-query-sqlite/src/index.ts:201</code>)
+— but every shipped bundle overrides it to <code>never</code>, which
+refuses full-text calls <em>"before any request normalization"</em> and
+never imports <code>node:sqlite</code>.</p>
 <p><strong>Index maintenance.</strong>
 <code>DELETE FROM persisted_docs WHERE session_id = ?</code> and its
 three siblings drop a session's rows from both the durable and temp
@@ -459,6 +503,13 @@ nothing scans event content for secrets before it is written or indexed
 — a credential pasted into a session is in the log, in the FTS index,
 and searchable by any authorized caller in that workspace.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>The default integration is none.</strong> No shipped bundle
+mounts <code>tool-session-query</code>, so a stock <code>dsh</code>
+model sees no memory tools; its history reaches it as the derived
+message list and, after compaction, as the summary that replaced part of
+it. Everything below describes the surface a deployment gets by adding
+one mount — real, tested code, exercised by the example compositions,
+and not what ships.</p>
 <p>Five tools, and the interesting thing is what is missing from them:
 there is no <code>session_write</code>, no <code>session_delete</code>,
 no memory the model curates. The model can <strong>search</strong> prior
@@ -476,7 +527,8 @@ two ways to make the write path safe by removing half of it.</p>
 <p>The tools are one plugin among fifty families, registered on
 <code>ctx.tools</code> like any other, which is what the
 everything-is-a-plugin thesis buys: the memory search surface is
-removable, and a different provider could implement the same seam.</p>
+removable, a different provider could implement the same seam — and the
+shipped compositions exercise that removability by leaving it out.</p>
 <p>Adapting the mechanism elsewhere means taking the seam rather than
 the code — <code>SessionPersistence</code> with two backends and
 <code>SessionQuery</code> with a provider-owned index are both small
@@ -484,14 +536,20 @@ interfaces with the hard parts written down in the subsystem docs.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Authorization is the strongest work here, and it is written
-as a threat model rather than a feature.</strong> Search is
-workspace-scoped by <code>cwd</code> and per-session authorized. The
-committed tests state the failure directions rather than the success
-one: fail closed with no agent and for direct cross-workspace targets;
-allow only self for a null-<code>cwd</code> caller; reject records the
-provider returned that were not requested or not authorized. The last is
-a system distrusting its own component's output, which is the check most
-layered designs omit.</p>
+as a threat model rather than a feature</strong> — in a package no
+shipped bundle mounts, which is where both this report's capability
+marks live. <code>scope_enforced</code> and <code>negative_eval</code>
+are earned by code in <code>tool-session-query</code>, not by the
+default composition; the mechanisms are in the tree and analysed as
+such, and a stock <code>dsh</code> exercises neither because it exposes
+no read path for them to guard. Search is workspace-scoped by
+<code>cwd</code> and per-session authorized. The committed tests state
+the failure directions rather than the success one: fail closed with no
+agent and for direct cross-workspace targets; allow only self for a
+null-<code>cwd</code> caller; reject records the provider returned that
+were not requested or not authorized. The last is a system distrusting
+its own component's output, which is the check most layered designs
+omit.</p>
 <p>The sharpest is <em>"makes hidden and nonexistent parent guesses
 indistinguishable without calling search"</em>. A caller who guesses a
 parent session id must not be able to tell "exists but you may not see
@@ -680,6 +738,20 @@ mechanism but changes what a reader can audit.</li>
 <code>packages/session-query/tool-session-query/tests/sqlite-integration.spec.ts</code>,
 <code>packages/session/session-persistence/tests/persistence.spec.ts</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a"><code class="commit-id" title="47f943859bef60e4160492346772ded9b24f765a">47f94385…</code></a>
+— re-read at the same commit. The mechanism did not move; the framing
+was wrong. This report had described cross-session full-text search and
+five model-facing history tools as what the system does, when both are
+off in every shipped composition:
+<code>packages/bundle/base/cordis.patch.yml</code> and the web-app
+bundle set <code>openAt: never</code> on
+<code>session-query-sqlite</code>, and no bundle mounts
+<code>tool-session-query</code>, whose own README states that
+<em>"shipped host compositions do not mount it by default."</em>
+Sections 1, 4, 8, 9 and the frontmatter now describe the default posture
+and mark the opt-in surface as opt-in. Both capability marks are
+retained and now say where they live.</p>
 <p><strong>2026-08-13</strong> — <a
 href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a"><code class="commit-id" title="47f943859bef60e4160492346772ded9b24f765a">47f94385…</code></a>
 — first reading, hours after the repository became public. The GitHub

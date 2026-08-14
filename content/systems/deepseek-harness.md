@@ -1,14 +1,14 @@
 ---
 title: "DeepSeek Harness"
-eyebrow: "History you can search, and cannot probe"
-description: "An agent harness whose durable memory is an append-only session log, indexed for full-text search across past sessions and handed to the model through five tools that fail closed on workspace authorization and are tested against a probing caller."
+eyebrow: "The search it ships turned off"
+description: "An agent harness whose durable memory is an append-only session log where nothing is overwritten — and whose cross-session full-text search and five model-facing history tools are both real, both carefully authorized, and both absent from every shipped composition."
 root: ../..
 page_kind: system
 source_name: "deepseek-ai/deepseek-harness"
 source_url: https://github.com/deepseek-ai/deepseek-harness
 revision: 47f943859bef60e4160492346772ded9b24f765a
 revision_url: https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a
-analyzed_at: 2026-08-13
+analyzed_at: 2026-08-14
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
@@ -16,15 +16,15 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "A `SessionEvent` in one session's append-only log, carrying a sequence number and a surface classification of `current`, `shadowed` or `log-only`"
   storage: "One append-only log per session behind a `SessionPersistence` seam with two interchangeable backends — JSONL files under a project directory, or one shared SQLite database — plus a separate FTS5 index and session-scoped spill files at 0600"
-  retrieval: "SQLite FTS5 over two virtual tables, `persisted_docs` and a `temp.live_docs` for sessions not yet flushed, unioned live-preferred; five model-facing tools filter by the caller's workspace `cwd` and by per-session authorization"
+  retrieval: "Exact reads, filters and lineage traces on `ctx.sessionQuery` by default; SQLite FTS5 over `persisted_docs` and a `temp.live_docs`, unioned live-preferred, exists but every shipped bundle sets `openAt: never` so search calls fail closed"
   write: "Synchronous in-memory append, then a batched durable write — the first pending event opens a fixed window that later events join without resetting it, and `session/flush` is the ordering checkpoint the loop waits on before claiming the next turn"
   update_delete: "Nothing is overwritten. Compaction issues `{ op: 'replace', start, end }`, which shadows the surface entries in that range and inserts the new event in their place; the shadowed events stay in the log and stay searchable as `shadowed`"
   scoping: "A `cwd` column on the session row is applied as a workspace filter on the model-facing read path, with per-session authorization above it and a registry layered by an opaque `ScopeKey` so a preset's plugins are invisible outside it"
-  integration: "`session_search`, `session_event_search`, `session_trace`, `session_event_trace` and `session_event_read` — the model searches and traces prior sessions but cannot write to or delete from the log"
+  integration: "`tool-session-query` registers `session_search`, `session_event_search`, `session_trace`, `session_event_trace` and `session_event_read` — all read-only, and no shipped bundle mounts the package, so the default model has no history tools at all"
   background: "None over memory. Persistence batches on a bounded timer and the FTS index is maintained on write; nothing re-reads or rewrites the corpus on a schedule"
   trust: "No epistemic state. `surface` says whether the model currently sees an event, not whether it is true, and nothing carries confidence, verification or provenance beyond who emitted it"
   strengths: "Cross-session search whose authorization is tested against a probing caller — a hidden parent session and a nonexistent one are asserted indistinguishable, without the provider being called"
-  risks: "A developer preview whose public history is hours old, 244 dependency surfaces inside the cooldown and 97 unpinned manifests, and a memory layer with no delete a user can reach"
+  risks: "The searchable-history story is opt-in twice over and off in every shipped bundle; the preview's public history is hours old, with 244 dependency surfaces inside the cooldown and 97 unpinned manifests, and no delete a user can reach"
 ---
 
 ## 1. Executive Summary
@@ -43,15 +43,41 @@ of truth from which the model's message history is derived. That much is the
 shape [Otis](../otis/) and most local coding agents share. Two things lift it out
 of that group.
 
-**The log is a searchable corpus, and the model is given the search.** A SQLite
-FTS5 index covers two virtual tables — `persisted_docs` for the durable corpus
-and a `temp.live_docs` for sessions still in memory — unioned live-preferred, so a
-search reaches a session whose last turn has not been flushed. Five tools expose
-it: `session_search` across prior sessions, `session_event_search` within one,
-`session_trace` for a session's ancestors and descendants, `session_event_trace`
-for every direct replacement of one event, and `session_event_read` for the full
-unabridged text. Almost nothing else in this corpus lets an agent ask its own
-history a question rather than being handed a slice of it.
+**The log is a searchable corpus, the model can be given the search, and as
+shipped it is not.** A SQLite FTS5 index covers two virtual tables —
+`persisted_docs` for the durable corpus and a `temp.live_docs` for sessions still
+in memory — unioned live-preferred, so a search reaches a session whose last turn
+has not been flushed. Five tools expose it: `session_search` across prior
+sessions, `session_event_search` within one, `session_trace` for a session's
+ancestors and descendants, `session_event_trace` for every direct replacement of
+one event, and `session_event_read` for the full unabridged text.
+
+**Both halves are off by default, independently.** `packages/bundle/base/cordis.patch.yml`
+mounts `session-query-sqlite` with `path: ':memory:'` and `openAt: never`, so
+`searchSessions` and `searchEvents` fail with `SESSION_QUERY_SEARCH_DISABLED`
+before request normalization and `node:sqlite` is never opened; the web-app
+bundle restates it. And `tool-session-query` — the package holding all five
+tools — is mounted by no bundle at all: it appears in `examples/acp-agent/` and
+in tests, and its own README says *"shipped host compositions do not mount it by
+default."* A default `dsh` therefore gives the model **no history tools**, and
+gives the deployment **no content search**.
+
+What survives that default is stated precisely in the bundle's own comment, and
+it is more than nothing: exact reads, titles, and lineage traces stay on
+`ctx.sessionQuery`, which is what session export and subagent-fork workspace
+inheritance run on, *"while the Web sidebar search matches titles and workspace
+names only."* So the shipped product has durable, append-only, compaction-safe
+history with cross-session *lineage* — and no cross-session *content* recall by
+anyone, model or user.
+
+That posture is the finding, and it is a deliberate one rather than an oversight:
+the search path is one config key away, the tool package is one mount away, and
+both defaults are pinned by a test (`apps/cli/tests/lazy-search-startup.compat.spec.ts`
+asserts `openAt` is `never` on both layers). A harness that builds a carefully
+authorized cross-session search and then ships it disabled has decided that
+history recall is a deployment's choice rather than a product default — which is
+the opposite of nearly every system in this atlas, and worth more attention than
+the mechanism it withholds.
 
 **Nothing is overwritten, and what was replaced stays searchable.** Compaction
 does not delete; it issues `{ op: 'replace', start, end }`, which shadows the
@@ -225,7 +251,16 @@ and available to *"any surface-replacing producer"*.
 filtering can be pushed around the match.
 
 **Model surface.** `tool-session-query` registers five tools whose prompt states
-that results are *"cursor-free and workspace-scoped"*.
+that results are *"cursor-free and workspace-scoped"*. The package is opt-in and
+absent from `packages/bundle/{base,headless,web-app}/cordis.patch.yml`; the only
+compositions that mount it are `examples/acp-agent/session-query.cordis.yml` and
+`packages/examples/acp-demo/tests/load-path.e2e.ts`.
+
+**Search gate.** `SqliteSessionQueryEngine` accepts `openAt` of `startup`,
+`first-search` or `never`, schema-defaulting to `startup`
+(`packages/session-query/session-query-sqlite/src/index.ts:201`) — but every
+shipped bundle overrides it to `never`, which refuses full-text calls *"before
+any request normalization"* and never imports `node:sqlite`.
 
 **Index maintenance.** `DELETE FROM persisted_docs WHERE session_id = ?` and its
 three siblings drop a session's rows from both the durable and temp tables — the
@@ -335,6 +370,13 @@ and searchable by any authorized caller in that workspace.
 
 ## 8. Agent Integration
 
+**The default integration is none.** No shipped bundle mounts
+`tool-session-query`, so a stock `dsh` model sees no memory tools; its history
+reaches it as the derived message list and, after compaction, as the summary that
+replaced part of it. Everything below describes the surface a deployment gets by
+adding one mount — real, tested code, exercised by the example compositions, and
+not what ships.
+
 Five tools, and the interesting thing is what is missing from them: there is no
 `session_write`, no `session_delete`, no memory the model curates. The model can
 **search** prior sessions in its workspace, **search within** an authorized
@@ -349,7 +391,8 @@ them they mark the two ways to make the write path safe by removing half of it.
 
 The tools are one plugin among fifty families, registered on `ctx.tools` like any
 other, which is what the everything-is-a-plugin thesis buys: the memory search
-surface is removable, and a different provider could implement the same seam.
+surface is removable, a different provider could implement the same seam — and
+the shipped compositions exercise that removability by leaving it out.
 
 Adapting the mechanism elsewhere means taking the seam rather than the code —
 `SessionPersistence` with two backends and `SessionQuery` with a provider-owned
@@ -359,8 +402,12 @@ subsystem docs.
 ## 9. Reliability, Safety, and Trust
 
 **Authorization is the strongest work here, and it is written as a threat model
-rather than a feature.** Search is workspace-scoped by `cwd` and per-session
-authorized. The committed tests state the failure directions rather than the
+rather than a feature** — in a package no shipped bundle mounts, which is where
+both this report's capability marks live. `scope_enforced` and `negative_eval`
+are earned by code in `tool-session-query`, not by the default composition; the
+mechanisms are in the tree and analysed as such, and a stock `dsh` exercises
+neither because it exposes no read path for them to guard. Search is
+workspace-scoped by `cwd` and per-session authorized. The committed tests state the failure directions rather than the
 success one: fail closed with no agent and for direct cross-workspace targets;
 allow only self for a null-`cwd` caller; reject records the provider returned
 that were not requested or not authorized. The last is a system distrusting its
@@ -546,6 +593,17 @@ the two or three mechanisms above, rather than the dependency.
 `packages/session/session-persistence/tests/persistence.spec.ts`.
 
 ## History
+
+**2026-08-14** — [`47f943859bef60e4160492346772ded9b24f765a`](https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a)
+— re-read at the same commit. The mechanism did not move; the framing was wrong.
+This report had described cross-session full-text search and five model-facing
+history tools as what the system does, when both are off in every shipped
+composition: `packages/bundle/base/cordis.patch.yml` and the web-app bundle set
+`openAt: never` on `session-query-sqlite`, and no bundle mounts
+`tool-session-query`, whose own README states that *"shipped host compositions do
+not mount it by default."* Sections 1, 4, 8, 9 and the frontmatter now describe
+the default posture and mark the opt-in surface as opt-in. Both capability marks
+are retained and now say where they live.
 
 **2026-08-13** — [`47f943859bef60e4160492346772ded9b24f765a`](https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a)
 — first reading, hours after the repository became public. The GitHub repository

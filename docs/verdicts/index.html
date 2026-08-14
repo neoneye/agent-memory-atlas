@@ -7439,17 +7439,22 @@ column, so what the model used to see stays searchable and
 <code>session_event_trace</code> walks from a summary back to the events
 it replaced. One column buys the thing most systems lose at every
 compaction.</li>
-<li>Biggest risk: no delete a person can reach. The four
-<code>DELETE FROM</code> statements maintain the query index, the
-model's five tools are read-only by construction, and the spill seam
-says outright it "does not define a per-session cleanup policy". Nothing
-scans event content before it is written or indexed either, so a
-credential that reaches a transcript reaches the full-text index and is
-findable by every authorized caller in that workspace, forever.</li>
+<li>Biggest risk: the searchable-history story is off by default, twice
+over — every shipped bundle sets <code>openAt: never</code> on the FTS
+index, and no bundle mounts <code>tool-session-query</code>, so a stock
+<code>dsh</code> gives the model no history tools and the deployment no
+content search. Behind that: no delete a person can reach. The four
+<code>DELETE FROM</code> statements maintain the query index, the five
+tools are read-only by construction, and the spill seam says outright it
+"does not define a per-session cleanup policy". Nothing scans event
+content before it is written or indexed either, so a credential that
+reaches a transcript reaches the full-text index and is findable by
+every authorized caller in that workspace, forever.</li>
 <li>Most reusable component: the authorization tests on
-<code>tool-session-query</code>. They assert the failure directions
-rather than the success one — fail closed with no agent and for
-cross-workspace targets, allow only self for a null-<code>cwd</code>
+<code>tool-session-query</code> — the opt-in package, which is where
+both of this report's capability marks live. They assert the failure
+directions rather than the success one — fail closed with no agent and
+for cross-workspace targets, allow only self for a null-<code>cwd</code>
 caller, reject records the provider returned unrequested — and the
 sharpest asserts that a hidden parent session and a nonexistent one are
 indistinguishable <em>without search being called</em>, with a fixture

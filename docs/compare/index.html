@@ -5232,10 +5232,11 @@ carrying a sequence number and a surface classification of
 <code>SessionPersistence</code> seam with two interchangeable backends —
 JSONL files under a project directory, or one shared SQLite database —
 plus a separate FTS5 index and session-scoped spill files at 0600</td>
-<td>SQLite FTS5 over two virtual tables, <code>persisted_docs</code> and
-a <code>temp.live_docs</code> for sessions not yet flushed, unioned
-live-preferred; five model-facing tools filter by the caller's workspace
-<code>cwd</code> and by per-session authorization</td>
+<td>Exact reads, filters and lineage traces on
+<code>ctx.sessionQuery</code> by default; SQLite FTS5 over
+<code>persisted_docs</code> and a <code>temp.live_docs</code>, unioned
+live-preferred, exists but every shipped bundle sets
+<code>openAt: never</code> so search calls fail closed</td>
 <td>Synchronous in-memory append, then a batched durable write — the
 first pending event opens a fixed window that later events join without
 resetting it, and <code>session/flush</code> is the ordering checkpoint
@@ -5250,10 +5251,12 @@ workspace filter on the model-facing read path, with per-session
 authorization above it and a registry layered by an opaque
 <code>ScopeKey</code> so a preset's plugins are invisible outside
 it</td>
-<td><code>session_search</code>, <code>session_event_search</code>,
+<td><code>tool-session-query</code> registers
+<code>session_search</code>, <code>session_event_search</code>,
 <code>session_trace</code>, <code>session_event_trace</code> and
-<code>session_event_read</code> — the model searches and traces prior
-sessions but cannot write to or delete from the log</td>
+<code>session_event_read</code> — all read-only, and no shipped bundle
+mounts the package, so the default model has no history tools at
+all</td>
 <td>None over memory. Persistence batches on a bounded timer and the FTS
 index is maintained on write; nothing re-reads or rewrites the corpus on
 a schedule</td>
@@ -5263,9 +5266,10 @@ confidence, verification or provenance beyond who emitted it</td>
 <td>Cross-session search whose authorization is tested against a probing
 caller — a hidden parent session and a nonexistent one are asserted
 indistinguishable, without the provider being called</td>
-<td>A developer preview whose public history is hours old, 244
-dependency surfaces inside the cooldown and 97 unpinned manifests, and a
-memory layer with no delete a user can reach</td>
+<td>The searchable-history story is opt-in twice over and off in every
+shipped bundle; the preview's public history is hours old, with 244
+dependency surfaces inside the cooldown and 97 unpinned manifests, and
+no delete a user can reach</td>
 </tr>
 <tr>
 <td><code>deer-flow</code></td>
@@ -17328,6 +17332,34 @@ is synthesized at runtime rather than present in the source, so no
 static count settles it. What is established is that the count
 definition and its verification command have drifted apart. Reported by
 the project's author; verified at the atlas's pinned commit.</li>
+<li><strong>The <a href="../systems/deepseek-harness/">DeepSeek
+Harness</a> report described an opt-in surface as the system's default,
+and is corrected.</strong> Until 14 August 2026 it framed the harness as
+one whose durable memory is "indexed for full-text search across past
+sessions and handed to the model through five tools". Both halves are
+off in every shipped composition at the pinned commit, and
+independently. <code>packages/bundle/base/cordis.patch.yml</code> mounts
+<code>session-query-sqlite</code> with <code>path: ':memory:'</code> and
+<code>openAt: never</code>, so <code>searchSessions</code> and
+<code>searchEvents</code> fail with
+<code>SESSION_QUERY_SEARCH_DISABLED</code> before request normalization
+and <code>node:sqlite</code> is never opened; the web-app bundle
+restates it and
+<code>apps/cli/tests/lazy-search-startup.compat.spec.ts</code> pins both
+layers. And <code>tool-session-query</code>, which registers all five
+tools, is mounted by no bundle — only by
+<code>examples/acp-agent/</code> and a test — with its own README
+stating that <em>"shipped host compositions do not mount it by
+default."</em> A default <code>dsh</code> gives the model no history
+tools and the deployment no content search, while exact reads, titles
+and lineage traces stay available on <code>ctx.sessionQuery</code>.
+<strong>The error was reading the mechanism and not the composition that
+mounts it</strong> — the same shape as the Memora correction above,
+which read a filter and not its callers, and it is the second time a
+default has been mistaken for a capability in this corpus. Both
+capability marks are retained, because the mechanisms are real code in
+the tree, and the report now says which package they live in. Verified
+at the atlas's own pinned commit before correcting.</li>
 <li><strong><code>HKUDS/Auto-Deep-Research</code> was examined and has
 no report, because its memory layer is present in the tree and
 unreachable from it.</strong> It is a deep-research agent built on the

@@ -82,7 +82,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`daem0n-mcp`](../systems/daem0n-mcp/) **Daem0nMCP** — You may not write until you prove you asked · `dasblueyeddevil/daem0n-mcp` · Bi-temporal, Mutation audit
 - [`daimon`](../systems/daimon/) **Daimon** — Session-boundary checkpoint memory · `Daily-Nerd/daimon` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`deepcode`](../systems/deepcode/) **DeepCode** — Consolidation with no oracle · `HKUDS/DeepCode` · Scope enforced, Mutation audit, Negative evals
-- [`deepseek-harness`](../systems/deepseek-harness/) **DeepSeek Harness** — History you can search, and cannot probe · `deepseek-ai/deepseek-harness` · Scope enforced, Negative evals
+- [`deepseek-harness`](../systems/deepseek-harness/) **DeepSeek Harness** — The search it ships turned off · `deepseek-ai/deepseek-harness` · Scope enforced, Negative evals
 - [`deer-flow`](../systems/deer-flow/) **DeerFlow** — The best-specified memory contract here · `bytedance/deer-flow` · Scope enforced, Human review
 - [`dexto`](../systems/dexto/) **Dexto** — CRUD, and no retrieval on purpose · `truffle-ai/dexto` · Human review
 - [`diffmem`](../systems/diffmem/) **DiffMem** — A whitelisted shell for the memory repo · `growth-kinetics/diffmem`
