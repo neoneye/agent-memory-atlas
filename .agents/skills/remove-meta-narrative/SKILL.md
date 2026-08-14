@@ -22,16 +22,29 @@ supersedes in place. Both are now on the page, the newer one hedged into a
 transition — *"the argument has started to fail"*, *"this is no longer none"* —
 and the page argues with itself. Nothing was deleted, so nothing felt wrong.
 
-Three forms, in increasing order of how well they hide:
+Four forms, in increasing order of how well they hide:
 
 | Form | Looks like | Caught by |
 | --- | --- | --- |
 | **Explicit** | "This report previously said", "re-read on <date>", "the atlas had missed" | grep 1 |
+| **Self-report** | "this page **said** '164 open-source systems'", "the count **was** N **until** 7 August", "the sentence **was false** in the way that matters" | grep 4 |
 | **Adverbial** | "there are **now** two paths", "**still** inverts", "**no longer** none", "**has since** been read" | grep 2 |
 | **Structural** | a paragraph superseded by the next one, both retained; a bullet holding two positions | **nothing automatic — you have to read it** |
 
 The structural form is the one that matters most and the one the greps cannot
 see, because every individual sentence is fine.
+
+**The self-report form is the one that slipped past this skill in practice.** A
+licence section opened *"This page said '164 open-source memory systems' until
+7 August 2026. The sentence was false in the way that matters…"* — three
+sentences of the page grading its own past claim, in the body, when the
+correction was already logged and dated in the known-limitations list. It evaded
+grep 1 (which had "this page **first/named/called**", not "this page **said**")
+and grep 3 (whose trajectory verbs did not include reporting verbs or a bare
+"was false"). The tell is a **reporting or self-judgement verb whose subject is
+the project** — the page, the report, the atlas, the count, the headline, the
+sentence — rather than the system under review. When the page says what the page
+used to say, cut it; the correction lives in the known-limitations list.
 
 ## Where this narration is correct — do not strip it
 
@@ -53,25 +66,43 @@ Removing it from these places is a worse error than leaving it in the body.
 
 ## Detect
 
-Run both, over the **body only** — stop at `## History`, or its entry buries the
-real hits and a check whose output is mostly noise gets skipped.
+Run all four, over the **body only**. Stop at `## History` — and, in
+`content/overview.md`, stop earlier still, at `### Known Limitations`: everything
+from there to `## History` is the dated correction log, which legitimately
+narrates past claims ("previously said", "was wrong", "until <date>"), so
+scanning into it buries the real body hits under dozens of correct ones. The
+sed guards below stop at whichever comes first.
 
-All three need triage. On this repository's rubric page, grep 1 returns five hits
+All four need triage. On this repository's rubric page, grep 1 returns five hits
 and all five are legitimate — "re-reading a system is the expensive part" is a
 statement about method, not a narration of a past position.
 
 ```sh
 # 1 — explicit narration
-rg -n -i 're-read|re-review|re-pin|previously (said|reported|found|named)|this (report|page) (first|named|called)|the atlas (found|missed|had)' <file>
+sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+  | rg -n -i 're-read|re-review|re-pin|previously (said|reported|found|named)|this (report|page) (first|named|called)|the atlas (found|missed|had)'
 
 # 2 — adverbial leakage, high false-positive rate by design
-sed '/^## History$/q' <file> \
+sed '/^### Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '\b(now|still|no longer|used to|already|newer|earlier|these days|has since|has started|as of this reading|at the time of writing)\b'
 
-# 3 — the project narrating its own trajectory. Highest yield of the three.
-sed '/^## History$/q' <file> \
+# 3 — the project narrating its own trajectory. High yield.
+sed '/^### Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '(atlas|report|corpus|rubric|census)[^.]{0,50}(has now|now documents|has since|has not previously|had not|used to be|previously)|the reason this (report|page)|this atlas.{0,3}s (tooling|screener|scripts|build)|the atlas (can|could|should) (say|said|call|claim)|in a single round'
+
+# 4 — the page reporting or grading its own past claim (the self-report form).
+# A reporting/judgement verb whose subject is the project, or a state the page
+# says it held "until" a past date. Highest yield of the four on correction edits.
+sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+  | rg -n -i '(this|the) (page|report|atlas|headline|tagline|sentence|count|matrix|census|table) [^.]{0,60}\b(said|read|claimed|stated|listed|counted|called it)\b|\bwas (false|wrong|misleading|inaccurate|overstated|stale)\b|\buntil [0-9]{1,2} (january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}'
 ```
+
+Grep 4 has two triage traps, both already illustrated in the tables below. A
+reporting verb whose subject is the *subject system* is fine — "the README said
+it forgets" describes the code. And "**until** <date>" bounding a *subject* fact
+is fine — "until 31 July 2026 neither variable was assigned" describes the
+repository, not the page. Cut only when the thing that said, was wrong, or held
+until a date is *this project*.
 
 Grep 3 is narrow **on purpose**. Do not widen it to `this atlas|in this corpus`:
 comparative claims — "the only system in this atlas that…", "most systems in this
@@ -93,6 +124,8 @@ that hold different positions on the same question.
 | "holds what is **no longer** true" (a tombstone file's contents) | "**already** covered in the previous pin" |
 | "the only system in this atlas that routes them separately" | "the defect this atlas has **now** found five times in a fortnight" |
 | "drops the summary when a message **no longer** exists" | "MemoryAgentBench **has since** been read above" |
+| "the README **said** it forgets on restart" (about the code) | "this page **said** '164 open-source systems' **until** August" |
+| "**until** 31 July 2026 neither variable was assigned" (the repo) | "the count **was wrong** in the way that matters" |
 
 **The test:** if the sentence would have to change when *this project* changes
 rather than when the *subject* changes, it is the wrong kind, whatever word
@@ -134,6 +167,8 @@ a reader who wants the sequence can find it.
 
 - You are adding a paragraph and keeping the one above it.
 - You wrote a bolded sentence announcing that a previous position has changed.
+- You quoted what the page, the count, or the headline used to say — or called a
+  past claim false, wrong or misleading — anywhere but the known-limitations log.
 - The passage contains a contrast whose other half is not on the page.
 - You are hedging a new fact to avoid contradicting an old sentence — the old
   sentence is the thing to delete.
