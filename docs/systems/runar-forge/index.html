@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A four-layer memory for coding
+agents whose graduation sweep reads the newest five hundred entries and
+therefore cannot see the old ones it exists to archive — in a codebase
+that documents its own past failures, with counts, in the comment above
+each fix.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RunarForge — Agent Memory Atlas">
+    <meta property="og:description" content="A four-layer memory for
+coding agents whose graduation sweep reads the newest five hundred
+entries and therefore cannot see the old ones it exists to archive — in
+a codebase that documents its own past failures, with counts, in the
+comment above each fix.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RunarForge — Agent Memory Atlas">
+    <meta name="twitter:description" content="A four-layer memory for
+coding agents whose graduation sweep reads the newest five hundred
+entries and therefore cannot see the old ones it exists to archive — in
+a codebase that documents its own past failures, with counts, in the
+comment above each fix.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RunarForge — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Postmortems in the comment above the
+fix</p>
+          <h1>RunarForge</h1>
+          <p class="document-deck">A four-layer memory for coding agents
+whose graduation sweep reads the newest five hundred entries and
+therefore cannot see the old ones it exists to archive — in a codebase
+that documents its own past failures, with counts, in the comment above
+each fix.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/crlome/runar-forge">
+              <span>Source</span>
+              <strong>crlome/runar-forge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa" title="682248790ee1a6d916bd70a910d765be975270aa">
+              <span>Analyzed revision</span>
+              <code>68224879…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-14</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RunarForge is a memory product for coding agents — one static Rust
+binary, 54,895 lines in a single crate named <code>muninn</code>, MIT,
+<strong>694 tests</strong>, SQLite or Postgres, twenty-two MCP tools,
+and a CLI that any MCP-aware editor can mount. It is named for Odin's
+ravens and split accordingly: Huginn crawls the codebase and builds a
+dependency graph, Muninn stores and ranks and graduates, and a Curator
+answers questions by assembling context from both.</p>
+<p>The memory model is four layers — working, episodic, semantic,
+archival — with entries moving between them on a schedule, decaying on
+an exponential curve, and carrying an unusual amount of epistemic
+furniture: a <code>confidence</code> float with a named preset
+vocabulary (verified 1.0, observed 0.9, inferred 0.7, speculative 0.4),
+a separate owner-endorsed <code>verified</code> boolean with its own
+timestamp and <code>verified_by</code>, an <code>author</code> resolved
+from <code>git config user.name</code>, and a typed edge table with five
+relation kinds.</p>
+<p><strong>The finding is that the graduation sweep is pointed away from
+the material it exists to move.</strong>
+<code>graduate_layers_inner</code> fetches candidates with
+<code>ListFilters { limit: Some(500), .. }</code>, never sets the
+<code>offset</code> that <code>ListFilters</code> provides, and no
+caller loops. <code>list</code> ends in
+<code>ORDER BY created_at DESC LIMIT … OFFSET …</code>. Graduation is an
+aging ladder driven by days since last access, so the entries that need
+demoting to archival are the oldest ones — and in any namespace past
+five hundred entries those are precisely the rows the sweep can never
+reach. The mechanism reads the newest five hundred, forever.</p>
+<p><strong>The second finding is a vocabulary that is mostly
+unwired.</strong> <code>EdgeType</code> declares <code>Supports</code>,
+<code>Contradicts</code>, <code>Supersedes</code>,
+<code>Elaborates</code> and <code>Related</code>.
+<code>Supersedes</code> is constructed on dedup and asserted in tests;
+<code>Related</code> is written by the auto-linker.
+<code>Contradicts</code>, <code>Supports</code> and
+<code>Elaborates</code> each appear exactly once in the whole crate — in
+the enum that declares them. Nothing constructs them and nothing reads
+them. So a system with a confidence scale, a verification flag, human
+attribution and a supersession graph still has <strong>no way to record
+that two memories disagree</strong>, and it has named the edge that
+would do it.</p>
+<p>What is genuinely good here is the write path and the honesty.
+<code>propose</code> is a single chokepoint through which MCP saves,
+prompt capture, extraction and the crawler all pass, and it strips
+<code>&lt;private&gt;</code> blocks, redacts secret patterns from title,
+content, tags <em>and</em> the caller-supplied topic key, and bounds
+content — in that order, because "truncating first could cut a secret in
+half and hide it from the matchers". Supersession soft-deletes the old
+row so every read excludes it and writes a <code>Supersedes</code> edge
+so the lineage keeps it.</p>
+<p>And the codebase writes its own postmortems into the comment above
+each fix, with counts. That habit is rare enough to be a finding in
+itself, and section 9 takes it seriously.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entry</strong>: a title and content, an
+<code>EntryType</code>, a <code>MemorySource</code> of
+<code>Human</code>, <code>Agent</code>, <code>Scout</code> or
+<code>System</code>, tags, a namespace, an optional
+<code>project_id</code> and <code>topic_key</code>, a
+<code>MemoryLayer</code> of 1–4, <code>importance</code>,
+<code>decay_score</code>, <code>access_count</code>,
+<code>injected_count</code>, <code>confidence</code>,
+<code>verified</code>, <code>author</code>, <code>verified_by</code>,
+four timestamps and a <code>deleted_at</code>.</p>
+<p>The layer is the state, and four rules move an entry between layers
+(<code>decide_target_layer</code>):</p>
+<ol type="1">
+<li><strong>Verified fast-promote</strong> — a <code>verified</code>
+entry in WORKING jumps straight to SEMANTIC.</li>
+<li><strong>Hebbian citation bump</strong> — <code>access_count</code>
+past <code>citation_threshold</code> promotes one layer, up to
+SEMANTIC.</li>
+<li><strong>Low-confidence aggressive demote</strong> — an entry below
+<code>low_confidence_threshold</code> that has gone untouched for twice
+its layer's threshold drops directly to ARCHIVAL.</li>
+<li><strong>Standard age ladder</strong> — otherwise, WORKING → EPISODIC
+→ SEMANTIC → ARCHIVAL on days-since-access thresholds.</li>
+</ol>
+<p>That is a real epistemic state machine, and rules 1 and 3 are the
+interesting ones: human endorsement short-circuits the ladder upward,
+and low confidence short-circuits it downward at double speed. Belief
+and age are both inputs, and they can disagree.</p>
+<p>Death has two paths and one of them is reversible in principle. A
+<strong>topic-key collision</strong> on <code>propose</code>
+soft-deletes the prior entry — <code>deleted_at</code> set, every normal
+read filtered on <code>deleted_at IS NULL</code> — and writes
+<code>Supersedes</code> from new to old, so the superseded value is
+unreachable by search and reachable by lineage.
+<strong>Deprecation</strong> is the same soft delete without a
+replacement. Nothing is hard-deleted on the ordinary path, and nothing
+records a <em>rejected value</em>, so an entry removed by dedup can be
+re-proposed from the same source with no memory that it was
+displaced.</p>
+<p>Confidence is a float with names attached, not a state.
+<code>verified</code> is a boolean with attribution. Neither can express
+<em>rejected</em>, and the edge that could express <em>disagrees
+with</em> is never written — which is why this report withholds
+<code>trust_state</code> despite the system having more trust machinery
+than most things here.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four rules move an entry between layers, and the sweep that applies them sees only the newest five hundred</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four rules move an entry between layers, and the sweep that applies them sees only the newest five hundred
+flowchart TB
+    Propose[&quot;propose()&quot;] --&gt; Redact[&quot;strip private blocks&lt;br/&gt;redact secrets in title, content,&lt;br/&gt;tags and topic_key&lt;br/&gt;THEN bound content&quot;]
+    Redact --&gt; Dup{&quot;topic_key collides?&quot;}
+    Dup --&gt;|&quot;yes&quot;| Sup[&quot;soft-delete the old row&lt;br/&gt;write Supersedes new → old&quot;]
+    Dup --&gt;|&quot;no&quot;| New[(&quot;entry, layer WORKING&lt;br/&gt;confidence, verified=false,&lt;br/&gt;author from git config&quot;)]
+    Sup --&gt; New
+    New --&gt; Sweep{&quot;gc: list(limit 500)&lt;br/&gt;ORDER BY created_at DESC&quot;}
+    Sweep --&gt;|&quot;newest 500 only&quot;| Rules[&quot;decide_target_layer&quot;]
+    Sweep -.-&gt;|&quot;everything older is&lt;br/&gt;never examined&quot;| Stuck[&quot;stays in its layer&lt;br/&gt;however stale&quot;]
+    Rules --&gt;|&quot;verified and WORKING&quot;| Sem[&quot;SEMANTIC&quot;]
+    Rules --&gt;|&quot;access_count ≥ threshold&quot;| Up[&quot;one layer up, capped at SEMANTIC&quot;]
+    Rules --&gt;|&quot;confidence low and 2× overdue&quot;| Arch[&quot;ARCHIVAL&quot;]
+    Rules --&gt;|&quot;otherwise, age ladder&quot;| Next[&quot;WORKING → EPISODIC → SEMANTIC → ARCHIVAL&quot;]
+    New -.-&gt;|&quot;Contradicts is declared&lt;br/&gt;and never written&quot;| Gap[&quot;no way to record&lt;br/&gt;that two memories disagree&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One crate, <code>crates/muninn</code>, with a thin npm wrapper in
+<code>packages/cli-wrapper</code> that fetches the platform binary.
+Subsystems:</p>
+<ul>
+<li><strong><code>librarian/</code></strong> (3,268 lines) — the core:
+<code>propose</code>, <code>deprecate</code>, search,
+<code>recall_for_prompt</code>, decay, graduation, edges, sessions, the
+observation queue, <code>mark_verified</code>, outbox enqueue.</li>
+<li><strong><code>storage/</code></strong> — <code>sqlite.rs</code>
+(5,375) and <code>postgres.rs</code> (3,121) behind one trait, with
+numbered SQL migrations.</li>
+<li><strong><code>huginn/</code></strong> — the crawler:
+<code>crawl.rs</code>, <code>git.rs</code>,
+<code>analysis/file_analyzer.rs</code>,
+<code>analysis/pattern_extractor.rs</code>, a benchmark harness.</li>
+<li><strong><code>codegraph/</code></strong> — <code>resolve.rs</code>
+(2,323), <code>store.rs</code> (2,234), <code>refresh.rs</code>,
+<code>freshness.rs</code>, and tree-sitter extractors per language.</li>
+<li><strong><code>curator/</code></strong> — natural-language question
+answering over memory.</li>
+<li><strong><code>mcp/</code></strong> (2,824) — twenty-two tools.</li>
+<li><strong><code>embedding/</code></strong>,
+<strong><code>sync/</code></strong>,
+<strong><code>redact.rs</code></strong>,
+<strong><code>extract.rs</code></strong>,
+<strong><code>hooks_runtime.rs</code></strong>,
+<strong><code>maintenance.rs</code></strong>,
+<strong><code>doctor.rs</code></strong> (1,620),
+<strong><code>setup.rs</code></strong> (1,868),
+<strong><code>wizard.rs</code></strong>.</li>
+</ul>
+<p>Storage is a memory-entry table with FTS and embeddings, an edge
+table, a sessions table, a <code>debug_log</code> (migration 005), an
+observation queue and a sync outbox. The outbox exists for hybrid mode:
+a local SQLite store that drains row payloads to a remote Postgres.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>One static binary, no runtime.</strong> ~16 MB on macOS
+arm64, ~70 MB with bundled local embeddings — so semantic search can run
+with no API key and no service.</li>
+<li><strong>SQLite by default</strong>, Postgres for the shared case,
+hybrid via <code>RUNAR_STORAGE_LOCAL</code> with an outbox between
+them.</li>
+<li><strong>The store is a database, not files</strong> — inspectable
+with any SQLite client, not hand-editable the way a markdown tree
+is.</li>
+<li>Setup is a wizard (<code>setup.rs</code>, <code>wizard.rs</code>)
+that writes the MCP config for whichever editors it finds, and there is
+a <code>doctor</code> with 1,620 lines of diagnostics.</li>
+<li>Operator surface: <code>runar gc</code> with <code>--dry-run</code>
+that previews planned layer transitions without mutating,
+<code>sync repair</code>, <code>merge_projects</code>, and a debug log
+behind <code>RUNAR_DEBUG=true</code>.</li>
+</ul>
+<p>The screen of this checkout found <strong>no auto-run surfaces, no
+build-time execution and no unpinned manifests</strong>, with
+<code>Cargo.lock</code> present and four dependency surfaces inside the
+seven-day cooldown. That is the cleanest screen of anything read for
+this atlas recently. A <code>CLAUDE.md</code> is present and was read as
+data. Nothing was installed and nothing was built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write chokepoint</strong> — <code>Librarian::propose</code>
+at <code>librarian/mod.rs:125</code>: <code>strip_private</code>,
+<code>redact_secrets</code> over title, content and each tag, then
+<code>scrub</code> on <code>topic_key</code>, then
+<code>bound_content</code>, then author stamping, then save, then
+synchronous embedding, then the <code>Supersedes</code> edge, then the
+outbox enqueue.</li>
+<li><strong>Supersession</strong> — <code>librarian/mod.rs:220</code>,
+writing <code>EdgeType::Supersedes</code> from the new entry to
+<code>result.superseded</code>.</li>
+<li><strong>Dedup lookup</strong> — <code>storage/sqlite.rs:387</code>
+on <code>namespace + content_hash</code>, and <code>:414</code> on
+<code>namespace + topic_key</code>, both filtered
+<code>deleted_at IS NULL</code>.</li>
+<li><strong>Soft delete</strong> — <code>Librarian::deprecate</code> at
+<code>librarian/mod.rs:265</code>, which deletes first and <em>then</em>
+snapshots through <code>get_including_deleted</code>.</li>
+<li><strong>Decay</strong> — <code>compute_decay_score</code> at
+<code>:961</code>:
+<code>base_weight * exp(-lambda * days_since) + access_boost</code>,
+clamped to <code>[0,1]</code>, with a lower <code>base_weight</code> for
+ARCHIVAL.</li>
+<li><strong>Graduation</strong> — <code>graduate_layers_inner</code> at
+<code>:990</code> and <code>decide_target_layer</code> at
+<code>:1447</code>.</li>
+<li><strong>List</strong> — <code>storage/sqlite.rs:694</code> onward,
+<code>WHERE namespace = ?1 … ORDER BY created_at DESC LIMIT {} OFFSET {}</code>.</li>
+<li><strong>Verification</strong> — <code>mark_verified</code> at
+<code>librarian/mod.rs:1124</code>, resolving <code>verified_by</code>
+from <code>identity::resolve_author()</code>.</li>
+<li><strong>Recall</strong> — <code>recall_for_prompt</code> at
+<code>:547</code> and <code>fused_search</code> at
+<code>:525</code>.</li>
+<li><strong>Edges</strong> — <code>save_edge</code>,
+<code>get_edges</code>, <code>delete_edge</code> at
+<code>:1037</code>–<code>:1049</code>; the auto-linker writes
+<code>EdgeType::Related</code> at <code>:1538</code>.</li>
+<li><strong>Observation queue</strong> —
+<code>enqueue_observation</code>, <code>claim_observations</code>,
+<code>confirm_observations</code>,
+<code>recover_stale_observations</code> at
+<code>:1080</code>–<code>:1105</code>.</li>
+<li><strong>Debug log</strong> — <code>write_debug_log</code> at
+<code>storage/sqlite.rs:1100</code>, gated by
+<code>debug::enabled()</code> reading <code>RUNAR_DEBUG</code>.</li>
+<li><strong>MCP dispatch</strong> — <code>mcp/mod.rs:285</code>
+onward.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryEntry</code> carries more per-row epistemic state than
+almost anything in this atlas:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>layer</code></td>
+<td>1–4, working through archival, clamped on construction</td>
+</tr>
+<tr>
+<td><code>importance</code>, <code>decay_score</code></td>
+<td>ranking inputs, decay recomputed by <code>gc</code></td>
+</tr>
+<tr>
+<td><code>access_count</code></td>
+<td>ranked-search hits; feeds the Hebbian promote and the decay
+boost</td>
+</tr>
+<tr>
+<td><code>injected_count</code>, <code>last_injected_at</code></td>
+<td>automatic-recall injections, <strong>reporting only</strong></td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>float, with presets verified 1.0 / observed 0.9 / inferred 0.7 /
+speculative 0.4</td>
+</tr>
+<tr>
+<td><code>verified</code>, <code>verified_at</code>,
+<code>verified_by</code></td>
+<td>owner endorsement, its time, and who did it</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>proposer, from <code>git config user.name</code>, NULL for
+agent-origin rows</td>
+</tr>
+<tr>
+<td><code>topic_key</code></td>
+<td>the supersession key</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>soft delete; every normal read filters it out</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The split between <code>access_count</code> and
+<code>injected_count</code> is the schema's best moment, and the comment
+on it is the reason.</strong> Verbatim:</p>
+<blockquote>
+<p>Separate from <code>access_count</code> (ranked search) on purpose:
+one counter for two channels is what let "95.9% never retrieved" stand
+for three months while 15,819 injections went unrecorded. Reporting only
+— deliberately not an input to ranking or decay.</p>
+</blockquote>
+<p>Two decisions in three lines: split the counter because one number
+over two channels produced a headline statistic that was false, and then
+keep the new counter <em>out of ranking and decay</em> so that a memory
+injected automatically does not thereby become more likely to be
+injected again. The second half is the part most systems get wrong — <a
+href="../reflexion/">Reflexion</a> and the retrieval-boost designs in
+this corpus all close that loop without noticing.</p>
+<p><strong>Scoping</strong> is <code>namespace</code>, and it is applied
+as <code>WHERE namespace = ?1</code> on <code>list</code>, on both dedup
+lookups, on topic-key reads and on the search paths — a stored scope key
+filtered on the read path, which earns <code>scope_enforced</code>.
+<code>project_id</code> and <code>topic_key</code> sit beneath it, and
+<code>merge_projects</code> exists to fold one namespace into another
+with a preview.</p>
+<p>There is no bitemporality: <code>created_at</code>,
+<code>updated_at</code>, <code>last_accessed_at</code> and
+<code>deleted_at</code> are all record time.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Fused lexical and vector search — FTS5 over entry text plus
+embeddings, which can be local (bundled, no key) or remote. Ranking
+multiplies in a <strong>1.25× verified bonus</strong>, and the tests
+assert its direction rather than its value: <em>"verified entry must
+outrank speculative peer"</em>, and separately that the bonus "cannot
+recover" an entry below a relevance floor — so the bonus is a tiebreak
+among plausible results, not an override.</p>
+<p>Decay feeds ranking through <code>decay_score</code>, and
+<code>access_count</code> feeds decay through a capped boost.
+<code>injected_count</code> feeds neither, by design.</p>
+<p>Edge traversal is a <strong>separate surface</strong>, not a fused
+arm: <code>muninn_related</code> walks the edge table from an entry. So
+the graph is queryable on demand and does not influence ranked search —
+which means a <code>Supersedes</code> chain is visible to an agent that
+asks and invisible to one that searches. Since supersession also
+soft-deletes the old row, that is the right call, and it leaves
+<code>Related</code> edges doing nothing for relevance.</p>
+<p>The failure mode worth naming is what the layer model does
+<em>not</em> do at read time: nothing in the ranked path filters or
+weights by <code>layer</code>. An entry demoted to ARCHIVAL gets a lower
+<code>base_weight</code> in the decay computation and is otherwise a
+normal search result. Graduation therefore changes a number, not a
+visibility — so the four-layer taxonomy is a decay-rate schedule wearing
+the vocabulary of a tiered store.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Everything funnels through <code>propose</code>, and the ordering
+inside it is the design. <code>&lt;private&gt;…&lt;/private&gt;</code>
+blocks are stripped first; secret patterns are redacted from title,
+content and each tag; the caller-supplied <code>topic_key</code> is
+scrubbed separately because — the comment again — a secret pasted into
+it "outlived the scrubbing of every other field. Only the
+<em>derived</em> key was clean, because that one is built from an
+already-redacted title." Content is bounded <strong>after</strong>
+redaction, because truncating first "could cut a secret in half and hide
+it from the matchers". Each of the three outcomes tags the row:
+<code>redacted</code>, <code>redacted:secret</code>,
+<code>truncated</code> — so the fact that a memory was modified on the
+way in is itself stored and searchable.</p>
+<p>That is one chokepoint covering MCP save, prompt capture, extraction
+and the crawler, with the hazard ordering reasoned out in comments. It
+is the strongest write-path hygiene in this atlas.</p>
+<p>Writes are synchronous, including the embedding: <code>propose</code>
+awaits <code>embedding.embed()</code> before returning, so a memory is
+semantically searchable the moment it is saved and the caller pays the
+embedding latency. With local embeddings bundled in the binary that is a
+defensible trade.</p>
+<p>Deduplication is two-level: a <code>content_hash</code> match within
+a namespace, and a <code>topic_key</code> match. The topic-key path is
+the supersession path. Without a topic key, two entries stating opposite
+things both persist, with nothing relating them — which is where the
+missing <code>Contradicts</code> edge would earn its keep.</p>
+<p>Background work is <code>runar gc</code>: recompute decay, then
+graduate layers. Its <code>--dry-run</code> returns the planned
+transitions without mutating, which is the right affordance for a
+destructive-feeling operation and is rare here. The sync outbox drains
+separately, with a dead-letter cap and a <code>sync repair</code>
+path.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Twenty-two MCP tools, and the breadth is the product:
+<code>muninn_save</code>, <code>muninn_search</code>,
+<code>muninn_context</code>, <code>muninn_get</code>,
+<code>muninn_related</code>, <code>muninn_timeline</code>,
+<code>muninn_stats</code>, <code>muninn_verify</code>,
+<code>muninn_capture_passive</code>, session start/end,
+<code>muninn_merge_projects</code>, <code>muninn_debug</code>, a
+four-tool icebox and a five-tool plan surface.</p>
+<p>The agent has broad agency: it can save, search, verify, and manage
+sessions, plans and an icebox. There is no delete tool in the MCP set —
+deprecation is a CLI and internal path — so the model can add and
+endorse but not retract, which is the <a
+href="../memoir-cli/">memoir</a> shape.</p>
+<p>Automatic recall runs through <code>recall_for_prompt</code> and a
+hook runtime, and this is where <code>injected_count</code> comes from:
+entries served into context by a PreToolUse hook rather than by a
+model's search. The <code>Injection</code> debug event records which
+entries were injected, how many, how large and how long it took.</p>
+<p><code>muninn_verify</code>'s description tells the model when to use
+it: <em>"Use when reviewing an agent-generated memory that is accurate
+and worth surfacing first."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The trust machinery is extensive and stops one step
+short.</strong> There is a confidence float with a named vocabulary, an
+owner-endorsed flag with its own timestamp and attribution, a proposer
+recorded from git config, and a supersession graph. What there is not is
+a <em>rejected</em> state or any way to relate two entries that
+conflict, so the <code>trust_state</code> mark is withheld. The
+near-miss is precise: <code>verified</code> is a two-valued flag, and
+the enum member that would make it three — <code>Contradicts</code> — is
+declared and never written. A system can say "this is endorsed" and
+"this replaced that", and cannot say "this is wrong" or "these two
+disagree".</p>
+<p><strong><code>human_review</code> is earned, with a caveat that
+should be read alongside it.</strong> <code>muninn_verify</code> is an
+explicit endorsement surface, <code>verified_by</code> records who
+performed it from <code>git config user.name</code>, and it is separate
+from <code>author</code> so proposer and endorser are distinguishable.
+The caveat is that the only surface is an MCP tool — no CLI
+<code>verify</code> subcommand exists at this commit — so the
+<em>caller</em> can be the same agent that wrote the memory, while the
+<em>attribution</em> records whichever human's git config is configured.
+That is the self-endorsement hazard <a href="../open-second-brain/">Open
+Second Brain</a> has in its counters, relocated to a review flag, and it
+means a verified entry attests to a review having been requested rather
+than performed.</p>
+<p><strong><code>audit_log</code> is withheld, and two near-misses are
+why.</strong> The <code>debug_log</code> table is append-only and
+records real memory mutations — <code>LayerGraduation</code>,
+<code>DedupDecision</code>, <code>TouchPromotion</code>,
+<code>Injection</code>, <code>SearchScoring</code>,
+<code>DecayCompute</code>, <code>AutoLink</code> — but it is gated on
+<code>RUNAR_DEBUG=true</code>, off by default, and
+<code>prune_debug_log(older_than_days)</code> exists to age it out. It
+is a diagnostic channel, not a record of what the store did. The sync
+outbox is append-only and carries full row payloads for every Create,
+Update and Delete, but its purpose is a replication queue that gets
+drained.</p>
+<p><strong><code>negative_eval</code> is withheld for a reason worth
+stating</strong>, because the tests look like the mark and are not.
+<code>test_propose_redacts_private_content</code> and
+<code>test_propose_redacts_secret_patterns</code> assert that a secret
+does not appear in <code>entry.content</code> — material kept out of a
+<em>write</em>. The atlas draws that line explicitly: keeping material
+out of a write is a different and weaker thing than asserting it must
+not be <em>retrieved</em>. No test here indexes something, searches for
+it, and asserts absence.</p>
+<p><strong>Provenance is the strongest in its class.</strong> Every
+entry knows its source category, its human proposer where one exists,
+its endorser, its redaction history via tags, and its supersession
+lineage via edges. That is more than any markdown-based system here can
+offer, and it is the payoff for storing rows rather than files.</p>
+<p><strong>The graduation cap is a correctness bug, not a tuning
+choice</strong>, and it is worth stating separately from the finding
+because of what it interacts with. Rule 3 — low-confidence aggressive
+demote — is the mechanism that clears speculative material out of the
+ranked set. It runs only over the newest five hundred entries. So in a
+mature namespace, the low-confidence entries most overdue for archival
+are the ones the rule cannot see, and they keep their
+<code>base_weight</code> of 1.0 in the decay computation
+indefinitely.</p>
+<p>Concurrency is handled with an observation queue that supports claim,
+confirm and stale-recovery, and the outbox has a dead-letter cap.
+Redaction is described in its own comment as "best-effort privacy
+hygiene; not a security boundary", which is the correct disclaimer for
+regex secret matching.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>694 tests in the crate</strong>, and they are written against
+behaviour rather than coverage: the supersession test asserts the edge
+direction, the ranking tests assert that a verified entry outranks a
+speculative peer <em>and</em> that the bonus cannot rescue an entry
+below the relevance floor, and the author test asserts that an explicit
+<code>author</code> survives propose → storage → get while
+<code>mark_verified</code> sets <code>verified_by</code> "without
+disturbing <code>author</code>".</p>
+<p><code>huginn/benchmark.rs</code> is a crawler benchmark — throughput
+of the scout, not retrieval quality.</p>
+<p>What is missing is the pair a reader would most want. <strong>Nothing
+tests graduation at scale</strong>: there is no case with more than five
+hundred entries in a namespace, which is exactly why the cap survives.
+And there is no retrieval-quality evaluation of any kind — no dataset,
+no recall measurement, no negative case — so the 1.25× verified bonus,
+the decay lambda, the access boost cap and the four graduation
+thresholds are all unmeasured constants with tests that assert their
+direction and nothing that assesses their value.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Split your counters by channel, and keep the new one out of
+ranking.</strong> One counter over ranked search and automatic injection
+produced a false headline statistic here for three months. Splitting it
+fixed the reporting; refusing to feed the injection counter back into
+ranking or decay is what stops automatic recall from becoming
+self-reinforcing.</p>
+<p><strong>Put redaction on one chokepoint, and order it before
+truncation.</strong> Every write path through one function,
+<code>&lt;private&gt;</code> blocks and secret patterns stripped from
+every caller-supplied field including the ones that look like keys, and
+the bound applied afterwards so a truncation cannot hide half a secret
+from the matcher. Then tag the row so the redaction is itself a fact you
+can query.</p>
+<p><strong>Supersede by soft-delete plus an edge.</strong> The old row
+leaves every read because reads filter <code>deleted_at IS NULL</code>,
+and the lineage survives because the edge points new → old. You get
+correct retrieval and a recoverable history from two writes.</p>
+<p><strong>Give a destructive maintenance pass a <code>--dry-run</code>
+that returns the plan.</strong> <code>runar gc --dry-run</code> lists
+the layer transitions it would make and mutates nothing. Anything that
+reclassifies or deletes in bulk should be previewable.</p>
+<p><strong>Distinguish the proposer from the endorser.</strong>
+<code>author</code> and <code>verified_by</code> are separate columns,
+and one test exists specifically to assert that verifying does not
+overwrite authorship.</p>
+<p><strong>Write the postmortem into the comment above the fix.</strong>
+See below — it is the most transferable thing in this repository and it
+costs nothing.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not page a maintenance sweep by recency when the sweep is
+about age.</strong> <code>LIMIT 500 ORDER BY created_at DESC</code> over
+an aging ladder selects exactly the rows that least need processing. If
+a background pass must be bounded, bound it by the property it acts on,
+or paginate to exhaustion, or process oldest-first.</p>
+<p><strong>Do not declare a vocabulary you do not wire up.</strong>
+Three of five edge types here are never constructed and never read. A
+reader — and a future maintainer — reasonably infers that a system with
+a <code>Contradicts</code> edge can represent contradiction, and this
+one cannot.</p>
+<p><strong>Do not let a layer taxonomy imply a retrieval boundary it
+does not have.</strong> Nothing in the ranked read path filters or
+weights on <code>layer</code>; archival entries are ordinary results
+with a lower decay base. The four names promise a tiered store and
+deliver a decay schedule.</p>
+<p><strong>Do not ship a review flag whose only caller can be the thing
+being reviewed.</strong> If verification grants a ranking bonus and a
+graduation fast-promote, the surface that grants it needs an actor the
+memory's author cannot be.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who wants durable, structured, queryable
+memory across several coding tools and is content for it to live in a
+database rather than in files. The one-binary, no-runtime,
+local-embeddings-included deployment is the best in this atlas for that
+use case, the write-path hygiene is the best full stop, and 694 tests
+over 55,000 lines is a real maintenance signal.</p>
+<p>Walk away if you want memory you can edit in a text editor and diff
+in git — this is rows, and the markdown-tree systems serve that better.
+Walk away if you need contradiction handling, because the type exists
+and the mechanism does not. And if your namespaces will exceed five
+hundred entries, treat graduation as non-functional until the cap is
+paginated: the store still works, but the layer field stops meaning what
+the documentation says it means.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the 500-entry graduation limit a deliberate bound with pagination
+intended elsewhere? <code>ListFilters::offset</code> exists and is
+unused by this caller.</li>
+<li>Were <code>Contradicts</code>, <code>Supports</code> and
+<code>Elaborates</code> wired up previously, or reserved for future use?
+Nothing in the tree constructs them at this commit.</li>
+<li>Is there a non-MCP path to <code>mark_verified</code>? No CLI
+subcommand appears here, which decides whether the review surface has a
+human in it.</li>
+<li>What are the shipped values of <code>lambda</code>,
+<code>citation_threshold</code>, <code>low_confidence_threshold</code>
+and the four graduation thresholds, and were any of them measured? They
+live in <code>DecayConfig</code> and nothing evaluates them.</li>
+<li>Does the remote in hybrid mode enforce the same namespace scoping
+the local reads apply? The outbox pushes rows; the read-side story on
+the remote is not in this crate.</li>
+<li>How often is the <code>95.9%</code> statistic in the
+<code>injected_count</code> comment now recomputed, and against which
+counter?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Core</strong></p>
+<ul>
+<li><code>crates/muninn/src/librarian/mod.rs</code> —
+<code>propose</code>, <code>deprecate</code>,
+<code>mark_verified</code>, <code>compute_decay_score</code>,
+<code>graduate_layers_inner</code>, <code>decide_target_layer</code>,
+<code>fused_search</code>, <code>recall_for_prompt</code>, edges,
+observation queue, outbox.</li>
+<li><code>crates/muninn/src/types.rs</code> — <code>MemoryEntry</code>,
+<code>MemoryLayer</code>, <code>EdgeType</code>,
+<code>DebugEvent</code>, <code>ListFilters</code>,
+<code>resolve_confidence</code>.</li>
+</ul>
+<p><strong>Storage</strong></p>
+<ul>
+<li><code>crates/muninn/src/storage/sqlite.rs</code> — schema,
+<code>list</code>, dedup lookups, <code>write_debug_log</code>,
+FTS.</li>
+<li><code>crates/muninn/src/storage/postgres.rs</code> — the shared
+backend.</li>
+<li><code>crates/muninn/src/storage/sql/005_add_debug_log.sql</code> —
+the debug table.</li>
+</ul>
+<p><strong>Write hygiene</strong></p>
+<ul>
+<li><code>crates/muninn/src/redact.rs</code> —
+<code>strip_private</code>, <code>redact_secrets</code>,
+<code>scrub</code>.</li>
+<li><code>crates/muninn/src/identity.rs</code> —
+<code>resolve_author</code>.</li>
+</ul>
+<p><strong>Scout and graph</strong></p>
+<ul>
+<li><code>crates/muninn/src/huginn/</code> — <code>crawl.rs</code>,
+<code>git.rs</code>, <code>analysis/</code>,
+<code>benchmark.rs</code>.</li>
+<li><code>crates/muninn/src/codegraph/</code> — <code>resolve.rs</code>,
+<code>store.rs</code>, <code>refresh.rs</code>,
+<code>freshness.rs</code>, <code>extract/</code>.</li>
+</ul>
+<p><strong>Agent surface</strong></p>
+<ul>
+<li><code>crates/muninn/src/mcp/mod.rs</code> — twenty-two tools and
+their descriptions.</li>
+<li><code>crates/muninn/src/hooks_runtime.rs</code>,
+<code>src/curator/mod.rs</code>.</li>
+</ul>
+<p><strong>Operations</strong></p>
+<ul>
+<li><code>crates/muninn/src/maintenance.rs</code>,
+<code>src/doctor.rs</code>, <code>src/setup.rs</code>,
+<code>src/wizard.rs</code>, <code>src/sync/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa"><code class="commit-id" title="682248790ee1a6d916bd70a910d765be975270aa">68224879…</code></a>
+— first reading, at release 0.19.0 dated 11 August 2026. Screened before
+opening: no auto-run surfaces, no build-time execution, no unpinned
+manifests, <code>Cargo.lock</code> present, four dependency surfaces
+inside the seven-day cooldown, and a <code>CLAUDE.md</code> read as
+data. Nothing was installed and nothing was built or run; the graduation
+cap was established by reading the caller against <code>list</code>'s
+<code>ORDER BY</code>, not by observing a store.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

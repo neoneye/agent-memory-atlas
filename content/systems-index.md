@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **278 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **279 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -283,6 +283,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
 - [`ruflo`](../systems/ruflo/) **ruflo** — A guard on the retrieval path, off by default · `ruvnet/ruflo`
+- [`runar-forge`](../systems/runar-forge/) **RunarForge** — Postmortems in the comment above the fix · `crlome/runar-forge` · Scope enforced, Human review
 ## S
 
 - [`second-brain-cloudflare`](../systems/second-brain-cloudflare/) **Second Brain** — How fast a fact goes stale depends on what kind of fact it is · `rahilp/second-brain-cloudflare` · Trust state, Negative evals

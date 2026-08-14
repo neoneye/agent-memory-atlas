@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 278 reports.</strong></p>
+<p><strong>This page covers all 279 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7876,6 +7876,61 @@ before trusting the store with anything private:
 <code>memory.tar.gz</code> bundles every <code>MEMORY.md</code> and
 session log for upload, off by default, and if the local flag is unset a
 remote setting decides.</li>
+</ul>
+<h3 id="runar-forge"><a
+href="../systems/runar-forge/"><code>runar-forge</code></a></h3>
+<ul>
+<li>Best idea: one redaction chokepoint, ordered before truncation.
+Every write path — MCP save, prompt capture, extraction, crawler —
+passes through <code>propose</code>, which strips
+<code>&lt;private&gt;</code> blocks and redacts secret patterns from
+title, content, each tag and the caller-supplied <code>topic_key</code>,
+then bounds content, in that order, because "truncating first could cut
+a secret in half and hide it from the matchers". Each outcome tags the
+row <code>redacted</code>, <code>redacted:secret</code> or
+<code>truncated</code>, so the fact that a memory was modified on the
+way in is itself stored and searchable. The strongest write-path hygiene
+in the atlas.</li>
+<li>Biggest risk: the graduation sweep cannot see the entries it exists
+to move. <code>graduate_layers_inner</code> fetches with
+<code>limit: Some(500)</code>, never sets the <code>offset</code> its
+own filter type provides, and no caller loops; <code>list</code> ends
+<code>ORDER BY created_at DESC</code>. Graduation is an aging ladder, so
+the rows needing archival are the oldest — precisely the ones a
+newest-500 window can never reach in a namespace past that size. The
+low-confidence aggressive-demote rule, which clears speculative
+material, is disabled by the same cap.</li>
+<li>Most reusable component: the <code>access_count</code> /
+<code>injected_count</code> split, and the comment explaining it — "one
+counter for two channels is what let '95.9% never retrieved' stand for
+three months while 15,819 injections went unrecorded. Reporting only —
+deliberately not an input to ranking or decay." Two decisions in three
+lines: split the counter because one number over two channels made a
+headline statistic false, then keep the new one out of ranking so
+automatic recall cannot reinforce itself.</li>
+<li>Maturity impression: MIT, one static Rust binary over 54,895 lines
+in a single crate, <strong>694 tests</strong>, twenty-two MCP tools,
+SQLite or Postgres with a hybrid outbox, bundled local embeddings so
+semantic search needs no key, a <code>doctor</code> with 1,620 lines of
+diagnostics and a <code>gc --dry-run</code> that previews layer
+transitions. And a habit of writing its own postmortems, with counts,
+into the comment above each fix.</li>
+<li>Study when: you want durable structured memory across several coding
+tools with provenance that reaches a person — <code>author</code> from
+git config, <code>verified_by</code> separate from it, redaction history
+as tags, supersession as an edge. Supersession is done well: a topic-key
+collision soft-deletes the old row so reads exclude it and writes
+<code>Supersedes</code> new → old so the lineage keeps it.</li>
+<li>Do not copy when: you need to record that two memories disagree.
+<code>EdgeType</code> declares <code>Contradicts</code>,
+<code>Supports</code> and <code>Elaborates</code>, and each appears
+exactly once in the crate — in the enum. Nothing constructs them and
+nothing reads them, so a system with a confidence scale, a verification
+flag and a supersession graph still has no way to represent conflict.
+Also note the review surface: <code>muninn_verify</code> grants a
+ranking bonus and a graduation fast-promote, its only caller is an MCP
+tool the writing agent can invoke, and the <code>verified_by</code> it
+records is whichever human's git config is configured.</li>
 </ul>
         </article>
       </div>
