@@ -18074,19 +18074,23 @@ recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
 — but a reader looking for agent memory here will not find it.</li>
 <li><strong><code>os-factory/har</code> was examined and has no report,
 and it is the same boundary carrying the atlas's rarest mechanism
-anyway.</strong> Apache-2.0, at <a
-href="https://github.com/os-factory/har/commit/d16a5eb6e68aad46a2b3aee0e3e4fa036bd1f042"><code class="commit-id" title="d16a5eb6e68aad46a2b3aee0e3e4fa036bd1f042">d16a5eb6…</code></a>:
-a harness that gives each coding agent its own git worktree, ports and
-database, runs the project's own checks through one pipeline, and keeps
-the evidence. The scope call is settled by its schema — the twelve
-Prisma models in <code>control/prisma/schema.prisma</code> cover
+anyway.</strong> Apache-2.0, re-read at release 0.55.0, <a
+href="https://github.com/os-factory/har/commit/241ef6da39660fcc93eef92454ce0b6f8501ccf2"><code class="commit-id" title="241ef6da39660fcc93eef92454ce0b6f8501ccf2">241ef6da…</code></a>,
+38 commits past the first reading: a harness that gives each coding
+agent its own git worktree, ports and database, runs the project's own
+checks through one pipeline, and keeps the evidence. The scope call is
+settled by its schema — <code>control/prisma/schema.prisma</code> is
+byte-identical across those 38 commits, twelve Prisma models covering
 repositories, slots, sessions, spans, runs, work units, attempts,
-validation bindings and change batches, and across 16,065 lines of
+validation bindings and change batches, and across 16,277 lines of
 <code>src/</code> the words <code>recall</code>, <code>remember</code>,
 <code>forget</code>, <code>embedding</code> and <code>vector</code>
 appear <strong>twice</strong>, both incidental. Nothing stored is a
-claim that could be false. <strong>What makes it worth recording is one
-of those twelve.</strong> <code>UnregisteredRepository</code> is a <a
+claim that could be false; the 38 commits are plugins (Semgrep, Trivy,
+Gitleaks, Kerno), docs, iOS fixes and node provisioning, none of which
+touches the durable-belief question. <strong>What makes it worth
+recording is one of those twelve.</strong>
+<code>UnregisteredRepository</code> is a <a
 href="../patterns/rejected-value-tombstone/">rejected-value
 tombstone</a> in a repository registry: <code>deleteRepository</code>
 writes the path into it <em>before</em> deleting the row,
@@ -18099,9 +18103,15 @@ the one the pattern page names, a background pass re-reading an
 unchanged source and restating what a person deleted, and it is keyed on
 a filesystem path rather than on a natural-language claim, so it never
 meets the normalization problem that defeated two implementations here.
-It also has <strong>no test</strong>, in a tree with 87 test files and
-10,157 lines of tests, beside a commit gate tested across nine cases.
-Two neighbouring mechanisms are recorded in <a
+Its mechanism (<code>control/src/server/repositories.ts</code>) is
+byte-identical since the first reading, but the gap named then has
+closed: <strong>the tombstone is now tested</strong>, by three files
+that did not exist at the earlier commit —
+<code>tests/control-sync-unregistered.test.ts</code> asserts the client
+drops the path from its local registry on a 409, and
+<code>control/src/app/api/repos/route.test.ts</code> asserts the server
+returns the 409, in a tree grown to 94 test files and 11,893 lines. Two
+neighbouring mechanisms are recorded in <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-a-harness-that-reinvented-the-tombstone.md">the
 note</a>: a validation record filed under the hash of the working tree
 it certifies — so it invalidates itself on any edit, with no expiry

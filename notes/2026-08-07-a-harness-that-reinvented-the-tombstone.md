@@ -1,6 +1,6 @@
 # A harness that reinvented the tombstone
 
-**Status:** triaged. One repository read and excluded, with three mechanisms
+**Status:** triaged, then re-read at 0.55.0 (see the addendum below). One repository read and excluded, with three mechanisms
 recorded because they are rarer in this atlas than in the tool that has them.
 **Subject:** [os-factory/har](https://github.com/os-factory/har), Apache-2.0,
 read at
@@ -195,3 +195,39 @@ the whole distance between this and
 The interesting version of HAR is the one where a verification run teaches the
 contract something, and the shrink guard and the proposal gateway are already the
 right shape to govern it.
+
+## Re-read at 0.55.0 (2026-08-14)
+
+Read again at [`241ef6da39660fcc93eef92454ce0b6f8501ccf2`](https://github.com/os-factory/har/commit/241ef6da39660fcc93eef92454ce0b6f8501ccf2),
+release 0.55.0, 38 commits past the first reading. Screened first: still 1
+auto-run surface, 3 build-time execution paths, 7 unpinned manifests, 6
+dependency surfaces inside the cooldown — the same shape as before, and two
+root lockfiles unchanged for ten days. Nothing installed or run.
+
+The scope call is unchanged and, for once, provable rather than re-argued:
+`control/prisma/schema.prisma` is **byte-identical** across the 38 commits
+(`git diff --stat` on the file is empty), and the vocabulary sweep still returns
+two incidental hits for `recall`/`remember`/`forget`/`embedding`/`vector` across
+`src/` and `control/src/`. The 38 commits are plugins (Semgrep, Trivy, Gitleaks,
+Kerno), docs, iOS fixes and node provisioning for bun/pnpm/yarn — none of which
+touches durable belief. HAR is still a harness, not a store.
+
+**One thing this note got to record going stale, which is the point of a
+re-read.** The 2026-08-07 reading said the `UnregisteredRepository` tombstone
+"has no test, in a tree with 87 test files and 10,157 lines of tests." The
+mechanism (`control/src/server/repositories.ts`) is byte-identical since then,
+but the gap has closed. Three test files exist now that did not at the earlier
+commit:
+
+- `tests/control-sync-unregistered.test.ts` — `describe('registerRepoWithControl
+  unregistered tombstone', …)`, whose first case is `it('drops path from local
+  registry on 409 and returns null')`. That tests the exact behaviour this note
+  called the tombstone's step past the corpus: the client quieting its own
+  writer rather than only being refused at the gate.
+- `control/src/app/api/repos/route.test.ts` — `it('returns 409 when repository
+  was previously unregistered')`, the server half.
+- `control/src/server/repositories.test.ts` — the register/delete unit surface.
+
+Test files went 87 → 94 and test lines 10,157 → 11,893. So the rarest mechanism
+in the atlas's orbit is no longer the untested one; the overview known-limitations
+entry is re-pinned and corrected to match. Nothing else moved.
