@@ -18612,6 +18612,27 @@ with the migration arguing why a parallel table was rejected. The doc
 comment says <em>"the three statements commit together"</em> and there
 are five, which is the ordinary fate of a count written in prose beside
 code that grew.</li>
+<li><strong><code>Emericen/tiny-qwen</code> was examined and has no
+report: it is a model, not a memory system.</strong> MIT, at <a
+href="https://github.com/Emericen/tiny-qwen/commit/61ff9d4213db3acfb494410832cbc39a87e1fc97"><code class="commit-id" title="61ff9d4213db3acfb494410832cbc39a87e1fc97">61ff9d42…</code></a>:
+a ~1,600-line PyTorch re-implementation of Qwen with int4 quantization
+and a single-file terminal agentic harness. The scope call is settled by
+the vocabulary — across the <code>.py</code> tree <code>recall</code>,
+<code>remember</code>, <code>persist</code>, <code>store</code>,
+<code>session</code>, <code>sqlite</code> and <code>database</code>
+appear <strong>zero</strong> times; the seven <code>memory</code> hits
+are RAM (<em>"peak memory is one tensor"</em>), the two
+<code>embedding</code> hits are the model's token embeddings, and the
+two <code>history</code> hits are <code>readline</code>'s input arrows.
+The harness's conversation is a <code>self.messages</code> list held in
+process, and the only file writes in <code>run.py</code> are
+quantization output (<code>quant.json</code>, safetensors shards);
+nothing survives a session, so there is no claim that could be
+corrected. It is the cleanest kind of exclusion — not a borderline
+harness but a model implementation whose "memory" is the allocator's —
+recorded by name because a repository called <em>qwen</em> in a
+memory-candidate list deserves a stated reason rather than a silent
+drop.</li>
 <li>Helm was read, not run. Three claims in its report are inferences
 from code that a live database would settle: that
 <code>getAutonomyMode</code> returns the stale pre-supersession row
