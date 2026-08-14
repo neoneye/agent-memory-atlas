@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 279 reports.</strong></p>
+<p><strong>This page covers all 280 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7931,6 +7931,53 @@ Also note the review surface: <code>muninn_verify</code> grants a
 ranking bonus and a graduation fast-promote, its only caller is an MCP
 tool the writing agent can invoke, and the <code>verified_by</code> it
 records is whichever human's git config is configured.</li>
+</ul>
+<h3 id="redcell"><a
+href="../systems/redcell/"><code>redcell</code></a></h3>
+<ul>
+<li>Best idea: the memory unit is a claim that can be false, and its
+status is set by a human. A finding is
+<code>[severity] title @ location</code>, recorded by the agent as
+<code>candidate</code> — the only status the agent may write — and moved
+to <code>verified</code>, <code>dismissed</code> or
+<code>inconclusive</code> by a person. A dismissed finding is a false
+positive removed from the record and the report, which makes it the
+cleanest example of a corrected memory in the atlas: not a superseded or
+decayed value, but a stored claim a reviewer judged wrong.</li>
+<li>Biggest risk: recall is a wholesale paste capped by recency.
+<code>assistant.py</code> lists the session's findings, truncates to
+forty newest-first, unranked, and prepends them to the system prompt —
+so a long engagement silently drops its earliest findings from the
+agent's context with no signal, and there is no cross-engagement memory
+at all, everything keyed to one <code>session_id</code>. Also: tool
+output from an adversarial target becomes a finding becomes agent
+context, unfenced, in a system pointed at hostile machines by
+definition.</li>
+<li>Most reusable component: the three-way split of memory authority.
+The agent writes (only <code>candidate</code>), a human triages
+(verify/dismiss/merge, with a merge that refuses to touch a duplicate in
+another session), and a chat assistant reads the record back on reopen.
+Letting the writer also confirm its own output is the failure most
+memory systems have; here a verified memory carries the mark of a review
+that actually happened.</li>
+<li>Maturity impression: MIT, ~9,100 lines of Python across a FastAPI
+API, an <code>arq</code> worker and a LangGraph/LiteLLM engine,
+<strong>77 tests</strong> including a triage suite that asserts an
+unknown status raises and that dismissed findings leave the report. A
+full server platform — Postgres, Redis, MinIO, a Kali container — not a
+library. Durable across restarts via a LangGraph SQLite checkpointer
+that is itself out of scope; the findings record is the memory.</li>
+<li>Study when: your agent produces reviewable claims a person must
+approve within a bounded engagement. The finding-as-memory model,
+agent-proposes/human-confirms, and repository-enforced session scoping
+transfer whole, independent of the pentest domain.</li>
+<li>Do not copy when: you need ranked recall, cross-engagement learning,
+or a triage audit trail. The read path is a truncated paste, the
+<code>session_id</code> key is load-bearing everywhere, and a finding
+records that a human ruled but not which human — a gap for a deliverable
+someone signs. Dismissal is status-only, so a reworded re-derivation of
+a dismissed finding would be recorded fresh: the dedup key (title,
+location) and the dismissal key do not intersect.</li>
 </ul>
         </article>
       </div>
