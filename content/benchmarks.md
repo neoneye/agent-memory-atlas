@@ -77,7 +77,7 @@ existence and use are verifiable from code.
 | **LoCoMo** | Question answering over very long multi-session conversations, with single-hop, multi-hop, temporal, open-domain and adversarial question categories | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Basic Memory](../systems/basic-memory/) |
 | **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/), [Daimon](../systems/daimon/), [Engram Alpha](../systems/engram-alpha/) (retrieval half only — see below) |
 | **BEAM** | Long-conversation QA at extreme length; Cognee's committed report covers 100K and 10M-token conversations. Its category list includes **`contradiction_resolution`** and **`abstention`** — see the correction below | [Cognee](../systems/cognee/), [Honcho](../systems/honcho/), [ReMe](../systems/reme/) |
-| **Oolong** | Present in Honcho's bench tree; not characterized here | [Honcho](../systems/honcho/) |
+| **Oolong** | Long-context *reasoning and aggregation* — counting, classification and distributional questions that require analysing every chunk, not retrieving one. [arXiv:2511.02817](https://arxiv.org/abs/2511.02817) (Bertsch et al., 4 November 2025) reports GPT-5, Claude-Sonnet-4 and Gemini-2.5-Pro all below 50% at 128K on both splits. Not a memory test — it is the case retrieval cannot help, and the boundary below is drawn around it | [Honcho](../systems/honcho/) |
 | **τ²-bench (tau2)** | Agentic tool use against a simulated user with policy compliance — a *downstream task*, not a memory test | [OpenViking](../systems/openviking/) |
 | **SkillsBench** | Procedural/skill retrieval; a repository-local harness | [OpenViking](../systems/openviking/) |
 | **Multi-hop QA** (MuSiQue, 2Wiki, HotpotQA) | Retrieval over a fixed corpus — RAG evaluation, with no writes accumulating over time | [HippoRAG](../systems/hipporag/) |
@@ -284,6 +284,36 @@ correct as it changes, and drop what it should not keep?
 
 The blurring of that line is the field's central measurement problem, and it
 leads directly to the next section.
+
+**Two 2025 research artifacts measure the two halves of that boundary, and
+neither is a memory system.** Chroma's *Context Rot* report
+([trychroma.com/research/context-rot](https://www.trychroma.com/research/context-rot),
+code at [chroma-core/context-rot](https://github.com/chroma-core/context-rot))
+runs eighteen models and finds performance "grows increasingly unreliable as
+input length grows" even on trivial tasks — and its LongMemEval experiment is
+the one that matters here: **every model family scores significantly higher on a
+focused ~300-token prompt than on the full ~113K-token conversation.** That is
+the empirical case for retrieval stated as a measurement: a memory layer that
+delivers the relevant 300 tokens beats handing the model the whole history, so
+"decide what to retrieve" is not a convenience but a performance floor. It is
+also, pointedly, made by the vendor of a vector database — the argument that
+retrieval is necessary, from the company that sells retrieval. The other half is
+[Oolong](https://arxiv.org/abs/2511.02817) above: the tasks that need the *whole*
+context aggregated, which frontier models fail at 128K, and which no retrieval
+policy fixes because there is nothing to narrow to. Between them they bound what
+a memory system is for — retrieval answers the recall half and does nothing for
+the aggregation half — and both say a larger context window is not the answer to
+either.
+
+**This is also where a fabricated baseline in the corpus traces back to.**
+[MemCP](../systems/memcp/) ships a `tests/benchmark/test_context_rot.py` that
+borrows this exact framing and then hardcodes the numbers the Chroma work
+actually measures: `native_value=5.0  # Typical ~5% retention` and
+`native_value=2.0  # ~0.05^3 ≈ near zero`, one assumed constant derived from
+another, presented in a benchmark report as a head-to-head. The phenomenon is
+real and measured; MemCP cites it and asserts a constant for it rather than
+running the measurement, which is the difference between the report above and the
+one in that repository.
 
 ## 3. Does a Bad Score Matter?
 

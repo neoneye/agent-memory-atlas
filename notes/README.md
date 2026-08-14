@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md](2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md) —
+  Chroma's Context Rot report and the Oolong benchmark (arXiv:2511.02817), read
+  and triaged — neither a memory system, both measurements that bound what a
+  memory layer is for. Context Rot's LongMemEval result (every model family
+  scores higher on a focused ~300-token prompt than the full ~113K conversation)
+  is the empirical case for retrieval, stated as a measurement and made by a
+  vector-DB vendor; Oolong is the aggregation half retrieval cannot help, where
+  frontier models fail at 128K. Both say a bigger window is not the fix, and both
+  are now cited on the benchmarks page. Also closes a loop: MemCP's hardcoded
+  `test_context_rot.py` baseline traces to this real, measured phenomenon it
+  asserts a constant for instead of running.
 - [2026-08-14-a-coding-agent-whose-search-is-the-users-not-the-models.md](2026-08-14-a-coding-agent-whose-search-is-the-users-not-the-models.md) —
   Kimi Code CLI has cross-session full-text search over its session corpus,
   which is the DeepSeek Harness shape exactly — and it is out of scope where DSH

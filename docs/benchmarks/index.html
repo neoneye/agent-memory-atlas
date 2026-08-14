@@ -218,7 +218,13 @@ href="../systems/reme/">ReMe</a></td>
 </tr>
 <tr>
 <td><strong>Oolong</strong></td>
-<td>Present in Honcho's bench tree; not characterized here</td>
+<td>Long-context <em>reasoning and aggregation</em> — counting,
+classification and distributional questions that require analysing every
+chunk, not retrieving one. <a
+href="https://arxiv.org/abs/2511.02817">arXiv:2511.02817</a> (Bertsch et
+al., 4 November 2025) reports GPT-5, Claude-Sonnet-4 and Gemini-2.5-Pro
+all below 50% at 128K on both splits. Not a memory test — it is the case
+retrieval cannot help, and the boundary below is drawn around it</td>
 <td><a href="../systems/honcho/">Honcho</a></td>
 </tr>
 <tr>
@@ -537,6 +543,41 @@ to retrieve, keep it correct as it changes, and drop what it should not
 keep?</p>
 <p>The blurring of that line is the field's central measurement problem,
 and it leads directly to the next section.</p>
+<p><strong>Two 2025 research artifacts measure the two halves of that
+boundary, and neither is a memory system.</strong> Chroma's <em>Context
+Rot</em> report (<a
+href="https://www.trychroma.com/research/context-rot">trychroma.com/research/context-rot</a>,
+code at <a
+href="https://github.com/chroma-core/context-rot">chroma-core/context-rot</a>)
+runs eighteen models and finds performance "grows increasingly
+unreliable as input length grows" even on trivial tasks — and its
+LongMemEval experiment is the one that matters here: <strong>every model
+family scores significantly higher on a focused ~300-token prompt than
+on the full ~113K-token conversation.</strong> That is the empirical
+case for retrieval stated as a measurement: a memory layer that delivers
+the relevant 300 tokens beats handing the model the whole history, so
+"decide what to retrieve" is not a convenience but a performance floor.
+It is also, pointedly, made by the vendor of a vector database — the
+argument that retrieval is necessary, from the company that sells
+retrieval. The other half is <a
+href="https://arxiv.org/abs/2511.02817">Oolong</a> above: the tasks that
+need the <em>whole</em> context aggregated, which frontier models fail
+at 128K, and which no retrieval policy fixes because there is nothing to
+narrow to. Between them they bound what a memory system is for —
+retrieval answers the recall half and does nothing for the aggregation
+half — and both say a larger context window is not the answer to
+either.</p>
+<p><strong>This is also where a fabricated baseline in the corpus traces
+back to.</strong> <a href="../systems/memcp/">MemCP</a> ships a
+<code>tests/benchmark/test_context_rot.py</code> that borrows this exact
+framing and then hardcodes the numbers the Chroma work actually
+measures: <code>native_value=5.0  # Typical ~5% retention</code> and
+<code>native_value=2.0  # ~0.05^3 ≈ near zero</code>, one assumed
+constant derived from another, presented in a benchmark report as a
+head-to-head. The phenomenon is real and measured; MemCP cites it and
+asserts a constant for it rather than running the measurement, which is
+the difference between the report above and the one in that
+repository.</p>
 <h2 id="3-does-a-bad-score-matter">3. Does a Bad Score Matter?</h2>
 <p>Usually less than it appears. Six reasons, in rough order of how
 often they apply.</p>
