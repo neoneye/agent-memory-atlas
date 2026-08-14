@@ -9,9 +9,9 @@ page_kind: comparison
 ## In Short
 
 282 memory systems with publicly readable source, each read at a pinned commit
-and judged against seven mechanisms with strict definitions. Not all 165 are
-open source — see [what the licences actually say](#what-the-licences-actually-say).
-Corpus last extended **6 August 2026**.
+and judged against seven mechanisms with strict definitions. "Readable" is not
+"open source" — sixteen carry a non-open-source licence, listed in the
+[appendix](#what-the-licences-actually-say). Corpus last extended **6 August 2026**.
 Five findings, with the counts they rest on:
 
 1. **Correction is the phase that goes unbuilt.** 14 systems of 282 carry a
@@ -109,33 +109,6 @@ sample of a population and no sampling frame is claimed. It skews toward
 actively developed public repositories, toward things adjacent to coding
 agents, and toward whatever was visible in mid-2026. Absence from this atlas is
 not evidence of anything.
-
-### What the licences actually say
-
-This page said "164 open-source memory systems" until 7 August 2026. The
-sentence was false in the way that matters: a reader deciding whether they can
-*use* something acts on it. **Sixteen of the
-166 carry a licence that is not open source**, each named in its own report and
-now collected here:
-
-| Licence | Systems |
-| --- | --- |
-| Elastic License 2.0 — no hosted service, no licence-key circumvention | [AgentSwarms](../systems/agentswarms/), [ByteRover](../systems/byterover/), [Dexto](../systems/dexto/) |
-| Business Source License 1.1 — source-available, converts later | [Cognis](../systems/cognis/), [Empryo](../systems/empryo/), [Intaris](../systems/intaris/), [MuninnDB](../systems/muninndb/), [Skales](../systems/skales/) |
-| Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence) |
-| Conditional MIT — a royalty clause and an "ethical treatment" clause, revocable | [Z-Waif](../systems/z-waif/) |
-| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) and [SESA](../systems/sesa/) (no licence file, which defaults to this) |
-
-Two things this table is not. It is **not a complete licence taxonomy of the
-corpus**: it collects what the reports happened to record, and a report is
-written about mechanisms, so a permissive licence usually goes unmentioned. The
-150 not listed here have not each been checked — the honest claim is that
-sixteen are known non-open-source and the rest are unrecorded, not that the rest
-are MIT. And it is **not a reason to skip those sixteen**: every mechanism in
-this atlas is described so it can be re-implemented rather than copied, which is
-the only way a restrictively licensed system can be read usefully. What changes
-is what you may do with the code afterwards, and that is worth knowing before
-you open the file rather than after.
 
 **What an absence claim means.** "There is no trust state", "no tombstone was
 found", "no benchmark exists" all mean the same thing: *not found in the
@@ -5727,6 +5700,32 @@ Privacy/deletion:
 - [martian56/redcell](https://github.com/martian56/redcell) at [`323a3e11d8a2b50de4a8193c5ac356f4aa4d27e5`](https://github.com/martian56/redcell/commit/323a3e11d8a2b50de4a8193c5ac356f4aa4d27e5) — read only; five unpinned manifests and eight dependency surfaces inside the cooldown, so nothing was installed or run. The scope call — findings in, the LangGraph checkpointer out — was made by tracing what the assistant reads back against what the checkpointer stores
 - [kovartravis/neuron](https://github.com/kovartravis/neuron) at [`af55adbc34ff7b04b9083c3f1dd0047002429285`](https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285) — read only; one auto-run surface (the `.claude/settings.json` hooks the system installs), two build-time execution points and six dependency surfaces inside the cooldown, so nothing was installed or run. The schema-refusal and supersession claims were read from the write gate and read-path SQL and corroborated by the committed tests
 - [buiilding/WindieOS](https://github.com/buiilding/WindieOS) at [`da2deadc9e5ebd5b45bb61e73b80417156b2b3a9`](https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9) — read only; one auto-run surface, one build-time execution point, eight unpinned manifests, lockfiles unchanged for 47–130 days so no cooldown exposure. Nothing installed or run. A distinct repository from the same author's Rust [Windie Sandbox](../systems/windie-sandbox/), sharing no git history; the embedding-space rebuild and delete gaps were read from `local_store.py` against the architecture doc and the delete-cleanup tests
+
+### What the licences actually say
+
+A licence is an operational caveat, not a memory mechanism, so it lives in the
+appendix — but a reader deciding whether they can *use* something needs it.
+"Publicly readable source" is not "open source": **sixteen carry a licence that
+is not open source**, each named in its own report and collected here.
+
+| Licence | Systems |
+| --- | --- |
+| Elastic License 2.0 — no hosted service, no licence-key circumvention | [AgentSwarms](../systems/agentswarms/), [ByteRover](../systems/byterover/), [Dexto](../systems/dexto/) |
+| Business Source License 1.1 — source-available, converts later | [Cognis](../systems/cognis/), [Empryo](../systems/empryo/), [Intaris](../systems/intaris/), [MuninnDB](../systems/muninndb/), [Skales](../systems/skales/) |
+| Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence) |
+| Conditional MIT — a royalty clause and an "ethical treatment" clause, revocable | [Z-Waif](../systems/z-waif/) |
+| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) and [SESA](../systems/sesa/) (no licence file, which defaults to this) |
+
+Two things this table is not. It is **not a complete licence taxonomy of the
+corpus**: it collects what the reports happened to record, and a report is
+written about mechanisms, so a permissive licence usually goes unmentioned. The
+rest have not each been checked — the honest claim is that sixteen are known
+non-open-source and the others are unrecorded, not that the others are MIT. And
+it is **not a reason to skip those sixteen**: every mechanism in this atlas is
+described so it can be re-implemented rather than copied, which is the only way a
+restrictively licensed system can be read usefully. What changes is what you may
+do with the code afterwards, and that is worth knowing before you open the file
+rather than after.
 
 ### Commands Used
 
