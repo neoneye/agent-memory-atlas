@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-14-a-coding-agent-whose-search-is-the-users-not-the-models.md](2026-08-14-a-coding-agent-whose-search-is-the-users-not-the-models.md) —
+  Kimi Code CLI has cross-session full-text search over its session corpus,
+  which is the DeepSeek Harness shape exactly — and it is out of scope where DSH
+  is in, on one fact: DSH registers the search as model-facing tools, while Kimi
+  Code's search is an app-server service for the UI and the agent's thirteen-tool
+  registry has no recall tool at all. The human can search past sessions; the
+  model cannot. The line between a searchable session corpus that is agent memory
+  and searchable session history that is a product feature is whether the model
+  can query it, and grepping the tool registry answers it faster than reading the
+  storage engine. `contextMemory` is window management, `minidb` indexes sessions
+  not beliefs, and `AGENTS.md` is generated once by `/init`.
 - [2026-08-14-the-framework-that-explains-the-deepseek-correction.md](2026-08-14-the-framework-that-explains-the-deepseek-correction.md) —
   Cordis, the plugin runtime under DeepSeek Harness, has zero hits for recall,
   persist, storage, durable, embedding, vector, sqlite, database, forget or

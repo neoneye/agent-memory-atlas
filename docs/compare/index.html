@@ -18126,6 +18126,53 @@ self-invalidating key is the one a memory system cannot copy and should
 read anyway: bi-temporal validity, decay and re-verification exist
 because memories are keyed by subject rather than by content, and this
 is what the alternative buys.</li>
+<li><strong><code>MoonshotAI/kimi-code</code> was examined and has no
+report, and it is the clean contrast to a system the atlas does have one
+for.</strong> MIT, ~410,000 lines of non-test TypeScript across
+seventeen packages, at <a
+href="https://github.com/MoonshotAI/kimi-code/commit/13d86f8b7bb2443a3b8222e7d94deb0a66429f8e"><code class="commit-id" title="13d86f8b7bb2443a3b8222e7d94deb0a66429f8e">13d86f8b…</code></a>.
+The vocabulary reads like a memory system — <code>memory</code> 585
+times, <code>persist</code> 272, <code>compaction</code> 1409 — and
+every surface traces to something else:
+<code>agent-core-v2/src/agent/contextMemory/</code> is per-agent
+conversation history with
+<code>append</code>/<code>applyCompaction</code>/<code>undo</code>, i.e.
+window management; sessions persist to <code>wire.jsonl</code> and a
+<code>minidb</code> query store for replay and resume, i.e. session
+state; and <code>AGENTS.md</code> is generated once by
+<code>/init</code> handing a brief to a <code>coder</code> subagent and
+then read back into the system prompt, i.e. instructions.
+<code>minidb</code> itself is a real embedded database — WAL, generation
+checkpoints, a trigram text index — but it exists to index sessions, not
+to hold beliefs. <strong>What makes it worth recording is that it has
+cross-session full-text search and it is the user's, not the
+model's.</strong> <code>kap-server/src/search</code> is an
+<code>IGlobalSearchService</code> — <em>"cross-session full-text search
+over user messages, assistant text and session titles, backed by a
+single minidb database"</em> — with a background sync coordinator and
+published index generations, which is the <a
+href="../systems/deepseek-harness/">DeepSeek Harness</a> shape exactly.
+DSH is in the atlas because it registers <code>session_search</code> and
+four siblings as <strong>model-facing tools</strong> (unmounted by
+default, but the model is their caller). Kimi Code's search lives in the
+app server for the UI, and the agent's own tool registry —
+<code>agent</code>, <code>ask-user-question</code>, <code>cron</code>,
+<code>edit</code>, <code>fetch-url</code>, <code>goal</code>,
+<code>os</code>, <code>read-media-file</code>,
+<code>select-tools</code>, <code>skill</code>, <code>task</code>,
+<code>todo-list</code>, <code>web-search</code> — contains no memory,
+recall or session-search tool at all. The human can search their past
+sessions; the model cannot. The line between a searchable session corpus
+that is agent memory and searchable session history that is a product
+feature is exactly whether the model can query it, and these two
+repositories sit on opposite sides of it with nearly identical machinery
+underneath. Same boundary as <code>os-factory/har</code> and
+<code>Untrivial-ai/agent-orchestrator</code>; details in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-14-a-coding-agent-whose-search-is-the-users-not-the-models.md">the
+note</a>. If a release exposes session search or a
+<code>remember</code>/<code>recall</code> tool to the model — the
+"graduate into agent-core-v2" the search service's own comment
+anticipates — the scope call flips.</li>
 <li><strong><code>cline/cline</code> was examined and has no report, and
 the finding is where its memory turned out to live.</strong> Apache-2.0,
 at <a
