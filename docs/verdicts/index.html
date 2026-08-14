@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 281 reports.</strong></p>
+<p><strong>This page covers all 282 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8023,6 +8023,53 @@ boundary is a project-root hash on a shared per-machine cache, not an
 auth boundary. And weigh the markdown-as-record tradeoff: reviewability
 and hand-repair, bought with a source of truth a parser edge case can
 corrupt.</li>
+</ul>
+<h3 id="windieos"><a
+href="../systems/windieos/"><code>windieos</code></a></h3>
+<ul>
+<li>Best idea: stamping every FAISS index with the embedding space that
+built it. <code>EmbeddingSpaceMetadata</code> (provider, model,
+dimension, space version) is saved beside the index and checked on
+startup; when it changes, the store logs <em>"SDK embedding space
+changed … Clearing local vector indices,"</em> resets the indices, nulls
+every <code>embedding_id</code> in SQLite, and re-embeds from the
+surviving rows. That is the correct answer to a failure almost nothing
+in the atlas handles — scoring vectors from a new embedding model
+against vectors from an old one, silently, the first time anyone
+upgrades.</li>
+<li>Biggest risk: two delete gaps the project documents honestly. There
+is no episodic→semantic cascade, so deleting a conversation leaves the
+facts summarized from it behind in semantic memory — the exact opposite
+of the same author's Rust sibling, which deletes compactions in the
+transaction that deletes their source message. And a partial delete
+drops the vector→memory mapping (so deleted content can't surface) but
+leaves the vector in the FAISS file until the tier empties, so a
+long-lived index carries dead vectors and overreports its count.</li>
+<li>Most reusable component: the fail-safe write path. The SDK asks the
+backend for an embedding and hands it to the local store; if embeddings
+are down the row still lands in SQLite with a NULL vector id and a
+startup backfill re-embeds it later. A memory is never lost to an
+embedding outage, and search degrades to returning nothing rather than
+erroring — the memory is an enhancement the chat loop can survive
+without.</li>
+<li>Maturity impression: MIT, an Electron desktop runtime with a Python
+local runtime (~58,500 backend lines) and 676 sidecar tests; memory is
+local-first (SQLite + FAISS per user under OS app-data), the backend a
+stateless calculator for embeddings and summaries. The default branch
+had been stalled six weeks at reading while the author's active work was
+the Rust sibling — read as a mature, paused predecessor.</li>
+<li>Study when: you are building a local, single-user desktop assistant
+that should accumulate a picture of its user across sessions without
+shipping that memory to a server, and you want a two-tier
+episodic→semantic split with crash-safe consolidation (mark sources
+semanticized only after the summary write, resume from a watermark,
+dedup by <code>summary_hash</code>).</li>
+<li>Do not copy when: you need multi-tenant isolation beyond one
+machine, ranked or hybrid retrieval (this is exact
+<code>IndexFlatIP</code> vector search, no lexical arm, no reranker), a
+trust model richer than present/absent, or deletion guaranteed complete
+across derived tiers. At large corpus sizes the exact search and the
+never-compacted-until-empty index are both scale ceilings.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A desktop-agent runtime whose
+local two-tier episodic/semantic memory stamps every FAISS index with
+the embedding space that built it — and, when the SDK's embedding model
+or dimension changes, clears the vectors and re-embeds from SQLite
+rather than comparing across incompatible spaces.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="WindieOS — Agent Memory Atlas">
+    <meta property="og:description" content="A desktop-agent runtime
+whose local two-tier episodic/semantic memory stamps every FAISS index
+with the embedding space that built it — and, when the SDK's embedding
+model or dimension changes, clears the vectors and re-embeds from SQLite
+rather than comparing across incompatible spaces.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WindieOS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A desktop-agent runtime
+whose local two-tier episodic/semantic memory stamps every FAISS index
+with the embedding space that built it — and, when the SDK's embedding
+model or dimension changes, clears the vectors and re-embeds from SQLite
+rather than comparing across incompatible spaces.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>WindieOS — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">When the embedding model changes,
+rebuild</p>
+          <h1>WindieOS</h1>
+          <p class="document-deck">A desktop-agent runtime whose local
+two-tier episodic/semantic memory stamps every FAISS index with the
+embedding space that built it — and, when the SDK's embedding model or
+dimension changes, clears the vectors and re-embeds from SQLite rather
+than comparing across incompatible spaces.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/buiilding/WindieOS">
+              <span>Source</span>
+              <strong>buiilding/WindieOS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9" title="da2deadc9e5ebd5b45bb61e73b80417156b2b3a9">
+              <span>Analyzed revision</span>
+              <code>da2deadc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-14</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>WindieOS is a "hackable desktop runtime for personal AI agents" — an
+Electron desktop app with a Python local runtime and a FastAPI backend,
+~58,500 lines of Python in the backend alone, MIT, by the author of the
+Rust <a href="../windie-sandbox/">Windie Sandbox</a> already in this
+atlas. The two are sibling projects with genuinely different memory
+designs: the Sandbox's memory is a SQLite message tree you branch and
+edit; WindieOS's is a <strong>two-tier episodic/semantic vector
+store</strong> that lives on the user's machine. This report is of
+WindieOS at its default-branch tip, which had not moved for six weeks at
+reading while the author's active work was the Rust sibling — so read it
+as a snapshot of a mature-but-paused predecessor, which is what the pin
+is for.</p>
+<p>The memory is owned by the <strong>local-runtime</strong>, not the
+backend. Per user, on disk: <code>episodic.db</code>,
+<code>semantic.db</code>, <code>episodic.faiss.index</code>,
+<code>semantic.faiss.index</code>, and
+<code>watermark_state.json</code>. The backend does two stateless jobs —
+compute an embedding (<code>/api/embeddings/</code>) and summarize a
+conversation window into facts (<code>/api/semantic/summarize</code>) —
+and the local store persists everything and does all retrieval. That
+split is the first good idea: the thing that holds your memory runs on
+your machine, and the cloud is a calculator it calls.</p>
+<p><strong>The finding worth the report is the embedding-space
+guard.</strong> A vector store has a problem almost nobody in this atlas
+addresses: vectors are only comparable within the embedding model that
+produced them, so the day you change the embedding provider, model, or
+dimension, every stored vector becomes noise against every new query —
+silently, because cosine similarity still returns a number. WindieOS
+stamps each index with an <code>EmbeddingSpaceMetadata</code>
+(<code>embedding_provider_id</code>, <code>embedding_model_id</code>,
+<code>embedding_dimension</code>, <code>embedding_space_version</code>),
+checks it on startup, and when it has changed logs <em>"SDK embedding
+space changed … Clearing local vector indices,"</em> resets the FAISS
+indices, nulls every <code>embedding_id</code> in SQLite, and re-saves
+the metadata. The rows survive; the vectors are rebuilt from them when
+embeddings are available again. That is the correct answer to a failure
+mode most systems here would ship straight into.</p>
+<p>The weaknesses are two delete gaps the project documents honestly.
+Deleting an episodic conversation does <strong>not</strong> cascade to
+the semantic summaries derived from it — <em>"There is no cross-delete
+cascade between episodic and semantic memory"</em> — so a fact-summary
+can outlive the interactions it summarized, which is the exact opposite
+of the Rust sibling, where deleting a message deletes its compactions in
+the same transaction. And a <strong>partial</strong> delete leaves the
+vector in the FAISS file — <em>"stale vectors may remain"</em> — cleared
+only when a memory type reaches zero rows. The mapping from that vector
+back to a memory id is dropped, so the stale vector cannot surface
+deleted content, but it bloats the index and the recall count until the
+type empties.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two tiers, and the pipeline between them is the whole epistemic
+design.</p>
+<p>An <strong>episodic memory</strong> is a completed interaction —
+<code>record_kind='interaction'</code>, a turn's worth of durable
+fact/interaction content, distinct from the visible chat log (which
+lives in <code>conversation_events</code>, not in the memory table). A
+<strong>semantic memory</strong> is a fact-summary rolled up from a
+window of episodic rows by the backend summarizer.</p>
+<pre class="text"><code>completed turn      -&gt; episodic.db row (record_kind=&#39;interaction&#39;), embedding requested
+                    -&gt; FAISS episodic index (or NULL vector id if embeddings are down)
+summarizer gate     -&gt; unsemanticized interaction count crosses a threshold
+                    -&gt; fetch one conversation window (&lt;=30 rows, oldest-first)
+                    -&gt; backend /semantic/summarize -&gt; summary + facts, or SUMMARY: NONE
+SUMMARY: NONE       -&gt; source rows marked processed, no semantic row created
+summary written     -&gt; semantic.db row + FAISS semantic index
+                    -&gt; only THEN are the source episodic rows marked semanticized</code></pre>
+<p>The states a memory moves through are <em>unsemanticized →
+semanticized</em> on the episodic side, and <em>present → deleted</em>
+on both. There is no verified, no rejected, no confidence, and no
+supersession — a semantic memory does not point back at a corrected
+earlier one; it is a fresh row. So there is no trust state to describe,
+and the report withholds <code>trust_state</code>. What stands in for
+judgement is a <strong>filter at write time</strong>: the summarizer
+rejects greetings, transient UI/app state, and runtime/tool-error facts,
+and treats an explicit <code>SUMMARY: NONE</code> as a valid "nothing
+durable here" outcome that still advances the watermark. Low value is
+dropped, not recorded as low-value.</p>
+<p>The ordering discipline is the careful part. Episodic rows are marked
+semanticized <strong>only after</strong> a successful semantic write,
+and the summarizer deduplicates by a <code>summary_hash</code> over the
+source memory ids and resumes from <code>watermark_state.json</code>. So
+a crash between summarize and mark cannot lose a fact or double-count
+one: the work is idempotent and the watermark is the only progress
+authority.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — episodic rolls up into semantic, and the embedding space that built each index is checked before any vector is trusted</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: episodic rolls up into semantic, and the embedding space that built each index is checked before any vector is trusted
+flowchart TB
+    Turn[&quot;completed turn&quot;] --&gt; Ep[(&quot;episodic.db&lt;br/&gt;record_kind=interaction&lt;br/&gt;embedding_id or NULL&quot;)]
+    Ep --&gt; EpVec[(&quot;episodic.faiss.index&quot;)]
+    Ep --&gt; Gate{&quot;unsemanticized count&lt;br/&gt;&gt;= threshold?&quot;}
+    Gate --&gt;|&quot;yes, one conversation window&quot;| Sum[&quot;backend /semantic/summarize&quot;]
+    Sum --&gt;|&quot;SUMMARY: NONE&quot;| Mark[&quot;mark sources processed&lt;br/&gt;no semantic row&quot;]
+    Sum --&gt;|&quot;summary + facts&quot;| Sem[(&quot;semantic.db + semantic.faiss.index&quot;)]
+    Sem --&gt; MarkOK[&quot;only now mark sources semanticized&lt;br/&gt;dedup by summary_hash, advance watermark&quot;]
+    Start{&quot;startup: persisted embedding space&lt;br/&gt;== current provider/model/dim?&quot;} --&gt;|&quot;yes&quot;| Ready[&quot;search ready&quot;]
+    Start --&gt;|&quot;no&quot;| Rebuild[&quot;clear FAISS indices,&lt;br/&gt;NULL every embedding_id,&lt;br/&gt;re-save metadata, backfill&quot;]
+    Rebuild --&gt; Ready
+    Ep -.-&gt;|&quot;delete episodic: no cascade&quot;| Sem
+    Ep -.-&gt;|&quot;partial delete: drop mapping,&lt;br/&gt;vector stays in FAISS until type empties&quot;| EpVec</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><strong>Local-runtime memory</strong>
+(<code>frontend/src/main/python/memory/</code>, ~6,300 lines):
+<code>local_store.py</code> (1,894) is <code>LocalMemoryStore</code> —
+SQLite + FAISS, search/add/ update/delete, embedding-space metadata;
+<code>chat_event_store.py</code> (1,967) is the visible chat replay,
+kept out of the memory table; <code>summarizer.py</code> (551) is the
+episodic→semantic roll-up; <code>sqlite_store.py</code> the schema;
+<code>faiss_index.py</code> the index read/write;
+<code>operations.py</code> the CRUD surface; <code>admin.py</code> bulk
+destructive resets; <code>conversation_*_runtime.py</code> the windowing
+and semanticization queries; <code>watermark_state.py</code> the
+progress ledger; <code>index_artifact_cleanup.py</code> the empty-index
+file removal.</li>
+<li><strong>Backend</strong>
+(<code>backend/src/api/routes/memory/</code>): <code>embeddings/</code>
+(provider-routed: local SentenceTransformer, remote HTTP, vendor OpenAI,
+or disabled) and <code>semantic/</code> (LLM summarization + fact
+extraction, and title generation). Both stateless; the backend holds no
+memory.</li>
+<li><strong>Transport</strong>: the desktop app talks to the local
+runtime over JSON-RPC, and the local runtime calls the backend over
+HTTP.</li>
+</ul>
+<p>Two SQLite databases (episodic, semantic) and two FAISS
+<code>IndexFlatIP</code> indices, one per tier, per user, in the OS
+app-data directory. <code>IndexFlatIP</code> is exact inner-product
+search — no approximate-nearest-neighbour structure — so recall is
+exhaustive and correct at whatever the local corpus size is, which for a
+personal desktop memory is the right trade.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Fully local storage, cloud compute.</strong> The store needs
+no service; embeddings and summaries need the backend, and every backend
+dependency degrades non-fatally (see §7).</li>
+<li><strong>An embedding provider is required for vector
+search</strong>, but not for storage: with embeddings disabled, writes
+still persist to SQLite with NULL vector ids and search returns nothing
+rather than failing.</li>
+<li><strong>The store is on-disk SQLite plus FAISS files</strong>,
+inspectable with ordinary tools, and the docs ship a one-command "nuke
+local memory" reset.</li>
+<li><strong>Per-OS paths</strong> are documented
+(<code>~/.config/windieos/memory/</code> on Linux, the Application
+Support and APPDATA equivalents elsewhere).</li>
+</ul>
+<p>The screen found one auto-run surface, one build-time execution
+point, eight unpinned manifests, and lockfiles unchanged for 47–130 days
+(so no cooldown exposure). A
+<code>CLAUDE.md</code>/<code>AGENTS.md</code> pair was read as data.
+Nothing was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write</strong> — <code>LocalMemoryStore.add_*</code> in
+<code>local_store.py</code>: the SDK supplies the embedding, the row is
+written to <code>episodic.db</code>, and the vector is added to the
+episodic FAISS index; a missing embedding yields a NULL
+<code>embedding_id</code>.</li>
+<li><strong>Embedding-space check</strong> —
+<code>local_store.py:405</code> onward: load persisted
+<code>EmbeddingSpaceMetadata</code>, compare
+<code>embedding_space_version</code> and
+<code>embedding_dimension</code>, and on mismatch call
+<code>_clear_all_vector_mappings</code> (<code>:428</code>), which
+<code>_reset_all_indices</code> to fresh <code>IndexFlatIP</code>,
+clears the in-memory id maps,
+<code>UPDATE memories SET embedding_id = NULL</code>, and re-saves the
+FAISS files.</li>
+<li><strong>Search</strong> — <code>local_store.py:930</code> ("Apply
+user_id filter"): FAISS inner-product query per memory type, resolved
+through the vector-id→memory-id map, with <code>WHERE user_id = ?</code>
+on the SQLite fetch (<code>:1255</code>, <code>:1515</code>).</li>
+<li><strong>Summarize</strong> — <code>summarizer.py</code>: the run
+gate on unsemanticized interaction count (<code>min_batch_size=6</code>,
+idle <code>min_batch_size_idle=1</code>), per-conversation window fetch
+(<code>max_batch_size=30</code>, oldest-first),
+<code>RemoteSemanticClient</code> call, <code>summary_hash</code> dedup,
+watermark advance, and the mark-semanticized-after-write ordering.</li>
+<li><strong>Delete</strong> —
+<code>local_store.py:1617</code>/<code>:1661</code>: drop the row, drop
+its vector mapping "so stale vectors cannot be resolved back to memory
+IDs"; the whole-index cleanup at <code>:1694</code> runs only when a
+type empties, via <code>index_artifact_cleanup.py</code>.</li>
+<li><strong>Backfill/repair</strong> —
+<code>_repair_index_mapping_mismatch("episodic"|"semantic")</code> at
+startup (<code>:297</code>), and re-embedding of NULL-vector rows once
+embeddings return.</li>
+<li><strong>Chat vs memory boundary</strong> —
+<code>chat_event_store.py</code>: <code>conversation_events</code> for
+the visible timeline, never summarized, kept out of the memory
+table.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> table carries <code>user_id</code>
+(indexed), <code>conversation_id</code>, the content, a
+<code>record_kind</code> (<code>interaction</code> for episodic memory
+rows), an <code>embedding_id</code> (nullable), and timestamps;
+conversation rows are keyed <code>(user_id, conversation_id)</code>. The
+semantic table holds the summary text, its facts, and a
+<code>summary_hash</code>. <code>EmbeddingSpaceMetadata</code> is
+persisted beside the indices, not in a row — it describes the whole
+index, which is correct, because the property it guards (which model
+built these vectors) is a property of the index and not of any single
+memory.</p>
+<p><strong>Scoping is real and applied on the read path.</strong>
+<code>user_id</code> is a column with its own index, every SQLite read
+in the store carries <code>WHERE user_id = ?</code>, and the
+conversation primary key is <code>(user_id, conversation_id)</code>.
+That earns <code>scope_enforced</code>. The honest caveat: this is a
+personal desktop runtime, so the scope key separates identities on one
+machine rather than enforcing a multi-tenant boundary — but it is a
+stored key filtered on the read path, not a tag, and the summarizer
+resolves the authenticated user id rather than trusting a
+caller-supplied one.</p>
+<p>Temporal fields are creation/update timestamps only — record time.
+Nothing tracks when a fact was true of the world, so
+<code>bitemporal</code> does not apply.</p>
+<p>The separation between <code>conversation_events</code> (visible
+chat) and the <code>memories</code> table (durable facts) is the same
+discipline the Rust sibling applies between its message tree and its
+compactions, and it is the right one: the transcript and the memory are
+different kinds of thing with different lifecycles, and conflating them
+is how a chat buffer gets mistaken for a memory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector-only, per tier, exact. A query is embedded by the backend,
+searched against the episodic and/or semantic <code>IndexFlatIP</code>
+by inner product, resolved to memory ids through the in-memory map, and
+fetched from SQLite under the user filter. There is no lexical arm on
+the memory path (the separate <code>search_conversations</code> helper
+does chat-log search, which is a different surface), no reranker, and no
+fusion — this is straightforward semantic recall.</p>
+<p>Three properties are worth drawing out.</p>
+<p><strong>Retrieval fails safe.</strong> When the embedding provider is
+disabled, unavailable, or circuit-broken, memory search "returns no
+prompt memories" rather than erroring, and the turn continues. A memory
+system that becomes a hard dependency of the chat loop is a fragile one;
+this one is an enhancement that can be absent.</p>
+<p><strong>The embedding-space guard is what makes recall trustworthy at
+all.</strong> Without it, the first time the embedding model changed,
+every query would score historical vectors on an incompatible basis and
+return confident nonsense. With it, the window after a model change is a
+period where search returns <em>less</em> (only re-embedded rows) rather
+than <em>wrong</em> — the correct direction for that trade.</p>
+<p><strong>Exact search caps the scale.</strong>
+<code>IndexFlatIP</code> is O(n) per query. For a personal memory that
+is fine and removes an entire class of ANN-recall bugs; for a store that
+grew to millions of rows it would be the bottleneck, and nothing here
+shards or switches to an approximate index. The design is scoped to one
+person's memory and priced accordingly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write path is SDK-driven and degrades in layers. The SDK asks the
+backend for an embedding, then hands the row and its vector to the local
+store. If the embedding call fails, the row is still written to SQLite
+with a NULL <code>embedding_id</code>; a startup backfill re-embeds
+NULL-vector rows once embeddings return. So a memory is never lost to an
+embedding outage — it is stored immediately and made searchable later,
+which is the same read-your-writes-lag shape <a href="../zep/">Zep</a>
+documents, handled here by storing first and indexing when able rather
+than by polling.</p>
+<p>Summarization is the background consolidation and it is gated
+conservatively: a run fires when the unsemanticized interaction count
+crosses <code>min_batch_size</code> (6) immediately, or
+<code>min_batch_size_idle</code> (1) after an idle/age check, and then a
+per-conversation batch gate applies again. Batches are scoped to a
+single <code>conversation_id</code> — one summary never mixes two
+conversations — and processed oldest-first. The token cost therefore
+scales with new interactions, not with the whole corpus: this is not a
+nightly map-reduce over everything, and the watermark means a restart
+resumes rather than re-summarizes.</p>
+<p>Deletion is where the design is weakest, and the project says so
+plainly in its own FAQ. Two gaps:</p>
+<ul>
+<li><strong>No episodic→semantic cascade.</strong> Deleting the episodic
+interactions does not delete the semantic summary derived from them. A
+fact-summary can therefore outlive its sources, and a user who deletes a
+conversation to remove its content may leave the extracted facts behind
+in semantic memory. The Rust sibling deletes compactions in the same
+transaction as the message they cover; WindieOS does not, and the
+divergence between the same author's two systems is the sharpest
+illustration in the atlas of how much that transaction matters.</li>
+<li><strong>Stale vectors on partial delete.</strong> A single-row
+delete drops the vector→memory mapping but leaves the vector in the
+FAISS file; the file is only rebuilt when the memory type hits zero
+rows. The dropped mapping means the orphan cannot surface deleted
+content — a real safety property, tested — but the index keeps growing
+with dead vectors, and <code>ntotal</code> overreports the live memory
+count until the type empties. This is the <a
+href="../langgraph/">LangGraph</a> orphaned-embedding shape again, here
+documented and mapping-guarded rather than silent.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is a local-runtime service the desktop app drives over
+JSON-RPC; it is not a set of model-callable tools in the <a
+href="../letta/">MCP</a> sense. The agent's memory is written as a side
+effect of completed turns and read as retrieved context, and the human
+drives deletion and management through the dashboard's memory section.
+So the model does not curate its own memory through tool calls; the
+runtime captures it and the person edits it.</p>
+<p>That places WindieOS with the capture-and-curate designs rather than
+the agent-controlled ones: the model's leverage over memory is what it
+says in a turn (which becomes an episodic row) and what the summarizer
+distils from that, not an explicit save/forget decision. For a desktop
+assistant meant to accumulate a picture of the user over time, that is a
+defensible choice — the memory is a consequence of use, not a thing the
+model has to remember to manage.</p>
+<p>The backend boundary is clean enough to reuse: embeddings and
+summaries are HTTP calls behind provider routing, so the same local
+store could run against a different embedding or summarization service
+without touching the storage code.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The embedding-space metadata is the reliability idea worth
+stealing</strong>, and it generalizes past this codebase: any durable
+vector store should record the model that produced its vectors and
+refuse to compare across a change. WindieOS's response — clear and
+rebuild — is the conservative one; a more ambitious system could
+re-embed in place from retained source text, which is effectively what
+the NULL-and-backfill path does over time. Either way, the invariant is
+the same: never score two vectors from different spaces against each
+other.</p>
+<p><strong>Failure handling is consistently non-fatal.</strong>
+Embedding outages, disabled providers, and circuit-broken services all
+degrade to "store without a vector, search returns nothing, backfill
+later" rather than breaking the chat. Startup runs
+<code>_repair_index_mapping_mismatch</code> for both tiers, so an index
+and its id map that fall out of agreement are reconciled rather than
+trusted.</p>
+<p><strong>Provenance and trust are thin.</strong> A memory row has no
+author, no confidence, no verification state, and no link from a
+semantic summary back to a corrected earlier belief. The
+<code>summary_hash</code> ties a summary to its source ids for dedup,
+which is a provenance thread, but it is not surfaced as lineage a reader
+can walk. Low-value filtering happens at summarization and leaves no
+trace of what was rejected. So the store records what it believes and
+not how sure it is or where a claim came from — adequate for a personal
+assistant, short of what a higher-stakes memory needs.</p>
+<p><strong>The delete gaps are the safety findings.</strong> The
+no-cascade behavior means "delete this conversation" is not "forget what
+you learned from it," and a privacy-motivated deletion can leave derived
+facts in semantic memory. A user who expects deletion to be complete
+does not get that here without also clearing semantic memory, and
+nothing in the UI couples the two. The stale-vector behavior is the
+milder of the two because the mapping guard prevents retrieval of
+deleted content; it is a hygiene and accuracy-of-counts problem rather
+than a disclosure one.</p>
+<p>Scope is enforced on the read path; concurrency is
+single-user-desktop scale; there is no encryption of the local databases
+mentioned, so the memory is as private as the user's disk.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The sidecar test suite is substantial — <strong>676 tests</strong>
+across <code>frontend/tests/sidecar/</code>, including
+<code>test_local_store_delete_cleanup.py</code>,
+<code>test_local_store_init.py</code>,
+<code>test_memory_summarizer.py</code>,
+<code>test_conversation_window_runtime.py</code>,
+<code>test_chat_event_store.py</code>, and
+<code>test_system_metrics_and_watermark_state.py</code>.</p>
+<p>The delete-cleanup suite is the most memory-relevant and it is
+well-aimed: it asserts that deleting the last row of a tier clears the
+in-memory maps, resets <code>next_vector_id</code>, empties the FAISS
+index (<code>ntotal == 0</code>) and removes the index file; that a
+partial delete with rows remaining <em>preserves</em> the index and the
+surviving mappings (the stale-vector-by-design case, pinned so it cannot
+regress); and that searching with no searchable indices short-circuits
+to an empty result. Those are behaviour tests of the delete and cleanup
+contract.</p>
+<p>What is not present is a negative-retrieval test in the atlas's
+strict sense — delete a memory, search for its content, assert it does
+not come back. The mapping-clear-on-delete makes that property hold, and
+the suite tests the mapping clear, but not the end-to-end
+absence-from-search. So <code>negative_eval</code> is withheld and the
+near-miss recorded: the mechanism that would make the test pass is
+tested; the retrieval assertion itself is not written.</p>
+<p>Also absent: any test or harness exercising the embedding-space
+change end to end — a stored index, a changed
+<code>embedding_space_version</code>, and an assertion that the vectors
+are cleared and the rows survive. That is the report's headline
+mechanism and its correctness rests on reading
+<code>_clear_all_vector_mappings</code>, not on a committed test. And
+there is no retrieval-quality evaluation of any kind; the run-gate
+thresholds, the batch sizes, and the low-value filter are
+unmeasured.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Stamp every vector index with the embedding space that built
+it, and refuse to compare across a change.</strong> Provider, model,
+dimension, and a space version, saved beside the index and checked on
+startup. This is the single most transferable idea here, because the
+failure it prevents — scoring vectors from a new model against vectors
+from an old one — is silent, produces confident wrong recall, and
+arrives the first time anyone upgrades an embedding model. Clearing and
+re-embedding from retained source text is the safe response.</p>
+<p><strong>Store the row before you have the vector, and
+backfill.</strong> A memory that is lost to an embedding-service outage
+is a memory system that made the cloud a hard dependency of remembering.
+Persist to SQLite with a NULL vector id, return nothing from search
+until the backfill runs, and keep the chat working.</p>
+<p><strong>Mark sources processed only after the derived write succeeds,
+and resume from a watermark.</strong> The episodic→semantic ordering
+here is crash-safe: a failure between summarize and mark loses nothing
+and double-counts nothing, because the mark follows the write and the
+watermark is the only progress authority.</p>
+<p><strong>Keep the transcript out of the memory table.</strong>
+<code>conversation_events</code> for what was said,
+<code>memories</code> for what was learned. Two lifecycles, two tables —
+the same discipline that keeps a chat buffer from being mistaken for
+memory.</p>
+<p><strong>Filter low-value material at write and let the summarizer say
+"nothing."</strong> A <code>SUMMARY: NONE</code> outcome that advances
+the watermark without creating a row keeps greetings and tool-error
+noise out of semantic memory without a downstream cleanup pass.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not delete one tier without deciding what happens to what
+was derived from it.</strong> No episodic→semantic cascade means
+deleting a conversation can leave its extracted facts behind. If a
+summary is derived from sources, deleting the sources should either
+delete or re-derive the summary — leaving it orphaned turns "forget
+this" into "forget where this came from."</p>
+<p><strong>Do not let partial deletes accumulate dead vectors
+indefinitely.</strong> Dropping the mapping keeps deleted content
+unreachable, which is the important safety half — but rebuilding the
+index only when a tier empties means a long-lived store carries dead
+vectors and an inflated count for its whole life. A periodic compact, or
+delete-time vector removal, closes it.</p>
+<p><strong>Do not ship your headline correctness mechanism without a
+test.</strong> The embedding-space rebuild is the best thing in this
+store and the one thing a refactor could silently break, because nothing
+exercises the mismatch path.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a local, single-user desktop assistant that should
+accumulate a picture of its user across sessions without sending that
+memory to a server. The local-first storage, the fail-safe degradation,
+and the embedding-space guard are exactly right for that shape, and the
+two-tier episodic/semantic split is a sound default for turning raw
+interactions into durable facts.</p>
+<p>Walk away if you need multi-tenant isolation beyond one machine,
+ranked or hybrid retrieval, a trust model richer than present/absent, or
+deletion that is guaranteed complete across derived tiers. And if your
+corpus will be large, the exact <code>IndexFlatIP</code> search and the
+never-compacted-until-empty index are both scale ceilings to plan
+around. For its intended scope — one person's memory on their own
+computer — the design is coherent and unusually honest about its own
+gaps.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does anything re-embed NULL-vector rows proactively, or only on the
+startup backfill? A long session after an embedding outage would
+otherwise keep new rows unsearchable until the next restart.</li>
+<li>Is the embedding-space rebuild ever triggered mid-session, or only
+at startup? A provider swap while running would leave stale vectors
+until the next launch.</li>
+<li>What advances <code>embedding_space_version</code> — is it derived
+from the model id, or a manually bumped constant? A model changed
+without a version bump would defeat the guard.</li>
+<li>Is there a supported path to clear semantic memory when its episodic
+sources are deleted, or must the user nuke both tiers?</li>
+<li>How large does a personal <code>IndexFlatIP</code> get before exact
+search is felt, and is there any intent to shard or switch to an
+approximate index?</li>
+<li>The default branch was six weeks stale at reading — is WindieOS
+superseded by the Rust <a href="../windie-sandbox/">Windie Sandbox</a>,
+or a parallel product?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Store and schema</strong></p>
+<ul>
+<li><code>frontend/src/main/python/memory/local_store.py</code> —
+<code>LocalMemoryStore</code>, <code>EmbeddingSpaceMetadata</code>, the
+space check and rebuild, search, delete.</li>
+<li><code>frontend/src/main/python/memory/sqlite_store.py</code> —
+episodic/semantic schema, <code>user_id</code> index, vector
+mappings.</li>
+<li><code>frontend/src/main/python/memory/faiss_index.py</code> — index
+read/write.</li>
+<li><code>frontend/src/main/python/memory/record_kinds.py</code> — the
+<code>interaction</code> record kind.</li>
+</ul>
+<p><strong>Consolidation</strong></p>
+<ul>
+<li><code>frontend/src/main/python/memory/summarizer.py</code> — the
+episodic→semantic roll-up, run gate, <code>summary_hash</code>
+dedup.</li>
+<li><code>frontend/src/main/python/memory/conversation_semanticization_runtime.py</code>,
+<code>conversation_window_runtime.py</code> — windowing and
+semanticization queries.</li>
+<li><code>frontend/src/main/python/memory/watermark_state.py</code> —
+progress ledger.</li>
+</ul>
+<p><strong>Chat boundary</strong></p>
+<ul>
+<li><code>frontend/src/main/python/memory/chat_event_store.py</code> —
+<code>conversation_events</code>, kept out of the memory table.</li>
+</ul>
+<p><strong>Delete / maintenance</strong></p>
+<ul>
+<li><code>frontend/src/main/python/memory/operations.py</code>,
+<code>admin.py</code>, <code>index_artifact_cleanup.py</code>.</li>
+</ul>
+<p><strong>Backend compute</strong></p>
+<ul>
+<li><code>backend/src/api/routes/memory/embeddings/</code> —
+provider-routed embedding service.</li>
+<li><code>backend/src/api/routes/memory/semantic/</code> — LLM
+summarization, fact extraction, title generation.</li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>frontend/docs/architecture/memory_system.md</code> — the
+layout, components, and the summarization/deletion FAQ.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>frontend/tests/sidecar/test_local_store_delete_cleanup.py</code>,
+<code>test_memory_summarizer.py</code>,
+<code>test_local_store_init.py</code>,
+<code>test_conversation_window_runtime.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9"><code class="commit-id" title="da2deadc9e5ebd5b45bb61e73b80417156b2b3a9">da2deadc…</code></a>
+— first reading, at a default-branch tip dated 1 July 2026 that had not
+advanced in the six weeks before the reading. This is a distinct
+repository from the same author's Rust <a
+href="../windie-sandbox/">Windie Sandbox</a> (pinned separately at
+<code>90f949b8</code>); the two share no git history and implement
+different memory designs. Screened before opening: one auto-run surface,
+one build-time execution point, eight unpinned manifests, lockfiles
+unchanged for 47–130 days. Nothing was installed or run; the
+embedding-space rebuild and the delete gaps were established by reading
+<code>local_store.py</code> against the architecture doc and the
+delete-cleanup tests, not by executing the runtime.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
