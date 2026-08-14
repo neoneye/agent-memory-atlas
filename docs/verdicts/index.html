@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 277 reports.</strong></p>
+<p><strong>This page covers all 278 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7817,6 +7817,65 @@ a <code>user_id</code> on the read path and notebook 06 has no tenant
 concept at all — and nothing warns you which one you picked. Six of the
 thirty techniques are conversation-window management filed under the
 word memory.</li>
+</ul>
+<h3 id="grok-build"><a
+href="../systems/grok-build/"><code>grok-build</code></a></h3>
+<ul>
+<li>Best idea: stamping retrieved memory with its own age and a verify
+hint, at injection time, suppressed for curated sources.
+<code>format_staleness_note</code> emits
+<code>**Stale (…):** Verify current state before relying on this.</code>
+into the <code>&lt;system-reminder&gt;</code> block, so the hedge
+reaches the model at the moment it decides whether to trust the claim.
+Nothing is stored and nothing can filter on it, which is why it is not
+<code>trust_state</code> — and why it works: the distinction it draws is
+not fresh-versus-old but written-down-versus-merely-observed. Curated
+<code>MEMORY.md</code> files are exempt from both the note and temporal
+decay.</li>
+<li>Biggest risk: the dream pass is destructive at both ends. It
+truncates the model's consolidated document at 16,000 characters with
+<code>chars().take()</code>, overwrites the workspace
+<code>MEMORY.md</code> with the result — no version, no diff, no backup
+— and then deletes the session logs it read. Prior knowledge survives
+only because the prompt asks the model to merge rather than replace.
+Behind that, <code>grok memory clear --global</code> removes one file
+and leaves its verbatim text in <code>chunks.text</code> in every other
+workspace's <code>index.sqlite</code> until someone runs
+<code>grok memory reindex</code>.</li>
+<li>Most reusable component: <code>MemoryStorage::read_file</code>. It
+canonicalizes both the model-supplied path and the memory root, refuses
+anything not under the root, and reads the <em>canonicalized</em> path
+rather than the original with the reason in a comment — "to prevent
+TOCTOU races". That is the containment check on the read path that
+several systems here apply only on the write path, plus the race that
+survives a naive version of it.</li>
+<li>Maturity impression: Apache-2.0, 1.59M lines of Rust synced from a
+monorepo with the source commit recorded at the root; the memory crate
+is ~9,900 lines with <strong>290 tests</strong>, distributed across
+storage, dream, search, lock and index rather than pooled in the easy
+modules. Behind <code>--experimental-memory</code>. The concurrency work
+is serious — a dream lock with stale recovery and rollback, a
+<code>reindex_claim</code> row so two processes cannot reindex at once,
+<code>arc_swap</code> for lock-free dirty tracking — and there is no
+benchmark, no dataset, and nothing measuring the seven weighted ranking
+stages.</li>
+<li>Study when: you want memory to be files a developer edits with
+search as an accelerator, and you are deciding where injected context
+sits relative to the provider's prompt cache. The injection here is
+persisted into the leading system message and reused verbatim rather
+than re-scored, because "a re-scored block would mutate the
+system-prompt prefix and bust the KV cache for the whole downstream
+conversation" — the most direct answer to that question in the
+atlas.</li>
+<li>Do not copy when: your memory is a set of claims rather than a set
+of documents. There is no fact, no extraction, no supersession, no
+tombstone and no way to mark something disputed; the dream's instruction
+is to "keep only the current truth", so the losing side of a
+contradiction leaves no trace. Also check the session-registry flag
+before trusting the store with anything private:
+<code>memory.tar.gz</code> bundles every <code>MEMORY.md</code> and
+session log for upload, off by default, and if the local flag is unset a
+remote setting decides.</li>
 </ul>
         </article>
       </div>
