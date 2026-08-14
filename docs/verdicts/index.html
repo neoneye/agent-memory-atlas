@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 280 reports.</strong></p>
+<p><strong>This page covers all 281 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7978,6 +7978,51 @@ records that a human ruled but not which human — a gap for a deliverable
 someone signs. Dismissal is status-only, so a reworded re-derivation of
 a dismissed finding would be recorded fresh: the dedup key (title,
 location) and the dismissal key do not intersect.</li>
+</ul>
+<h3 id="neuron"><a
+href="../systems/neuron/"><code>neuron</code></a></h3>
+<ul>
+<li>Best idea: a per-category schema enforced on the write path, below
+the prompt. <code>neuron.yaml</code> declares required and enum-typed
+fields, and <code>enforceFieldSchema</code> refuses any write that skips
+a required field, names an undeclared one, or sends a value outside a
+declared enum — from the CLI and from <code>neuron scan</code> alike,
+with a did-you-mean on enum near-misses. An agent whose prompt says
+"just save it" cannot, because the refusal is a property of the store,
+not the instruction. The cleanest answer in the atlas to stopping an
+agent writing junk into its own memory.</li>
+<li>Biggest risk: the store of record is markdown a hand-edit or a
+parser edge case can corrupt, and reconciliation trims the mirror to
+match it. Ticket 38 records exactly that — a stray <code>---</code> made
+the parser undercount a category ~38% and the vector mirror was
+mass-deleted to agree. Root bug fixed, a loud-but-non-blocking tripwire
+added, <code>.neuron/</code> is git-recoverable — but when humans and a
+parser both write your truth, a parse disagreement is a data-integrity
+event.</li>
+<li>Most reusable component: the recall fidelity ladder. Deterministic /
+best-effort / instruction-only, reported per harness by calling its real
+hook registration through <code>verify()</code> rather than inferring
+from a config file, with Cursor explicitly marked "not verified against
+a real installation … fixture evidence only." How to make an
+integration-matrix claim honest, and almost nothing here does it.</li>
+<li>Maturity impression: MIT, ~28,900 lines of TypeScript, ~700 tests
+across 62 files with dedicated suites for the dual router, the
+md-to-vector sync, supersession (two files) and schema-of-schema
+validation. Fully offline — local ONNX embeddings, no key, no cloud.
+Retrieval is real hybrid: RRF over vector and FTS5 legs, an FTS-match
+gate, and a cross-encoder reranker.</li>
+<li>Study when: you want your agent's memory to be plain files you own,
+review in diffs and edit by hand, with a schema that keeps the agent
+honest and recall the harness guarantees rather than the model choosing
+to look. Make the human-readable form the store of record and the index
+disposable — reconcile it from the files, delete it and rebuild.</li>
+<li>Do not copy when: you need a trust model richer than
+live-vs-superseded — there is no verified or rejected state and disputed
+claims have no representation — or multi-tenant isolation, since the
+boundary is a project-root hash on a shared per-machine cache, not an
+auth boundary. And weigh the markdown-as-record tradeoff: reviewability
+and hand-repair, bought with a source of truth a parser edge case can
+corrupt.</li>
 </ul>
         </article>
       </div>
