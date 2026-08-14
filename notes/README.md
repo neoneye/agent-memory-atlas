@@ -8,6 +8,19 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-14-a-handoff-protocol-and-the-durable-thing-that-is-not-a-belief.md](2026-08-14-a-handoff-protocol-and-the-durable-thing-that-is-not-a-belief.md) —
+  DeepJudge's Agent Handoff Protocol requires durable state as a normative MUST
+  — a thread mapping, an idempotency result and materialised resources,
+  committed atomically and retained at least 24 hours — and is still not memory,
+  because a correlation identifier and a replay guard are not claims that can be
+  wrong. The same call `showjihyun/bvwebchat` got, reached from the protocol side
+  instead of the harness side, and the distinguishing question in both is not
+  whether something survives but whether the surviving thing could be false.
+  Keeps three mechanisms: the sharpest untrusted-input rule in the corpus, an
+  idempotency-key-plus-request-fingerprint write guard that would give a memory
+  store a conflict signal where it currently overwrites, and a normative
+  deletion-completeness MUST. Also pairs its unrunnable fifteen-scenario
+  conformance list against LangGraph's runnable one, which covers the wrong half.
 - [2026-08-14-a-teaching-corpus-and-the-prior-art-it-was-citing.md](2026-08-14-a-teaching-corpus-and-the-prior-art-it-was-citing.md) —
   a thirty-notebook cookbook's reading list named 21 systems, 15 already
   reported, and the six that were left had been cited in 5 to 16 `content/`
