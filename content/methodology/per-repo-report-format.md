@@ -8,6 +8,10 @@ page_kind: methodology
 
 Use this format for each repository-specific report. The report should be technical, code-grounded, and opinionated. Prefer concrete file paths, functions, classes, schemas, prompts, API endpoints, tests, and call flows over product claims.
 
+## Who these are written for
+
+Two readers, both expert: a **senior engineer evaluating memory systems**, and the **developers of the repository under review**. Both can act on a finding immediately — the second can open the exact file and fix it — and both are ill-served by a gloss that a plain-language rewrite would insert between them and the evidence. So the density is deliberate. Name the file, the symbol, the config key and the constant; do not stop to define `FTS5`, compaction, or a capability mark for a newcomer. A report that reads as a wall to someone who does not work on memory systems is aimed correctly, not written badly. This is not a beginner tutorial, and it should not be softened into one; the executive summary's job is to let one of those two readers decide whether to keep reading, not to onboard a third.
+
 Suggested output path:
 
 ```text
