@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **282 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **283 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -297,6 +297,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
 - [`smythos-sre`](../systems/smythos-sre/) **SmythOS SRE** — A conversation handle in a request header · `SmythOS/sre` · Scope enforced, Negative evals
+- [`sonder-runtime`](../systems/sonder-runtime/) **Sonder Runtime** — A quarantine that checks the base rate before it blames · `Krilliac/Sonder-runtime` · Trust state, Scope enforced, Mutation audit, Negative evals
 - [`soul-of-waifu`](../systems/soul-of-waifu/) **Soul of Waifu** — Rollback that nothing calls · `jofizcd/Soul-of-Waifu` · Mutation audit
 - [`sovereign`](../systems/sovereign/) **AMITY / Archangel-8** — The capacity to refuse · `Renkasha/Sovereign`
 - [`stash`](../systems/stash/) **Stash** — A hypothesis is not a fact, and gets its own table · `alash3al/stash` · Trust state, Scope enforced

@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 282 reports.</strong></p>
+<p><strong>This page covers all 283 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8070,6 +8070,55 @@ machine, ranked or hybrid retrieval (this is exact
 trust model richer than present/absent, or deletion guaranteed complete
 across derived tiers. At large corpus sizes the exact search and the
 never-compacted-until-empty index are both scale ceilings.</li>
+</ul>
+<h3 id="sonder-runtime"><a
+href="../systems/sonder-runtime/"><code>sonder-runtime</code></a></h3>
+<ul>
+<li>Best idea: an outcome-gated quarantine that checks the base rate and
+the attribution before it suppresses a lesson. A distilled lesson stops
+being retrieved only when its run of losses is statistically improbable
+for its own retrieval-frequency band (a test computes
+<code>p=0.006</code>), and only for losses it is individually answerable
+for — a cohort of lessons always retrieved together cannot each claim
+the same shared failure. A cooldown then admits it to sampled probation,
+and a win lifts the quarantine on evidence. It is the credit-assignment
+discipline the atlas keeps asking for and almost never finds built.</li>
+<li>Biggest risk: the loop is only as good as its outcome signal, and
+much of that signal is <code>machine</code> or <code>unknown</code>. The
+code weights caller-sourced outcomes above machine ones and enforces an
+<code>outcomes.source</code> provenance column <code>NOT NULL</code>
+with no default — a real self-grading defense — but a store fed only
+machine-graded outcomes is still grading itself, and no base-rate care
+fixes a signal that is the model assessing its own output. Separately,
+quarantine suppresses a lesson without a rejected-value record, so a
+re-distilled duplicate can return.</li>
+<li>Most reusable component: the
+<code>interaction → outcome(source) → lesson_usage</code> credit chain.
+It links every retrieved lesson to the interaction that used it and the
+outcome that followed, with who judged it, which is the join most lesson
+stores omit and the thing that makes outcome-gated trust possible at
+all. The base-rate math in <code>retriever.py</code> and the pure
+ranking/contradiction logic in <code>lesson_decay.py</code> are
+test-friendly by construction and portable.</li>
+<li>Maturity impression: Apache-2.0, ~257,000 lines of Python (a
+self-modifying runtime; the memory layer is a stdlib-only SQLite adapter
+inside it), 357 test files with worked-probability quarantine cases,
+schema columns that carry a comment explaining the defect each prevents.
+The constants — 0.62 relevance floor, 0.93 dedup, 30-day half-life,
+five-loss quarantine — are each defended in a comment and tested for
+behaviour, and none is measured against retrieval quality.</li>
+<li>Study when: you are building a self-improving agent that accumulates
+procedural lessons and can observe outcomes, and you want to suppress
+the lessons that hurt without punishing the ones that merely got the
+hard tasks. The quarantine's two statistical guards are worth lifting
+whole even into a different store.</li>
+<li>Do not copy when: you cannot produce a trustworthy outcome signal —
+the design degrades to self-grading if every outcome is
+<code>machine</code>. Also walk away if you need contradiction
+<em>resolved</em> rather than flagged, or a rejected-value tombstone
+that keeps a bad lesson gone; the near-duplicate dedup and quarantine
+both check stored lessons, not rejected ones, so continuous
+re-distillation can resurrect a suppressed lesson.</li>
 </ul>
         </article>
       </div>
