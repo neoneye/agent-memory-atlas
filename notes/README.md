@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-14-the-framework-that-explains-the-deepseek-correction.md](2026-08-14-the-framework-that-explains-the-deepseek-correction.md) —
+  Cordis, the plugin runtime under DeepSeek Harness, has zero hits for recall,
+  persist, storage, durable, embedding, vector, sqlite, database, forget or
+  retrieve, and its loader's `write()` is a comment saying the tree is in-memory.
+  The exclusion is trivial; the reason for reading it is that its design is why
+  the DSH report was wrong. When capabilities are separately-mounted plugins with
+  isolated service symbols, "implemented" and "present" become independent facts
+  and nothing at the implementation site signals which. Proposes a three-step
+  reading rule — find the shipped composition rather than the example one, grep
+  it for the package, and check the config it passes rather than the component's
+  schema default — and an explicit prompt for it in the report format.
 - [2026-08-14-a-handoff-protocol-and-the-durable-thing-that-is-not-a-belief.md](2026-08-14-a-handoff-protocol-and-the-durable-thing-that-is-not-a-belief.md) —
   DeepJudge's Agent Handoff Protocol requires durable state as a normative MUST
   — a thread mapping, an idempotency result and materialised resources,
