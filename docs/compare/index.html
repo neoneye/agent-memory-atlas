@@ -18732,8 +18732,8 @@ note</a>. If a release exposes session search or a
 anticipates — the scope call flips.</li>
 <li><strong><code>cline/cline</code> was examined and has no report, and
 the finding is where its memory turned out to live.</strong> Apache-2.0,
-at <a
-href="https://github.com/cline/cline/commit/6e6befdb65e4472fa7f2860a6b295a1325469417"><code class="commit-id" title="6e6befdb65e4472fa7f2860a6b295a1325469417">6e6befdb…</code></a>.
+re-checked at <a
+href="https://github.com/cline/cline/commit/8bbdde2a5c1f972864fe1b954f639c21fac61a40"><code class="commit-id" title="8bbdde2a5c1f972864fe1b954f639c21fac61a40">8bbdde2a…</code></a>.
 <strong>Memory Bank</strong> — six markdown files
 (<code>projectbrief.md</code>, <code>productContext.md</code>,
 <code>activeContext.md</code>, <code>systemPatterns.md</code>,
@@ -18765,7 +18765,69 @@ session versioning, <code>checkpoint-diff.ts</code> /
 tree of rules, skills, workflows, agents and hooks beside an
 <code>AGENTS.md</code>. Details in <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
+note</a>. That exclusion named the condition that would reverse it —
+Memory Bank becoming a store consulted before a write — and <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-16-a-fork-a-successor-and-an-editor.md">the
+condition was tested a week and roughly a hundred commits later</a>: the
+same two documentation files, and the only other <code>memor</code>
+paths are a process-RSS logger and an <code>InMemoryStateAdapter</code>
+holding maps with <code>expiresAt</code> for the life of the
+process.</li>
+<li><strong><code>Zoo-Code-Org/Zoo-Code</code> was examined and has no
+report, and it has the best editing surface in the corpus with nothing
+behind it.</strong> Apache-2.0, at <a
+href="https://github.com/Zoo-Code-Org/Zoo-Code/commit/e064cf0592cfc70735d86feff77f1265637697ae"><code class="commit-id" title="e064cf0592cfc70735d86feff77f1265637697ae">e064cf05…</code></a>.
+It continues Roo Code — still <code>roo-code</code> in the package
+manifest — which makes it a fork of a fork of Cline, and its durable
+state is three piles, none of them a belief store.
+<code>src/services/code-index/</code> is a semantic index of the user's
+<em>source</em>, with embedders, a vector store and an orchestrator,
+regenerated from the thing it indexes: the boundary already drawn for
+<code>DeusData/codebase-memory-mcp</code> and Kodiak's ChromaDB source
+index. <code>TaskHistoryStore.ts</code> and
+<code>src/core/checkpoints/</code> store the run, which is the
+LangGraph-checkpointer boundary. The third pile is where the interest
+is. Cline's Memory Bank declines as <em>"a prompt plus ordinary file
+editing"</em>; Zoo Code's rules and skills have a real management layer
+— a typed CRUD API over <code>RuleMetadata</code> records with ids built
+from <code>(scope, kind, modeSlug, relativePath)</code>,
+<code>global</code> and <code>project</code> bases each split into
+generic and per-mode directories, a filename pattern enforced on write,
+and resolution containment-checked <em>twice</em>, before and after an
+<code>lstat</code> that accepts symlinks, so a rule cannot escape its
+scope through a link. <strong>Every caller of <code>createRule</code>
+and <code>deleteRule</code> is a click in the webview.</strong> The
+agent invokes a skill through <code>SkillTool</code> and never writes
+one; nothing it concludes reaches the store except through the same
+generic file-write it could aim anywhere. That is configuration, not
+memory: a rule the user wrote cannot be wrong in the sense this atlas
+means, only outdated, and nothing derives it so nothing can re-assert
+it. It is further along than Cline on every axis except the one that
+decides the question — see <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-16-a-fork-a-successor-and-an-editor.md">the
 note</a>.</li>
+<li><strong><code>Aider-AI/aider</code> was examined and has no report,
+and it is the cleanest test of the boundary because it does persist
+something.</strong> Apache-2.0, at <a
+href="https://github.com/Aider-AI/aider/commit/5dc9490bb35f9729ef2c95d00a19ccd30c26339c"><code class="commit-id" title="5dc9490bb35f9729ef2c95d00a19ccd30c26339c">5dc9490b…</code></a>.
+<code>.aider.chat.history.md</code> is written continuously and
+<code>--restore-chat-history</code> reads it back:
+<code>base_coder.py:519</code> splits the markdown into messages and
+calls <code>summarize_start()</code>, and <code>ChatSummary</code>
+recursively summarizes from the oldest end until the tail fits a token
+budget — so a previous session's conversation genuinely reaches a later
+session's context. It is still a transcript and a summary of one. There
+is no unit, no identity and no status; two sessions that contradict each
+other yield a summary containing both, and no operation means <em>"this
+was wrong"</em>. The other durable artifact is <code>repomap.py</code>'s
+<code>.aider.tags.cache.v&lt;N&gt;</code> — tree-sitter tags per file,
+mtime-invalidated, ranked by a personalized PageRank over the identifier
+graph — a derived index of the user's source.
+<code>CONVENTIONS.md</code> is a file the user passes with
+<code>--read</code>, which is a prompt input. This is the exclusion
+where <em>a conversation cannot be wrong either, and a summary of one
+inherits the property</em> has to carry real weight, because the
+artifact does outlive the session.</li>
 <li><strong><code>MoonshotAI/kimi-code</code> and
 <code>MoonshotAI/kimi-cli</code> were examined together and neither
 earns a report, and the interesting one is the one being
