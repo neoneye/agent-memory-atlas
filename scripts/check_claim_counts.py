@@ -54,7 +54,17 @@ WORDS = {
 #: "one hundred", or the long form is read as 100 and reported stale against a
 #: live 105.
 WORDS_BY_LENGTH = sorted(WORDS, key=len, reverse=True)
-NUMBER = rf"(?:{'|'.join(WORDS_BY_LENGTH)}|\d{{1,3}})"
+#: Spaces inside a spelled number match a space *or* a newline. Prose wraps, and
+#: *"two hundred and\nninety"* with a literal-space alternation matches only
+#: "two hundred" — the long form losing to a prefix, which is the exact failure
+#: the length sort above exists to prevent, arriving through the line wrap
+#: instead. It read a live 290 as a claimed 200 and reported a correct sentence
+#: stale.
+#:
+#: One character, not `\s+`: a quantifier makes each of the ~1,000 alternatives
+#: ambiguous about where it ends, and the `\s+` separators around it in `CLAIM`
+#: re-split the same whitespace. A wrap leaves exactly one whitespace character.
+NUMBER = rf"(?:{'|'.join(w.replace(' ', '[ \n]') for w in WORDS_BY_LENGTH)}|\d{{1,3}})"
 NOUNS = r"(?:memory\s+)?(?:systems?|repositories|repository|reports?)"
 
 #: A claim is a number that either qualifies a countable atlas noun, or names a
@@ -241,13 +251,49 @@ def window(text: str, start: int, end: int) -> tuple[str, str]:
     return ahead, behind
 
 
-def bind(ahead: str, behind: str) -> str | None:
+#: A pattern page whose whole subject is one rubric mechanism. On these pages
+#: the mechanism is usually a pronoun — *"Nineteen systems of two hundred and
+#: ninety carry it"*, *"Nineteen systems in the atlas have this"* — because
+#: naming it again in every sentence would be unreadable. Requiring the noun in
+#: the window left both of the tombstone page's headline counts unbound, and
+#: they were the two staleest numbers in the corpus: the page arguing the
+#: atlas's central finding was the one page the numerator check could not read.
+PAGE_SUBJECT = {
+    "rejected-value-tombstone.md": "tombstone",
+    "trust-state-machine.md": "trust_state",
+    "bi-temporal-fact-validity.md": "bitemporal",
+    "scope-as-a-first-class-key.md": "scope_enforced",
+    "append-only-memory-audit.md": "audit_log",
+}
+
+#: The page subject alone is not enough to bind, and the first version of this
+#: proved it by failing eleven correct sentences: a pattern page is *full* of
+#: counts that are not censuses — "two systems arrived at it independently",
+#: "one repository tests the rotation case". A census sentence on these pages
+#: has both marks: it counts against the corpus denominator, and it says the
+#: systems *carry* the thing. Requiring both is what separates
+#: "Nineteen systems of two hundred and ninety carry it" from
+#: "One of two hundred and ninety, plus one adoption, suggests an idea that is
+#: not being reached at all" — two sentences, one paragraph apart, only one of
+#: which is a count of the mark.
+CARRIAGE = re.compile(
+    r"\b(?:carry|carries|carrying|have\s+this|has\s+this|hold|holds|"
+    r"implement|implements)\b",
+    re.I,
+)
+
+
+def bind(ahead: str, behind: str, subject: str | None = None) -> str | None:
     """Which mechanism a claim is about, or None if the sentence does not say.
 
     Forward first. "Nine systems of one hundred and fifty-five carry a
     tombstone" names its subject after the number; the backward window exists
     for the inverted form ("the tombstone is carried by nine systems"), and a
     sentence naming two mechanisms is left unbound rather than guessed at.
+
+    `subject` is the page's own mechanism, used only when the sentence names
+    none. A sentence that names a *different* mechanism still wins over the
+    page, and a sentence naming two is still left alone.
     """
     for source in (ahead, behind):
         hits = {flag for flag, pattern in MECHANISM.items() if pattern.search(source)}
@@ -255,10 +301,14 @@ def bind(ahead: str, behind: str) -> str | None:
             return hits.pop()
         if len(hits) > 1:
             return None
-    return None
+    return subject
 
 
 def value(token: str) -> int:
+    # A spelled number may have wrapped mid-phrase, so collapse whitespace
+    # before the lookup — `NUMBER` matches across the newline and `WORDS` is
+    # keyed on single spaces.
+    token = " ".join(token.split())
     return int(token) if token.isdigit() else WORDS[token.lower()]
 
 
@@ -302,12 +352,24 @@ EXTERNAL_SOURCE = re.compile(r"arxiv\.org|arXiv:|doi\.org", re.I)
 
 
 def external_spans(text: str) -> list[tuple[int, int]]:
-    """Character ranges of paragraphs that cite an external work."""
+    """Character ranges of *sentences* that cite an external work.
+
+    This was paragraph-scoped once, and that is the widest hole this checker has
+    had. The rejected-value tombstone page opens with a blockquote that states
+    the atlas's own headline count and, six lines further down in the same
+    paragraph, cites an arXiv paper for the vocabulary. Paragraph scope read the
+    citation as owning the count, labelled *"Fourteen systems of two hundred and
+    seventy-one"* an external corpus, and waved the atlas's most-quoted sentence
+    through while it drifted five systems and nineteen reports out of date.
+
+    A citation governs the number in its own sentence. Anything further away is
+    this corpus until proven otherwise.
+    """
     spans, cursor = [], 0
-    for para in text.split("\n\n"):
-        if EXTERNAL_SOURCE.search(para):
-            spans.append((cursor, cursor + len(para)))
-        cursor += len(para) + 2
+    for sentence in re.split(r"(?<=[.!?])\s+", text):
+        if EXTERNAL_SOURCE.search(sentence):
+            spans.append((cursor, cursor + len(sentence)))
+        cursor += len(sentence) + 1
     return spans
 
 
@@ -347,6 +409,7 @@ def check(root: Path, show_list: bool) -> int:
         past = historical_spans(text)
         cited = external_spans(text)
         where = source.relative_to(root)
+        subject = PAGE_SUBJECT.get(source.name) if source.parent.name == "patterns" else None
 
         # A number naming its mechanism directly needs no window: the subject is
         # the noun. Recorded first so the general pass can skip the same span.
@@ -392,11 +455,15 @@ def check(root: Path, show_list: bool) -> int:
             ahead, behind = window(text, match.start(), match.end())
             if LOCAL_SCOPE.match(ahead):
                 continue
-            # Somebody else's corpus, cited in a paragraph naming the paper. A
-            # denominator matching one of our live totals is still ours.
+            # Somebody else's corpus, cited in the same sentence as the number.
+            # A denominator matching one of our live totals is still ours — and
+            # so is any denominator *below* one, because this corpus only ever
+            # grows: a smaller own total is a stale own total, which is exactly
+            # the drift this check exists to catch and the one case where
+            # "external" is the most expensive possible misreading.
             if (
                 denom is not None
-                and value(denom) not in (total_reports, total_repos)
+                and value(denom) > max(total_reports, total_repos)
                 and any(s0 <= match.start() < e0 for s0, e0 in cited)
             ):
                 if show_list:
@@ -405,7 +472,15 @@ def check(root: Path, show_list: bool) -> int:
                         f"'{' '.join(match.group(0).split())}' — external corpus, not checked"
                     )
                 continue
-            flag = bind(ahead, behind)
+            page_subject = (
+                subject
+                if subject
+                and denom is not None
+                and value(denom) in (total_reports, total_repos)
+                and (CARRIAGE.search(ahead) or CARRIAGE.search(behind))
+                else None
+            )
+            flag = bind(ahead, behind, page_subject)
             line = text[: match.start()].count("\n") + 1
             claim = " ".join(match.group(0).split())
 
@@ -507,6 +582,9 @@ def self_test() -> int:
     # of its own, and a second review caught that before it caught a bug — which
     # is the same lesson as the rest of this file: an untested branch is a claim
     # nobody has checked.
+    #: (prose, expected exit, label, page path, corpus size). The last two
+    #: default to a plain page on a corpus of two; the branches added later need
+    #: a real denominator and a real pattern page to exercise at all.
     cases = [
         ("One system carries a rejected-value tombstone.\n", 0, "windowed: correct count passes"),
         ("Two systems carry a rejected-value tombstone.\n", 1, "windowed: wrong count fails"),
@@ -519,9 +597,63 @@ def self_test() -> int:
             0,
             "mechanism noun: a within-system count is not a corpus claim",
         ),
+        # A spelled denominator that wraps mid-phrase. Read as "two hundred"
+        # this is a correct claim reported stale; the whole number has to match
+        # across the newline.
+        (
+            "One system of two hundred and\nninety carries a rejected-value tombstone.\n",
+            0,
+            "wrapped denominator: the long form survives a line break",
+            "page.md",
+            290,
+        ),
+        # The external-corpus escape, which was paragraph-scoped and swallowed
+        # this atlas's own headline count six lines above an arXiv link.
+        (
+            "Two systems of one hundred carry a rejected-value tombstone.\n"
+            "The vocabulary is borrowed from arXiv:2605.26252.\n",
+            1,
+            "external escape: a citation in a later sentence does not excuse the count",
+        ),
+        (
+            "A survey at arXiv:2605.26252 found two systems of four hundred "
+            "carrying a rejected-value tombstone.\n\n"
+            # A bound, correct claim beside it: an excused claim on its own
+            # leaves nothing bound, which is its own failure by design.
+            "One system carries a rejected-value tombstone.\n",
+            0,
+            "external escape: a citation in the same sentence, over our total, still excuses",
+        ),
+        # A pattern page names its mechanism with a pronoun. Both of the
+        # tombstone page's headline counts were unbound for this reason.
+        (
+            "One system of two hundred and ninety carries it.\n",
+            0,
+            "page subject: correct pronoun census passes",
+            "patterns/rejected-value-tombstone.md",
+            290,
+        ),
+        (
+            "Two systems of two hundred and ninety carry it.\n",
+            1,
+            "page subject: wrong pronoun census fails",
+            "patterns/rejected-value-tombstone.md",
+            290,
+        ),
+        (
+            "Two systems of two hundred and ninety arrived at it independently.\n\n"
+            "One system of two hundred and ninety carries it.\n",
+            0,
+            "page subject: a non-carriage sentence on the page is not a census",
+            "patterns/rejected-value-tombstone.md",
+            290,
+        ),
     ]
     failures = []
-    for prose, expected, label in cases:
+    for case in cases:
+        prose, expected, label = case[0], case[1], case[2]
+        rel = case[3] if len(case) > 3 else "page.md"
+        size = case[4] if len(case) > 4 else 2
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             systems = root / "content" / "systems"
@@ -529,10 +661,13 @@ def self_test() -> int:
             (systems / "with.md").write_text(
                 FIXTURE_REPORT.format(name="with", caps="tombstone"), encoding="utf-8"
             )
-            (systems / "without.md").write_text(
-                FIXTURE_REPORT.format(name="without", caps=""), encoding="utf-8"
-            )
-            (root / "content" / "page.md").write_text(prose, encoding="utf-8")
+            for i in range(size - 1):
+                (systems / f"without{i}.md").write_text(
+                    FIXTURE_REPORT.format(name=f"without{i}", caps=""), encoding="utf-8"
+                )
+            page = root / "content" / rel
+            page.parent.mkdir(parents=True, exist_ok=True)
+            page.write_text(prose, encoding="utf-8")
             # The controls are expected to fail loudly; their output would read
             # as real findings in a build log.
             noise = io.StringIO()

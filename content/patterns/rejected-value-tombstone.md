@@ -7,15 +7,15 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Fourteen systems of two hundred and seventy-one
+> **This is not an established best practice.** Nineteen systems of two hundred and ninety
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
-> form independently, one was driven to it by a regulation, three built it after
-> this page named its absence in their report, **two have it as a side effect of a
+> form independently, one was driven to it by a regulation, several built it only
+> after their report named its absence, **two have it as a side effect of a
 > lookup that forgot to exclude the rejected row**, one made that same collision
 > deliberate, one built it as ordinary plumbing in its write gate, and one
 > hardened it against key rotation.
-> Sorted by mechanism rather than by mark, most refuse the write
+> Sorted by mechanism rather than by mark, fourteen refuse the write
 > — [the table below](#sorted-by-what-actually-stops-the-value) says
 > which, and what the rest do instead.
 > There is no consensus
@@ -126,8 +126,8 @@ enough.
 
 ## Seen in the atlas
 
-**Fourteen systems in the atlas have this.** That is still the most striking
-negative result in the atlas, and it is the reason this page exists.
+**Nineteen systems of 290 in the atlas have this.** That is still the most
+striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
 mechanism and protects rejected states from ordinary pruning.
@@ -447,15 +447,18 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/), [Wenlan](../../systems/wenlan/) | The write lands *on* the rejected row, which stays rejected. Accidental in the first two, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/) | A copy enters the store and is stopped on the way out |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
-**Five of the nine, then, implement the strong form** — value-keyed, normalized,
-consulted before the write, refusing activation. The mark is broader than this
-page's argument, and a reader deciding what to build should use the table rather
-than the count.
+**Fourteen of the nineteen, then, implement the strong form** — value-keyed,
+normalized, consulted before the write, refusing activation. That share has
+grown as the corpus has: the five most recent holders all consult at a write
+choke point rather than relying on a key collision, which is the difference
+between a mechanism and an accident. The mark is still broader than this page's
+argument, and a reader deciding what to build should use the table rather than
+the count.
 
 **[Memory Compiler](../../systems/memory-compiler/) is the cheapest complete
 instance, and the one that shows where the cost actually lands.** Its store is

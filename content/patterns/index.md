@@ -181,8 +181,8 @@ Where the atlas has an exact count — the seven mechanisms on
 | Rejected-value tombstone | 19 of 290 |
 <!-- END GENERATED SPREAD -->
 
-Read the bottom two rows as what they are. A mechanism present in seventeen
-systems of two hundred and ninety — or in nine — is **not a best
+Read the bottom two rows as what they are. A mechanism present in thirty-three
+systems of two hundred and ninety — or in nineteen — is **not a best
 practice**. There is no consensus behind it, no library that gives it to you, and nobody to
 ask when your implementation has a hole.
 Adopting it means building it.

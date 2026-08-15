@@ -86,7 +86,7 @@ capability their design deliberately does not need.
 Three things the counts show that the reports individually do not:
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies a
-scope key when retrieving. Sixteen carry a value-level tombstone. That gap
+scope key when retrieving. Nineteen systems of 290 carry a value-level tombstone. That gap
 is the atlas's central finding, and it is visible here in one column pair.
 
 **Trust is usually a number, not a state.** Most systems collapse "how sure am I"
@@ -103,8 +103,9 @@ particular value, 7 about a scope boundary — while ten assert about a
 projection, a preamble, a summarization, a file or a write. All ten are real
 committed tests. Only the 27 are negative *retrieval* assertions.
 
-**Five assert a boundary:** that a principal cannot retrieve another
-principal's material. [MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`
+**Seven asserted a boundary** at that reading: that a principal cannot retrieve
+another principal's material. Five are worth describing.
+[MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`
 creates a memory under one scope, searches under another, and asserts the id is
 absent. [Aukora Kernel](../systems/aukora-kernel/) does it better — an unrelated
 principal reads `ok: false`, a subject whose delegation manifest was revoked
@@ -121,12 +122,13 @@ case the other four leave implicit: `searchMemories` called in project mode with
 *no* project id must return `[]`, with the assertion message spelling out the
 intent — *"project mode without a project ID must fail closed"*.
 
-All five of those systems also hold `scope_enforced`. Their negative suites are
+All five also hold `scope_enforced`. Their negative suites are
 therefore tests **of a capability the same system already claims** — which is
 worth having, and is not evidence about deletion or correction.
 
-**Ten assert about content:** that particular material must not surface to
-anyone entitled to search, regardless of who is asking.
+**Twenty asserted about content** at that reading: that particular material must
+not surface to anyone entitled to search, regardless of who is asking. Eight
+show the range.
 [open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
 naming what a query must not return, scored as a penalty.
 [Verel](../systems/verel/)'s `tests/test_memory_negative_eval.py` asserts a
@@ -157,11 +159,11 @@ nobody else has: `test_negative_only_node_absent_from_sources` asserts that a
 source cited only by answers marked `dead_end` appears in none of the three
 lesson lists — a *source* that failed rather than a *value* that was rejected.
 
-**Only these ten probe the question the atlas is actually asking.** A boundary
-test proves the filter works; a content test proves a value that was rejected,
-disputed or forbidden stays gone. Thirteen of two hundred and ninety is the real figure for the
-second kind, and the two newest raise a distinction the others do
-not: a test that a *superseded* value stays hidden is cheap, because the row is
+**Only the content kind probes the question the atlas is actually asking.** A
+boundary test proves the filter works; a content test proves a value that was
+rejected, disputed or forbidden stays gone. Within that kind the sharpest cases
+raise a distinction the rest
+do not: a test that a *superseded* value stays hidden is cheap, because the row is
 still there to be filtered on. The expensive assertion is that a value the system
 *destroyed* does not come back — which requires something durable to check
 against, and is why the tombstone column and this one keep appearing together.
@@ -170,10 +172,11 @@ Two further things the joint reading shows. The **positive control** — asserti
 that the denial is targeted rather than an empty result — appears in Aukora and
 EverOS and is absent from the rest, and a negative test without one passes just
 as well when retrieval is broken. And the assertion shape is **reachable from
-ordinary engineering practice**: three of the six arrived from access-control
-work rather than from memory research, and one, N.E.K.O., from a companion app
-where re-raising something the user asked you to drop is a product failure
-rather than a data-quality one.
+ordinary engineering practice**: every boundary case above is an access-control
+test that happens to assert about recall rather than a result of memory
+research, and N.E.K.O. reached the content form from a companion app, where
+re-raising something the user asked you to drop is a product failure rather than
+a data-quality one.
 
 ## Near-misses
 
@@ -227,26 +230,26 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 <!-- BEGIN GENERATED STACK -->
 
-| Stored in | Systems | | Retrieval arm | Systems |
-| --- | ---: | --- | --- | ---: |
-| SQLite | 134 | | Vector | 167 |
-| Files on disk | 121 | | Lexical | 139 |
-| Postgres | 56 | | Graph | 50 |
-| Delegated to the adopter | 30 | | No arm named in the review | 79 |
-| In-process only | 22 | |  |  |
-| Chroma | 18 | |  |  |
-| Qdrant | 15 | |  |  |
-| Graph database | 13 | |  |  |
-| Redis | 11 | |  |  |
-| LanceDB | 8 | |  |  |
-| Embedded key-value | 5 | |  |  |
-| Milvus | 5 | |  |  |
-| FAISS | 5 | |  |  |
-| MongoDB | 2 | |  |  |
-| Elasticsearch | 1 | |  |  |
-| Pinecone | 1 | |  |  |
-| DuckDB | 1 | |  |  |
+| Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
+| --- | ---: | ---: | --- | --- | ---: | ---: |
+| SQLite | 134 | 30 | | Vector | 167 | 26 |
+| Files on disk | 121 | 35 | | Lexical | 139 | 33 |
+| Postgres | 56 | 10 | | Graph | 50 | 5 |
+| Delegated to the adopter | 30 | 5 | | No arm named in the review | 79 | 18 |
+| In-process only | 22 | 3 | |  |  |  |
+| Chroma | 18 | 1 | |  |  |  |
+| Qdrant | 15 | 1 | |  |  |  |
+| Graph database | 13 | 1 | |  |  |  |
+| Redis | 11 | 2 | |  |  |  |
+| LanceDB | 8 | 1 | |  |  |  |
+| Embedded key-value | 5 | 0 | |  |  |  |
+| Milvus | 5 | 1 | |  |  |  |
+| FAISS | 5 | 2 | |  |  |  |
+| MongoDB | 2 | 0 | |  |  |  |
+| Elasticsearch | 1 | 0 | |  |  |  |
+| Pinecone | 1 | 0 | |  |  |  |
+| DuckDB | 1 | 0 | |  |  |  |
 
-Counted across 290 reports, each of which may name more than one store. 57 of 290 rows were read off the code at the pinned commit; the other 233 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`.
+Counted across 290 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 57 of 290 reports have been read that way, and the other 233 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

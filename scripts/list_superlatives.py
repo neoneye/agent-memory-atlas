@@ -7,7 +7,7 @@ the thing under review, and the report's evidence supports it or does not.
 
 A superlative scoped to the *corpus* is different in kind. "The only system in
 this atlas that…", "the first report here to…", "nothing else in this corpus…"
-are each an assertion about all 134 reports at once. They are the sentences most
+are each an assertion about every report in the corpus at once. They are the sentences most
 likely to be quoted, they are the ones a reader has no way to verify, and the
 atlas has no mechanism that notices when one stops being true — a system added
 next week can falsify a claim written today in a file nobody touches.
@@ -18,8 +18,8 @@ other reports carry AGPL and six carry licences that are not open source at all.
 It took one grep to disprove and had never had one.
 
 **This is a reporting tool, not a gate.** It is deliberately not wired into
-`npm test`, because a check that fails on 294 pre-existing instances teaches
-people to skip it. Run it when adding a report, or periodically, and treat the
+`npm test`, because a check that fails on several hundred pre-existing instances
+teaches people to skip it. Run it when adding a report, or periodically, and treat the
 output as a review list: for each hit, either the claim is checkable and should
 be checked, or it is a judgement and should say so.
 

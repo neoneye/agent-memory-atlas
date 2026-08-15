@@ -53,10 +53,10 @@ value, so later extraction cannot silently re-assert it.
 status on a row. Those are all keyed on a *record*; re-extraction produces a new
 record and walks straight past them.
 
-**Why it is on the list:** it is the widest gap *this corpus has found* — nine
-of 164, and the corpus is an opportunistic collection rather than a sample, so
-that is a fact about what has been read and not a prevalence figure for the
-field. It is invisible on every published benchmark, and it is the mechanism
+**Why it is on the list:** it is the widest gap *this corpus has found* —
+nineteen systems of 290, and the corpus is an opportunistic collection rather
+than a sample, so that is a fact about what has been read and not a prevalence
+figure for the field. It is invisible on every published benchmark, and it is the mechanism
 that decides whether "forget that" survives the next background pass.
 
 ### Explicit trust state
@@ -161,10 +161,10 @@ re-score, system by system, is in
 it also names the one mark that cites no case at all and should probably be
 dropped.
 
-**Three numbers appear above and they are not the same kind of number.**
-Sixty-four
-is live, generated from report frontmatter on every build. Thirty-seven and
-twenty-seven are dated: what the corpus held, and what the re-score found in it,
+**Three numbers appear above and they are not the same kind of number.** The
+negative retrieval assertion count — seventy-five systems of two hundred and
+ninety — is live, checked against report frontmatter on every build. Thirty-seven
+and twenty-seven are dated: what the corpus held, and what the re-score found in it,
 on 2026-08-08. Every mark awarded since was judged against the strict definition
 at the top of this section, but **the read-path share has not been recomputed** —
 so 27 describes a smaller corpus and is not a current strict reading.

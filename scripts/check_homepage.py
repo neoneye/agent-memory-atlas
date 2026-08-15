@@ -87,10 +87,23 @@ WORDS = _number_words(16, 999)
 #: against a live 105 — the check accusing a correct count of being wrong.
 WORDS_BY_LENGTH = sorted(WORDS, key=len, reverse=True)
 
+#: Every literal space inside a spelled number matches a space *or* a newline.
+#: Prose here is hard-wrapped, and *"of two hundred and\nninety"* against a
+#: literal-space alternation matches only "of two hundred" — the same
+#: first-match-wins truncation the length sort above prevents, arriving through
+#: the line wrap instead. It reported a correct 290 as a stale 200.
+#:
+#: One character, not `\s+`. A quantifier here makes every one of the ~1,000
+#: alternatives ambiguous about where it ends, and the following
+#: `(?:\s+\w+){0,3}?\s+` re-splits the same whitespace — the two together took
+#: this check from milliseconds to not finishing. A wrap produces exactly one
+#: whitespace character where the space was, so one is all that is needed.
+WORDS_WRAPPED = [w.replace(" ", "[ \n]") for w in WORDS_BY_LENGTH]
+
 #: Matches the " of <number>" that turns a preceding count into the numerator of
 #: a subset claim ("Sixteen repositories of one hundred and thirteen"). Allows a
 #: line break, because these sentences wrap.
-SUBSET_TAIL = re.compile(rf"\s+of\s+(?:{'|'.join(WORDS_BY_LENGTH)}|\d+)\b", re.I)
+SUBSET_TAIL = re.compile(rf"\s+of\s+(?:{'|'.join(WORDS_WRAPPED)}|\d+)\b", re.I)
 
 
 def stale_number_words(root: Path, live: set[int]) -> list[str]:
@@ -107,12 +120,12 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     nouns = r"(?:memory )?(?:systems|reports|repositories|patterns|design patterns)"
     patterns = [
         # "fifty-eight systems" — the number qualifies the noun.
-        re.compile(rf"\b({'|'.join(WORDS_BY_LENGTH)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I),
+        re.compile(rf"\b({'|'.join(WORDS_WRAPPED)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I),
         # "two systems of fifty-eight" — the number is the DENOMINATOR, and sits
         # after the noun. The first version of this check only looked forward, so
         # it read straight past three of these and an outside reviewer quoted the
         # stale figure back at the atlas.
-        re.compile(rf"\bof\s+({'|'.join(WORDS_BY_LENGTH)})\b(?!-)", re.I),
+        re.compile(rf"\bof\s+({'|'.join(WORDS_WRAPPED)})\b(?!-)", re.I),
     ]
     # "1 of 58" in digits. Bounded to denominators of forty or more because the
     # only atlas count that large is the system total, which keeps this away from
@@ -145,7 +158,8 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
         cited = cited_spans(text)
         for index, pattern in enumerate(patterns):
             for match in pattern.finditer(text):
-                value = WORDS[match.group(1).lower()]
+                # Collapse a wrapped spelled number back to its `WORDS` key.
+                value = WORDS[" ".join(match.group(1).split()).lower()]
                 if value in live:
                     continue
                 # The bare "of N" form is noun-blind, so it reads a research
