@@ -97,11 +97,12 @@ systems of two hundred and ninety carry it, and almost no two arrived
 the same way: one invented it under adversarial pressure, one adopted it
 from the first, one arrived at a weaker form independently, one was
 driven to it by a regulation, several built it only after their report
-named its absence, <strong>two have it as a side effect of a lookup that
+named its absence, <strong>one has it as a side effect of a lookup that
 forgot to exclude the rejected row</strong>, one made that same
-collision deliberate, one built it as ordinary plumbing in its write
+collision deliberate, one began as that side effect and was rebuilt as
+an explicit refusal, one built it as ordinary plumbing in its write
 gate, and one hardened it against key rotation. Sorted by mechanism
-rather than by mark, fourteen refuse the write — <a
+rather than by mark, fifteen refuse the write — <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a> says
 which, and what the rest do instead. There is no consensus behind this
 page and no library that provides the mechanism. There is now a
@@ -562,27 +563,34 @@ disambiguation candidate list both filter it out, while
 inspecting the graph sees exactly what the reasoner refuses to use. That
 split — invisible to inference, visible to audit — is the cleanest
 expression of this pattern's intent in the corpus.</p>
-<p>What makes it a tombstone rather than a soft delete is the same
-omission that makes <a href="../../systems/mnemosyne/">Mnemosyne</a>
-one: the deduplication loop in <code>add_sense</code> matches an
-incoming definition <strong>by definition text and does not exclude
-rejected rows</strong>, and the status branch below it promotes only
-when <code>source == "user"</code>. So Wikipedia auto-learning or
-auto-extraction re-deriving a refuted definition lands on the refusal,
-leaves it in place, and the reasoner still cannot see it. The key is the
-definition — the value — not the row.</p>
-<p>Two systems arriving at this by the same accident, in different
-languages, on different data models, is worth stating plainly:
-<strong>the property falls out of writing dedup against content and
-rejection against the same record, and it is destroyed by the tidy-up
-that adds <code>AND status != 'rejected'</code> to the lookup.</strong>
-Neither project claims the behaviour and neither pins it with a test. If
-you have this shape, write the test before someone helpfully filters
+<p><strong>And it is the one case in the corpus where the accident
+became a design, which is the strongest evidence this page has for its
+own advice.</strong> Until August 2026 Nova held the property the way <a
+href="../../systems/mnemosyne/">Mnemosyne</a> still does: the
+deduplication loop in <code>add_sense</code> matched an incoming
+definition by definition text and did not exclude rejected rows, and the
+status branch below it promoted only when <code>source == "user"</code>.
+Automatic re-derivation landed on the refusal and left it standing — but
+a person re-teaching the same sentence set <code>confirmed</code> and
+lifted it with nothing recorded and nothing asked.</p>
+<p><code>core/semantic.py:204</code> now tests the rejected status
+<em>first</em> and returns <code>{"blocked": "rejected", …}</code>
+without touching the stored sense. The signal is carried up to the layer
+holding the chat bus, where an automatic source is reported and never
+applied, and a person's re-assertion becomes a spoken <em>"I had already
+rejected this — do you really want to confirm it again?"</em> whose
+<code>ja</code> writes a <code>sense_reactivated</code> audit entry. Six
+cases in <code>tests/test_tombstone.py</code> hold each link, and the
+one covering re-assertion says in its own name that it replaced a test
+pinning the previous behaviour.</p>
+<p>That is the whole argument of this page, run once by somebody who had
+the shape already: <strong>the property falls out of writing dedup
+against content and rejection against the same record, and it is
+destroyed by the tidy-up that adds <code>AND status != 'rejected'</code>
+to the lookup.</strong> Nova's author reached the opposite tidy-up.
+Mnemosyne still claims the behaviour nowhere and pins it with no test.
+If you have this shape, write the test before someone helpfully filters
 it.</p>
-<p>Nova is also the only holder here where a human can lift the refusal
-by re-teaching the same definition, which sets <code>confirmed</code> —
-the audited override this page's tradeoff list asks for, present because
-the same branch that blocks automatic sources admits the person.</p>
 <p><strong>The ninth is the write gate itself, and it is the plainest
 instance on this page.</strong> <a
 href="../../systems/universal-memory-engine/">Universal Memory
@@ -633,18 +641,18 @@ href="../../systems/agent-memory-doctrine/">Agent Memory Doctrine</a>,
 href="../../systems/memmy-agent/">Memmy</a>, <a
 href="../../systems/plur1bus/">plur1bus</a>, <a
 href="../../systems/sonder-runtime/">Sonder Runtime</a>, <a
-href="../../systems/open-second-brain/">Open Second Brain</a></td>
+href="../../systems/open-second-brain/">Open Second Brain</a>, <a
+href="../../systems/nova-ai/">Nova AI</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
 <td><strong>Collided</strong> — the key stays occupied</td>
 <td><a href="../../systems/mnemosyne/">Mnemosyne</a>, <a
-href="../../systems/nova-ai/">Nova AI</a>, <a
 href="../../systems/wenlan/">Wenlan</a></td>
 <td>The write lands <em>on</em> the rejected row, which stays rejected.
-Accidental in the first two, held in place by a missing filter and
-pinned by no test; deliberate in Wenlan, where the unique key is the
-value and the no-op is a named outcome the caller handles</td>
+Accidental in Mnemosyne, held in place by a missing filter and pinned by
+no test; deliberate in Wenlan, where the unique key is the value and the
+no-op is a named outcome the caller handles</td>
 </tr>
 <tr>
 <td><strong>Suppressed</strong> — the read path hides it</td>
@@ -659,14 +667,15 @@ every read, consulted by one emitter</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Fourteen of the nineteen, then, implement the strong
+<p><strong>Fifteen of the nineteen, then, implement the strong
 form</strong> — value-keyed, normalized, consulted before the write,
-refusing activation. That share has grown as the corpus has: the five
-most recent holders all consult at a write choke point rather than
-relying on a key collision, which is the difference between a mechanism
-and an accident. The mark is still broader than this page's argument,
-and a reader deciding what to build should use the table rather than the
-count.</p>
+refusing activation. The collided form is the rarer one, and Nova AI
+shows why the distinction is worth drawing: its refusal held by a
+missing filter, which its author then replaced with an explicit check, a
+<code>blocked</code> return value and six tests. A property nothing
+claims is one a tidy-up can delete. The mark is still broader than this
+page's argument, and a reader deciding what to build should use the
+table rather than the count.</p>
 <p><strong><a href="../../systems/memory-compiler/">Memory Compiler</a>
 is the cheapest complete instance, and the one that shows where the cost
 actually lands.</strong> Its store is four Markdown files; the tombstone
@@ -1009,11 +1018,13 @@ whitespace variants. Verel's round 9 was an NFKC bypass of
 <code>strip().lower()</code>.</li>
 <li>Reject a value, rerun extraction, and prove it stays inactive. Every
 system in the atlas that carries this mechanism should have this test;
-Daimon, which has 1,920 others, does not, and neither do Mnemosyne, with
-51,407 lines of them, nor Nova AI, whose 21 test files hold five
-assertions between them. All three of those hold the property by
-accident. A tombstone is the one mechanism whose silent failure looks
-exactly like success.</li>
+Daimon, which has 1,920 others, does not, and neither does Mnemosyne,
+with 51,407 lines of them. Both hold the property by accident. Nova AI
+is the counter-case and the cheapest one to copy:
+<code>tests/test_tombstone.py</code> is 246 lines, isolates a store in a
+temporary directory, and asserts that a re-asserted rejected definition
+changes no status and creates no second sense. A tombstone is the one
+mechanism whose silent failure looks exactly like success.</li>
 <li>Correct A to B, then try to reintroduce A through a different
 source.</li>
 <li>Verify scope isolation between users, projects, and agents.</li>

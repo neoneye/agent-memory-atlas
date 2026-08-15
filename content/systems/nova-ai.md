@@ -1,15 +1,21 @@
 ---
 title: "Nova AI"
 eyebrow: "Symbolic memory, no model"
-description: "A single-user companion whose memory is a hand-built concept graph with an audit log on every record, a confirmation gate before any relation is written, and a refusal that survives re-extraction because the dedup lookup does not exempt it."
+description: "A single-user companion whose memory is a hand-built concept graph with an audit log on every record, a confirmation gate before any relation is written, and a value-keyed refusal that the write path consults first and only a person can lift."
 root: ../..
 page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
-revision: c4c000b17487683deecb06cf810dc82c17ef0894
-revision_url: https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894
-analyzed_at: 2026-08-06
-capabilities: "tombstone, trust_state, audit_log, human_review"
+revision: 924f91acb98e9f5d46121c09d3429f981cc99f7f
+revision_url: https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f
+analyzed_at: 2026-08-15
+capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "concept graph, write path | core/semantic.py | add_sense tests status == rejected before the confidence/status branch and returns a blocked signal without touching the stored sense | tests/test_tombstone.py, test_add_sense_dedup_BLOKKEERT_rejected_status_BUG_32_FIX"
+  trust_state: "concept graph, senses and relations | core/semantic.py | status field of unverified/confirmed/rejected, written from source, monotonic against automatic downgrade | tests/test_tombstone.py, reject_sense and reject_relation status assertions"
+  audit_log: "concept graph, per-record | core/semantic.py | _audit_sense and _audit_relation append to the record's own audit_log with old_value/new_value, mirrored to logs/concepts.jsonl | none"
+  human_review: "concept graph, write and re-admission gates | core/semantic.py | the spoken confirmation before a relation is stored, and handle_reactivation_answer gating re-admission of a rejected value on an explicit ja/nee | tests/test_reactivatie_flow.py"
+  negative_eval: "concept graph, reasoning read path | tests/test_tombstone.py | part_of_chained and get_relations asserted to exclude refuted material while concepts.json still holds it, each paired with a pre-refutation positive control | tests/test_tombstone.py"
 stack_storage: "sqlite, files"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -18,13 +24,13 @@ matrix:
   storage: "SQLite for events (plus a JSONL mirror and an archive table); one `concepts.json` rewritten whole for knowledge"
   retrieval: "SQL `LIKE` over the event JSON, `difflib.SequenceMatcher` over the newest 500 rows, and graph walks over `is_a`/`part_of`/`causes` — no embeddings anywhere"
   write: "Event-bus fan-in with a 50-event/5-second buffer; knowledge writes pass a spoken yes/no confirmation gate"
-  update_delete: "`weerleg` marks a sense, concept or relation `rejected` with a reason in the audit log; the reasoning layer ignores rejected rows while `get_senses()` still shows them, and a hard delete is refused until everything is rejected first"
+  update_delete: "`weerleg` marks a sense, concept or relation `rejected` with a reason in the audit log; the reasoning layer ignores rejected rows while `get_senses()` still shows them; `add_sense` tests the rejected status before anything else and returns a `blocked` signal instead of absorbing the re-assertion, with re-admission behind a spoken yes/no that writes its own audit entry; a hard delete is refused until everything is rejected first"
   scoping: "None — a single named user, no scope key anywhere"
   integration: "An in-process event bus across roughly 40 modules; a 24/7 loop that decides when to speak unprompted"
   background: "Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip, vacuum, backup rotation, health check; four-hourly classifier retraining; a periodic contradiction sweep that reports conflicts to the user"
   trust: "A three-value `status` on every sense and relation — `unverified`, `confirmed`, `rejected` — set from the source, monotonic against automatic downgrades, beside `source`, `confidence` and a per-record audit log"
-  strengths: "A rejection keyed on the definition text that automatic re-extraction cannot lift, a confirmation gate before knowledge is written, and an audit log on the record itself"
-  risks: "Twenty-one test files carrying five assertions between them, a whole-file non-atomic save, and a licence that forbids reuse"
+  strengths: "A rejection keyed on the definition text that no source can lift without a person answering for that value, negative cases that carry positive controls, and an audit log on the record itself"
+  risks: "The refusal matches definition text exactly, so a paraphrase evades it and there is no embedding to fall back on; the whole graph is rewritten on every mutation; and a licence that forbids reuse"
 ---
 
 ## 1. Executive Summary
@@ -62,25 +68,43 @@ with `old_value` and `new_value` where a value changed. The same entries are
 mirrored to `logs/concepts.jsonl`. Nova can answer "when did I come to believe
 this, and who told me" for anything in the graph.
 
-**The refusal is the mechanism worth reading, and it holds by an omission.**
-`weerleg` — refute — sets `status = "rejected"` on a sense, a concept's every
-sense, or a relation, with the reason and timestamp written into that record's
-own audit log. The reasoning layer then filters `status != "rejected"` when
-choosing a sense and when offering disambiguation candidates, while `get_senses()`
-deliberately keeps showing it *"transparantie"* — so a person inspecting the graph
-sees what the reasoner refuses to use.
+**The refusal is the mechanism worth reading, and it is consulted before the
+write.** `weerleg` — refute — sets `status = "rejected"` on a sense, a concept's
+every sense, or a relation, with the reason and timestamp written into that
+record's own audit log. The reasoning layer then filters `status != "rejected"`
+when choosing a sense and when offering disambiguation candidates, while
+`get_senses()` deliberately keeps showing it *"transparantie"* — so a person
+inspecting the graph sees what the reasoner refuses to use.
 
 What makes it a tombstone rather than a soft delete is the deduplication loop in
-`add_sense`. It matches an incoming definition against existing senses **by
-definition text, without excluding rejected ones**, and the status branch below
-it only promotes on `source == "user"`. So when `wikipedia_teacher` or
-`auto_extract` re-derives a definition that was refuted, the write lands on the
-rejected row, leaves the status where it is, and the reasoner still cannot see
-it. The rejection is keyed on the value and survives its own re-assertion.
+`add_sense` (`core/semantic.py:188`). It matches an incoming definition against
+existing senses by definition text, and its **first** test on a match is the
+rejected status (`:204`). A hit returns not a sense but a signal —
+`{"blocked": "rejected", "sense": …, "attempted_source": …}` — and the stored
+sense is not touched at all. The refusal is keyed on the value, and re-asserting
+the value is refused rather than absorbed.
 
-A person can lift it — re-teaching the same definition as `user` sets
-`confirmed`, which is the audited human override the atlas asks for and not a
-hole. Automatic sources cannot.
+The signal is threaded up rather than swallowed, which is the part worth copying.
+`TeachEngine.teach` passes it through untouched and deliberately skips
+`_auto_extract_is_a` on that path — *"er is niets nieuws om relaties uit te
+halen"* (`:1634`). `SemanticConceptsModule.teach` (`:2154`) is the layer with the
+chat bus, and it splits on the source. A non-user source — `wikipedia`,
+`auto_extract` — is only reported, never applied. A re-assertion by the user
+becomes a `pending_reactivation` and a spoken question: *"I had already rejected
+'<word>' → '<definition>'. Do you really want to confirm this again?"* Answering
+`nee` leaves the rejection standing. Answering `ja` sets `confirmed` and writes a
+`sense_reactivated` audit entry carrying the previous status and the reason
+*"Kevin bevestigde expliciet opnieuw"* (`:2207`).
+
+So the value-keyed refusal is not merely durable against automatic re-derivation:
+lifting it requires a person to answer a question about that specific value, and
+the lift is itself an audited event. That is the shape this atlas argues for, and
+Nova reaches it with string equality and a dict.
+
+The limit is exactness. The dedup match is `s.get("definition") == definition` —
+a paraphrase of a refuted definition is a different string and is not blocked.
+Nova has no embedding to fall back on by design, so there is no semantic version
+of this gate available to it.
 
 `hard_delete` sits behind it as a second step: it refuses while any sense is
 still unrejected, so physical removal requires the refusal first.
@@ -312,9 +336,13 @@ to, and carries `confidence: 0.1` — but it is a value in the definition field
 rather than a status, and it has no rejected counterpart, so the mark is
 withheld.
 
-The whole file is `json.dump`ed on every save. At 242 concepts that is fine;
-`ConceptStore.save` rewrites the entire graph for a single confidence bump, and
-does so non-atomically, so an interrupted write truncates the memory.
+The whole file is `json.dump`ed on every save: `ConceptStore.save` rewrites the
+entire graph for a single confidence bump. At 242 concepts that is affordable,
+and the write is atomic — a temporary file in the same directory, `flush` plus
+`os.fsync`, then `os.replace`, with the PID in the temporary name and the
+orphaned file cleaned up if the write fails (`core/semantic.py:31`). An
+interrupted write leaves the previous graph intact rather than truncating it.
+The cost is still O(graph) per mutation; the failure mode is not.
 
 ## 6. Retrieval Mechanics
 
@@ -414,13 +442,23 @@ Gaps:
 - **The status is written and barely read.** Three call sites read it back, all
   to compute an audit diff, and two reasoning queries filter on it. Nothing
   reports on it, counts it, or surfaces the unverified backlog.
-- **The whole graph is rewritten on every save**, non-atomically.
-- **`tombstone` — earned, and by an omission rather than a design.** The record
-  is keyed on the definition text, the reasoner filters it, and `add_sense`'s
-  dedup loop finds it without exempting it, so automatic re-extraction lands on
-  the refusal instead of routing around it. Nothing in the code claims this
-  property and no test pins it; adding an `and s.get("status") != "rejected"` to
-  that loop during a tidy-up would remove it silently.
+- **The whole graph is rewritten on every save**, though atomically.
+- **`tombstone` — earned, by design and pinned by tests.** The record is keyed on
+  the definition text; the reasoner filters it; and `add_sense`'s dedup loop
+  tests the rejected status before anything else, returning a `blocked` signal
+  and leaving the stored sense untouched. Re-admission requires a person to
+  answer a question about that value and writes its own audit entry. Six cases in
+  `tests/test_tombstone.py` hold each link, including the one that matters most —
+  that a re-asserted rejected definition neither changes status nor creates a
+  second sense.
+- **`negative_eval` — earned, with a positive control.**
+  `test_part_of_chained_na_weerlegging_is_false` asserts that a refuted
+  intermediate link removes a reasoning path, and
+  `test_get_relations_negeert_rejected_relatie` asserts a refuted `is_a` is
+  absent from `get_relations` while remaining in `concepts.json`. Each is paired
+  with an assertion that the same query *succeeds* before the refutation, so a
+  pass cannot come from retrieval being broken — a control most of the
+  negative-eval suites in this atlas do not have.
 - **`trust_state` — earned.** `unverified`, `confirmed` and `rejected` on every
   sense and relation, set from `source` at write time, with a stated
   monotonicity rule: a user confirmation may overwrite `unverified`, and a later
@@ -445,25 +483,37 @@ deleting a belief loses the record that it was ever held and refuted.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`tests/` holds 21 files, and the shape is worth stating precisely: **five
-assertions in total, all in one file** (`test_randgeval_fase5.py`), against
-roughly 230 `print` calls across the rest. These are manual exploration scripts
-whose output a person reads, not a suite that fails.
+`tests/` holds 27 files carrying **272 test functions and 491 assertions**, and
+they are pytest cases that fail rather than exploration scripts whose output a
+person reads. `conftest.py` puts the repository root on `sys.path` at collection
+time, which is the one thing in the tree that executes before a test does.
 
-The consequence is specific rather than general. Nothing detects that
-`find_contradictions` has no caller. Nothing pins the confirmation gate's
-behaviour on an unparseable answer. And nothing asserts that a retrain leaves
-`training_data.json` byte-identical — the invariant the most carefully reasoned
-code in the repository exists to preserve, guarded today by a `try/finally` and a
-comment.
+The memory-relevant suites are the ones to read. `test_tombstone.py` holds the
+refusal in six cases across three scenarios — a reasoning chain broken by a
+refuted intermediate link, `get_relations` ignoring both a refuted relation and
+every relation under a refuted sense, and the re-assertion path. Each isolates
+itself in `tmp_path` with its own `ConceptStore`, and the module docstring says
+why it drives `SenseEngine`/`RelationEngine` directly rather than
+`SemanticConceptsModule`: the latter always constructs a store at the default
+path, which is the author's real `concepts.json`. A test suite that names the
+way it could have corrupted production data is not a common thing to find.
 
-No retrieval-quality benchmark, and no negative retrieval cases. The changelog
-compensates in a way worth noting: it is unusually detailed, records live
-end-to-end confirmations with dates, and documents bugs found while building —
-including one where an over-broad search-and-replace deleted an entire method,
-caught by a local harness before the file shipped. That is a real verification
-practice. It is a person's practice rather than the repository's, and it does not
-survive the person.
+`test_hard_delete_en_atomic_save.py` covers the other half — that `hard_delete`
+refuses while any sense is unrejected, and that an interrupted `save` leaves the
+previous graph intact.
+
+What is unasserted is narrow. There is no
+retrieval-quality benchmark and no ranking evaluation of any kind, which for a
+store with no embeddings is a smaller gap than it sounds — there is nothing to
+tune. Nothing asserts that a retrain leaves `training_data.json` byte-identical,
+the invariant the most carefully reasoned code in the repository exists to
+preserve, still guarded by a `try/finally` and a comment.
+
+The changelog is unusually detailed, records live end-to-end confirmations with
+dates, and documents bugs found while building — including one where an
+over-broad search-and-replace deleted an entire method, caught by a local harness
+before the file shipped. The suite is that practice written down: the same
+discipline held by the repository rather than by the person.
 
 ## 11. For Your Own Build
 
@@ -521,14 +571,14 @@ has yet written the delete.
 
 ## 12. Open Questions
 
-- Is the dedup loop's blindness to `rejected` deliberate? It is what makes the
-  refusal survive automatic re-extraction, and no comment claims it.
+- Does the exact-text refusal need a looser key? A paraphrase of a refuted
+  definition is a different string, and a store with no embedding has no cheap
+  way to close that — `difflib.SequenceMatcher` is already used elsewhere in the
+  tree and would be the obvious candidate.
 - What happens to the `unverified` backlog? Nothing counts it or offers it for
   confirmation, so it grows silently as Wikipedia and auto-extraction run.
 - Why does `add_relation` hardcode `source: "user"` and `confidence: 1.0` when
   the schema and the committed data both carry real values?
-- Does `ConceptStore.save` need to become atomic before the graph grows, or is
-  242 concepts near the intended ceiling?
 - Are `gecorrigeerde_voorbeelden.jsonl` and `onbekende_correcties.jsonl` empty
   because they are runtime-only, or because the flow rarely fires?
 - What would `concepts.json` need for a second user, given no scope key exists?
@@ -558,6 +608,20 @@ has yet written the delete.
 - Licence: `LICENSE.txt` ("Viewable, Not Reusable").
 
 ## History
+
+**2026-08-15** — [`924f91acb98e9f5d46121c09d3429f981cc99f7f`](https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f) — 11 commits on. Two published criticisms closed and the tombstone's provenance reversed: what this report described as a property held by an omission is a designed, tested, human-gated refusal.
+
+Bug #32 (`core/semantic.py:204`, dated 8 August 2026 in the source comment) puts the rejected-status test first in `add_sense`'s dedup loop. A definition matching a refuted sense returns `{"blocked": "rejected", "sense": …, "attempted_source": …}` and leaves the stored sense untouched, where before it fell through to the status branch — which meant a `user` re-assertion silently set `confirmed` and lifted the refusal. The signal is threaded through `TeachEngine.teach` (`:1634`, which also skips `_auto_extract_is_a` on that path) to `SemanticConceptsModule.teach` (`:2154`), where a non-user source is reported only and a user re-assertion becomes a `pending_reactivation` and a spoken yes/no. A `ja` writes a `sense_reactivated` audit entry carrying the old status; a `nee` leaves the rejection standing.
+
+`negative_eval` is earned. `tests/test_tombstone.py` asserts that a refuted intermediate link removes a `part_of_chained` path, that `get_relations` returns neither a refuted relation nor anything under a refuted sense, and that a re-asserted rejected definition changes no status and creates no second sense. Each negative case is paired with an assertion that the same query succeeds before the refutation.
+
+`ConceptStore.save` is atomic (`:31`): temporary file in the same directory, `flush` plus `os.fsync`, `os.replace`, PID in the temporary name, orphan cleaned up on failure. At the previous pin it was a bare `open(…, "w")` on `concepts.json` itself.
+
+The test suite is the other reversal: 21 files carrying 3 test functions and 4 assertions at the previous pin, 27 files carrying 272 test functions and 491 assertions here.
+
+Unchanged: the licence is still *"Viewable, Not Reusable"*, all rights reserved; there is still no scope key; and the refusal still matches definition text exactly, so a paraphrase evades it.
+
+Nothing was run. Screening found no auto-run surface, two build-time execution surfaces (`conftest.py`, a vendored Stockfish `Makefile` that is new since the previous pin) and ten unpinned requirements.
 
 **2026-08-06** — [`c4c000b17487683deecb06cf810dc82c17ef0894`](https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894) — 5 commits on. Four published criticisms went stale together, all closed by the project, and the report is rewritten around what replaced them.
 

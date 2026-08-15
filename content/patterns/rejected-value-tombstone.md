@@ -11,11 +11,12 @@ stance: advocacy
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
-> after their report named its absence, **two have it as a side effect of a
+> after their report named its absence, **one has it as a side effect of a
 > lookup that forgot to exclude the rejected row**, one made that same collision
-> deliberate, one built it as ordinary plumbing in its write gate, and one
+> deliberate, one began as that side effect and was rebuilt as an explicit
+> refusal, one built it as ordinary plumbing in its write gate, and one
 > hardened it against key rotation.
-> Sorted by mechanism rather than by mark, fourteen refuse the write
+> Sorted by mechanism rather than by mark, fifteen refuse the write
 > — [the table below](#sorted-by-what-actually-stops-the-value) says
 > which, and what the rest do instead.
 > There is no consensus
@@ -402,25 +403,30 @@ sees exactly what the reasoner refuses to use. That split — invisible to
 inference, visible to audit — is the cleanest expression of this pattern's intent
 in the corpus.
 
-What makes it a tombstone rather than a soft delete is the same omission that
-makes [Mnemosyne](../../systems/mnemosyne/) one: the deduplication loop in
-`add_sense` matches an incoming definition **by definition text and does not
-exclude rejected rows**, and the status branch below it promotes only when
-`source == "user"`. So Wikipedia auto-learning or auto-extraction re-deriving a
-refuted definition lands on the refusal, leaves it in place, and the reasoner
-still cannot see it. The key is the definition — the value — not the row.
+**And it is the one case in the corpus where the accident became a design, which
+is the strongest evidence this page has for its own advice.** Until August 2026
+Nova held the property the way [Mnemosyne](../../systems/mnemosyne/) still does:
+the deduplication loop in `add_sense` matched an incoming definition by
+definition text and did not exclude rejected rows, and the status branch below it
+promoted only when `source == "user"`. Automatic re-derivation landed on the
+refusal and left it standing — but a person re-teaching the same sentence set
+`confirmed` and lifted it with nothing recorded and nothing asked.
 
-Two systems arriving at this by the same accident, in different languages, on
-different data models, is worth stating plainly: **the property falls out of
-writing dedup against content and rejection against the same record, and it is
-destroyed by the tidy-up that adds `AND status != 'rejected'` to the lookup.**
-Neither project claims the behaviour and neither pins it with a test. If you have
-this shape, write the test before someone helpfully filters it.
+`core/semantic.py:204` now tests the rejected status *first* and returns
+`{"blocked": "rejected", …}` without touching the stored sense. The signal is
+carried up to the layer holding the chat bus, where an automatic source is
+reported and never applied, and a person's re-assertion becomes a spoken
+*"I had already rejected this — do you really want to confirm it again?"* whose
+`ja` writes a `sense_reactivated` audit entry. Six cases in
+`tests/test_tombstone.py` hold each link, and the one covering re-assertion says
+in its own name that it replaced a test pinning the previous behaviour.
 
-Nova is also the only holder here where a human can lift the refusal by
-re-teaching the same definition, which sets `confirmed` — the audited override
-this page's tradeoff list asks for, present because the same branch that blocks
-automatic sources admits the person.
+That is the whole argument of this page, run once by somebody who had the shape
+already: **the property falls out of writing dedup against content and rejection
+against the same record, and it is destroyed by the tidy-up that adds
+`AND status != 'rejected'` to the lookup.** Nova's author reached the opposite
+tidy-up. Mnemosyne still claims the behaviour nowhere and pins it with no test.
+If you have this shape, write the test before someone helpfully filters it.
 
 **The ninth is the write gate itself, and it is the plainest instance on this
 page.** [Universal Memory Engine](../../systems/universal-memory-engine/)
@@ -447,16 +453,17 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/) | The write is refused. No row, or no activation |
-| **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/), [Wenlan](../../systems/wenlan/) | The write lands *on* the rejected row, which stays rejected. Accidental in the first two, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/) | The write is refused. No row, or no activation |
+| **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/) | A copy enters the store and is stopped on the way out |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
-**Fourteen of the nineteen, then, implement the strong form** — value-keyed,
-normalized, consulted before the write, refusing activation. That share has
-grown as the corpus has: the five most recent holders all consult at a write
-choke point rather than relying on a key collision, which is the difference
-between a mechanism and an accident. The mark is still broader than this page's
+**Fifteen of the nineteen, then, implement the strong form** — value-keyed,
+normalized, consulted before the write, refusing activation. The collided form
+is the rarer one, and Nova AI shows why the distinction is worth drawing:
+its refusal held by a missing filter, which its author then replaced with an
+explicit check, a `blocked` return value and six tests. A property nothing
+claims is one a tidy-up can delete. The mark is still broader than this page's
 argument, and a reader deciding what to build should use the table rather than
 the count.
 
@@ -769,9 +776,11 @@ implementations here also leave open.
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
   in the atlas that carries this mechanism should have this test; Daimon, which
-  has 1,920 others, does not, and neither do Mnemosyne, with 51,407 lines of
-  them, nor Nova AI, whose 21 test files hold five assertions between them. All
-  three of those hold the property by accident. A tombstone is the one mechanism
+  has 1,920 others, does not, and neither does Mnemosyne, with 51,407 lines of
+  them. Both hold the property by accident. Nova AI is the counter-case and the
+  cheapest one to copy: `tests/test_tombstone.py` is 246 lines, isolates a store
+  in a temporary directory, and asserts that a re-asserted rejected definition
+  changes no status and creates no second sense. A tombstone is the one mechanism
   whose silent failure looks exactly like success.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.

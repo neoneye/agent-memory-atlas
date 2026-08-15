@@ -233,7 +233,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
 - [`noosphere`](../systems/noosphere/) **Noosphere** — A tombstone that survives key rotation · `sweetsophia/noosphere` · Tombstone, Scope enforced, Mutation audit, Human review
 - [`nornicdb`](../systems/nornicdb/) **NornicDB** — Temporal validity as a constraint · `orneryd/NornicDB` · Scope enforced, Mutation audit
-- [`nova-ai`](../systems/nova-ai/) **Nova AI** — Symbolic memory, no model · `Whooptie/NOVA_AI` · Tombstone, Trust state, Mutation audit, Human review
+- [`nova-ai`](../systems/nova-ai/) **Nova AI** — Symbolic memory, no model · `Whooptie/NOVA_AI` · Tombstone, Trust state, Mutation audit, Human review, Negative evals
 - [`npcpy`](../systems/npcpy/) **npcpy** — Memory that waits for a yes · `npc-worldwide/npcpy` · Trust state, Human review
 ## O
 

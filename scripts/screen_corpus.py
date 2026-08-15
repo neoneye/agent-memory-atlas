@@ -88,6 +88,16 @@ def screen_one(slug: str, url: str, revision: str, reuse: Path | None) -> dict:
     checkout: Path
     if reuse and (reuse / slug).is_dir():
         checkout = reuse / slug
+        # Same fail-closed rule as the fresh-clone branch below. A reused clone
+        # is whatever tree somebody left on disk, and recording its findings
+        # under the report's pinned revision without checking would certify a
+        # revision nobody screened — the exact failure this reuse path exists to
+        # make cheap.
+        head = run(["git", "-C", str(checkout), "rev-parse", "HEAD"], timeout=60)
+        at = (head.stdout or "").strip()
+        if head.returncode != 0 or at != revision:
+            return {**base, "status": "revision-unreachable",
+                    "detail": f"reused clone is at {at or 'unknown'}, not the pinned revision"}
         base["source"] = "reused-clone"
     else:
         workdir = Path(tempfile.mkdtemp(prefix=f"screen-{slug}-"))
@@ -212,6 +222,11 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=5, help="repositories to screen this run")
     ap.add_argument("--reuse", type=Path, default=None,
                     help="directory of existing clones, matched by report slug")
+    # A re-analysis re-pins one report and leaves its screening record
+    # describing the previous revision. Without this the only way to refresh
+    # that one record is to work the whole backlog down to it in batches.
+    ap.add_argument("--only", action="append", default=None, metavar="SLUG",
+                    help="screen just these report slugs, repeatable")
     args = ap.parse_args()
 
     state = load_state()
@@ -227,6 +242,16 @@ def main() -> int:
         if done.get(r["slug"], {}).get("revision") != r["revision"]
         or done[r["slug"]].get("status") != "screened"
     ]
+    if args.only:
+        wanted = set(args.only)
+        unknown = wanted - {r["slug"] for r in corpus()}
+        if unknown:
+            print(f"screen_corpus: no such report(s): {', '.join(sorted(unknown))}")
+            return 1
+        # Named slugs are screened whether or not the skip-list already covers
+        # them, because naming one is an explicit request to look again.
+        todo = [r for r in corpus() if r["slug"] in wanted]
+        args.batch = max(args.batch, len(todo))
 
     if not todo:
         write_summary(state, len(corpus()))
