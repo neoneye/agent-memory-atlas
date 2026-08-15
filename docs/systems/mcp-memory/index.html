@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP server that gives an agent
+persistent memory as Open Knowledge Format markdown indexed in SQLite
+FTS5 — faithfully storing OKF's verified, status and stale_after
+trust-and-lifecycle fields, none of which any read path consults.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MCP-Memory — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP server that gives an
+agent persistent memory as Open Knowledge Format markdown indexed in
+SQLite FTS5 — faithfully storing OKF's verified, status and stale_after
+trust-and-lifecycle fields, none of which any read path consults.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MCP-Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP server that gives
+an agent persistent memory as Open Knowledge Format markdown indexed in
+SQLite FTS5 — faithfully storing OKF's verified, status and stale_after
+trust-and-lifecycle fields, none of which any read path consults.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MCP-Memory — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A trust model written and never read</p>
+          <h1>MCP-Memory</h1>
+          <p class="document-deck">An MCP server that gives an agent
+persistent memory as Open Knowledge Format markdown indexed in SQLite
+FTS5 — faithfully storing OKF's verified, status and stale_after
+trust-and-lifecycle fields, none of which any read path consults.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/fellowgeek/mcp-memory">
+              <span>Source</span>
+              <strong>fellowgeek/mcp-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16" title="4514d1fd162598e65280c15ea2df017698fcbf16">
+              <span>Analyzed revision</span>
+              <code>4514d1fd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MCP-Memory is a small MIT-licensed MCP server — about 1,620 lines of
+Python across five files, with only <code>fastmcp</code> and
+<code>pyyaml</code> beyond the standard library — that gives an agent
+(Claude Desktop, Cursor, Codex, and the like) a persistent key-value
+memory. Its distinguishing choice is the record format: every memory is
+an <strong>Open Knowledge Format (OKF v0.2)</strong> document — markdown
+with YAML frontmatter — stored in a per-project SQLite database with an
+FTS5 full-text index and mirrored to a <code>.md</code> file on disk for
+a human to read. As a piece of plumbing it is clean, self-contained and
+does what an MCP memory server should: store, search, retrieve and
+delete stateful snippets that survive across sessions, scoped by
+namespace.</p>
+<p>The reason it earns a report rather than a line is the gap between
+the format's promise and the code's use of it, because that gap is a
+pattern the atlas keeps finding. OKF's frontmatter is a <em>trust and
+lifecycle</em> vocabulary: a <code>status</code>
+(<code>draft</code>/<code>stable</code>/<code>deprecated</code>), a
+<code>verified</code> list of who-checked-this-and-when events, a
+<code>stale_after</code> date past which a record is meant to be
+considered stale. MCP-Memory serializes all of it faithfully
+(<code>okf_engine.py:52-109</code>) and <strong>reads none of
+it</strong>. The search and retrieve paths consume only
+<code>key</code>, <code>namespace</code>, <code>tags</code> and the raw
+payload (<code>db.py:329-346</code>); there is no
+<code>WHERE status = …</code>, no <code>today &gt;= stale_after</code>
+comparison, no weighting by <code>verified</code>. A memory marked
+<code>deprecated</code>, or one a month past its
+<code>stale_after</code>, is returned exactly like a fresh verified one.
+The trust model is written and never read.</p>
+<p>Two smaller instances of the same shape sit beside it. The README
+says the server adheres <em>"strictly to SPEC.md and OKF_RULES.md"</em>,
+and a conformance validator (<code>validate_okf_conformance</code>,
+<code>okf_engine.py:173-229</code>) exists to enforce that — but it is
+<strong>never invoked</strong> in the store path; the only runtime
+enforcement is that an invalid <code>status</code> is silently coerced
+to <code>stable</code> (<code>okf_engine.py:66-70</code>). And a
+<code>log.md</code> records an append-only prose trail of updates and
+deletions, which looks like an audit log until you notice nothing ever
+reads it either.</p>
+<p>What it does earn is <code>scope_enforced</code>:
+<code>namespace</code> is a genuine read filter, not a stored label,
+applied in SQL on every search, retrieve and delete and partitioning the
+on-disk directories. Everything else the atlas checks for is withheld,
+and in each case the withholding is precise — the field exists, and
+nothing consumes it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an OKF record identified by
+<code>(key, namespace)</code>. Its life is short to describe because the
+store is deliberately flat: it exists, it can be overwritten in place,
+and it can be hard-deleted. There is no status transition the system
+acts on, because the status field is inert.</p>
+<pre class="text"><code>memory_store(key, namespace, content, type?, status?, verified?, stale_after?, tags?)
+  -&gt; serialize_okf(...)            build the OKF markdown + frontmatter
+  -&gt; UPSERT memories ON CONFLICT(key, namespace)   overwrite in place, keep created_at
+  -&gt; sync_memory_to_disk(...)      write memory/&lt;namespace&gt;/&lt;key&gt;.md (a mirror)
+  -&gt; append_log_entry(&quot;Update&quot;)    prose line in log.md (never read back)
+
+memory_search(query?, tags?, namespace?)
+  -&gt; FTS5 MATCH &quot;term&quot;* ORDER BY rank         (or updated_at DESC if no query)
+  -&gt; WHERE namespace = ?                        scope filter
+  -&gt; python: drop rows whose tags don&#39;t intersect
+  -&gt; returns okf_payload  -- status / verified / stale_after ignored throughout</code></pre>
+<p>The frontmatter carries a rich vocabulary the read path never
+touches, and the diagram below draws exactly that: the fields flow in at
+write time and dead-end.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — OKF's trust and lifecycle fields are serialized into every record and mirrored to disk, but the search and retrieve paths consume only key, namespace, tags and payload — the status, verified and stale_after fields are written and never read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: OKF&#39;s trust and lifecycle fields are serialized into every record and mirrored to disk, but the search and retrieve paths consume only key, namespace, tags and payload — the status, verified and stale_after fields are written and never read
+flowchart TB
+    Store[&quot;memory_store&quot;] --&gt; Ser[&quot;serialize_okf: type, status,&lt;br/&gt;verified, stale_after, tags, sources&quot;]
+    Ser --&gt; DB[(&quot;SQLite memories&lt;br/&gt;PK (key, namespace) + FTS5&quot;)]
+    Ser --&gt; MD[&quot;memory/&amp;lt;namespace&amp;gt;/&amp;lt;key&amp;gt;.md&lt;br/&gt;(mirror, never read back)&quot;]
+    Ser --&gt; Log[&quot;log.md prose trail&lt;br/&gt;(never read back)&quot;]
+    DB --&gt; Search[&quot;memory_search / memory_retrieve&quot;]
+    Search --&gt;|&quot;filter: namespace + tags only&quot;| Out[&quot;okf_payload returned&quot;]
+    Ser -.-&gt;|&quot;status (coerced to stable)&quot;| Dead1[&quot;read by nothing&quot;]
+    Ser -.-&gt;|&quot;verified {by, at}&quot;| Dead2[&quot;read by nothing&quot;]
+    Ser -.-&gt;|&quot;stale_after date&quot;| Dead3[&quot;read by nothing&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Five files, no services, one embedded database per project.</p>
+<ul>
+<li><strong><code>memory_server.py</code></strong> (275) — the FastMCP
+server and the six tools.</li>
+<li><strong><code>okf_engine.py</code></strong> (421) — OKF
+serialization/parsing, the disk mirror, the
+<code>log.md</code>/<code>index.md</code> generators, and the
+(uninvoked) conformance validator.</li>
+<li><strong><code>db.py</code></strong> (377) — the SQLite schema,
+upsert, FTS5 search, retrieve, delete.</li>
+<li><strong><code>test_memory.py</code></strong> (309) and
+<strong><code>setup.py</code></strong> (240, an install wizard).</li>
+</ul>
+<p><strong>Storage.</strong> SQLite in WAL mode at
+<code>&lt;project_root&gt;/.mcp_memory/memories.db</code>
+(<code>db.py:43,83</code>). The schema is one base table and one FTS5
+mirror (<code>db.py:87-109</code>):</p>
+<pre class="sql"><code>CREATE TABLE memories (
+  key TEXT NOT NULL, namespace TEXT NOT NULL DEFAULT &#39;default&#39;,
+  okf_payload TEXT NOT NULL, tags TEXT NOT NULL DEFAULT &#39;[]&#39;,
+  created_at DATETIME, updated_at DATETIME,
+  PRIMARY KEY (key, namespace));
+CREATE VIRTUAL TABLE memories_fts USING fts5(
+  key UNINDEXED, namespace UNINDEXED, tags, okf_payload);</code></pre>
+<p>SQLite is authoritative: the full OKF document is the
+<code>okf_payload</code> TEXT column, and
+<code>sync_memory_to_disk</code> (<code>db.py:223</code>) writes the
+<code>.md</code> file <em>after</em> the DB commit as a browseable copy.
+No code path reads the <code>.md</code> files back, so the disk tree is
+an export, not a second source of truth.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Trivial to stand up.</strong> <code>pip install</code>,
+point an MCP client at it; storage is stdlib <code>sqlite3</code>, no
+server, no model, no network. Each tool call passes a
+<code>project_root</code>, so one server process backs many per-project
+stores.</li>
+<li><strong>The store is human-readable and hand-repairable</strong> —
+OKF markdown per namespace, plus a generated <code>index.md</code> and
+<code>log.md</code> — which is a real operator convenience and the main
+thing the disk mirror buys.</li>
+<li>The screen flagged a <code>requirements.txt</code> inside the
+seven-day cooldown and one build-time exec (the setup wizard); nothing
+was installed or run.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store</strong> — <code>memory_server.py:98</code>
+<code>memory_store</code> → <code>okf_engine.serialize_okf</code>
+(<code>okf_engine.py:52</code>) → <code>db.store_memory</code> upsert
+(<code>db.py:210-219</code>,
+<code>ON CONFLICT(key, namespace) DO UPDATE</code>) →
+<code>sync_memory_to_disk</code>.</li>
+<li><strong>Search</strong> — <code>db.search_memories</code>
+(<code>db.py:261-351</code>): FTS5 <code>MATCH "term"*</code> ordered by
+<code>rank</code> (<code>:289-302</code>), or
+<code>updated_at DESC</code> with no query; namespace in SQL
+(<code>:283</code>); tags filtered in Python after the fetch
+(<code>:334-336</code>); <code>LIKE</code> fallback on an FTS syntax
+error.</li>
+<li><strong>Retrieve</strong> — <code>db.retrieve_memory</code> exact
+<code>WHERE key=? AND namespace=?</code>
+(<code>db.py:247-258</code>).</li>
+<li><strong>Delete</strong> — <code>db.delete_memory</code> hard
+<code>DELETE</code> (<code>db.py:367-371</code>) plus
+<code>os.remove</code> of the <code>.md</code> and an empty-dir
+<code>rmdir</code> (<code>okf_engine.py:388-409</code>).</li>
+<li><strong>Continuity</strong> —
+<code>memory_get_last</code>/<code>memory_update_last</code>
+(<code>memory_server.py:26-95</code>) maintain a
+<code>system/last_memory</code> checkpoint record so a new session can
+pick up where the last left off.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The record is an OKF v0.2 document; <code>serialize_okf</code>
+(<code>okf_engine.py:52-109</code>) assembles the frontmatter. The
+fields the atlas cares about, and what the code does with them:</p>
+<ul>
+<li><strong><code>type</code></strong> — free string, default
+<code>"Agent Memory"</code>; not enumerated, not validated at
+write.</li>
+<li><strong><code>status</code></strong> — constrained to
+<code>draft</code>/<code>stable</code>/<code>deprecated</code>, and
+<strong>any invalid or absent value is silently coerced to
+<code>stable</code></strong> (<code>okf_engine.py:66-70</code>). Never
+read on retrieval.</li>
+<li><strong><code>verified</code></strong> — a list of
+<code>{by, at}</code> events (OKF's provenance/trust tier), written only
+if supplied. Never read.</li>
+<li><strong><code>stale_after</code></strong> — an absolute
+<code>YYYY-MM-DD</code> date whose OKF meaning is "stale when today ≥
+stale_after". Written verbatim, compared nowhere.</li>
+<li><strong><code>namespace</code>, <code>tags</code>,
+<code>key</code></strong> — the only fields the read path consumes.</li>
+</ul>
+<p>So the model has a real trust-and-lifecycle vocabulary and uses none
+of it. This is why three marks are withheld on the model rather than on
+a technicality: <code>trust_state</code> because
+<code>status</code>/<code>verified</code> are stored-but-unread (a
+discrete status that nothing consumes is not a trust state);
+<code>bitemporal</code> because <code>stale_after</code> is a validity
+date applied on no read path (and
+<code>created_at</code>/<code>updated_at</code> are transaction time);
+<code>tombstone</code> because deletion is a hard removal with no
+rejected-value record. The near-miss is worth stating plainly: the
+fields to build all three are already in every record — closing the gap
+is a matter of reading them, not adding them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical only. A query becomes an FTS5 prefix match
+(<code>"term"*</code>) ordered by FTS5's built-in <code>rank</code>; an
+empty query lists by <code>updated_at DESC</code>. Namespace is enforced
+in SQL; tags are intersected in Python after fetching
+<code>limit*2</code> candidates (<code>db.py:303,334-336</code>); a
+malformed FTS query falls back to <code>LIKE</code> over key and
+payload. There is no embedding, no vector index, no semantic search
+anywhere in the tree.</p>
+<p>The retrieval's honest limit is the one from §5 read from the query
+side: because <code>status</code>, <code>verified</code> and
+<code>stale_after</code> never enter a <code>WHERE</code> or an
+<code>ORDER BY</code>, the ranker cannot prefer a verified record over
+an unverified one, cannot demote a deprecated one, and cannot drop a
+stale one. The lifecycle exists in the data and not in the results.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and idempotent by key.
+<code>memory_store</code> upserts on <code>(key, namespace)</code>,
+overwriting <code>okf_payload</code> and <code>updated_at</code> while
+preserving <code>created_at</code> (<code>db.py:178-183</code>) — so
+there is no version history in the database; a correction replaces the
+prior content and the old value is gone from the store (it survives only
+as a prose line in <code>log.md</code> and, until overwritten, in git if
+the <code>.md</code> mirror is committed). Deletion is a hard
+<code>DELETE</code> plus file removal.</p>
+<p>Nothing records a <em>rejected</em> value. Re-storing content that
+was just deleted is accepted unconditionally — the upsert has no
+rejection check — so if an extractor or an agent re-proposes something a
+user removed, it returns without objection. That is the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> gap in its simplest form, and here it is unmitigated:
+there is not even a soft-delete to build on.</p>
+<p>There is no background work at all: no daemon, no extraction, no
+consolidation, no decay. The <code>stale_after</code> field is the only
+decay-shaped thing in the design, and it is inert.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP-Memory is a FastMCP server, and the model's whole relationship to
+memory is the six tools: <code>memory_store</code>,
+<code>memory_retrieve</code>, <code>memory_search</code>,
+<code>memory_delete</code>, and the
+<code>memory_get_last</code>/<code>memory_update_last</code> continuity
+pair. Every tool takes a <code>project_root</code>, which is how one
+running server backs a per-project store — a small, sensible
+multi-tenancy-by-path design. The continuity checkpoint is the one
+concession to cross-session flow: an agent writes a
+<code>system/last_memory</code> snapshot at the end of a turn and reads
+it back at the start of the next, which is the minimum viable version of
+the handoff pattern other systems here build out.</p>
+<p>The <code>verified</code> field is the seam where a human
+<em>could</em> enter — an agent can supply
+<code>verified: {by: "human:…", at: …}</code> when storing — but nothing
+gates a memory on human sign-off and nothing reads the field back, so
+<code>human_review</code> is withheld: the provenance is recorded and
+never consulted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust story is the report's spine, and it is short because the
+mechanisms are present as data and absent as behaviour.</p>
+<ul>
+<li><strong>The OKF trust model is write-only.</strong>
+<code>status</code>, <code>verified</code> and <code>stale_after</code>
+are serialized on every record and read by no retrieval, ranking or
+gating path. This is the single most important thing to know before
+adopting it: the format advertises trust tiers and staleness, and the
+server delivers neither at read time.</li>
+<li><strong>Conformance is documented, not enforced.</strong> The README
+claims strict adherence to the OKF spec; the validator that checks it is
+never called in the store path, and the only write-time enforcement is
+coercing an invalid <code>status</code> to <code>stable</code>. An
+invalid <code>type</code>, a malformed actor, or non-conforming
+frontmatter is accepted and written.</li>
+<li><strong>The <code>log.md</code> is a trail, not an audit
+log.</strong> It appends a human-prose "Update"/"Deletion" line with a
+key and date — no before/after, no actor, not in a queryable store, and
+never read by the system — so <code>audit_log</code> is withheld.</li>
+<li><strong>Scope is real.</strong> <code>namespace</code> is enforced
+in SQL on read, which is the one guarantee the server actually delivers,
+and its tests exercise it.</li>
+</ul>
+<p>The safety surface is otherwise small: no network, no model, no
+background execution, a per-project SQLite file as private as the disk.
+The risks are all of the quiet, correctness kind above — a memory that
+should be distrusted or expired is served as current — rather than
+operational.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test_memory.py</code> (309 lines, <code>unittest</code>) covers
+the positive paths: OKF serialize/parse for string and dict content, the
+extended frontmatter fields, the conformance validator's
+valid/missing-type/bad-actor cases, DB store/retrieve, the disk mirror
+and <code>index.md</code>/<code>log.md</code> generation, FTS and tag
+search, delete, the MCP tool flow, the <code>last_memory</code>
+checkpoint, and the missing-<code>project_root</code> error.</p>
+<p>Two things the tests do not cover are the two that matter for this
+design. There is no assertion that a <code>deprecated</code> or
+<code>stale_after</code>-expired record is treated differently on read —
+which would fail, because it is not — so the trust model's inertness is
+untested rather than caught. And there is no negative-retrieval case:
+the one absence assertion is a post-delete <code>retrieve</code>
+returning <code>None</code>, which tests deletion, not retrieval
+suppression, so <code>negative_eval</code> is withheld. There is no
+paper, benchmark or retrieval-quality measurement, which for a lexical
+key-value store is a reasonable absence.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store memory as a documented, human-readable format with a
+real spec.</strong> OKF markdown with typed frontmatter, mirrored to
+disk per namespace, gives you a store a person can read, diff and repair
+by hand — a property most SQLite-only stores lack, and it costs one
+<code>write_text</code> after the commit.</li>
+<li><strong>Namespace on the read path, and pass the scope per
+call.</strong> A <code>project_root</code> argument plus a
+<code>WHERE namespace = ?</code> is a small, effective multi-tenancy
+design for an MCP server backing many projects.</li>
+<li><strong>Keep a <code>last_memory</code> continuity
+checkpoint.</strong> A single well-known record an agent updates at the
+end of a turn and reads at the start of the next is the cheapest useful
+cross-session handoff.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not store a trust field you do not read.</strong>
+<code>status</code>, <code>verified</code> and <code>stale_after</code>
+written and never consulted is a format cosplaying as a mechanism; a
+reader assumes a <code>deprecated</code> memory is suppressed and a
+<code>stale_after</code> one expires, and neither happens. Either wire
+them into the query or do not promise them.</li>
+<li><strong>Do not claim strict spec conformance you do not
+enforce.</strong> The validator exists; call it on the write path, or
+the "strictly adheres" claim is a documentation artifact and invalid
+frontmatter flows straight in.</li>
+<li><strong>Do not treat a prose log as an audit trail.</strong> A
+<code>log.md</code> of "Update" lines with no before/after, no actor and
+no reader is a changelog for humans, not a mutation record a system can
+act on.</li>
+<li><strong>Do not let re-storing a deleted value succeed
+silently</strong> if anything upstream re-proposes memories, or a user's
+deletion is undone on the next write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a solo user or a small team who wants a simple,
+inspectable, dependency-light memory for their MCP client and is content
+with lexical search and manual lifecycle management. It installs in
+minutes, the store is yours on disk, and namespace scoping works. Take
+it as-is if that is the need.</p>
+<p>Walk away if you expect the OKF trust and lifecycle fields to
+<em>do</em> anything — today they are inert — or if you need semantic
+recall, decay, correction that sticks, or provenance the system acts on.
+The bones of a trust-aware store are all in the record; this
+implementation just does not read them yet.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the OKF trust model intended to be consumed on read, and is the
+write-only state a stage the project means to close? Every field is
+present to close it.</li>
+<li>Would <code>status = 'deprecated'</code> and
+<code>stale_after</code> be applied as a read filter or a ranking
+penalty — and which, given the format defines staleness but not a
+ranking?</li>
+<li>Is the conformance validator meant to run on the store path? It
+exists and is called only from tests.</li>
+<li>Is the <code>.md</code> mirror ever meant to be read back (e.g. to
+rebuild the DB), or is it purely an export?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>memory_server.py</code> — FastMCP server and the six tools
+(<code>memory_store</code>, <code>memory_retrieve</code>,
+<code>memory_search</code>, <code>memory_delete</code>,
+<code>memory_get_last</code>, <code>memory_update_last</code>).</li>
+<li><code>okf_engine.py</code> — <code>serialize_okf</code>, OKF
+parsing, <code>sync_memory_to_disk</code>,
+<code>append_log_entry</code>, <code>validate_okf_conformance</code>
+(uninvoked at runtime).</li>
+<li><code>db.py</code> — schema (<code>init_db</code>),
+<code>store_memory</code> upsert, <code>search_memories</code> (FTS5),
+<code>retrieve_memory</code>, <code>delete_memory</code>.</li>
+<li><code>test_memory.py</code> — unit tests for serialization, storage,
+search, delete, tool flow, checkpoint.</li>
+<li><code>SPEC.md</code>, <code>OKF_RULES.md</code> — verbatim copies of
+the external Open Knowledge Format spec.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16"><code class="commit-id" title="4514d1fd162598e65280c15ea2df017698fcbf16">4514d1fd…</code></a>
+— first reading. Screened before opening: a
+<code>requirements.txt</code> inside the seven-day cooldown and one
+build-time exec (the setup wizard); nothing was installed or run. The
+upsert-and-mirror store, the FTS5 read path, the namespace filter, and
+the write-only handling of OKF's
+<code>status</code>/<code>verified</code>/<code>stale_after</code>
+(serialized in <code>okf_engine.py</code>, absent from every
+<code>WHERE</code>/<code>ORDER BY</code> in <code>db.py</code>) were
+read from the five source files and cross-checked against
+<code>test_memory.py</code>. <code>scope_enforced</code> is earned on
+the namespace filter; the other six marks are withheld, each because the
+field exists and nothing consumes it. No paper or citation file exists
+in the tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

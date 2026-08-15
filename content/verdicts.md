@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 285 reports.**
+**This page covers all 289 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2483,3 +2483,39 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, a Claude Code `.claude/` config (30 hooks, 32 agents, 109 skills) plus an `opc/` Python package; PostgreSQL + pgvector for learnings behind a heavy Docker-and-daemon install. Carries **none** of the seven capability marks, no memory tests and no retrieval eval, and a striking amount of dead scaffolding — a broken default backend, an unread affinity table, an artifact-index hook that writes to a nonexistent path. The one working, novel idea is real; most of the surface around it is aspirational.
 - Study when: you are building a coding-agent memory and want the thinking-block extraction idea and the auto-injected hybrid recall — as patterns to reimplement over a store you control.
 - Do not copy when: you need scope isolation, correction, provenance, a trust state or an audit trail — none is present, and the global cross-project recall plus the unstamped embedding column fail quietly rather than loudly. Also walk away if you cannot run Docker, a local Postgres and a permission-disabled headless daemon, which is what the memory half costs to operate.
+
+### [`mcp-memory`](../systems/mcp-memory/)
+
+- Best idea: store memory as an Open Knowledge Format markdown document — typed frontmatter, human-readable, mirrored to disk per namespace — indexed in SQLite FTS5, so the store is diffable and hand-repairable rather than an opaque table.
+- Biggest risk: the OKF trust-and-lifecycle model is write-only. `status` (draft/stable/deprecated), a `verified` actor list and a `stale_after` date are serialized faithfully into every record and read by no retrieval, ranking or gating path — a `deprecated` or expired memory is returned exactly like a fresh verified one. The "strictly adheres to the spec" claim is also unbacked: the conformance validator exists and is never called on the write path.
+- Most reusable component: the namespace-scoped, FTS5-indexed OKF store with a `last_memory` continuity checkpoint — small, self-contained (≈1,600 lines, stdlib sqlite3 plus fastmcp and pyyaml), and the namespace filter is genuinely enforced on read.
+- Maturity impression: MIT, a tidy single-purpose MCP server; the one earned mark is `scope_enforced`. Tests cover the positive paths but assert nothing about the lifecycle fields, so their inertness is untested rather than caught.
+- Study when: you want a minimal, inspectable, dependency-light MCP memory server and are content with lexical search and manual lifecycle management.
+- Do not copy when: you expect the OKF `verified`/`status`/`stale_after` fields to *do* anything — today they are inert — or you need semantic recall, decay, correction that sticks, or provenance the system acts on.
+
+### [`mentisdb`](../systems/mentisdb/)
+
+- Best idea: an append-only, SHA-256 hash-chained thought log that is re-hashed on open and **refuses to load if tampered** — the strongest integrity story in the corpus, because verification gates the load rather than logging a warning. Correction never mutates: a wrong thought is superseded by an appended relation, and the superseded ids are excluded from default reads.
+- Biggest risk: tamper-evidence is detection, not prevention — an actor with file-write access can recompute the whole chain — and the guarantee has two stated holes: `entity_type` and `source_episode` sit outside the canonical hash, and thought signatures are stored but never verified (only *skill* signatures are). Scope is an opt-in tag, not an enforced boundary.
+- Most reusable component: the verify-on-open chain with an `include_invalidated` auditor escape hatch, and the git-like immutable skill registry — whole-then-diff versions, content-hash re-verification, and server-side Ed25519 verification required once keys are registered.
+- Maturity impression: MIT, ~47,000 lines of Rust, ~487 tests, a WHITEPAPER; earns `bitemporal`, `audit_log` and `negative_eval`. Only the binary storage adapter ships (the "swappable sqlite/files/memory" is a trait), and the benches measure scale, not recall quality.
+- Study when: you want an audit-grade, local, multi-harness memory whose history is verifiable and whose corrections are on the record; the signed skill registry alone is worth lifting.
+- Do not copy when: you need enforced multi-tenant scope, tamper-*resistance* rather than tamper-evidence, or verified provenance on the thoughts themselves — those are perimeter, aspiration and gap respectively.
+
+### [`monet`](../systems/monet/)
+
+- Best idea: split declare from propose and gate the constraining memories on a human — the agent proposes facts, but a person must `declare` principles and blocking rules (SQL-enforced so a blocking rule cannot be self-authorized), and a contradiction flips the concept to `disputed`, dropping it from the always-on context until a human resolves it.
+- Biggest risk: two headline mechanisms are softer than the prose. "Rules read at the moment they bind (commit, release, PR)" is lexical token-matching against a tool call on *user-authored* stages, and as shipped the agent-first harness relies on the agent *pulling* `stage_lookup` rather than wiring the mechanical hook — binding is cooperative, not enforced. "Corrections recorded so they never need making twice" is supersession (retrieve-the-winner), not a value-keyed tombstone that blocks a re-proposed mistake.
+- Most reusable component: the always-on principle "skeleton" (materialized and auto-prewarmed) kept separate from the searched concept store, plus append-only `resolution_events`/`gate_events` that log even the silences.
+- Maturity impression: AGPL-3.0 core, genuinely local-first (~57,000 lines over one SQLite file, on-device ONNX hybrid retrieval, test tree larger than source); earns `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` — one of the better-governed local memories here. A ~10,000-line RAG source-ingestion subsystem sits provisionally retired behind the trio-shaped README.
+- Study when: you want a private, local, governed memory for a coding agent and will work its method — declare the principles, name the stages, resolve the contradictions.
+- Do not copy when: you need the binding and correction to be *enforced* rather than cooperative — the shipped harness leaves rule-lookup to the agent, and corrections do not prevent recurrence.
+
+### [`memmy-agent`](../systems/memmy-agent/)
+
+- Best idea: share one local memory across every coding agent through a daemon plus an *injected per-agent CLI skill* — Memmy writes a `memmy-memory` skill into `~/.claude`, `~/.codex`, `~/.cursor`, `~/.openclaw` and `~/.hermes`, so all of them read and write the same SQLite store, no MCP required. Beside it, a negative-experience pipeline turns failures into content-keyed anti-pattern "avoid" policies surfaced on read.
+- Biggest risk: the shared brain has no scope on its main recall. Scope keys (user/agent/app/session) sit on every row, but the primary semantic recall filters only by layer/status/tags — cross-agent pooling is deliberate, so every agent's memory blends into one recall surface with only a `--source` tag for provenance. Fine for a solo user; a confidentiality leak across projects or trust boundaries. And "local" is one config flip from a hosted OpenMem/MemOS cloud backend.
+- Most reusable component: the injected-skill-plus-daemon sharing pattern, the anti-pattern induction (rejected values keyed on a failure signature, merged not duplicated), and vector rows stamped with their embedding model and dimension.
+- Maturity impression: from MemTensor (the MemOS team) but its own TypeScript engine, not MemOS embedded; ~44,000 lines of memory core, SQLite + FTS5 + sqlite-vec, local embeddings, an LLM L1→L2→L3→Skill evolution pipeline, 57 test files. Earns `tombstone`, `trust_state`, `audit_log` and `negative_eval`; `scope_enforced` is withheld by design.
+- Study when: you run several coding agents and want them to share one growing local memory, and you value the shared brain over per-project isolation.
+- Do not copy when: you need per-project or per-trust-boundary isolation from one daemon — the main recall deliberately does not scope — or "local" is a hard requirement you cannot police against the opt-in cloud backend.

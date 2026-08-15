@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first SQLite memory hub
+from the MemOS team that distills a layered L1→L2→L3→Skill store from
+every connected agent's turns, shares it across Claude Code, Codex,
+Cursor and others through one daemon plus an injected per-agent CLI
+skill, and induces anti-pattern 'avoid' policies from failures.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memmy — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first SQLite memory
+hub from the MemOS team that distills a layered L1→L2→L3→Skill store
+from every connected agent's turns, shares it across Claude Code, Codex,
+Cursor and others through one daemon plus an injected per-agent CLI
+skill, and induces anti-pattern 'avoid' policies from failures.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memmy — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first SQLite
+memory hub from the MemOS team that distills a layered L1→L2→L3→Skill
+store from every connected agent's turns, shares it across Claude Code,
+Codex, Cursor and others through one daemon plus an injected per-agent
+CLI skill, and induces anti-pattern 'avoid' policies from failures.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memmy — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One local memory, injected into every
+agent</p>
+          <h1>Memmy</h1>
+          <p class="document-deck">A local-first SQLite memory hub from
+the MemOS team that distills a layered L1→L2→L3→Skill store from every
+connected agent's turns, shares it across Claude Code, Codex, Cursor and
+others through one daemon plus an injected per-agent CLI skill, and
+induces anti-pattern 'avoid' policies from failures.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MemTensor/memmy-agent">
+              <span>Source</span>
+              <strong>MemTensor/memmy-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MemTensor/memmy-agent/commit/c6cdbf9a126cc297253783c5594ac5ee8acb7c1a" title="c6cdbf9a126cc297253783c5594ac5ee8acb7c1a">
+              <span>Analyzed revision</span>
+              <code>c6cdbf9a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memmy — <code>memmy-agent</code> from MemTensor, the team behind
+MemOS — is a personal AI agent and, more interestingly for this atlas, a
+<strong>local memory hub</strong> meant to be shared across every coding
+agent a person uses: Claude Code, Codex, Cursor, OpenClaw, Hermes. The
+claim is that these one-shot tools should build on each other's context
+instead of starting over, and the mechanism is concrete and distinctive.
+The durable memory is a real, local SQLite engine — the
+<code>@memmy/memory</code> package, ~44,000 lines of TypeScript — with
+an FTS5 mirror, a <code>sqlite-vec</code> vector sidecar, and local
+embeddings; the shipped default is
+<code>byok</code>/<code>local</code>/<code>sqlite</code>, so the whole
+engine runs on the machine and is present in the repo, not behind a
+service (<code>Memory/src/config/index.ts:252-255</code>,
+<code>storage/backend.ts:111-123</code>).</p>
+<p>Two design choices make it worth a report. The first is <strong>how
+it is shared</strong>. One local HTTP daemon
+(<code>127.0.0.1:18960</code>) holds the single SQLite store, and Memmy
+<em>installs a per-agent skill</em> into each agent's config directory —
+<code>~/.claude</code> (as <code>CLAUDE.md</code>),
+<code>~/.codex</code>, <code>~/.cursor</code>, <code>~/.openclaw</code>,
+<code>~/.hermes</code>
+(<code>Memory/src/cli/skill-writer/index.ts:161-174</code>) — that
+teaches each agent to call the <code>memmy-memory</code> CLI, which hits
+the shared daemon. Every connected agent reads and writes the
+<em>same</em> SQLite store, tagged by
+<code>--source &lt;agent&gt;</code>. That is the "unified memory across
+agents" realized as an injected CLI skill plus a shared daemon, and it
+is a genuinely different integration shape from the MCP servers
+elsewhere in this corpus.</p>
+<p>The second is <strong>what it stores and how it grows</strong>. A
+memory is a layered structured note — <code>L1</code> a trace,
+<code>L2</code> an induced policy or preference, <code>L3</code> a
+world-model abstraction, <code>Skill</code> a procedure — and
+"self-evolving" is a concrete background pipeline
+(<code>evolution_jobs</code> plus workers) that distills L1 traces,
+induces L2 policies from repeated traces through a candidate pool with
+similarity dedup, abstracts L3, mines skills, and — the part the atlas
+rewards — runs a <strong>negative-experience pipeline</strong> that
+synthesizes anti-pattern "avoid" policies keyed on a failure signature
+and surfaces them on read as failure-avoidance
+(<code>service/evolution/negative-experience-pipeline.ts:85,409</code>).
+That is a rejected-value record in the induced-policy layer, and it
+earns <code>tombstone</code> with the nuance that it applies to
+anti-patterns and rejected candidates rather than to deleted user
+facts.</p>
+<p>Memmy is its own system, not MemOS embedded: there is no
+<code>memos</code> dependency, the engine is memmy's own TypeScript over
+SQLite, and "MemOS-powered" is lineage and branding (plus an
+<em>optional</em> hosted OpenMem/MemOS cloud backend that is not the
+default). It earns four marks — <code>tombstone</code>,
+<code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code> — and its most important withheld one is the
+mirror of its headline feature: because the shared brain
+<strong>deliberately pools across agents</strong>, the primary recall
+applies no user/agent/project scope, so <code>scope_enforced</code> is
+withheld by design, not omission. That trade — one shared memory, no
+isolation on the main read — is the thing to weigh before adopting
+it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a layered note that starts as a trace and is promoted
+upward by a background pipeline; recall pools across every agent that
+shares the daemon.</p>
+<pre class="text"><code>turns from any connected agent  -&gt; raw_turns / episodes
+evolution pipeline (background jobs):
+  span-pipeline        L1: summarize traces
+  policy-induction     L2: induce policies from repeated L1 (candidate pool + similarity dedup)
+  world-model-pipeline L3: abstract world models (confidence-shaped)
+  skill-pipeline       Skill: mine procedures
+  negative-experience  anti-pattern &quot;avoid&quot; policy keyed on failure signature (merged, not duplicated)
+
+recall (per agent, via CLI -&gt; local daemon):
+  vector (sqlite-vec) ∪ FTS5 ∪ pattern ∪ structural  -&gt; per-channel max fuse -&gt; rank
+  filter: memory_layer, status IN (&#39;activated&#39;,&#39;resolving&#39;), tags   (NO user/agent scope)
+  LLM multi-query rewrite -&gt; failure-avoidance section injected from anti-patterns</code></pre>
+<p>The unit is a <code>MemoryRow</code> with a discrete
+<code>status</code>
+(<code>activated | resolving | archived | deleted</code>) that the read
+path acts on, a <code>memory_layer</code>, a <code>content_hash</code>
+for dedup and a <code>version</code>. The state that governs recall is
+the status — a <code>resolving</code> row is the candidate lifecycle,
+and only <code>activated</code>/<code>resolving</code> are returned —
+and the thing that makes the store "evolve" is the promotion of L1
+traces into L2 policies and the induction of anti-patterns from
+failures.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — turns from every connected agent ingest into one local SQLite store; a background LLM pipeline distills L1 traces into L2 policies, L3 world models and skills and mines anti-pattern avoid policies from failures; recall fuses vector, FTS, pattern and structural channels across all agents with no scope filter on the main read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: turns from every connected agent ingest into one local SQLite store; a background LLM pipeline distills L1 traces into L2 policies, L3 world models and skills and mines anti-pattern avoid policies from failures; recall fuses vector, FTS, pattern and structural channels across all agents with no scope filter on the main read
+flowchart TB
+    subgraph agents[&quot;Claude Code · Codex · Cursor · OpenClaw · Hermes&quot;]
+      CLI[&quot;injected memmy-memory CLI skill&quot;]
+    end
+    CLI --&gt;|&quot;HTTP 127.0.0.1:18960&quot;| D[(&quot;one local SQLite store&lt;br/&gt;~/.memmy (FTS5 + sqlite-vec)&quot;)]
+    D --&gt; Ev[&quot;evolution jobs (background)&quot;]
+    Ev --&gt; L1[&quot;L1 trace&quot;] --&gt; L2[&quot;L2 induced policy&lt;br/&gt;(candidate pool + dedup)&quot;]
+    L2 --&gt; L3[&quot;L3 world model&quot;]
+    Ev --&gt; Sk[&quot;Skill&quot;]
+    Ev --&gt; Neg[&quot;negative-experience:&lt;br/&gt;anti-pattern &#39;avoid&#39; policy&lt;br/&gt;keyed on failure signature&quot;]
+    D --&gt; R[&quot;recall: vector ∪ FTS ∪ pattern ∪ structural&quot;]
+    R --&gt;|&quot;filter: layer + status(activated/resolving) + tags&lt;br/&gt;NO user/agent scope&quot;| Out[&quot;ranked hits + failure-avoidance section&quot;]
+    Neg -.-&gt;|&quot;surfaced on read&quot;| Out</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory core is the <code>Memory/</code> workspace
+(<code>@memmy/memory</code>); everything else is shell and UI
+(<code>App/shell/desktop</code> Electron,
+<code>App/frontend/desktop</code> React,
+<code>App/memmy-agent/src/memmy-memory</code> a thin HTTP client to the
+service).</p>
+<ul>
+<li><strong><code>Memory/src/storage/</code></strong> —
+<code>schema.ts</code> (SCHEMA_VERSION 4), <code>db.ts</code> (SQLite at
+<code>~/.memmy/memory-service/memory.sqlite</code>),
+<code>backend.ts</code> (local sqlite vs the opt-in remote REST
+backend), <code>sqlite-vec-store.ts</code>, <code>repositories.ts</code>
+(4,990).</li>
+<li><strong><code>Memory/src/service/</code></strong> —
+<code>memory-service.ts</code> (2,387), <code>retrieval/</code>
+(<code>indexed-candidate-pool.ts</code>,
+<code>retrieval-service.ts</code> 2,220, <code>query-rewrite.ts</code>),
+<code>evolution/</code>
+(span/policy-induction/world-model/skill/reward/negative-experience
+pipelines + <code>evolution-job-processor.ts</code>),
+<code>worker/</code>, <code>session/</code>,
+<code>namespace/</code>.</li>
+<li><strong><code>Memory/src/model/embedder.ts</code></strong> — local
+<code>Xenova/all-MiniLM-L6-v2</code> via transformers.js by
+default.</li>
+<li><strong><code>Memory/src/cli/</code></strong> — the
+<code>memmy-memory</code> CLI, the <code>skill-writer</code> that
+injects the per-agent skill, and
+<code>skills/memmy-memory/SKILL.md</code>.</li>
+<li><strong><code>Memory/src/client/openmem-cloud-client.ts</code></strong>
+— the optional hosted backend.</li>
+</ul>
+<p><strong>Storage.</strong> One local SQLite database
+(<code>better-sqlite3</code>), FTS5 (<code>memories_fts</code>,
+<code>unicode61</code>), and a <code>sqlite-vec</code> (0.1.9) vector
+sidecar (<code>memory_vector_entries</code> with
+<code>vec_summary</code>/<code>vec_action</code>/<code>vec</code> and
+<code>embedding_model</code>/<code>provider</code>/<code>dim</code>),
+plus supporting tables — <code>sessions</code>, <code>episodes</code>,
+<code>raw_turns</code>, <code>feedback</code>,
+<code>decision_repairs</code>, <code>l2_candidate_pool</code>,
+<code>skill_trials</code>, <code>recall_events</code>,
+<code>evolution_jobs</code>, <code>memory_change_log</code>,
+<code>audit_logs</code>, <code>idempotency_keys</code>. Runtime deps are
+<code>better-sqlite3</code>, <code>sqlite-vec</code>,
+<code>@huggingface/transformers</code> — local by default, no key
+required.</p>
+<p>The optional cloud is worth stating precisely so it is not mistaken
+for the engine: <code>RemoteRestStorageBackend</code>
+(<code>storage/backend.ts:74-109</code>, id
+<code>openmem-cloud-rest</code>) delegates to MemTensor's hosted OpenMem
+service (<code>memos-api.openmem.net</code> /
+<code>memos.memtensor.cn/api/openmem/v1/</code>), and its
+<code>repositories()</code> throws — it is an alternate backend a user
+opts into, not the default and not present in the tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>A shared local daemon plus injected skills.</strong> Run the
+service; the CLI's skill-writer installs a <code>memmy-memory</code>
+skill into each agent's config dir so the agents call the CLI, which
+hits the daemon. This is the whole "one brain" story and it needs no
+MCP.</li>
+<li><strong>Local and offline by default.</strong> SQLite on disk, local
+embeddings; the cloud backend is opt-in.</li>
+<li>The screen flagged FRESH manifests across the workspaces; nothing
+was installed or run, and the engine was read against 57 committed test
+files.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest</strong> — turns normalized
+(<code>turn/turn-normalization.ts</code>) into <code>raw_turns</code>
+and <code>episodes</code>
+(<code>session/session-turn-service.ts</code>).</li>
+<li><strong>Evolve</strong> — background <code>evolution_jobs</code>
+(schema.ts:487, unique <code>dedupe_key</code>) processed by
+<code>service/evolution/evolution-job-processor.ts</code>:
+<code>span-pipeline</code> (L1 summaries), <code>policy-induction</code>
+(L2 via <code>L2_INDUCTION_PROMPT</code>, <code>l2_candidate_pool</code>
+<ul>
+<li><code>tracePolicySimilarity</code> dedup),
+<code>world-model-pipeline</code> (L3,
+<code>shapeWorldModelConfidence</code>), <code>skill-pipeline</code>,
+<code>negative-experience-pipeline</code>.</li>
+</ul></li>
+<li><strong>Anti-pattern</strong> —
+<code>negative-experience-pipeline.ts:85</code>
+<code>policy:avoid:${stableHash(scope:signature)}</code> and
+<code>:409</code> <code>avoid:${stableHash(normalized)}</code>, merged
+into an existing policy via
+<code>decisionGuidance(..., "anti_pattern")</code>; surfaced through
+<code>failureAvoidanceSection</code>
+(<code>retrieval-service.ts:428-432</code>).</li>
+<li><strong>Retrieve</strong> —
+<code>service/retrieval/indexed-candidate-pool.ts:90-137</code> runs
+<code>searchVectorIds</code> (sqlite-vec), <code>searchFtsIds</code>
+(FTS5), <code>searchPatternIds</code>, <code>searchStructuralIds</code>
+in parallel, fused by per-channel max in
+<code>algorithm/plugin-algorithms.ts</code>; LLM multi-query rewrite in
+<code>service/retrieval/query-rewrite.ts</code>.</li>
+<li><strong>Share</strong> —
+<code>Memory/src/cli/skill-writer/index.ts:161-174</code> writes the
+skill into each agent's config dir; <code>SKILL.md</code> teaches the
+agent to call the CLI with <code>--source &lt;agent&gt;</code>; all hit
+<code>http://127.0.0.1:18960</code>.</li>
+<li><strong>Govern</strong> — <code>memory-service.ts:1227</code>
+<code>deleteMemory</code> → soft delete; <code>:1171-1217</code>
+<code>archiveMemory</code>; <code>:1313</code>
+<code>redactRawTurn</code>; <code>repositories.ts:3286-3361</code>
+import conflict <code>skip|replace|error</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>MemoryRow</code> (<code>types.ts:99-131</code>, table at
+<code>schema.ts:24-47</code>) carries <code>memory_type</code>,
+<code>status</code> (<code>activated|resolving|archived|deleted</code>),
+<code>visibility</code> (<code>private|public|session</code>),
+<code>memory_key</code>, <code>memory_value</code>,
+<code>tags_json</code>, <code>info_json</code>,
+<code>properties_json</code> (holding
+<code>internal_info.memory_layer/memory_kind</code>),
+<code>memory_layer</code> (<code>L1|L2|L3|Skill</code>),
+<code>content_hash</code>, <code>version</code>, and
+<code>created_at</code>/<code>updated_at</code>/<code>deleted_at</code>.
+Vectors are separate in <code>memory_vector_entries</code>, stamped with
+the embedding model, provider and dimension — so unlike some stores here
+a vector carries the space that produced it.</p>
+<p>Three facts decide marks.</p>
+<p><strong>Status is discrete and gates recall.</strong>
+<code>activated</code>/<code>resolving</code>/<code>archived</code>/
+<code>deleted</code> is a real lifecycle: a <code>candidate</code> maps
+to <code>resolving</code> (<code>memory-service.ts:2183</code>), and the
+read paths filter <code>status IN ('activated','resolving')</code>
+(<code>indexed-candidate-pool.ts:41</code>,
+<code>retrieval-service.ts:1493</code>,
+<code>read-model/skill.ts:313</code>). <code>trust_state</code> is
+earned — a status field the store acts on, plus world-model confidence
+and skill-trial pass/fail as adjacent signals.</p>
+<p><strong>Rejected values are recorded and keyed on content.</strong>
+The anti-pattern policies are keyed on a <code>stableHash</code> of a
+failure signature and merged rather than duplicated, and
+<code>l2_candidate_pool</code> carries an explicit
+<code>status='rejected'</code> keyed on a <code>candidate_key</code> so
+a rejected candidate is not re-promoted
+(<code>schema.ts:229-241</code>). This is <code>tombstone</code> in the
+induced-policy layer — a durable rejected-value record that steers
+future behaviour away — with the honest nuance that it governs
+anti-patterns and induction candidates, not deletion of user facts (a
+deleted fact is a soft-delete, not a value-keyed rejection).</p>
+<p><strong>There is no validity-time axis.</strong> Only
+<code>created_at</code>/<code>updated_at</code>/<code>deleted_at</code>
+— record time — so <code>bitemporal</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is multi-channel and fused. Per layer,
+<code>indexed-candidate-pool</code> runs four routes in parallel —
+vector cosine over the <code>sqlite-vec</code> sidecar (against summary,
+action and content vectors), FTS5 lexical, a pattern route and a
+structural route — and fuses them by taking the per-channel max score
+into a combined ranking (<code>algorithm/plugin-algorithms.ts</code>),
+with an LLM multi-query rewrite expanding the query first. Anti-pattern
+policies are injected as a dedicated failure-avoidance section, so the
+store not only surfaces what worked but warns against what failed.</p>
+<p>The property that decides the withheld mark is the filter. The scope
+keys (<code>user_id</code>, <code>agent_id</code>, <code>app_id</code>,
+<code>session_id</code>) all exist on the row and in
+<code>MemoryFilter</code>, and episode reads assert scope
+(<code>retrieval-service.ts:1486</code>), but the <strong>primary
+semantic recall builds its filter from
+<code>{memory_layer, status, tags}</code> only</strong>
+(<code>indexed-candidate-pool.ts:85-93</code>) — no user, agent or
+project predicate. This is deliberate: the whole point is one memory
+pooled across agents, so recall crosses agents by design.
+<code>scope_enforced</code> is therefore withheld not because the key is
+missing but because the main read intentionally does not apply it —
+which is exactly the confidentiality trade a reader must weigh (§9).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are two-phase and evolutionary. Turns ingest cheaply into
+<code>raw_turns</code>/ <code>episodes</code>; the durable, typed
+memories are produced asynchronously by the evolution pipeline, so
+nothing blocks the agent's turn. The pipeline is the "self-evolving"
+claim made concrete: L1 summaries from traces, L2 policies induced from
+<em>repeated</em> L1 traces through a candidate pool with similarity
+dedup, L3 abstractions with a confidence-shaping step, mined skills, and
+the negative-experience pass. Deduplication is real —
+<code>content_hash</code> (<code>repositories.ts:3552</code>,
+<code>contentHash ?? stableHash(memoryValue)</code>) and the
+<code>evolution_jobs.dedupe_key</code> unique index — so the store does
+not simply accrete duplicates.</p>
+<p>Correction and conflict are handled at several layers. A user (or the
+panel) can soft-delete (<code>status='deleted'</code>,
+<code>deleted_at</code>; reads filter <code>deleted_at IS NULL</code>),
+archive, or redact a raw turn; import carries a
+<code>skip|replace|error</code> conflict strategy. The sharpest
+mechanism is the negative-experience pipeline: a failure becomes an
+anti-pattern "avoid" policy keyed on its signature and merged into
+existing guidance, and a rejected induction candidate is remembered as
+<code>rejected</code> in the candidate pool so it is not re-promoted. So
+Memmy does record rejected values — in the induced layer — which is more
+than most stores here manage, even if a plainly deleted user fact is
+only soft-deleted rather than tombstoned by value.</p>
+<p>Every governance mutation is logged: an <code>audit_logs</code> row
+on archive/delete/redact (<code>memory-service.ts:1204-1213</code>) and
+an append-only <code>memory_change_log</code> with before/after JSON
+(<code>repositories.ts:1930-1956</code>, <code>appendChange</code>). The
+one caveat for <code>audit_log</code> is that both are subject to
+retention pruning (<code>scheduleLogTablePruneAfterInsert</code>), so
+the trail is append-only but not indefinite.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is the distinctive thing. Memmy is
+<strong>not</strong> an MCP server; it is a local HTTP daemon plus an
+injected CLI skill. The skill-writer enumerates a fixed set of supported
+agents
+(<code>SUPPORTED_MEMMY_AGENT_IDS = ["codex", "cursor", "claude", "opencode", "openclaw", "hermes"]</code>,
+<code>cli/skill-writer/index.ts:6</code>) and writes a
+<code>memmy-memory</code> skill into each one's config directory — into
+<code>~/.claude</code>'s <code>CLAUDE.md</code>, into
+<code>~/.codex</code>, <code>~/.cursor</code>, and so on — teaching that
+agent to shell out to the <code>memmy-memory</code> CLI, tagging its
+writes with <code>--source &lt;agent&gt;</code>. Every agent therefore
+reads and writes the one SQLite store behind the daemon. This is a clean
+answer to "how do five different coding agents share one memory" that
+sidesteps MCP entirely, and it is the design's signature.</p>
+<p>The consequence is the withheld scope mark read from the integration
+side: because the point is a shared brain, the memories are pooled and
+the main recall does not partition by which agent wrote them.
+<code>--source</code> records provenance; it does not scope retrieval.
+For a single user that is the feature; for anyone who would run distinct
+projects or trust boundaries through one daemon it is the risk.</p>
+<p><code>human_review</code> is withheld: there is a governance panel
+where a user can archive, delete or redact, and an explicit
+<code>feedback</code> polarity, but there is no approval queue
+adjudicating memory <em>content</em> before it is stored — candidate
+promotion is automated by the evolution pipeline, not gated on a
+person.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<ul>
+<li><strong>Trust is a status the store acts on.</strong> Recall filters
+to <code>activated</code>/ <code>resolving</code>, so an archived or
+deleted memory does not surface, and the candidate
+(<code>resolving</code>) lifecycle is a real intermediate state — not a
+score the ranker ignores.</li>
+<li><strong>Failures are remembered as anti-patterns.</strong> The
+negative-experience pipeline turns a failure into a durable,
+content-keyed avoid policy surfaced on read. That is the rejected-value
+discipline the atlas keeps asking for, applied to induced policies — a
+genuine strength.</li>
+<li><strong>Mutations are logged, with a retention caveat.</strong>
+<code>audit_logs</code> and an append-only
+<code>memory_change_log</code> with before/after record governance ops
+in the system's own store; both are pruned by a retention job, so the
+guarantee is "append-only within the window", not forever.</li>
+<li><strong>The shared brain has no scope on its main read.</strong>
+This is the load-bearing risk. Scope keys exist and the main semantic
+recall does not apply them, by design, so every connected agent's memory
+pools into one recall surface. A single user gets the intended benefit;
+anyone pointing multiple projects or trust boundaries at one daemon gets
+cross-contamination with only <code>--source</code> provenance to
+reconstruct who wrote what.</li>
+<li><strong>"MemOS-powered" is lineage, and the cloud is one flip
+away.</strong> The engine is memmy's own TypeScript, not the MemOS
+package; but a <code>RemoteRestStorageBackend</code> can point the store
+at MemTensor's hosted OpenMem service, at which point the durable
+mechanism moves off the machine. The default is local; the option
+exists.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>57 <code>*.test.ts</code> files under <code>Memory/tests/</code>
+cover the algorithm, repositories, retrieval service, evolution
+pipelines, contracts, the embedder, config, the CLI, and a
+local-vs-cloud parity suite. The relevant negative case is real:
+<code>tests/service/retrieval/injected-context.test.ts:113-115</code>
+asserts that scanned, unrelated and stale markers
+(<code>"…MUST_NOT_BE_INJECTED"</code>,
+<code>"STALE_FIRST_REPORT"</code>) do <strong>not</strong> appear in the
+injected context — a committed must-not-retrieve assertion, which earns
+<code>negative_eval</code>.</p>
+<p>What is absent is a retrieval-quality benchmark: the multi-channel
+fusion, the LLM query rewrite and the L1→L2→L3 induction are the
+design's substance, and while the pipelines are unit-tested, nothing
+committed measures whether recall returns the right memories or whether
+induced policies improve task outcomes — the measurement the
+"self-evolving" claim most invites. MemTensor's MemOS has academic
+papers; none is cited in this repository, and the "MemOS-powered" line
+is branding rather than a citation.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Share one memory across agents with a daemon plus an
+injected CLI skill.</strong> Writing a small skill into each agent's
+config dir that shells to a CLI against a shared local service is a
+pragmatic, MCP-free way to give several coding agents one brain — and
+tagging writes with <code>--source</code> keeps provenance even when
+retrieval pools.</li>
+<li><strong>Remember failures as content-keyed anti-patterns.</strong>
+Turning a failure into an "avoid" policy keyed on a failure signature,
+merged rather than duplicated, and injected as a failure-avoidance
+section, is a rejected-value mechanism that steers future behaviour —
+the useful half of a tombstone in the procedural layer.</li>
+<li><strong>Keep a <code>rejected</code> state in the induction
+candidate pool.</strong> A rejected L2 candidate remembered by
+<code>candidate_key</code> is not re-promoted next cycle, which stops
+the evolution loop from re-proposing what it already discarded.</li>
+<li><strong>Stamp every vector with its model and dimension.</strong>
+<code>memory_vector_entries</code> carrying
+<code>embedding_model</code>/<code>provider</code>/<code>dim</code> is
+the space-guard some stores here lack, and it costs three columns.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not pool a shared brain without a scope you can turn
+on.</strong> One recall surface across every agent is a feature for a
+solo user and a confidentiality leak across projects or trust
+boundaries; the scope keys are on the row, so apply them when isolation
+matters rather than filtering by layer/status/tags alone.</li>
+<li><strong>Do not let a soft-delete masquerade as forgetting.</strong>
+A deleted user fact is a <code>status='deleted'</code> row filtered on
+read, not a value-keyed rejection — if an extraction or a re-ingest can
+re-derive it, it comes back; the anti-pattern mechanism exists, so
+extend it to user deletions if that matters.</li>
+<li><strong>Do not call an append-only log durable if a retention job
+prunes it.</strong> The change log and audit log are append-only within
+their window; say so.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer who runs several coding agents and
+wants them to share one growing, local memory — and who values the
+cross-agent shared brain over per-project isolation. The layered
+evolution and anti-pattern induction are more than most local stores
+attempt, it is genuinely local by default, and the injected- skill
+integration means it works with the agents people already use without
+MCP plumbing.</p>
+<p>Walk away if you need per-project or per-trust-boundary isolation
+from the same daemon — the main recall deliberately does not scope — or
+if "local" is a hard requirement you cannot police, since the hosted
+backend is a configuration away. And treat "self-evolving" as an LLM
+consolidation pipeline whose recall quality is unmeasured here, not a
+proven gain.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the unscoped main recall intended to stay a pooled shared brain,
+or will per-project/per-agent scope become applyable on the primary
+read? The keys are on every row.</li>
+<li>How much does the L1→L2→L3 evolution and anti-pattern induction
+improve task outcomes? The pipelines are tested; the gain is
+unmeasured.</li>
+<li>Should user-fact deletion become a value-keyed rejection like the
+anti-pattern path, so a re-ingest cannot restore a deleted fact?</li>
+<li>How many deployments opt into the hosted OpenMem backend, and what
+moves off the machine when they do?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>Memory/src/storage/schema.ts</code>, <code>db.ts</code>,
+<code>backend.ts</code>, <code>sqlite-vec-store.ts</code>,
+<code>repositories.ts</code> — schema, local/remote backends, vector
+sidecar, dedup, change log.</li>
+<li><code>Memory/src/service/memory-service.ts</code> —
+store/delete/archive/redact, status mapping, audit writes.</li>
+<li><code>Memory/src/service/retrieval/</code> —
+<code>indexed-candidate-pool.ts</code> (channel fusion, filter),
+<code>retrieval-service.ts</code> (failure-avoidance, episode scope),
+<code>query-rewrite.ts</code>.</li>
+<li><code>Memory/src/service/evolution/</code> —
+<code>span-pipeline</code>, <code>policy-induction</code>,
+<code>world-model-pipeline</code>, <code>skill-pipeline</code>,
+<code>negative-experience-pipeline</code>,
+<code>evolution-job-processor</code>.</li>
+<li><code>Memory/src/model/embedder.ts</code> — local all-MiniLM
+embeddings.</li>
+<li><code>Memory/src/cli/skill-writer/index.ts</code>,
+<code>cli/skills/memmy-memory/SKILL.md</code> — the injected per-agent
+skill.</li>
+<li><code>Memory/src/client/openmem-cloud-client.ts</code> — the
+optional hosted backend.</li>
+<li><code>Memory/tests/service/retrieval/injected-context.test.ts</code>
+— the must-not-inject assertions.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/MemTensor/memmy-agent/commit/c6cdbf9a126cc297253783c5594ac5ee8acb7c1a"><code class="commit-id" title="c6cdbf9a126cc297253783c5594ac5ee8acb7c1a">c6cdbf9a…</code></a>
+— first reading. Screened before opening: FRESH manifests across the
+workspaces; nothing was installed or run. The <code>Memory/</code>
+package was established as the authoritative local engine (default
+<code>byok</code>/<code>local</code>/<code>sqlite</code>,
+<code>config/index.ts:252-255</code>), distinct from the MemOS Python
+package and from the optional hosted OpenMem backend; the layered store,
+the evolution pipeline, the anti-pattern/negative-experience mechanism,
+the injected per-agent CLI skill, and the unscoped main recall were read
+from <code>Memory/src/storage/</code>, <code>service/</code> and
+<code>cli/</code> and cross-checked against the committed tests
+(<code>injected-context.test.ts</code>). <code>tombstone</code>
+(anti-pattern and rejected-candidate records keyed on content),
+<code>trust_state</code> (status consumed on read),
+<code>audit_log</code> (audit and change logs, retention-pruned) and
+<code>negative_eval</code> are earned; <code>scope_enforced</code> is
+withheld because the primary recall deliberately pools across agents,
+and <code>bitemporal</code> and <code>human_review</code> are withheld.
+No paper is cited in the tree; "MemOS-powered" is lineage and
+branding.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

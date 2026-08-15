@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **285 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **289 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -164,6 +164,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`marsnme`](../systems/marsnme/) **MarsNMe** — An agent can leave a note for another agent · `marsmanleo/marsnme`
 - [`mastra-observational-memory`](../systems/mastra-observational-memory/) **Mastra Observational Memory** — Observer–reflector context · `mastra-ai/mastra` · Scope enforced
 - [`mateclaw`](../systems/mateclaw/) **MateClaw** — Scoped provider SPI · `mateaix/mateclaw` · Scope enforced
+- [`mcp-memory`](../systems/mcp-memory/) **MCP-Memory** — A trust model written and never read · `fellowgeek/mcp-memory` · Scope enforced
 - [`mem0`](../systems/mem0/) **Mem0** — Library-first memory · `mem0ai/mem0` · Scope enforced, Mutation audit
 - [`mem0sharp`](../systems/mem0sharp/) **Mem0Sharp** — Mem0's architecture, rebuilt in C# · `jihadkhawaja/mem0sharp` · Scope enforced, Mutation audit
 - [`mem9`](../systems/mem9/) **mem9** — A test suite for an API that is not here · `mem9-ai/mem9` · Scope enforced
@@ -176,6 +177,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memlayer`](../systems/memlayer/) **Memlayer** — Salience by example, with an API key among the examples · `divagr18/memlayer`
 - [`memledger`](../systems/memledger/) **MemLedger** — Provenance that answers, and does not enforce · `riktar/memledger` · Trust state, Mutation audit
 - [`memmachine`](../systems/memmachine/) **MemMachine** — Episode-preserving dual memory · `MemMachine/MemMachine` · Scope enforced
+- [`memmy-agent`](../systems/memmy-agent/) **Memmy** — One local memory, injected into every agent · `MemTensor/memmy-agent` · Tombstone, Trust state, Mutation audit, Negative evals
 - [`memobase`](../systems/memobase/) **Memobase** — Structured user profiles · `memodb-io/memobase` · Scope enforced
 - [`memoir`](../systems/memoir/) **Memoir** — The collision policy is chosen by memory type · `zhangfengcdt/memoir` · Scope enforced, Mutation audit, Human review
 - [`memoir-cli`](../systems/memoir-cli/) **memoir-cli** — The tombstone nothing can create · `camgitt/memoir` · Mutation audit, Human review, Negative evals
@@ -200,6 +202,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memv`](../systems/memv/) **memv** — Store only what you failed to predict · `vstorm-co/memv` · Bi-temporal, Scope enforced
 - [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
 - [`mengram`](../systems/mengram/) **Mengram** — Regression tests for memory · `alibaizhanov/mengram` · Trust state, Scope enforced
+- [`mentisdb`](../systems/mentisdb/) **MentisDB** — A hash-chained memory that refuses to load if tampered · `CloudLLM-ai/mentisdb` · Bi-temporal, Mutation audit, Negative evals
 - [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review
 - [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
 - [`midas`](../systems/midas/) **Midas** — A guard on memory-justified action · `vornicx/Midas` · Bi-temporal, Scope enforced, Mutation audit, Negative evals
@@ -214,6 +217,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`mobius`](../systems/mobius/) **Mobius** — Scope is the directory name · `nutshellai-tech/mobius` · Scope enforced, Human review
 - [`moltbrain`](../systems/moltbrain/) **MoltBrain** — The session summary is a form, not a paragraph · `nhevers/moltbrain` · Scope enforced
 - [`moltis`](../systems/moltis/) **Moltis** — File-corpus memory · `moltis-org/moltis`
+- [`monet`](../systems/monet/) **Monet** — Rules read at the moment they bind · `team-monet/monet` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`muninndb`](../systems/muninndb/) **MuninnDB** — A database whose primitives are cognitive · `scrypster/muninndb` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Negative evals
 ## N
 
