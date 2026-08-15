@@ -18773,6 +18773,43 @@ same two documentation files, and the only other <code>memor</code>
 paths are a process-RSS logger and an <code>InMemoryStateAdapter</code>
 holding maps with <code>expiresAt</code> for the life of the
 process.</li>
+<li><strong><code>integry/propr</code> was examined and has no report,
+and it is the corpus's cleanest case of an index that is <em>built</em>
+not to be memory.</strong> Apache-2.0, at <a
+href="https://github.com/integry/propr/commit/d537c25ea08ec072f23fb206174f3061886874e3"><code class="commit-id" title="d537c25ea08ec072f23fb206174f3061886874e3">d537c25e…</code></a>,
+4,280 commits — a self-hosted platform that runs coding agents through
+the GitHub pull-request workflow, from labeled issue to reviewed PR, in
+containers on the operator's own server. Twenty-five tables, and they
+sort into three piles with nothing left over. <strong>The run</strong>:
+<code>tasks</code>, <code>task_history</code>, <code>task_drafts</code>,
+<code>plan_issues</code>, <code>llm_executions</code>,
+<code>llm_logs</code>, <code>usage_metric_records</code> — the
+LangGraph-checkpointer boundary. <strong>Configuration and
+people</strong>: <code>repositories</code>, <code>system_configs</code>,
+<code>instance_members</code>, <code>instance_role_audit</code>, plus
+<code>repo_todos</code> and <code>repo_chat_messages</code>, which are
+human-authored. <strong>A summary index of the user's source</strong>:
+<code>file_summaries</code> and <code>directory_summaries</code>,
+LLM-written, one row per path. That third pile is where a memory system
+would be if there were one, and the invalidation is the reason there is
+not. <code>file_summaries.commit_hash</code> holds the <strong>git blob
+hash of the file's content</strong>, and <code>identifyStaleFiles</code>
+(<code>packages/core/src/services/relevance/summaryMinerStaleness.ts</code>)
+reprocesses every path whose stored hash differs from the current blob
+and <strong>deletes every row whose path is no longer in the
+tree</strong>; <code>directory_summaries.hash</code> is a composite over
+its children, so a change propagates up. Reads are branch-scoped. The
+mechanism therefore <em>enforces</em> that the index is a pure function
+of the checkout — it cannot outlive its source, and a wrong summary is
+not corrected but regenerated from the file that produced it. That is
+the sharpest statement of this boundary the corpus has: an entry that a
+hash can prove stale is not an entry that can be believed, and the
+systems this atlas reports on are exactly the ones where no hash can
+settle the question. Nothing in the tree learns across tasks — 296 test
+files, six touching the summary miner, and no store of lessons, rejected
+approaches or accumulated preference. Propr enters the day a review
+finding outlives its pull request as a claim a later task must
+consult.</li>
 <li><strong><code>Zoo-Code-Org/Zoo-Code</code> was examined and has no
 report, and it has the best editing surface in the corpus with nothing
 behind it.</strong> Apache-2.0, at <a
