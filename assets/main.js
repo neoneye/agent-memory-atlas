@@ -1,9 +1,14 @@
 (() => {
   // ---------------------------------------------------------------- consent
-  // The head sets every Consent Mode signal to denied before gtag configures,
-  // so no analytics cookie exists until someone chooses here. Declining is a
-  // stored choice, not an absence of one, so the banner does not reappear.
+  // Basic consent mode: no Google tag exists on the page until a reader clicks
+  // Allow. The head used to load gtag.js with every Consent Mode signal denied,
+  // which still contacts Google and, per Google's own consent-mode
+  // documentation, still sends cookieless pings — so the banner's "Nothing is
+  // collected until you choose" was false for anyone who never chose. Declining
+  // now means the script is never fetched at all, and declining is a stored
+  // choice rather than an absence of one, so the banner does not reappear.
   const CONSENT_KEY = "ama-consent";
+  const MEASUREMENT_ID = "G-2F6NE7JWTR";
   const readConsent = () => {
     try {
       return localStorage.getItem(CONSENT_KEY);
@@ -19,11 +24,42 @@
     }
   };
 
-  const applyConsent = (granted) => {
-    if (typeof window.gtag !== "function") return;
-    window.gtag("consent", "update", {
-      analytics_storage: granted ? "granted" : "denied",
+  // Injects the tag on first grant and never again. There is no "revoke" path
+  // that can unload it — a reader who changes their mind after allowing gets
+  // the denied signal plus a page they can reload into a clean state, which is
+  // the honest limit of doing this client-side.
+  let analyticsLoaded = false;
+  const loadAnalytics = () => {
+    if (analyticsLoaded) return;
+    analyticsLoaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () {
+      window.dataLayer.push(arguments);
+    };
+    window.gtag("js", new Date());
+    window.gtag("consent", "default", {
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      analytics_storage: "granted",
     });
+    window.gtag("config", MEASUREMENT_ID);
+    const tag = document.createElement("script");
+    tag.async = true;
+    tag.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+    document.head.appendChild(tag);
+  };
+
+  const applyConsent = (granted) => {
+    if (granted) {
+      loadAnalytics();
+      return;
+    }
+    // Nothing to deny if nothing was ever loaded; this only matters when a
+    // reader allows and then declines within the same page view.
+    if (typeof window.gtag === "function") {
+      window.gtag("consent", "update", { analytics_storage: "denied" });
+    }
   };
 
   let banner = null;
