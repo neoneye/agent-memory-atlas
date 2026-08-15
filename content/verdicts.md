@@ -24,9 +24,11 @@ the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
 walk away.
 
-It is hand-written, unlike the [capability index](../capabilities/) and the
-[comparative matrix](../compare/#2-comparative-matrix), which is generated from every report's frontmatter
-and complete by construction. So completeness here is a fact about today rather
+It is prose — written by a model, like everything else here that is not
+generated; the [review method](../methodology/per-repo-report-format/#who-writes-these)
+says who and what follows from it — unlike the [capability index](../capabilities/) and the
+[comparative matrix](../compare/#2-comparative-matrix), which are derived from every report's frontmatter
+by a script and complete by construction. So completeness here is a fact about today rather
 than a guarantee: nothing fails the build if the next report arrives without an
 entry, and `scripts/check_homepage.py` only notices the count in the sentence
 going stale. A verdict missing in future means nobody wrote the paragraph,
@@ -41,7 +43,7 @@ because it decides how much weight a completeness claim on any page can carry:
 flowchart TD
     R["Every report<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
-    R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
+    R --> HAND["Written as prose<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
     GEN --> MX["Comparative matrix"]
     GEN --> CI["Capability index"]

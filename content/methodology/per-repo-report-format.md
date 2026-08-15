@@ -18,6 +18,34 @@ Suggested output path:
 content/systems/<repo-name>.md
 ```
 
+## Who writes these
+
+**Claude wrote every report on this site**, reading each repository at the commit
+the report pins, directed by the atlas's maintainer, who set the questions, made
+the scope calls and reviewed the output. Codex, Gemini, Grok, DeepSeek, Kimi and
+Qwen have read drafts and found errors in them — including errors this format now
+exists to prevent.
+
+That is worth stating plainly rather than leaving to inference, because a reader
+who assumes a person typed these will weight them differently, and because the
+failure modes are specific and this project has hit them: a fabricated commit
+hash, an invented quotation, a capability mark awarded to a mechanism that was
+not there, a count that stayed in the prose after the corpus moved past it. Each
+was found by re-reading the code or by another reader, not by the writer noticing.
+
+**Everything in the format above is a response to that.** The pin, the file path,
+the symbol name, the quoted line, the refusal to accept a README's claim about
+its own code — these are not stylistic preferences. They exist so that a claim
+here can be checked against the repository it describes without trusting whoever
+wrote the sentence. The counts are machine-checked against report frontmatter for
+the same reason, and the checks that do the machine-checking carry their own
+negative controls, because a checker that has stopped working looks exactly like
+a clean tree.
+
+So: **do not take a claim on this site on authority.** Open the commit. Every
+report is built to make that cheap, and where it is not cheap the report is
+supposed to say so.
+
 ## Dates are absolute, never relative
 
 Every report is pinned to a commit and stamped with `analyzed_at`, so the reader
