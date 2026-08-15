@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code layer whose
+background daemon spawns a headless model to extract typed learnings
+from a finished session's thinking blocks, embeds them into a pgvector
+store, and recalls them into later sessions — a real cross-session loop
+wrapped in more design than the code delivers.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Continuous
+Claude — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code layer whose
+background daemon spawns a headless model to extract typed learnings
+from a finished session's thinking blocks, embeds them into a pgvector
+store, and recalls them into later sessions — a real cross-session loop
+wrapped in more design than the code delivers.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Continuous
+Claude — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code layer whose
+background daemon spawns a headless model to extract typed learnings
+from a finished session's thinking blocks, embeds them into a pgvector
+store, and recalls them into later sessions — a real cross-session loop
+wrapped in more design than the code delivers.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Continuous Claude — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A daemon mines the thinking blocks</p>
+          <h1>Continuous Claude</h1>
+          <p class="document-deck">A Claude Code layer whose background
+daemon spawns a headless model to extract typed learnings from a
+finished session's thinking blocks, embeds them into a pgvector store,
+and recalls them into later sessions — a real cross-session loop wrapped
+in more design than the code delivers.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/parcadei/Continuous-Claude-v3">
+              <span>Source</span>
+              <strong>parcadei/Continuous-Claude-v3</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e" title="d07ff4b06b62f43771bc0c927d0211b734d6149e">
+              <span>Analyzed revision</span>
+              <code>d07ff4b0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Continuous Claude is an MIT-licensed enhancement layer for Claude
+Code — a <code>.claude/</code> configuration of 30 hooks, 32 agents and
+109 skills, plus a Python package (<code>opc/</code>,
+<code>mcp-execution</code> 3.0.0) that supplies the memory machinery.
+Its pitch is the one every coding agent's users ask for: <em>"maintains
+context across sessions"</em> by learning from what happened and
+recalling it later. Underneath the 109-skill surface, the memory system
+is small and has one genuinely good idea, and the honest way to review
+it is to separate what the code does from what the README says it does,
+because the gap between them is the finding.</p>
+<p><strong>What is real and worth stealing.</strong> When a session goes
+stale, a background daemon spawns a headless model
+(<code>claude -p --model sonnet</code>) whose job is to read the
+session's <strong>thinking blocks</strong> — the model's own reasoning,
+not its actions — and distill them into typed learnings. The project
+names the insight itself: <em>"thinking blocks contain the real
+reasoning — not just what Claude did, but why."</em> Those learnings are
+embedded, stored in a <code>pgvector</code> table, and recalled into
+future sessions by hybrid reciprocal-rank fusion, injected automatically
+as a <code>MEMORY MATCH</code> on the next prompt. Extraction from the
+reasoning trace rather than the transcript is a distinction no other
+system in this atlas draws, and the cross-session loop it feeds does
+work when PostgreSQL is configured.</p>
+<p><strong>What the design claims and the code does not
+deliver.</strong> The README describes a four-table database, a
+typed-and-confident learning model, a "user-confirm-learning" step, and
+a memory system that "just works." The code tells a narrower story, and
+the <a href="../../compare/">claims are corrected against it</a> rather
+than repeated:</p>
+<ul>
+<li><strong>The default learnings backend cannot write.</strong>
+<code>memory_factory.get_default_backend()</code> returns
+<code>"sqlite"</code>
+(<code>opc/scripts/core/db/memory_factory.py:96</code>), whose branch
+imports <code>from .memory_service import MemoryService</code> — a
+module that <strong>does not exist</strong> in the tree. Learnings
+persist only against PostgreSQL, and only when
+<code>DATABASE_URL</code>/<code>CONTINUOUS_CLAUDE_DB_URL</code> is set.
+A parallel SQLite read path in <code>recall_learnings.py</code> queries
+a <code>~/.claude/cache/memory.db</code> that nothing ever creates. The
+functioning store is Postgres; the SQLite halves are aspirational.</li>
+<li><strong>Confidence is inert.</strong> A learning carries
+<code>confidence</code> ∈ {high, medium, low} in its metadata, and no
+read path ever consults it — not to rank, not to gate. The extractor
+hardcodes <code>"high"</code> in every example.</li>
+<li><strong>"User-confirm-learning" confirms nothing.</strong> The hook
+of that name fires when the <em>user's own message</em> matches an
+affirmation regex (<code>works</code>, <code>thanks</code>,
+<code>lgtm</code>) and then auto-stores a learning <strong>without
+showing it to anyone</strong> — and it is not registered in
+<code>settings.json</code>, and its script path is wrong.</li>
+<li><strong>Dedup is per-session; recall is global.</strong> A new
+learning is checked for near-duplicates only within its own session,
+while recall returns learnings across every session and every project,
+because a learning is tagged with a <code>session_id</code> and no
+project key at all.</li>
+</ul>
+<p>The net is a system that is in scope — durable, typed learnings
+survive the session and are recalled later — and that carries
+<strong>none of the seven capability marks</strong> this atlas checks.
+It is reviewed here not as a cautionary tale but because the
+thinking-block extraction is a real idea, and because a widely-shared
+"give Claude Code a memory" layer deserves an accurate account of what a
+user actually installs.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>learning</strong>: a short typed note the
+system believes about how to work in this codebase, distilled from a
+past session's reasoning.</p>
+<pre class="text"><code>session runs, then goes quiet
+  daemon poll (60s)     -&gt; stale? last_heartbeat &lt; now-300s AND memory_extracted_at IS NULL
+  extract (headless)    -&gt; claude -p --model sonnet reads the session JSONL&#39;s thinking blocks
+                           regex pre-filter (perception signals) -&gt; LLM classifies into 7 types
+  store                 -&gt; embed(content) -&gt; if same-session cosine &gt;= 0.85: SKIP
+                           else INSERT archival_memory(content, metadata{type,tags,confidence}, embedding)
+  mark done             -&gt; sessions.memory_extracted_at = NOW()   -- even if extraction failed
+
+later session, every prompt
+  recall (UserPromptSubmit) -&gt; hybrid RRF over pgvector cosine + Postgres FTS, top-k=3
+                               filter: metadata-&gt;&gt;&#39;type&#39; = &#39;session_learning&#39;   -- and nothing else
+  inject                -&gt; &quot;MEMORY MATCH&quot; appended to the model&#39;s context</code></pre>
+<p>The unit's identity is thin. A learning is an
+<code>archival_memory</code> row — <code>content</code>, an
+<code>embedding vector(1024)</code>, and a <code>metadata</code> JSONB
+carrying the type, tags, context and confidence — plus a
+<code>session_id</code>. Everything the CLI validates (the seven
+learning types, the confidence enum) is flattened into the JSONB blob;
+there are no typed columns, no status, and no project key. So the
+questions this atlas asks — is this belief current, whose is it, was it
+ever rejected — have no field to answer them. A learning is present or
+it is hard-deleted, and while it is present it is recalled.</p>
+<p>The state machine is correspondingly flat, and the diagram below
+draws the loop that works alongside the two places the design promises a
+gate and the code supplies none.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a stale session triggers a headless model that mines thinking blocks into typed, embedded learnings; recall is global hybrid RRF with no confidence, type or project filter, and the promised gates are inert</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a stale session triggers a headless model that mines thinking blocks into typed, embedded learnings; recall is global hybrid RRF with no confidence, type or project filter, and the promised gates are inert
+flowchart TB
+    S[&quot;session goes stale&lt;br/&gt;(heartbeat &gt; 300s, not yet extracted)&quot;] --&gt; D{&quot;memory daemon&lt;br/&gt;60s poll&quot;}
+    D --&gt;|&quot;spawn headless claude -p sonnet&quot;| X[&quot;read session JSONL&lt;br/&gt;thinking blocks only&quot;]
+    X --&gt; F[&quot;regex perception pre-filter&lt;br/&gt;+ LLM classify to 7 types&quot;]
+    F --&gt; E[&quot;embed(content) → 1024-d&quot;]
+    E --&gt; Dup{&quot;cosine ≥ 0.85&lt;br/&gt;same session only&quot;}
+    Dup --&gt;|&quot;duplicate&quot;| Skip[&quot;SKIP&quot;]
+    Dup --&gt;|&quot;new&quot;| Ins[(&quot;archival_memory&lt;br/&gt;content · metadata{type,tags,confidence} · embedding&lt;br/&gt;pgvector, no ANN index&quot;)]
+    F -.-&gt;|&quot;extraction failed&quot;| Mark[&quot;mark session done anyway&lt;br/&gt;never retried&quot;]
+    Ins --&gt; R[&quot;recall on every prompt:&lt;br/&gt;hybrid RRF (cosine + FTS), top 3&quot;]
+    R --&gt;|&quot;filter: type = session_learning ONLY&quot;| Inj[&quot;inject as MEMORY MATCH&quot;]
+    Ins -.-&gt;|&quot;confidence stored, read by nothing&quot;| Inert1[&quot;no trust gate&quot;]
+    Ins -.-&gt;|&quot;no project key; recall spans all projects&quot;| Inert2[&quot;no scope filter&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two trees ship, and only one runs. <strong><code>opc/</code></strong>
+is the installable package and the authoritative source of the memory
+code; <strong><code>.claude/scripts/core/*.py</code></strong> is a
+near-identical copy whose imports (<code>from scripts.core.db …</code>)
+resolve against a <code>.claude/</code> directory that has no
+<code>db/</code> layer, so the copy would <code>ImportError</code> if
+invoked directly. The TypeScript hooks always run the Python from
+<code>opc/</code> with <code>PYTHONPATH=opc</code>
+(<code>memory-awareness.ts:127-135</code>). Everything below is
+<code>opc/</code>.</p>
+<ul>
+<li><strong><code>opc/scripts/core/</code></strong> —
+<code>store_learning.py</code> (346), <code>recall_learnings.py</code>
+(697), <code>memory_daemon.py</code> (503),
+<code>extract_thinking_blocks.py</code> (148), and the artifact index
+(<code>artifact_index.py</code>, <code>artifact_query.py</code>,
+<code>artifact_mark.py</code>).</li>
+<li><strong><code>opc/scripts/core/db/</code></strong> — the store
+abstraction: <code>memory_service_pg.py</code> (1,180),
+<code>embedding_service.py</code> (729), <code>postgres_pool.py</code>
+(342), <code>memory_factory.py</code>, <code>memory_protocol.py</code>.
+This directory exists only in <code>opc/</code>.</li>
+<li><strong><code>.claude/hooks/</code></strong> — 30 hooks in
+TypeScript (compiled to <code>.mjs</code>) and Python, wired by event in
+<code>.claude/settings.json</code>. The memory-relevant ones are
+<code>memory-awareness</code> (recall, UserPromptSubmit),
+<code>pre-compact-continuity</code> and
+<code>session-start-continuity</code> (handoffs), and
+<code>handoff-index</code> (PostToolUse).</li>
+<li><strong><code>docker/init-schema.sql</code></strong> — the
+PostgreSQL schema: four tables, <code>sessions</code>,
+<code>file_claims</code>, <code>archival_memory</code>,
+<code>handoffs</code>.</li>
+</ul>
+<p><strong>Storage, precisely.</strong> Learnings live in Postgres
+<code>archival_memory</code> with a <code>vector(1024)</code> column and
+pgvector cosine (<code>docker/init-schema.sql:35-49</code>). A
+<em>separate</em> SQLite database at
+<code>.claude/cache/artifact-index/context.db</code> holds the
+handoff/plan/continuity artifact index with FTS5 (BM25), and another
+SQLite DB tracks <code>sessions</code> for cross-terminal awareness and
+<code>file_claims</code> for cross-terminal file locking. So three
+stores with three jobs: pgvector for belief, SQLite-FTS for handoffs,
+SQLite for coordination.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>This is a heavy install, and an operator should understand three
+things before running the wizard.</p>
+<ul>
+<li><strong>It needs Docker and PostgreSQL.</strong> The prerequisites
+are <em>"Python 3.11+, uv, Docker (for PostgreSQL), Claude Code
+CLI"</em>, and setup is a twelve-step interactive wizard
+(<code>opc -m scripts.setup.wizard</code>) that backs up
+<code>~/.claude</code>, starts a Docker stack, runs migrations, and
+installs 32 agents, 109 skills and 30 hooks into the user's Claude Code
+config. The handoff half needs only local SQLite; the learnings half
+needs the database and a running daemon.</li>
+<li><strong>The extractor runs a headless agent with permissions
+disabled.</strong> <code>memory_daemon.extract_memories</code>
+(<code>:273-285</code>) spawns
+<code>claude -p --model sonnet --dangerously-skip-permissions --max-turns 15</code>
+against the session transcript. This is background code that invokes a
+model with tool permissions turned off, on every stale session, and a
+reader installing this should know it is there.</li>
+<li><strong>The hooks are always-on and blocking.</strong>
+<code>settings.json</code> wires all 30 to fire on their events and
+Claude Code blocks on each until it returns. One of them, a
+<code>Stop</code> hook (<code>auto-handoff-stop.py:62-66</code>),
+<em>blocks the agent from stopping</em> once context passes 85%,
+returning <code>{"decision":"block"}</code> with a nudge to run
+<code>/create_handoff</code>.</li>
+</ul>
+<p>The screen flagged the two <code>.claude/</code> auto-run surfaces
+(<code>hooks/</code>, <code>settings.json</code>), five floating npm
+ranges behind a committed lockfile, and one floating
+<code>opc/pyproject.toml</code>; nothing was installed or run, and the
+code was read against the committed
+<code>docker/init-schema.sql</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture / daemon</strong> —
+<code>opc/scripts/core/memory_daemon.py</code>: <code>daemon_loop</code>
+(<code>:333-355</code>) polls every 60s;
+<code>pg_get_stale_sessions</code> (<code>:107-120</code>) selects
+<code>last_heartbeat &lt; NOW()-300s AND memory_extracted_at IS NULL</code>;
+<code>extract_memories</code> (<code>:218-289</code>) resolves the
+session JSONL and spawns the headless extractor;
+<code>mark_extracted</code> (<code>:123-132</code>) sets
+<code>memory_extracted_at</code> immediately after queueing,
+<strong>success or not</strong>.</li>
+<li><strong>Thinking-block filter</strong> —
+<code>opc/scripts/core/extract_thinking_blocks.py:22-48</code> is a
+regex pre-filter for "perception signal" phrases; the headless
+<code>memory-extractor</code> agent
+(<code>.claude/agents/memory-extractor.md</code>) runs it, then
+classifies the survivors into the seven types and calls
+<code>store_learning</code>.</li>
+<li><strong>Store</strong> —
+<code>opc/scripts/core/store_learning.py</code>: embed at
+<code>:124-125</code>, same-session dedup at <code>:127-143</code>
+(<code>DEDUP_THRESHOLD = 0.85</code>, SKIP), metadata built at
+<code>:146-159</code>, insert via
+<code>memory_service_pg.py:337-362</code>.</li>
+<li><strong>Recall</strong> —
+<code>opc/scripts/core/recall_learnings.py</code>:
+<code>search_learnings_hybrid_rrf</code> (<code>:241-357</code>,
+<code>rrf_k=60</code>) is the default;
+<code>search_learnings_postgres</code> (<code>:360-515</code>) is vector
++ recency; every query filters only
+<code>metadata-&gt;&gt;'type' = 'session_learning'</code>
+(<code>:290-292</code>).</li>
+<li><strong>Inject</strong> —
+<code>.claude/hooks/src/memory-awareness.ts:123-137</code> runs recall
+with <code>--k 3</code> on <code>UserPromptSubmit</code> and emits the
+results as <code>additionalContext</code> (<code>:217-224</code>).</li>
+<li><strong>Handoff (continuity)</strong> —
+<code>.claude/hooks/src/pre-compact-continuity.ts:56-63</code> writes a
+git-tracked
+<code>thoughts/shared/handoffs/&lt;session&gt;/auto-handoff-&lt;ts&gt;.yaml</code>
+on auto-compaction; <code>session-start-continuity.ts:311-430</code>
+reads the most-recent-by-mtime handoff back and injects its
+<code>goal</code>/<code>now</code> on
+<code>resume|compact|clear</code>.</li>
+<li><strong>Embeddings</strong> —
+<code>opc/scripts/core/db/embedding_service.py</code>: Voyage
+<code>voyage-3</code> (1024-d) with a local
+<code>BAAI/bge-large-en-v1.5</code> (1024-d) fallback; also OpenAI
+(1536) and a mock (1536).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The learning schema is the DDL and nothing more
+(<code>docker/init-schema.sql:35-49</code>):</p>
+<pre class="sql"><code>CREATE TABLE archival_memory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id TEXT NOT NULL,
+    agent_id TEXT,
+    content TEXT NOT NULL,
+    metadata JSONB DEFAULT &#39;{}&#39;,
+    embedding vector(1024),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Everything that makes a learning a <em>learning</em> — its type, its
+confidence, its tags, its context — is a key in <code>metadata</code>,
+written at <code>store_learning.py:146-159</code> and never promoted to
+a column. Two consequences follow directly.</p>
+<p><strong>There is no scope.</strong> A learning records the
+<code>session_id</code> it came from and no project, workspace or user
+key. The recall queries filter on
+<code>metadata-&gt;&gt;'type' = 'session_learning'</code> and nothing
+else, so a learning captured in project A is recalled, verbatim, in
+project B. This is not a scope key applied loosely; it is the absence of
+one, and it is why <code>scope_enforced</code> is withheld rather than
+qualified. (The dedup path, by contrast, filters
+<code>session_id = $1</code> when checking for near-duplicates — so the
+one place scoping <em>is</em> applied is the place it does the least
+good, and the global read path has none.)</p>
+<p><strong>There is no state and no lineage.</strong> No
+<code>status</code>, no <code>superseded_by</code>, no validity interval
+— only <code>created_at</code>, which is record time.
+<code>confidence</code> exists as a label and is read nowhere. So a
+learning cannot be marked wrong, cannot be superseded by a better one,
+and cannot be told from a stale one except by the 30-day recency decay
+the vector path optionally applies. <code>tombstone</code>,
+<code>trust_state</code> and <code>bitemporal</code> are all withheld on
+the model, not on a technicality.</p>
+<p>The <code>handoffs</code> and artifact-index tables carry more
+structure — a handoff row has <code>what_worked</code>,
+<code>what_failed</code>, <code>key_decisions</code>, and an
+<code>outcome</code> from a closed set
+(<code>SUCCEEDED | PARTIAL_PLUS | PARTIAL_MINUS | FAILED | UNKNOWN</code>)
+— but that is the continuity half (§8), and its outcome field is a
+post-hoc human label, not a state the recall path consumes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is genuinely hybrid and genuinely automatic, which is the
+second thing the system gets right. On every
+<code>UserPromptSubmit</code>, <code>memory-awareness</code> runs
+<code>recall_learnings.py --k 3</code> and injects the hits as a
+<code>MEMORY MATCH</code> block the model can use unbidden. The default
+ranker is reciprocal-rank fusion over two lists — pgvector cosine and
+Postgres <code>to_tsvector</code> full-text — combined as
+<code>1/(k+rank_fts) + 1/(k+rank_vector)</code> with
+<code>rrf_k=60</code> (<code>recall_learnings.py:241-357</code>). A
+vector-plus-recency mode with a 30-day linear decay is available, and a
+text-only mode falls back when embeddings are unavailable. This is a
+competent retrieval design, and it is the part of the system a reader
+could lift.</p>
+<p>Three properties of the read path bound what that retrieval can
+mean.</p>
+<p><strong>It is global.</strong> No query carries a
+<code>session_id</code>, <code>agent_id</code> or project predicate; the
+only filter is the <code>session_learning</code> type tag. Recall spans
+every session and every project the shared database has ever seen. For a
+single-project solo user that is invisible; for anyone running
+Continuous Claude across more than one repository against one database,
+memories cross between them silently.</p>
+<p><strong>Confidence and type do not participate.</strong> The
+<code>confidence</code> label is never read, and recall does not filter
+or weight by learning type, so a <code>FAILED_APPROACH</code> and a
+<code>WORKING_SOLUTION</code> compete on similarity alone and either can
+surface as a <code>MEMORY MATCH</code>. The distinction the capture path
+works to record is discarded at read time.</p>
+<p><strong>The vector search is unindexed.</strong>
+<code>archival_memory.embedding</code> has no ANN index (only the
+<code>handoffs</code> table gets HNSW), so learning recall is a
+sequential scan over the table — fine at hundreds of rows, a growing
+cost at scale, and a silent one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write path's good idea is <em>what</em> it reads. Rather than
+summarizing the transcript of actions, the extractor is pointed at the
+thinking blocks — <code>extract_thinking_blocks.py</code> pre-filters
+them for perception-change signals, and the headless model classifies
+the survivors into the seven types. Capturing "why the model changed its
+mind" rather than "what commands it ran" is the right target for a
+procedural memory, and it is unique in this corpus.</p>
+<p>The write path's weaknesses are in <em>when</em> and <em>whether</em>
+it runs, and in what it does with a near-duplicate.</p>
+<ul>
+<li><strong>It is not wired to a session-end event.</strong> The daemon
+docstring claims <em>"the session_start hook ensures this daemon is
+running"</em>, but <code>session-register</code> only writes the session
+row — it does not start the daemon. So capture depends on a
+<code>memory_daemon.py start</code> an operator runs by hand; without
+it, nothing is ever extracted.</li>
+<li><strong>A failed extraction is marked done.</strong>
+<code>mark_extracted</code> sets
+<code>memory_extracted_at = NOW()</code> right after queueing,
+regardless of whether the headless run succeeded (<code>:123-132</code>,
+<code>:350-351</code>). A session whose extraction crashed is never
+retried; its learnings are lost silently.</li>
+<li><strong>Dedup skips, and only within a session.</strong> A candidate
+whose cosine similarity to an existing learning is ≥ 0.85 is dropped,
+not merged (<code>store_learning.py:127-143</code>) — but
+<code>search_vector</code> compares only against the <em>same
+session's</em> learnings (<code>memory_service_pg.py:466-524</code>).
+Because recall is cross-session, the store accumulates cross-session
+duplicates that dedup never sees and recall always returns.</li>
+</ul>
+<p>Nothing about a learning can be corrected after the fact. There is no
+update path for content or type, no supersession, and no forget command.
+The only mutation in the code is <code>delete_archival</code>
+(<code>memory_service_pg.py:881-899</code>), a hard
+<code>DELETE … WHERE id=$1 AND session_id=$2</code> that no script, hook
+or command invokes. And because deletion leaves no record, a deleted
+learning whose source session is re-processed — or whose idea recurs in
+a later session — returns unremarked. This is the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> gap in its plainest form: there is not even a soft-delete
+to build on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Continuous Claude <em>is</em> an integration — it exists only as a
+Claude Code <code>.claude/</code> configuration plus the
+<code>opc/</code> package the hooks call. The model's relationship to
+memory is entirely mediated by hooks: it does not call a
+<code>remember</code> tool, though saying <em>"remember that …"</em>
+routes to <code>store_learning</code>, and <em>"recall …"</em> to
+<code>recall_learnings</code>; capture is the daemon's job and recall is
+injected for it on every prompt. There is no tool registry entry for
+memory — the mechanism lives in the hook layer, below the model's
+agency, which is a defensible design for a capture loop that should not
+depend on the model choosing to use it.</p>
+<p><strong>The continuity half is the other integration, and it is the
+more finished one.</strong> On auto-compaction,
+<code>pre-compact-continuity</code> writes a YAML handoff — goal, what
+was done, decisions, blockers, open questions, next steps, files
+touched, drawn from the session's TodoWrite items — into a git-tracked
+<code>thoughts/shared/handoffs/</code> directory. On the next session
+start, <code>session-start-continuity</code> reads the most-recent
+handoff back and injects its goal and current task. A separate SQLite
+artifact index (FTS5/BM25) makes past handoffs, plans and continuity
+snapshots searchable, and <code>artifact_mark.py</code> lets a person
+stamp a handoff's <code>outcome</code> after the fact
+(<code>SUCCEEDED</code>/<code>FAILED</code>/…), which is the closest
+thing in the system to a human touching a stored record.</p>
+<p>That handoff half is best understood as <strong>continuity plumbing
+that hardens into a retained log</strong>, not as memory. On the inject
+path it is transient resume state: the newest handoff by modification
+time wins and the rest are ignored. On the index path each handoff
+persists as a searchable row, but the only correction available is the
+coarse outcome label — the handoff's <em>content</em> is never revised
+or superseded. It survives compaction, which is its job; it does not
+carry a belief that can be found wrong and fixed. Two of its wiring
+details are also broken in the shipped layer: the
+<code>PostToolUse</code> hook that would populate the SQLite index
+shells out to a <code>scripts/artifact_index.py</code> path that does
+not exist in this layout, so the index is not auto-filled; and the
+per-instance "session affinity" table (terminal-PID → session) is
+written but never read, so the promised isolation between concurrent
+Claude instances in one repo does not take effect — selection falls back
+to newest-by-mtime globally.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust story is short because the mechanisms that would carry it
+are absent or inert, and it is worth being precise about which is
+which.</p>
+<ul>
+<li><strong>No trust state.</strong> <code>confidence</code> is a
+discrete label the schema stores and no code reads. It cannot rank a
+memory up, gate one out, or mark one rejected. A label nothing consumes
+is not a trust state, so the mark is withheld.</li>
+<li><strong>No correction, no audit.</strong> There is no supersede,
+update or forget, and no append-only record of any mutation — the four
+tables carry no history. A wrong learning stays until someone runs a
+<code>DELETE</code> by hand, and that deletion is itself
+unrecorded.</li>
+<li><strong>No scope boundary.</strong> Recall is global across
+projects, and learnings are not even tagged with a project, so there is
+nothing to enforce. In a multi-project deployment against a shared
+database, one repository's learnings surface in another, which is a
+confidentiality property a reader should weigh before pointing more than
+one project at one instance.</li>
+<li><strong>No embedding-space guard.</strong> The column is a bare
+<code>vector(1024)</code>; embeddings from Voyage, a local BGE model,
+OpenAI (1536, truncated) and the mock (1536) are all force-fit to 1024
+by pad-or-truncate (<code>memory_service_pg.py:381-394</code>) and
+compared with the same cosine operator regardless of which model
+produced them. Change <code>EMBEDDING_PROVIDER</code> and recall
+silently compares across incompatible spaces — the exact failure <a
+href="../windieos/">WindieOS</a> stamps every index against and rebuilds
+to avoid.</li>
+</ul>
+<p>The safety facts are the deployment ones from §3: a background daemon
+that runs a headless model with
+<code>--dangerously-skip-permissions</code>, and thirty always-on
+blocking hooks including one that refuses to let the agent stop above
+85% context. None of this is hidden — it is readable in the tree — but
+it is a large surface to accept, and the memory value it buys is the
+cross-session learning loop, not any of the guarantees the atlas usually
+weighs.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are no Python tests for the memory or recall code, and no
+committed retrieval-quality measurement of any kind — no LoCoMo-style
+eval, no precision number for the extractor, no benchmark harness. The
+extractor's whole value rests on how often it distills a genuine,
+reusable learning from a session's thinking blocks versus how often it
+stores noise, and nothing in the repository measures that.</p>
+<p>The TypeScript <code>__tests__/</code> cover the continuity plumbing
+— that the most-recent-by-mtime handoff is selected, that UUID-suffixed
+session directories are isolated, that the ledger-extraction regex
+behaves — and the affirmation detector for the (unwired) auto-capture
+hook. These are parsing-and-selection tests: they establish that a path
+runs, not that it decides correctly. There is no committed case
+asserting that a stale or forbidden learning must <em>not</em> be
+recalled, so <code>negative_eval</code> is withheld; the nearest thing
+is a must-not-<em>capture</em> assertion on the dead confirmation hook,
+which is one step away and on the wrong side of the read/write line.</p>
+<p>The honest summary is that this system is untested where it matters.
+The capture-classify-recall loop is exactly the kind of thing that needs
+a fixture — a session transcript in, an expected set of learnings out, a
+forbidden set that must not surface — and it has none.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Extract from the thinking blocks, not the
+transcript.</strong> The reasoning trace records why the model changed
+its mind; the action log records only what it did. A procedural memory
+built from the former captures the transferable lesson, and a cheap
+regex pre-filter for "perception-change" phrases in front of the model
+keeps the extraction call small. This is the idea worth taking
+whole.</li>
+<li><strong>Capture in a background daemon on a stale
+heartbeat.</strong> Decoupling extraction from the session — poll for
+sessions that have gone quiet and are not yet processed, then run a
+headless model — keeps the agent's own turn free of any extraction cost,
+which is the right place for a lossy, expensive summarization.</li>
+<li><strong>Recall automatically with hybrid RRF, and inject it
+unbidden.</strong> Fusing vector and full-text ranks with
+reciprocal-rank fusion and surfacing the top few on every prompt means
+the model benefits from memory without having to decide to look, which
+for a coding assistant is usually what you want.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not select a default backend you have not
+implemented.</strong> A factory that defaults to <code>"sqlite"</code>
+whose write module is absent means the out-of-the-box experience is a
+silent no-op unless the user sets a database URL. Make the default the
+thing that works, or fail loudly.</li>
+<li><strong>Do not store a field you never read.</strong> A
+<code>confidence</code> label that no ranker or gate consumes is
+documentation pretending to be a mechanism. Either wire it into recall
+or drop it, because a reader will assume it does something.</li>
+<li><strong>Do not dedup in one scope and recall in another.</strong>
+Checking for duplicates within a session while recalling across all of
+them guarantees the store fills with cross-session repeats that dedup
+structurally cannot catch. Dedup and recall must share a scope, or dedup
+is theater.</li>
+<li><strong>Do not put embeddings from different models in one unstamped
+column.</strong> Pad-or-truncate to a common width and compare with one
+cosine operator, and a provider change quietly corrupts every
+comparison. Stamp the vector with the model that made it and refuse to
+mix, as the better systems here do.</li>
+<li><strong>Do not mark a failed extraction as done.</strong> Setting
+<code>extracted_at</code> before you know the run succeeded turns a
+transient failure into permanent silent data loss. Mark done on
+success.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits exactly one reader: a solo developer, on one project,
+willing to run Docker and a local Postgres and to start a daemon, who
+wants Claude Code to carry reasoning across sessions and is comfortable
+operating the machinery. For that person the thinking-block loop is a
+real gain and the handoff-on-compaction is a genuine convenience.
+Everyone else should read it for the extraction idea and build the store
+themselves.</p>
+<p>Walk away if you need any of the properties the atlas exists to check
+— scope isolation, correction, provenance, a trust state, an audit trail
+— because none is present, and the multi-project confidentiality gap and
+the unstamped embedding column are the kind of thing that fails quietly
+rather than loudly. And weigh the install honestly: thirty always-on
+hooks and a permission-disabled headless daemon are a large surface to
+take on for a memory that, today, is a single unscoped pgvector table
+read back by a good query.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the thinking-block extractor produce a genuine,
+reusable learning rather than noise? It is the number the whole design
+rests on, and nothing measures it.</li>
+<li>Is the SQLite learnings backend intended to work — the default the
+factory selects — or is Postgres the only supported store? The missing
+<code>memory_service.py</code> makes the default a dead end today.</li>
+<li>Does any deployment run more than one project against a single
+database, and if so, is the global cross-project recall intended or an
+oversight? Learnings carry no project key to make it configurable either
+way.</li>
+<li>Is the memory daemon expected to be started by hand, or is a start
+hook missing? The docstring claims session-start ensures it runs; the
+code does not.</li>
+<li>Would the artifact-index <code>PostToolUse</code> hook populate the
+SQLite index if its path were correct, and does anyone rely on that
+search today given it is not auto-filled?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Learnings store (<code>opc/</code>,
+authoritative)</strong></p>
+<ul>
+<li><code>opc/scripts/core/store_learning.py</code> — capture entry:
+embed, same-session dedup, metadata build, insert.</li>
+<li><code>opc/scripts/core/recall_learnings.py</code> — hybrid RRF /
+vector+recency / text-only recall; the dead SQLite read path.</li>
+<li><code>opc/scripts/core/memory_daemon.py</code> — the double-fork
+daemon: stale poll, headless extraction,
+<code>mark_extracted</code>.</li>
+<li><code>opc/scripts/core/extract_thinking_blocks.py</code> — regex
+perception-signal pre-filter over thinking blocks.</li>
+<li><code>opc/scripts/core/db/memory_service_pg.py</code> —
+Postgres/pgvector store: insert, <code>search_vector</code>,
+<code>delete_archival</code>, <code>_pad_embedding</code>.</li>
+<li><code>opc/scripts/core/db/embedding_service.py</code> — Voyage /
+local BGE / OpenAI / mock providers.</li>
+<li><code>opc/scripts/core/db/memory_factory.py</code> — backend
+selector defaulting to the absent <code>"sqlite"</code> service.</li>
+<li><code>opc/scripts/core/db/postgres_pool.py</code> — connection
+string resolution and pgvector registration.</li>
+<li><code>docker/init-schema.sql</code> — the four tables:
+<code>sessions</code>, <code>file_claims</code>,
+<code>archival_memory</code>, <code>handoffs</code>.</li>
+</ul>
+<p><strong>Continuity / artifacts</strong></p>
+<ul>
+<li><code>.claude/hooks/src/pre-compact-continuity.ts</code>,
+<code>session-start-continuity.ts</code> — write/read YAML handoffs
+across compaction.</li>
+<li><code>.claude/hooks/src/transcript-parser.ts</code> —
+<code>generateAutoHandoff</code> from TodoWrite items.</li>
+<li><code>.claude/hooks/src/handoff-index.ts</code> — frontmatter IDs
+and the (unread) session-affinity table.</li>
+<li><code>opc/scripts/core/artifact_index.py</code>,
+<code>artifact_query.py</code>, <code>artifact_mark.py</code>,
+<code>artifact_schema.sql</code> — SQLite FTS5 index and outcome
+marking.</li>
+</ul>
+<p><strong>Hooks and config</strong></p>
+<ul>
+<li><code>.claude/hooks/src/memory-awareness.ts</code> — recall on
+<code>UserPromptSubmit</code>, injected as
+<code>MEMORY MATCH</code>.</li>
+<li><code>.claude/hooks/auto-handoff-stop.py</code> — blocks
+<code>Stop</code> above 85% context.</li>
+<li><code>.claude/settings.json</code> — the 30-hook wiring by
+event.</li>
+<li><code>.claude/agents/memory-extractor.md</code> — the headless
+extractor's system prompt.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e"><code class="commit-id" title="d07ff4b06b62f43771bc0c927d0211b734d6149e">d07ff4b0…</code></a>
+— first reading, at the <code>.claude</code> + <code>opc/</code> layout.
+Screened before opening: two <code>.claude/</code> auto-run surfaces
+(<code>hooks/</code>, <code>settings.json</code>), five floating npm
+ranges behind a committed lockfile, one floating
+<code>opc/pyproject.toml</code>; nothing was installed or run.
+<code>opc/</code> was established as the authoritative memory tree (the
+<code>.claude/scripts/core/*.py</code> copy has no <code>db/</code>
+layer and would <code>ImportError</code>), and the capture, dedup,
+recall, embedding and correction paths were read from
+<code>opc/scripts/core/</code> and <code>db/</code> against the
+committed <code>docker/init-schema.sql</code> and the compiled hooks.
+The daemon extraction (headless
+<code>claude -p --dangerously-skip-permissions</code>), the broken
+default SQLite backend, the per-session dedup against global recall, the
+inert <code>confidence</code>, the unstamped 1024-d embedding column,
+and the unwired "user-confirm-learning" hook were all confirmed in code.
+No capability mark is earned; no paper or citation file exists in the
+tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

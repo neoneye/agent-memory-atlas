@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 284 reports.</strong></p>
+<p><strong>This page covers all 285 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8182,6 +8182,51 @@ content, retrieve by similarity, scope by tenant, or decide whether a
 memory is correct — and if you want staleness handled automatically
 rather than by hand-written probes and transitions, the
 decay-and-reinforcement systems here ask less and promise less.</li>
+</ul>
+<h3 id="continuous-claude"><a
+href="../systems/continuous-claude/"><code>continuous-claude</code></a></h3>
+<ul>
+<li>Best idea: extract learnings from the <strong>thinking
+blocks</strong> — the model's reasoning, not its action transcript — via
+a background daemon that spawns a headless model on a stale-session
+heartbeat, then embeds and recalls them across sessions. Capturing
+<em>why the model changed its mind</em> rather than <em>what it ran</em>
+is the right target for a procedural memory and is unique in this
+corpus; a cheap regex "perception-signal" pre-filter keeps the
+extraction call small.</li>
+<li>Biggest risk: the design overshoots the code, and the gaps are the
+confidentiality-and-correctness kind. The default learnings backend
+selects a <code>sqlite</code> service whose module is absent, so out of
+the box it silently no-ops unless a Postgres URL is set; recall is
+global across every project because a learning carries no project key;
+dedup runs per-session while recall runs cross-session, so duplicates
+accumulate; <code>confidence</code> is stored and read by nothing;
+embeddings from different providers share one unstamped 1024-d column;
+and the "user-confirm-learning" hook auto-captures on casual
+affirmations without showing anyone, and isn't wired anyway.</li>
+<li>Most reusable component: the recall design — hybrid reciprocal-rank
+fusion over pgvector cosine and Postgres full-text, top-k, injected
+automatically on every prompt as a <code>MEMORY MATCH</code> — paired
+with the daemon-plus-thinking-block capture shape. Both are liftable
+independently of the store.</li>
+<li>Maturity impression: MIT, a Claude Code <code>.claude/</code> config
+(30 hooks, 32 agents, 109 skills) plus an <code>opc/</code> Python
+package; PostgreSQL + pgvector for learnings behind a heavy
+Docker-and-daemon install. Carries <strong>none</strong> of the seven
+capability marks, no memory tests and no retrieval eval, and a striking
+amount of dead scaffolding — a broken default backend, an unread
+affinity table, an artifact-index hook that writes to a nonexistent
+path. The one working, novel idea is real; most of the surface around it
+is aspirational.</li>
+<li>Study when: you are building a coding-agent memory and want the
+thinking-block extraction idea and the auto-injected hybrid recall — as
+patterns to reimplement over a store you control.</li>
+<li>Do not copy when: you need scope isolation, correction, provenance,
+a trust state or an audit trail — none is present, and the global
+cross-project recall plus the unstamped embedding column fail quietly
+rather than loudly. Also walk away if you cannot run Docker, a local
+Postgres and a permission-disabled headless daemon, which is what the
+memory half costs to operate.</li>
 </ul>
         </article>
       </div>
