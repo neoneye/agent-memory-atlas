@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""Catch mermaid node labels that break the renderer.
+"""Catch mermaid node labels that break the renderer, and pin the renderer.
+
+**This is not diagram validation.** Nothing here parses mermaid. What follows is
+a short list of syntax errors that have shipped to the published site at least
+once, written as regexes so the same mistake cannot ship twice. A diagram that
+fails for any reason not on the list passes this check and renders as a red box
+in the reader's browser. Read the count it prints as "no *known* breakage",
+never as "the diagrams are valid".
+
+The renderer itself runs in the reader's browser from a CDN, so the version is
+part of the contract: `check_pin` asserts the template imports an exact mermaid
+version rather than a floating range. It was `mermaid@11` — a range that could
+have broken every diagram in the atlas hours after a green build here, with no
+commit to point at, and this file's regexes would have reported success while it
+happened.
 
 Mermaid parses a node's shape from its delimiters, so a `[` or `]` inside an
 unquoted label ends the shape early and the whole diagram fails with
@@ -33,8 +47,30 @@ BREAKERS = "[]{}"
 STATE_EDGE = re.compile(r"^\s*[\w\[\]*]+\s*-->\s*[\w\[\]*]+\s*:(?P<label>.*)$")
 
 
-def main(content_dir: str) -> int:
+#: `mermaid@11.16.1` — exact. Rejects `mermaid@11`, `mermaid@^11.2`,
+#: `mermaid@latest` and a bare `mermaid`.
+MERMAID_IMPORT = re.compile(r"cdn\.jsdelivr\.net/npm/mermaid@([^/\"']+)/")
+EXACT_VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def check_pin(root: Path) -> list[str]:
+    """Every mermaid import in a template names an exact version."""
     problems = []
+    for path in sorted(root.rglob("*.html")):
+        if "docs" in path.parts or "node_modules" in path.parts:
+            continue
+        for spec in MERMAID_IMPORT.findall(path.read_text(encoding="utf-8")):
+            if not EXACT_VERSION.match(spec):
+                problems.append(
+                    f"{path}: mermaid is imported as '{spec}', which floats. Pin an "
+                    "exact version — a CDN release must arrive as a diff, not as "
+                    "hundreds of broken diagrams on a build nobody changed."
+                )
+    return problems
+
+
+def main(content_dir: str) -> int:
+    problems = check_pin(Path(content_dir).resolve().parent)
     for path in sorted(Path(content_dir).rglob("*.md")):
         text = path.read_text(encoding="utf-8")
         for block in re.findall(r"```mermaid\n(.*?)```", text, re.S):

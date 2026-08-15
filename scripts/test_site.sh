@@ -203,6 +203,16 @@ if ! python3 "$project_dir/scripts/check_capability_evidence.py" "$project_dir";
   exit 1
 fi
 
+# A screening record certifies one revision. Nothing compared the recorded
+# revision to the report's pin, so a re-pinned report kept the record from its
+# previous commit and the summary counted it as screened. Absent records are a
+# backlog and never fail; records claiming to be screened at a revision the
+# report has moved off are the defect, and they ratchet down.
+if ! python3 "$project_dir/scripts/check_screening_ledger.py" "$project_dir"; then
+  echo "Screening records certify revisions the reports no longer pin." >&2
+  exit 1
+fi
+
 # The storage census is only worth publishing if a seeded guess cannot quietly
 # become indistinguishable from a reviewed judgement. --check enforces the
 # vocabulary, that every report declares the keys, that the seeded count never

@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -142,6 +143,35 @@ def main() -> int:
         f"\n{len(current)} current, {len(stale)} stale, {len(broken)} unreachable, "
         f"{len(errors)} unresolved of {len(rows)} pinned reports."
     )
+
+    # Staleness is not a failure. A pin is a *deliberate* claim about what was
+    # read, so commits landing upstream is the normal state of every report here
+    # and failing on it would train the reader to ignore this job.
+    #
+    # Losing the ability to check is different in kind. An orphaned or
+    # unreachable pin means the revision this atlas cites is no longer in the
+    # project's history: every quotation, line number and mechanism claim in
+    # that report has stopped being verifiable by anyone, which is the one
+    # promise the whole corpus rests on. And a run where most requests failed
+    # proves nothing about freshness while looking exactly like a clean bill of
+    # health — the same lying-operation shape the atlas names in the systems it
+    # reviews. Both fail.
+    if broken:
+        print(
+            f"\nFAIL: {len(broken)} pinned revision(s) are no longer reachable in "
+            "the project's history. The reports citing them cannot be verified "
+            "against the code they claim to describe; re-pin or re-review each.",
+            file=sys.stderr,
+        )
+        return 1
+    if rows and len(errors) > len(rows) // 4:
+        print(
+            f"\nFAIL: {len(errors)} of {len(rows)} pins did not resolve. This run "
+            "did not measure freshness — do not read it as evidence that the "
+            "pins are current.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

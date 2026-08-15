@@ -1,7 +1,15 @@
 name: Freshness
 
 # Commit pinning makes every claim auditable and makes the atlas go quietly
-# stale. This does not fail: a drifted pin is a work list, not a build error.
+# stale. Ordinary drift does not fail: commits landing upstream is the normal
+# state of every report here, and a job that goes red weekly for that is a job
+# nobody reads.
+#
+# Two things do fail, because they are not staleness. An orphaned or unreachable
+# pin means the revision a report cites is gone from the project's history, so
+# every quotation and line number in that report has stopped being checkable by
+# anyone. And a run where most requests failed measured nothing while looking
+# exactly like a clean result. `check_freshness.py` returns 1 for both.
 on:
   schedule:
     - cron: "0 6 * * 1"
@@ -16,10 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compare each pinned revision against its default branch
+        id: freshness
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          python3 scripts/check_freshness.py | tee freshness.txt
+          set -o pipefail
+          status=0
+          python3 scripts/check_freshness.py > freshness.txt 2>&1 || status=$?
           {
             echo "## Pinned revision drift"
             echo
@@ -27,3 +38,17 @@ jobs:
             cat freshness.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          cat freshness.txt
+          exit $status
+
+      # The job summary is deleted with the run, so a week-old freshness reading
+      # had nowhere to live and could not be compared against the next one. The
+      # artifact is the durable copy, and it is uploaded whether the step passed
+      # or failed — a failing run is the one whose output is worth keeping.
+      - name: Keep the reading
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness
+          path: freshness.txt
+          retention-days: 90
