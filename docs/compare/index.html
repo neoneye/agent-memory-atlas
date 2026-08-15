@@ -17872,7 +17872,15 @@ renamed to Letta, so the OS-style tiered-memory reference implementation
 is the <a href="../systems/letta/">Letta report</a>, and a reader
 searching this atlas for "MemGPT" will otherwise find only a passing
 mention in the correction discussion. Recorded because the rename makes
-the lineage hard to find, not because anything is missing.</li>
+the lineage hard to find, not because anything is missing. The paper is
+<a href="https://arxiv.org/abs/2310.08560">arXiv:2310.08560</a>,
+<em>MemGPT: Towards LLMs as Operating Systems</em> (Packer, Wooders,
+Lin, Fang, Patil, Stoica &amp; Gonzalez, 12 October 2023), which
+introduced the virtual-context-management idea — paging between an
+in-context working set and out-of-context tiers, driven by the model
+through function calls and interrupts — that the Letta report analyses
+as shipped code; the atlas judges the implementation, and the paper is
+the design behind it.</li>
 <li><code>Cohexa-ai/agent-coherence</code> was examined and has no
 report. It is MESI cache-coherence for shared agent artifacts —
 single-writer ownership, commit-CAS, a read-generation fence, pinned
@@ -19263,6 +19271,69 @@ file backs RELC-Bench where the atlas can read it. The open, inspectable
 systems it names are already reviewed here; the rest are hosted products
 on the closed-engine side of the line. Recorded so a reader arriving
 from that page finds why it is not itself an atlas entry.</li>
+<li><strong><code>DeusData/codebase-memory-mcp</code> was examined and
+has no report: it is a code-intelligence engine, not agent
+memory.</strong> MIT, a pure-C native binary at <a
+href="https://github.com/DeusData/codebase-memory-mcp/commit/3162f091730109b7e5cef56d0c41554ed242a786"><code class="commit-id" title="3162f091730109b7e5cef56d0c41554ed242a786">3162f091…</code></a>,
+158 languages through tree-sitter with a Hybrid-LSP type-resolution
+layer, that full-indexes a repository into a persistent knowledge graph
+of functions, classes, call chains, HTTP routes and cross-service links
+and answers structural queries over 15 MCP tools. Its durable store is
+that graph — a corpus index <em>of the user's source</em>, regenerated
+from the source, the boundary already drawn for
+<code>VectorSpaceLab/general-agentic-memory</code>,
+<code>ShamGaneshan2008/Kodiak</code>'s ChromaDB source index and
+<code>perplexityai/numbat</code>. The <code>sqlite</code> (53k) and
+<code>memory</code> (5.7k) vocabulary counts are the vendored SQLite
+amalgamation and the project's own name, not a belief store. The one
+genuine agent-memory surface is <code>manage_adr</code> (internally
+<code>ln</code>): a single per-project Architecture Decision Record
+document (<code>cbm_adr_t</code>, ≤8000 chars, section-structured)
+CRUD-able across sessions — <a
+href="../patterns/memory-as-an-editing-surface/">memory as an editing
+surface</a> with nothing behind it, no status, supersession, provenance
+or scope beyond the project, the same call made for Cline's Memory Bank.
+Its own preprint is <a
+href="https://arxiv.org/abs/2603.27277">arXiv:2603.27277</a>, on
+tree-sitter knowledge graphs for code exploration, distinct from the two
+papers submitted alongside it. If the ADR store grew into a real belief
+store — multiple records with status and correction semantics — the call
+would flip; today it is code navigation with a decisions document
+attached.</li>
+<li><strong><code>arXiv:2309.02427</code> was examined and has no
+report: it is a framework, not a system.</strong> <em>Cognitive
+Architectures for Language Agents</em> (Sumers, Yao, Narasimhan &amp;
+Griffiths, 5 September 2023, revised through March 2024) proposes CoALA
+— a language agent as modular memory components (working, episodic,
+semantic, procedural), a structured action space over internal memory
+and external environments, and a generalized decision loop — and uses it
+to survey the field. It is foundational to how this atlas reasons about
+memory <em>kinds</em>, but it defines a taxonomy rather than shipping an
+implementation: its companion repository,
+<code>ysymyth/awesome-language-agents</code>, is a curated link list, so
+there is nothing to review at a pinned commit. Recorded as the
+conceptual lineage behind the working/episodic/semantic/procedural split
+that recurs across the corpus — most explicitly in <a
+href="../systems/memmy-agent/">Memmy</a>'s L1→L2→L3→Skill layering and
+the cognitive-taxonomy stores — and as the survey a reader should read
+<em>before</em> the code, not instead of it.</li>
+<li><strong><code>developers.openai.com/cookbook/examples/agents_sdk/context_personalization</code>
+was examined and is not a reviewable system: it is an official
+tutorial.</strong> OpenAI's Agents-SDK cookbook demonstrates
+<em>state-based</em> long-term memory — a structured state object
+injected into the system prompt at session start, new preferences
+distilled through tool calls during the conversation, consolidated into
+long-term storage by an LLM call, and reused next session, with a
+global-versus-session scope split resolved by precedence (latest input →
+session override → global default). It is a notebook-style walkthrough
+over an in-memory <code>TravelState</code> dataclass with <strong>no
+persistent backend</strong>, not installable code at a pinned commit, so
+it cannot be reviewed on this atlas's terms. Worth recording because it
+is OpenAI's own illustration of the inject–distill–consolidate–reuse
+shape that several reviewed systems build over a real store, and because
+it names recency-weighting, confidence and TTL as <em>notes a memory
+should carry</em> — the affordances this atlas keeps checking for —
+while leaving them to the reader to implement.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
