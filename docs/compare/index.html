@@ -18852,6 +18852,36 @@ atlas applies to every leaderboard boast, and it is why a
 #1-on-two-benchmarks memory layer with an open SDK still earns a list
 entry rather than a report: what reads as reviewable is the client, and
 the thing being ranked is the part that is not there.</li>
+<li><strong><code>SWE-agent/mini-swe-agent</code> was examined and has
+no report: its only state is the trajectory.</strong> MIT (Lieret and
+Jimenez), ~15,000 lines of Python at <a
+href="https://github.com/SWE-agent/mini-swe-agent/commit/a83fcae82d2a08f0ee0c688f9d137b3566c097f8"><code class="commit-id" title="a83fcae82d2a08f0ee0c688f9d137b3566c097f8">a83fcae8…</code></a>,
+from the SWE-agent team and deliberately minimal — the agent class is a
+<code>while True: self.step()</code> loop over a
+<code>self.messages</code> list against a bash environment, with no
+tools. The scope call is settled by the vocabulary and confirmed by the
+design: across <code>src/</code> <code>recall</code>,
+<code>remember</code>, <code>embedding</code>, <code>vector</code>,
+<code>forget</code>, <code>retriev</code>, <code>sqlite</code> and
+<code>database</code> appear <strong>zero</strong> times; the three
+<code>memory</code> hits are Docker RAM (<code>--memory 4096</code>),
+and the ten <code>persist</code> hits are either an in-turn
+model-response contract (a <code>FormatError</code> must not lose the
+response) or the prompt telling the model that <em>"Directory or
+environment variable changes are not persistent. Every action is
+executed in a new subshell."</em> — the opposite of a durable store.
+What <code>save()</code> writes is the <strong>trajectory</strong>
+(<code>.traj.json</code>): the message list, config, cost and exit
+status, and the README states the identity outright — <em>"there's no
+difference between the trajectory and the messages that you pass on to
+the LM."</em> So the persisted artifact is the conversation serialized
+and replayed by a trajectory browser; nothing is a claim that could be
+false and later corrected. Same boundary as <a
+href="../systems/pi/">Pi</a>, <code>shepherd-agents/shepherd</code> and
+<code>Untrivial-ai/agent-orchestrator</code> above — a harness that
+persists a run, not a memory that believes. Recorded by name because a
+widely-used agent from the SWE-agent lineage in a memory-candidate list
+deserves a stated reason rather than a silent drop.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
