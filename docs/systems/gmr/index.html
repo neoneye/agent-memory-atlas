@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A grounding runtime that binds a
+memory to the observable facts it depends on, re-observes them with a
+versioned probe, journals every transition, and returns the bound
+memories when the fact crosses a declared threshold — so a stale
+assumption is surfaced rather than trusted.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GMR — Agent Memory Atlas">
+    <meta property="og:description" content="A grounding runtime that
+binds a memory to the observable facts it depends on, re-observes them
+with a versioned probe, journals every transition, and returns the bound
+memories when the fact crosses a declared threshold — so a stale
+assumption is surfaced rather than trusted.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GMR — Agent Memory Atlas">
+    <meta name="twitter:description" content="A grounding runtime that
+binds a memory to the observable facts it depends on, re-observes them
+with a versioned probe, journals every transition, and returns the bound
+memories when the fact crosses a declared threshold — so a stale
+assumption is surfaced rather than trusted.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GMR — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Surface the memory when its basis
+drifts</p>
+          <h1>GMR</h1>
+          <p class="document-deck">A grounding runtime that binds a
+memory to the observable facts it depends on, re-observes them with a
+versioned probe, journals every transition, and returns the bound
+memories when the fact crosses a declared threshold — so a stale
+assumption is surfaced rather than trusted.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Anchorstate-Lab/GMR">
+              <span>Source</span>
+              <strong>Anchorstate-Lab/GMR</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981" title="8c4bc230c501a344b6d52d4f51f08e0d7b51c981">
+              <span>Analyzed revision</span>
+              <code>8c4bc230…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-14</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GMR — Grounded Memory Runtime — is a grounding layer that sits
+<em>beside</em> an agent's memory rather than being one. Apache-2.0,
+~11,500 lines of Rust across seven crates. It answers a question the
+rest of this atlas mostly leaves to decay heuristics and manual review:
+<strong>when does a stored belief stop being true because the thing it
+was about changed?</strong></p>
+<p>Its answer is a first-class mechanism, and it is the reason the
+report exists. A memory is not stored as content here; it is stored as a
+<strong>binding</strong> — an external reference
+<code>(provider, external_id)</code>, e.g.
+<code>("git", "memories/core-modules.md")</code>, attached to one or
+more <strong>anchors</strong>. An anchor is an observable fact: a
+versioned <strong>probe</strong> that produces <code>Facts</code>, a set
+of content-hashed <strong>transition rules</strong> (<code>when</code>
+expression → <code>to</code> expression), and a state. GMR re-runs the
+probe, content-addresses the observed facts, and when that address
+crosses a declared transition the anchor moves and GMR returns the
+memories bound to it. The memory content stays in its provider (git
+files); GMR maintains the <em>relationship</em> between a judgment and
+the observable state it depends on, and — its own README is precise
+about this — "does not store a copy of the world or decide whether a
+judgment is correct."</p>
+<p>Three things make it worth a senior reader's time.</p>
+<p><strong>The transition is content-addressed, and the failure taxonomy
+is separate from it.</strong> A change is detected when the hash of the
+observed <code>Facts</code> (plus the probe derivation) differs from the
+last — not by a model judging similarity. And when the probe
+<em>fails</em>, that is journalled as an <code>Attempt</code> with a
+<code>ReasonClass</code> of <code>Unreachable</code>,
+<code>Unusable</code> or <code>Unevaluable</code> and a specific
+<code>FailureCode</code> (<code>TimedOut</code>,
+<code>InvalidJson</code>, <code>GuardNotBoolean</code>,
+<code>DividedByZero</code>, …). An unreachable probe therefore
+<strong>never masquerades as a change</strong> — the most important
+correctness property a drift detector can have, and one the tests pin by
+name (<code>does_not_blame_the_anchors_it_never_reached</code>).</p>
+<p><strong>Every anchor is an append-only journal.</strong>
+<code>Open</code>, <code>Transition</code>, <code>Still</code> (the fact
+was re-observed and had not moved), <code>Attempt</code> (a failed
+observation), <code>Revise</code> (the anchor's own probe, rules,
+terminal set or state changed, each with a rationale content-hash) and
+<code>Close</code>. The declaration is versioned and every change to it
+carries a reason. That is <code>audit_log</code> earned without strain,
+and it extends to the grounding definition itself, not just the
+data.</p>
+<p><strong>It is dogfooded on its own source.</strong> The
+<code>memories/</code> directory holds 135 memories, each a design
+decision about GMR's own code —
+<code>about: crates/gmr-core/src/addr.rs#CanonicalizeError</code> in the
+frontmatter — and each closing with a "When this changes, ask" section:
+the questions to re-evaluate the memory when its anchor drifts. The
+project stores its own architectural rationale the way it asks agents to
+store theirs.</p>
+<p>The honest limits are two, and both follow from what GMR deliberately
+is not. It grounds and surfaces; it does not decide correctness, so the
+value is entirely a function of whether someone wrote a probe that
+observes the right fact and a transition that fires on the right change.
+And a probe declared <code>Open</code> (unverifiable) is trusted rather
+than reproduced — GMR marks the distinction
+(<code>Verifiability::Closed</code> vs <code>Open</code>) but cannot
+close the gap for you.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>binding</strong>, and its trust is derived
+from the state of the anchors it binds to, at the journal sequence it
+was bound at.</p>
+<pre class="text"><code>memory (in a provider: git file, …)   -- GMR does not own the content
+  └─ Binding { reference, anchors, bound_at_seq }
+       └─ Anchor { key, probe, transitions, terminal, superseded? }
+            probe run  -&gt; Outcome::Found{facts} | NotFound
+                       -&gt; FactAddress = hash(derivation, found, facts)
+            address changed and a rule fires -&gt; Transition (anchor moves)
+            address same                      -&gt; Still (nothing moved)
+            probe failed                      -&gt; Attempt (ReasonClass + FailureCode)
+       surface: memories whose anchor moved since their bound_at_seq</code></pre>
+<p>The epistemic states are discrete and they live on the anchor and the
+binding, not on a confidence score:</p>
+<ul>
+<li>An anchor has a <code>status</code> and a set of
+<code>terminal</code> statuses; it can be <code>closed</code> or
+<code>superseded</code> by another anchor (with a rationale hash). These
+are the states that decide whether a bound memory is still
+grounded.</li>
+<li>A binding records <code>bound_at_seq</code> — the journal position
+the memory was attached at — so "has this memory's basis drifted" is the
+concrete test <code>anchor.head &gt; bound_at_seq</code>, not a
+guess.</li>
+<li>A memory's <em>own content</em> is tracked too: if the provider file
+moved since binding, the view marks it <code>rewritten</code>, and a
+caller can <code>reaffirm</code> it — accept the new content — "without
+touching anchors." A memory with no anchor is carried but marked
+ungrounded; a detached memory is no longer listed under its former
+anchor.</li>
+</ul>
+<p><code>trust_state</code> is earned by this: a bound memory is
+<em>current</em>, <em>drifted</em> (anchor moved past its bound
+sequence), <em>rewritten</em> (its own content changed),
+<em>ungrounded</em> (no anchor), or dead (anchor closed/superseded) —
+discrete states, a field on the anchor and the binding, governing
+whether the memory should be trusted. What GMR does <em>not</em> have is
+a rejected-value tombstone: <code>Superseded</code> and
+<code>Close</code> are anchor-level with a rationale, not a record keyed
+on a rejected memory value, so <code>tombstone</code> is withheld and
+the supersession named as the near-miss.</p>
+<p>The probe carries the other honesty axis.
+<code>Verifiability::Closed</code> means the observation is
+content-addressed and reproducible; <code>Open</code> means you are
+trusting a declaration that cannot be independently reproduced. GMR
+records which, on every observation, so a memory grounded on a
+reproducible probe is distinguishable from one grounded on an assertion
+— but it does not refuse the <code>Open</code> one, and a reader should
+not read the mark as verification it is not.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory is bound to an anchor at a sequence; a versioned probe re-observes the fact, and a content-addressed change surfaces the bound memory as drifted while a probe failure is journalled apart</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory is bound to an anchor at a sequence; a versioned probe re-observes the fact, and a content-addressed change surfaces the bound memory as drifted while a probe failure is journalled apart
+flowchart TB
+    Mem[&quot;memory in a provider&lt;br/&gt;(git file)&quot;] --&gt; Bind[(&quot;Binding&lt;br/&gt;reference → anchors&lt;br/&gt;bound_at_seq&quot;)]
+    Bind --&gt; Anchor[&quot;Anchor: probe + transitions + terminal&quot;]
+    Anchor --&gt; Probe{&quot;run versioned probe&quot;}
+    Probe --&gt;|&quot;Found/NotFound → FactAddress = hash(facts)&quot;| Cmp{&quot;address changed?&quot;}
+    Probe --&gt;|&quot;failed&quot;| Att[&quot;Attempt: ReasonClass + FailureCode&lt;br/&gt;journalled, never a transition&quot;]
+    Cmp --&gt;|&quot;no&quot;| Still[&quot;Still: nothing moved&quot;]
+    Cmp --&gt;|&quot;yes, a rule fires&quot;| Trans[&quot;Transition: anchor moves&quot;]
+    Trans --&gt; Surface[&quot;surface memories where&lt;br/&gt;anchor.head &gt; bound_at_seq&quot;]
+    Anchor -.-&gt;|&quot;Revise (reprobe/retransition/…) or Close,&lt;br/&gt;each with a rationale hash&quot;| Journal[(&quot;append-only journal&lt;br/&gt;Open · Transition · Still · Attempt · Revise · Close&quot;)]
+    Att --&gt; Journal
+    Still --&gt; Journal
+    Trans --&gt; Journal
+    Bind -.-&gt;|&quot;provider file moved since bind&quot;| Rewritten[&quot;memory marked rewritten;&lt;br/&gt;reaffirm accepts it without touching anchors&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Seven crates, cleanly separated:</p>
+<ul>
+<li><strong><code>gmr-core</code></strong> (1,670 lines) — the types:
+<code>anchor.rs</code> (<code>Anchor</code>, <code>Rule</code>,
+<code>Transitions</code>, <code>State</code>, <code>Superseded</code>,
+<code>RunSettings</code>), <code>memory.rs</code> (<code>Ref</code>,
+<code>Binding</code>, <code>Link</code>, <code>LinkKind</code>),
+<code>journal.rs</code> (<code>Entry</code>, <code>Change</code>,
+<code>ReasonClass</code>, <code>FailureCode</code>,
+<code>AnchorState</code>, <code>Observation</code>),
+<code>probe.rs</code> (<code>ProbeRef</code>,
+<code>Verifiability</code>, <code>Derivation</code>, <code>Facts</code>,
+<code>Outcome</code>), and <code>addr.rs</code> (content-hashing,
+canonicalization, string newtypes).</li>
+<li><strong><code>gmr-expr</code></strong> (1,630 lines) — the
+transition expression language: the <code>when</code> guard and
+<code>to</code> state expressions are content-hashed source evaluated
+against the observed facts, with a failure code per evaluation error
+(<code>GuardNotBoolean</code>, <code>NoSuchField</code>,
+<code>NotComparable</code>, <code>DividedByZero</code>).</li>
+<li><strong><code>gmr-probe</code></strong> (311 lines) — probe
+execution budgets and deadlines.</li>
+<li><strong><code>gmr-runtime</code></strong> (4,706 lines) — the loop:
+<code>observe.rs</code> runs a probe and produces an
+<code>Observed</code>, <code>read.rs</code> derives <code>cobound</code>
+memories, and the assembly wires stores together.</li>
+<li><strong><code>gmr-store</code></strong> (3,060 lines) — SQLite (via
+<code>sqlx</code>) with an append-only <code>journal</code>,
+<code>bindings</code>, <code>binding_anchors</code>, <code>links</code>,
+and a content-addressed <code>sealed</code> table, plus a portable
+export/import for binary upgrades.</li>
+<li><strong><code>gmr-content</code></strong> (54 lines) — the
+<code>ContentProvider</code> trait: <code>fetch(id)</code> and
+<code>fetch_at(id, version)</code>, so a provider that keeps history can
+serve the content a memory was bound against.</li>
+<li><strong><code>gmr</code></strong> (29 lines) — the umbrella.</li>
+</ul>
+<p>Beside the crates, <code>domains/coding/</code> ships a concrete
+domain: a <code>probes/</code> directory with a
+<code>test-roster.sh</code> probe, an <code>extract</code> crate, a
+<code>cli</code>, and a <code>SKILL.md</code> — the batteries that turn
+the runtime into a coding-memory grounding tool.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>One SQLite file</strong>, no service. Memory content lives
+in whatever provider the adopter binds (git is the worked case), so GMR
+adds a grounding index beside an existing memory store rather than
+replacing it.</li>
+<li><strong>The store is portable</strong> —
+<code>export</code>/<code>import</code> exist specifically so a binary
+upgrade can round-trip the database, an unusual amount of care for a
+v0.3.</li>
+<li><strong>Probes are external processes</strong> with deadlines and
+output caps (<code>gmr-probe</code>), run through a shell transport; the
+coding domain's probe is a shell script.</li>
+<li><strong>The memory format is plain Markdown with an
+<code>about:</code> header</strong> — human- and agent-readable,
+diffable, and the binding is what GMR adds on top.</li>
+</ul>
+<p>The screen found dependency surfaces inside the seven-day cooldown
+(the tree released v0.3.2 the day of reading) and the ordinary build
+surfaces of a Cargo workspace, with <code>Cargo.lock</code> present.
+Nothing was installed or run; the crates were read and cross-checked
+against 223 committed tests.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Bind</strong> — <code>Binding { reference, anchors }</code>
+in <code>gmr-core/src/memory.rs</code>, persisted by the
+<code>BindingStore</code> in <code>gmr-store/src/bindings.rs</code> with
+a <code>binding_version</code> and <code>bound_at_seq</code>.</li>
+<li><strong>Observe</strong> —
+<code>gmr-runtime/src/observe.rs::observe(&amp;AnchorKey)</code> runs
+the probe, builds an <code>Observation</code> (<code>Outcome</code>,
+<code>FactAddress</code>, <code>Versions</code>), and appends the right
+journal entry.</li>
+<li><strong>Detect change</strong> — <code>Outcome::address()</code> in
+<code>gmr-core/src/probe.rs</code> content-hashes
+<code>{derivation, found, facts}</code>;
+<code>journal::should_still</code> compares last vs now to decide
+<code>Still</code> versus a candidate transition; the
+<code>gmr-expr</code> guard decides whether a rule fires.</li>
+<li><strong>Journal</strong> —
+<code>gmr-core/src/journal.rs::Entry</code>, append-only, sequenced by
+<code>Seq</code>, with
+<code>Open</code>/<code>Transition</code>/<code>Still</code>/<code>Attempt</code>/<code>Revise</code>/<code>Close</code>
+and an <code>AnchorState</code> head projection.</li>
+<li><strong>Surface</strong> —
+<code>gmr-runtime/src/read.rs::cobound(&amp;Ref)</code> derives the
+memories sharing an anchor; the grounding view marks each
+<code>rewritten</code>, <code>grounded</code>, <code>retrievable</code>,
+with <code>content_at_bind</code>.</li>
+<li><strong>Revise / close</strong> —
+<code>Change::{Reprobe, Retransition, Reterminal, Restate}</code>
+journalled as <code>Entry::Revise</code> with a <code>rationale</code>
+hash; <code>Entry::Close</code> likewise.</li>
+<li><strong>Failure handling</strong> —
+<code>FailureCode::reason()</code> maps each code to a
+<code>ReasonClass</code>, keeping "couldn't observe" separate from
+"observed a change."</li>
+<li><strong>Provider</strong> —
+<code>gmr-content::ContentProvider::fetch_at(id, version)</code>
+retrieves the exact content a memory was bound against, when the
+provider keeps history.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a <code>Binding</code>, and the model's discipline is
+that GMR stores <em>relationships and observations</em>, never the
+memory's content:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>journal</code></td>
+<td>append-only anchor entries, sequenced, timestamped</td>
+</tr>
+<tr>
+<td><code>bindings</code></td>
+<td>a memory <code>Ref</code> (provider, external_id), its version, its
+<code>bound_at_seq</code></td>
+</tr>
+<tr>
+<td><code>binding_anchors</code></td>
+<td>the many-to-many of bindings to anchor keys</td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td>typed memory→memory edges (<code>LinkKind</code>, e.g.
+<code>contradicts</code>)</td>
+</tr>
+<tr>
+<td><code>sealed</code></td>
+<td>content-addressed records (rationales, contexts, expr sources)</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>Ref</code> is <code>(ProviderId, ExternalId)</code>, both
+non-empty and ≤128 chars; a memory is identified by where it lives, not
+by GMR-assigned id. <code>Binding</code> carries the anchor keys and —
+in the store record — the version and sequence it was bound at, which is
+the staleness key. <code>Link</code> gives typed edges between memories,
+including a <code>contradicts</code> kind, so the graph can hold that
+two memories disagree without GMR adjudicating.</p>
+<p><strong>Scoping is by provider namespace, not by a security
+boundary.</strong> A <code>Ref</code>'s provider and external_id
+namespace where the content lives; there is no per-user or per-tenant
+scope key applied as a read filter, because GMR is a single-project
+grounding layer. <code>scope_enforced</code> is therefore withheld — the
+honest statement is that the mark's mechanism (a stored scope key
+filtered on the read path) is not present, not that scoping was
+overlooked.</p>
+<p>Temporal fields are observation/record time: journal entries carry
+<code>at: DateTime&lt;Utc&gt;</code>, and the binding carries a
+<code>bound_at_seq</code>. There is no separate validity-time axis — GMR
+records when it <em>observed</em> a state, not a claim about when the
+state was true in the world independent of observation — so
+<code>bitemporal</code> is withheld. The
+<code>bound_at_seq</code>-versus-<code>head</code> comparison is the
+staleness mechanism and is worth taking even though it is
+single-temporal.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>GMR does not search. There is no lexical index and no vector index
+over memory content — <code>stack_retrieval</code> is empty on purpose.
+Its read path is <strong>surfacing</strong>: observe an anchor, and if
+it transitioned, return the memories bound to it; or, given a memory,
+return its <code>cobound</code> siblings (memories sharing its anchors),
+derived from the binding graph rather than stored. Retrieval is driven
+by <em>drift</em>, not by <em>query similarity</em>.</p>
+<p>That is the design's whole thesis and its whole limitation. The
+strength: a memory is surfaced exactly when the fact it depends on
+changes, which is the question decay heuristics approximate with a clock
+and vector stores cannot ask at all. The limitation: GMR cannot answer
+"what do I know about X" — that is the provider's job or a separate
+retrieval layer's; GMR answers "which of my stored beliefs just became
+suspect." The two are complementary, and a deployment needs both.</p>
+<p>The surfacing has three failure modes it handles explicitly, all
+tested. An unreachable bound version is <strong>flagged, not silently
+dropped</strong>
+(<code>an_unreachable_bound_version_is_flagged_not_silently_dropped</code>)
+— GMR tells you it could not fetch the content the memory was bound
+against rather than pretending the memory is fine. A detached memory is
+<strong>no longer listed</strong> under its former anchor. And a probe
+failure <strong>does not blame the anchors it never reached</strong>, so
+a network blip does not surface every memory as drifted. These are the
+negative assertions that earn <code>negative_eval</code>: committed
+cases that particular material must <em>not</em> be surfaced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two write paths, both append-only in spirit. <strong>Binding</strong>
+attaches a memory reference to anchors at the current journal sequence.
+<strong>Observation</strong> appends to the anchor's journal: a
+<code>Still</code> when the content-addressed fact has not moved, a
+<code>Transition</code> when it crosses a rule, an <code>Attempt</code>
+when the probe fails. Nothing overwrites; the head state is a projection
+of the journal.</p>
+<p>Revision of the grounding definition itself is the interesting write.
+<code>Entry::Revise</code> records a <code>Change</code> —
+<code>Reprobe</code> (swap the probe), <code>Retransition</code> (change
+the rules), <code>Reterminal</code> (change the terminal set),
+<code>Restate</code> (correct the state) — each with a
+<code>context</code> and a <code>rationale</code> content-hash, and the
+<code>AnchorState</code> counts revisions by kind. So the grounding
+logic is itself versioned and auditable: you can see that an anchor's
+probe was swapped, when, and why. That is rarer than data-level audit
+and it is the same append-only discipline applied one level up.</p>
+<p>The memory-content side is handled without GMR owning the content.
+When the provider file moves, the memory is marked
+<code>rewritten</code> against the version it was bound at;
+<code>reaffirm</code> accepts the new content and clears the flag
+"without touching anchors," and — tested — reaffirming an unbound
+reference is refused (<code>not_bound</code>). So a content edit and an
+anchor drift are two distinct events with two distinct resolutions,
+which is the correct separation: a memory can be rewritten while its
+grounding holds, or drift while its text is untouched.</p>
+<p>There is no background LLM pass and no consolidation. The heavy
+recurring work is observation, run on a cadence
+(<code>RunSettings::cadence_secs</code>) with a budget
+(<code>budget_ms</code>), and a <code>Retain::{Tick, Full}</code>
+setting governs how much journal history is kept. The cost scales with
+the number of anchors and the probe cost, not with the memory corpus
+size — a grounding index is cheap relative to re-embedding a store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>GMR is a Rust runtime and CLI, with the coding domain
+(<code>domains/coding/</code>) as the worked integration: probes that
+observe a codebase (a test roster), an extractor, and a
+<code>SKILL.md</code> for an agent to use it. The
+<code>ContentProvider</code> trait is the integration seam for memory
+itself — bind against <code>git</code>, or any provider that can
+<code>fetch</code> a reference and, ideally, <code>fetch_at</code> a
+version.</p>
+<p>The division of labour is the thing to understand for adoption: an
+agent's memory system stores and retrieves; GMR sits beside it and tells
+it which stored items have gone stale. An agent would write a memory to
+its own store, register a binding in GMR against the code or config that
+memory depends on, and on later turns ask GMR which memories drifted
+before trusting them. That is a narrower, sharper contract than "a
+memory system," and it composes with any of the stores in this atlas
+rather than competing with them.</p>
+<p>The <code>about:</code> convention is the lightweight version of the
+same idea for a file-based memory: a Markdown memory names the symbol it
+depends on in frontmatter, and the coding domain's extractor turns that
+into a binding. The 135 committed memories are the existence proof that
+the convention is usable at scale on a real codebase — GMR's own.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The failure taxonomy is the reliability core, and it is the
+right one.</strong> A drift detector's cardinal sin is treating "I could
+not observe" as "it changed," which would surface every memory as
+suspect on a network hiccup and train the reader to ignore the signal.
+GMR separates them at the type level:
+<code>Outcome::{Found, NotFound}</code> is an observation,
+<code>Entry::Attempt</code> with a <code>ReasonClass</code> and
+<code>FailureCode</code> is a failure, and only a changed
+<code>FactAddress</code> with a firing rule is a
+<code>Transition</code>.
+<code>does_not_blame_the_anchors_it_never_reached</code> pins it. This
+is the discipline the atlas's <a
+href="../../compare/#verify-memory-against-its-subject">verify memory
+against its subject</a> pattern asks for, implemented as a runtime
+rather than a one-off check.</p>
+<p><strong>The audit trail reaches the grounding definition.</strong>
+Every anchor mutation — data and declaration alike — is a journalled
+entry with a rationale hash, so "why is this memory considered current"
+is answerable from the journal, not reconstructed. That is stronger
+provenance than most stores here offer, because most audit the memory
+and not the policy that judges it.</p>
+<p><strong>Trust is honest about its own limits.</strong>
+<code>Verifiability::Closed</code> vs <code>Open</code> marks whether an
+observation is reproducible, and GMR records it rather than pretending
+every probe is verifiable. A memory grounded on an <code>Open</code>
+probe is trusted on a declaration; the system tells you so and leaves
+the decision to you. This is the correct posture — surface the
+uncertainty rather than resolve it silently — and it is also the
+ceiling: GMR cannot make an unverifiable probe verifiable.</p>
+<p><strong>What it deliberately does not do bounds the safety
+story.</strong> GMR does not decide whether a memory is
+<em>correct</em>, only whether its <em>basis moved</em>; a memory
+grounded on the wrong anchor is confidently reported current while being
+wrong, and nothing here catches that. It does not store the content, so
+it cannot enforce redaction or scoping on it — that is the provider's
+job. And there is no multi-tenant boundary. These are scope choices,
+stated plainly in the README, not gaps to fix.</p>
+<p>The <code>tombstone</code> near-miss deserves a sentence:
+<code>Superseded</code> and <code>Close</code> retire an anchor with a
+rationale, which retires the grounding, but nothing records a
+<em>rejected memory value</em> keyed on content, so a memory re-created
+in the provider and re-bound would be grounded afresh. Closing that
+would require GMR to reach into the content it deliberately does not
+own.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>223 tests across the crates, and the runtime's integration suites are
+aimed squarely at the mechanisms this report credits.
+<code>grounding.rs</code> asserts the memory-content behaviours: a
+rewritten record emits an edge with both versions, reaffirming clears
+<code>rewritten</code> without touching anchors, reaffirming an unbound
+reference is refused, an unreachable bound version is flagged not
+dropped, <code>cobound</code> is derived not stored, an unanchored
+record is carried but marked, and a detached record is no longer listed
+under its anchor. <code>operations.rs</code> covers the transition
+machinery, including that a transition "waits for the streak" (a single
+observation does not move an anchor) and that a failed probe does not
+blame anchors it never reached.</p>
+<p>Those last two are the tests that matter most, because they pin the
+two ways a drift detector goes wrong — firing on noise, and firing on
+its own failure — and GMR asserts against both. The negative cases
+(<code>detached … no longer listed</code>,
+<code>does_not_blame … never reached</code>) are the committed "must not
+surface" assertions behind <code>negative_eval</code>.</p>
+<p>What is absent is a benchmark: there is no committed measurement of
+detection precision or recall — how often a real drift is surfaced, how
+often a surfaced drift is spurious — over a corpus of memories and
+changes. That is the evaluation the design most invites, and the coding
+domain plus the 135 dogfooded memories are the fixture it could be run
+on. The unit and integration tests establish that the mechanism behaves
+as specified; nothing yet establishes how well the grounding choices
+track real staleness in practice.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Bind a memory to the observable fact it depends on, and
+re-check the fact rather than the memory's age.</strong> A clock-based
+decay says "this is old"; a grounding binding says "the thing this was
+about changed." The second is what a reader actually wants, and GMR
+shows it is buildable as a versioned probe plus a content-hashed
+transition, not an LLM judgment.</p>
+<p><strong>Separate "could not observe" from "observed a change" at the
+type level.</strong> An <code>Attempt</code> with a failure taxonomy,
+distinct from a <code>Transition</code>, is the single most important
+property of a drift detector — without it the signal trains its reader
+to ignore it. Copy the <code>ReasonClass</code>/<code>FailureCode</code>
+split.</p>
+<p><strong>Content-address the observation.</strong> A transition
+detected by the hash of the observed facts changing is deterministic,
+cheap, and immune to a model's mood; it also gives you a
+<code>FactAddress</code> to journal and compare. Reserve the model for
+extraction, not for deciding whether something changed.</p>
+<p><strong>Journal the grounding policy, not just the data.</strong>
+<code>Revise</code> entries with a rationale hash mean "why is this
+considered current" is answerable including "the probe was swapped on
+this date because …". Auditing the judge, not only the judged, is rare
+and worth it.</p>
+<p><strong>Record whether an observation is reproducible.</strong>
+<code>Closed</code> vs <code>Open</code> lets a reader distinguish a
+memory grounded on a re-runnable probe from one grounded on an
+assertion, without forcing the system to reject the latter.</p>
+<p><strong>Let the memory name its dependency in frontmatter.</strong>
+<code>about: path/to/file#symbol</code> plus a "When this changes, ask"
+section is the zero-infrastructure version of a binding, and the 135
+dogfooded memories prove it scales on a real codebase.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let a probe failure surface memories as
+drifted.</strong> It is the same error as treating a 500 as a delete: if
+"unreachable" and "changed" collapse, every outage looks like the world
+moved. Keep them distinct and journal the failure.</p>
+<p><strong>Do not ground a memory and think you have verified
+it.</strong> GMR grounds and surfaces; it does not decide correctness. A
+memory bound to the wrong anchor is reported current while being wrong,
+and no amount of drift detection catches a grounding that was
+mis-specified.</p>
+<p><strong>Do not conflate a content rewrite with a basis
+drift.</strong> A memory whose text was edited and a memory whose
+subject changed are two events needing two responses; folding them loses
+the ability to reaffirm one without disturbing the other.</p>
+<p><strong>Do not read <code>Open</code>/reproducible-unverifiable as a
+trust score.</strong> It says whether the observation can be re-run, not
+whether the memory is true; treating an <code>Open</code> probe's output
+as verified is exactly the mistake the flag exists to prevent.</p>
+<h3 id="fit">Fit</h3>
+<p>GMR fits a builder who already has a memory store and wants the one
+thing most stores lack: a principled answer to when a stored belief has
+gone stale because its subject moved. It composes with any store in this
+atlas — it is a grounding index beside them, not a replacement — and it
+is unusually disciplined for a v0.3 (a portable store, a failure
+taxonomy, a dogfooded corpus, 223 tests). The coding domain makes it
+directly usable for grounding memories about a codebase.</p>
+<p>Walk away if you want a store: GMR does not hold your memory content,
+retrieve by similarity, or scope by tenant, and it will not decide
+whether a memory is correct. And weigh the authoring cost honestly — the
+value is entirely in whether someone writes probes that observe the
+right facts and transitions that fire on the right changes, which is
+real work the runtime cannot do for you. For a team willing to write
+those, it is the sharpest implementation of memory-staleness detection
+in the corpus; for one that wants staleness handled automatically, the
+decay-and-reinforcement systems here ask less and promise less.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What is detection quality in practice — over a corpus of memories
+and real changes, how often does a genuine drift surface and how often
+is a surfaced drift spurious? Nothing committed measures it.</li>
+<li>How are transitions authored at scale? The <code>when → to</code>
+expressions are the labour; the coding domain has an extractor, but how
+much of anchor authoring is automatable versus hand-written is not
+established from the tree.</li>
+<li>Does any provider besides git implement <code>fetch_at</code>, and
+what does grounding degrade to when a provider keeps no history (the
+<code>keeps_history=false</code> path returns <code>None</code>)?</li>
+<li>Is there an intended multi-project or multi-tenant story, or is
+single-project the design? The <code>Ref</code> provider namespaces
+content but nothing scopes reads.</li>
+<li>Would GMR ever reach into content to record a rejected value, or is
+content-ownership-by-the-provider a permanent boundary that keeps a
+rejected-value tombstone out of scope?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Core types</strong></p>
+<ul>
+<li><code>crates/gmr-core/src/anchor.rs</code> — <code>Anchor</code>,
+<code>Rule</code>, <code>Transitions</code>, <code>State</code>,
+<code>Superseded</code>, <code>RunSettings</code>,
+<code>Retain</code>.</li>
+<li><code>crates/gmr-core/src/memory.rs</code> — <code>Ref</code>,
+<code>Binding</code>, <code>Link</code>, <code>LinkKind</code>.</li>
+<li><code>crates/gmr-core/src/journal.rs</code> — <code>Entry</code>,
+<code>Change</code>, <code>ChangeKind</code>, <code>ReasonClass</code>,
+<code>FailureCode</code>, <code>AnchorState</code>,
+<code>Observation</code>, <code>should_still</code>.</li>
+<li><code>crates/gmr-core/src/probe.rs</code> — <code>ProbeRef</code>,
+<code>Verifiability</code>, <code>Derivation</code>, <code>Facts</code>,
+<code>Outcome</code>, <code>FactAddress</code>.</li>
+<li><code>crates/gmr-core/src/addr.rs</code> — content hashing,
+canonicalization, string newtypes.</li>
+</ul>
+<p><strong>Expression and probe</strong></p>
+<ul>
+<li><code>crates/gmr-expr/</code> — the
+<code>when</code>/<code>to</code> transition language and its evaluation
+failure codes.</li>
+<li><code>crates/gmr-probe/</code> — probe budgets and deadlines.</li>
+</ul>
+<p><strong>Runtime and store</strong></p>
+<ul>
+<li><code>crates/gmr-runtime/src/observe.rs</code> — observation and
+journal append.</li>
+<li><code>crates/gmr-runtime/src/read.rs</code> — <code>cobound</code>
+surfacing.</li>
+<li><code>crates/gmr-store/src/sqlite/schema.rs</code> — the append-only
+journal/bindings/links/sealed tables.</li>
+<li><code>crates/gmr-store/src/bindings.rs</code>,
+<code>sqlite/portable.rs</code> — binding records and portable
+export/import.</li>
+<li><code>crates/gmr-content/</code> — the <code>ContentProvider</code>
+trait.</li>
+</ul>
+<p><strong>Domain and corpus</strong></p>
+<ul>
+<li><code>domains/coding/</code> — probes (<code>test-roster.sh</code>),
+<code>extract</code>, <code>cli</code>, <code>SKILL.md</code>.</li>
+<li><code>memories/</code> — 135 memories anchored to GMR's own code via
+<code>about:</code> frontmatter.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>crates/gmr-runtime/tests/grounding.rs</code> —
+rewritten/reaffirm/unreachable/cobound/detached behaviours.</li>
+<li><code>crates/gmr-runtime/tests/operations.rs</code> — transition
+streak, probe-failure-does-not-blame.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981"><code class="commit-id" title="8c4bc230c501a344b6d52d4f51f08e0d7b51c981">8c4bc230…</code></a>
+— first reading, at release v0.3.2. Screened before opening: dependency
+surfaces inside the seven-day cooldown (v0.3.2 released the day of
+reading), ordinary Cargo build surfaces, <code>Cargo.lock</code>
+present. Nothing was installed or run; the transition, failure-taxonomy,
+journal and surfacing semantics were read from <code>gmr-core</code> and
+<code>gmr-runtime</code> and cross-checked against the committed
+<code>grounding.rs</code> and <code>operations.rs</code> tests.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

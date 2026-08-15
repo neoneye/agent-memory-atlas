@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 283 reports.</strong></p>
+<p><strong>This page covers all 284 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8118,6 +8118,59 @@ the design degrades to self-grading if every outcome is
 that keeps a bad lesson gone; the near-duplicate dedup and quarantine
 both check stored lessons, not rejected ones, so continuous
 re-distillation can resurrect a suppressed lesson.</li>
+</ul>
+<h3 id="gmr"><a href="../systems/gmr/"><code>gmr</code></a></h3>
+<ul>
+<li>Best idea: bind a memory to the observable fact it depends on and
+re-check the fact, not the memory's age. A memory is stored as a binding
+— an external reference attached to anchors, each an observable fact
+with a versioned probe and content-hashed transition rules — and when
+the probe's observed facts hash to a new value and a rule fires, the
+memories bound to that anchor are surfaced as drifted. It answers the
+question decay heuristics only approximate with a clock: not "is this
+old" but "did the thing this was about change." Detection is
+deterministic (a <code>FactAddress</code> hash), not a model judging
+similarity.</li>
+<li>Biggest risk: it grounds and surfaces but does not decide
+correctness or store the content, so the value is entirely a function of
+whether someone wrote a probe that observes the right fact and a
+transition that fires on the right change — real authoring work the
+runtime cannot do for you. A memory bound to the wrong anchor is
+reported current while being wrong. And a probe declared
+<code>Open</code> (unverifiable) is trusted rather than reproduced; GMR
+marks the <code>Closed</code>/<code>Open</code> distinction but cannot
+close the gap.</li>
+<li>Most reusable component: the failure taxonomy that keeps "could not
+observe" apart from "observed a change." A failed probe is journalled as
+an <code>Entry::Attempt</code> with a <code>ReasonClass</code>
+(<code>Unreachable</code>/<code>Unusable</code>/<code>Unevaluable</code>)
+and a specific <code>FailureCode</code>, never as a transition, so an
+outage never surfaces every memory as drifted — the single most
+important property a drift detector can have, and the tests pin it
+(<code>does_not_blame_the_anchors_it_never_reached</code>). The
+append-only journal —
+<code>Open</code>/<code>Transition</code>/<code>Still</code>/<code>Attempt</code>/<code>Revise</code>/<code>Close</code>,
+each <code>Revise</code> carrying a rationale hash — audits the
+grounding <em>policy</em>, not just the data.</li>
+<li>Maturity impression: Apache-2.0, ~11,500 lines of Rust across seven
+clean crates, 223 tests whose integration suites target exactly the
+mechanisms above, a portable export/import so a binary upgrade
+round-trips the SQLite store, and 135 memories in the tree dogfooding
+the thesis — each anchored to a GMR source symbol via
+<code>about:</code> frontmatter with a "When this changes, ask" section.
+Unusually disciplined for a v0.3.2. What is absent is a benchmark:
+nothing committed measures detection precision or recall.</li>
+<li>Study when: you already have a memory store and want the one thing
+most stores here lack — a principled answer to when a stored belief has
+gone stale because its subject moved. It composes with any store in the
+atlas as a grounding index beside them rather than a replacement, and
+the coding domain makes it directly usable for grounding memories about
+a codebase.</li>
+<li>Do not copy when: you want a store. GMR does not hold memory
+content, retrieve by similarity, scope by tenant, or decide whether a
+memory is correct — and if you want staleness handled automatically
+rather than by hand-written probes and transitions, the
+decay-and-reinforcement systems here ask less and promise less.</li>
 </ul>
         </article>
       </div>
