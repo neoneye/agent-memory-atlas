@@ -264,7 +264,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`perseus-vault`](../systems/perseus-vault/) **Perseus Vault** — Claims audited against artifacts · `Perseus-Computing-LLC/perseus-vault` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
 - [`pltm-claude`](../systems/pltm-claude/) **PLTM** — A third verdict with nowhere to live · `Alby2007/PLTM-Claude` · Scope enforced
-- [`plur1bus`](../systems/plur1bus/) **PLUR1BUS** — OpenClaw memory plugin · `Cyb3rb1ade/openclaw-plur1bus-memory` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
+- [`plur1bus`](../systems/plur1bus/) **PLUR1BUS** — OpenClaw memory plugin · `Cyb3rb1ade/openclaw-plur1bus-memory` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
 - [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
 - [`pro-long`](../systems/pro-long/) **PRO-LONG** — The log is the memory · `alexisfox7/PRO-LONG`
@@ -298,7 +298,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
 - [`smythos-sre`](../systems/smythos-sre/) **SmythOS SRE** — A conversation handle in a request header · `SmythOS/sre` · Scope enforced, Negative evals
-- [`sonder-runtime`](../systems/sonder-runtime/) **Sonder Runtime** — A quarantine that checks the base rate before it blames · `Krilliac/Sonder-runtime` · Trust state, Scope enforced, Mutation audit, Negative evals
+- [`sonder-runtime`](../systems/sonder-runtime/) **Sonder Runtime** — A quarantine that checks the base rate before it blames · `Krilliac/Sonder-runtime` · Tombstone, Trust state, Scope enforced, Mutation audit, Negative evals
 - [`soul-of-waifu`](../systems/soul-of-waifu/) **Soul of Waifu** — Rollback that nothing calls · `jofizcd/Soul-of-Waifu` · Mutation audit
 - [`sovereign`](../systems/sovereign/) **AMITY / Archangel-8** — The capacity to refuse · `Renkasha/Sovereign`
 - [`stash`](../systems/stash/) **Stash** — A hypothesis is not a fact, and gets its own table · `alash3al/stash` · Trust state, Scope enforced

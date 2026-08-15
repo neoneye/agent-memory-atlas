@@ -83,7 +83,7 @@ existence and use are verifiable from code.
 | **Multi-hop QA** (MuSiQue, 2Wiki, HotpotQA) | Retrieval over a fixed corpus — RAG evaluation, with no writes accumulating over time | [HippoRAG](../systems/hipporag/) |
 | **Minecraft tech tree** | Task completion by an agent with a skill library — measures whether procedural memory helps, not whether it is accurate | [Voyager](../systems/voyager/) |
 | **Human believability ratings** | Whether simulated agents behave plausibly | [Generative Agents](../systems/generative-agents/) |
-| **Repository-local eval harnesses** | Per-project cases with expected and forbidden hits, or replayed retrieval policies | [open-cowork](../systems/open-cowork/), [MetaClaw](../systems/metaclaw/), [MemPalace](../systems/mempalace/), [agentmemory](../systems/agentmemory/) |
+| **Repository-local eval harnesses** | Per-project cases with expected and forbidden hits, or replayed retrieval policies | [open-cowork](../systems/open-cowork/), [MetaClaw](../systems/metaclaw/), [MemPalace](../systems/mempalace/), [agentmemory](../systems/agentmemory/), [Waku Agent](../systems/waku-agent/) |
 
 Three entries in that table are doing something the others are not.
 
@@ -108,6 +108,23 @@ the rest of this page.
 
 **open-cowork's harness** is described below and is the most interesting
 evaluation shape in the atlas, precisely because it is not a public benchmark.
+
+**Waku Agent's "memory arena"** is the repository-local harness worth singling
+out, because it does the thing this page keeps asking for. It holds the model and
+the probe set constant and varies only which store the facts live in — SQLite,
+Supabase, mem0, Zep or LangMem — so a difference in the scoreboard can only have
+come from the store. It seeds a *conversation* rather than a pre-extracted fact
+list, so each backend's own extraction is exercised, and it scores four outcomes
+rather than pass/fail: `PASS`, `MISS`, `STALE` (returns a superseded answer) and
+`INVENTED` (answers a probe that should have been refused). The last two are the
+correction-and-abstention signals the public benchmarks mostly skip. Its sharpest
+idea is a **no-memory control contestant** — "told nothing, then asked
+everything" — whose passes expose probes that were scoring the model's training
+data rather than the store; running it caught three of seven probes on one track
+doing exactly that. The one caveat is that no results are committed: the harness,
+a dull example fixture and a methodology doc ship, and the scoreboard is written
+to a gitignored directory, so the atlas can verify the *method* but not any
+*number*.
 
 ### Read directly, at a pinned commit
 

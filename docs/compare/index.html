@@ -105,7 +105,7 @@ href="#what-the-licences-actually-say">appendix</a>. Corpus last
 extended <strong>6 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 14
+<li><strong>Correction is the phase that goes unbuilt.</strong> 16
 systems of 284 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -245,7 +245,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-fourteen tombstones, seventy-two negative-eval suites — are counts
+sixteen tombstones, seventy-two negative-eval suites — are counts
 <em>over inspectable code</em>, and a closed system could hold any of
 these mechanisms without this method ever knowing. And a mechanism's
 absence here is weaker evidence about the field than its presence:
@@ -255,14 +255,14 @@ proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Fourteen systems in this entire
-atlas can record that a <em>value</em> was rejected so extraction cannot
-bring it back — see the <a href="../capabilities/">capability index</a>
-for the live count. This is the widest gap this atlas has found, and it
-is invisible on every benchmark. <em>Widest gap found</em>, not widest
-gap in the field: the corpus is opportunistic, so a ratio over it
-describes what has been read and cannot be quoted as prevalence — and
-four of the five strongest implementations <a
+everything can overwrite or supersede. Sixteen, in this entire atlas,
+can record that a <em>value</em> was rejected so extraction cannot bring
+it back — see the <a href="../capabilities/">capability index</a> for
+the live count. This is the widest gap this atlas has found, and it is
+invisible on every benchmark. <em>Widest gap found</em>, not widest gap
+in the field: the corpus is opportunistic, so a ratio over it describes
+what has been read and cannot be quoted as prevalence — and four of the
+five strongest implementations <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">arrived
 through this atlas's own orbit</a>, which is the opposite of an
 independent measurement.</li>
@@ -9395,7 +9395,10 @@ passes</td>
 <td>Deferred to the <code>agent_end</code> hook through a per-agent
 scheduler; nothing blocks the reply</td>
 <td><code>safeUpdate</code> writes a new version, then supersedes the
-old row; <code>/forget</code> archives behind a confirmation token</td>
+old row; <code>/forget</code> archives behind a confirmation token and
+writes a durable content-fingerprint tombstone that blocks re-capture of
+the forgotten value; a claim carries a real-world validity window
+separate from its record time</td>
 <td><code>checkAccess</code> fails closed on agent-private, workspace
 and user scopes, applied as a read filter in the adapter and the recall
 pipeline</td>
@@ -9404,12 +9407,15 @@ hook, background crons, and an Obsidian review vault</td>
 <td>Daily consolidation, garbage collection, skill mining, critical-push
 classification, and two dream passes</td>
 <td>Seven-state record status and a six-level trust ladder scored off
-the newest revision, plus an append-only reconsolidation event log</td>
+the newest revision, plus a separate claim-level epistemic status whose
+<code>invalidated</code> value hard-filters on read, and an append-only
+reconsolidation event log</td>
 <td>A correction path that demands evidence, records the event, and
 orders its writes so a crash cannot lose the memory</td>
-<td>Forty-seven config groups over one careful core; doubt states are
-ranking penalties rather than filters, and the drift gate is
-deliberately off</td>
+<td>Forty-seven config groups over one careful core; the neo doubt
+states (conflict, demoted) are still ranking penalties rather than
+filters, though a new epistemic <code>invalidated</code> status does
+hard-filter; and the drift gate is deliberately off</td>
 </tr>
 <tr>
 <td><code>powermem</code></td>
@@ -10229,7 +10235,8 @@ a concrete lesson, and refuses exact and semantic duplicates; outcomes
 are credited back to the lessons that were retrieved</td>
 <td>Preferences carry a revision and every apply/rollback is journalled
 in refinement_history with optimistic version checks; a near-duplicate
-pruner deletes redundant lessons keeping one representative</td>
+pruner deletes redundant lessons keeping one representative and writes a
+content-hashed tombstone so the pruned value cannot be re-distilled</td>
 <td>Interactions, tasks, preferences and sessions filter by project and
 an account_scope supplied by the authenticated serving layer; lessons
 are deliberately global procedural knowledge</td>
@@ -10245,8 +10252,9 @@ flag; every outcome records who judged it</td>
 lessons and tests a loss run against the lesson's own frequency-band
 base rate before suppressing it, with a probation path back</td>
 <td>The whole loop trusts an outcome signal whose provenance is often
-machine or unknown, and quarantine suppresses a lesson without recording
-a rejected value, so a re-distilled duplicate can return</td>
+machine or unknown; near-duplicate pruning now tombstones the rejected
+value, but quarantine still suppresses a lesson without one, so a
+quarantined lesson re-distilled from a fresh interaction can return</td>
 </tr>
 <tr>
 <td><code>soul-of-waifu</code></td>
@@ -10858,7 +10866,8 @@ frozen since 2023</td>
 <tr>
 <td><code>waku-agent</code></td>
 <td>Fact (semantic), episode (episodic), and SKILL.md (procedural)</td>
-<td>SQLite by default; Supabase for facts, Notion for episodes</td>
+<td>SQLite by default; Supabase, mem0, Zep or LangMem selectable for
+facts behind one FactStore contract; Notion for episodes</td>
 <td>Gated — a small model decides whether to search at all, and supplies
 the query</td>
 <td>Consolidation batched after N new chats, not per message</td>
@@ -11234,7 +11243,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>14 of 284:</em> <a
+<p><em>16 of 284:</em> <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
@@ -11244,8 +11253,10 @@ href="../systems/noosphere/"><code>noosphere</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
+href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a></p>
@@ -11316,7 +11327,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>31 of 284:</em> <a
+<p><em>32 of 284:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -11345,6 +11356,7 @@ href="../systems/omega-memory/"><code>omega-memory</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
 href="../systems/ostk-recall/"><code>ostk-recall</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
+href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vestige/"><code>vestige</code></a>, <a
@@ -11762,11 +11774,11 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p>Three observations follow from the counts, stated no more strongly
 than the counts support.</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving, while fourteen
-systems carry a value-level tombstone. That is not the same as saying
-scope is solved — this flag measures the read path only. It says nothing
-about write authorization, whether background consolidation respects the
-same boundary, whether cache and embedding keys include it, or whether
+half the atlas applies a scope key when retrieving, while sixteen carry
+a value-level tombstone. That is not the same as saying scope is solved
+— this flag measures the read path only. It says nothing about write
+authorization, whether background consolidation respects the same
+boundary, whether cache and embedding keys include it, or whether
 deletion reaches every scoped copy. A summary that spans two projects
 has crossed a boundary the retriever would have enforced, and nothing
 here measures that.</p>
@@ -12836,10 +12848,10 @@ Retrieval "early-stage".</p>
 survey written by the authors of a system reviewed here, working from
 threat models rather than from repositories, independently derives the
 capability the atlas counts, defines it more precisely than this atlas
-does, and reports that nobody has published it. Meanwhile fourteen
-repositories here implement a value-level tombstone — the mechanism
-Verified Forgetting requires — and none of the nine has a paper. The
-literature and the code have each found half of it.</p>
+does, and reports that nobody has published it. Meanwhile sixteen here
+implement a value-level tombstone — the mechanism Verified Forgetting
+requires — and none of the nine has a paper. The literature and the code
+have each found half of it.</p>
 <p>The "propagated copies" clause has a partial answer too, from further
 outside the literature than the tombstones are. <a
 href="../systems/risuai/">RisuAI</a> stores on every generated summary
@@ -16086,7 +16098,15 @@ href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d
 <li><a
 href="https://github.com/ShenSeanChen/waku-agent">ShenSeanChen/waku-agent</a>
 at <a
-href="https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060"><code class="commit-id" title="51228f07a4c8bad13987cdfb9668edd3ea9ba060">51228f07…</code></a></li>
+href="https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8"><code class="commit-id" title="4e59ab575827081b0986ed61afde5d6f21be64f8">4e59ab57…</code></a>
+— read only; three manifests inside the seven-day cooldown, two
+build-time execution points (<code>Makefile</code>,
+<code>evals/conftest.py</code>), so nothing was installed or run. No
+capability mark changed; the pluggable <code>FactStore</code> backends,
+the memory-arena benchmark and the Unicode FTS fix were read from
+<code>waku/memory/semantic/</code> and
+<code>waku/ops/memory_arena.py</code>, and the stack row was verified
+and promoted from seeded to reviewed</li>
 <li><a
 href="https://github.com/agentic-box/memora">agentic-box/memora</a> at
 <a
@@ -16908,11 +16928,16 @@ surface changed the same day so nothing was built</li>
 <li><a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">Cyb3rb1ade/openclaw-plur1bus-memory</a>
 at <a
-href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3efedcd4179f6e5594229b7a52f2ca8a6e234d9a"><code class="commit-id" title="3efedcd4179f6e5594229b7a52f2ca8a6e234d9a">3efedcd4…</code></a>
-— both manifests were inside the cooldown and the package's
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/b550a2d84f607da28438b39d86f1edd04e0951ff"><code class="commit-id" title="b550a2d84f607da28438b39d86f1edd04e0951ff">b550a2d8…</code></a>
+— release 7.3.0; both manifests inside the cooldown and the package's
 <code>postinstall</code> patches the host OpenClaw's dist directory, so
-nothing was installed; three regression files that import only node
-builtins and in-tree modules were run with <code>node --test</code></li>
+nothing was installed or run this reading. The v7.3.0 validity window,
+content-fingerprint tombstone, hard-filtering epistemic
+<code>invalidated</code> status and the REM-dream/<code>/critical</code>
+scope fixes were read from <code>lib/valid-time.js</code>,
+<code>lib/tombstone.js</code>, <code>lib/epistemic-status.js</code>,
+<code>lib/dreaming/rem-dream.js</code> and
+<code>lib/critical-review.js</code> against the committed tests</li>
 <li><a
 href="https://github.com/OmniNode-ai/omniintelligence">OmniNode-ai/omniintelligence</a>
 at <a
@@ -17129,14 +17154,15 @@ the delete-cleanup tests</li>
 <li><a
 href="https://github.com/Krilliac/Sonder-runtime">Krilliac/Sonder-runtime</a>
 at <a
-href="https://github.com/Krilliac/Sonder-runtime/commit/2a11324cbb131c76572724ac1fe47362a4aedf83"><code class="commit-id" title="2a11324cbb131c76572724ac1fe47362a4aedf83">2a11324c…</code></a>
+href="https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03"><code class="commit-id" title="53a6ac550488f9fd9d59dea61fb4bcea85a6dc03">53a6ac55…</code></a>
 — read only; no auto-run surface, no dependency surface inside the
 cooldown, two build-time execution points (<code>conftest.py</code>),
 two unpinned dev/train requirement ranges. Nothing installed or run; the
-quarantine base-rate and attribution guards and the outcome-provenance
-enforcement were read from <code>retriever.py</code>,
-<code>memory_store.py</code> and <code>lesson_decay.py</code> against
-the committed tests</li>
+quarantine base-rate and attribution guards, the outcome-provenance
+enforcement, and the new <code>lesson_tombstones</code> rejected-value
+registry were read from <code>retriever.py</code>,
+<code>memory_store.py</code>, <code>reflection.py</code> and
+<code>lesson_pruner.py</code> against the committed tests</li>
 <li><a
 href="https://github.com/Anchorstate-Lab/GMR">Anchorstate-Lab/GMR</a> at
 <a

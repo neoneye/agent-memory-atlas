@@ -6,16 +6,16 @@ root: ../..
 page_kind: system
 source_name: ShenSeanChen/waku-agent
 source_url: https://github.com/ShenSeanChen/waku-agent
-revision: 51228f07a4c8bad13987cdfb9668edd3ea9ba060
-revision_url: https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060
-analyzed_at: 2026-08-06
+revision: 4e59ab575827081b0986ed61afde5d6f21be64f8
+revision_url: https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8
+analyzed_at: 2026-08-15
 capabilities: "human_review"
-stack_storage: "sqlite, postgres"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_storage: "sqlite, postgres, delegated"
+stack_retrieval: "lexical"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Fact (semantic), episode (episodic), and SKILL.md (procedural)"
-  storage: "SQLite by default; Supabase for facts, Notion for episodes"
+  storage: "SQLite by default; Supabase, mem0, Zep or LangMem selectable for facts behind one FactStore contract; Notion for episodes"
   retrieval: "Gated — a small model decides whether to search at all, and supplies the query"
   write: "Consolidation batched after N new chats, not per message"
   update_delete: "`manage_memory` lets the agent search, update and delete its own facts and episodes mid-conversation; the dashboard gives a person the same CRUD; no supersession chain and no tombstone"
@@ -29,7 +29,7 @@ matrix:
 
 ## 1. Executive Summary
 
-Waku is a small MIT-licensed personal agent — about 800 lines of memory code — organized around three pillars borrowed from cognitive science: `semantic/` (facts), `episodic/` (what happened), and `procedural/` (how to act). Each has a SQLite default and an optional external backend: Supabase for facts, Notion for episodes.
+Waku is a small MIT-licensed personal agent — about 800 lines of core memory code — organized around three pillars borrowed from cognitive science: `semantic/` (facts), `episodic/` (what happened), and `procedural/` (how to act). Each has a SQLite default and an optional external backend: facts can also live in Supabase, mem0, Zep or LangMem — all held to one `FactStore` contract by a conformance suite, so a hosted service stands in for local SQLite without anything upstream noticing — and episodes in Notion. The SQLite fact store is keyword search over FTS5.
 
 That structure is conventional. What makes Waku worth reading is that its design question is not *how do we remember more* but **when should we not do the expensive thing** — and it answers that in three different places.
 
@@ -45,7 +45,7 @@ That structure is conventional. What makes Waku worth reading is that its design
 
 The gate's failure direction is also right, and stated: it **fails open**. If the gate errors, Waku retrieves anyway, because "a stale memory beats a lost one."
 
-**Correction is not where the memory package is.** `waku/memory/` has no update or delete surface at all — the mutation path lives one directory over, in `waku/tools/memory_admin.py`, which registers three tools that let the agent manage its own memory: `manage_memory` (search, update, delete over facts and episodes), `update_soul` (append a behaviour rule to `SOUL.md`, deliberately append-only so "the agent can't delete its own honesty rules") and `create_skill` (write a new `SKILL.md`). All three are registered unconditionally in `waku/tools/__init__.py:35`, and `waku/ops/dashboard.py:778` gives a person the same CRUD over the same SQLite file. A reader who takes the directory named `memory` as the boundary of the memory system will conclude this project cannot correct anything, and be wrong.
+**Correction is not where the memory package is.** `waku/memory/` has no update or delete surface at all — the mutation path lives one directory over, in `waku/tools/memory_admin.py`, which registers three tools that let the agent manage its own memory: `manage_memory` (search, update, delete over facts and episodes), `update_soul` (append a behaviour rule to `SOUL.md`, deliberately append-only so "the agent can't delete its own honesty rules") and `create_skill` (write a new `SKILL.md`). All three are registered whenever a memory store is present (`waku/tools/__init__.py`, under `if memory is not None:`), and `waku/ops/dashboard.py:798` gives a person the same CRUD over the same SQLite file. A reader who takes the directory named `memory` as the boundary of the memory system will conclude this project cannot correct anything, and be wrong.
 
 The real limits are one layer up: nothing is keyed on a *rejected* value, so a fact the user just corrected can be re-extracted by the next consolidation pass with nothing to consult; there is no supersession chain, no trust state, and no scope beyond a single user.
 
@@ -173,7 +173,7 @@ dashboard. And `create_skill` refuses to overwrite an existing skill by name
 rather than silently replacing it. Both are cases of giving the model a write
 verb and withholding the destructive half of it.
 
-The human door is `memory_action` in `waku/ops/dashboard.py:778` — `update_fact`,
+The human door is `memory_action` in `waku/ops/dashboard.py:798` — `update_fact`,
 `delete_fact`, `delete_episode`, `save_soul`, `save_skill`, writing "the same
 sqlite file the agent uses (busy_timeout covers contention); changes are live
 for the next agent turn." `save_skill` resolves the destination and rejects any
@@ -205,7 +205,7 @@ The Notion episodic backend is the most operationally interesting choice: episod
 
 ## 6. Retrieval Mechanics
 
-Whatever the underlying stores provide, downstream of the gate. The gate is the mechanism worth studying; the search itself is unremarkable.
+Whatever the underlying stores provide, downstream of the gate. The gate is the mechanism worth studying; the search itself is unremarkable — with one correctness caveat worth a footnote, because it reinforces the report's own thesis. The SQLite fact store searches FTS5, and `_fts_query` (`waku/memory/semantic/store.py`) previously tokenized ASCII-only, so a non-Latin or accented query was silently mangled (`"Müller" → "ller"`, `"Сергей" → ""`) and an empty result made the episodic store hand back *unrelated* memories under a "Relevant memory" heading — the over-interpretation the retrieval gate exists to prevent, arriving through the back door. It now tokenizes on Unicode word characters, pinned by `test_memory_search.py`.
 
 The cost model deserves stating honestly: the gate **adds** a small-model call to every turn in order to **remove** a search from some of them. Whether that trades well depends on the ratio of memory-needing turns to the rest, and on the relative latency of the gate model versus the store. Waku asserts the trade is favourable; nothing in the repository measures it.
 
@@ -221,9 +221,9 @@ That guard fixes the budget and not the silence. Both branches return `0`, the c
 
 ## 8. Agent Integration
 
-A CLI agent plus a local dashboard, with fifty deterministic eval files under `evals/deterministic/`. Skills follow the published Agent Skills format, so procedural memory is portable to other runtimes that read it.
+A CLI agent plus a local dashboard, with sixty deterministic eval files under `evals/deterministic/`. Skills follow the published Agent Skills format, so procedural memory is portable to other runtimes that read it.
 
-The model's agency over memory is wider than the memory package suggests: it can search, correct and delete its own facts and episodes, append a standing behaviour rule to its persona, and author a new skill — the last two gated so that the destructive halves stay with the human. `waku/ops/dashboard.py:526` groups the three under `_SELFMGMT`, which is the project's own name for the boundary.
+The model's agency over memory is wider than the memory package suggests: it can search, correct and delete its own facts and episodes, append a standing behaviour rule to its persona, and author a new skill — the last two gated so that the destructive halves stay with the human. `waku/ops/dashboard.py:546` groups the three under `_SELFMGMT`, which is the project's own name for the boundary.
 
 The dashboard's memory tab is a review surface in the sense this atlas means: a person reads the stored facts and episodes and can rewrite or remove any of them, against the same SQLite file the agent reads on its next turn. It is not an approval queue — nothing waits for a human before entering memory — so it adjudicates after the fact rather than gating.
 
@@ -254,7 +254,9 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-Fifty deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation. Nothing was run for this review — a dependency surface was inside the seven-day cooldown.
+Sixty deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation; `test_fact_store_conformance.py` holds every fact backend to the same contract, and `test_memory_search.py` pins the Unicode FTS fix. Nothing was run for this review — a dependency surface was inside the seven-day cooldown.
+
+The largest committed addition since the previous pin is a **memory benchmark**. `waku/ops/memory_arena.py` (896 lines) is a harness that holds the model and the probes constant and varies only `WAKU_SEMANTIC_STORE`, so "a difference in the scoreboard can only have come from where the facts live" — racing Waku's own SQLite against Supabase, mem0, Zep, LangMem and a no-memory control. It seeds a *conversation* rather than a pre-extracted fact list, so each backend's own extraction runs, then scores each probe on four outcomes: `PASS`, `MISS` (an honest failure), `STALE` (returns a superseded answer), and `INVENTED` (answers a probe that should have been refused) — the last being, in the code's words, "the number the whole exercise exists to produce." An LLM adjudicator settles only the verdicts a substring heuristic marks uncertain, and returns `None` rather than silently converting when unreachable. The **negative control** — a contestant "told nothing, then asked everything" — is the sharpest idea: any probe it passes was scoring the model's training data, not the store, and running it found 3 of 7 dinner-track probes doing exactly that. No results are committed; the harness writes to a gitignored directory, and only a deliberately dull example fixture (`evals/memory_arena.json`), a cleanup script and a methodology doc (`docs/memory-backends-playbook.md`) are in the tree. It measures other systems, so it changes none of Waku's own marks, but it is one of the more carefully-reasoned memory evals in the corpus. See the [benchmarks page](../../benchmarks/).
 
 The measurement the design most needs and does not have is **gate accuracy**: how often does `should_retrieve` return false on a turn that would have benefited from memory? Eleven tests establish that the gate parses, not that it decides correctly, so the project's whole thesis rests on an unscored judgement call.
 
@@ -307,14 +309,17 @@ Do not copy:
 - Retrieval gate: `waku/memory/retrieval_gate.py` (`should_retrieve`, `GATE_PROMPT`).
 - Facade: `waku/memory/__init__.py` (`Memory`).
 - Consolidation: `waku/memory/consolidation.py`.
-- Semantic: `waku/memory/semantic/store.py`, `supabase_store.py`.
+- Semantic: `waku/memory/semantic/store.py` (SQLite FTS5, `_fts_query`), and the `FactStore` contract `base.py` with backends `supabase_store.py`, `mem0_store.py`, `zep_store.py`, `langmem_store.py`.
 - Episodic: `waku/memory/episodic/store.py`, `notion_store.py`.
 - Procedural: `waku/memory/procedural/loader.py`, `installer.py`.
-- Self-management tools: `waku/tools/memory_admin.py` (`make_manage_memory_tool`, `make_update_soul_tool`, `make_create_skill_tool`), registered in `waku/tools/__init__.py:35`.
+- Self-management tools: `waku/tools/memory_admin.py` (`make_manage_memory_tool`, `make_update_soul_tool`, `make_create_skill_tool`), registered in `waku/tools/__init__.py` under `if memory is not None:`.
 - Human review: `waku/ops/dashboard.py` (`memory_action`, `_SELFMGMT`).
-- Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`, `test_retrieval_gate.py`, `test_consolidation.py`, `test_episodic_store_switch.py`, `test_skill_encoding.py`.
+- Memory benchmark: `waku/ops/memory_arena.py`, `evals/memory_arena.json`, `scripts/arena_clean.py`, `docs/memory-backends-playbook.md`, and the diagram builders `waku/ops/whiteboard/build_memory_anatomy.py`, `build_memory_in_harness.py`.
+- Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`, `test_retrieval_gate.py`, `test_consolidation.py`, `test_episodic_store_switch.py`, `test_skill_encoding.py`, `test_fact_store_conformance.py`, `test_memory_arena.py`, `test_memory_search.py`.
 
 ## History
+
+**2026-08-15** — [`4e59ab575827081b0986ed61afde5d6f21be64f8`](https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8) — re-pinned at HEAD. Screened again before reading: `pyproject.toml`, `uv.lock` and an example manifest inside the seven-day cooldown, two build-time execution points (`Makefile`, `evals/conftest.py`); nothing was installed or run. None of the seven capability marks changed — `human_review` still holds on the dashboard's memory tab, and nothing was added or removed. The additions are context. Facts became a swappable backend: a `FactStore` protocol (`waku/memory/semantic/base.py`) with a conformance suite now lets Supabase, mem0, Zep or LangMem stand in for the default SQLite store via `WAKU_SEMANTIC_STORE`. [`c1ee6476dcc9374638f29ba248fd41e38dbfdddc`](https://github.com/ShenSeanChen/waku-agent/commit/c1ee6476dcc9374638f29ba248fd41e38dbfdddc) added a "memory arena" (`waku/ops/memory_arena.py`) that races those backends through one harness on four-outcome scoring with a no-memory negative control — a committed benchmark, though results are gitignored and only the harness ships. [`25b456c0d8fa2586508d97279b4373cfb510e534`](https://github.com/ShenSeanChen/waku-agent/commit/25b456c0d8fa2586508d97279b4373cfb510e534) fixed an ASCII-only FTS tokenizer that silently dropped non-Latin queries. The stack row is promoted from `seeded` to `reviewed` and corrected: the SQLite fact store runs an FTS5 **lexical** arm (the seed recorded no retrieval arm), and the delegated backends are named. Deterministic eval files went from 50 to 60.
 
 **2026-08-06** — [`51228f07a4c8bad13987cdfb9668edd3ea9ba060`](https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060) — 32 commits on. One published claim was wrong, and wrong at the previous pin rather than overtaken by it: the report asserted no correction or deletion path existed. `waku/tools/memory_admin.py` was present at `5f638cfb`, registered unconditionally at `waku/tools/__init__.py:35`, with committed tests, and `waku/ops/dashboard.py` carried human CRUD over the same store at the same commit. Both were missed because the reading scoped itself to `waku/memory/` and took the directory name as the boundary of the mechanism. `human_review` is earned on the dashboard's memory tab and is added; the correction criticism narrows to its accurate form, which is that nothing is keyed on a rejected value. Reported by the maintainer on [issue #45](https://github.com/ShenSeanChen/waku-agent/issues/45), and verified here at the previous pin as well as at this one.
 

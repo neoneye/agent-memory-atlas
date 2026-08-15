@@ -261,7 +261,8 @@ retrieval policies</td>
 <td><a href="../systems/open-cowork/">open-cowork</a>, <a
 href="../systems/metaclaw/">MetaClaw</a>, <a
 href="../systems/mempalace/">MemPalace</a>, <a
-href="../systems/agentmemory/">agentmemory</a></td>
+href="../systems/agentmemory/">agentmemory</a>, <a
+href="../systems/waku-agent/">Waku Agent</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -290,6 +291,25 @@ the rest of this page.</p>
 <p><strong>open-cowork's harness</strong> is described below and is the
 most interesting evaluation shape in the atlas, precisely because it is
 not a public benchmark.</p>
+<p><strong>Waku Agent's "memory arena"</strong> is the repository-local
+harness worth singling out, because it does the thing this page keeps
+asking for. It holds the model and the probe set constant and varies
+only which store the facts live in — SQLite, Supabase, mem0, Zep or
+LangMem — so a difference in the scoreboard can only have come from the
+store. It seeds a <em>conversation</em> rather than a pre-extracted fact
+list, so each backend's own extraction is exercised, and it scores four
+outcomes rather than pass/fail: <code>PASS</code>, <code>MISS</code>,
+<code>STALE</code> (returns a superseded answer) and
+<code>INVENTED</code> (answers a probe that should have been refused).
+The last two are the correction-and-abstention signals the public
+benchmarks mostly skip. Its sharpest idea is a <strong>no-memory control
+contestant</strong> — "told nothing, then asked everything" — whose
+passes expose probes that were scoring the model's training data rather
+than the store; running it caught three of seven probes on one track
+doing exactly that. The one caveat is that no results are committed: the
+harness, a dull example fixture and a methodology doc ship, and the
+scoreboard is written to a gitignored directory, so the atlas can verify
+the <em>method</em> but not any <em>number</em>.</p>
 <h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
 commit</h3>
 <p>Four benchmarks were checked out and read rather than described from

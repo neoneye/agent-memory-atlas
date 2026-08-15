@@ -94,14 +94,14 @@ and nothing keyed on a rejected value.</p>
               <strong>ShenSeanChen/waku-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060" title="51228f07a4c8bad13987cdfb9668edd3ea9ba060">
+            <a class="meta-pill revision-pill" href="https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8" title="4e59ab575827081b0986ed61afde5d6f21be64f8">
               <span>Analyzed revision</span>
-              <code>51228f07…</code>
+              <code>4e59ab57…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-08-15</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -120,12 +120,15 @@ and nothing keyed on a rejected value.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Waku is a small MIT-licensed personal agent — about 800 lines of
+<p>Waku is a small MIT-licensed personal agent — about 800 lines of core
 memory code — organized around three pillars borrowed from cognitive
 science: <code>semantic/</code> (facts), <code>episodic/</code> (what
 happened), and <code>procedural/</code> (how to act). Each has a SQLite
-default and an optional external backend: Supabase for facts, Notion for
-episodes.</p>
+default and an optional external backend: facts can also live in
+Supabase, mem0, Zep or LangMem — all held to one <code>FactStore</code>
+contract by a conformance suite, so a hosted service stands in for local
+SQLite without anything upstream noticing — and episodes in Notion. The
+SQLite fact store is keyword search over FTS5.</p>
 <p>That structure is conventional. What makes Waku worth reading is that
 its design question is not <em>how do we remember more</em> but
 <strong>when should we not do the expensive thing</strong> — and it
@@ -171,9 +174,10 @@ that let the agent manage its own memory: <code>manage_memory</code>
 <code>update_soul</code> (append a behaviour rule to
 <code>SOUL.md</code>, deliberately append-only so "the agent can't
 delete its own honesty rules") and <code>create_skill</code> (write a
-new <code>SKILL.md</code>). All three are registered unconditionally in
-<code>waku/tools/__init__.py:35</code>, and
-<code>waku/ops/dashboard.py:778</code> gives a person the same CRUD over
+new <code>SKILL.md</code>). All three are registered whenever a memory
+store is present (<code>waku/tools/__init__.py</code>, under
+<code>if memory is not None:</code>), and
+<code>waku/ops/dashboard.py:798</code> gives a person the same CRUD over
 the same SQLite file. A reader who takes the directory named
 <code>memory</code> as the boundary of the memory system will conclude
 this project cannot correct anything, and be wrong.</p>
@@ -314,7 +318,7 @@ honesty rules"; a human does full rewrites in the dashboard. And
 rather than silently replacing it. Both are cases of giving the model a
 write verb and withholding the destructive half of it.</p>
 <p>The human door is <code>memory_action</code> in
-<code>waku/ops/dashboard.py:778</code> — <code>update_fact</code>,
+<code>waku/ops/dashboard.py:798</code> — <code>update_fact</code>,
 <code>delete_fact</code>, <code>delete_episode</code>,
 <code>save_soul</code>, <code>save_skill</code>, writing "the same
 sqlite file the agent uses (busy_timeout covers contention); changes are
@@ -366,8 +370,17 @@ href="../basic-memory/">Basic Memory</a> property of human-owned
 canonical state, arrived at by picking a familiar tool as the store.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Whatever the underlying stores provide, downstream of the gate. The
-gate is the mechanism worth studying; the search itself is
-unremarkable.</p>
+gate is the mechanism worth studying; the search itself is unremarkable
+— with one correctness caveat worth a footnote, because it reinforces
+the report's own thesis. The SQLite fact store searches FTS5, and
+<code>_fts_query</code> (<code>waku/memory/semantic/store.py</code>)
+previously tokenized ASCII-only, so a non-Latin or accented query was
+silently mangled (<code>"Müller" → "ller"</code>,
+<code>"Сергей" → ""</code>) and an empty result made the episodic store
+hand back <em>unrelated</em> memories under a "Relevant memory" heading
+— the over-interpretation the retrieval gate exists to prevent, arriving
+through the back door. It now tokenizes on Unicode word characters,
+pinned by <code>test_memory_search.py</code>.</p>
 <p>The cost model deserves stating honestly: the gate
 <strong>adds</strong> a small-model call to every turn in order to
 <strong>remove</strong> a search from some of them. Whether that trades
@@ -403,7 +416,7 @@ thinking-only response with <code>stop_reason=max_tokens</code> and pins
 that the log stays unconsolidated and no facts are written; what it pins
 is that the failure is safe, not that it is visible.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>A CLI agent plus a local dashboard, with fifty deterministic eval
+<p>A CLI agent plus a local dashboard, with sixty deterministic eval
 files under <code>evals/deterministic/</code>. Skills follow the
 published Agent Skills format, so procedural memory is portable to other
 runtimes that read it.</p>
@@ -411,7 +424,7 @@ runtimes that read it.</p>
 suggests: it can search, correct and delete its own facts and episodes,
 append a standing behaviour rule to its persona, and author a new skill
 — the last two gated so that the destructive halves stay with the human.
-<code>waku/ops/dashboard.py:526</code> groups the three under
+<code>waku/ops/dashboard.py:546</code> groups the three under
 <code>_SELFMGMT</code>, which is the project's own name for the
 boundary.</p>
 <p>The dashboard's memory tab is a review surface in the sense this
@@ -475,16 +488,43 @@ and neither logs.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Fifty deterministic eval files, model-free rather than model-judged,
+<p>Sixty deterministic eval files, model-free rather than model-judged,
 which is the right shape for behavioural checks.
 <code>test_retrieval_gate.py</code> carries eleven cases and every one
 is about plumbing: JSON extracted from prose, survival of a thinking
 block, failing open on an API error, exactly one model call.
 <code>test_episodic_store_switch.py</code> and
 <code>test_skill_encoding.py</code> exercise the self-management tools;
-<code>test_consolidation.py</code> pins the thinking-only truncation.
-Nothing was run for this review — a dependency surface was inside the
-seven-day cooldown.</p>
+<code>test_consolidation.py</code> pins the thinking-only truncation;
+<code>test_fact_store_conformance.py</code> holds every fact backend to
+the same contract, and <code>test_memory_search.py</code> pins the
+Unicode FTS fix. Nothing was run for this review — a dependency surface
+was inside the seven-day cooldown.</p>
+<p>The largest committed addition since the previous pin is a
+<strong>memory benchmark</strong>. <code>waku/ops/memory_arena.py</code>
+(896 lines) is a harness that holds the model and the probes constant
+and varies only <code>WAKU_SEMANTIC_STORE</code>, so "a difference in
+the scoreboard can only have come from where the facts live" — racing
+Waku's own SQLite against Supabase, mem0, Zep, LangMem and a no-memory
+control. It seeds a <em>conversation</em> rather than a pre-extracted
+fact list, so each backend's own extraction runs, then scores each probe
+on four outcomes: <code>PASS</code>, <code>MISS</code> (an honest
+failure), <code>STALE</code> (returns a superseded answer), and
+<code>INVENTED</code> (answers a probe that should have been refused) —
+the last being, in the code's words, "the number the whole exercise
+exists to produce." An LLM adjudicator settles only the verdicts a
+substring heuristic marks uncertain, and returns <code>None</code>
+rather than silently converting when unreachable. The <strong>negative
+control</strong> — a contestant "told nothing, then asked everything" —
+is the sharpest idea: any probe it passes was scoring the model's
+training data, not the store, and running it found 3 of 7 dinner-track
+probes doing exactly that. No results are committed; the harness writes
+to a gitignored directory, and only a deliberately dull example fixture
+(<code>evals/memory_arena.json</code>), a cleanup script and a
+methodology doc (<code>docs/memory-backends-playbook.md</code>) are in
+the tree. It measures other systems, so it changes none of Waku's own
+marks, but it is one of the more carefully-reasoned memory evals in the
+corpus. See the <a href="../../benchmarks/">benchmarks page</a>.</p>
 <p>The measurement the design most needs and does not have is
 <strong>gate accuracy</strong>: how often does
 <code>should_retrieve</code> return false on a turn that would have
@@ -583,8 +623,11 @@ prompt over time?</li>
 <li>Facade: <code>waku/memory/__init__.py</code>
 (<code>Memory</code>).</li>
 <li>Consolidation: <code>waku/memory/consolidation.py</code>.</li>
-<li>Semantic: <code>waku/memory/semantic/store.py</code>,
-<code>supabase_store.py</code>.</li>
+<li>Semantic: <code>waku/memory/semantic/store.py</code> (SQLite FTS5,
+<code>_fts_query</code>), and the <code>FactStore</code> contract
+<code>base.py</code> with backends <code>supabase_store.py</code>,
+<code>mem0_store.py</code>, <code>zep_store.py</code>,
+<code>langmem_store.py</code>.</li>
 <li>Episodic: <code>waku/memory/episodic/store.py</code>,
 <code>notion_store.py</code>.</li>
 <li>Procedural: <code>waku/memory/procedural/loader.py</code>,
@@ -593,16 +636,51 @@ prompt over time?</li>
 (<code>make_manage_memory_tool</code>,
 <code>make_update_soul_tool</code>,
 <code>make_create_skill_tool</code>), registered in
-<code>waku/tools/__init__.py:35</code>.</li>
+<code>waku/tools/__init__.py</code> under
+<code>if memory is not None:</code>.</li>
 <li>Human review: <code>waku/ops/dashboard.py</code>
 (<code>memory_action</code>, <code>_SELFMGMT</code>).</li>
+<li>Memory benchmark: <code>waku/ops/memory_arena.py</code>,
+<code>evals/memory_arena.json</code>,
+<code>scripts/arena_clean.py</code>,
+<code>docs/memory-backends-playbook.md</code>, and the diagram builders
+<code>waku/ops/whiteboard/build_memory_anatomy.py</code>,
+<code>build_memory_in_harness.py</code>.</li>
 <li>Evals: <code>evals/deterministic/test_working_memory.py</code>,
 <code>test_cli_memory.py</code>, <code>test_retrieval_gate.py</code>,
 <code>test_consolidation.py</code>,
 <code>test_episodic_store_switch.py</code>,
-<code>test_skill_encoding.py</code>.</li>
+<code>test_skill_encoding.py</code>,
+<code>test_fact_store_conformance.py</code>,
+<code>test_memory_arena.py</code>,
+<code>test_memory_search.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8"><code class="commit-id" title="4e59ab575827081b0986ed61afde5d6f21be64f8">4e59ab57…</code></a>
+— re-pinned at HEAD. Screened again before reading:
+<code>pyproject.toml</code>, <code>uv.lock</code> and an example
+manifest inside the seven-day cooldown, two build-time execution points
+(<code>Makefile</code>, <code>evals/conftest.py</code>); nothing was
+installed or run. None of the seven capability marks changed —
+<code>human_review</code> still holds on the dashboard's memory tab, and
+nothing was added or removed. The additions are context. Facts became a
+swappable backend: a <code>FactStore</code> protocol
+(<code>waku/memory/semantic/base.py</code>) with a conformance suite now
+lets Supabase, mem0, Zep or LangMem stand in for the default SQLite
+store via <code>WAKU_SEMANTIC_STORE</code>. <a
+href="https://github.com/ShenSeanChen/waku-agent/commit/c1ee6476dcc9374638f29ba248fd41e38dbfdddc"><code class="commit-id" title="c1ee6476dcc9374638f29ba248fd41e38dbfdddc">c1ee6476…</code></a>
+added a "memory arena" (<code>waku/ops/memory_arena.py</code>) that
+races those backends through one harness on four-outcome scoring with a
+no-memory negative control — a committed benchmark, though results are
+gitignored and only the harness ships. <a
+href="https://github.com/ShenSeanChen/waku-agent/commit/25b456c0d8fa2586508d97279b4373cfb510e534"><code class="commit-id" title="25b456c0d8fa2586508d97279b4373cfb510e534">25b456c0…</code></a>
+fixed an ASCII-only FTS tokenizer that silently dropped non-Latin
+queries. The stack row is promoted from <code>seeded</code> to
+<code>reviewed</code> and corrected: the SQLite fact store runs an FTS5
+<strong>lexical</strong> arm (the seed recorded no retrieval arm), and
+the delegated backends are named. Deterministic eval files went from 50
+to 60.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060"><code class="commit-id" title="51228f07a4c8bad13987cdfb9668edd3ea9ba060">51228f07…</code></a>
 — 32 commits on. One published claim was wrong, and wrong at the

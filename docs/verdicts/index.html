@@ -722,10 +722,14 @@ not that it decides correctly, and the project's whole thesis rests on
 the second.</li>
 <li>Most reusable component: <code>should_retrieve()</code> — the
 fail-open branch and the recorded reason included.</li>
-<li>Maturity impression: 825 lines of memory code under fifty model-free
-eval files, unusually clear about why each expensive step is
+<li>Maturity impression: ~800 lines of core memory code under sixty
+model-free eval files, unusually clear about why each expensive step is
 conditional, and a maintainer who files the criticism as an issue and
-states the error asymmetry a single accuracy number would hide.</li>
+states the error asymmetry a single accuracy number would hide. Facts
+became a swappable backend behind one contract, and the repo now ships a
+memory "arena" that races SQLite, Supabase, mem0, Zep and LangMem
+against a no-memory control on four-outcome scoring — a genuinely
+careful eval whose one gap is that no results are committed.</li>
 <li>Study when: retrieval runs every turn and you suspect it is hurting
 as often as helping.</li>
 <li>Do not copy when: you need a correction that survives the next
@@ -6715,14 +6719,16 @@ change rather than the row, and writes the replacement to durable
 storage <em>before</em> superseding the original, with the crash window
 named in a comment and resolved in favour of a recoverable fork over a
 possible loss.</li>
-<li>Biggest risk: doubt is arithmetic. Seven record statuses and a
-six-level trust ladder exist as fields, and <code>conflict</code>,
-<code>demoted</code> and <code>untrusted</code> enter recall as
-penalties of 0.3, 0.35 and 0.3 rather than as filters. Only the deletion
-states — <code>pruned</code> and <code>tombstoned</code> — score
-<code>-Infinity</code>. A memory the system has recorded as
-contradicting another memory ranks lower and reaches the prompt,
-labelled with its status, which moves the judgement to the model.</li>
+<li>Biggest risk: the doubt that flags a <em>contradiction</em> is still
+arithmetic. The neo statuses <code>conflict</code>, <code>demoted</code>
+and <code>untrusted</code> enter recall as penalties of 0.3, 0.35 and
+0.3 rather than as filters, so a memory recorded as contradicting
+another ranks lower and reaches the prompt, labelled with its status,
+which moves the judgement to the model. Release 7.3.0 does add one doubt
+state that withholds — a claim-level epistemic <code>invalidated</code>
+status is a hard filter at all three read layers — but it sits on a
+separate axis from the contradiction flag, so the specific "I recorded a
+conflict and injected it anyway" path remains.</li>
 <li>Most reusable component: the injected-context guard. Text PLUR1BUS
 itself put into a prompt is marker-matched and refused as a capture
 candidate, which closes the recall-becomes-memory loop the code traces
@@ -6732,14 +6738,17 @@ append dedupe key is computed so a status transition is never mistaken
 for a content duplicate, and the recall path deduplicates by <em>newest
 revision</em> rather than first appearance, because in an append-only
 log the first copy of a record is the one from before the decision.</li>
-<li>Maturity impression: MIT, release 7.2.6, ~64,000 lines of JavaScript
-with ~70,000 more across 317 test files — a test suite larger than the
+<li>Maturity impression: MIT, release 7.3.0, ~68,000 lines of JavaScript
+with ~80,000 more across 339 test files — a test suite larger than the
 implementation, and the denials rather than the permissions are what it
-asserts. Its regression tests pin arithmetic to numbers on both sides of
-an admission threshold, and its own commit records verifying that they
-fail without the fix. Against that, forty-seven configuration groups,
-fifteen background jobs, and a <code>postinstall</code> that patches the
-host OpenClaw's shipped code and is contractually unable to fail.</li>
+asserts. v7.3.0 added a bi-temporal validity window, a
+content-fingerprint rejected-value tombstone, and a hard-filtering
+epistemic status, each with a large committed suite
+(<code>valid-time.test.js</code> alone is 1,721 lines), plus scope fixes
+to the dream reader and the <code>/critical</code> surface. Against
+that, forty-seven configuration groups, fifteen background jobs, and a
+<code>postinstall</code> that patches the host OpenClaw's shipped code
+and is contractually unable to fail.</li>
 <li>Study when: you are designing a correction path and want the most
 complete worked answer in this atlas to "change a memory without losing
 the old one" — or you are putting state transitions into an append-only
@@ -8114,10 +8123,12 @@ whole even into a different store.</li>
 <li>Do not copy when: you cannot produce a trustworthy outcome signal —
 the design degrades to self-grading if every outcome is
 <code>machine</code>. Also walk away if you need contradiction
-<em>resolved</em> rather than flagged, or a rejected-value tombstone
-that keeps a bad lesson gone; the near-duplicate dedup and quarantine
-both check stored lessons, not rejected ones, so continuous
-re-distillation can resurrect a suppressed lesson.</li>
+<em>resolved</em> rather than flagged. Note that the rejected-value gap
+is now half-closed: near-duplicate pruning writes a content-hashed
+tombstone that distillation refuses to re-derive, so a pruned duplicate
+cannot return — but quarantine still keeps a suppressed row without a
+rejected-value record, so a quarantined lesson re-distilled from a fresh
+interaction can come back.</li>
 </ul>
 <h3 id="gmr"><a href="../systems/gmr/"><code>gmr</code></a></h3>
 <ul>

@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: "Krilliac/Sonder-runtime"
 source_url: https://github.com/Krilliac/Sonder-runtime
-revision: 2a11324cbb131c76572724ac1fe47362a4aedf83
-revision_url: https://github.com/Krilliac/Sonder-runtime/commit/2a11324cbb131c76572724ac1fe47362a4aedf83
-analyzed_at: 2026-08-14
-capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
+revision: 53a6ac550488f9fd9d59dea61fb4bcea85a6dc03
+revision_url: https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03
+analyzed_at: 2026-08-15
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval, tombstone"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -18,22 +18,22 @@ matrix:
   storage: "One stdlib-only SQLite database with a dozen tables and an FTS5 virtual table; embeddings as BLOBs stamped with model and revision"
   retrieval: "Hybrid — embedding cosine at min_sim 0.62 unioned with FTS5 lexical, MMR-reranked (lambda 0.5), with quarantined lessons excluded before ranking"
   write: "A lesson-distillation state machine claims an interaction, extracts a concrete lesson, and refuses exact and semantic duplicates; outcomes are credited back to the lessons that were retrieved"
-  update_delete: "Preferences carry a revision and every apply/rollback is journalled in refinement_history with optimistic version checks; a near-duplicate pruner deletes redundant lessons keeping one representative"
+  update_delete: "Preferences carry a revision and every apply/rollback is journalled in refinement_history with optimistic version checks; a near-duplicate pruner deletes redundant lessons keeping one representative and writes a content-hashed tombstone so the pruned value cannot be re-distilled"
   scoping: "Interactions, tasks, preferences and sessions filter by project and an account_scope supplied by the authenticated serving layer; lessons are deliberately global procedural knowledge"
   integration: "A terminal runtime, REPL, headless service and MCP surface over one local database; the memory adapter is stdlib-only and importable"
   background: "Distillation, near-duplicate pruning, age-decay ranking, contradiction detection and quarantine, all driven by accumulated outcomes"
   trust: "A lesson is active, quarantined or on probation by outcome statistics; preferences carry confidence, evidence_count and an enabled flag; every outcome records who judged it"
   strengths: "Outcome-gated quarantine that deduplicates blame across co-retrieved lessons and tests a loss run against the lesson's own frequency-band base rate before suppressing it, with a probation path back"
-  risks: "The whole loop trusts an outcome signal whose provenance is often machine or unknown, and quarantine suppresses a lesson without recording a rejected value, so a re-distilled duplicate can return"
+  risks: "The whole loop trusts an outcome signal whose provenance is often machine or unknown; near-duplicate pruning now tombstones the rejected value, but quarantine still suppresses a lesson without one, so a quarantined lesson re-distilled from a fresh interaction can return"
 ---
 
 ## 1. Executive Summary
 
-Sonder Runtime is a self-modifying terminal agent — Apache-2.0, ~257,000 lines
-of Python across 742 files, with a code-rewriting loop (`selfmod.py`), a training
+Sonder Runtime is a self-modifying terminal agent — Apache-2.0, ~260,000 lines
+of Python across 743 files, with a code-rewriting loop (`selfmod.py`), a training
 pipeline, an NPU broker, and a great deal else. Most of that is out of this
 atlas's scope. What is in scope is a genuinely serious memory subsystem: a
-stdlib-only SQLite adapter (`sonder_runtime/adapters/memory_store.py`, 3,529
+stdlib-only SQLite adapter (`sonder_runtime/adapters/memory_store.py`, 3,632
 lines) that stores **interactions**, the **outcomes** credited to them, and the
 **lessons** distilled from them, and then lets the outcomes decide which lessons
 keep being retrieved.
@@ -76,10 +76,12 @@ implementations that acts on it).
 The weakness is the same fact read from the other side. The loop is only as good
 as the outcome signal, and in practice much of that signal is `machine` or
 `unknown` — the code treats those categories with visible suspicion, which is the
-right instinct and also an admission that the ground truth is thin. And
-quarantine *suppresses* a lesson without recording a *rejected value*, so a
-re-distillation of the same idea can re-enter; the dedup that would stop it is
-keyed on the interaction, not on the rejected content.
+right instinct and also an admission that the ground truth is thin. And the
+rejected-value gap is now half-closed: near-duplicate pruning writes a
+content-hashed tombstone that distillation refuses to re-derive, so a pruned
+duplicate cannot come back — but quarantine still *suppresses* a lesson without
+recording a rejected value, so a lesson quarantined for being harmful, then
+re-distilled from a fresh interaction, can re-enter.
 
 ## 2. Mental Model
 
@@ -119,13 +121,17 @@ the design's sophistication:
 - **Age-decay ranking** — a lesson loses ground over a 30-day half-life to
   fresher lessons, blended with usage evidence; not deletion but demotion.
 
-Nothing here records a *rejected value* — quarantine keeps the row and suppresses
-it, pruning deletes a duplicate, and the distillation refusal (`semantic_duplicate`)
-is keyed on the interaction that would have produced the lesson, not on the
-lesson content itself. So `tombstone` is withheld: a lesson quarantined for being
-harmful, then re-distilled from a fresh interaction, can return. The near-miss is
-worth naming because the machinery to close it — an embedding of the rejected
-lesson, checked at distillation — is already present for the duplicate case.
+One of these paths now records a *rejected value* and one does not. Near-duplicate
+pruning writes a `lesson_tombstones` row keyed on the pruned lesson's
+normalized-text SHA-256, carrying its embedding but — by an explicit comment —
+never its text, and distillation refuses a candidate that matches one, by exact
+hash and by semantic similarity to those embeddings, terminating with
+`result: rejected_value`. So a pruned duplicate cannot be re-distilled, and
+`tombstone` is earned. Quarantine is the path that still does *not* tombstone: it
+keeps the row and suppresses it, so a lesson quarantined for being harmful, then
+re-distilled from a fresh interaction, can return. The machinery to close that is
+now one call away — the same tombstone check the pruner triggers, extended from
+pruning to quarantine.
 
 ```mermaid
 %% caption: outcomes credited back to retrieved lessons drive a quarantine that checks blame attribution and base rate before it suppresses
@@ -139,10 +145,11 @@ flowchart TB
     Q -->|"otherwise"| Active["active"]
     Quar -->|"after cooldown"| Prob["sampled probation retrieval"]
     Prob -->|"a win"| Active
-    Task -->|"went well"| Dist["distill: refuse not_concrete,<br/>exact_duplicate, semantic_duplicate"]
+    Task -->|"went well"| Dist["distill: refuse not_concrete,<br/>exact_duplicate, semantic_duplicate,<br/>rejected_value (tombstone hit)"]
     Dist --> Lesson[("lessons + embedding + FTS")]
-    Lesson -.->|"cosine ≥ 0.93"| Prune["near-duplicate pruned, keep one"]
-    Quar -.->|"row kept, no rejected-value record"| Regrow["a re-distilled duplicate can return"]
+    Lesson -.->|"cosine ≥ 0.93"| Prune["near-duplicate pruned, keep one +<br/>content-hashed tombstone"]
+    Prune -.->|"distillation refuses by hash or embedding"| Blocked["a pruned duplicate cannot return"]
+    Quar -.->|"row kept, no rejected-value record"| Regrow["a re-distilled quarantined lesson can return"]
 ```
 
 ## 3. Architecture
@@ -164,8 +171,9 @@ adapter:
 - **`lesson_decay.py`** (253) — pure age-decay + usage-evidence ranking math, and
   a contradiction detector for semantically-similar lessons carrying opposite
   outcomes. No I/O, no clock, similarity injected — built for deterministic tests.
-- **`lesson_pruner.py`** (256) — embedding-cluster near-duplicate removal,
-  dry-run by default, embedding-space-isolated.
+- **`lesson_pruner.py`** (256) — embedding-cluster near-duplicate removal that
+  writes a content-hashed rejected-value tombstone as it deletes, dry-run by
+  default, embedding-space-isolated.
 - **`memory_quality.py`** (358) — a read-only auditor that flags vague lessons
   (*"use appropriate", "be careful", "best practices"*) against concrete anchors
   (backticks, dotted names, Big-O).
@@ -201,7 +209,9 @@ read and cross-checked against its committed tests.
 - **Write / distill** — the `lesson_distillations` state machine in
   `memory_store.py`: `claim` an interaction, extract a lesson, transition to
   `stored` / `no_lesson` / `cancelled`, with `result_reason` recording
-  `not_concrete`, `exact_duplicate`, or `semantic_duplicate`.
+  `not_concrete`, `exact_duplicate`, `semantic_duplicate`, or `rejected_value`
+  (a hit against the tombstone registry, by exact hash in `reflection.py:465` or
+  by embedding in `is_tombstoned_duplicate`).
 - **Credit** — `lesson_usage` rows link a retrieved lesson to its interaction;
   outcome signal, reward and `outcome_source` are filled in when the outcome
   lands (`record_outcome`, the `_checked_source` guard).
@@ -217,7 +227,14 @@ read and cross-checked against its committed tests.
   writes a `refinement_history` row per `apply`/`rollback` with `expected_version`
   optimistic concurrency and before/after versions.
 - **Prune** — `lesson_pruner.prune` clusters by cosine ≥ `0.93` and deletes all
-  but one representative per cluster, dry-run unless `--apply`.
+  but one representative per cluster, dry-run unless `--apply`; each deletion goes
+  through `memory_store.tombstone_lesson` (`lesson_pruner.py:209`), writing a
+  `lesson_tombstones` row (content SHA-256 + embedding) so the value cannot be
+  re-distilled.
+- **Tombstone / re-derivation guard** — `memory_store.tombstone_lesson`
+  (`:2225`) records the digest and embedding then deletes the lesson rows;
+  `lesson_text_tombstoned` and `all_lesson_tombstones` back the distillation
+  refusal. `delete_interaction` purges the tombstones derived from it.
 - **Decay / contradiction** — `lesson_decay` blends a 30-day half-life with a
   small usage weight and flags contradicting lesson pairs.
 - **Quality audit** — `memory_quality` classifies stored lessons as vague or
@@ -247,6 +264,18 @@ and an on/off switch. `refinement_history` records `operation IN ('apply',
 `parent_refinement_id`, which is an **append-only audit of every correction, with
 rollback** — the mechanism the [append-only memory audit](../../patterns/append-only-memory-audit/)
 pattern describes, applied to preferences.
+
+`lesson_tombstones` is the model's rejected-value record. Its primary key is the
+normalized-text SHA-256 of a pruned lesson, and it carries the lesson's embedding
+and vector provenance but — by an explicit comment — never the lesson text:
+*"its content identity must not disappear with it… never retain the lesson text in
+this denial record."* A `reason CHECK` admits only `near_duplicate_pruned` today,
+so the table is scoped to the pruning path, and deleting a source interaction
+purges the tombstones derived from it. This is the value-keyed
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/), and it is
+kept distinct from privacy deletion on purpose: `delete_lesson` and the new
+project-scoped `delete_fact` erase completely, while `tombstone_lesson` rejects a
+value and remembers, content-free, that it did.
 
 **Scoping** is real on the scoped stores and absent on the lesson store, by
 design. Interactions carry `project` and a `project_explicit` flag; tasks and
@@ -320,13 +349,15 @@ interaction that produced a storable lesson, gated by the concreteness and dedup
 checks, so noise does not accumulate.
 
 Deletion has the two shapes above — reversible quarantine and irreversible
-near-duplicate pruning — and the honest gap is that neither leaves a
-rejected-value record. A lesson pruned as a duplicate or quarantined as harmful
-can be re-distilled from a new interaction, because the dedup check compares a
-candidate against *stored* lessons, and a quarantined lesson is still stored while
-a pruned one is gone. Closing that would mean keeping an embedding of the rejected
-lesson and checking distillation against it — the same move the duplicate path
-already makes, extended to rejections.
+near-duplicate pruning — and they now differ in exactly the way that matters.
+Pruning writes a `lesson_tombstones` row keyed on the rejected lesson's content
+hash and embedding, and distillation checks a candidate against it by both exact
+hash and semantic match, returning `rejected_value`; a pruned duplicate cannot be
+re-distilled. Quarantine still leaves no rejected-value record — it keeps the row
+and suppresses it — so a lesson quarantined as harmful can be re-distilled from a
+fresh interaction and return. Closing that is now a one-line extension: the
+tombstone check the pruner already triggers, applied when a lesson is quarantined
+rather than only when it is pruned.
 
 ## 8. Agent Integration
 
@@ -377,8 +408,10 @@ credit-assignment discipline the atlas argues for and finds almost nowhere.
 trusts an outcome signal that is frequently `machine` or `unknown`; the code's
 suspicion of those categories is correct but does not manufacture ground truth
 where there is none, so a store fed only machine-graded outcomes is a store
-grading itself, however carefully the weights are set. Quarantine suppresses
-without a rejected-value tombstone, so re-distillation can resurrect a bad lesson.
+grading itself, however carefully the weights are set. Near-duplicate pruning now
+writes a content-hashed rejected-value tombstone that distillation honours, so a
+pruned duplicate cannot come back; quarantine still suppresses without one, so a
+quarantined lesson can be re-distilled from a fresh interaction and resurrect.
 And the base-rate test's need for evidence gives a new harmful lesson a grace
 period.
 
@@ -391,7 +424,7 @@ disk.
 ## 10. Tests, Evals, and Benchmarks
 
 The test suite is large and unusually well-aimed at the mechanisms this report
-cares about: 357 test files, and the memory-relevant ones assert behaviour rather
+cares about: 362 test files, and the memory-relevant ones assert behaviour rather
 than coverage. `tests/test_retriever.py` alone pins the quarantine's design:
 `test_quarantine_judges_a_lesson_against_its_own_frequency_band` (with an explicit
 `p=0.006`), `test_positive_outcome_rehabilitates_quarantined_lesson`,
@@ -408,6 +441,17 @@ asserts a quarantined lesson reaches neither the prompt nor the trace, and the
 retriever tests assert quarantined lessons are excluded from the candidate set.
 `tests/test_outcome_source.py` ties the eligibility decision to provenance,
 asserting a lesson driven by non-caller outcomes is not treated as active.
+
+The rejected-value tombstone is pinned by tests of its own.
+`tests/test_reflection.py::test_store_prepared_lesson_refuses_pruned_value_tombstone`
+refuses a re-distillation of a pruned lesson by exact text, and
+`…refuses_semantic_pruned_tombstone` refuses a *reworded* one whose embedding
+still matches — the semantic half being what makes the tombstone more than a hash
+set. `tests/test_lesson_pruner.py` asserts the tombstones are written with no
+lesson text retained, and `tests/test_memory_store.py` asserts deleting a source
+interaction purges the tombstones derived from it. These are write-refusal
+assertions rather than retrieval-omission ones, so they strengthen the
+rejected-value story without adding to `negative_eval`.
 
 What is missing is an end-to-end retrieval-quality benchmark: the constants — the
 0.62 relevance floor, the 0.93 dedup threshold, the 30-day half-life, the
@@ -451,6 +495,13 @@ apply/rollback and `expected_version` is optimistic concurrency plus an audit
 trail in one table; a preference can be corrected, the correction can be rolled
 back, and both are on the record.
 
+**Tombstone a rejected value without keeping the value.** Sonder's pruner records
+the normalized-text hash and the embedding of the lesson it removes — never the
+text — and distillation refuses a re-derivation by both exact hash and semantic
+match. It is a rejected-value tombstone that is also privacy-safe, and it stays
+distinct from a full privacy delete that erases everything, so "reject a value"
+and "erase a record" are two verbs rather than one.
+
 ### Avoid
 
 **Do not let outcome provenance be optional.** A nullable-with-default `source`
@@ -463,8 +514,10 @@ guards, an outcome-gated memory punishes the memories that get the hard tasks an
 lets a co-failing cohort escape, which is backwards.
 
 **Do not suppress without a rejected-value record if re-derivation is likely.**
-Sonder's own gap: a quarantined or pruned lesson can be re-distilled because the
-dedup checks stored lessons, not rejected ones. If your extractor runs
+Sonder shows both halves: its pruner now writes a content-hashed tombstone that
+distillation checks, so a pruned duplicate cannot come back — but quarantine still
+keeps the row without a rejected-value record, so a quarantined lesson can be
+re-distilled from a fresh interaction and return. If your extractor runs
 continuously, a suppression that does not tombstone the value invites it back.
 
 **Do not confuse a preference version history with bitemporality.** Revisions are
@@ -492,11 +545,14 @@ self-modifying agent around them.
 ## 12. Open Questions
 
 - What fraction of outcomes in practice carry `caller` provenance versus
-  `machine`/`unknown`? The trust math is only as strong as that ratio, and
-  nothing committed reports it.
-- Does any path re-embed and check a candidate lesson against *quarantined* or
-  *pruned* lessons at distillation, or only against active ones? The latter is
-  what leaves the re-derivation gap.
+  `machine`/`unknown`? The improvement report now surfaces the buckets
+  (`legacy/unknown provenance: N` beside the caller-judged and autograded rates)
+  rather than a blended number, but no committed run reports the ratio on real
+  traffic — and the trust math is only as strong as it.
+- Distillation now checks a candidate against *pruned* lessons via the tombstone
+  registry, by exact hash and by embedding. Does the same check ever run against
+  *quarantined* lessons, or is quarantine still the one suppression a
+  re-derivation can undo? At this reading it is the latter.
 - Are the quarantine constants (five losses, two distinct tasks, 24-hour
   probation) tuned against anything, or chosen? Each is defended in a comment,
   none is measured.
@@ -511,7 +567,7 @@ self-modifying agent around them.
 
 **Store and schema**
 
-- `sonder_runtime/adapters/memory_store.py` — the SQLite adapter: schema, distillation state machine, outcome crediting, `outcomes.source` enforcement.
+- `sonder_runtime/adapters/memory_store.py` — the SQLite adapter: schema, distillation state machine, outcome crediting, `outcomes.source` enforcement, the `lesson_tombstones` rejected-value registry (`tombstone_lesson`, `lesson_text_tombstoned`, `all_lesson_tombstones`), and the project-scoped `delete_fact`.
 - `memory_store.py`, `recall.py` — root compatibility shims aliasing the adapters.
 
 **Retrieval and trust**
@@ -524,7 +580,7 @@ self-modifying agent around them.
 
 - `lesson_pruner.py` — embedding-cluster near-duplicate deletion.
 - `memory_quality.py` — vague-vs-concrete lesson auditing.
-- `grounded_extraction.py`, `reflection.py` — lesson and outcome extraction.
+- `grounded_extraction.py`, `reflection.py` — lesson and outcome extraction, including the distillation tombstone check that returns `rejected_value` (`is_tombstoned_duplicate`).
 
 **Correction**
 
@@ -541,7 +597,11 @@ self-modifying agent around them.
 - `tests/test_learning_health.py` — shared-blame cohort cases.
 - `tests/test_outcome_source.py` — provenance-gated eligibility.
 - `tests/test_orchestrator_memory.py` — quarantined lesson omitted from prompt and trace.
+- `tests/test_reflection.py` — distillation refuses a pruned value by exact hash and by embedding (`rejected_value`).
+- `tests/test_lesson_pruner.py`, `tests/test_memory_store.py` — tombstones written without lesson text; purged when their source interaction is deleted.
 
 ## History
+
+**2026-08-15** — [`53a6ac550488f9fd9d59dea61fb4bcea85a6dc03`](https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03) — re-pinned at HEAD, around fifty commits past the first reading. Screened again before reading: no auto-run surface, two build-time `conftest.py` points, two unpinned dev/train ranges, nothing inside the cooldown; nothing was installed or run. [`ec351a477e325b9c66eca17df8f3a5d612d063d7`](https://github.com/Krilliac/Sonder-runtime/commit/ec351a477e325b9c66eca17df8f3a5d612d063d7) added a `lesson_tombstones` table keyed on a pruned lesson's normalized-text SHA-256 plus its embedding — content-free by an explicit comment — and `reflection.py` now refuses a re-distillation matching one by exact hash or by embedding (`result: rejected_value`); the near-duplicate pruner writes a tombstone as it deletes. That earns `tombstone` and closes the re-derivation gap for the pruning path, leaving quarantine as the one suppression that still keeps a row without a rejected-value record. [`e33c604468d0da2561477b29c6f694c9cfd3c4ff`](https://github.com/Krilliac/Sonder-runtime/commit/e33c604468d0da2561477b29c6f694c9cfd3c4ff) added a project-scoped `delete_fact`, and [`03455668e4b4718a833cb78a138020d64b892970`](https://github.com/Krilliac/Sonder-runtime/commit/03455668e4b4718a833cb78a138020d64b892970) surfaces `legacy/unknown` outcome provenance as its own bucket in the improvement report rather than folding it into a blended rate. `memory_store.py` is 3,632 lines; the tree is ~259,800 lines of Python across 743 files, 362 test files.
 
 **2026-08-14** — [`2a11324cbb131c76572724ac1fe47362a4aedf83`](https://github.com/Krilliac/Sonder-runtime/commit/2a11324cbb131c76572724ac1fe47362a4aedf83) — first reading. Screened before opening: no auto-run surfaces, no dependency surfaces inside the cooldown, two build-time execution points (`conftest.py`), two unpinned dev/train requirement ranges. Nothing was installed or run; the quarantine's base-rate and attribution guards, the outcome-provenance enforcement, and the retrieval exclusion were read from `retriever.py`, `memory_store.py` and `lesson_decay.py` and cross-checked against the committed tests named above.
