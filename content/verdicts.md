@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 289 reports.**
+**This page covers all 290 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2519,3 +2519,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: from MemTensor (the MemOS team) but its own TypeScript engine, not MemOS embedded; ~44,000 lines of memory core, SQLite + FTS5 + sqlite-vec, local embeddings, an LLM L1→L2→L3→Skill evolution pipeline, 57 test files. Earns `tombstone`, `trust_state`, `audit_log` and `negative_eval`; `scope_enforced` is withheld by design.
 - Study when: you run several coding agents and want them to share one growing local memory, and you value the shared brain over per-project isolation.
 - Do not copy when: you need per-project or per-trust-boundary isolation from one daemon — the main recall deliberately does not scope — or "local" is a hard requirement you cannot police against the opt-in cloud backend.
+
+### [`always-on-memory-agent`](../systems/always-on-memory-agent/)
+
+- Best idea: replace retrieval with a read. No vector DB and no embeddings — memories are structured SQLite rows, and the query agent loads the recent window (50 memories + 10 consolidations) for Gemini to read and answer with citations. Beside it, a genuine always-on consolidation daemon on a 30-minute timer that reads the unconsolidated set, finds cross-cutting connections and one insight, writes it, and marks the sources done — the "compress and connect during sleep" idea done as real background work.
+- Biggest risk: recall is a recency window, not relevance. Past the fifty most recent rows a memory is invisible to a query unless a consolidation folded it in; the design does not scale beyond what fits the context window, and it is not trying to. Correction is a hard delete with no rejected-value record, so a re-ingested claim returns and a deleted memory can leave a dangling `source_id` inside a consolidation.
+- Most reusable component: the load-and-read query paired with the standalone consolidation loop — the anti-RAG shape (structured capture, no vectors, model-as-reader, background compression) in about 700 readable lines.
+- Maturity impression: MIT (© Shubham Saboo), a ~1,000-line sample vendored into Google's `generative-ai` repo, on Google ADK + Gemini Flash-Lite with multimodal ingest, a file watcher, an HTTP API and a Streamlit dashboard. No capability mark: `importance` is a stored-but-unranked float, `consolidated` a processing flag, delete is hard, and there is no scope, validity time or audit. No tests, no eval.
+- Study when: you are prototyping a personal, always-on memory without an embedding stack and want the clarity of a load-and-read design and an active consolidation daemon.
+- Do not copy when: your store will outgrow a context window, you need to find the *relevant* memory rather than the recent one, or you need scope, correction that sticks, or any trust/audit property — none is present and the recency-window ceiling is architectural, not a knob.

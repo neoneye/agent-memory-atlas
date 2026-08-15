@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Gemini/ADK memory agent that
+stores structured memories in SQLite, never embeds or searches them, and
+instead loads a recent window for the model to read — with a background
+daemon that consolidates unconsolidated memories into cross-cutting
+insights on a timer, the way sleep is said to.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Always-On Memory
+Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A Gemini/ADK memory agent
+that stores structured memories in SQLite, never embeds or searches
+them, and instead loads a recent window for the model to read — with a
+background daemon that consolidates unconsolidated memories into
+cross-cutting insights on a timer, the way sleep is said to.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Always-On Memory
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Gemini/ADK memory agent
+that stores structured memories in SQLite, never embeds or searches
+them, and instead loads a recent window for the model to read — with a
+background daemon that consolidates unconsolidated memories into
+cross-cutting insights on a timer, the way sleep is said to.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Always-On Memory Agent — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">No vector DB — the model is the
+retriever</p>
+          <h1>Always-On Memory Agent</h1>
+          <p class="document-deck">A Gemini/ADK memory agent that stores
+structured memories in SQLite, never embeds or searches them, and
+instead loads a recent window for the model to read — with a background
+daemon that consolidates unconsolidated memories into cross-cutting
+insights on a timer, the way sleep is said to.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent">
+              <span>Source</span>
+              <strong>GoogleCloudPlatform/generative-ai
+(always-on-memory-agent)</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd" title="97597c46d0c2fe9a3c187b970d32d93100f738fd">
+              <span>Analyzed revision</span>
+              <code>97597c46…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>The Always-On Memory Agent is a small MIT-licensed sample — about
+1,000 lines of Python (<code>agent.py</code> 677,
+<code>dashboard.py</code> 323) authored by Shubham Saboo and included in
+Google's <code>generative-ai</code> samples repository — that is worth a
+report because it commits, cleanly and on purpose, to a design most of
+this corpus argues against. Its README states the bet in three
+sentences: <em>"No vector database. No embeddings. Just an LLM that
+reads, thinks, and writes structured memory."</em> There is no retrieval
+anywhere in the code. A memory is stored as a structured row in SQLite,
+and when the agent is asked a question it loads the most recent fifty
+memories plus the last ten consolidations into the context window and
+lets Gemini synthesize an answer with citations. The model is the
+retriever.</p>
+<p>The second commitment is the one the name points at. A background
+<code>consolidation_loop</code> runs on a 30-minute timer, and — in the
+project's own analogy to sleep — reads the memories not yet
+consolidated, has the model find connections between them and one
+cross-cutting insight, writes that to a <code>consolidations</code>
+table, appends the discovered links onto the source memories, and marks
+them consolidated. This is a real always-on daemon doing active
+compression and connection, not the batched summarization most systems
+here run at write time; it is the closest thing in the corpus to the
+"replay and connect during sleep" framing taken literally, on a clock,
+as its own process.</p>
+<p>The design is honest about what it is and the atlas should be too: it
+earns <strong>none of the seven capability marks</strong>, and the
+reasons are structural rather than oversights. There is no scope key
+(one SQLite file, one user), no discrete trust state
+(<code>importance</code> is a float, <code>consolidated</code> a
+processing flag), no bitemporal axis, no audit log, and no
+rejected-value record — deletion is a hard <code>DELETE</code> by id, so
+a claim a user removes returns the next time the same content is
+ingested from a new path. And the "no retrieval" bet has a hard ceiling:
+recall is a fifty-row recency window, so relevance is whatever fits, and
+the system is built for a personal store measured in hundreds of
+memories, not a growing one.</p>
+<p>What it is, then, is a clear, buildable illustration of an anti-RAG
+memory architecture — structured capture, no embeddings, load-and-read
+query, and an active consolidation daemon — from an official samples
+repository, with a multimodal ingest path and a dashboard. It is a good
+thing to read for the shape; it is not a store you would grow past the
+context window.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a structured note the model wrote about an input; recall
+is the model reading a recent window of those notes.</p>
+<pre class="text"><code>ingest (file / HTTP / inbox watcher)
+  Gemini multimodal -&gt; {summary, entities[], topics[], importance}
+  store_memory -&gt; memories row (raw_text, summary, entities, topics, importance, consolidated=0)
+
+consolidate (every 30 min, always-on):
+  read_unconsolidated_memories (WHERE consolidated=0, LIMIT 10)
+  model finds connections + one insight
+  store_consolidation -&gt; consolidations row (source_ids, summary, insight)
+                         append connections onto each source memory
+                         UPDATE memories SET consolidated=1 WHERE id IN (...)
+
+query:
+  read_all_memories (ORDER BY created_at DESC LIMIT 50) + read_consolidation_history (LIMIT 10)
+  model synthesizes an answer with [Memory N] citations   -- no search, no ranking</code></pre>
+<p>The unit is deliberately thin on epistemics and rich on structure. A
+<code>memories</code> row carries <code>raw_text</code>, an LLM
+<code>summary</code>, JSON <code>entities</code> and
+<code>topics</code>, an <code>importance</code> float, a
+<code>connections</code> list the consolidator fills in, a
+<code>created_at</code>, and a <code>consolidated</code> boolean. There
+is no <code>status</code>, no <code>superseded_by</code>, no scope
+column. The only two states a memory occupies are
+<em>unconsolidated</em> and <em>consolidated</em>, and that is a
+processing flag — whether the daemon has looked at it yet — not a
+judgement about whether it is true. Nothing in the read path consults
+<code>importance</code> either; it is recorded and never ranked on.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — memories are stored structured but never embedded or searched; a 30-minute daemon consolidates unconsolidated rows into a cross-cutting insight and marks them done; the query agent loads a recent window and the model reads it, so recall is recency, not relevance</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: memories are stored structured but never embedded or searched; a 30-minute daemon consolidates unconsolidated rows into a cross-cutting insight and marks them done; the query agent loads a recent window and the model reads it, so recall is recency, not relevance
+flowchart TB
+    In[&quot;ingest: file / HTTP / ./inbox watcher&quot;] --&gt; G[&quot;Gemini multimodal extract:&lt;br/&gt;summary · entities · topics · importance&quot;]
+    G --&gt; M[(&quot;SQLite memories&lt;br/&gt;consolidated = 0&quot;)]
+    M --&gt; Loop{&quot;consolidation_loop&lt;br/&gt;every 30 min&quot;}
+    Loop --&gt;|&quot;read unconsolidated (≤10)&quot;| Con[&quot;model: connections + one insight&quot;]
+    Con --&gt; CT[(&quot;consolidations row&quot;)]
+    Con --&gt;|&quot;append connections;&lt;br/&gt;SET consolidated = 1&quot;| M
+    Q[&quot;query&quot;] --&gt;|&quot;load recent 50 + last 10 consolidations&quot;| Read[&quot;model reads the window,&lt;br/&gt;synthesizes with [Memory N] citations&quot;]
+    M -.-&gt;|&quot;no embedding, no search,&lt;br/&gt;recall = recency window&quot;| Read
+    M --&gt;|&quot;delete_memory (hard DELETE) /&lt;br/&gt;clear_all&quot;| Gone[&quot;removed; no rejected-value record&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite file, one process, three specialist agents behind an
+orchestrator.</p>
+<ul>
+<li><strong><code>agent.py</code></strong> (677) — the whole engine: the
+schema, the ADK tools, the three agents (<code>build_agents</code>), the
+file watcher, the consolidation loop, and an HTTP server.</li>
+<li><strong><code>dashboard.py</code></strong> (323) — a Streamlit UI
+with Ingest, Query and Memory Bank tabs, memory cards, stats, upload and
+delete.</li>
+<li><strong><code>docs/</code></strong>, <code>README.md</code>,
+<code>requirements.txt</code> — the sample's documentation.</li>
+</ul>
+<p><strong>Storage.</strong> <code>get_db()</code> creates three tables
+(<code>agent.py:83-107</code>): <code>memories</code> (the notes),
+<code>consolidations</code> (<code>source_ids</code>,
+<code>summary</code>, <code>insight</code>, <code>created_at</code>),
+and <code>processed_files</code> (<code>path</code> primary key, for the
+watcher's dedup). SQLite, <code>node</code>-free, no extensions; there
+is no vector table and no FTS, by design.</p>
+<p><strong>The agents</strong> (<code>build_agents</code>,
+<code>:318</code>) are Google ADK agents on Gemini Flash-Lite: an
+<strong>IngestAgent</strong> that extracts structure from multimodal
+input, a <strong>ConsolidateAgent</strong> whose tools are
+<code>read_unconsolidated_memories</code> and
+<code>store_consolidation</code>, and a <strong>QueryAgent</strong>
+whose tools are <code>read_all_memories</code> and
+<code>read_consolidation_history</code>. An orchestrator routes an
+incoming request to the right specialist.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Runs as an always-on process.</strong>
+<code>main_async</code> starts the file watcher and the
+<code>consolidation_loop</code> alongside the HTTP server, so the daemon
+consolidates on its timer whether or not anyone is asking questions —
+that is the "always-on" claim, and it is literally a background asyncio
+task.</li>
+<li><strong>Multimodal ingest is the nice affordance.</strong>
+Twenty-seven file types (text, images, audio, video, PDF) are handled
+through Gemini's multimodal extraction; drop a file in
+<code>./inbox</code>, upload it in the dashboard, or
+<code>POST /ingest</code>.</li>
+<li><strong>It needs a Gemini API key and nothing else</strong> — SQLite
+is stdlib, the store is a local file, and the whole thing is a
+<code>pip install -r requirements.txt</code>.</li>
+<li>The screen found build-time execution points and unpinned surfaces
+typical of a Python sample; nothing was installed or run, and the
+mechanism was read from <code>agent.py</code> and
+<code>dashboard.py</code>.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest / write</strong> — <code>store_memory</code>
+(<code>agent.py:114</code>) inserts a row with the model-extracted
+<code>summary</code>, <code>entities</code>, <code>topics</code>,
+<code>importance</code> and <code>source</code>; the file watcher
+(<code>watch_folder</code>, <code>:481</code>) skips paths already in
+<code>processed_files</code>.</li>
+<li><strong>Consolidate</strong> — <code>consolidation_loop</code>
+(<code>:527</code>, <code>interval_minutes=30</code>) counts
+unconsolidated rows and runs the ConsolidateAgent;
+<code>read_unconsolidated_memories</code> (<code>:169</code>,
+<code>WHERE consolidated=0 … LIMIT 10</code>) feeds it;
+<code>store_consolidation</code> (<code>:190</code>) writes the
+<code>consolidations</code> row, appends <code>connections</code> onto
+each source memory (<code>UPDATE memories SET connections=…</code>), and
+marks them <code>consolidated=1</code> (<code>:224</code>).</li>
+<li><strong>Query / read</strong> — <code>read_all_memories</code>
+(<code>:149</code>, <code>ORDER BY created_at DESC LIMIT 50</code>) and
+<code>read_consolidation_history</code> (<code>:231</code>,
+<code>LIMIT 10</code>) load the window; the QueryAgent synthesizes an
+answer with <code>[Memory N]</code> citations. There is no search
+function anywhere.</li>
+<li><strong>Delete</strong> — <code>delete_memory</code>
+(<code>:262</code>) is a hard
+<code>DELETE FROM memories WHERE id=?</code>;
+<code>clear_all_memories</code> (<code>:283</code>) wipes memories,
+consolidations and the inbox.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> schema (<code>agent.py:84-95</code>) is the
+model:</p>
+<pre class="sql"><code>CREATE TABLE memories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source TEXT NOT NULL DEFAULT &#39;&#39;, raw_text TEXT NOT NULL, summary TEXT NOT NULL,
+  entities TEXT NOT NULL DEFAULT &#39;[]&#39;, topics TEXT NOT NULL DEFAULT &#39;[]&#39;,
+  connections TEXT NOT NULL DEFAULT &#39;[]&#39;, importance REAL NOT NULL DEFAULT 0.5,
+  created_at TEXT NOT NULL, consolidated INTEGER NOT NULL DEFAULT 0);</code></pre>
+<p>Three facts about it decide the marks, and all three are the same
+shape — a field that looks epistemic but is not consumed as one.</p>
+<ul>
+<li><strong><code>importance</code> is a score the read path never
+reads.</strong> It is extracted at ingest and stored, but
+<code>read_all_memories</code> orders by <code>created_at</code>, not
+importance, and nothing filters or ranks on it. So it is neither a trust
+state nor a live ranking signal — <code>trust_state</code> is
+withheld.</li>
+<li><strong><code>consolidated</code> is a processing flag, not a
+status.</strong> It records whether the daemon has visited a memory, not
+whether the memory is believed; a memory is read into the query window
+whether or not it is consolidated.</li>
+<li><strong>There is no scope, no validity time, and no
+lineage.</strong> One SQLite file, one user, <code>created_at</code>
+only, no <code>superseded_by</code>. So <code>scope_enforced</code>,
+<code>bitemporal</code> and <code>audit_log</code> are all withheld on
+the model rather than on a technicality.</li>
+</ul>
+<p>The <code>consolidations</code> table is the one genuinely additive
+structure: it is not an audit of mutations (so it does not earn
+<code>audit_log</code>) but a derived layer of model-authored insights
+over groups of memories, keyed by their <code>source_ids</code> — a
+second, compressed reading of the store that the query path also
+loads.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval, and that is the design. The query path loads
+the fifty most recent memories and the ten most recent consolidations
+and hands them to the model, which reads them and answers with
+citations. There is no lexical index, no vector search, no embedding, no
+ranking beyond recency, and no relevance filter — the
+<code>stack_retrieval</code> field is empty because nothing in the read
+path is a retrieval arm.</p>
+<p>For the intended use — a personal, always-on store of hundreds of
+notes — this is a defensible bet: a few dozen structured summaries fit
+comfortably in a Flash-Lite context window, and a model reading them can
+do associative recall a top-k vector query cannot, because it sees the
+whole window at once. The consolidation layer sharpens this: by the time
+the store grows, the daemon has compressed groups of raw memories into a
+smaller set of insight rows, so the recent-window read is over
+increasingly distilled material.</p>
+<p>The ceiling is equally clear and worth stating plainly. Recall is a
+<strong>recency window</strong>: the fifty-first-most-recent memory is
+invisible to a query unless a consolidation happened to fold it into an
+insight, and there is no way to ask for the <em>relevant</em> memory
+regardless of age. This system does not scale past what fits in the
+window, and it is not trying to — but a reader must not mistake "the
+model reads everything" for "the model can find anything." It reads
+everything recent.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are model-mediated capture. The IngestAgent turns an input — a
+dropped file, an upload, an HTTP post — into a structured memory through
+Gemini's multimodal extraction, and <code>store_memory</code> records
+it. The file watcher dedups by <em>path</em> through
+<code>processed_files</code>, so the same file is not ingested twice,
+but the same <em>content</em> arriving under a new path or through the
+HTTP endpoint is ingested again; there is no content-hash or semantic
+dedup.</p>
+<p>The consolidation daemon is the write path that makes the system
+interesting. It is not summarization-at-capture; it is a separate,
+recurring pass that treats the store as a whole: read what has not been
+consolidated, find cross-cutting connections and a single insight, write
+that insight as a first-class row, and link the sources. This is the
+"compress and connect" half of the sleep analogy done as real background
+work, and it is a genuine strength — most stores here only append and
+decay, where this one actively builds a second, more abstract layer over
+time.</p>
+<p>Correction is the weak half. <code>delete_memory</code> is a hard
+<code>DELETE</code>, and there is no update, no supersession and no
+rejected-value record. A user who deletes a wrong memory removes the
+row, but nothing stops the same claim being re-ingested from a new
+source, and nothing records that it was judged wrong — the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> gap in its plainest form, unmitigated. And a deleted
+memory that had already been folded into a consolidation leaves that
+insight standing, referencing a <code>source_id</code> that no longer
+exists.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The system is a Google ADK multi-agent application: an orchestrator
+routes a request to one of three specialists — ingest, consolidate,
+query — each with its own tools over the shared SQLite store. That
+separation is the tidy part of the design: capture, compression and
+recall are distinct agents with distinct tool sets, rather than one
+agent with a grab-bag of memory functions. The model's relationship to
+memory is direct — it reads and writes structured rows through tools —
+and the consolidation agent runs without a user in the loop, which is
+what "always-on" means here.</p>
+<p>The <strong>Streamlit dashboard</strong> is the human surface, and it
+is a near-miss for <code>human_review</code> worth naming precisely. It
+has a Memory Bank tab that renders memory cards and stats, an upload
+path, and delete — so a person can inspect the store and remove a
+memory. But it displays and deletes; it does not offer a
+review-and-approve gate before a memory is stored, nor an edit/rewrite
+of memory content, so it adjudicates only by deletion. Consistent with
+the strict definition — a UI that inspects and deletes but does not
+approve or rewrite content — the mark is withheld; the dashboard is a
+viewer with a delete button, not a review queue.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust story is short because the mechanisms are deliberately
+absent, and the report's job is to say which absences are principled and
+which are gaps.</p>
+<ul>
+<li><strong>The embedding-free, retrieval-free design is a principled
+choice, with a stated ceiling.</strong> Betting the store fits in
+context and letting the model read it is a coherent architecture for a
+personal memory, and the consolidation daemon is a real mechanism that
+keeps the readable window meaningful as the store grows. This is the
+system's contribution and it is sound within its scope.</li>
+<li><strong><code>importance</code> is recorded and unused</strong>,
+which is the same write-only-signal pattern the atlas keeps finding: a
+field that reads as a trust or ranking lever and drives nothing. Either
+rank on it or drop it.</li>
+<li><strong>Correction does not stick.</strong> Hard delete with no
+rejected-value record means a re-ingested claim returns, and a dangling
+<code>source_id</code> can outlive its memory in a consolidation. For a
+store meant to run continuously and ingest from a watched folder, that
+is the gap most likely to bite.</li>
+<li><strong>No scope and a single file</strong> make it a single-user
+tool by construction; pointing more than one person's inputs at one
+instance mixes them with nothing to separate them.</li>
+</ul>
+<p>Operationally the surface is small and local: a SQLite file, a Gemini
+key, a watched folder, an HTTP port and a dashboard. The privacy posture
+is the disk plus whatever the process is bound to; there is no
+multi-tenant boundary because there is no tenant concept.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are no tests and no evaluation of any kind in the sample — no
+unit tests, no retrieval-quality measurement, no benchmark. For a design
+whose whole thesis is that a load-and-read query beats retrieval for a
+personal store, the measurement that would matter is exactly the one
+absent: at what store size does the recency window start dropping
+answers a vector query would have found, and how much does the
+consolidation layer delay that point. Nothing here measures it, which is
+understandable for a samples-repo illustration but leaves the central
+bet unquantified.</p>
+<p>The atlas records this as an educational sample rather than a
+measured system: the design is legible and the code is clean, but the
+report's confidence is in <em>what the code does</em>, not in any claim
+about how well it recalls.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Consider replacing retrieval with a read for a small
+personal store.</strong> If the corpus fits in the context window,
+loading structured summaries and letting the model reason over all of
+them at once is simpler than an embedding pipeline and gives associative
+recall a top-k query cannot. Know the ceiling and design for it.</li>
+<li><strong>Run consolidation as an always-on daemon, not only at
+capture.</strong> A recurring pass that reads the un-consolidated set,
+finds cross-cutting connections and writes a first-class insight row —
+then marks the sources done — builds a second, compressed layer over
+time and keeps a recency-window read meaningful. This is the sleep
+analogy done as real background work.</li>
+<li><strong>Capture structure, not text.</strong> Extracting a summary,
+entities and topics at ingest — multimodally, so any file type becomes a
+memory — makes both the consolidation pass and the model's read more
+effective than storing raw blobs.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not store an <code>importance</code> (or any signal) you
+never read.</strong> A field that looks like a ranking or trust lever
+and drives nothing is documentation pretending to be a mechanism.</li>
+<li><strong>Do not ship hard-delete as your only correction</strong> if
+the system ingests continuously — a deleted claim re-ingested from a new
+path comes straight back, and a deleted memory can leave a dangling
+reference inside a consolidation. Key a rejection on the content, and
+repair or re-derive the insights that referenced it.</li>
+<li><strong>Do not confuse "the model reads everything" with "the model
+can find anything."</strong> A recency window is not retrieval; past the
+window, an old but relevant memory is simply gone from the answer.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a builder who wants to prototype a personal, always-on
+memory without an embedding stack, and who values the clarity of a
+load-and-read design and an active consolidation daemon over scale. As a
+reference for the anti-RAG shape — structured capture, no vectors,
+model-as-reader, background compression — it is one of the cleaner
+illustrations in the corpus, and it is short enough to read in a
+sitting.</p>
+<p>Walk away if your store will outgrow a context window, if you need to
+find the relevant memory rather than the recent one, or if you need
+scope, correction that sticks, or any of the trust and audit properties
+this atlas checks — none is present, and the recency-window ceiling is a
+hard architectural bound, not a tuning knob.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>At what store size does the recency-window read start missing
+answers a vector query would return, and how far does the consolidation
+layer push that point? Nothing measures it.</li>
+<li>Should <code>importance</code> gate or rank the query window, given
+it is already extracted? Today it is inert.</li>
+<li>What happens to a consolidation whose <code>source_id</code> was
+deleted — is the insight ever repaired or re-derived, or does it stand
+referencing a memory that is gone?</li>
+<li>Is a content-level dedup or rejected-value guard intended, given
+continuous ingest from a watched folder makes re-ingestion likely?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>agent.py</code> — schema (<code>get_db</code>), tools
+(<code>store_memory</code>, <code>read_all_memories</code>,
+<code>read_unconsolidated_memories</code>,
+<code>store_consolidation</code>,
+<code>read_consolidation_history</code>, <code>get_memory_stats</code>,
+<code>delete_memory</code>, <code>clear_all_memories</code>),
+<code>build_agents</code>, <code>watch_folder</code>,
+<code>consolidation_loop</code>, <code>build_http</code>,
+<code>main_async</code>.</li>
+<li><code>dashboard.py</code> — Streamlit UI: Ingest / Query / Memory
+Bank tabs, memory cards, stats, upload, delete.</li>
+<li><code>README.md</code>, <code>docs/</code> — the sample's
+documentation and the design narrative.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd"><code class="commit-id" title="97597c46d0c2fe9a3c187b970d32d93100f738fd">97597c46…</code></a>
+— first reading, as vendored in Google's <code>generative-ai</code>
+samples monorepo under
+<code>gemini/agents/always-on-memory-agent</code>; the standalone origin
+is <code>Shubhamsaboo/always-on-memory-agent</code> (MIT, © Shubham
+Saboo). Screened before reading: build-time execution points and
+unpinned surfaces typical of a Python sample; nothing was installed or
+run. The embedding-free store, the load-and-read query
+(<code>read_all_memories</code> at <code>LIMIT 50</code>, no search),
+the 30-minute <code>consolidation_loop</code>, and the hard-delete
+correction were read from <code>agent.py</code> and cross-checked
+against the README's design narrative. No capability mark is earned; the
+dashboard is a display-and-delete surface (a <code>human_review</code>
+near-miss, withheld). No tests and no paper exist in the tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **289 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **290 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -36,6 +36,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`aimaos`](../systems/aimaos/) **AIMAOS** — Contradictions embeddings place far apart · `munch2u-a11y/AIMAOS` · Scope enforced
 - [`aipass`](../systems/aipass/) **AIPass** — A budget on how often memory may speak · `AIOSAI/AIPass` · Scope enforced
 - [`alma-memory`](../systems/alma-memory/) **ALMA** — A write guard on one door of six · `RBKunnela/ALMA-memory` · Trust state, Scope enforced, Mutation audit
+- [`always-on-memory-agent`](../systems/always-on-memory-agent/) **Always-On Memory Agent** — No vector DB — the model is the retriever · `GoogleCloudPlatform/generative-ai (always-on-memory-agent)`
 - [`arc-code`](../systems/arc-code/) **arc-code** — The actuator writes the log · `jerber/arc-code`
 - [`arcrift`](../systems/arcrift/) **ArcRift** — A canary secret in each of ten tenants · `eshaan-nair/arcrift` · Scope enforced, Negative evals
 - [`argo`](../systems/argo/) **ARGO** — Architecture as the memory · `derekhu0002/Argo` · Scope enforced, Negative evals
