@@ -18805,6 +18805,53 @@ memory surface could not be reviewed at all: twelve
 <code>cortex.*</code> tools are registered and documented as a
 five-layer memory stack, and <code>workspace/cortex/</code> is
 gitignored and absent from the repository.</li>
+<li><strong><code>maximem-ai/maximem_synap_sdk</code> was examined and
+has no report, and it is the closed-engine refusal in its purest hosted
+form.</strong> Apache-2.0, at <a
+href="https://github.com/maximem-ai/maximem_synap_sdk/commit/0fd74edb985518696afc35c69aaa9d720ceec324"><code class="commit-id" title="0fd74edb985518696afc35c69aaa9d720ceec324">0fd74edb…</code></a>:
+the Python and JavaScript SDKs plus about two dozen framework
+integrations — LangChain, LangGraph, LlamaIndex, CrewAI, AutoGen, Google
+ADK, OpenAI Agents, Semantic Kernel and the rest. The README states the
+boundary itself — <em>"The Synap memory engine itself (ingestion, entity
+resolution, retrieval, anticipation) runs as a fully managed cloud
+service operated by Maximem and is not open source. The SDKs in this
+repo are clients for that service; there is nothing to self-host, and an
+API key is required."</em> The code confirms it: the durable operations
+— <code>ingest_transcript</code>, <code>get_compacted</code>,
+<code>get_context_for_prompt</code>, <code>get_profile</code> in
+<code>packages/sdks/maximem-synap/maximem_synap/sdk.py</code> — are
+<code>httpx</code> calls to <code>api_base_url</code>, and the
+substantial local modules are client concerns (auth, telemetry,
+transport, resilience) plus a client-side cache: <code>cache/</code>
+carries a local BM25 index, a SQLite backend, a short-term store and an
+<em>anticipation cache</em> that pre-fetches. So everything this atlas
+asks about — how a stored belief is resolved against an existing one,
+ranked, scoped, corrected or forgotten — happens in the closed engine,
+and the SDK caches its results in front of it. That is the
+closed-source-mechanism-behind-an-open-wrapper exclusion; its nearest
+neighbours are <code>kunal12203/graperoot</code> (an open repository
+around a proprietary pip package) and <code>ArtKeyAi/bhived-mcp</code>
+(open transport posting to a closed API) above, and this is the
+hosted-service version those two are variations on. <strong>Its paper is
+the same system and the same limit.</strong> <a
+href="https://arxiv.org/abs/2607.21503">arXiv:2607.21503</a> —
+<em>Agentic Context Management</em>, Gaurav Dadhich, 23 July 2026 —
+names Maximem Synap as its reference implementation, argues that memory
+is a lifecycle rather than a store, and decomposes it into five
+primitives (architecting, ingesting, scoping, anticipating, compacting
+&amp; consolidation). The framing is worth reading and adjacent to this
+atlas's own taxonomy; the evaluation is not checkable here. It reports
+<strong>92% on LongMemEval and 93.2% on LoCoMo</strong> — the same
+figures the README leads with under a <em>"#1"</em> banner — run through
+the company's own separate harness
+(<code>maximem-ai/memory_and_context_eval_harness</code>) and published
+on a vendor blog, with no inspectable implementation at a pinned commit
+to check them against. That is the <a
+href="../benchmarks/">judge-the-code-not-the-claim</a> posture this
+atlas applies to every leaderboard boast, and it is why a
+#1-on-two-benchmarks memory layer with an open SDK still earns a list
+entry rather than a report: what reads as reviewable is the client, and
+the thing being ranked is the part that is not there.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
