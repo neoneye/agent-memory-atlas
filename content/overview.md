@@ -11,7 +11,7 @@ page_kind: comparison
 290 memory systems with publicly readable source, each read at a pinned commit
 and judged against seven mechanisms with strict definitions. "Readable" is not
 "open source" — sixteen carry a non-open-source licence, listed in the
-[appendix](#what-the-licences-actually-say). Corpus last extended **6 August 2026**.
+[appendix](#what-the-licences-actually-say).
 Five findings, with the counts they rest on:
 
 1. **Correction is the phase that goes unbuilt.** 19 systems of 290 carry a

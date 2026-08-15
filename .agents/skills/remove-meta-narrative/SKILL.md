@@ -22,14 +22,28 @@ supersedes in place. Both are now on the page, the newer one hedged into a
 transition — *"the argument has started to fail"*, *"this is no longer none"* —
 and the page argues with itself. Nothing was deleted, so nothing felt wrong.
 
-Four forms, in increasing order of how well they hide:
+Five forms, in increasing order of how well they hide:
 
 | Form | Looks like | Caught by |
 | --- | --- | --- |
+| **Freshness stamp** | "Corpus **last extended** 6 August 2026", "**last updated** <date>", "**current as of** <date>" | grep 5 |
 | **Explicit** | "This report previously said", "re-read on <date>", "the atlas had missed" | grep 1 |
 | **Self-report** | "this page **said** '164 open-source systems'", "the count **was** N **until** 7 August", "the sentence **was false** in the way that matters" | grep 4 |
 | **Adverbial** | "there are **now** two paths", "**still** inverts", "**no longer** none", "**has since** been read" | grep 2 |
 | **Structural** | a paragraph superseded by the next one, both retained; a bullet holding two positions | **nothing automatic — you have to read it** |
+
+**The freshness-stamp form is noise even when nothing is wrong.** A line dating
+when the page, the corpus or a section was *last extended, updated, refreshed or
+reviewed* stamps the atlas's own bookkeeping onto a page whose job is the current
+state of memory systems — and it is stale within days of the next commit while
+telling the reader nothing they came to learn. Unlike the other four, it is not
+narrating a *changed position*; it is a self-dating currency stamp, and it reads as
+cringe precisely because the reader can see it has already rotted. The corpus
+counts are live — generated and build-checked — so the page is as current as its
+last build; announcing that with a hardcoded date only decays. If *when a reading
+happened* genuinely matters, it belongs in a report's dated `## History`, never
+stamped on the compare page. Cut the stamp; do not "update" it, because the next
+edit re-stales it.
 
 The structural form is the one that matters most and the one the greps cannot
 see, because every individual sentence is fine.
@@ -66,14 +80,14 @@ Removing it from these places is a worse error than leaving it in the body.
 
 ## Detect
 
-Run all four, over the **body only**. Stop at `## History` — and, in
+Run all five, over the **body only**. Stop at `## History` — and, in
 `content/overview.md`, stop earlier still, at `### Known Limitations`: everything
 from there to `## History` is the dated correction log, which legitimately
 narrates past claims ("previously said", "was wrong", "until <date>"), so
 scanning into it buries the real body hits under dozens of correct ones. The
 sed guards below stop at whichever comes first.
 
-All four need triage. On this repository's rubric page, grep 1 returns five hits
+All five need triage. On this repository's rubric page, grep 1 returns five hits
 and all five are legitimate — "re-reading a system is the expensive part" is a
 statement about method, not a narration of a past position.
 
@@ -95,6 +109,10 @@ sed '/^### Known Limitations$/q; /^## History$/q' <file> \
 # says it held "until" a past date. Highest yield of the four on correction edits.
 sed '/^### Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '(this|the) (page|report|atlas|headline|tagline|sentence|count|matrix|census|table) [^.]{0,60}\b(said|read|claimed|stated|listed|counted|called it)\b|\bwas (false|wrong|misleading|inaccurate|overstated|stale)\b|\buntil [0-9]{1,2} (january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}'
+
+# 5 — freshness stamps: a hardcoded date stamping the page's own currency, which rots
+sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+  | rg -n -i 'last (extended|updated|refreshed|revised|reviewed|synced|edited)\b|(corpus|page|census|list|index|count|table) [^.]{0,30}(as of|updated|extended|refreshed) [0-9]|current as of|as of (today|this writing|the latest)'
 ```
 
 Grep 4 has two triage traps, both already illustrated in the tables below. A
@@ -103,6 +121,14 @@ it forgets" describes the code. And "**until** <date>" bounding a *subject* fact
 is fine — "until 31 July 2026 neither variable was assigned" describes the
 repository, not the page. Cut only when the thing that said, was wrong, or held
 until a date is *this project*.
+
+Grep 5 has one triage trap: a "last updated / last released" date about the
+*subject* is a fact about the code — "the README shows the repo was last updated
+in August 2023" describes a frozen project and stays. Cut only when the thing
+being dated is *this project's* own currency: the page, the corpus, the census,
+the count, the list. There is no legitimate reason to stamp the compare page or
+its corpus with a date; the count is live and build-checked, so the page is as
+fresh as its last build.
 
 Grep 3 is narrow **on purpose**. Do not widen it to `this atlas|in this corpus`:
 comparative claims — "the only system in this atlas that…", "most systems in this
@@ -126,6 +152,7 @@ that hold different positions on the same question.
 | "drops the summary when a message **no longer** exists" | "MemoryAgentBench **has since** been read above" |
 | "the README **said** it forgets on restart" (about the code) | "this page **said** '164 open-source systems' **until** August" |
 | "**until** 31 July 2026 neither variable was assigned" (the repo) | "the count **was wrong** in the way that matters" |
+| "the README shows the repo was **last updated** in 2023" (a frozen subject) | "Corpus **last extended** 6 August 2026" (the page's own freshness) |
 
 **The test:** if the sentence would have to change when *this project* changes
 rather than when the *subject* changes, it is the wrong kind, whatever word
@@ -169,6 +196,10 @@ a reader who wants the sequence can find it.
 - You wrote a bolded sentence announcing that a previous position has changed.
 - You quoted what the page, the count, or the headline used to say — or called a
   past claim false, wrong or misleading — anywhere but the known-limitations log.
+- You stamped the page, the corpus, the census or a section with a hardcoded
+  "last updated / last extended / refreshed / current as of <date>" freshness
+  date. The page's currency is its last build; a date only rots. Cut it — do not
+  bump it.
 - The passage contains a contrast whose other half is not on the page.
 - You are hedging a new fact to avoid contradicting an old sentence — the old
   sentence is the thing to delete.
