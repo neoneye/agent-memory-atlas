@@ -202,11 +202,21 @@ def read_reports(root: Path) -> tuple[list[dict], list[str]]:
 
 def distribution(rows: list[dict]) -> dict:
     storage, arms, combos = Counter(), Counter(), Counter()
+    # The same counts over reviewed rows only. A total that mixes 57 readings
+    # with 233 inferences into one number reads as a census of 290, and the
+    # aggregate was the one place the `stack_source` distinction disappeared —
+    # it was on every row in the frontmatter and on none of them in the table.
+    storage_reviewed, arms_reviewed = Counter(), Counter()
     for row in rows:
+        is_reviewed = row["source"] == "reviewed"
         for value in row["storage"]:
             storage[value] += 1
+            if is_reviewed:
+                storage_reviewed[value] += 1
         for value in row["retrieval"]:
             arms[value] += 1
+            if is_reviewed:
+                arms_reviewed[value] += 1
         combos[" + ".join(row["retrieval"]) or "none named"] += 1
     return {
         "total": len(rows),
@@ -214,8 +224,13 @@ def distribution(rows: list[dict]) -> dict:
         "seeded": sum(1 for r in rows if r["source"] == "seeded"),
         "no_storage": sum(1 for r in rows if not r["storage"]),
         "no_arm": sum(1 for r in rows if not r["retrieval"]),
+        "no_arm_reviewed": sum(
+            1 for r in rows if not r["retrieval"] and r["source"] == "reviewed"
+        ),
         "storage": dict(storage.most_common()),
         "arms": dict(arms.most_common()),
+        "storage_reviewed": dict(storage_reviewed),
+        "arms_reviewed": dict(arms_reviewed),
         "arm_combinations": dict(combos.most_common()),
     }
 
@@ -247,26 +262,39 @@ def render_section(dist: dict) -> str:
     lines = [
         BEGIN,
         "",
-        "| Stored in | Systems | | Retrieval arm | Systems |",
-        "| --- | ---: | --- | --- | ---: |",
+        "| Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |",
+        "| --- | ---: | ---: | --- | --- | ---: | ---: |",
     ]
     # .get, not [] — an out-of-vocabulary value is reported by --check as a
     # problem, and rendering it as its raw key beats crashing the build before
     # the problem list is printed.
-    storage_rows = [(STORAGE_LABELS.get(k, k), v) for k, v in dist["storage"].items()]
-    arm_rows = [(ARM_LABELS.get(k, k), v) for k, v in dist["arms"].items()]
-    arm_rows.append(("No arm named in the review", dist["no_arm"]))
+    storage_rows = [
+        (STORAGE_LABELS.get(k, k), v, dist["storage_reviewed"].get(k, 0))
+        for k, v in dist["storage"].items()
+    ]
+    arm_rows = [
+        (ARM_LABELS.get(k, k), v, dist["arms_reviewed"].get(k, 0))
+        for k, v in dist["arms"].items()
+    ]
+    arm_rows.append(
+        ("No arm named in the review", dist["no_arm"], dist["no_arm_reviewed"])
+    )
     for index in range(max(len(storage_rows), len(arm_rows))):
-        left = storage_rows[index] if index < len(storage_rows) else ("", "")
-        right = arm_rows[index] if index < len(arm_rows) else ("", "")
-        lines.append(f"| {left[0]} | {left[1]} | | {right[0]} | {right[1]} |")
+        left = storage_rows[index] if index < len(storage_rows) else ("", "", "")
+        right = arm_rows[index] if index < len(arm_rows) else ("", "", "")
+        lines.append(
+            f"| {left[0]} | {left[1]} | {left[2]} | | {right[0]} | {right[1]} | {right[2]} |"
+        )
     lines += [
         "",
         f"Counted across {dist['total']} reports, each of which may name more "
-        f"than one store. {dist['reviewed']} of {dist['total']} rows were read "
-        f"off the code at the pinned commit; the other {dist['seeded']} were "
-        "derived from the review's own summary lines and are labelled "
-        "`seeded` rather than `reviewed`.",
+        f"than one store. The **Read off code** column is the part of each row "
+        f"confirmed against the tree at the pinned commit: "
+        f"{dist['reviewed']} of {dist['total']} reports have been read that way, "
+        f"and the other {dist['seeded']} were derived from the review's own "
+        "summary lines and are labelled `seeded` rather than `reviewed`. Read "
+        "the first number as what the corpus says about itself and the second as "
+        "what has been checked.",
         "",
         END,
     ]

@@ -41,6 +41,7 @@ Usage:
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -59,6 +60,19 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: the same commit that earns it, so raising it is a deliberate act with a diff
 #: rather than a side effect of a build.
 COVERAGE_FLOOR = 43
+
+#: Reports analyzed on or after this date must carry an evidence record for
+#: *every* mark they declare. The floor above only stops coverage falling; it
+#: says nothing about new marks, so an unbounded number of unsupported ticks
+#: could be added forever without the build noticing — 43 of 502 marks carried a
+#: record when this was added, and nothing prevented the next 500.
+#:
+#: A date rather than a flag day. The 459 legacy marks are a real backlog that
+#: has to be worked report by report at the pin, and failing the build on them
+#: teaches people to skip the check rather than to fill it in. New work has no
+#: such excuse: the report is being written at the pin *now*, with the code
+#: open, which is the only moment the four fields are cheap to fill.
+EVIDENCE_REQUIRED_FROM = "2026-08-16"
 
 #: A test field says what pins the mechanism. These two are the honest answers
 #: when nothing does, and they are common — writing one is the point, because
@@ -79,6 +93,22 @@ def audit(root: Path) -> tuple[list[str], list[str], int, int]:
         records = read_capability_evidence(path)
         total += len(marks)
         covered += len(marks & set(records))
+
+        analyzed = re.search(
+            r"^analyzed_at:\s*[\"']?(\d{4}-\d{2}-\d{2})",
+            path.read_text(encoding="utf-8"),
+            re.M,
+        )
+        if analyzed and analyzed.group(1) >= EVIDENCE_REQUIRED_FROM:
+            bare = sorted(marks - set(records))
+            if bare:
+                problems.append(
+                    f"{where}: analyzed {analyzed.group(1)}, so every mark needs an "
+                    f"evidence record. Missing: {', '.join(bare)}. Write "
+                    '"subsystem | file | symbol | test" for each, at the pin — '
+                    '"none" or "unknown" is a valid test field and is often the '
+                    "finding."
+                )
 
         for flag, record in sorted(records.items()):
             if flag not in FLAGS:
@@ -142,6 +172,7 @@ def check(root: Path, show_list: bool) -> int:
 
 FIXTURE = """---
 title: "Fixture"
+analyzed_at: {analyzed}
 capabilities: "{caps}"
 capability_evidence:
 {records}---
@@ -160,26 +191,40 @@ def self_test() -> int:
     """
     import tempfile
 
+    # An analysis date before the cutoff, so the shape cases exercise only the
+    # shape rules. The date rule gets its own three at the end.
+    legacy = "2020-01-01"
     cases = [
         ('scope_enforced', '  scope_enforced: "store | a/b.py | q | none"\n', 0,
-         "complete record passes"),
+         "complete record passes", legacy),
         ('scope_enforced', '  scope_enforced: "store | a/b.py | q"\n', 1,
-         "missing test field fails"),
+         "missing test field fails", legacy),
         ('scope_enforced', '  audit_log: "store | a/b.py | q | none"\n', 1,
-         "evidence for an uncarried mark fails"),
+         "evidence for an uncarried mark fails", legacy),
         ('scope_enforced', '  invented: "store | a/b.py | q | none"\n', 1,
-         "unknown flag fails"),
+         "unknown flag fails", legacy),
         ('scope_enforced', '  scope_enforced: " | a/b.py | q | none"\n', 1,
-         "empty subsystem fails"),
+         "empty subsystem fails", legacy),
+        # The date rule. A legacy report may carry a bare mark forever; a report
+        # analyzed on or after the cutoff may not.
+        ('scope_enforced, audit_log', '  scope_enforced: "store | a/b.py | q | none"\n',
+         0, "legacy report may leave a mark bare", legacy),
+        ('scope_enforced, audit_log', '  scope_enforced: "store | a/b.py | q | none"\n',
+         1, "new report may not leave a mark bare", EVIDENCE_REQUIRED_FROM),
+        ('scope_enforced, audit_log',
+         '  scope_enforced: "store | a/b.py | q | none"\n'
+         '  audit_log: "store | a/c.py | w | none"\n',
+         0, "new report with every mark covered passes", EVIDENCE_REQUIRED_FROM),
     ]
 
     failures = []
-    for caps, records, expected, label in cases:
+    for caps, records, expected, label, analyzed in cases:
         with tempfile.TemporaryDirectory() as tmp:
             systems = Path(tmp) / "content" / "systems"
             systems.mkdir(parents=True)
             (systems / "fixture.md").write_text(
-                FIXTURE.format(caps=caps, records=records), encoding="utf-8"
+                FIXTURE.format(caps=caps, records=records, analyzed=analyzed),
+                encoding="utf-8",
             )
             problems, _, _, _ = audit(Path(tmp))
             if bool(problems) != bool(expected):
