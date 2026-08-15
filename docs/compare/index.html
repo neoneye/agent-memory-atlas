@@ -105,7 +105,7 @@ href="#what-the-licences-actually-say">appendix</a>. Corpus last
 extended <strong>6 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 17
+<li><strong>Correction is the phase that goes unbuilt.</strong> 19
 systems of 289 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -245,7 +245,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-seventeen tombstones, seventy-five negative-eval suites — are counts
+nineteen tombstones, seventy-five negative-eval suites — are counts
 <em>over inspectable code</em>, and a closed system could hold any of
 these mechanisms without this method ever knowing. And a mechanism's
 absence here is weaker evidence about the field than its presence:
@@ -3611,7 +3611,9 @@ domain, project and task in the governing adapter</td>
 <td>Every mutation is a proposal evaluated by PAMA into one of five
 authority outcomes before the substrate is touched</td>
 <td>Correction is supersession; deletion plans a transitive purge and
-classifies everything derived into four residue buckets</td>
+classifies everything derived into four residue buckets; a
+rejected-value registry now fingerprints a rejected value and
+fail-closed blocks its silent re-admission</td>
 <td>Domain, project and task refs checked on the read path, returning
 named refusals the substrate itself cannot produce</td>
 <td>None shipped as a product — a port, an adapter, conformance runners
@@ -3622,8 +3624,8 @@ schedule</td>
 confidence is barred from reaching an outcome</td>
 <td>Undeclared residue is a hard gate, and the sweep re-derives it
 instead of trusting the purge's own traversal</td>
-<td>A doctrine of twenty-five ADRs and 22,000 lines of prose over a
-reference implementation whose substrate is in-memory</td>
+<td>A doctrine of thirty-five ADRs and tens of thousands of lines of
+prose over a reference implementation whose substrate is in-memory</td>
 </tr>
 <tr>
 <td><code>agent-memory-supabase</code></td>
@@ -3719,10 +3721,11 @@ record</td>
 <td>Editing an accepted decision emits <code>decision_revisited</code>,
 clears <code>accepted_utc</code> and returns the record to proposed, so
 a revision cannot silently inherit its predecessor's approval</td>
-<td><code>decision_verifications</code> is populated by no shipped write
-path and executed with <code>shell=True</code> by
-<code>agent-q decisions verify</code>; a single stop-line-violating
-event is durably appended and then aborts every subsequent read</td>
+<td>The grounding packet still never auto-reads the decision store (it
+regexes posted result bodies), <code>enforcement_mode</code> is printed
+but gates nothing, and two of the five verification fields
+(<code>assumptions</code>, <code>evidence</code>) still have no
+producer</td>
 </tr>
 <tr>
 <td><code>agent-working-memory</code></td>
@@ -6134,9 +6137,11 @@ audit</td>
 boost, and a physics pass over mass, charge and temperature</td>
 <td><code>capture</code> extracts items from transcript text; CLI, HTTP
 and MCP writes; auto-learn from a repository</td>
-<td>Record-keyed supersession honoured on read, plus a hard
-<code>forget</code>; no rejected-value record, so re-assertion is
-unguarded</td>
+<td>Record-keyed supersession honoured on read, a hard
+<code>forget</code>, and a digest-keyed rejected-value tombstone
+(<code>rejected_values</code>) whose guard refuses re-asserting a
+rejected value at the single write choke point — exact normalized value,
+not semantic</td>
 <td><code>tenant_id</code> as a read-path predicate on the API; the CLI
 is single-tenant-per-process by design and <code>sleep</code> is
 host-wide behind a loopback and admin gate</td>
@@ -6151,8 +6156,9 @@ first three are stored and <code>stale</code> is derived from disuse at
 for consolidation, fenced at the transport layer instead; a retention
 prune that records its own execution</td>
 <td>Staleness is computed from retrieval recency rather than from
-evidence; the quality audit deletes host-wide; correction is
-record-keyed with no tombstone</td>
+evidence; the quality audit deletes host-wide; the rejected-value
+tombstone is keyed on the exact normalized value, so a paraphrase of a
+rejected value still evades it</td>
 </tr>
 <tr>
 <td><code>hipporag</code></td>
@@ -11450,9 +11456,11 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>17 of 289:</em> <a
-href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
+<p><em>19 of 289:</em> <a
+href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
+<a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -16182,7 +16190,7 @@ href="https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9
 <li><a
 href="https://github.com/kitfunso/hippo-memory">kitfunso/hippo-memory</a>
 at <a
-href="https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb6c070b7c976197"><code class="commit-id" title="a9c7cca3613b6571bfb37ad1fb6c070b7c976197">a9c7cca3…</code></a></li>
+href="https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186"><code class="commit-id" title="35815a04026c685594e7d80ecb94f73662508186">35815a04…</code></a></li>
 <li><a href="https://github.com/kunal12203/swafra">kunal12203/swafra</a>
 at <a
 href="https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915"><code class="commit-id" title="669e7bdbcbcd421deb172a05f8fe52b741c0e915">669e7bdb…</code></a></li>
@@ -16714,7 +16722,7 @@ at <a
 href="https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1"><code class="commit-id" title="cd196704bb3dd148c314a81a32d96752204be5c1">cd196704…</code></a></li>
 <li><a href="https://github.com/techtheist/engram">techtheist/engram</a>
 at <a
-href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d"><code class="commit-id" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">cbc6f0b8…</code></a></li>
+href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb"><code class="commit-id" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">15fbe809…</code></a></li>
 <li><a
 href="https://github.com/munch2u-a11y/Helix-AGI">munch2u-a11y/Helix-AGI</a>
 at <a
@@ -17116,7 +17124,7 @@ rather than reproduced</li>
 <li><a
 href="https://github.com/cbalgeman/agent-mesh">cbalgeman/agent-mesh</a>
 at <a
-href="https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886"><code class="commit-id" title="258a1eed288513e24953a633c44b397e91ea9886">258a1eed…</code></a>
+href="https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062"><code class="commit-id" title="43bfe5cc376c71754c4a627286401825f4599062">43bfe5cc…</code></a>
 — read only; no third-party dependencies to install, and the two shipped
 examples were read rather than run</li>
 <li><a href="https://github.com/SmythOS/sre">SmythOS/sre</a> at <a
@@ -17190,7 +17198,7 @@ tree was enumerated and read by hand</li>
 <li><a
 href="https://github.com/MythologIQ-Labs-LLC/agent-memory">MythologIQ-Labs-LLC/agent-memory</a>
 at <a
-href="https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/bba0aa4cab8e04d11f5380b215b3eea6998fe119"><code class="commit-id" title="bba0aa4cab8e04d11f5380b215b3eea6998fe119">bba0aa4c…</code></a>
+href="https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/0df4cf3337b3752105e1b5a110f38eee31f46fef"><code class="commit-id" title="0df4cf3337b3752105e1b5a110f38eee31f46fef">0df4cf33…</code></a>
 — read only; the tree carries no dependency manifest, so nothing was
 installed. The shipped <code>scripts/</code> validators were run as-is,
 and the residue partition was exercised through a driver written for
@@ -17353,7 +17361,7 @@ the assistant reads back against what the checkpointer stores</li>
 <li><a
 href="https://github.com/kovartravis/neuron">kovartravis/neuron</a> at
 <a
-href="https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285"><code class="commit-id" title="af55adbc34ff7b04b9083c3f1dd0047002429285">af55adbc…</code></a>
+href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4"><code class="commit-id" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">9f6eaf90…</code></a>
 — read only; one auto-run surface (the
 <code>.claude/settings.json</code> hooks the system installs), two
 build-time execution points and six dependency surfaces inside the

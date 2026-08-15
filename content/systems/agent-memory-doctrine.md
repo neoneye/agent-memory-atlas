@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: "MythologIQ-Labs-LLC/agent-memory"
 source_url: https://github.com/MythologIQ-Labs-LLC/agent-memory
-revision: bba0aa4cab8e04d11f5380b215b3eea6998fe119
-revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/bba0aa4cab8e04d11f5380b215b3eea6998fe119
-analyzed_at: 2026-08-11
-capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: 0df4cf3337b3752105e1b5a110f38eee31f46fef
+revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/0df4cf3337b3752105e1b5a110f38eee31f46fef
+analyzed_at: 2026-08-15
+capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval, tombstone"
 stack_storage: "files, delegated"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -18,18 +18,18 @@ matrix:
   storage: "A substrate port with an in-memory temporal graph reference; evidence artifacts as JSON on disk; Graphiti mapped through a driver"
   retrieval: "Lexical overlap in the reference substrate, filtered by isolation domain, project and task in the governing adapter"
   write: "Every mutation is a proposal evaluated by PAMA into one of five authority outcomes before the substrate is touched"
-  update_delete: "Correction is supersession; deletion plans a transitive purge and classifies everything derived into four residue buckets"
+  update_delete: "Correction is supersession; deletion plans a transitive purge and classifies everything derived into four residue buckets; a rejected-value registry now fingerprints a rejected value and fail-closed blocks its silent re-admission"
   scoping: "Domain, project and task refs checked on the read path, returning named refusals the substrate itself cannot produce"
   integration: "None shipped as a product — a port, an adapter, conformance runners and a Mem0 comparator"
   background: "None; the independent residue sweep runs on demand rather than on a schedule"
   trust: "Source trust and PAMA authority as separate axes; estimator confidence is barred from reaching an outcome"
   strengths: "Undeclared residue is a hard gate, and the sweep re-derives it instead of trusting the purge's own traversal"
-  risks: "A doctrine of twenty-five ADRs and 22,000 lines of prose over a reference implementation whose substrate is in-memory"
+  risks: "A doctrine of thirty-five ADRs and tens of thousands of lines of prose over a reference implementation whose substrate is in-memory"
 ---
 
 ## 1. Executive Summary
 
-Agent Memory is a reference architecture for governed memory, Apache-2.0, from MythologIQ Labs. It is 294 files: 134 Markdown documents totalling around 22,400 lines, 25 ADRs, JSON schemas, 36 conformance fixtures, and — the part this report is mostly about — a 10,400-line Python reference implementation under `reference/` with conformance runners, a Graphiti driver and an adversarial comparator that executes Mem0.
+Agent Memory is a reference architecture for governed memory, Apache-2.0, from MythologIQ Labs. At this reading it is 766 files: 152 Markdown documents, 35 ADRs, JSON schemas, 64 conformance fixtures, and — the part this report is mostly about — a reference implementation under `reference/` grown to roughly 46,500 lines of Python across 112 modules and 105 test modules, with conformance runners, a Graphiti driver, and a fleet of adversarial comparators (Mem0, Cedar, OPA, LangGraph, MAF) beside a capability-qualification program. The mark-core deletion machinery — `substrate.py`, `projections.py`, `residue.py`, `scope_governance.py`, `deletion_completeness.py`, `portable_evidence.py` — is byte-for-byte unchanged from the previous reading; the quadrupling happened around it.
 
 Its thesis is a sentence this atlas could have written: *"Probabilistic epistemics. Governed consequences. Uncertainty may propose. Authority constrains."* What makes it worth a report rather than a citation is that the interesting parts are executable.
 
@@ -41,7 +41,7 @@ Two honesty constraints hold that up. *"Unknown is not a fourth bucket"* — sta
 
 That unfiltered default deserves its own sentence, because it is the most repeated scope defect in this corpus — a retrieval argument whose omission means *everything*, catalogued in four live systems on the [scope as a first-class key](../../patterns/scope-as-a-first-class-key/) page. Here somebody has built it on purpose, as a hazard for the governance layer to catch.
 
-Where it is weakest is the ratio. Twenty-five ADRs and 22,000 lines of doctrine sit above a reference implementation whose substrate is a dictionary, and the repository is careful to say so itself: *"Passing fixture validation is not the same thing as proving a production memory system behaves correctly."* Nothing here is a deployable memory system, and it does not claim to be.
+Where it is weakest is the ratio. Thirty-five ADRs and tens of thousands of lines of doctrine sit above a reference implementation whose substrate is a dictionary, and the repository is careful to say so itself: *"Passing fixture validation is not the same thing as proving a production memory system behaves correctly."* Nothing here is a deployable memory system, and it does not claim to be.
 
 ## 2. Mental Model
 
@@ -85,10 +85,10 @@ flowchart TD
 
 There is no service. The repository is a doctrine plus a reference implementation you run.
 
-- **`docs/`** — 134 Markdown files, including the layer model, lifecycle state machine, threat model, source trust, privacy classifier, retention and deletion, actor scope and tenancy, governed recall planner, and a research bibliography.
+- **`docs/`** — 152 Markdown files, including the layer model, lifecycle state machine, threat model, source trust, privacy classifier, retention and deletion, actor scope and tenancy, governed recall planner, and a research bibliography.
 - **`docs/adr/`** — 25 architecture decision records. ADR-015 requires tombstones, ADR-016 requires actor scope and tenancy, ADR-017 requires audit events, ADR-023 makes corrections supersession, ADR-025 requires explicit authority to overwrite a durable decision.
-- **`reference/agentmem_ref/`** — 27 modules: `substrate.py` (the port and its permissive stub), `adapter.py` (the governing layer), `policy.py` (PAMA), `projections.py` and `residue.py` (tier-3 and deletion), `receipts.py`, `scope_governance.py`, `shared_revocation.py`, `interchange.py`, `portable_evidence.py`, `mem0_comparator.py`, `graphiti_driver.py`.
-- **`reference/tests/`** — 24 test modules.
+- **`reference/agentmem_ref/`** — 112 modules (27 at the previous pin): `substrate.py` (the port and its permissive stub), `adapter.py` (the governing layer), `policy.py` (PAMA), `projections.py` and `residue.py` (tier-3 and deletion), `receipts.py`, `scope_governance.py`, `shared_revocation.py`, `interchange.py`, `portable_evidence.py`, `mem0_comparator.py`, `graphiti_driver.py`.
+- **`reference/tests/`** — 105 test modules.
 - **`schemas/`, `fixtures/`** — JSON schemas for PAMA decisions, decision receipts and audit events; 36 scenario fixtures with names like `authority-laundering`, `cross-tenant-relevance-trap`, `same-agent-cross-project-isolation`, `confidently-wrong-memory`.
 - **`scripts/`** — seven stdlib-only validators for fixtures, schemas, links, visual assets and doctrine boundaries.
 
@@ -96,7 +96,7 @@ There is no service. The repository is a doctrine plus a reference implementatio
 
 Nothing to deploy. The cost is reading: 22,000 lines of doctrine is a substantial commitment, and the repository organises it with a "start here" table routing by role, which helps.
 
-**There is no dependency manifest** — no `requirements.txt`, no `pyproject.toml` — which is why the screen returned `NOTHING SCANNED`. Dependencies are declared in CI instead: `jsonschema==4.26.0` pinned for the validation job, `graphiti-core` and `kuzu` unpinned for the substrate-conformance job, and `mem0ai` pinned in code at `2.0.18`. `CONTRIBUTING` states the policy the code follows — fixture and link validation stay standard-library, schema validation may use `jsonschema` — and the split is real: I ran the seven `scripts/` validators and the residue path with no installation at all.
+**A dependency manifest now exists.** At the previous pin there was none, which is why the screen returned `NOTHING SCANNED`; the tree now ships a `pyproject.toml` (`agent-memory-reference` v0.1.0, `jsonschema>=4.20,<5`) with a console script `agent-memory` and a `doctor.py` diagnostic — the "nothing to install" framing is softened, though the core validators remain standard-library and the split `CONTRIBUTING` describes still holds (fixture and link validation stdlib, schema validation may use `jsonschema`). The seven `scripts/` validators and the residue path still run with no installation.
 
 ## 4. Essential Implementation Paths
 
@@ -159,7 +159,7 @@ A `Fact` carries `uuid`, `fact_text`, `group_id`, and the four temporal fields; 
 
 `requires_authority_to_rebuild` is a small, sharp piece of that model: a rebuild is categorically authorizable only when the transform is deterministic *and* reproducible, because *"everything else commits estimator-derived content and must pass through governance, or invalidation becomes a write channel."* Invalidating a cache as a way to smuggle a write is not a threat most designs here have considered.
 
-What is absent: **no rejected-value tombstone.** The adapter keeps `self._tombstones[fact_uuid]` — keyed on the record, existing to give the substrate the delete marker it lacks — and neither the code nor `docs/28-retention-deletion-and-tombstones.md` uses the vocabulary of a value that must not be re-asserted. The residue machinery attacks the adjacent problem from the other end, ensuring a deleted value does not survive in derived state; nothing here stops the same value being written again from a new source. And there is **no discrete epistemic status on a memory** — the three-valued freshness relation describes derived state's relationship to canonical state, not whether a claim is believed.
+**A rejected-value tombstone is now present** (ADR-027). Alongside the record-keyed `self._tombstones[fact_uuid]` delete marker, `readmission.py` adds a `RejectedValueRegistry` "keyed by memory and exact value identity": it stores a SHA-256 `value_fingerprint` of the normalized content (never the raw value), and the adapter's `_readmission_blocked` refuses a proposal whose value matches a rejected fingerprint, emitting a `memory.readmission_blocked` event and failing closed — only an externally-approved correction may readmit. That earns `tombstone`, and it complements the residue machinery, which attacks the adjacent problem from the other end (ensuring a deleted value does not survive in derived state). The stated limit, in the adapter's own comment, is that the block is exact-identity — semantic similarity is review-lane evidence, not a hard block — so it "does not claim full closure" of the semantic case. What remains genuinely absent is a **discrete epistemic status on a memory**: the three-valued freshness relation describes derived state's relationship to canonical state, not whether a claim is believed.
 
 ## 6. Retrieval Mechanics
 
@@ -179,7 +179,7 @@ Every write is a proposal through PAMA, then a substrate mutation, then a receip
 
 ## 8. Agent Integration
 
-None ships. There is no MCP server, no plugin, no client library and no packaging — `reference/` is imported by its own tests and runners. The architecture is meant to be implemented rather than installed, and the repository is consistent about that.
+Packaging now ships — a `pyproject.toml`, an `agent-memory` CLI and a `doctor.py` — but there is still no MCP server, no plugin and no client library; `reference/` is imported by its own tests, runners and CLI. The architecture is meant to be implemented rather than integrated as a product, and the repository stays consistent about that.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -252,7 +252,7 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 - What does the Mem0 comparator actually report? The harness is committed, pinned and credential-free; the result is not in the repository.
 - Has the residue sweep been run against a real substrate with derived state at scale, or only against the in-memory graph and the Graphiti driver?
 - Why do the README's fixture and ADR counts understate the tree, and are the badges generated or hand-maintained?
-- Is a rejected-value tombstone out of scope by decision or simply not reached yet? ADR-015 requires tombstones, and the implementation's are record-keyed.
+- The rejected-value tombstone that was absent is now present (ADR-027, exact-identity). Will the semantic-similarity case become a hard block rather than review-lane evidence, which the adapter's own comment says it does not yet claim to close?
 - What would ADR-020 and ADR-021 need to move from Proposed to Accepted, and is that evidence expected to come from adopters?
 
 ## Appendix: File Index
@@ -266,5 +266,7 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 - Validators: `scripts/validate_fixtures.py`, `validate_schemas.py`, `validate_doctrine_boundaries.py`.
 
 ## History
+
+**2026-08-15** — [`0df4cf3337b3752105e1b5a110f38eee31f46fef`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/0df4cf3337b3752105e1b5a110f38eee31f46fef) — re-pinned after the "capability-oriented memory component program" closeout. Screened again before reading; a `pyproject.toml` now exists (there was none at the pin), so the tree is no longer `NOTHING SCANNED`; nothing was installed. The mark-core deletion machinery (`substrate.py`, `projections.py`, `residue.py`, `scope_governance.py`, `deletion_completeness.py`, `portable_evidence.py`) is byte-for-byte unchanged, but the reference implementation quadrupled around it — 27→112 modules, 24→105 test modules, ~10,400→~46,500 lines, 294→766 files, 25→35 ADRs. [`readmission.py`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/0df4cf3337b3752105e1b5a110f38eee31f46fef) (ADR-027) adds a `RejectedValueRegistry` keyed on an exact SHA-256 `value_fingerprint` of the normalized content, and the adapter's `_readmission_blocked` fail-closed refuses a proposal whose value matches a rejected fingerprint (emitting `memory.readmission_blocked`, tested in `test_rejected_value_readmission.py`); only an externally-approved correction may readmit. That earns `tombstone` and resolves the report's former "no rejected-value tombstone" gap, with the stated limit that the block is exact-identity, not semantic. The other four marks were re-verified and hold; the program also added packaging (an `agent-memory` CLI + `doctor.py`) and a fleet of comparators (Cedar, OPA, LangGraph, MAF) and an EvolveAI qualification profile beside the unchanged Mem0 comparator. The `CITATION.cff` remains software-only, no DOI.
 
 **2026-08-11** — [`bba0aa4cab8e04d11f5380b215b3eea6998fe119`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/bba0aa4cab8e04d11f5380b215b3eea6998fe119) — first reading, on the `main` default branch, 331 commits from a repository created 6 July 2026. Screened before reading: `screen_repo.py` reported `NOTHING SCANNED` because the tree carries no dependency manifest at all, so the execution surface was established by hand — dependencies are declared in `.github/workflows/` and pinned in code. Nothing was installed. The seven `scripts/` validators were run as shipped, and the residue partition was exercised through a driver written for this review over copies of `projections.py` and `residue.py`, because the package `__init__` imports `jsonschema` transitively.

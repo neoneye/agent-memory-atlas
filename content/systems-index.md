@@ -21,10 +21,10 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`aeris`](../systems/aeris/) **Aeris** — The model never touches the state · `Cedrick-Coto/Aeris` · Trust state, Scope enforced, Negative evals
 - [`agent-afk`](../systems/agent-afk/) **agent-afk** — A citation or an [unverified] tag · `griffinwork40/agent-afk` · Negative evals
 - [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
-- [`agent-memory-doctrine`](../systems/agent-memory-doctrine/) **Agent Memory (MythologIQ)** — Deletion residue as a partition · `MythologIQ-Labs-LLC/agent-memory` · Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
+- [`agent-memory-doctrine`](../systems/agent-memory-doctrine/) **Agent Memory (MythologIQ)** — Deletion residue as a partition · `MythologIQ-Labs-LLC/agent-memory` · Tombstone, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced
 - [`agent-memory-techniques`](../systems/agent-memory-techniques/) **Agent Memory Techniques** — Thirty reference implementations · `NirDiamant/Agent_Memory_Techniques` · Scope enforced, Mutation audit
-- [`agent-mesh`](../systems/agent-mesh/) **Agent Mesh** — The schema for a verified decision, and no way to write one · `cbalgeman/agent-mesh` · Trust state, Mutation audit, Human review
+- [`agent-mesh`](../systems/agent-mesh/) **Agent Mesh** — A decision ledger that validates before it appends · `cbalgeman/agent-mesh` · Trust state, Mutation audit, Human review
 - [`agent-working-memory`](../systems/agent-working-memory/) **AgentWorkingMemory** — Retracting a fact should shake its whole story · `CompleteIdeas/agent-working-memory` · Trust state, Scope enforced, Negative evals
 - [`agentic-context-engine`](../systems/agentic-context-engine/) **Agentic Context Engine** — A decision not to merge, kept · `kayba-ai/agentic-context-engine` · Trust state
 - [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced, Mutation audit
@@ -125,7 +125,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`hexis`](../systems/hexis/) **Hexis** — Reconsolidation after a belief changes · `quixiai/hexis` · Trust state, Mutation audit, Human review
 - [`hillock`](../systems/hillock/) **Hillock** — A gate that is control flow · `roandejager/Hillock` · Negative evals
 - [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced, Mutation audit
-- [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit
+- [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit
 - [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
 - [`holographic`](../systems/holographic/) **Holographic** — Vector-symbolic memory · `NousResearch/hermes-agent`
 - [`honcho`](../systems/honcho/) **Honcho** — Peer and session representation · `plastic-labs/honcho` · Scope enforced

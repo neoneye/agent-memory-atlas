@@ -6,31 +6,32 @@ root: ../..
 page_kind: system
 source_name: "kitfunso/hippo-memory"
 source_url: https://github.com/kitfunso/hippo-memory
-revision: a9c7cca3613b6571bfb37ad1fb6c070b7c976197
-revision_url: https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb6c070b7c976197
-analyzed_at: 2026-08-04
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log"
+revision: 35815a04026c685594e7d80ecb94f73662508186
+revision_url: https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186
+analyzed_at: 2026-08-15
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, tombstone"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row carrying strength, half-life, layer, emotional valence, schema fit, outcome score and a confidence level"
   storage: "SQLite with FTS5 and a 25-plus-step migration ladder; separate tables for conflicts, goals, policies, decisions, processes and audit"
   retrieval: "Hybrid BM25 plus vector with RRF, MMR rerank, a temporal-direction boost, and a physics pass over mass, charge and temperature"
   write: "`capture` extracts items from transcript text; CLI, HTTP and MCP writes; auto-learn from a repository"
-  update_delete: "Record-keyed supersession honoured on read, plus a hard `forget`; no rejected-value record, so re-assertion is unguarded"
+  update_delete: "Record-keyed supersession honoured on read, a hard `forget`, and a digest-keyed rejected-value tombstone (`rejected_values`) whose guard refuses re-asserting a rejected value at the single write choke point — exact normalized value, not semantic"
   scoping: "`tenant_id` as a read-path predicate on the API; the CLI is single-tenant-per-process by design and `sleep` is host-wide behind a loopback and admin gate"
   integration: "31 HTTP routes, an MCP server, and a large CLI"
   background: "A six-phase `sleep`: consolidation, dedup, quality audit that hard-deletes, auto-share, ambient state, graph extraction drain"
   trust: "`verified | observed | inferred | stale`, where only the first three are stored and `stale` is derived from disuse at 30 days"
   strengths: "A scope boundary enforced in the query and deliberately suspended for consolidation, fenced at the transport layer instead; a retention prune that records its own execution"
-  risks: "Staleness is computed from retrieval recency rather than from evidence; the quality audit deletes host-wide; correction is record-keyed with no tombstone"
+  risks: "Staleness is computed from retrieval recency rather than from evidence; the quality audit deletes host-wide; the rejected-value tombstone is keyed on the exact normalized value, so a paraphrase of a rejected value still evades it"
 ---
 
 ## 1. Executive Summary
 
-Hippo is a **memory layer for coding agents** in 42,482 lines of TypeScript,
-MIT, with 376 test files and a migration ladder past twenty-five steps. Its
+Hippo is a **memory layer for coding agents** in ~50,000 lines of TypeScript,
+MIT (release v1.31.0), with hundreds of test files and a migration ladder past
+forty steps. Its
 README leads with a thesis this atlas agrees with — *"The secret to good memory
 isn't remembering more. It's knowing what to forget"* — and the gap between that
 sentence and the mechanism behind it is the most useful thing in the report.
@@ -56,14 +57,24 @@ the suspension fenced at the transport layer instead. That is a position, not an
 oversight, and the version reference in the error string says the project met
 the hazard in production.
 
-**The weakest thing is what the tagline promises.** The word *tombstone* appears
-nowhere in `src/`. `forget` (`src/api.ts:1677`) resolves to
-`DELETE FROM memories` (`src/store.ts:1654`). Correction is real and extensive —
-453 occurrences of `superseded`, a `superseded_by` pointer honoured on read
-(`src/ambient.ts:57`) — but it is **record-keyed**: it hides a row and does
-nothing to stop the same value being re-asserted by a later extraction. For a
-project whose stated secret is knowing what to forget, forgetting is a hard
-delete with an audit row.
+**What was the weakest thing is now built.** At the previous pin the tagline —
+knowing what to forget — outran the mechanism: `forget` was a hard
+`DELETE FROM memories`, correction was record-keyed supersession, and the word
+*tombstone* appeared nowhere in `src/`. Release v1.31.0 closed that gap with a
+purpose-built rejected-value tombstone (`src/rejection.ts`, migration v41). A
+`rejected_values` table is keyed on `(tenant_id, digest)` where the digest is a
+SHA-256 of the NFC-normalized, lowercased, whitespace-collapsed content — the
+value, not the row — and it stores no content (only a human `reason`), with no
+foreign key so the tombstone outlives the memory it came from. A guard
+(`checkRejectionGuard`) sits at the single write choke point (`src/store.ts:1172`,
+and inline in the consolidation batch path at `:1986`) and refuses to write a
+value that has been rejected, across capture, import, sync and the markdown-mirror
+rebuild — so a later extraction that rediscovers a rejected claim is turned away
+rather than silently re-asserting it. `reject`/`unreject`/`rejections` exist on
+the CLI, HTTP and MCP surfaces, and a refused write is itself audited
+(`reject_refusal`). The honest limitation is that the match is exact-normalized-value
+only: a paraphrase of a rejected value still evades it (`src/rejection.ts:5-8`).
+That earns `tombstone` and reverses the report's former central finding.
 
 Second weakness, and subtler: **staleness is computed from disuse, not from
 evidence.** See section 2.
@@ -107,17 +118,20 @@ flowchart TD
     R -->|"last_retrieved older<br/>than 30 days"| ST["reported as stale<br/>(derived, never written)"]
     R -->|"otherwise"| K
     S -->|"a newer claim arrives"| SU["superseded_by set<br/>— row hidden on read"]
-    SU -.->|"nothing keys the value,<br/>so extraction can re-assert it"| S
-    S -->|"forget()"| D[["DELETE FROM memories"]]
+    S -->|"forget() / reject"| D[["DELETE FROM memories"]]
+    D -->|"reject writes a digest"| T[("rejected_values<br/>digest = sha256(normalized)")]
+    T -.->|"write-path guard refuses<br/>a rejected value (exact, not semantic)"| C
     S -->|"sleep phase 3<br/>quality audit grades error"| D
 
     style D fill:#f4e2bd,stroke:#b8860b
 ```
 
-The two edges into the deletion box are the finding. One is a user asking to
-forget; the other is a background quality audit deciding a memory is junk, and
-it runs host-wide. The dashed edge is the correction gap: supersession changes
-what is *shown* and not what may be *written*.
+The edges into the deletion box are one half of the finding. One is a user asking
+to forget; the other is a background quality audit deciding a memory is junk, and
+it runs host-wide. The other half is what closed the former gap: `reject` writes a
+digest into `rejected_values`, and the dashed edge is the write-path guard that
+now refuses re-asserting a rejected value — so supersession still only changes
+what is *shown*, but rejection changes what may be *written*.
 
 ## 3. Architecture
 
@@ -241,11 +255,17 @@ operators investigating "where did old rows go" have one row left to find
 regardless of retention floor. A retention policy that records its own execution
 in the log it truncates is worth copying directly.
 
-**Correction is record-keyed, and the gap is the atlas's central one.**
-Supersession hides a row on read; nothing keys the rejected *value*, so a later
-extraction that rediscovers the same claim writes a new row and the system has
-no way to know it was already judged wrong. `forget` is a hard delete. There is
-no rejected-value tombstone and the vocabulary is absent from the source.
+**Correction now has two layers, and the value-keyed one is new.** Supersession
+still only hides a row on read; but `reject` writes the rejected value's digest
+into `rejected_values`, and a guard at the single write choke point
+(`src/store.ts:1172`) refuses a later extraction that rediscovers the same claim —
+so the system now *does* know a value was judged wrong and turns it away, across
+capture, import, sync and the markdown-mirror rebuild, with the refusal itself
+audited (`reject_refusal`). The audit op union grew to cover it —
+`reject_value`, `reject_refusal`, `unreject_value` and, closing a separate gap,
+`conflict_resolve`. The residual limit is that the guard matches the exact
+normalized value, so a paraphrase of a rejected claim still evades it; semantic
+rejection is out of scope by the module's own statement.
 
 **Conflict resolution is automatic, not human.** `memory_conflicts` carries a
 `status`, and it moves — but by code, from inside detection and merge
@@ -303,8 +323,10 @@ from asserting that a particular memory must not surface.
   axis and the belief axis apart, and let a memory be both current and unused.
 - **A quality audit that deletes host-wide.** It is fenced here; if you copy the
   phase without the fence you have built a cross-tenant delete.
-- **Supersession as your only correction.** Hiding a row does not stop the next
-  extraction from writing it again.
+- **Supersession as your *only* correction.** Hiding a row does not stop the next
+  extraction from writing it again — which is why Hippo added a digest-keyed
+  rejected-value tombstone on top of supersession. Steal that pairing, and note
+  its limit: an exact-value guard does not catch a paraphrase.
 
 ### Fit
 
@@ -313,8 +335,9 @@ multi-tenancy** and is willing to own 42,000 lines of it. The migration ladder
 and the incident comments say it has been run in anger, and the transport-level
 fencing says someone thought about a hostile caller. It is a poor fit if you
 want a small dependency — the physics model, the DAG assembler, the graph layer,
-the connectors and the goal stack all arrive together — and a poor fit if
-correction durability is your requirement, since that is the one axis where the
+the connectors and the goal stack all arrive together — and a weaker fit if
+semantic correction durability is your requirement, since the new rejected-value
+tombstone catches an exact repeat but not a reworded one, which is the axis where the
 design stops at hiding rows.
 
 ## 12. Open Questions
@@ -365,5 +388,7 @@ design stops at hiding rows.
 - `src/eval-suite.ts`, `src/eval.ts`, `src/ablation.ts`, `src/compare.ts`
 
 ## History
+
+**2026-08-15** — [`35815a04026c685594e7d80ecb94f73662508186`](https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186) — re-pinned at release v1.31.0. Screened again before reading: no auto-run surface, several manifests inside the cooldown, build-time execs; nothing was installed or run. [`6d12a00e9d1426d89a53f545dbc297d027068ee0`](https://github.com/kitfunso/hippo-memory/commit/6d12a00e9d1426d89a53f545dbc297d027068ee0) (AT1) added a rejected-value tombstone — a `rejected_values` table (migration v41) keyed on `(tenant_id, digest)` where the digest is a SHA-256 of the normalized content, with no foreign key so the record outlives the memory, and a `checkRejectionGuard` at the single write choke point (`src/store.ts:1172`, and the consolidation batch path at `:1986`) that refuses to re-write a rejected value across capture, import, sync and index rebuild. That earns `tombstone` and reverses this report's former central finding; the residual limit is exact-normalized-value matching, so a paraphrase evades it. The audit op union grew to cover `reject_value`/`reject_refusal`/`unreject_value` and the previously-missing `conflict_resolve`. Two additive features are context: [`2a4619aef20b2e920f8d4e37980b11a91bae0e53`](https://github.com/kitfunso/hippo-memory/commit/2a4619aef20b2e920f8d4e37980b11a91bae0e53) (CS1) installs PreCompact-capture and compact-aware re-injection hooks so working state survives a context compaction, and LC2-E3 adds an opt-in (default-off) learned-value *rescue* veto over the sleep decay pass that can only spare a condemned memory, never condemn one. Size grew to ~50,000 lines of TypeScript; the stack row is promoted from seeded to reviewed. The four prior marks (`trust_state`, `bitemporal`, `scope_enforced`, `audit_log`) were re-verified against `src/memory.ts`, `src/policies.ts`, `src/store.ts` and `src/audit.ts`. No paper exists.
 
 **2026-08-04** — [`a9c7cca3613b6571bfb37ad1fb6c070b7c976197`](https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb6c070b7c976197) — first reading.

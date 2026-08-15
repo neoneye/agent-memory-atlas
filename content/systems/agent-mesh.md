@@ -1,14 +1,14 @@
 ---
 title: "Agent Mesh"
-eyebrow: "The schema for a verified decision, and no way to write one"
-description: "A hash-chained event log whose decisions carry tiers, quorum, supersession and executable verification commands — with both shipped write paths hardcoding the verification list empty, and a grounding packet that never reads the decision store at all."
+eyebrow: "A decision ledger that validates before it appends"
+description: "A hash-chained event log whose decisions carry tiers, quorum, supersession and executable verification commands — now writable through the CLI and Workbench, validated at append so a malformed event never lands, with verification run through argv rather than a shell; the grounding packet still never reads the decision store."
 root: ../..
 page_kind: system
 source_name: "cbalgeman/agent-mesh"
 source_url: https://github.com/cbalgeman/agent-mesh
-revision: 258a1eed288513e24953a633c44b397e91ea9886
-revision_url: https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886
-analyzed_at: 2026-08-10
+revision: 43bfe5cc376c71754c4a627286401825f4599062
+revision_url: https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062
+analyzed_at: 2026-08-15
 capabilities: "trust_state, audit_log, human_review"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical"
@@ -24,14 +24,14 @@ matrix:
   background: "None over memory. A user-level service (launchd, systemd, Task Scheduler) supervises the Workbench server; nothing re-reads or rewrites the store on a schedule"
   trust: "A six-value `status` column — proposed, accepted, in_force, rejected, superseded, retired — with tier-driven promotion, optional reviewer quorum, and re-approval forced by editing an accepted record"
   strengths: "Editing an accepted decision emits `decision_revisited`, clears `accepted_utc` and returns the record to proposed, so a revision cannot silently inherit its predecessor's approval"
-  risks: "`decision_verifications` is populated by no shipped write path and executed with `shell=True` by `agent-q decisions verify`; a single stop-line-violating event is durably appended and then aborts every subsequent read"
+  risks: "The grounding packet still never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed but gates nothing, and two of the five verification fields (`assumptions`, `evidence`) still have no producer"
 ---
 
 ## 1. Executive Summary
 
 Agent Mesh is a project-local coordination substrate for human-plus-agent teams:
-19,170 lines of Python across `src/agent_mesh/`, MIT, version 0.2.0, five
-commits between 14 and 16 July 2026 on a repository whose first commit is
+24,653 lines of Python across `src/agent_mesh/`, MIT, release v0.3.0 (PyPI
+`my-agent-mesh`), eight commits on a repository whose first commit is
 `chore: publish clean agent-mesh surface` — a curated publish of work developed
 elsewhere, which is why the history says nothing about how the design arrived.
 It has **no third-party dependencies**: `pyproject.toml` declares an empty
@@ -59,18 +59,18 @@ Workbench requires a reason, emits a `decision_revisited` event, and sets
 inherit the approval of the thing it replaced. Very little in this atlas closes
 that loop.
 
-**The worst thing is that the verification apparatus cannot be filled.** Both
-shipped write paths — `cmd_decision_propose` in `cli/mail.py` and
-`create_decision` in `workbench.py` — construct the `decision_proposed` payload
-with `"verification": []`, `"assumptions": []`, `"required_checks": []` and
-`"evidence": {}` hardcoded, and the Workbench also hardcodes
-`"affected_code_globs": []`. The only later mutation event,
-`decision_metadata_updated`, handles title, owner, tier, body, human ID, status
-and seven meta fields, and touches none of those five. So
-`decision_verifications`, `decision_assumptions`, `decision_checks` and
-`decision_evidence` have tables, projections, a rebuild path and consumers —
-and no producer. `agent-q decisions verify` reads a table that the package
-cannot write.
+**The verification apparatus can now be filled — v0.3.0 closed what was the
+report's central gap.** At the previous pin both write paths hardcoded the
+verification list empty; now `cmd_decision_propose` (`cli/mail.py`, `--verification`)
+and `create_decision` (`workbench.py`) both populate `verification`,
+`required_checks` and `affected_code_globs`, a new `decision amend` verb edits
+them after the fact, and `agent-q decisions verify` executes commands the package
+can actually write. Authoring parses the command into argv and rejects shell
+operators and env-assignments (`core/decision_schema.py`, `reject_unsafe=True`);
+execution is `subprocess.Popen(argv, …, shell=False)` (`q.py:1324`) and refuses a
+verification unless the decision is `accepted`/`in_force`. The narrowed residue:
+two of the five fields, `assumptions` and `evidence`, still have no producer and
+ship empty — the finding survives on those two alone.
 
 Two further findings follow from reading the read path rather than the schema.
 The dispatch grounding packet that an agent actually receives has a section
@@ -83,7 +83,8 @@ tells the model to go and look. And every `agent-q` read calls
 `projection_is_current` exists and is called from exactly one place, the
 Workbench refresh.
 
-There are **zero tests** in the published tree.
+The published tree now ships tests: `tests/public/test_public_contract.py` (a
+four-test behaviour contract) with CI, where the previous pin had none.
 
 ## 2. Mental Model
 
@@ -242,9 +243,8 @@ public."* It also states that configs predating the setting are read as
   `workbench.py:create_decision` (`:500`) and the edit path (`:680`).
 - **Decision read surfaces.** `cli/q.py:cmd_decisions_list/show/log/search/at/verify`
   (`:733`–`:914`) and the Workbench Decisions tab.
-- **Verification runner.** `cli/q.py:cmd_decisions_verify` (`:866`) —
-  `subprocess.run(row["command"], cwd=config.project_root, shell=True)`, emitting
-  `decision_drift_detected` on non-zero exit.
+- **Verification runner.** `cli/q.py:cmd_decisions_verify` — `subprocess.Popen(argv, …, shell=False)` (`:1324`), emitting
+  `decision_drift_detected` on non-zero exit; refuses a verification on a non-accepted decision.
 - **Grounding.** `dispatch/grounding.py` — sections for referenced rows, git
   state, `prior-decisions` (`prior_decisions_text`, `:57`) and the full thread,
   each tagged `stable` or `volatile` and hashed.
@@ -362,19 +362,18 @@ interrupted writes, `dispatch/atomic.py` journals its file operations for
 roll-forward, and the Workbench's feedback receipts make an uncertain retry
 return the original request ID.
 
-**The write path does not validate decision invariants.** `append_event` calls
-`validate_event_provenance` and `validate_dispatch_payload`; there is no
-equivalent for decisions. The decision invariants — a superseded target must be
+**The write path now validates decision invariants — the poison-event hazard is
+closed.** At the previous pin decision invariants (a superseded target must be
 accepted or in force, no supersession cycles, no human-ID collision, no alias
-fork, no missing parent — are all enforced at *projection* time, by raising
-`DecisionStopLine`, and nothing catches that inside `rebuild_all`. The
-consequence is a poison event: an event violating a stop line is durably
-appended, hash-chained into the log, and then aborts the replay. Because
-`rebuild_all` runs at the top of essentially every read, **one bad decision event
-makes the whole store unreadable from the CLI** — and the log has no delete, no
-skip and no quarantine, so the repair is to rewrite an append-only hash chain by
-hand. Validating at the write boundary as well as the replay boundary is the
-standard defence and it is one function call away from where it already lives.
+fork, no missing parent) were enforced only at *projection* time by raising
+`DecisionStopLine`, so a stop-line-violating event was durably appended and then
+aborted every subsequent replay — one bad event made the store unreadable.
+v0.3.0 added `_validate_stateful_event_before_append` → `validate_decision_event`
+in `append_event` (`events.py:150,428-468`), so an invalid decision event **fails
+before it is journalled**; the public-contract test asserts the bad event never
+lands and `events.jsonl` stays byte-identical, and a new `agent-q decisions
+diagnose` reports replay health. Validating at the write boundary as well as the
+replay boundary was the standard defence, and the project took it.
 
 The other write-side finding is the one in this report's title. Both propose
 paths hardcode the interesting lists empty:
@@ -398,13 +397,17 @@ who installs the package and follows the documented flow gets a decision with an
 empty verification list and a verify command that prints `no verification
 commands`.
 
-Nothing filters malicious input, and one path makes that sharper than usual.
-`agent-q decisions verify` runs each stored verification command through
-`subprocess.run(..., shell=True)` in the project root. The command string is
-memory: it arrives in an event payload, written by whichever participant appended
-it, and the participant set includes agents. A memory store whose records can
-contain a shell command that a maintenance command later executes is a
-prompt-injection path with an unusually short distance to code execution. That
+Input handling here is much improved since the previous pin, though the shape of
+the risk is worth keeping in view. `agent-q decisions verify` used to run each
+stored verification command through `subprocess.run(..., shell=True)`; v0.3.0
+now parses the command into argv at authoring time, rejecting shell operators and
+env-assignments (`core/decision_schema.py`, `reject_unsafe=True`), executes via
+`shell=False` (`q.py:1324`), and refuses a legacy shell-dependent string and any
+verification on a non-accepted decision. The command string is still memory —
+it arrives in an event payload written by a participant, and the participant set
+includes agents — so a store whose records feed a later executor remains a path
+worth watching, but the unusually short distance to code execution has been
+lengthened by the argv boundary and the authoring rejection. That
 the field is currently unfillable through the shipped surfaces is what keeps it
 theoretical, which is an uncomfortable pair of facts to hold together: the same
 gap that makes the feature useless is the thing making it safe.
@@ -516,12 +519,18 @@ label, an intentional redaction path is the obvious next mechanism, and the
 
 ## 10. Tests, Evals, and Benchmarks
 
-There are no tests. Not a `tests/` directory, not a `test_*.py`, not a
-`conftest.py`, nothing under `examples/` that asserts. The `.gitignore` excludes
-`.pytest_cache/`, `.coverage`, `htmlcov/`, `.tox/` and `.mypy_cache/` — artifacts
-of a suite that is not in this tree, which is consistent with the repository
-being a curated publish of a larger internal one rather than with there being no
-suite at all. Either way, what a reader can check is nothing.
+The published tree now ships a curated public verification pack:
+`tests/public/test_public_contract.py`, four tests, with a CI workflow. At the
+previous pin there were none — only `.gitignore` entries for a suite kept in the
+larger internal repository. The four are behaviour contracts and they are pointed:
+request→respond→packet round-trips and the packet carries the bodies; a
+hash-chain tamper is detected (`prev_event_hash mismatch`); an invalid decision
+transition raises `DecisionStopLine` **at append** and leaves `events.jsonl`
+byte-identical (the poison-event fix, asserted); and the git-shared allowlist
+tracks exactly config/events/gitignore and not a private attachment. They assert
+must-detect and must-not-write, not must-not-*retrieve*, so they do not earn
+`negative_eval`, but they turn "what a reader can check is nothing" into a real,
+if small, checkable surface.
 
 That matters more here than in most reports, because the design's claims are
 exactly the kind that only a test can support. Idempotent crash recovery, a
@@ -664,6 +673,8 @@ rather than to adopt it for the guarantees.
   `docs/migration.md`, `docs/privacy.md`.
 
 ## History
+
+**2026-08-15** — [`43bfe5cc376c71754c4a627286401825f4599062`](https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062) — re-pinned at release v0.3.0 (24,653 lines, eight commits, PyPI distribution `my-agent-mesh`). Screened again; a manifest inside the cooldown, nothing installed or run. The release fixed all three of this report's central negative findings: the verification apparatus, which both write paths hardcoded empty, is now writable through `--verification`, the Workbench and a new `decision amend` verb (three of the five fields — `verification`, `required_checks`, `affected_code_globs` — now populate; `assumptions` and `evidence` still have no producer); the poison-event hazard is closed by `_validate_stateful_event_before_append` → `validate_decision_event` in `append_event` (`events.py:150,428-468`), so an invalid decision event fails before it is journalled; and the `shell=True` verification runner is now argv/`shell=False` with authoring-time rejection of shell operators (`core/decision_schema.py`, `q.py:1324`). A public-contract test suite ships (`tests/public/test_public_contract.py`, four tests, plus CI) where there were none. The eyebrow and description are rewritten accordingly. Marks are unchanged — `trust_state`, `audit_log` and `human_review` all hold and are lightly strengthened (a completeness gate on acceptance, receipt↔decision binding, direct human approval of revisions); no new mark is earned (the contract tests are must-detect/must-not-write, not must-not-retrieve). What still holds: the grounding packet never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed and gates nothing, and there is no scope key, no validity-time axis and no delete. No paper.
 
 **2026-08-10** — [`258a1eed288513e24953a633c44b397e91ea9886`](https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886) —
 first reading, at 5 commits. Screened before reading: 0 auto-run surfaces, 0

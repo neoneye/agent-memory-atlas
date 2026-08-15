@@ -99,14 +99,14 @@ write.</p>
               <strong>techtheist/engram</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">
+            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">
               <span>Analyzed revision</span>
-              <code>cbc6f0b8…</code>
+              <code>15fbe809…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-08-15</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -125,10 +125,11 @@ write.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Engram Alpha is graph memory for AI coding assistants: 26,244 lines
+<p>Engram Alpha is graph memory for AI coding assistants: ~30,200 lines
 of Rust across <code>engram-core</code>, <code>engram-mcp</code> and
-<code>engram-http</code>, MIT, 76 commits since 3 July 2026, shipping as
-a JetBrains plugin and a VS Code extension on three marketplaces with a
+<code>engram-http</code> (33,500 with the <code>engram-cli</code>
+crate), MIT, release v0.8.7, 98 commits since 3 July 2026, shipping as a
+JetBrains plugin and a VS Code extension on three marketplaces with a
 browser demo of the real pane. <strong>Not to be confused with <a
 href="../engram/">Engram</a> — a different project of the same name,
 already in this atlas.</strong></p>
@@ -319,7 +320,7 @@ graph and changes no trust, so a note cannot certify itself by being
 popular.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><strong>Runtime.</strong> A Rust core (<code>engram-core</code>) with
-an MCP server (<code>engram-mcp</code>, 3,046 lines) and an HTTP surface
+an MCP server (<code>engram-mcp</code>, 3,778 lines) and an HTTP surface
 (<code>engram-http</code>), a Vue frontend for the pane, and editor
 integrations for JetBrains and VS Code published to the JetBrains
 Marketplace, the VS Marketplace and Open VSX. There is a standalone
@@ -352,6 +353,12 @@ drifted <code>code_refs</code> — journalled as a
 <code>graph_validated</code> row with its own summary note, and backed
 by a six-hourly sweep. Drift scans surface for review without
 demoting.</p>
+<p>Since v0.8.4 a second detached daemon runs alongside that sweep: the
+<strong>history harvester</strong>, a 60-second loop
+(fs-notify-accelerated in v0.8.7) that tails coding-assistant
+transcripts into a separate episodic store — so "deliberately little
+background" now understates a continuous transcript-tailing loop, even
+though it feeds a sibling store and not the curated read.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>One binary and one SQLite file per project, plus optional local
 models — an embedder (<code>bge-small-en-v1.5</code>), a reranker
@@ -557,6 +564,35 @@ calibrating its own "I don't know" threshold from synthesised
 unanswerable queries</strong> — <a href="../metaclaw/">MetaClaw</a> is
 the nearest, and it replays <em>real</em> past turns against candidate
 policies rather than manufacturing negatives.</p>
+<p><strong>Since v0.8.7 search is time-scoped, and it is a
+capture-window filter rather than a new validity axis.</strong> A single
+temporal grammar (<code>timespec.rs</code>) adds <code>after</code>,
+<code>before</code>, <code>during_version</code> and <code>order</code>
+to the MCP <code>search</code>, applied <em>before</em> the reranker and
+both calibrated cuts so "a scoped verdict describes the scoped set,"
+with ordering applied last so a time-ordered read has the same
+membership as its relevance twin. <code>during_version</code> resolves a
+window from the audit journal's <code>version_switched</code> rows with
+no new storage, and <code>order: "recent"</code> folds a history
+restatement under its newest form. Read precisely, the window filters
+<code>created_at</code> — <em>when the knowledge was captured</em> — not
+the <code>valid_from</code>/<code>valid_until</code> validity axis that
+already earns <code>bitemporal</code>; the code says so at
+<code>store.rs:524-528</code>. So this strengthens recall ergonomics,
+not the temporal model.</p>
+<p>Beneath the curated graph now sits a second, sealed <strong>episodic
+history store</strong> (<code>history.tepin</code>, one per project):
+the harvester tails chat transcripts from seven assistants — Claude
+Code, Codex, Gemini CLI, opencode, Kilo, Antigravity, IBM Bob — as
+Session/Message nodes cross-linked to curated memory by a
+<code>born-in</code> provenance edge. Its isolation is physical, not a
+filter: curated search, brief, drift and decay never see it
+(<code>history.rs:7-11</code>). It is opt-in and <strong>encrypted at
+rest</strong> (zstd then XChaCha20-Poly1305, key in the OS keyring), the
+sharper half of a deliberate two-store redaction split — the curated
+graph is redacted but inspectable, a transcript nobody curates is
+redacted <em>and</em> sealed. New MCP tools <code>expand_history</code>
+and <code>list_sessions</code> read it on request.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>A write is synchronous and returns more than an id.
 <code>WriteOutcome::Created</code> carries the node, any
@@ -664,9 +700,15 @@ that mentions it.</p>
 key on either table.</p>
 <p>Other observations:</p>
 <ul>
-<li><strong><code>redact.rs</code> exists</strong>, so redaction is a
-modelled concern rather than an afterthought; what drives it was not
-traced.</li>
+<li><strong><code>redact.rs</code> drives the write path.</strong>
+<code>redact::scrub</code> runs on title and body in the node write
+paths (<code>engine.rs:290-291</code>, <code>:2400-2401</code>): named
+patterns (PEM/AWS/JWT/GitHub/Slack/OpenAI/<code>key=value</code>) plus a
+high-entropy backstop, now judged per separator-delimited segment
+(segments under twelve chars abstain) so a compound identifier is no
+longer masked. The curated graph is redacted but not encrypted (it
+exists to be inspected); the new history store is redacted <em>and</em>
+encrypted.</li>
 <li><strong><code>meta</code> pins the embedding model identity and
 vector width</strong>, so a store read with the wrong embedder is
 detectable rather than silently wrong.</li>
@@ -994,8 +1036,10 @@ inputs, not of answers. The online half is planned and reserved.</li>
 ontology?</strong> <code>--lme-ontology default</code> runs the stock
 types beside it and the page lists that pair as reserved, so the type
 layer's contribution on this corpus is named but not yet a number.</li>
-<li><strong>What drives <code>redact.rs</code>?</strong> The module
-exists; the policy that calls it was not traced.</li>
+<li><strong>How much does the encrypted history store get used in
+practice?</strong> The transcript-harvest layer is opt-in and physically
+isolated from curated recall; whether teams enable it, and how much it
+grows, is not observable from the tree.</li>
 <li><strong>How often does the local NLI hint disagree with the
 assistant's verdict?</strong> Both are stored — <code>nli_label</code>
 beside the resolved <code>status</code> — so the repository could report
@@ -1070,6 +1114,28 @@ adapter), <code>chains.rs</code> (supersession chains),
 <li><code>scripts/mem-probe.sh</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb"><code class="commit-id" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">15fbe809…</code></a>
+— re-pinned at release v0.8.7 (98 commits, ~30,200 lines across the
+three core crates / 33,500 with <code>engram-cli</code>;
+<code>engram-mcp</code> 3,046→3,778). Screened again; the
+<code>.claude/settings.json</code> auto-run surface is still present,
+nothing installed or run. No capability mark changed: all five hold, and
+time-scoped search — the headline addition (<a
+href="https://github.com/techtheist/engram/commit/719f7b56d03940b959a843131e6455a6ee9894fc"><code class="commit-id" title="719f7b56d03940b959a843131e6455a6ee9894fc">719f7b56…</code></a>)
+— filters the record-time (<code>created_at</code>) axis with recency
+ordering, not a new validity axis, so <code>bitemporal</code> is not
+upgraded. Two additions are new context: a sealed, opt-in,
+XChaCha20-encrypted <strong>episodic history store</strong> that
+harvests seven assistants' transcripts (<a
+href="https://github.com/techtheist/engram/commit/40b919bfc20373951337273aff7a2452391c4324"><code class="commit-id" title="40b919bfc20373951337273aff7a2452391c4324">40b919bf…</code></a>
+accelerates its sweep with fs-notify), physically isolated from curated
+recall; and a <strong>time-scoped search grammar</strong> over both
+layers. Two prior claims are corrected: <code>redact.rs</code> is now
+traced to the node write paths (with a per-segment-entropy fix), and
+"deliberately little background" is qualified by the new harvester
+daemon. The <code>engram-cli</code> crate was added. No paper for engram
+itself; the only external citation remains LongMemEval.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d"><code class="commit-id" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">cbc6f0b8…</code></a>
 — ten commits past the previous pin, covering releases 0.8.2 and a

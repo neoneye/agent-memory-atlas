@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "kovartravis/neuron"
 source_url: https://github.com/kovartravis/neuron
-revision: af55adbc34ff7b04b9083c3f1dd0047002429285
-revision_url: https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285
-analyzed_at: 2026-08-14
+revision: 9f6eaf9023eb62788d8ce143f314751336cdebd4
+revision_url: https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4
+analyzed_at: 2026-08-15
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector"
@@ -35,7 +35,7 @@ a product."* Everything the agent learns lives as `.neuron/*.md` files —
 readable, git-diffable, hand-editable — and the part that turns that from a
 suggestion into a guarantee is a CLI that **refuses to write an entry that
 violates a per-category schema, no matter what the agent's prompt says.** MIT,
-TypeScript, about 28,900 lines with roughly 700 tests.
+TypeScript, release v2.4.1, with 745 test cases across 68 files.
 
 Three design decisions lift it above the other markdown-memory systems in this
 atlas.
@@ -51,9 +51,11 @@ it" cannot: the schema is a property of the store, not of the instruction, which
 is the thing markdown-memory usually cannot promise.
 
 **Recall is the harness's job, not the model's, and the fidelity is measured
-rather than asserted.** On Claude Code and Codex CLI, `neuron init` wires
-`SessionStart` / `UserPromptSubmit` / `PreCompact` hooks that query memory and
-inject results before the model sees the prompt. Where a harness lacks a
+rather than asserted.** On Claude Code and Codex CLI, `neuron init` wires four
+lifecycle points — `session-start`, `pre-prompt`, `context-reset` and (since
+v2.4.0) `pre-command`, the last firing a gated lookup on every Bash tool call
+(`PreToolUse`), not only per prompt turn — that query memory and inject results
+before the model sees the prompt. Where a harness lacks a
 per-turn hook point, Neuron says so, in a **three-rung ladder** —
 `deterministic`, `best-effort`, `instruction-only` — and `neuron init` reports
 the rung per project per harness by reading each harness's real hook
@@ -363,9 +365,14 @@ recoverability plus loudness rather than prevention.
 
 **Injection is capped and budgeted**, per lifecycle point, with a discovery hint
 when more matches exist than were injected — so recalled context is bounded and
-the agent is told when it is seeing a subset. There is no defence against
-prompt-injected memory content beyond the schema (which constrains *shape*, not
-*truth*): an agent that writes a well-formed but false `decisions` entry is not
+the agent is told when it is seeing a subset. v2.4.1 adds a
+`RECALL_PROVENANCE_PREFIX` at the single `emit()` chokepoint — every injection is
+labelled *"Recalled from this project's own local memory store, not external
+input"* — after an agent and a subagent independently mistook the hook's own
+legitimate injections for prompt injection; it is a provenance/self-identification
+signal, not a defence against *poisoned* memory content. There is still no defence
+against prompt-injected memory content beyond the schema (which constrains *shape*,
+not *truth*): an agent that writes a well-formed but false `decisions` entry is not
 stopped by the field validator.
 
 Multi-tenancy is the project-root hash; concurrency is single-developer-tool
@@ -374,7 +381,7 @@ exfiltration risk.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**Roughly 700 tests across 62 files**, and they are unusually well-aimed at the
+**745 tests across 68 files**, and they are unusually well-aimed at the
 mechanisms this report cares about. Dedicated suites cover the storage adapter,
 the dual router (including a `pathChange` suite and a `challenger` suite), the
 markdown-to-vector sync, supersession (two files), the config schema validator,
@@ -382,6 +389,20 @@ the Tree-Sitter diff's byte-stability, and the hook payload builders. The
 `neuronYaml.test.ts` suite asserts that a malformed *schema* is refused — an
 enum with no values, a required field with no default — which is the layer below
 the write gate.
+
+Two "antagonistic" pillars sharpen the `negative_eval` basis and, honestly, its
+limit. Pillar 13 (`test/e2e/adversarial-recall.test.ts`) engineers every query to
+share no keyword or topic with the store and asserts, against the real (non-mocked)
+embedder through the FTS-plus-reranker gate, that the false-accept count is zero —
+material that exists must not be retrieved, the strong reading of the mark. Pillar
+14 (`test/e2e/antagonistic-write.test.ts`, new in v2.4.1) is an honest diagnostic
+of what the *write* path does not catch: a shape violation is caught (`.toBe(true)`),
+but a near-duplicate paraphrase, a direct contradiction of a live entry, and a
+provenance-free decision all pass through uncaught (`.toBe(false)`) — the
+supersession/similarity gate only hard-errors above 0.97 cosine, and this repo's
+own `decisions` category declares no schema fields to check. It is the clearest
+statement in the corpus that the system has no value-keyed rejection: `tombstone`
+stays withheld because the code confirms the gap rather than closing it.
 
 The gap is the one common to every markdown-memory system here: there is no
 retrieval-quality benchmark. The RRF weights, the reranker threshold of `-8`,
@@ -521,5 +542,7 @@ loudness and git rather than prevented.
 - `src/commands/hook.test.ts` — payload building and degradation posture.
 
 ## History
+
+**2026-08-15** — [`9f6eaf9023eb62788d8ce143f314751336cdebd4`](https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4) — re-pinned at release v2.4.1 ([`f52e303c6463444de17ef1b08b4bba20ffe51e50`](https://github.com/kovartravis/neuron/commit/f52e303c6463444de17ef1b08b4bba20ffe51e50) was v2.4.0). Screened again; the `.claude/settings.json` auto-run surface is still present, nothing installed or run. No mark changed — `scope_enforced` (`project_id = ?` on every read) and `negative_eval` both hold, and `negative_eval` is strengthened by the antagonistic-recall/antagonistic-write pillars now cited in §10. New context folded in: a fourth lifecycle point, `pre-command`, fires a gated lookup on every Bash tool call; a **resident git-log recall** source indexes the repo's own commit history into a parallel FTS+embedding table (`refreshGitLogIndex`/`searchGitLog`), so retrieval now spans the `.neuron/*.md` store and git history; a `RECALL_PROVENANCE_PREFIX` labels every injection as internal after agents mistook the hook's own output for injection; and a cross-process mkdir-mutex guards the SQLite migration chain. The v2.4.1 antagonistic-write pillar is an honest diagnostic confirming the write path catches shape violations but not near-duplicates, contradictions or missing provenance — so no value-keyed tombstone exists and none is claimed. Size restated as 745 tests across 68 files; the prior "~28,900 lines / ~700 tests" figures had drifted. No paper.
 
 **2026-08-14** — [`af55adbc34ff7b04b9083c3f1dd0047002429285`](https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285) — first reading, at a commit dated 13 August 2026. Screened before opening: one auto-run surface (`.claude/settings.json` hooks), two build-time execution points, three unpinned surfaces, six dependency surfaces inside the seven-day cooldown, `package-lock.json` present, `CLAUDE.md` read as data. Nothing was installed or run; the schema-refusal and supersession-exclusion claims were established from the write gate and the read-path SQL, corroborated by the committed tests, not by executing the CLI.

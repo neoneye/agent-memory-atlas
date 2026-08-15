@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
-revision: cbc6f0b867d8858ba6795b516bf9baf7f852426d
-revision_url: https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d
-analyzed_at: 2026-08-09
+revision: 15fbe809ddfd744c161cb49a4b0014d96693cceb
+revision_url: https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb
+analyzed_at: 2026-08-15
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -29,8 +29,9 @@ matrix:
 
 ## 1. Executive Summary
 
-Engram Alpha is graph memory for AI coding assistants: 26,244 lines of Rust
-across `engram-core`, `engram-mcp` and `engram-http`, MIT, 76 commits since
+Engram Alpha is graph memory for AI coding assistants: ~30,200 lines of Rust
+across `engram-core`, `engram-mcp` and `engram-http` (33,500 with the `engram-cli`
+crate), MIT, release v0.8.7, 98 commits since
 3 July 2026, shipping as a JetBrains plugin and a VS Code extension on three
 marketplaces with a browser demo of the real pane. **Not to be confused with
 [Engram](../engram/) — a different project of the same name, already in this
@@ -217,7 +218,7 @@ changes no trust, so a note cannot certify itself by being popular.
 
 ## 3. Architecture
 
-**Runtime.** A Rust core (`engram-core`) with an MCP server (`engram-mcp`, 3,046
+**Runtime.** A Rust core (`engram-core`) with an MCP server (`engram-mcp`, 3,778
 lines) and an HTTP surface (`engram-http`), a Vue frontend for the pane, and
 editor integrations for JetBrains and VS Code published to the JetBrains
 Marketplace, the VS Marketplace and Open VSX. There is a standalone browser demo
@@ -246,6 +247,12 @@ retire what a supersession superseded, refit the two auto-tune dials, rescan for
 conflicts, count drifted `code_refs` — journalled as a `graph_validated` row
 with its own summary note, and backed by a six-hourly sweep. Drift scans surface
 for review without demoting.
+
+Since v0.8.4 a second detached daemon runs alongside that sweep: the **history
+harvester**, a 60-second loop (fs-notify-accelerated in v0.8.7) that tails
+coding-assistant transcripts into a separate episodic store — so "deliberately
+little background" now understates a continuous transcript-tailing loop, even
+though it feeds a sibling store and not the curated read.
 
 ### Deployment and ergonomics
 
@@ -416,6 +423,28 @@ system calibrating its own "I don't know" threshold from synthesised
 unanswerable queries** — [MetaClaw](../metaclaw/) is the nearest, and it replays
 *real* past turns against candidate policies rather than manufacturing negatives.
 
+**Since v0.8.7 search is time-scoped, and it is a capture-window filter rather than
+a new validity axis.** A single temporal grammar (`timespec.rs`) adds `after`,
+`before`, `during_version` and `order` to the MCP `search`, applied *before* the
+reranker and both calibrated cuts so "a scoped verdict describes the scoped set,"
+with ordering applied last so a time-ordered read has the same membership as its
+relevance twin. `during_version` resolves a window from the audit journal's
+`version_switched` rows with no new storage, and `order: "recent"` folds a
+history restatement under its newest form. Read precisely, the window filters
+`created_at` — *when the knowledge was captured* — not the `valid_from`/`valid_until`
+validity axis that already earns `bitemporal`; the code says so at
+`store.rs:524-528`. So this strengthens recall ergonomics, not the temporal model.
+
+Beneath the curated graph now sits a second, sealed **episodic history store**
+(`history.tepin`, one per project): the harvester tails chat transcripts from
+seven assistants — Claude Code, Codex, Gemini CLI, opencode, Kilo, Antigravity,
+IBM Bob — as Session/Message nodes cross-linked to curated memory by a `born-in`
+provenance edge. Its isolation is physical, not a filter: curated search, brief,
+drift and decay never see it (`history.rs:7-11`). It is opt-in and **encrypted at
+rest** (zstd then XChaCha20-Poly1305, key in the OS keyring), the sharper half of
+a deliberate two-store redaction split — the curated graph is redacted but
+inspectable, a transcript nobody curates is redacted *and* sealed. New MCP tools
+`expand_history` and `list_sessions` read it on request.
 
 ## 7. Write Mechanics
 
@@ -521,8 +550,13 @@ can be re-authored from the next conversation that mentions it.
 
 Other observations:
 
-- **`redact.rs` exists**, so redaction is a modelled concern rather than an
-  afterthought; what drives it was not traced.
+- **`redact.rs` drives the write path.** `redact::scrub` runs on title and body
+  in the node write paths (`engine.rs:290-291`, `:2400-2401`): named patterns
+  (PEM/AWS/JWT/GitHub/Slack/OpenAI/`key=value`) plus a high-entropy backstop, now
+  judged per separator-delimited segment (segments under twelve chars abstain) so
+  a compound identifier is no longer masked. The curated graph is redacted but not
+  encrypted (it exists to be inspected); the new history store is redacted *and*
+  encrypted.
 - **`meta` pins the embedding model identity and vector width**, so a store read
   with the wrong embedder is detectable rather than silently wrong.
 - **The external dataset is SHA-256 pinned and re-verified on every open**, not
@@ -814,8 +848,9 @@ which signals are allowed to change what an agent believes.
   `--lme-ontology default` runs the stock types beside it and the page lists
   that pair as reserved, so the type layer's contribution on this corpus is
   named but not yet a number.
-- **What drives `redact.rs`?** The module exists; the policy that calls it was
-  not traced.
+- **How much does the encrypted history store get used in practice?** The
+  transcript-harvest layer is opt-in and physically isolated from curated recall;
+  whether teams enable it, and how much it grows, is not observable from the tree.
 - **How often does the local NLI hint disagree with the assistant's verdict?**
   Both are stored — `nli_label` beside the resolved `status` — so the repository
   could report it and does not.
@@ -865,6 +900,8 @@ which signals are allowed to change what an agent believes.
 - `scripts/mem-probe.sh`
 
 ## History
+
+**2026-08-15** — [`15fbe809ddfd744c161cb49a4b0014d96693cceb`](https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb) — re-pinned at release v0.8.7 (98 commits, ~30,200 lines across the three core crates / 33,500 with `engram-cli`; `engram-mcp` 3,046→3,778). Screened again; the `.claude/settings.json` auto-run surface is still present, nothing installed or run. No capability mark changed: all five hold, and time-scoped search — the headline addition ([`719f7b56d03940b959a843131e6455a6ee9894fc`](https://github.com/techtheist/engram/commit/719f7b56d03940b959a843131e6455a6ee9894fc)) — filters the record-time (`created_at`) axis with recency ordering, not a new validity axis, so `bitemporal` is not upgraded. Two additions are new context: a sealed, opt-in, XChaCha20-encrypted **episodic history store** that harvests seven assistants' transcripts ([`40b919bfc20373951337273aff7a2452391c4324`](https://github.com/techtheist/engram/commit/40b919bfc20373951337273aff7a2452391c4324) accelerates its sweep with fs-notify), physically isolated from curated recall; and a **time-scoped search grammar** over both layers. Two prior claims are corrected: `redact.rs` is now traced to the node write paths (with a per-segment-entropy fix), and "deliberately little background" is qualified by the new harvester daemon. The `engram-cli` crate was added. No paper for engram itself; the only external citation remains LongMemEval.
 
 **2026-08-09** — [`cbc6f0b867d8858ba6795b516bf9baf7f852426d`](https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d) — ten commits past the previous pin, covering releases 0.8.2 and a drafted 0.8.3. Two published claims were wrong in the same direction and are corrected here. **The ontology was described as a fixed set of eight node kinds; it is per-graph configuration** — `config.rs`, unchanged since the previous pin, stores types and verbs as a document inside the graph, engine logic keys on roles rather than names, three presets ship, and the hard invariants are asserted by test. The same document carries version stamping and the reserved `handoff` tag, a rename bulk-retypes the rows it renames, and `docs/customization.md` described all of it at the previous pin. **Auto-tune was not described at all**, though both dials predate the previous pin: dial one fits the conflict floor from judged suspects, dial two fits the abstention line from synthesised unanswerable probes, and both run at session boundaries under damping, clamps, volume gates and an audit row. The report also read *Alpha* as a maturity label; it is part of the product's name — the marketplace id is `techtheist.engram-alpha` and the binary is `engram-alpha` — and the stability statement the repository actually makes is its README status line. What moved upstream: LongMemEval-S at full population, the first external corpus, under a chat ontology defined purely as per-graph data; `merge_nodes` with four committed tests; a supersession-chain bench with a no-supersession ablation; budget sweeps that refute the spend-more-tokens lever; and an inference batch-width cap with a before/after daemon-memory receipt. The open question "how does any of it perform on a corpus the project did not generate" is answered and removed; the criticism replacing it is narrower — the external run prices the false-positive side of the calibrated warning line and not its cost on the 470 answerable questions. Screened before reading: 1 auto-run surface (`.claude/settings.json` hooks), 0 build-time exec paths, 2 unpinned dependency surfaces and 4 inside the seven-day cooldown. Nothing was installed, built or run; the committed receipts were read, and the CPU and GPU smoke runs compared field by field.
 

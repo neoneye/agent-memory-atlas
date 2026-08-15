@@ -1338,17 +1338,18 @@ it.</li>
 <code>audit-prune.ts</code>, which emits its own
 <code>audit_prune</code> row carrying cutoff, count and dryRun so the
 audit trail explains its own hole.</li>
-<li>Maturity impression: 42,482 lines under 376 test files with a
-real-database test convention, a migration ladder past twenty-five
-steps, and incident comments naming what each repair was for — beside a
-tagline about forgetting that the correction model does not
-implement.</li>
+<li>Maturity impression: ~50,000 lines (release v1.31.0) with a
+real-database test convention, a migration ladder past forty steps, and
+incident comments naming what each repair was for — and a tagline about
+forgetting the correction model now backs, since v1.31.0 added the
+digest-keyed rejected-value tombstone that was the report's former
+central gap.</li>
 <li>Study when: you need multi-tenant memory where different transports
 carry different trust models, or you want a worked example of ranking
 that fuses lexical, vector and derived-quantity arms.</li>
-<li>Do not copy when: correction has to be durable — supersession hides
-a row and re-assertion is unguarded — or when you want a small
-dependency.</li>
+<li>Do not copy when: correction has to survive a <em>paraphrase</em> —
+the new tombstone refuses an exact repeat of a rejected value but not a
+reworded one — or when you want a small dependency.</li>
 </ul>
 <h3 id="7layermem"><a
 href="../systems/7layermem/"><code>7layermem</code></a></h3>
@@ -6516,14 +6517,14 @@ the Workbench is refused without a reason, emits
 <code>status: [old, "proposed"]</code> into the update so the projection
 clears <code>accepted_utc</code>. A revision cannot inherit the blessing
 of what it replaced, and the rule is code rather than convention.</li>
-<li>Biggest risk: decision invariants are enforced only at replay.
-<code>append_event</code> validates provenance and dispatch payloads and
-nothing else, so an event violating a stop line — a supersession target
-that was never accepted, a human-ID collision — is durably hash-chained
-into an append-only log with no delete, and then raises out of
-<code>rebuild_all</code>, which runs at the top of every
-<code>agent-q</code> command. One bad event makes the store unreadable
-and the repair is rewriting a hash chain by hand.</li>
+<li>Biggest risk: what an agent actually receives is not the decision
+store. The dispatch grounding packet regexes
+<code>APPROVE|REJECT|GO|NO-GO</code> out of posted result-message bodies
+rather than reading the decision records; no decision reaches an agent's
+context automatically, and <code>enforcement_mode</code> is printed but
+gates nothing. (The v0.2.0 poison-event hazard — an invalid event
+breaking every read — is fixed: v0.3.0 validates decision events before
+append.)</li>
 <li>Most reusable component: the contract in
 <code>skill/render.py</code>, which names the event kinds a future
 version will use — <code>quality_bar_declared</code>,
@@ -6531,22 +6532,23 @@ version will use — <code>quality_bar_declared</code>,
 <em>"do not invent today"</em>. A model asked to record something with
 no verb for it will invent one; reserving the vocabulary in advance
 costs a paragraph.</li>
-<li>Maturity impression: MIT, 0.2.0, 19,170 lines of Python with
-<strong>no third-party dependencies</strong>, five commits beginning
-with a curated <code>chore: publish clean agent-mesh surface</code>, and
-<strong>zero tests</strong> — beside a <code>.gitignore</code> excluding
-<code>.pytest_cache/</code> and <code>.coverage</code>, and an
-<code>AGENT_MESH_FAULT_AFTER</code> fault-injection hook that exists to
-be driven by a harness that is not here. Every durability claim is a
-docstring.</li>
+<li>Maturity impression: MIT, release v0.3.0 (PyPI
+<code>my-agent-mesh</code>), 24,653 lines of Python with <strong>no
+third-party dependencies</strong>, eight commits from a curated publish,
+and now a four-test public contract suite with CI where v0.2.0 had none.
+v0.3.0 fixed all three of the report's former central findings — the
+empty verification apparatus (now writable for three of five fields),
+the poison-event store corruption (now validated at append), and the
+<code>shell=True</code> runner (now argv/<code>shell=False</code>).</li>
 <li>Study when: you want a coordination history you can audit — a
 hash-chained log with a disposable derived index, closed provenance
 vocabularies distinguishing what a human said from what an agent
 summarised, and a privacy default that commits nothing.</li>
 <li>Do not copy when: you need memory an agent actually receives.
 Nothing is retrieved automatically, <code>decisions search</code> is an
-unranked substring scan that never reads the decision body, and the
-verification tables have a runner, a drift event and no producer.</li>
+unranked substring scan that never reads the decision body, and while
+verification is now writable the <code>assumptions</code> and
+<code>evidence</code> fields still have no producer.</li>
 </ul>
 <h3 id="smythos-sre"><a
 href="../systems/smythos-sre/"><code>smythos-sre</code></a></h3>
@@ -6952,20 +6954,23 @@ Beside it, a test posture worth copying: the substrate stub reproduces
 the mapped system's <em>unsafe</em> defaults on purpose, because
 <em>"the negative paths need something real to escape
 through."</em></li>
-<li>Maturity impression: Apache-2.0, 294 files — 22,400 lines of
-doctrine, 25 ADRs, 36 fixtures and a 10,400-line executable reference
-implementation with a Graphiti driver and a comparator that runs Mem0 at
-a pinned version. No dependency manifest anywhere; CI declares what to
-install. The README's own counts understate the tree (26 fixtures
-claimed, 36 shipped and validated; 21 ADRs claimed, 25 present), which
-is the rarer direction of drift.</li>
+<li>Maturity impression: Apache-2.0, now 766 files — 152 docs, 35 ADRs,
+64 fixtures and a reference implementation grown to ~46,500 lines across
+112 modules, with a Graphiti driver and a fleet of comparators (Mem0,
+Cedar, OPA, LangGraph, MAF) plus an EvolveAI qualification profile. A
+<code>pyproject.toml</code> and an <code>agent-memory</code> CLI now
+ship where there was no manifest at all. The mark-core deletion
+machinery is byte-for-byte unchanged; the quadrupling happened around
+it, and it added the rejected-value tombstone (ADR-027) that was the
+report's former gap.</li>
 <li>Study when: you are designing deletion for a system with derived
 state, or you need the vocabulary to argue about what a deletion
 guarantee even means. It is the most developed treatment of residue,
 scope derivation and mutation authority in this atlas.</li>
-<li>Do not copy when: you want a store. There is nothing to install, no
-agent integration, and no production evidence — this is a specification
-with a demonstration attached.</li>
+<li>Do not copy when: you want a store. It now installs as a CLI, but
+there is still no MCP server, no client library and no production
+evidence beyond fixtures — this is a specification with a demonstration
+attached.</li>
 </ul>
 <h3 id="ods"><a href="../systems/ods/"><code>ods</code></a></h3>
 <ul>

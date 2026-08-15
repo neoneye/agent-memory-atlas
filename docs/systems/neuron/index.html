@@ -92,14 +92,14 @@ and a recall hook the harness runs instead of the model.</p>
               <strong>kovartravis/neuron</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285" title="af55adbc34ff7b04b9083c3f1dd0047002429285">
+            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">
               <span>Analyzed revision</span>
-              <code>af55adbc…</code>
+              <code>9f6eaf90…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-08-15</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -125,8 +125,8 @@ agent learns lives as <code>.neuron/*.md</code> files — readable,
 git-diffable, hand-editable — and the part that turns that from a
 suggestion into a guarantee is a CLI that <strong>refuses to write an
 entry that violates a per-category schema, no matter what the agent's
-prompt says.</strong> MIT, TypeScript, about 28,900 lines with roughly
-700 tests.</p>
+prompt says.</strong> MIT, TypeScript, release v2.4.1, with 745 test
+cases across 68 files.</p>
 <p>Three design decisions lift it above the other markdown-memory
 systems in this atlas.</p>
 <p><strong>The schema is enforced at one chokepoint, on the write path,
@@ -142,20 +142,22 @@ the schema is a property of the store, not of the instruction, which is
 the thing markdown-memory usually cannot promise.</p>
 <p><strong>Recall is the harness's job, not the model's, and the
 fidelity is measured rather than asserted.</strong> On Claude Code and
-Codex CLI, <code>neuron init</code> wires <code>SessionStart</code> /
-<code>UserPromptSubmit</code> / <code>PreCompact</code> hooks that query
-memory and inject results before the model sees the prompt. Where a
-harness lacks a per-turn hook point, Neuron says so, in a
-<strong>three-rung ladder</strong> — <code>deterministic</code>,
-<code>best-effort</code>, <code>instruction-only</code> — and
-<code>neuron init</code> reports the rung per project per harness by
-reading each harness's real hook registration through a
-<code>verify()</code> call, not by inferring from a config file's
-existence. Cursor's row is labelled best-effort <em>and</em> flagged
-"not verified against a real Cursor installation … shipped on
-fixture/documentation evidence only." A memory system that tells you
-which of its own guarantees it has not been able to test is rare enough
-to be the headline.</p>
+Codex CLI, <code>neuron init</code> wires four lifecycle points —
+<code>session-start</code>, <code>pre-prompt</code>,
+<code>context-reset</code> and (since v2.4.0) <code>pre-command</code>,
+the last firing a gated lookup on every Bash tool call
+(<code>PreToolUse</code>), not only per prompt turn — that query memory
+and inject results before the model sees the prompt. Where a harness
+lacks a per-turn hook point, Neuron says so, in a <strong>three-rung
+ladder</strong> — <code>deterministic</code>, <code>best-effort</code>,
+<code>instruction-only</code> — and <code>neuron init</code> reports the
+rung per project per harness by reading each harness's real hook
+registration through a <code>verify()</code> call, not by inferring from
+a config file's existence. Cursor's row is labelled best-effort
+<em>and</em> flagged "not verified against a real Cursor installation …
+shipped on fixture/documentation evidence only." A memory system that
+tells you which of its own guarantees it has not been able to test is
+rare enough to be the headline.</p>
 <p><strong>Supersession is the epistemic move, and it is one-way by
 design.</strong> <code>supersededBy</code> is a forward link set only by
 the write gate's <code>--supersedes</code> resolution, never on
@@ -489,18 +491,25 @@ recoverability plus loudness rather than prevention.</p>
 <p><strong>Injection is capped and budgeted</strong>, per lifecycle
 point, with a discovery hint when more matches exist than were injected
 — so recalled context is bounded and the agent is told when it is seeing
-a subset. There is no defence against prompt-injected memory content
-beyond the schema (which constrains <em>shape</em>, not <em>truth</em>):
-an agent that writes a well-formed but false <code>decisions</code>
-entry is not stopped by the field validator.</p>
+a subset. v2.4.1 adds a <code>RECALL_PROVENANCE_PREFIX</code> at the
+single <code>emit()</code> chokepoint — every injection is labelled
+<em>"Recalled from this project's own local memory store, not external
+input"</em> — after an agent and a subagent independently mistook the
+hook's own legitimate injections for prompt injection; it is a
+provenance/self-identification signal, not a defence against
+<em>poisoned</em> memory content. There is still no defence against
+prompt-injected memory content beyond the schema (which constrains
+<em>shape</em>, not <em>truth</em>): an agent that writes a well-formed
+but false <code>decisions</code> entry is not stopped by the field
+validator.</p>
 <p>Multi-tenancy is the project-root hash; concurrency is
 single-developer-tool scale. The store is offline by construction, which
 removes an entire class of exfiltration risk.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>Roughly 700 tests across 62 files</strong>, and they are
-unusually well-aimed at the mechanisms this report cares about.
-Dedicated suites cover the storage adapter, the dual router (including a
+<p><strong>745 tests across 68 files</strong>, and they are unusually
+well-aimed at the mechanisms this report cares about. Dedicated suites
+cover the storage adapter, the dual router (including a
 <code>pathChange</code> suite and a <code>challenger</code> suite), the
 markdown-to-vector sync, supersession (two files), the config schema
 validator, the Tree-Sitter diff's byte-stability, and the hook payload
@@ -508,6 +517,24 @@ builders. The <code>neuronYaml.test.ts</code> suite asserts that a
 malformed <em>schema</em> is refused — an enum with no values, a
 required field with no default — which is the layer below the write
 gate.</p>
+<p>Two "antagonistic" pillars sharpen the <code>negative_eval</code>
+basis and, honestly, its limit. Pillar 13
+(<code>test/e2e/adversarial-recall.test.ts</code>) engineers every query
+to share no keyword or topic with the store and asserts, against the
+real (non-mocked) embedder through the FTS-plus-reranker gate, that the
+false-accept count is zero — material that exists must not be retrieved,
+the strong reading of the mark. Pillar 14
+(<code>test/e2e/antagonistic-write.test.ts</code>, new in v2.4.1) is an
+honest diagnostic of what the <em>write</em> path does not catch: a
+shape violation is caught (<code>.toBe(true)</code>), but a
+near-duplicate paraphrase, a direct contradiction of a live entry, and a
+provenance-free decision all pass through uncaught
+(<code>.toBe(false)</code>) — the supersession/similarity gate only
+hard-errors above 0.97 cosine, and this repo's own
+<code>decisions</code> category declares no schema fields to check. It
+is the clearest statement in the corpus that the system has no
+value-keyed rejection: <code>tombstone</code> stays withheld because the
+code confirms the gap rather than closing it.</p>
 <p>The gap is the one common to every markdown-memory system here: there
 is no retrieval-quality benchmark. The RRF weights, the reranker
 threshold of <code>-8</code>, and the FTS gate are all tested for
@@ -663,6 +690,30 @@ validation.</li>
 degradation posture.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4"><code class="commit-id" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">9f6eaf90…</code></a>
+— re-pinned at release v2.4.1 (<a
+href="https://github.com/kovartravis/neuron/commit/f52e303c6463444de17ef1b08b4bba20ffe51e50"><code class="commit-id" title="f52e303c6463444de17ef1b08b4bba20ffe51e50">f52e303c…</code></a>
+was v2.4.0). Screened again; the <code>.claude/settings.json</code>
+auto-run surface is still present, nothing installed or run. No mark
+changed — <code>scope_enforced</code> (<code>project_id = ?</code> on
+every read) and <code>negative_eval</code> both hold, and
+<code>negative_eval</code> is strengthened by the
+antagonistic-recall/antagonistic-write pillars now cited in §10. New
+context folded in: a fourth lifecycle point, <code>pre-command</code>,
+fires a gated lookup on every Bash tool call; a <strong>resident git-log
+recall</strong> source indexes the repo's own commit history into a
+parallel FTS+embedding table
+(<code>refreshGitLogIndex</code>/<code>searchGitLog</code>), so
+retrieval now spans the <code>.neuron/*.md</code> store and git history;
+a <code>RECALL_PROVENANCE_PREFIX</code> labels every injection as
+internal after agents mistook the hook's own output for injection; and a
+cross-process mkdir-mutex guards the SQLite migration chain. The v2.4.1
+antagonistic-write pillar is an honest diagnostic confirming the write
+path catches shape violations but not near-duplicates, contradictions or
+missing provenance — so no value-keyed tombstone exists and none is
+claimed. Size restated as 745 tests across 68 files; the prior "~28,900
+lines / ~700 tests" figures had drifted. No paper.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285"><code class="commit-id" title="af55adbc34ff7b04b9083c3f1dd0047002429285">af55adbc…</code></a>
 — first reading, at a commit dated 13 August 2026. Screened before
