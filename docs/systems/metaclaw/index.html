@@ -22,27 +22,17 @@ replays past turns against candidate retrieval policies and promotes a
 new one only when it beats the incumbent on eight measured deltas.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>MetaClaw — Agent Memory Atlas</title>
-    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
-         build has no shared header partial, so the two must be kept in step. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      // Consent Mode v2. Everything denied until the reader chooses, for every
-      // region rather than only the EU — a site arguing for scope-before-ranking
-      // should not quietly set cookies while it decides whether it has to ask.
-      // assets/main.js raises analytics_storage on accept; the ad_* signals are
-      // never granted, because nothing here advertises.
-      gtag('consent', 'default', {
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        analytics_storage: 'denied',
-        wait_for_update: 500
-      });
-      gtag('js', new Date());
-      gtag('config', 'G-2F6NE7JWTR');
-    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -548,7 +538,19 @@ href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8a
     </footer>
 
     <script type="module">
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
       const diagrams = document.querySelectorAll("pre.mermaid");
       diagrams.forEach((pre) => {
         const holder = document.createElement("div");

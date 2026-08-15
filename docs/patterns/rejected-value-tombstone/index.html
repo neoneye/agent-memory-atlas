@@ -24,27 +24,17 @@ as negative memory so automatic extraction cannot silently reintroduce a
 known-wrong belief.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Rejected-Value Tombstone — Agent Memory Atlas</title>
-    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
-         build has no shared header partial, so the two must be kept in step. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      // Consent Mode v2. Everything denied until the reader chooses, for every
-      // region rather than only the EU — a site arguing for scope-before-ranking
-      // should not quietly set cookies while it decides whether it has to ask.
-      // assets/main.js raises analytics_storage on accept; the ad_* signals are
-      // never granted, because nothing here advertises.
-      gtag('consent', 'default', {
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        analytics_storage: 'denied',
-        wait_for_update: 500
-      });
-      gtag('js', new Date());
-      gtag('config', 'G-2F6NE7JWTR');
-    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -102,16 +92,16 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Fourteen
-systems of two hundred and seventy-one carry it, and almost no two
-arrived the same way: one invented it under adversarial pressure, one
-adopted it from the first, one arrived at a weaker form independently,
-one was driven to it by a regulation, three built it after this page
-named its absence in their report, <strong>two have it as a side effect
-of a lookup that forgot to exclude the rejected row</strong>, one made
-that same collision deliberate, one built it as ordinary plumbing in its
-write gate, and one hardened it against key rotation. Sorted by
-mechanism rather than by mark, most refuse the write — <a
+<p><strong>This is not an established best practice.</strong> Nineteen
+systems of two hundred and ninety carry it, and almost no two arrived
+the same way: one invented it under adversarial pressure, one adopted it
+from the first, one arrived at a weaker form independently, one was
+driven to it by a regulation, several built it only after their report
+named its absence, <strong>two have it as a side effect of a lookup that
+forgot to exclude the rejected row</strong>, one made that same
+collision deliberate, one built it as ordinary plumbing in its write
+gate, and one hardened it against key rotation. Sorted by mechanism
+rather than by mark, fourteen refuse the write — <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a> says
 which, and what the rest do instead. There is no consensus behind this
 page and no library that provides the mechanism. There is now a
@@ -247,8 +237,8 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Fourteen systems in the atlas have this.</strong> That is
-still the most striking negative result in the atlas, and it is the
+<p><strong>Nineteen systems of 290 in the atlas have this.</strong> That
+is still the most striking negative result in the atlas, and it is the
 reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -637,7 +627,13 @@ Engine</a>, <a href="../../systems/rainbox/">RainBox</a>, <a
 href="../../systems/verel/">Verel</a>, <a
 href="../../systems/noosphere/">Noosphere</a>, <a
 href="../../systems/breadcrumbs/">breadcrumbs</a>, <a
-href="../../systems/memory-compiler/">Memory Compiler</a></td>
+href="../../systems/memory-compiler/">Memory Compiler</a>, <a
+href="../../systems/agent-memory-doctrine/">Agent Memory Doctrine</a>,
+<a href="../../systems/hippo-memory/">Hippo Memory</a>, <a
+href="../../systems/memmy-agent/">Memmy</a>, <a
+href="../../systems/plur1bus/">plur1bus</a>, <a
+href="../../systems/sonder-runtime/">Sonder Runtime</a>, <a
+href="../../systems/open-second-brain/">Open Second Brain</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
@@ -663,10 +659,14 @@ every read, consulted by one emitter</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Five of the nine, then, implement the strong form</strong> —
-value-keyed, normalized, consulted before the write, refusing
-activation. The mark is broader than this page's argument, and a reader
-deciding what to build should use the table rather than the count.</p>
+<p><strong>Fourteen of the nineteen, then, implement the strong
+form</strong> — value-keyed, normalized, consulted before the write,
+refusing activation. That share has grown as the corpus has: the five
+most recent holders all consult at a write choke point rather than
+relying on a key collision, which is the difference between a mechanism
+and an accident. The mark is still broader than this page's argument,
+and a reader deciding what to build should use the table rather than the
+count.</p>
 <p><strong><a href="../../systems/memory-compiler/">Memory Compiler</a>
 is the cheapest complete instance, and the one that shows where the cost
 actually lands.</strong> Its store is four Markdown files; the tombstone
@@ -1060,7 +1060,19 @@ audit</a></li>
     </footer>
 
     <script type="module">
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
       const diagrams = document.querySelectorAll("pre.mermaid");
       diagrams.forEach((pre) => {
         const holder = document.createElement("div");

@@ -24,27 +24,17 @@ against the seven capabilities the atlas judges by, filterable,
 generated from the same frontmatter as the reports.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Capability Index — Agent Memory Atlas</title>
-    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
-         build has no shared header partial, so the two must be kept in step. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      // Consent Mode v2. Everything denied until the reader chooses, for every
-      // region rather than only the EU — a site arguing for scope-before-ranking
-      // should not quietly set cookies while it decides whether it has to ask.
-      // assets/main.js raises analytics_storage on accept; the ad_* signals are
-      // never granted, because nothing here advertises.
-      gtag('consent', 'default', {
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        analytics_storage: 'denied',
-        wait_for_update: 500
-      });
-      gtag('js', new Date());
-      gtag('config', 'G-2F6NE7JWTR');
-    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -172,9 +162,9 @@ dash on a capability their design deliberately does not need.</p>
 <p>Three things the counts show that the reports individually do
 not:</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving. Sixteen carry a
-value-level tombstone. That gap is the atlas's central finding, and it
-is visible here in one column pair.</p>
+half the atlas applies a scope key when retrieving. Nineteen systems of
+290 carry a value-level tombstone. That gap is the atlas's central
+finding, and it is visible here in one column pair.</p>
 <p><strong>Trust is usually a number, not a state.</strong> Most systems
 collapse "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
@@ -191,17 +181,18 @@ re-score</a> on 2026-08-08 found 27 of the 37 assert about a
 scope boundary — while ten assert about a projection, a preamble, a
 summarization, a file or a write. All ten are real committed tests. Only
 the 27 are negative <em>retrieval</em> assertions.</p>
-<p><strong>Five assert a boundary:</strong> that a principal cannot
-retrieve another principal's material. <a
-href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
-creates a memory under one scope, searches under another, and asserts
-the id is absent. <a href="../systems/aukora-kernel/">Aukora Kernel</a>
-does it better — an unrelated principal reads <code>ok: false</code>, a
-subject whose delegation manifest was revoked reads
-<code>ok: false</code>, and the owner reads <code>"the secret"</code> in
-the same block, so the denial is proved <em>targeted</em> rather than a
-blanket failure. <a href="../systems/everos/">EverOS</a> does it at the
-endpoint: two owners, the same query string,
+<p><strong>Seven asserted a boundary</strong> at that reading: that a
+principal cannot retrieve another principal's material. Five are worth
+describing. <a href="../systems/mirix/">MIRIX</a>'s
+<code>test_filter_tags_db.py</code> creates a memory under one scope,
+searches under another, and asserts the id is absent. <a
+href="../systems/aukora-kernel/">Aukora Kernel</a> does it better — an
+unrelated principal reads <code>ok: false</code>, a subject whose
+delegation manifest was revoked reads <code>ok: false</code>, and the
+owner reads <code>"the secret"</code> in the same block, so the denial
+is proved <em>targeted</em> rather than a blanket failure. <a
+href="../systems/everos/">EverOS</a> does it at the endpoint: two
+owners, the same query string,
 <code>assert c_ids.isdisjoint(m_ids)</code> plus a positive control on
 each side, repeated for two agent owners sharing a keyword. <a
 href="../systems/crewai/">CrewAI</a> does it over a path hierarchy:
@@ -214,13 +205,14 @@ case the other four leave implicit: <code>searchMemories</code> called
 in project mode with <em>no</em> project id must return <code>[]</code>,
 with the assertion message spelling out the intent — <em>"project mode
 without a project ID must fail closed"</em>.</p>
-<p>All five of those systems also hold <code>scope_enforced</code>.
-Their negative suites are therefore tests <strong>of a capability the
-same system already claims</strong> — which is worth having, and is not
-evidence about deletion or correction.</p>
-<p><strong>Ten assert about content:</strong> that particular material
-must not surface to anyone entitled to search, regardless of who is
-asking. <a href="../systems/open-cowork/">open-cowork</a>'s
+<p>All five also hold <code>scope_enforced</code>. Their negative suites
+are therefore tests <strong>of a capability the same system already
+claims</strong> — which is worth having, and is not evidence about
+deletion or correction.</p>
+<p><strong>Twenty asserted about content</strong> at that reading: that
+particular material must not surface to anyone entitled to search,
+regardless of who is asking. Eight show the range. <a
+href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
 must not return, scored as a penalty. <a
 href="../systems/verel/">Verel</a>'s
@@ -258,25 +250,25 @@ the shape and one nobody else has:
 source cited only by answers marked <code>dead_end</code> appears in
 none of the three lesson lists — a <em>source</em> that failed rather
 than a <em>value</em> that was rejected.</p>
-<p><strong>Only these ten probe the question the atlas is actually
-asking.</strong> A boundary test proves the filter works; a content test
-proves a value that was rejected, disputed or forbidden stays gone.
-Thirteen of two hundred and ninety is the real figure for the second
-kind, and the two newest raise a distinction the others do not: a test
-that a <em>superseded</em> value stays hidden is cheap, because the row
-is still there to be filtered on. The expensive assertion is that a
-value the system <em>destroyed</em> does not come back — which requires
-something durable to check against, and is why the tombstone column and
-this one keep appearing together.</p>
+<p><strong>Only the content kind probes the question the atlas is
+actually asking.</strong> A boundary test proves the filter works; a
+content test proves a value that was rejected, disputed or forbidden
+stays gone. Within that kind the sharpest cases raise a distinction the
+rest do not: a test that a <em>superseded</em> value stays hidden is
+cheap, because the row is still there to be filtered on. The expensive
+assertion is that a value the system <em>destroyed</em> does not come
+back — which requires something durable to check against, and is why the
+tombstone column and this one keep appearing together.</p>
 <p>Two further things the joint reading shows. The <strong>positive
 control</strong> — asserting that the denial is targeted rather than an
 empty result — appears in Aukora and EverOS and is absent from the rest,
 and a negative test without one passes just as well when retrieval is
 broken. And the assertion shape is <strong>reachable from ordinary
-engineering practice</strong>: three of the six arrived from
-access-control work rather than from memory research, and one, N.E.K.O.,
-from a companion app where re-raising something the user asked you to
-drop is a product failure rather than a data-quality one.</p>
+engineering practice</strong>: every boundary case above is an
+access-control test that happens to assert about recall rather than a
+result of memory research, and N.E.K.O. reached the content form from a
+companion app, where re-raising something the user asked you to drop is
+a product failure rather than a data-quality one.</p>
 <h2 id="near-misses">Near-misses</h2>
 <p>Strictness is what makes the counts mean anything, and it hides the
 interesting cases. The ones worth knowing:</p>
@@ -343,137 +335,176 @@ retrieval.</p>
 <tr>
 <th>Stored in</th>
 <th style="text-align: right;">Systems</th>
+<th style="text-align: right;">Read off code</th>
 <th></th>
 <th>Retrieval arm</th>
 <th style="text-align: right;">Systems</th>
+<th style="text-align: right;">Read off code</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>SQLite</td>
 <td style="text-align: right;">134</td>
+<td style="text-align: right;">30</td>
 <td></td>
 <td>Vector</td>
 <td style="text-align: right;">167</td>
+<td style="text-align: right;">26</td>
 </tr>
 <tr>
 <td>Files on disk</td>
 <td style="text-align: right;">121</td>
+<td style="text-align: right;">35</td>
 <td></td>
 <td>Lexical</td>
 <td style="text-align: right;">139</td>
+<td style="text-align: right;">33</td>
 </tr>
 <tr>
 <td>Postgres</td>
 <td style="text-align: right;">56</td>
+<td style="text-align: right;">10</td>
 <td></td>
 <td>Graph</td>
 <td style="text-align: right;">50</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr>
 <td>Delegated to the adopter</td>
 <td style="text-align: right;">30</td>
+<td style="text-align: right;">5</td>
 <td></td>
 <td>No arm named in the review</td>
 <td style="text-align: right;">79</td>
+<td style="text-align: right;">18</td>
 </tr>
 <tr>
 <td>In-process only</td>
 <td style="text-align: right;">22</td>
+<td style="text-align: right;">3</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Chroma</td>
 <td style="text-align: right;">18</td>
+<td style="text-align: right;">1</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Qdrant</td>
 <td style="text-align: right;">15</td>
+<td style="text-align: right;">1</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Graph database</td>
 <td style="text-align: right;">13</td>
+<td style="text-align: right;">1</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Redis</td>
 <td style="text-align: right;">11</td>
+<td style="text-align: right;">2</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>LanceDB</td>
 <td style="text-align: right;">8</td>
+<td style="text-align: right;">1</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Embedded key-value</td>
 <td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Milvus</td>
 <td style="text-align: right;">5</td>
+<td style="text-align: right;">1</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>FAISS</td>
 <td style="text-align: right;">5</td>
+<td style="text-align: right;">2</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>MongoDB</td>
 <td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Elasticsearch</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>Pinecone</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>DuckDB</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td></td>
 <td></td>
+<td style="text-align: right;"></td>
 <td style="text-align: right;"></td>
 </tr>
 </tbody>
 </table></div>
 <p>Counted across 290 reports, each of which may name more than one
-store. 57 of 290 rows were read off the code at the pinned commit; the
-other 233 were derived from the review's own summary lines and are
-labelled <code>seeded</code> rather than <code>reviewed</code>.</p>
+store. The <strong>Read off code</strong> column is the part of each row
+confirmed against the tree at the pinned commit: 57 of 290 reports have
+been read that way, and the other 233 were derived from the review's own
+summary lines and are labelled <code>seeded</code> rather than
+<code>reviewed</code>. Read the first number as what the corpus says
+about itself and the second as what has been checked.</p>
 <!-- END GENERATED STACK -->
         </article>
       </div>
@@ -502,7 +533,19 @@ labelled <code>seeded</code> rather than <code>reviewed</code>.</p>
     </footer>
 
     <script type="module">
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
       const diagrams = document.querySelectorAll("pre.mermaid");
       diagrams.forEach((pre) => {
         const holder = document.createElement("div");
