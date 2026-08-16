@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **291 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **292 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -102,6 +102,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`everos`](../systems/everos/) **EverOS** — Cases, skills and a cascade · `EverMind-AI/EverOS` · Scope enforced, Negative evals
 ## F
 
+- [`feltstate`](../systems/feltstate/) **feltstate** — Memory that can die · `Morephine/feltstate` · Trust state, Bi-temporal, Mutation audit, Human review, Negative evals
 - [`fidelis`](../systems/fidelis/) **Fidelis Memory** — The gap is not the issue. The metric is. · `hermes-labs-ai/fidelis`
 ## G
 

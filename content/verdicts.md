@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 291 reports.**
+**This page covers all 292 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2539,3 +2539,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 104 commits, ~8,100 lines of TypeScript, 407 tests across 24 files, CI, an npm package, a four-tool MCP server and a VS Code panel. One capability mark — `scope_enforced`, `project_id` a required predicate on both read arms. Three near-misses stated in the report: a bi-temporal pair whose record-time column no read path queries, a prune-scope test carrying an inline discriminating control that asserts about deletion rather than retrieval, and a viewer that displays without reviewing.
 - Study when: you want an agent to know what you already tried, you work locally in one repository at a time, and you would rather ship raw stored text through a good ranker than summaries through a model.
 - Do not copy when: anything you capture must be removable on request. Deletion here is keyed on the source while the source survives on disk, which is the pattern this atlas argues against, applied to the one collector most likely to hold a secret.
+
+### [`feltstate`](../systems/feltstate/)
+
+- Best idea: seal only what is supposed to be immutable. The hash-linked chain bites in the sealed text and fingerprint ids and deliberately leaves recall counts, decay state and pruned lineage *out*, **"so living never looks like tampering"** — a tamper-evident log that alarms on ordinary use is one people mute. Beside it, the fail-safe direction is right: a missing row is lawful only if a `legal_death` tombstone vouches for it, and that tombstone is sealed *into* the chained payload rather than asserted by a deletable line, so removing it makes the next patrol alarm rather than go quiet.
+- Biggest risk: every exit is carefully built and none is consulted on the way back in. `retract` marks a fact and hides it from `view` and `search` while keeping the record on disk — then matching skips retracted and superseded rows, so the same value written again *"yields a fresh active fact"*, in the store's own docstring. The record that would prevent the re-admission already exists and nothing reads it. Separately, there is no scope key of any kind: `region` splits facts from skills and `actor` is optional, so a second user is a second deployment.
+- Most reusable component: `memory/lifecycle/` as a set — `gc.py` is a pure judge returning a death plan and touches no file, `reaper.py` is the only executioner and runs a five-step fsynced cascade keyed on a `txid` that removes rows from the live stores *and every snapshot* (*"No regret medicine: disaster copies survive crashes, they do not resurrect the forgotten"*), and `chain.py` witnesses both. Few libraries this size ship a crash-safe deletion contract at all.
+- Maturity impression: MIT, 60 commits, ~25,400 lines of Python, 528 tests across 40 files, CI, no database — every store is jsonl the caller names. Five marks: `trust_state`, `bitemporal` (a real `valid_at`/`invalid_at` window with an `as_of` read), `audit_log`, `human_review` (1/2/3 ratings gating skill promotion), `negative_eval`. No paper, no benchmark, no retrieval evaluation.
+- Study when: you are building one long-running companion for one person, you want its memory inspectable as plain jsonl, and you need deletion that is real and provable rather than a flag — especially if backups are in scope, because the snapshot purge is the step most designs skip.
+- Do not copy when: you need multi-tenancy, your corpus will outgrow substring matching over a flat file, or your correction requirement is that a withdrawn value stays withdrawn against an automatic writer. The first two are ceilings this design accepts deliberately; the third is one fingerprint lookup from being closed.

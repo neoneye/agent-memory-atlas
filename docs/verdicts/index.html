@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 291 reports.</strong></p>
+<p><strong>This page covers all 292 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8453,6 +8453,56 @@ stored text through a good ranker than summaries through a model.</li>
 Deletion here is keyed on the source while the source survives on disk,
 which is the pattern this atlas argues against, applied to the one
 collector most likely to hold a secret.</li>
+</ul>
+<h3 id="feltstate"><a
+href="../systems/feltstate/"><code>feltstate</code></a></h3>
+<ul>
+<li>Best idea: seal only what is supposed to be immutable. The
+hash-linked chain bites in the sealed text and fingerprint ids and
+deliberately leaves recall counts, decay state and pruned lineage
+<em>out</em>, <strong>"so living never looks like tampering"</strong> —
+a tamper-evident log that alarms on ordinary use is one people mute.
+Beside it, the fail-safe direction is right: a missing row is lawful
+only if a <code>legal_death</code> tombstone vouches for it, and that
+tombstone is sealed <em>into</em> the chained payload rather than
+asserted by a deletable line, so removing it makes the next patrol alarm
+rather than go quiet.</li>
+<li>Biggest risk: every exit is carefully built and none is consulted on
+the way back in. <code>retract</code> marks a fact and hides it from
+<code>view</code> and <code>search</code> while keeping the record on
+disk — then matching skips retracted and superseded rows, so the same
+value written again <em>"yields a fresh active fact"</em>, in the
+store's own docstring. The record that would prevent the re-admission
+already exists and nothing reads it. Separately, there is no scope key
+of any kind: <code>region</code> splits facts from skills and
+<code>actor</code> is optional, so a second user is a second
+deployment.</li>
+<li>Most reusable component: <code>memory/lifecycle/</code> as a set —
+<code>gc.py</code> is a pure judge returning a death plan and touches no
+file, <code>reaper.py</code> is the only executioner and runs a
+five-step fsynced cascade keyed on a <code>txid</code> that removes rows
+from the live stores <em>and every snapshot</em> (<em>"No regret
+medicine: disaster copies survive crashes, they do not resurrect the
+forgotten"</em>), and <code>chain.py</code> witnesses both. Few
+libraries this size ship a crash-safe deletion contract at all.</li>
+<li>Maturity impression: MIT, 60 commits, ~25,400 lines of Python, 528
+tests across 40 files, CI, no database — every store is jsonl the caller
+names. Five marks: <code>trust_state</code>, <code>bitemporal</code> (a
+real <code>valid_at</code>/<code>invalid_at</code> window with an
+<code>as_of</code> read), <code>audit_log</code>,
+<code>human_review</code> (1/2/3 ratings gating skill promotion),
+<code>negative_eval</code>. No paper, no benchmark, no retrieval
+evaluation.</li>
+<li>Study when: you are building one long-running companion for one
+person, you want its memory inspectable as plain jsonl, and you need
+deletion that is real and provable rather than a flag — especially if
+backups are in scope, because the snapshot purge is the step most
+designs skip.</li>
+<li>Do not copy when: you need multi-tenancy, your corpus will outgrow
+substring matching over a flat file, or your correction requirement is
+that a withdrawn value stays withdrawn against an automatic writer. The
+first two are ceilings this design accepts deliberately; the third is
+one fingerprint lookup from being closed.</li>
 </ul>
         </article>
       </div>
