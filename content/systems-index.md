@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **295 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **296 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -222,6 +222,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`moltbrain`](../systems/moltbrain/) **MoltBrain** — The session summary is a form, not a paragraph · `nhevers/moltbrain` · Scope enforced
 - [`moltis`](../systems/moltis/) **Moltis** — File-corpus memory · `moltis-org/moltis`
 - [`monet`](../systems/monet/) **Monet** — Rules read at the moment they bind · `team-monet/monet` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
+- [`munder-difflin`](../systems/munder-difflin/) **Munder Difflin** — Verify the rewrite, not the model · `chaitanyagiri/munder-difflin` · Mutation audit
 - [`muninndb`](../systems/muninndb/) **MuninnDB** — A database whose primitives are cognitive · `scrypster/muninndb` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Negative evals
 ## N
 

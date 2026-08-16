@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 295 reports.</strong></p>
+<p><strong>This page covers all 296 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8658,6 +8658,55 @@ on every boot while still shipping the script for manual use.</li>
 state, or a soft delete that stays deleted — and note that identity is
 <code>(namespace, key)</code>, so the same fact written under two keys
 is two live memories and nothing detects the contradiction.</li>
+</ul>
+<h3 id="munder-difflin"><a
+href="../systems/munder-difflin/"><code>munder-difflin</code></a></h3>
+<ul>
+<li>Best idea: <strong>verify the rewrite, not the model.</strong>
+Memory is one markdown file per agent in three regions — pinned durable
+facts, a rolling recursive summary, the newest K sections verbatim — and
+when it outgrows its budget a headless <code>claude -p</code> summarises
+the evicted tail. The result is not trusted: back up losslessly
+<em>first</em>, rebuild, then run <code>verify()</code>, which checks
+that the file parses back into all three regions, that every pinned line
+survives, that it is <strong>actually smaller</strong> (a no-op condense
+is a failure), that it is non-empty and sane, and that the kept newest
+sections round-trip <strong>byte-for-byte</strong> — each failure
+returning a named reason. Backup-first plus atomic swap means a
+rejection is a pure no-op: <em>"the original file is left byte-for-byte
+untouched and the only side effect is a <code>condense-abort</code> log
+line."</em></li>
+<li>Biggest risk: <strong>there are no tests, anywhere.</strong>
+<code>verify()</code> is exported, pure, and takes a plain argument
+object — the easiest function in the repository to pin — and the gate
+whose entire purpose is catching a non-deterministic component has no
+case exercising it. Underneath that, compaction is the only lifecycle:
+nothing can mark a line wrong, so a false claim is not corrected but
+eventually summarised, possibly surviving in compressed form.</li>
+<li>Most reusable component: <code>src/main/reflect.ts</code> — about
+400 lines for the three-region file, the eviction, the summarizer prompt
+that hands the pinned block over <em>"for context only — do not rewrite
+it"</em>, and the gate. Transferable to any design where something will
+eventually rewrite an agent's markdown in place.</li>
+<li>Maturity impression: MIT, 666 commits, ~52,000 lines of TypeScript
+across an Electron desktop app that wraps a dozen terminal coding CLIs
+as a messaging hive; version 0.4.3, self-badged a working prototype. One
+mark, <code>audit_log</code>, for an append-only <code>log.jsonl</code>
+carrying <code>condense</code>, <code>condense-abort</code>,
+<code>compact</code>, <code>archive</code> and <code>drop</code>.
+Semantic recall is delegated to the <a
+href="../systems/mempalace/">MemPalace</a> CLI over a shared palace and
+<em>"degrades silently to no-op"</em> when that binary is absent. Six
+blog posts about agent memory are prose, not evidence.</li>
+<li>Study when: you keep agent memory as markdown and something will
+compress it — the gate is the part worth copying, and the macOS TCC note
+explaining why the loop runs in the Electron main process rather than
+launchd is the kind of reasoning most repositories leave out.</li>
+<li>Do not copy when: one agent's material must stay away from
+another's. Isolation is deliberately absent — one shared palace, and a
+text fallback that greps every agent's <code>memory.md</code> including
+archived ones — because the premise is a hive that knows
+collectively.</li>
 </ul>
         </article>
       </div>
