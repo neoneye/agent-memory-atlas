@@ -6651,25 +6651,20 @@ rejected value asserted in another project or under a different agent id
 is not refused. Beside that, <code>AuditLogger</code> writes tool calls
 to a file rather than mutations to the store, so "what changed and why"
 is not answerable from the store itself.</li>
-<li>Most reusable component: the fix for its own scope bug, as a worked
-example. This report previously found <code>handleCapture</code> reading
-<code>args.session_key ?? defaultSessionKey()</code> while
-<code>handleRecall</code>, in the same file, read
-<code>args.session_key as string | undefined</code> — so a recall that
-omitted the argument searched every project, while a committed
-two-project test passed because the test defined its own
-<code>recall</code> helper that supplied the default the real handler
-omitted. The handler now defaults it, and a third test asserts the
-property <strong>against the real handler</strong>: <em>"recall without
-session_key does NOT leak across projects (real handler)"</em>. Two
-tests of the same property, one of which could never have failed.</li>
+<li>Most reusable component: the pair of scope tests, for the
+distinction between them. One drives a helper that supplies the session
+default itself; the other drives the shipped handler, and its name says
+so — <em>"recall without session_key does NOT leak across projects (real
+handler)"</em>. A suite can hold two tests of the same property where
+only one could ever fail, and the difference is whether the case enters
+through the door production uses.</li>
 <li>Maturity impression: MIT, ~22,600 lines of TypeScript over SQLite
 with FTS5, <code>sqlite-vec</code> and a local MiniLM, 503 test cases
 across 30 files, schema at version 8. The project renamed itself from
 <code>tdai-memory-mcp</code>, and the old name was rebuilt from scratch
 as a three-commit stub that redirects users — the two repositories share
 no common ancestor, so the old URL is a live repository that is not this
-project. Four marks, up from one at the previous reading.</li>
+project. Four marks.</li>
 <li>Study when: you want the smallest complete rejected-value tombstone
 in this corpus — a content hash, a partial index and one lookup before
 the write — or you want to see what closing a scope hole looks like when
@@ -8599,14 +8594,13 @@ attention physics — the clearest statement of the mechanism in either of
 this author's repositories.</li>
 <li>Maturity impression: AGPL-3.0, <strong>one commit</strong>, ~4,300
 lines, <strong>no tests of any kind</strong>, no eval, no benchmark, no
-paper. Its own docstring discloses that the engine was <em>"originally
-developed as part of the Helix AGI cognitive architecture"</em> — <a
-href="../systems/helix-agi/">a system this atlas already reports</a> —
-so this is an extraction rather than independent evidence for
-gravity-ranked retrieval, and the corpus should not count the mechanism
-twice. <code>docs/</code> holds 709 lines of line-by-line self-audit
-whose file links point at <code>file:///home/nemo/…</code>, resolving
-for no reader.</li>
+paper. Its own docstring says the engine was <em>"originally developed
+as part of the Helix AGI cognitive architecture"</em> — <a
+href="../systems/helix-agi/">the parent</a>, where the same mechanism
+runs inside a system that has the surrounding machinery, so the two are
+one design rather than two. <code>docs/</code> holds 709 lines of
+line-by-line self-audit whose file links point at
+<code>file:///home/nemo/…</code>, resolving for no reader.</li>
 <li>Study when: you want to see decay expressed as mass and distance
 instead of a half-life and a cutoff, and you are reading for the idea
 rather than shopping for a dependency.</li>

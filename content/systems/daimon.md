@@ -952,8 +952,8 @@ about.
 
 ### The measuring instrument, and what it refuted
 
-The most interesting thing to arrive since the previous reading is not a memory
-mechanism. It is `research/experiments/recall-replay-ab/` — a deterministic
+The most interesting thing in the tree is not a memory mechanism. It is
+`research/experiments/recall-replay-ab/` — a deterministic
 offline rig for asking whether a proposed change to recall would inject better
 rows than what ships. Arm A is the shipped `recall.suggest()`, untouched; arm B
 is a pluggable variant; both replay the same real historical prompts against the

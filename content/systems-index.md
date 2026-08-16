@@ -295,7 +295,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
 - [`reflexion`](../systems/reflexion/) **Reflexion** — Memory as a plan after failure · `noahshinn/reflexion`
 - [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
-- [`remem-mcp`](../systems/remem-mcp/) **remem-mcp** — The gap it was reported for, closed · `tinhien11/remem-mcp` · Tombstone, Trust state, Scope enforced, Negative evals
+- [`remem-mcp`](../systems/remem-mcp/) **remem-mcp** — A refusal keyed on the content hash · `tinhien11/remem-mcp` · Tombstone, Trust state, Scope enforced, Negative evals
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
 - [`ruflo`](../systems/ruflo/) **ruflo** — A guard on the retrieval path, off by default · `ruvnet/ruflo`
 - [`runar-forge`](../systems/runar-forge/) **RunarForge** — Postmortems in the comment above the fix · `crlome/runar-forge` · Scope enforced, Human review

@@ -118,8 +118,8 @@ MCP stdio server spawned per session. WAL mode and
 <code>BEGIN IMMEDIATE</code> retries keep the two writers safe. The file
 lives on the pod's persistent volume, so memory survives tab closes and
 pod restarts.</p>
-<p><strong>The scope enforcement is the reason to read this
-report.</strong> A row is keyed <code>UNIQUE(namespace, key)</code>, and
+<p><strong>The scope enforcement is the strongest thing here.</strong> A
+row is keyed <code>UNIQUE(namespace, key)</code>, and
 <code>search</code> is a hybrid — FTS5 always, fused by normalized
 reciprocal-rank with a <code>sqlite-vec</code> KNN pass when the
 extension and an embedding provider are both present. The namespace
@@ -232,10 +232,10 @@ present, a vector KNN pass is fused with the FTS results by normalized
 reciprocal-rank fusion; when any is missing the method <em>"degrades to
 the Phase-1 FTS-only ranking with identical output"</em> — a stated
 equivalence, which is more than most optional-vector designs offer.</p>
-<p><strong>The scope logic is the strongest thing in this report and it
-is worth stating precisely.</strong> <code>namespaces</code> is an
-exact-match allow-list. <code>namespace_scope</code> is a namespace
-<em>root</em> that also matches everything nested under it, plus
+<p><strong>The scope logic is worth stating precisely.</strong>
+<code>namespaces</code> is an exact-match allow-list.
+<code>namespace_scope</code> is a namespace <em>root</em> that also
+matches everything nested under it, plus
 <code>ALWAYS_IN_SCOPE_ROOTS = ('user',)</code> — so a project-scoped
 chat can still reach <code>user.name</code>. Relevance leads the
 ranking; the caller's own scope only wins <strong>ties</strong> against

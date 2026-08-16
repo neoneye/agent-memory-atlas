@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A local-first MCP memory server
-that closed the scope hole it was reported for and added a
-rejected-value tombstone: capture hashes the redacted content, looks it
-up among rejected rows, and refuses the write with the reason.">
+whose capture path hashes the redacted content, looks it up among
+rejected rows, and refuses the write with the stored reason — behind a
+session key applied to both retrieval arms.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="remem-mcp — Agent Memory Atlas">
     <meta property="og:description" content="A local-first MCP memory
-server that closed the scope hole it was reported for and added a
-rejected-value tombstone: capture hashes the redacted content, looks it
-up among rejected rows, and refuses the write with the reason.">
+server whose capture path hashes the redacted content, looks it up among
+rejected rows, and refuses the write with the stored reason — behind a
+session key applied to both retrieval arms.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="remem-mcp — Agent Memory Atlas">
     <meta name="twitter:description" content="A local-first MCP memory
-server that closed the scope hole it was reported for and added a
-rejected-value tombstone: capture hashes the redacted content, looks it
-up among rejected rows, and refuses the write with the reason.">
+server whose capture path hashes the redacted content, looks it up among
+rejected rows, and refuses the write with the stored reason — behind a
+session key applied to both retrieval arms.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>remem-mcp — Agent Memory Atlas</title>
     <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
@@ -67,12 +67,12 @@ up among rejected rows, and refuses the write with the reason.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">The gap it was reported for, closed</p>
+          <p class="eyebrow">A refusal keyed on the content hash</p>
           <h1>remem-mcp</h1>
-          <p class="document-deck">A local-first MCP memory server that
-closed the scope hole it was reported for and added a rejected-value
-tombstone: capture hashes the redacted content, looks it up among
-rejected rows, and refuses the write with the reason.</p>
+          <p class="document-deck">A local-first MCP memory server whose
+capture path hashes the redacted content, looks it up among rejected
+rows, and refuses the write with the stored reason — behind a session
+key applied to both retrieval arms.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/tinhien11/remem-mcp">
               <span>Source</span>
@@ -113,36 +113,9 @@ Its own <code>server.json</code> describes it accurately:
 <em>"Local-first MCP memory server for coding agents. No API key, no
 cloud."</em> Nothing here calls a hosted model, for storage or
 retrieval.</p>
-<p><strong>The project renamed itself, and the old name is now a
-different repository.</strong> <code>tinhien11/tdai-memory-mcp</code>
-became <code>tinhien11/remem-mcp</code>, carrying the history; the old
-name was then rebuilt from scratch as a three-commit stub whose own
-message reads <em>"Rename to remem-mcp — stub package that redirects
-users"</em>. The two repositories share no common ancestor, so a reader
-who follows the old URL finds a live repository that is not this
-project. The rename is complete in the tree: <code>package.json</code>
-and the README both say <code>remem-mcp</code>.</p>
-<p><strong>The scope hole this report was written about is
-closed.</strong> <code>handleRecall</code> now computes
-<code>(args.session_key as string) ?? defaultSessionKey()</code> rather
-than passing <code>undefined</code> through, and the storage layer
-applies <code>session_key = ?</code> to the BM25 arm and the vector arm
-alike. Three committed tests pin it — <em>"recall without session_key
-does not leak across projects"</em>, the same for <code>search</code>,
-and a third asserting it <strong>against the real handler</strong>
-rather than a helper that applies the default itself, which is precisely
-the gap that let the original defect ship under a green suite.</p>
-<p>Around it the scope model grew: <code>agent_id</code>,
-<code>team_id</code>, <code>user_id</code> and <code>task_id</code>
-beside the session key, plus an <code>org</code> scope that deliberately
-drops the agent filter so a cross-agent handoff can retrieve what
-another agent stored.</p>
-<p><strong>And it has a rejected-value tombstone — the mechanism this
-atlas finds least often, arriving in a system that had one mark at its
-previous reading.</strong> The code names it: <em>"Rejected-value
-tombstone: check if this content was previously rejected."</em>
-<code>handleCapture</code> redacts secrets, takes <code>sha256</code> of
-the <strong>redacted</strong> content, and calls
+<p><strong>It has a rejected-value tombstone, and the code names
+it.</strong> <code>handleCapture</code> redacts secrets, takes
+<code>sha256</code> of the <strong>redacted</strong> content, and calls
 <code>findRejectedByContentHash(contentHash, sessionKey, agentId)</code>
 before writing. A hit refuses the capture and returns the stored
 <code>rejection_reason</code> with the offending id. A partial index —
@@ -156,16 +129,30 @@ leaves retrieval while remaining on disk <em>as</em> the thing the write
 path consults. That is the shape the <a
 href="../../patterns/rejected-value-tombstone/">rejected-value
 tombstone</a> pattern argues for, reached in about forty lines.</p>
-<p><strong>Four of seven marks</strong>, up from one. The limits are
-worth stating with the mechanism. The tombstone is scoped to
+<p><strong>Retrieval is scoped on both arms.</strong>
+<code>handleRecall</code> computes
+<code>(args.session_key as string) ?? defaultSessionKey()</code>, so a
+call that names no session gets the project's own key rather than an
+unfiltered search, and the storage layer applies
+<code>session_key = ?</code> to the BM25 arm and the vector arm alike.
+Three committed tests pin it: <em>"recall without session_key does not
+leak across projects"</em>, the same for <code>search</code>, and a
+third asserting it <strong>against the real handler</strong> rather than
+against a helper that supplies the default itself — the distinction
+between testing the storage layer and testing the wiring.</p>
+<p>Around the session key sit <code>agent_id</code>,
+<code>team_id</code>, <code>user_id</code> and <code>task_id</code>,
+plus an <code>org</code> scope that deliberately drops the agent filter
+so a cross-agent handoff can retrieve what another agent stored.</p>
+<p><strong>Four of seven marks.</strong> The limits belong with the
+mechanisms. The tombstone is scoped to
 <code>(content_hash, session_key, agent_id)</code>, so the same rejected
 value asserted under a different agent id or in another project is not
-refused — a deliberate scoping, and one that means the refusal is
-per-project rather than per-machine. <code>override_rejection</code> is
-an ordinary tool argument, so the model that was refused can set it and
-try again. And the audit log records tool calls to a file rather than
-mutations to the store, which is why <code>audit_log</code> is
-withheld.</p>
+refused — the refusal is per-project rather than per-machine.
+<code>override_rejection</code> is an ordinary tool argument, so a model
+that was refused can set it and try again. And the audit log records
+tool calls to a file rather than mutations to the store, which is why
+<code>audit_log</code> is withheld.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is <strong>a capture</strong>: one row of text an agent
 chose to write down, typed (<code>decision</code>,
@@ -636,7 +623,7 @@ SessionStart and Stop wiring</li>
 <li><code>src/backup.ts</code>, <code>src/export.ts</code>,
 <code>src/import.ts</code>, <code>src/stats.ts</code>,
 <code>src/viewer.ts</code>, <code>src/install-skill.ts</code></li>
-<li><code>skills/tdai-memory/SKILL.md</code></li>
+<li><code>skills/remem-mcp/SKILL.md</code></li>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>

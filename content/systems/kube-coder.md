@@ -47,7 +47,7 @@ session. WAL mode and `BEGIN IMMEDIATE` retries keep the two writers safe. The
 file lives on the pod's persistent volume, so memory survives tab closes and pod
 restarts.
 
-**The scope enforcement is the reason to read this report.** A row is keyed
+**The scope enforcement is the strongest thing here.** A row is keyed
 `UNIQUE(namespace, key)`, and `search` is a hybrid — FTS5 always, fused by
 normalized reciprocal-rank with a `sqlite-vec` KNN pass when the extension and an
 embedding provider are both present. The namespace filter is applied to **every**
@@ -156,8 +156,7 @@ normalized reciprocal-rank fusion; when any is missing the method *"degrades to
 the Phase-1 FTS-only ranking with identical output"* — a stated equivalence,
 which is more than most optional-vector designs offer.
 
-**The scope logic is the strongest thing in this report and it is worth stating
-precisely.** `namespaces` is an exact-match allow-list. `namespace_scope` is a
+**The scope logic is worth stating precisely.** `namespaces` is an exact-match allow-list. `namespace_scope` is a
 namespace *root* that also matches everything nested under it, plus
 `ALWAYS_IN_SCOPE_ROOTS = ('user',)` — so a project-scoped chat can still reach
 `user.name`. Relevance leads the ranking; the caller's own scope only wins

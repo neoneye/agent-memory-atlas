@@ -246,11 +246,7 @@ to consult the fold, and the store itself holds content a user asked to forget.
 already in the ledger, which is a consultation the systems in the read-only class
 do not have.
 
-*The key is normalized after all, and this page said otherwise for six days.*
-The original reading here was that the id is a hash of the exact text. The Daimon
-report's re-read on **2026-07-30** recorded the opposite —
-*"the tombstone key is canonical rather than literal text"* — and the report was
-corrected while this argument was not. `normalize.canonical_text` folds NFKC,
+**Daimon's key is canonical, not literal.** `normalize.canonical_text` folds NFKC,
 strips invisible characters, collapses whitespace, casefolds and **translates
 confusables**, and `content_key` truncates a digest under a docstring naming the
 direction it fails in: *"a prefix collision over-blocks, the fail-safe direction

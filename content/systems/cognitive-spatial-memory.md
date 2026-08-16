@@ -24,22 +24,19 @@ matrix:
   background: "A pulse step that decays temperature and recomputes gravity anchors, driven by the caller rather than scheduled"
   trust: "None. Confidence feeds mass, so belief strength is a ranking weight; there is no status and no state that withholds a point from retrieval"
   strengths: "A retrieval law stated as an equation and implemented as stated, where recency is a force rather than a filter, so nothing is excluded by a cutoff; and an honest docstring naming the parent system the engine came from"
-  risks: "The engine is extracted from Helix AGI, which this atlas already reports, so it is not independent evidence for the mechanism; there is no deletion of any kind behind a drop-in RAG claim; there are no tests; and the committed audits link file:///home/nemo paths that resolve for nobody"
+  risks: "There is no deletion of any kind — no delete, forget, supersede or compact — behind a drop-in RAG replacement claim; there are no tests and no evaluation of that claim; and the committed audits link file:///home/nemo paths that resolve for nobody"
 ---
 
 ## 1. Executive Summary
 
-**Read the provenance first, because it changes what this report is evidence
-for.** `cognitive_space.py`'s docstring ends: *"Originally developed as part of
-the Helix AGI cognitive architecture."* This is the spatial engine of
-[Helix AGI](../helix-agi/) — already in this atlas — extracted and published as a
-standalone library under the same AGPL-3.0 and the same author. The mechanism
-below is not a second independent arrival at gravity-ranked retrieval. It is the
-first one, packaged for reuse.
+**This is [Helix AGI](../helix-agi/)'s spatial engine, published as a standalone
+library.** `cognitive_space.py`'s docstring says so: *"Originally developed as
+part of the Helix AGI cognitive architecture."* Same author, same AGPL-3.0, and
+the same gravity mechanism the parent runs — so a reader weighing how widely this
+design is used should count the two together, not separately.
 
-That is disclosed rather than hidden, and the disclosure is why the extraction is
-worth its own reading: a library is adopted by people who will never see the
-parent, and what survived the extraction is not what survived in the parent.
+What the extraction kept and dropped is the interesting part, because a library
+is adopted by people who will never open the parent.
 
 **The mechanism.** Every belief and memory is embedded, then projected into a
 fixed 8-dimensional manifold by a deterministic random orthogonal matrix

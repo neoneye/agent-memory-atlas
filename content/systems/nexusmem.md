@@ -59,7 +59,7 @@ that was written at ingest, chosen by a ranker that decided what *not* to send.
 One source, `session_summary`, runs a local model — at ingest, never on the read
 path.
 
-**The scope key is real and it is the only rubric mark this report awards.**
+**The scope key is real, and it is the only rubric mark this system earns.**
 `project_id` is a required `WHERE` predicate on both read arms
 (`src/store/store.ts`), and a cross-project query opens each registered
 repository's own database separately and tags every hit with its origin rather

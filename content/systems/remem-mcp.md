@@ -1,7 +1,7 @@
 ---
 title: "remem-mcp"
-eyebrow: "The gap it was reported for, closed"
-description: "A local-first MCP memory server that closed the scope hole it was reported for and added a rejected-value tombstone: capture hashes the redacted content, looks it up among rejected rows, and refuses the write with the reason."
+eyebrow: "A refusal keyed on the content hash"
+description: "A local-first MCP memory server whose capture path hashes the redacted content, looks it up among rejected rows, and refuses the write with the stored reason — behind a session key applied to both retrieval arms."
 root: ../..
 page_kind: system
 source_name: "tinhien11/remem-mcp"
@@ -40,35 +40,12 @@ of TypeScript over SQLite, with FTS5 for BM25, `sqlite-vec` for embeddings, and
 describes it accurately: *"Local-first MCP memory server for coding agents. No
 API key, no cloud."* Nothing here calls a hosted model, for storage or retrieval.
 
-**The project renamed itself, and the old name is now a different repository.**
-`tinhien11/tdai-memory-mcp` became `tinhien11/remem-mcp`, carrying the history;
-the old name was then rebuilt from scratch as a three-commit stub whose own
-message reads *"Rename to remem-mcp — stub package that redirects users"*. The
-two repositories share no common ancestor, so a reader who follows the old URL
-finds a live repository that is not this project. The rename is complete in the
-tree: `package.json` and the README both say `remem-mcp`.
-
-**The scope hole this report was written about is closed.** `handleRecall` now
-computes `(args.session_key as string) ?? defaultSessionKey()` rather than
-passing `undefined` through, and the storage layer applies `session_key = ?` to
-the BM25 arm and the vector arm alike. Three committed tests pin it — *"recall
-without session_key does not leak across projects"*, the same for `search`, and a
-third asserting it **against the real handler** rather than a helper that applies
-the default itself, which is precisely the gap that let the original defect ship
-under a green suite.
-
-Around it the scope model grew: `agent_id`, `team_id`, `user_id` and `task_id`
-beside the session key, plus an `org` scope that deliberately drops the agent
-filter so a cross-agent handoff can retrieve what another agent stored.
-
-**And it has a rejected-value tombstone — the mechanism this atlas finds least
-often, arriving in a system that had one mark at its previous reading.** The code
-names it: *"Rejected-value tombstone: check if this content was previously
-rejected."* `handleCapture` redacts secrets, takes `sha256` of the **redacted**
-content, and calls `findRejectedByContentHash(contentHash, sessionKey, agentId)`
-before writing. A hit refuses the capture and returns the stored
-`rejection_reason` with the offending id. A partial index —
-`ON captures (content_hash) WHERE trust_state = 'rejected'` — backs the lookup.
+**It has a rejected-value tombstone, and the code names it.** `handleCapture`
+redacts secrets, takes `sha256` of the **redacted** content, and calls
+`findRejectedByContentHash(contentHash, sessionKey, agentId)` before writing. A
+hit refuses the capture and returns the stored `rejection_reason` with the
+offending id. A partial index — `ON captures (content_hash) WHERE trust_state =
+'rejected'` — backs the lookup.
 
 The negative record is the capture row itself: `reject(id, reason)` sets
 `trust_state = 'rejected'`, stamps `deleted_at`, writes the reason, and deletes
@@ -77,14 +54,26 @@ disk *as* the thing the write path consults. That is the shape the
 [rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern
 argues for, reached in about forty lines.
 
-**Four of seven marks**, up from one. The limits are worth stating with the
-mechanism. The tombstone is scoped to `(content_hash, session_key, agent_id)`, so
-the same rejected value asserted under a different agent id or in another project
-is not refused — a deliberate scoping, and one that means the refusal is
-per-project rather than per-machine. `override_rejection` is an ordinary tool
-argument, so the model that was refused can set it and try again. And the audit
-log records tool calls to a file rather than mutations to the store, which is why
-`audit_log` is withheld.
+**Retrieval is scoped on both arms.** `handleRecall` computes
+`(args.session_key as string) ?? defaultSessionKey()`, so a call that names no
+session gets the project's own key rather than an unfiltered search, and the
+storage layer applies `session_key = ?` to the BM25 arm and the vector arm alike.
+Three committed tests pin it: *"recall without session_key does not leak across
+projects"*, the same for `search`, and a third asserting it **against the real
+handler** rather than against a helper that supplies the default itself — the
+distinction between testing the storage layer and testing the wiring.
+
+Around the session key sit `agent_id`, `team_id`, `user_id` and `task_id`, plus
+an `org` scope that deliberately drops the agent filter so a cross-agent handoff
+can retrieve what another agent stored.
+
+**Four of seven marks.** The limits belong with the mechanisms. The tombstone is
+scoped to `(content_hash, session_key, agent_id)`, so the same rejected value
+asserted under a different agent id or in another project is not refused — the
+refusal is per-project rather than per-machine. `override_rejection` is an
+ordinary tool argument, so a model that was refused can set it and try again. And
+the audit log records tool calls to a file rather than mutations to the store,
+which is why `audit_log` is withheld.
 
 ## 2. Mental Model
 
@@ -524,7 +513,7 @@ author.
 **Integration and operations**
 - `src/hooks.ts`, `src/hook-handlers.ts` — SessionStart and Stop wiring
 - `src/backup.ts`, `src/export.ts`, `src/import.ts`, `src/stats.ts`, `src/viewer.ts`, `src/install-skill.ts`
-- `skills/tdai-memory/SKILL.md`
+- `skills/remem-mcp/SKILL.md`
 
 **Tests**
 - `tests/integration/full-flow.test.ts` — `isolates memory by session key`, and the helper that supplies the default
