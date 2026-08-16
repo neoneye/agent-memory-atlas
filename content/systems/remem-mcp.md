@@ -1,77 +1,90 @@
 ---
-title: "tdai-memory-mcp"
-eyebrow: "The default the read path does not apply"
-description: "A local-first MCP memory server whose session key is stamped on every write, filtered on every read that supplies it, and omitted by the one caller that ships — so the documented per-project default searches every project."
+title: "remem-mcp"
+eyebrow: "The gap it was reported for, closed"
+description: "A local-first MCP memory server that closed the scope hole it was reported for and added a rejected-value tombstone: capture hashes the redacted content, looks it up among rejected rows, and refuses the write with the reason."
 root: ../..
 page_kind: system
-source_name: "tinhien11/tdai-memory-mcp"
-source_url: https://github.com/tinhien11/tdai-memory-mcp
-revision: 281180e76bdf927ecebad33b23779328aec545ed
-revision_url: https://github.com/tinhien11/tdai-memory-mcp/commit/281180e76bdf927ecebad33b23779328aec545ed
-analyzed_at: 2026-08-10
-capabilities: "negative_eval"
+source_name: "tinhien11/remem-mcp"
+source_url: https://github.com/tinhien11/remem-mcp
+revision: 53a8612dea423db1255817ce0cfdb13086462129
+revision_url: https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129
+analyzed_at: 2026-08-16
+capabilities: "tombstone, trust_state, scope_enforced, negative_eval"
+capability_evidence:
+  tombstone: "the capture write path | src/server.ts | handleCapture hashes the redacted content, calls findRejectedByContentHash before writing, and refuses with the stored rejection_reason unless override_rejection is set; a partial index on content_hash WHERE trust_state = rejected backs the lookup | tests: forget creates a tombstone (soft delete) and prevents recapture in search"
+  trust_state: "the captures table | src/storage/sqlite.ts | trust_state carries candidate and rejected, reject() sets it with a rejection_reason and drops the vector row, and every read path filters trust_state != rejected | tests: tombstoned row still exists in DB with deleted_at set, get() returns null for tombstoned entry"
+  scope_enforced: "the captures read path, both arms | src/server.ts | handleRecall defaults sessionKey to defaultSessionKey() when the caller omits it, and storage.search applies session_key = ? to the BM25 and vector arms alike | tests: recall without session_key does NOT leak across projects (real handler)"
+  negative_eval: "the captures read path | src/__tests__ | recall without session_key does not leak across projects, search without session_key does not leak across projects, and the same assertion repeated against the real handler | tests: recall/search without session_key does not leak across projects"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
-capability_evidence:
-  negative_eval: "the SQLite capture store, read path | tests/integration/full-flow.test.ts | 'isolates memory by session key' captures to project-a and project-b, recalls each, and asserts one result whose content names only that project | same file, and it is the suite's only negative case"
 matrix:
   memory_unit: "An L0 capture row — id, session key, agent id, type, content, content hash, tags, created_at, metadata. The L1 atom and L2 scenario tables exist and are never written"
   storage: "One SQLite file with FTS5 and sqlite-vec virtual tables kept in sync by triggers; embeddings are 384-dim all-MiniLM-L6-v2 computed locally"
   retrieval: "Hybrid — FTS5 BM25 and vector distance fused by reciprocal rank fusion at k=60, with keyword-only and vector-only modes selectable per call"
   write: "Synchronous through the `capture` tool, redacted before storage, deduplicated by content hash. The distillation pipeline is a documented no-op"
-  update_delete: "`forget` by id or filter, refused unless `confirm` is true, then a hard DELETE across captures, atoms, scenarios and the vector table. Nothing records that a value was rejected"
-  scoping: "`session_key` defaulting to `sha256(cwd)` and `agent_id` from detection, both indexed and both applied as filters — when the caller supplies them. The shipped recall handler supplies neither"
+  update_delete: "`forget` refused unless `confirm` is true; `reject(id, reason)` sets `trust_state` to rejected with a `rejection_reason`, stamps `deleted_at`, and drops the vector row and atoms while keeping the capture row — which is the tombstone the capture path then consults by content hash. `superseded_by` carries corrections"
+  scoping: "`session_key` defaulting to `sha256(cwd)`, applied as `session_key = ?` on the BM25 and vector arms alike, and now defaulted by the recall handler itself rather than passed through as undefined; beside it `agent_id`, `team_id`, `user_id` and `task_id`, with an `org` scope that deliberately drops the agent filter for cross-agent handoff"
   integration: "Six MCP tools — recall, capture, search, forget, handoff, adr — plus SessionStart and Stop hooks it writes into Claude Code and Devin CLI config"
   background: "None. No consolidation, extraction or maintenance pass exists; the only pipeline stage implemented is `NoopPipeline`"
-  trust: "An `atoms.confidence` column that nothing populates. No state, no provenance beyond the capturing agent id"
-  strengths: "Secret redaction before storage with eleven patterns and an entropy detector; deletion gated on an explicit confirm; a committed cross-project isolation test; a schema migration with a backup"
-  risks: "The recall handler passes `session_key` through as undefined, so the documented per-project default is an unfiltered search across every project on the machine — and the test that would catch it calls a helper that applies the default itself"
+  trust: "A `trust_state` column carrying `candidate` and `rejected`, filtered out of every read path, beside a `rejection_reason` and a `superseded_by` pointer. The `atoms.confidence` column is still populated by nothing"
+  strengths: "A rejected-value tombstone the write path consults by content hash before every capture, refusing with the stored reason and an explicit override; the scope default now applied by the shipping handler and pinned by a test against that handler rather than a helper; secret redaction before hashing and storage"
+  risks: "The tombstone is scoped to `(content_hash, session_key, agent_id)`, so the same rejected value re-asserted under a different agent id or project is not refused; the audit log records tool calls to a file rather than mutations to the store; and `override_rejection` is a plain tool argument the model can set for itself"
 ---
 
 ## 1. Executive Summary
 
-tdai-memory-mcp is an MIT-licensed MCP memory server for coding agents — 7,081
-lines of TypeScript over SQLite, with FTS5 for BM25, `sqlite-vec` for embeddings,
-and `@huggingface/transformers` running all-MiniLM-L6-v2 locally. Its own
-`server.json` describes it accurately: *"Local-first MCP memory server for coding
-agents. No API key, no cloud."* That claim holds — nothing here calls a hosted
-model, for storage or for retrieval.
+remem-mcp is an MIT-licensed MCP memory server for coding agents — ~22,600 lines
+of TypeScript over SQLite, with FTS5 for BM25, `sqlite-vec` for embeddings, and
+`@huggingface/transformers` running a MiniLM model locally. Its own `server.json`
+describes it accurately: *"Local-first MCP memory server for coding agents. No
+API key, no cloud."* Nothing here calls a hosted model, for storage or retrieval.
 
-**The repository was created on 10 August 2026 and this report reads it the same
-day, at its seventeenth commit.** Everything below describes a tree hours old,
-including a schema migration landed the same afternoon. That is not a criticism;
-it is the fact a reader needs before weighing any of it.
+**The project renamed itself, and the old name is now a different repository.**
+`tinhien11/tdai-memory-mcp` became `tinhien11/remem-mcp`, carrying the history;
+the old name was then rebuilt from scratch as a three-commit stub whose own
+message reads *"Rename to remem-mcp — stub package that redirects users"*. The
+two repositories share no common ancestor, so a reader who follows the old URL
+finds a live repository that is not this project. The rename is complete in the
+tree: `package.json` and the README both say `remem-mcp`.
 
-The engineering is tidier than the age suggests. The schema declares its version
-and migrates idempotently. FTS5 is an external-content table kept in sync by
-three triggers. Content is redacted for secrets *before* it is stored, not on the
-way out. `forget` refuses to act without `confirm: true`. RRF is implemented with
-k=60 and attributed in a comment to
-[TencentDB Agent Memory](../tencentdb-agent-memory/), which is itself in this
-atlas — one of the few cases here of a project borrowing a mechanism from another
-project the atlas has read, and saying so in the code.
+**The scope hole this report was written about is closed.** `handleRecall` now
+computes `(args.session_key as string) ?? defaultSessionKey()` rather than
+passing `undefined` through, and the storage layer applies `session_key = ?` to
+the BM25 arm and the vector arm alike. Three committed tests pin it — *"recall
+without session_key does not leak across projects"*, the same for `search`, and a
+third asserting it **against the real handler** rather than a helper that applies
+the default itself, which is precisely the gap that let the original defect ship
+under a green suite.
 
-Two findings are worth the report.
+Around it the scope model grew: `agent_id`, `team_id`, `user_id` and `task_id`
+beside the session key, plus an `org` scope that deliberately drops the agent
+filter so a cross-agent handoff can retrieve what another agent stored.
 
-**The upper memory layers are declared and empty.** `schema.sql` creates an
-`atoms` table for L1 facts with a `confidence` column and a `scenarios` table for
-L2 blocks, each commented "populated by … pipeline, phase 2". The only class
-implementing `PipelineStage` is `NoopPipeline`, whose docstring says "It does
-nothing. It stores L0 data only", and no statement anywhere in `src/` or `tests/`
-inserts into either table. What ships is a well-built L0 store under a schema
-describing a three-layer one.
+**And it has a rejected-value tombstone — the mechanism this atlas finds least
+often, arriving in a system that had one mark at its previous reading.** The code
+names it: *"Rejected-value tombstone: check if this content was previously
+rejected."* `handleCapture` redacts secrets, takes `sha256` of the **redacted**
+content, and calls `findRejectedByContentHash(contentHash, sessionKey, agentId)`
+before writing. A hit refuses the capture and returns the stored
+`rejection_reason` with the offending id. A partial index —
+`ON captures (content_hash) WHERE trust_state = 'rejected'` — backs the lookup.
 
-**The session key is stamped on every write and dropped on every read.**
-`handleCapture` computes `args.session_key ?? defaultSessionKey()`, so every
-capture lands scoped to `sha256(cwd).slice(0,16)`. `handleRecall`, in the same
-file, reads `args.session_key as string | undefined` with no fallback, and the
-storage layer guards its filter with `if (sessionKey)`. So a `recall` that does
-not name a session searches every project on the machine — while the tool's own
-JSON schema tells the model *"The session key. The default is hash(cwd)."*
+The negative record is the capture row itself: `reject(id, reason)` sets
+`trust_state = 'rejected'`, stamps `deleted_at`, writes the reason, and deletes
+the row's vector and atoms — so the entry leaves retrieval while remaining on
+disk *as* the thing the write path consults. That is the shape the
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern
+argues for, reached in about forty lines.
 
-The strongest thing here and the weakest thing here are the same mechanism seen
-from two ends, which is what makes it worth reading.
+**Four of seven marks**, up from one. The limits are worth stating with the
+mechanism. The tombstone is scoped to `(content_hash, session_key, agent_id)`, so
+the same rejected value asserted under a different agent id or in another project
+is not refused — a deliberate scoping, and one that means the refusal is
+per-project rather than per-machine. `override_rejection` is an ordinary tool
+argument, so the model that was refused can set it and try again. And the audit
+log records tool calls to a file rather than mutations to the store, which is why
+`audit_log` is withheld.
 
 ## 2. Mental Model
 
@@ -149,7 +162,7 @@ not an artifact of reading the wrong file.
 
 Alongside the server: `hooks.ts` writes `SessionStart` and `Stop` entries into
 `~/.claude/settings.json` and `~/.config/devin/config.json`, each running
-`npx -y tdai-memory-mcp <subcommand>`; `backup.ts`, `export.ts`, `import.ts`,
+`npx -y remem-mcp <subcommand>`; `backup.ts`, `export.ts`, `import.ts`,
 `stats.ts`, `viewer.ts` and `install-skill.ts` are CLI subcommands beside the
 server.
 
@@ -519,6 +532,18 @@ author.
 - `tests/integration/db-detection.test.ts` — migration and backup paths
 
 ## History
+
+**2026-08-16** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — 203 commits on, and three of this report's findings are closed. Screened first: 1 auto-run surface (`server.json`, an MCP manifest declaring a start command), 2 build-time execution paths — an npm `postinstall` running `scripts/postinstall.js` and a `prepublishOnly` — and 2 manifests inside the seven-day cooldown; nothing was installed, built or run. Marks moved from one to four.
+
+**The project renamed itself and the old name is now a different repository.** `tdai-memory-mcp` became `remem-mcp` carrying the history, and the old name was rebuilt from scratch as a three-commit stub — *"Rename to remem-mcp — stub package that redirects users"*. The two share no common ancestor and both are live, so the previous report's `source_url` pointed at a repository that does not contain its own pinned commit. The report is filed under the new slug with a redirect stub at the old one.
+
+**The scope hole is fixed.** `handleRecall` computes `(args.session_key as string) ?? defaultSessionKey()` instead of passing `undefined`, and `session_key = ?` is applied to the BM25 and vector arms alike. The previous reading noted that the test which should have caught the defect called a helper applying the default itself; there are now three tests, and one of them asserts the property **against the real handler**. `scope_enforced` earned.
+
+**A rejected-value tombstone was added, and the code calls it that.** `handleCapture` hashes the redacted content and calls `findRejectedByContentHash` before writing, refusing with the stored `rejection_reason` unless `override_rejection` is set; a partial index on `content_hash WHERE trust_state = 'rejected'` backs the lookup. `reject(id, reason)` produces the negative record by marking the row rejected, stamping `deleted_at` and dropping its vector and atoms, so the row survives as the thing the write path consults. `tombstone` earned, with the limits stated: the check is scoped to `(content_hash, session_key, agent_id)`, and `override_rejection` is a plain tool argument.
+
+**`trust_state` earned** — `candidate` and `rejected` on the captures table, filtered out of every read path, beside `rejection_reason` and a `superseded_by` pointer, at schema version 8 (v5 added the three columns). `audit_log` stays withheld: `AuditLogger` writes tool calls to a file, not mutations to the store. `bitemporal` stays withheld; no validity time exists.
+
+The tree grew from ~7,100 to ~22,600 lines with 503 test cases across 30 files. The L1/L2 layers reported as declared-and-empty were not re-verified in depth at this pin.
 
 **2026-08-10** — [`281180e76bdf927ecebad33b23779328aec545ed`](https://github.com/tinhien11/tdai-memory-mcp/commit/281180e76bdf927ecebad33b23779328aec545ed)
 — first reading, at the seventeenth commit of a repository created the same day.

@@ -415,21 +415,27 @@ must say so unconditionally at startup. SRE's does warn, in a branch that
 re-tests a condition the line above it just satisfied, so the warning never
 prints.
 
-**[tdai-memory-mcp](../../systems/tdai-memory-mcp/) is the shortest version of
-this page's whole argument: one missing `??`.** Everything the pattern asks for
-is present. `session_key` is a column, it is indexed with `created_at`, it is
-stamped on every write from `sha256(cwd)`, and both retrieval arms append
-`AND c.session_key = ?`. There is even a committed isolation test — *"isolates
-memory by session key"* — that writes to two projects and asserts each recall
+**[remem-mcp](../../systems/remem-mcp/) is the shortest version of this page's
+whole argument: one missing `??`.** Everything the pattern asks for was present.
+`session_key` is a column, it is indexed with `created_at`, it is stamped on
+every write from `sha256(cwd)`, and both retrieval arms append
+`AND c.session_key = ?`. There was even a committed isolation test — *"isolates
+memory by session key"* — writing to two projects and asserting each recall
 returns only its own.
 
-The write handler reads `args.session_key ?? defaultSessionKey()`. The read
-handler, in the same file, reads `args.session_key as string | undefined`. The
-storage layer guards its filter with `if (sessionKey)`, so `undefined` means *no
-`WHERE` clause* rather than *this project* — and the tool schema shown to the
-model says the default is `hash(cwd)`. A `recall` that omits the parameter, which
-is the obvious call for a model handed an optional argument with a documented
-default, searches every project on the machine.
+Until August 2026 the write handler read `args.session_key ?? defaultSessionKey()`
+while the read handler, in the same file, read
+`args.session_key as string | undefined`. The storage layer guards its filter
+with `if (sessionKey)`, so `undefined` meant *no `WHERE` clause* rather than
+*this project* — and the tool schema shown to the model said the default was
+`hash(cwd)`. A `recall` that omitted the parameter, which is the obvious call for
+a model handed an optional argument with a documented default, searched every
+project on the machine.
+
+The handler now reads `(args.session_key as string) ?? defaultSessionKey()`, and
+the gap is closed. The whole distance between a system that has this pattern and
+one that does not was two characters, in one of the two places the key is
+read.
 
 Two things generalise. **A default that decides which data a query can see
 belongs below both handlers**, in the storage layer or in one helper both call;
@@ -531,15 +537,21 @@ the grader looks for in the answer. Its own example is the right shape —
 *"What was the name of the son of the last customer you helped?"*.
 
 **Whatever generates the case, it has to enter through the door production
-uses.** [tdai-memory-mcp](../../systems/tdai-memory-mcp/) has the two-project
-test this section asks for and it passes while the shipped read path is
-unscoped, because the test file defines its own `recall` helper rather than
-calling the server's handler, and that helper reads
-`sessionKey: args.sessionKey ?? "test-session"` — supplying the default the real
-handler omits. The suite proves `SQLiteBackend.search` filters correctly when
-given a key, which was never in doubt, and never reaches the branch where the
-key is `undefined`. A harness that reimplements its caller certifies the storage
-layer and takes the wiring on faith, and the wiring is where a scope bug lives.
+uses.** [remem-mcp](../../systems/remem-mcp/) had the two-project test this
+section asks for, and it passed while the shipped read path was unscoped: the
+test file defined its own `recall` helper rather than calling the server's
+handler, and that helper read `sessionKey: args.sessionKey ?? "test-session"` —
+supplying the default the real handler omitted. The suite proved
+`SQLiteBackend.search` filters correctly when given a key, which was never in
+doubt, and never reached the branch where the key is `undefined`. A harness that
+reimplements its caller certifies the storage layer and takes the wiring on
+faith, and the wiring is where a scope bug lives.
+
+**The project's own fix is the cleanest demonstration this page has.** Alongside
+the corrected handler it added a third test whose name states the distinction —
+*"recall without session_key does NOT leak across projects (real handler)"* —
+driving the shipped code path rather than a stand-in. Two tests of the same
+property, one of which could never have failed.
 That is also why the red-team plugin above is worth more than its convenience:
 it drives a *running system* from the outside, so there is no harness to diverge.
 

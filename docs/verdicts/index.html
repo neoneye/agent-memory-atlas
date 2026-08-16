@@ -6626,47 +6626,58 @@ a video file that still exists, and every one of them is a property you
 would have to remove before remembering anything about a person, a
 project or a codebase.</li>
 </ul>
-<h3 id="tdai-memory-mcp"><a
-href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a></h3>
+<h3 id="remem-mcp"><a
+href="../systems/remem-mcp/"><code>remem-mcp</code></a></h3>
 <ul>
-<li>Best idea: the secret redactor runs on the write path. Eleven
-patterns and a high-entropy scan applied before the row is inserted, so
-the credential is absent from the table, the FTS5 index, the vector
-table, the JSON export and the pre-migration backup. A redactor on the
-read path leaves all five holding it.</li>
-<li>Biggest risk: <code>handleRecall</code> reads
-<code>args.session_key as string | undefined</code> with no fallback
-while <code>handleCapture</code> reads
-<code>args.session_key ?? defaultSessionKey()</code>, and the storage
-layer treats <code>undefined</code> as no <code>WHERE</code> clause
-rather than as the current project. The tool schema shown to the model
-says the default is <code>hash(cwd)</code>. A recall that omits the
-parameter searches every project on the machine, silently, and the
-symptom is extra results rather than an error.</li>
-<li>Most reusable component: the confirm gate on <code>forget</code>,
-which refuses without <code>confirm: true</code> and returns <em>"Set
-confirm to true to execute the deletion. The tool did not delete
-anything."</em> — state and instruction in one string, so a
-mis-generated call is a no-op instead of a loss. The deletion it then
-performs reaches captures, atoms, scenarios, the vector table and the
-FTS index.</li>
-<li>Maturity impression: MIT, v0.2.3, 7,081 lines of TypeScript over
-SQLite with FTS5 and sqlite-vec and local MiniLM embeddings, in a
-repository created 10 August 2026 and read the same day at its
-seventeenth commit. Better structured than most first-week code —
-versioned idempotent schema, backup before migration, 21 test files.
-Also carries a second unwired copy of its own tool layer, and a schema
-declaring L1 <code>atoms</code> and L2 <code>scenarios</code> tables
-that nothing writes, because the only <code>PipelineStage</code>
-implementation is <code>NoopPipeline</code>.</li>
-<li>Study when: you want a compact, honest local-first MCP memory server
-to read end to end — or you want the clearest instance in this atlas of
-an integration test that passes because its harness reimplements the
-caller it was meant to exercise.</li>
-<li>Do not copy when: one machine serves several repositories, which is
-the exact case the session key exists for and the exact case its
-read-path default breaks; or when you need distillation, trust state or
-a correction that survives.</li>
+<li>Best idea: a <strong>rejected-value tombstone the write path
+consults</strong>, and the code names it that.
+<code>handleCapture</code> redacts secrets, takes <code>sha256</code> of
+the <em>redacted</em> content, calls
+<code>findRejectedByContentHash(contentHash, sessionKey, agentId)</code>
+before writing, and refuses with the stored
+<code>rejection_reason</code> and the offending id — backed by a partial
+index on <code>content_hash WHERE trust_state = 'rejected'</code>. The
+negative record is the capture row itself:
+<code>reject(id, reason)</code> marks it rejected, stamps
+<code>deleted_at</code>, and drops its vector and atoms, so the entry
+leaves retrieval while remaining on disk as the thing the write path
+checks. About forty lines for the mechanism this atlas finds least
+often.</li>
+<li>Biggest risk: the refusal is escapable and narrowly scoped.
+<code>override_rejection</code> is an ordinary tool argument, so the
+model that was just refused can set it and retry; and the lookup is
+keyed on <code>(content_hash, session_key, agent_id)</code>, so the same
+rejected value asserted in another project or under a different agent id
+is not refused. Beside that, <code>AuditLogger</code> writes tool calls
+to a file rather than mutations to the store, so "what changed and why"
+is not answerable from the store itself.</li>
+<li>Most reusable component: the fix for its own scope bug, as a worked
+example. This report previously found <code>handleCapture</code> reading
+<code>args.session_key ?? defaultSessionKey()</code> while
+<code>handleRecall</code>, in the same file, read
+<code>args.session_key as string | undefined</code> — so a recall that
+omitted the argument searched every project, while a committed
+two-project test passed because the test defined its own
+<code>recall</code> helper that supplied the default the real handler
+omitted. The handler now defaults it, and a third test asserts the
+property <strong>against the real handler</strong>: <em>"recall without
+session_key does NOT leak across projects (real handler)"</em>. Two
+tests of the same property, one of which could never have failed.</li>
+<li>Maturity impression: MIT, ~22,600 lines of TypeScript over SQLite
+with FTS5, <code>sqlite-vec</code> and a local MiniLM, 503 test cases
+across 30 files, schema at version 8. The project renamed itself from
+<code>tdai-memory-mcp</code>, and the old name was rebuilt from scratch
+as a three-commit stub that redirects users — the two repositories share
+no common ancestor, so the old URL is a live repository that is not this
+project. Four marks, up from one at the previous reading.</li>
+<li>Study when: you want the smallest complete rejected-value tombstone
+in this corpus — a content hash, a partial index and one lookup before
+the write — or you want to see what closing a scope hole looks like when
+the test that missed it is fixed alongside the code.</li>
+<li>Do not copy when: you need the refusal to bind an agent that can set
+its own override, to hold across projects, or to leave a mutation
+record. And note <code>atoms.confidence</code> is still populated by
+nothing.</li>
 </ul>
 <h3 id="windie-sandbox"><a
 href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></h3>

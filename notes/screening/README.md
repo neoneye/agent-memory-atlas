@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 134 of 295 screened at the report's current pin.**
+**Progress: 135 of 295 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
-off, and 142 report(s) have no record at all.
+off, and 141 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 49 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 30 |
-| Repositories with build-time execution (`EXEC`) | 109 |
+| Repositories with an auto-run surface (`RUNS`) | 50 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 31 |
+| Repositories with build-time execution (`EXEC`) | 110 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -73,6 +73,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
+| [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.mcp.json`, `server.json` |
