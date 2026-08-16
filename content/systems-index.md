@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **293 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **294 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -66,6 +66,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced
 - [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
 - [`cognis`](../systems/cognis/) **Cognis** — A memory policy with a fingerprint · `fpytloun/cognis` · Scope enforced, Negative evals
+- [`cognitive-spatial-memory`](../systems/cognitive-spatial-memory/) **Cognitive Spatial Memory** — Gravity instead of cosine · `munch2u-a11y/Cognitive-Spatial-Memory`
 - [`context-mem`](../systems/context-mem/) **Context Mem** — The unflattering number is committed; the badge is not about it · `JubaKitiashvili/context-mem`
 - [`context-mode`](../systems/context-mode/) **Context Mode** — Session knowledge across seventeen harnesses · `mksglu/context-mode` · Scope enforced, Negative evals
 - [`continuous-claude`](../systems/continuous-claude/) **Continuous Claude** — A daemon mines the thinking blocks · `parcadei/Continuous-Claude-v3`

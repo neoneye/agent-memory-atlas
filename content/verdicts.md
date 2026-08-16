@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 293 reports.**
+**This page covers all 294 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2557,3 +2557,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, ~696,000 lines of Go across a coding agent reachable four ways (terminal, desktop, browser, ACP), 10,032 test functions, 156 in `internal/memory`. Three marks: `scope_enforced` (reads rooted at a per-project directory), `human_review` (mined drafts that only save through an accept action), `negative_eval`. Four near-misses stated in the report: freshness classifies age rather than belief, the recall audit is the retrieval half of the audit pattern rather than the mutation half, supersession keys on the record, and there is no principal boundary. No paper, and no benchmark results committed — the instrument exists, the measurement does not.
 - Study when: you want per-turn-free memory because your provider caches the prefix, or you are building any memory evaluation at all and want a task set and a verification style to start from.
 - Do not copy when: you need multi-user boundaries, an audit of what changed, or a correction that binds an automatic writer. The last is not an oversight but the price of the cache decision, and it is worth understanding before paying it.
+
+### [`cognitive-spatial-memory`](../systems/cognitive-spatial-memory/)
+
+- Best idea: recency as a force rather than a filter. The docstring states it — *"No artificial limits. Recency = gravity, not exclusion"* — and the code means it: a cold memory is outweighed, never cut off by a threshold or a TTL, so enough mass can still bring it back. The ranking law is stated in the README as `F = T × m / d²` and implemented literally at `cognitive_space.py:504` (`gravity = temperature * mass / (d * d)`), with the vector form dividing by `dist³` because the displacement is unnormalised — the same law. A README equation that survives contact with the code is not the norm here.
+- Biggest risk: **there is no way to remove anything.** No delete, forget, remove, purge, supersede or compact exists anywhere in the package, and no journal; `store`, `add_belief` and `add_memory` have no counterpart, so the API has no shape a caller could delete against. That is offered as *"a drop-in RAG replacement"*, and a store you cannot delete from does not drop into a pipeline that could. The same absence is why the report carries no capability mark: no status, no scope key, no validity time, no audit — one omission rather than seven.
+- Most reusable component: `cognitive_space.py` as reading. 1,533 legible lines covering the fixed Johnson–Lindenstrauss projection to 8D, the KD-tree registry, the 512-anchor gravity field and the attention physics — the clearest statement of the mechanism in either of this author's repositories.
+- Maturity impression: AGPL-3.0, **one commit**, ~4,300 lines, **no tests of any kind**, no eval, no benchmark, no paper. Its own docstring discloses that the engine was *"originally developed as part of the Helix AGI cognitive architecture"* — [a system this atlas already reports](../systems/helix-agi/) — so this is an extraction rather than independent evidence for gravity-ranked retrieval, and the corpus should not count the mechanism twice. `docs/` holds 709 lines of line-by-line self-audit whose file links point at `file:///home/nemo/…`, resolving for no reader.
+- Study when: you want to see decay expressed as mass and distance instead of a half-life and a cutoff, and you are reading for the idea rather than shopping for a dependency.
+- Do not copy when: anything you store belongs to a user. There is no deletion, no scope key and no test, and the first is unrecoverable at the API level rather than a missing feature. If you want this mechanism inside a system that has the surrounding machinery, the parent is where it runs — with its own documented deletion gaps to weigh.
