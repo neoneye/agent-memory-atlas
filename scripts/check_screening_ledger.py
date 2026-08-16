@@ -34,7 +34,7 @@ from pathlib import Path
 #: the last time this was lowered. Edited by hand in the same commit that earns
 #: it, like `COVERAGE_FLOOR` in `check_capability_evidence.py`, so a reduction is
 #: a deliberate act with a diff. It may never rise.
-OFF_PIN_CEILING = 20
+OFF_PIN_CEILING = 19
 
 
 def pins(root: Path) -> dict[str, str]:

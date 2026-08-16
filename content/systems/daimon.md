@@ -6,10 +6,17 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 214fa7c4b90c529c59aee96cc2b53e34fb53a79d
-revision_url: https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d
-analyzed_at: 2026-08-10
+revision: 7f2f16eb74f226a61e726171e11c8274dcd86b04
+revision_url: https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04
+analyzed_at: 2026-08-16
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "checkpoint store, forget path | plugin/daimon_briefing/cli/lifecycle.py | _cmd_forget appends a tombstone event carrying a content hash rather than the text, before the rewrite, so the rewrite's _drop_forgotten reads it; the supersede-candidate emitter skips values already in the ledger | plugin/tests/test_forget_refutations.py, plugin/tests/test_log_text_privacy.py"
+  trust_state: "checkpoint items, and the refutation ledger separately | plugin/daimon_briefing/serializer.py | a stored trust field of verbatim vs inferred, verified by code against the transcript by verify_quotes; the ledger folds candidate/active/overturned across both polarities | plugin/tests/test_quote_verification.py, plugin/tests/test_refutations.py"
+  scope_enforced: "every store, by project slug | plugin/daimon_briefing/store.py | project_slug resolves the per-project directory under ~/.daimon and every read and write is rooted there; forget is project-scoped by construction | plugin/tests/test_isolation.py"
+  audit_log: "events.jsonl, plus the refutation, relation and amendment ledgers | plugin/daimon_briefing/store.py | append_event writes one row per lifecycle event; refutations, relations and amendments each carry their own append-only stream with an observed channel on every row | plugin/tests/test_store.py, plugin/tests/test_refutation_authority.py"
+  human_review: "refutation and relation ledgers, and reverify | plugin/daimon_briefing/refutations.py | CHANNEL_AUTHORITY derives authority from the observed write channel rather than a caller flag, so activation, overturn and ruling ratification require a human channel the CLI cannot reach for ui or signed | plugin/tests/test_refutation_authority.py, test_agent_cannot_self_ratify"
+  negative_eval: "refutation guard read path | plugin/tests/test_refutations.py | test_guard_fires_on_exact_issue_anchor_not_broad_topic asserts a broad topical query must not surface an active guard | plugin/tests/test_refutations.py:113"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -20,9 +27,9 @@ matrix:
   write: "Detached LLM extraction at session end, then deterministic quote and outcome gates"
   update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache and the second negative store"
   scoping: "Per-project bucket applied on the read path; cross-project reads only by explicit slug"
-  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only stdio MCP"
+  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP, and a local read-only viewer with search-as-recall"
   background: "Detached serialize child, retry ledger with self-heal, index rebuild"
-  trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; and a separate candidate/active/overturned ledger whose authority is read off the observed write channel"
+  trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; a candidate/active/overturned ledger carrying both polarities, whose authority is read off the observed write channel and whose polarity is derived from the founding event name rather than any writable field; and a candidate/confirmed/rejected relation ledger in shadow mode with no mechanical channel at all"
   strengths: "Authority derived from the observed write channel rather than a caller-set flag, with the strongest channels unreachable from the CLI; a surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; a placebo arm that has refuted the project's own features"
   risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age"
 ---
@@ -39,7 +46,7 @@ that one loop.
 The design commitment worth reading the code for is this: **every memory item
 carries a trust class, and the trust class is not taken on the model's word.**
 The extraction prompt asks for `trust: "verbatim"` plus an exact `quote`, and
-then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1015`)
+then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1064`)
 greps that quote against the rendered transcript. A miss is not a warning — the
 item is *downgraded* to `inferred`, the failure is logged, and a pointer to it is
 appended to a rejection ledger. Plenty of systems in this atlas store a
@@ -153,7 +160,7 @@ id, which is why widening the id could not break it.
 Lifecycle is *not* stored on the item. The checkpoint is append-only in
 practice — `last_verified` is stamped in exactly one place and the docstring
 forbids any other writer — and liveness is a **fold over an event log at read
-time** (`store.resolutions`, `store.py:1972`; `store.is_resolved`, `store.py:2013`):
+time** (`store.resolutions`, `store.py:2087`; `store.is_resolved`, `store.py:2128`):
 
 | Latest event for an id | Effect at read |
 | --- | --- |
@@ -177,7 +184,7 @@ resolved item requires evidence: either the item's code anchor still checks out
 live, or an explicit `--evidence` string. `_cmd_reverify` refuses otherwise,
 with the reason stated in the source: *"re-stamping without evidence would mark
 an unchecked claim verified — the one thing this tool must never do to its own
-audit trail"* (`cli.py:1558`).
+audit trail"* (`cli/lifecycle.py:713`).
 
 The system therefore treats memory as **attested transcription plus explicitly
 labelled inference**, never as ground truth. The briefing's own top section is
@@ -253,6 +260,78 @@ is built for the question that follows, splitting usage by outcome and rail
 because *"one aggregate count cannot separate a hit from a miss, so the
 false-veto rate the design named as its own expansion gate is uncomputable from
 field data."*
+
+### The same ledger, in the other direction
+
+`#693` widened this store to **both polarities**. A **ruling** is a
+human-ratified standing constraint — a positive record — sharing the id space,
+the fields, the deletion contract and the audit machinery with a refutation.
+The design decision that makes it safe is where the discriminator lives:
+**polarity is derived at fold time from the founding event name** (`ruled`
+versus `asserted`), never from a caller-supplied field, so nothing that can
+write a row can choose what that row *means*.
+
+The forward-compatibility property falls out of the same choice and is worth
+copying. An older reader's `events()` drops event names it does not know, and
+its fold treats the resulting orphan lifecycle rows as inert — so an install
+predating the change *"never renders a ruling as a refutation — it simply does
+not see it."* A new polarity was added to a shared append-only stream with no
+migration and no version gate, and the failure mode for old code is silence
+rather than inversion.
+
+The lifecycle is deliberately asymmetric: **no agent path changes what a ruling
+renders.** An agent-authority `revised` row on an active ruling is fully inert
+and stays in the raw audit; a retired ruling cannot be revived by one; and an
+agent proposal may not move a ruling's rendered age or its list order. Two
+guards bound the shape rather than the authority — `_MAX_RULING_TEXT` refuses
+anything past 280 characters because *"a standing rule that long is a document,
+not a ruling"*, and `_guard_ruling_cap` is a single chokepoint every activation
+path routes through, naming the active rulings in its refusal so the operator
+knows what to retire.
+
+**The bug this shipped with is the more instructive half, and the project wrote
+it down.** Scar 0053 records that the CLI was scoped (`refute list` passes
+`polarity="refutation"`) while the viewer lane called
+`refutations.listing(project_dir=slug)` unfiltered — so a human-ratified ruling
+rendered in the shipped viewer as *an active refutation of its own subject*: the
+exact inversion the feature existed to prevent, on the one surface a person
+actually looks at. And **the viewer's test mirrored the unfiltered call, so the
+suite locked the bug in green.** The scar generalises it — when a shared read
+surface gains a discriminating field, every call site must be decided
+explicitly, because a caller nobody touched inherits the widened result set
+silently — and encodes the recurrence as a regex violation pattern with an
+expiry condition: the scar retires when `listing` grows a *required* polarity
+parameter, making an unscoped call impossible to write.
+
+### A third store and a fourth
+
+`relations.py` (578 lines) is a project-scoped **typed relation ledger** —
+`revision-of`, `answers`, `supersedes`, `reclassified-from` — folded from
+`proposed`/`confirmed`/`rejected`/`retracted` events into the matching states.
+It ships in **shadow mode** and the report of that is precise: recall,
+lifecycle, corroboration and carry read nothing from it, and the only
+reader-facing surface is the viewer's History lane, which renders confirmed
+records alone, *"a chain a reader sees is always one a human vouched for."*
+Two constraints carry the design. Every writable string is a hash-derived id or
+drawn from a closed set and refused at the seam otherwise — load-bearing
+because rows referencing forgotten items survive on disk, so **no field may ever
+be able to carry item text**. And there is no mechanical channel at all in v1,
+*"because Phase 1 proved no evidence rail qualifies for automatic
+confirmation"* — a negative experimental result spent on removing a capability
+rather than on qualifying it.
+
+`amendments.py` (523 lines) records that a briefed item's state advanced while
+the item stays open — approved, unblocked, rescoped — *"the verb between"* a
+resolution and a reverify. Its header is an argument against reusing the store
+that was already there: `events.jsonl`'s `source` field is caller-declared with
+no write path attesting it (*"authority as a caller's claim about itself, the
+hole `refutations.py` names"*), its fold is latest-wins per ref so a
+confirmation would overwrite the amendment it confirms, and forget reaches its
+prose only by whole-value match without ever removing a row. So the module
+follows the refutation contract instead — own append-only stream, observed
+channel on every row, deterministic full-pass fold, rewrite deletion that
+reaches the bytes. A system naming the weaknesses of its own older store as the
+reason not to extend it is rarer than either store.
 
 ## 3. Architecture
 
@@ -725,7 +804,7 @@ still a gap.
 
 ## 10. Tests, Evals, and Benchmarks
 
-3,132 tests over ~50,800 lines against ~24,700 lines of source, better than
+3,679 tests over ~58,500 lines against ~28,600 lines of source, better than
 twice the source. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
@@ -735,7 +814,7 @@ links never guess), `test_redact_leak_gaps.py`, `test_receipts.py`,
 `test_isolation.py` (every path escapes the real `$HOME` under test). I did not
 run the suite.
 
-**The refutation ledger carries 95 of those across four files, and they are
+**The refutation ledger carries 106 of those across four files, and they are
 adversarial rather than illustrative.** `test_refutation_authority.py` asserts
 the properties the channel table exists for —
 `test_agent_cannot_self_ratify`, `test_tampered_agent_ratification_flag_cannot_activate`
@@ -751,6 +830,27 @@ retrieval case in the strict sense, asserting that a broad topical query must
 `test_refutation_privacy.py` bind the second store to the deletion contract, and
 `test_log_text_privacy.py` covers the downgrade lines that must log a hash rather
 than the item's text.
+
+**Two of these tests were found passing for the wrong reason, and the project
+recorded both as scars rather than fixing them quietly.** Scar 0054 is the
+sharper one. `test_capture_path_admits` pinned that the capture path opts into
+the echo-admission filter by asserting `"admit=True" in
+inspect.getsource(capture.run)` — and the call site carried the house-style
+comment `# admit=True (#693): capture is one of the two admission paths`, so
+**deleting the actual keyword argument left the assertion green: the comment
+alone satisfied it.** The scar's generalisation is the part worth carrying out
+of this repository: the project's own comment discipline — name the flag you are
+explaining — makes that collision *the norm rather than a fluke*, because any
+source-text substring assertion about a call site will usually also match the
+comment documenting it. Its prescription is a seam spy or an end-to-end drive,
+and failing that, proving the test fails with the real code removed and the
+comment left in place. Scar 0053 is the polarity inversion above, whose test
+mirrored the caller's unfiltered call.
+
+Both were exposed by mutation testing rather than by review reading, which is
+the same lesson one level up from the suite: a test that cannot be shown to fail
+is a claim nobody has checked, and 3,679 of them do not change that for any
+individual one.
 
 **The benchmark is the notable part.** `benchmark/` runs LongMemEval-S through
 the *real* serializer and answers only from what `daimon recall` surfaces, with
@@ -890,8 +990,8 @@ That last habit — stating which way your own conservatism cuts — is the thin
 this atlas asks of benchmark publishers and has found almost nowhere. Here it is
 applied by a project to a feature it then removed.
 
-**What I would still want** is unchanged in kind and narrower in scope: a
-completed paired A/B on the 150-question LongMemEval sample. The replay rig
+**What is missing** is a completed paired A/B on the 150-question LongMemEval
+sample. The replay rig
 answers a different question — precision of what *is* injected on the
 maintainer's own prompts — and says so, in a `not_measured` block, rather than
 letting the two be confused.
@@ -1036,21 +1136,27 @@ they stop working.
   classes; only the PR/issue class shells out to `gh`
 - `plugin/daimon_briefing/refutations.py` — the project-scoped negative-knowledge
   ledger, its channel-derived authority table and its lifecycle fold
+- `plugin/daimon_briefing/relations.py` — the typed relation ledger, shadow mode
+- `plugin/daimon_briefing/amendments.py` — evidence-carrying state transitions on
+  briefed items, on its own append-only stream
 - `plugin/daimon_briefing/receipts.py` — vitni Ed25519 provenance receipts
 - `plugin/daimon_briefing/ledger.py` — serialize log, health classification, heal plan
 
 **Integration**
 - `hook/` and `plugin/daimon_briefing/_hooks/` — per-host adapters and the shared stdlib helper
 - `plugin/daimon_briefing/mcp_server.py`, `mcp_tools.py` — read-only stdio MCP
-- `plugin/daimon_briefing/cli.py` — every command, including `resolve`, `forget`,
-  `reverify` and the `refute add|ratify|revise|overturn|search|guard` family
+- `plugin/daimon_briefing/cli/` — a package of subcommand family modules:
+  `lifecycle.py` (`resolve`, `forget`, `reverify`), `refute.py`, `ruling.py`,
+  `amend.py`, `audit.py`, `team.py`, `skill.py`, `_ledger.py`
+- `plugin/daimon_briefing/render.py` — the single output seam every lifecycle,
+  report and ledger verb routes through
 
 **Team and extras**
 - `plugin/daimon_briefing/teamsync.py`, `teamproject.py` — git sidecar mirror
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 3,132 tests across 81 files
+- `plugin/tests/` — 3,679 tests across 129 files
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
   arm and its self-verification
@@ -1058,6 +1164,18 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-08-16** — [`7f2f16eb74f226a61e726171e11c8274dcd86b04`](https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04) — 32 commits on. Screened first: 0 auto-run surfaces, 3 build-time execution paths (a third `conftest.py` under `research/experiments/multicycle/`), 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent, and no validity-time field exists anywhere in the package.
+
+The refutation ledger gained a second polarity. A **ruling** is a human-ratified standing constraint sharing the id space, fields, deletion contract and audit machinery with a refutation, and polarity is derived at fold time from the founding event name (`ruled` versus `asserted`) rather than from any writable field. The forward-compatibility consequence is the reusable part: an older reader drops unknown event names and folds the orphan lifecycle rows as inert, so a pre-change install never renders a ruling as a refutation — it does not see it. The lifecycle is polarity-asymmetric; an agent-authority `revised` row on an active ruling is inert, and `_MAX_RULING_TEXT` (280) plus a single `_guard_ruling_cap` chokepoint bound the shape.
+
+Two further stores: `relations.py`, a typed relation ledger in shadow mode whose every writable string is a hash-derived id or a closed-set value so no field can carry item text, and which has no mechanical channel because Phase 1 established that no evidence rail qualified for automatic confirmation; and `amendments.py`, whose header argues against reusing `events.jsonl` by naming three of that store's own weaknesses — a caller-declared `source` no write path attests, a latest-wins fold, and a forget that never removes a row.
+
+`cli.py` is now a package of subcommand family modules, and every lifecycle, report and ledger verb routes through one `render.py` seam.
+
+Two tests were found passing for the wrong reason and recorded as scars rather than fixed quietly. Scar 0053: the viewer called `refutations.listing` without the polarity argument the CLI passes, so a human-ratified ruling rendered as an active refutation of its own subject — and the viewer's test mirrored the unfiltered call, so the suite locked the bug green. Scar 0054: `test_capture_path_admits` asserted a substring of `inspect.getsource`, which the house-style comment naming the flag satisfied on its own, so deleting the real keyword argument left the test passing. Both were exposed by mutation testing. 56 scars, 3,679 tests across 129 files.
+
+Citations re-resolved against this commit. `serializer.py:1015` pointed at a blank line (`verify_quotes` is at 1064), `store.py:1972` and `store.py:2013` were a blank line and the wrong function (`resolutions` at 2087, `is_resolved` at 2128), and `cli.py:1558` no longer exists — the reverify refusal is at `cli/lifecycle.py:713`.
 
 **2026-08-10** — [`214fa7c4b90c529c59aee96cc2b53e34fb53a79d`](https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d) — 20 commits on. Screened first: 0 auto-run surfaces, 2 build-time execution paths, 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent — and `stack_source` was promoted from `seeded` to `reviewed` after checking both lists against the tree. The material change is a second store: `refutations.py` and a `refutations.jsonl` per project, holding approaches that lost under cited evidence, with a candidate/active/overturned fold whose authority is read off the observed write channel rather than a caller-set flag. Two published claims were wrong, and both were wrong at the previous pin rather than overtaken by it. `worldcheck` covers **five** claim classes, not four: `receipt-validity` is collected in its own pass from the item's `origin_session` stamp rather than from its text, and `worldcheck.py` is byte-identical to the previous pin, so the count was miscounted rather than outdated. And fourteen line-number citations pointed at unrelated lines — `store.py:1083` was `try:`, `store.py:1124` was blank, `cli.py:987` was a call to `carry._generic_terms` — apparently carried forward from a pin several readings old; every one has been re-resolved against this commit. Elsewhere the deletion contract absorbed the new store and two of its own writers: `forget` reaches every subject a refutation has ever carried rather than only the folded one, and the quote-downgrade log lines record a content key instead of the item's text, closing a plaintext residue in a shape the surface registry had already declared `exempt-no-plaintext`.
 

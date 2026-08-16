@@ -776,7 +776,7 @@ implementations here also leave open.
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
   in the atlas that carries this mechanism should have this test; Daimon, which
-  has 1,920 others, does not, and neither does Mnemosyne, with 51,407 lines of
+  has 3,679 others, does not, and neither does Mnemosyne, with 51,407 lines of
   them. Both hold the property by accident. Nova AI is the counter-case and the
   cheapest one to copy: `tests/test_tombstone.py` is 246 lines, isolates a store
   in a temporary directory, and asserts that a re-asserted rejected definition
