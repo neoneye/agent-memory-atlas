@@ -10,6 +10,12 @@ if ! command -v pandoc >/dev/null 2>&1; then
   exit 1
 fi
 
+# Every generator below reads this frontmatter, and YAML resolves a duplicate key
+# by silently keeping the last one — so a second `capability_evidence:` block
+# would be dropped here and the page would render as if it never existed. Pandoc
+# reports that as a warning and builds anyway; this refuses to.
+python3 "$project_dir/scripts/check_frontmatter_keys.py" "$project_dir"
+
 # The comparative matrix is derived from each report's frontmatter, so adding a
 # system never means editing a forty-row table by hand.
 python3 "$project_dir/scripts/generate_matrix.py"

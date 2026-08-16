@@ -203,6 +203,18 @@ if ! python3 "$project_dir/scripts/check_capability_evidence.py" "$project_dir";
   exit 1
 fi
 
+# YAML keeps the last of a duplicate key and drops the first without failing, so
+# a second `capability_evidence:` or `matrix:` block loses the one above it with
+# nothing in the rendered page to say so. Pandoc downgrades that to a warning.
+if ! python3 "$project_dir/scripts/check_frontmatter_keys.py" --self-test; then
+  echo "check_frontmatter_keys.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_frontmatter_keys.py" "$project_dir"; then
+  echo "A frontmatter block declares the same key twice." >&2
+  exit 1
+fi
+
 # A screening record certifies one revision. Nothing compared the recorded
 # revision to the report's pin, so a re-pinned report kept the record from its
 # previous commit and the summary counted it as screened. Absent records are a
