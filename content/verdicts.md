@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 290 reports.**
+**This page covers all 291 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2530,3 +2530,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT (© Shubham Saboo), a ~1,000-line sample vendored into Google's `generative-ai` repo, on Google ADK + Gemini Flash-Lite with multimodal ingest, a file watcher, an HTTP API and a Streamlit dashboard. No capability mark: `importance` is a stored-but-unranked float, `consolidated` a processing flag, delete is hard, and there is no scope, validity time or audit. No tests, no eval.
 - Study when: you are prototyping a personal, always-on memory without an embedding stack and want the clarity of a load-and-read design and an active consolidation daemon.
 - Do not copy when: your store will outgrow a context window, you need to find the *relevant* memory rather than the recent one, or you need scope, correction that sticks, or any trust/audit property — none is present and the recency-window ceiling is architectural, not a knob.
+
+### [`nexusmem`](../systems/nexusmem/)
+
+- Best idea: bound how far query-independent priors may overturn the query, as **one budget shared between them**. `signal` and `recency` hold before any question exists, and multiplied in as equals they win outright — a `fix:` commit at signal .9 took rank 1 from the doc section that actually answered, on a 44% signal edge against a 15% relevance deficit. Capping each prior separately fixes nothing, because the score multiplies and two priors worth 2x each are worth 4x together; that shape *"describes every commit made during an active working day"*. So one joint budget, split evenly, each prior raised to the power that makes its range worth its share, and a third prior re-divides rather than enlarges it. Beside it, the cheapest good idea in the corpus: capture the shell exit code, which git cannot supply and scrollback loses.
+- Biggest risk: nothing can be forgotten. There is no per-item delete, no delete by value, and no record that anything was removed; the finest granule is `--prune-source`, which wipes a whole source. Worse, the append-only hook log the shell nodes were derived from is untouched by every removal path, so `sync --rebuild` re-derives exactly what was pruned. For a store that deliberately ingests assistant transcripts and shell command lines — the two places a pasted credential lives — a redaction miss is unrecoverable by any command in the tree.
+- Most reusable component: `src/conversation/redact.ts`, for the distinction rather than the rules. Shape rules (private-key blocks, `AKIA`, `gh[pousr]_`, JWTs) match strings nothing else produces and are safe over source code; the broader key/value rule would match `const apiKey = process.env.API_KEY` *"and would corrupt the very lines a diff is indexed for"*. Two named profiles, chosen per collector.
+- Maturity impression: MIT, 104 commits, ~8,100 lines of TypeScript, 407 tests across 24 files, CI, an npm package, a four-tool MCP server and a VS Code panel. One capability mark — `scope_enforced`, `project_id` a required predicate on both read arms. Three near-misses stated in the report: a bi-temporal pair whose record-time column no read path queries, a prune-scope test carrying an inline discriminating control that asserts about deletion rather than retrieval, and a viewer that displays without reviewing.
+- Study when: you want an agent to know what you already tried, you work locally in one repository at a time, and you would rather ship raw stored text through a good ranker than summaries through a model.
+- Do not copy when: anything you capture must be removable on request. Deletion here is keyed on the source while the source survives on disk, which is the pattern this atlas argues against, applied to the one collector most likely to hold a secret.

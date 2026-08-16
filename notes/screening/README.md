@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 129 of 290 screened at the report's current pin.**
+**Progress: 130 of 291 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
 off, and 142 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 47 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 27 |
-| Repositories with build-time execution (`EXEC`) | 106 |
+| Repositories with an auto-run surface (`RUNS`) | 48 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 28 |
+| Repositories with build-time execution (`EXEC`) | 107 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -63,6 +63,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
+| [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |

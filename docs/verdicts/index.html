@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 290 reports.</strong></p>
+<p><strong>This page covers all 291 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8403,6 +8403,56 @@ to find the <em>relevant</em> memory rather than the recent one, or you
 need scope, correction that sticks, or any trust/audit property — none
 is present and the recency-window ceiling is architectural, not a
 knob.</li>
+</ul>
+<h3 id="nexusmem"><a
+href="../systems/nexusmem/"><code>nexusmem</code></a></h3>
+<ul>
+<li>Best idea: bound how far query-independent priors may overturn the
+query, as <strong>one budget shared between them</strong>.
+<code>signal</code> and <code>recency</code> hold before any question
+exists, and multiplied in as equals they win outright — a
+<code>fix:</code> commit at signal .9 took rank 1 from the doc section
+that actually answered, on a 44% signal edge against a 15% relevance
+deficit. Capping each prior separately fixes nothing, because the score
+multiplies and two priors worth 2x each are worth 4x together; that
+shape <em>"describes every commit made during an active working
+day"</em>. So one joint budget, split evenly, each prior raised to the
+power that makes its range worth its share, and a third prior re-divides
+rather than enlarges it. Beside it, the cheapest good idea in the
+corpus: capture the shell exit code, which git cannot supply and
+scrollback loses.</li>
+<li>Biggest risk: nothing can be forgotten. There is no per-item delete,
+no delete by value, and no record that anything was removed; the finest
+granule is <code>--prune-source</code>, which wipes a whole source.
+Worse, the append-only hook log the shell nodes were derived from is
+untouched by every removal path, so <code>sync --rebuild</code>
+re-derives exactly what was pruned. For a store that deliberately
+ingests assistant transcripts and shell command lines — the two places a
+pasted credential lives — a redaction miss is unrecoverable by any
+command in the tree.</li>
+<li>Most reusable component: <code>src/conversation/redact.ts</code>,
+for the distinction rather than the rules. Shape rules (private-key
+blocks, <code>AKIA</code>, <code>gh[pousr]_</code>, JWTs) match strings
+nothing else produces and are safe over source code; the broader
+key/value rule would match
+<code>const apiKey = process.env.API_KEY</code> <em>"and would corrupt
+the very lines a diff is indexed for"</em>. Two named profiles, chosen
+per collector.</li>
+<li>Maturity impression: MIT, 104 commits, ~8,100 lines of TypeScript,
+407 tests across 24 files, CI, an npm package, a four-tool MCP server
+and a VS Code panel. One capability mark — <code>scope_enforced</code>,
+<code>project_id</code> a required predicate on both read arms. Three
+near-misses stated in the report: a bi-temporal pair whose record-time
+column no read path queries, a prune-scope test carrying an inline
+discriminating control that asserts about deletion rather than
+retrieval, and a viewer that displays without reviewing.</li>
+<li>Study when: you want an agent to know what you already tried, you
+work locally in one repository at a time, and you would rather ship raw
+stored text through a good ranker than summaries through a model.</li>
+<li>Do not copy when: anything you capture must be removable on request.
+Deletion here is keyed on the source while the source survives on disk,
+which is the pattern this atlas argues against, applied to the one
+collector most likely to hold a secret.</li>
 </ul>
         </article>
       </div>
