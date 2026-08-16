@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **294 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **295 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -147,6 +147,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`kirocrew`](../systems/kirocrew/) **Kiro Crew** — Seven ways a write is refused · `kirodotdev/KiroCrew` · Mutation audit, Human review, Negative evals
 - [`klypix-mcp`](../systems/klypix-mcp/) **Klypix MCP** — The state machine is a regex over the card's own prose · `dahshanlabs/klypix-mcp` · Trust state, Mutation audit, Human review, Negative evals
 - [`knowledge-worker`](../systems/knowledge-worker/) **knowledge-worker** — The excerpt has to appear in the source · `rahulmranga/knowledge-worker` · Trust state
+- [`kube-coder`](../systems/kube-coder/) **kube-coder** — Scope on every retrieval arm · `imran31415/kube-coder` · Scope enforced, Mutation audit, Human review, Negative evals
 ## L
 
 - [`langchain`](../systems/langchain/) **LangChain** — The memory it deprecated · `langchain-ai/langchain`

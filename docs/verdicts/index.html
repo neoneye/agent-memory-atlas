@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 294 reports.</strong></p>
+<p><strong>This page covers all 295 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8604,6 +8604,55 @@ deletion, no scope key and no test, and the first is unrecoverable at
 the API level rather than a missing feature. If you want this mechanism
 inside a system that has the surrounding machinery, the parent is where
 it runs — with its own documented deletion gaps to weigh.</li>
+</ul>
+<h3 id="kube-coder"><a
+href="../systems/kube-coder/"><code>kube-coder</code></a></h3>
+<ul>
+<li>Best idea: apply the scope predicate to <strong>every arm of a fused
+retriever</strong>, and say which ones. <code>search</code> runs FTS5
+fused with a <code>sqlite-vec</code> KNN pass by normalized RRF, and the
+namespace allow-list and namespace root are enforced on the FTS pass, on
+the LIKE degradation <em>and</em> on the vector-only ids loaded by
+<code>_fetch_by_ids</code> — <em>"so a high-scoring out-of-scope memory
+can never be fused back in."</em> That is the failure a hybrid retriever
+invites: you scope the arm you thought about and fuse the one you did
+not. Relevance still leads and the caller's own scope wins only ties
+against the always-included <code>user</code> root, so a project chat
+can still reach <code>user.name</code>.</li>
+<li>Biggest risk: <code>upsert</code> clears the deletion flag it wrote.
+<code>soft_delete</code> sets <code>deleted_at</code> and appends a
+<code>memory_history</code> row carrying the op and the actor; writing
+the same <code>(namespace, key)</code> again sets
+<code>deleted_at=NULL</code> without reading it. The store records that
+a value was removed and does not use that record when the value comes
+back — record-keyed deletion, one lookup from being closed, with the row
+that would close it already written.</li>
+<li>Most reusable component: <code>memory_scope_test.py</code>. It does
+not stop at "a sibling project is out of scope": it attacks the escapes
+— a namespace that <em>shares a prefix</em> with the scoped root, SQL
+<code>LIKE</code> wildcards inside a scope, a literal underscore — and
+then asserts the same boundary separately on the LIKE fallback and the
+vector-only path. Testing the wildcard-escaping of your own scope
+predicate is rare in this corpus.</li>
+<li>Maturity impression: MIT, 752 commits; a Helm chart for
+browser-reachable Kubernetes dev workspaces, of which the memory is
+~3,100 lines of Python plus a 575-line MCP server and 223 test cases
+across nine files. One SQLite file per workspace, WAL with
+<code>BEGIN IMMEDIATE</code> retries for its two writers, and a
+schema-repair step re-asserted at open rather than in a numbered
+migration because a database left at an intermediate version is
+<em>"exactly the one that needs healing"</em>. Four marks; withheld are
+an epistemic state (<code>confidence</code> is a ranking float),
+validity time, and the tombstone. <code>memory_history</code> is capped
+at 100 versions per memory, so the audit has a horizon.</li>
+<li>Study when: you fuse a lexical and a vector arm behind a tenant or
+project boundary, or you want to see a project that built per-prompt
+memory injection, retired it, and now strips the hook entry from config
+on every boot while still shipping the script for manual use.</li>
+<li>Do not copy when: you need a correction that binds, an epistemic
+state, or a soft delete that stays deleted — and note that identity is
+<code>(namespace, key)</code>, so the same fact written under two keys
+is two live memories and nothing detects the contradiction.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A per-workspace SQLite memory
+shared by a dashboard and an MCP server, whose namespace filter is
+applied to the FTS arm, the LIKE degradation and the vector hits alike —
+and whose upsert clears the deletion flag it wrote.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="kube-coder — Agent Memory Atlas">
+    <meta property="og:description" content="A per-workspace SQLite
+memory shared by a dashboard and an MCP server, whose namespace filter
+is applied to the FTS arm, the LIKE degradation and the vector hits
+alike — and whose upsert clears the deletion flag it wrote.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="kube-coder — Agent Memory Atlas">
+    <meta name="twitter:description" content="A per-workspace SQLite
+memory shared by a dashboard and an MCP server, whose namespace filter
+is applied to the FTS arm, the LIKE degradation and the vector hits
+alike — and whose upsert clears the deletion flag it wrote.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>kube-coder — Agent Memory Atlas</title>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Scope on every retrieval arm</p>
+          <h1>kube-coder</h1>
+          <p class="document-deck">A per-workspace SQLite memory shared
+by a dashboard and an MCP server, whose namespace filter is applied to
+the FTS arm, the LIKE degradation and the vector hits alike — and whose
+upsert clears the deletion flag it wrote.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/imran31415/kube-coder">
+              <span>Source</span>
+              <strong>imran31415/kube-coder</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c" title="1a9008facf0776165c26ff8ba80ceff999b4504c">
+              <span>Analyzed revision</span>
+              <code>1a9008fa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-16</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>kube-coder is a Helm chart that turns a Kubernetes cluster into a
+fleet of browser-reachable dev workspaces — code-server, a persistent
+tmux, an in-pod browser, and pluggable coding agents, one pod per
+developer. MIT, 752 commits. Most of it is infrastructure. The part this
+atlas reads is <code>charts/workspace/memory/</code> — 3,101 lines of
+Python plus a 575-line MCP server, covered by 223 test cases across nine
+test files.</p>
+<p><strong>One SQLite file per workspace, two entry points.</strong> The
+dashboard reaches it over HTTP on the pod; Claude reaches it through an
+MCP stdio server spawned per session. WAL mode and
+<code>BEGIN IMMEDIATE</code> retries keep the two writers safe. The file
+lives on the pod's persistent volume, so memory survives tab closes and
+pod restarts.</p>
+<p><strong>The scope enforcement is the reason to read this
+report.</strong> A row is keyed <code>UNIQUE(namespace, key)</code>, and
+<code>search</code> is a hybrid — FTS5 always, fused by normalized
+reciprocal-rank with a <code>sqlite-vec</code> KNN pass when the
+extension and an embedding provider are both present. The namespace
+filter is applied to <strong>every</strong> arm, and the docstring says
+why: the allow-list and the namespace root are enforced on the FTS pass,
+on the LIKE degradation, and on the vector-only ids loaded by
+<code>_fetch_by_ids</code>, <em>"so a high-scoring out-of-scope memory
+can never be fused back in."</em></p>
+<p>That is the failure mode a hybrid retriever invites — scope the arm
+you thought about, fuse the one you did not — and it is named and closed
+here rather than discovered later.</p>
+<p><strong>The injection position is considered rather than
+default.</strong> Three modes exist. On-demand <code>memory_*</code> MCP
+calls are the supported default. Task creation can prefix the top-K
+(default 8) most relevant memories, with a per-task <em>"Don't inject
+memories"</em> toggle that force-disables it. And a
+<code>UserPromptSubmit</code> hook that prepended a block to
+<em>every</em> prompt still ships — <strong>disabled</strong>, with
+<code>seed_claude_config.py</code> stripping the entry from
+<code>settings.json</code> on every boot, kept only for anyone who wants
+to wire it manually. A project that built automatic injection, retired
+it, and then actively removes it on each start has taken a position most
+systems here leave implicit.</p>
+<p><strong>Four of seven marks</strong>, and the one that is missing
+matters most. <code>soft_delete</code> sets <code>deleted_at</code> and
+appends a history row recording the removal. <code>upsert</code> on the
+same <code>(namespace, key)</code> sets <code>deleted_at=NULL</code>. So
+a deleted memory is revived by writing it again, and the audit trail
+that already records the deletion is not consulted on the way in.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a value under a key inside a namespace. It is written by
+an agent tool call or by a person in the dashboard, versioned on every
+change, and read back by a hybrid search that will not cross the
+namespace boundary the caller was given. Nothing decays, nothing
+consolidates, nothing rewrites it in the background.</p>
+<p>The shape worth drawing is the loop between deletion and
+re-assertion, because every other part of the lifecycle is recorded and
+this one is not consulted.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — soft_delete writes the removal into history, and upsert clears the flag without reading it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: soft_delete writes the removal into history, and upsert clears the flag without reading it
+flowchart TD
+    AG[&quot;agent: memory_upsert (MCP)&quot;] --&gt; UP[&quot;upsert(namespace, key)&quot;]
+    UI[&quot;person: dashboard form&quot;] --&gt; UP
+    UP --&gt; ROW[(&quot;memories&lt;br/&gt;UNIQUE(namespace, key)&lt;br/&gt;version, deleted_at&quot;)]
+    UP --&gt; H[(&quot;memory_history&lt;br/&gt;version, op, updated_by&lt;br/&gt;capped at 100&quot;)]
+    DEL[&quot;soft_delete&quot;] --&gt; FLAG[&quot;deleted_at = now&quot;]
+    DEL --&gt; H
+    FLAG --&gt; ROW
+    ROW --&gt; S[&quot;search: FTS5 + vector KNN, RRF fused&quot;]
+    S --&gt; SCOPE{&quot;namespace allow-list&lt;br/&gt;or namespace root&quot;}
+    SCOPE -- &quot;in scope&quot; --&gt; OUT[&quot;results&quot;]
+    SCOPE -- &quot;out of scope&quot; --&gt; DROP[&quot;dropped on every arm:&lt;br/&gt;FTS, LIKE degradation, vector ids&quot;]
+    UP -. &quot;sets deleted_at = NULL,&lt;br/&gt;consulting nothing&quot; .-&gt; FLAG</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing new runs for memory: it is a SQLite file at
+<code>/home/dev/.claude-memory/memory.db</code> on the workspace's PVC,
+an MCP server started by <code>claude</code> per session, and a handful
+of routes on the pod's existing HTTP server. The <code>memory/</code>
+Python package is imported by both.</p>
+<p>The operator cost is the workspace, not the memory — one namespace,
+ingress, TLS certificate, PVC and OAuth allowlist per developer, all
+from the chart.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>MemoryManager.upsert</code> validates
+namespace, key, value, tags and kind, clamps <code>importance</code> and
+<code>confidence</code>, summarizes long values once into a derived
+column, inserts or updates, bumps <code>version</code>, appends to
+<code>memory_history</code>, and prunes that history to the last 100
+versions.</li>
+<li><strong>Delete.</strong> <code>soft_delete</code> sets
+<code>deleted_at</code> and appends a history row.</li>
+<li><strong>Read.</strong> <code>search</code> runs FTS5, optionally a
+vector KNN, fuses by normalized RRF, and applies the namespace predicate
+on each arm.</li>
+<li><strong>Inject.</strong> <code>top_for_prompt</code> picks the top-K
+and <code>format_injection_block</code> renders
+<code>&lt;workspace_memories&gt;</code>, used only when a task opts
+in.</li>
+<li><strong>Relate.</strong> <code>link</code> / <code>unlink</code> /
+<code>relations</code> / <code>neighbors</code> maintain a graph over
+memories, surfaced in the dashboard.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries namespace, key, value, a derived
+summary, kind, tags, <code>importance</code>, <code>confidence</code>,
+source, <code>created_at</code>, <code>updated_at</code>,
+<code>last_accessed_at</code>, <code>access_count</code>, a monotonic
+<code>version</code>, <code>expires_at</code> and
+<code>deleted_at</code>, unique on <code>(namespace, key)</code>.</p>
+<p><code>memory_history</code> carries <code>memory_id</code>,
+<code>version</code>, the value, tags, importance, confidence,
+<code>updated_at</code>, <strong><code>updated_by</code></strong> and
+<strong><code>op</code></strong> — a per-memory mutation log with the
+operation and the actor. That earns <code>audit_log</code>, with one
+property stated rather than glossed: <code>_prune_history</code> keeps
+the newest <code>HISTORY_CAP_PER_MEMORY = 100</code> versions per memory
+and deletes the rest, so the record is bounded rather than append-only
+forever.</p>
+<p>There is no epistemic status. <code>confidence</code> is a float used
+in ranking, <code>kind</code> is a taxonomy (<code>semantic</code> by
+default), and no value of either withholds a row from being returned.
+<code>expires_at</code> is a TTL, and there is no validity time separate
+from record time — the history gives versions of the record, not the
+period a claim was true, so <code>bitemporal</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 always runs. When <code>sqlite-vec</code>, the
+<code>vec_memories</code> table and an embedding provider are all
+present, a vector KNN pass is fused with the FTS results by normalized
+reciprocal-rank fusion; when any is missing the method <em>"degrades to
+the Phase-1 FTS-only ranking with identical output"</em> — a stated
+equivalence, which is more than most optional-vector designs offer.</p>
+<p><strong>The scope logic is the strongest thing in this report and it
+is worth stating precisely.</strong> <code>namespaces</code> is an
+exact-match allow-list. <code>namespace_scope</code> is a namespace
+<em>root</em> that also matches everything nested under it, plus
+<code>ALWAYS_IN_SCOPE_ROOTS = ('user',)</code> — so a project-scoped
+chat can still reach <code>user.name</code>. Relevance leads the
+ranking; the caller's own scope only wins <strong>ties</strong> against
+the always-included roots.</p>
+<p>Both are applied on every retrieval path. The docstring names all
+three: the FTS pass, the LIKE degradation, and the vector-only hits
+loaded by <code>_fetch_by_ids</code>. The reason is the one that catches
+people: in a fused retriever, a filter applied to one arm is not applied
+to the result.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous and explicit. Nothing extracts memories from a
+conversation, and no background pass rewrites the store; an embeddings
+worker drains a pending queue, and that is the only asynchronous
+work.</p>
+<p>Write-time summarization is a small good decision: a long value is
+condensed <strong>once</strong>, at write, into a derived column,
+<em>"instead of hard-cutting the value mid-sentence on every
+prompt"</em>, and the original is stored untouched. It is best-effort by
+construction — the summarizer swallows failures and returns
+<code>None</code>, and a NULL summary simply means readers fall back to
+the full value.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>memory_*</code> tools over MCP stdio, registered in
+<code>~/.claude.json</code> by the pod's entrypoint alongside
+<code>playwright</code> and <code>sequential-thinking</code>. The
+dashboard's Memory tab is the human surface: a create/edit form over the
+same rows, a relation graph, per-relation unlink scoped to the source,
+and an import drawer. That is an editing surface rather than an approval
+queue — nothing is held pending a decision — and it earns
+<code>human_review</code> on the "adjudicates after it takes effect"
+half of the definition.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Concurrency is handled deliberately: WAL plus
+<code>BEGIN IMMEDIATE</code> retries for two writers on one file, and a
+schema-repair step that re-asserts an index shape at open rather than
+inside a numbered migration, with the reasoning committed —
+version-gating it would skip exactly the databases left broken by an
+intermediate build, <em>"and that database is exactly the one that needs
+healing."</em> Re-asserting an invariant at open instead of once at
+migration is a pattern worth borrowing.</p>
+<p>The gap is deletion. <code>soft_delete</code> records the removal in
+history with an <code>op</code> and an actor, and <code>upsert</code>
+clears <code>deleted_at</code> without reading it. The store therefore
+knows a value was deleted and does not use that knowledge when the same
+key is written again — the record-keyed deletion this atlas's <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> page exists to distinguish from a value-keyed one. Here it
+is one step from being closed, because the history row already exists
+and is already keyed to the memory.</p>
+<p>Note also that identity is <code>(namespace, key)</code>, not
+content: a corrected fact written under a <em>different</em> key
+coexists with the old one, and nothing detects the contradiction.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>223 test cases across nine memory test files: scope, lifecycle, the
+MCP surface, the pending embeddings queue, rollback compatibility,
+summarization, and the DB path. There is no paper. The repository links
+an external <code>kubecoder-bench</code> for aider-polyglot coding
+scores, which measures the agent rather than the memory; no memory
+evaluation is committed here.</p>
+<p><strong><code>memory_scope_test.py</code> is a genuine negative
+retrieval suite and an adversarial one.</strong> Beyond asserting that a
+sibling project is out of scope and that scoped injection excludes other
+projects, it attacks the escapes: a namespace that <em>shares a
+prefix</em> with the scoped root must not match, a scope containing SQL
+<code>LIKE</code> wildcards must be escaped, and a literal underscore
+must stay literal. Then it asserts the same boundary separately on the
+LIKE degradation path and on the vector-only hits, and that a user scope
+is <em>"not widened back out"</em>.</p>
+<p>Testing the wildcard-escaping of your own scope predicate is rare.
+Most negative suites in this corpus assert the happy-path boundary and
+stop.</p>
+<p>I did not run the suite.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Apply the scope predicate to every arm of a fused retriever,
+and name them.</strong> FTS, the fallback, and the vector ids are three
+code paths; a filter on one is not a filter on the result. The docstring
+here lists all three, which is how the next person keeps it true.</li>
+<li><strong>Attack your own scope key in tests.</strong> Prefix-sharing
+siblings, <code>LIKE</code> wildcards, a literal underscore. A scope
+filter fails at its escapes, not at its centre.</li>
+<li><strong>Let relevance lead and scope break ties.</strong> A
+project-scoped question that needs <code>user.name</code> should still
+reach it; making the caller's scope win only <em>ties</em> against
+always-included roots is a cheap, legible rule.</li>
+<li><strong>Summarize at write, once.</strong> A derived column beats
+truncating a value mid-sentence on every prompt, and a NULL summary
+falling back to the full value makes the summarizer safe to fail.</li>
+<li><strong>Re-assert schema invariants at open, not in a numbered
+migration.</strong> A database left at an intermediate version skips the
+migration that would fix it, which is exactly the one that needs
+fixing.</li>
+<li><strong>Ship the injection hook disabled if you have decided against
+it.</strong> Keeping the script and stripping the config entry on every
+boot states the position and still lets someone opt in.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An upsert that clears the deletion flag it wrote.</strong>
+<code>deleted_at=NULL</code> on re-write makes deletion a suggestion.
+The history row recording the delete is already there; consulting it is
+the difference between a soft delete and a refusal.</li>
+<li><strong>A bounded audit used as an unbounded one.</strong> 100
+versions per memory is a sensible cap, and it means "why does it believe
+this" has a horizon. Say which it is before relying on it.</li>
+<li><strong>Identity on <code>(namespace, key)</code> with no
+contradiction detection.</strong> The same fact under two keys is two
+live memories, and nothing notices.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the retrieval layer if you are building anything that fuses a
+lexical and a vector arm behind a tenant or project boundary. The scope
+handling and its tests are the most careful treatment of that specific
+problem in this corpus, and they are ~3,100 readable lines against
+SQLite with no service to run.</p>
+<p>Walk away if you need correction that binds, an epistemic state, or
+validity time — none is present, and the deletion behaviour would
+surprise anyone who assumed a soft delete stays deleted. And take the
+whole thing only if you want the workspace platform around it: this
+memory is a per-pod component, not a library you would vendor on its
+own.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>soft_delete</code> already writes a history row with an
+<code>op</code>. What is the intended behaviour when the same key is
+upserted afterwards — is the revival deliberate, and if so is it
+documented anywhere a user of the dashboard would see?</li>
+<li>The history cap is 100 versions per memory. What is the intended
+answer to "who changed this and why" for a memory edited more than a
+hundred times?</li>
+<li>Identity is <code>(namespace, key)</code>. What stops the same fact
+being written under two keys, and is that a case anyone has hit?</li>
+<li>The per-prompt injection hook was built and retired. What was
+measured or observed that decided it, and is the top-K-at-task-creation
+path measured against no injection at all?</li>
+<li><code>ALWAYS_IN_SCOPE_ROOTS</code> is <code>('user',)</code>. What
+happens to a shared workspace where two people's memories would both
+want that root?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory</strong></p>
+<ul>
+<li><code>charts/workspace/memory/store.py</code> — schema, migrations,
+the index-shape repair re-asserted at open</li>
+<li><code>charts/workspace/memory/manager.py</code> —
+<code>upsert</code>, <code>update_partial</code>,
+<code>soft_delete</code>, <code>search</code>, the scope predicate,
+<code>top_for_prompt</code>, the relation graph,
+<code>_prune_history</code></li>
+<li><code>charts/workspace/memory/embeddings.py</code>,
+<code>embeddings_worker.py</code>, <code>sync.py</code>,
+<code>summarize.py</code></li>
+<li><code>charts/workspace/mcp_memory.py</code> — the stdio MCP
+server</li>
+<li><code>charts/workspace/memory_inject_hook.py</code> — the per-prompt
+hook that ships disabled</li>
+</ul>
+<p><strong>Surfaces</strong></p>
+<ul>
+<li><code>charts/workspace/web/src/routes/memory/</code> — the dashboard
+tab and relation graph</li>
+<li><code>docs/persistent-memory.md</code> — the subsystem's own
+documentation, accurate against the code read here</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>charts/workspace/tests/memory_scope_test.py</code> — the
+negative suite, including the wildcard and prefix-sibling cases</li>
+<li><code>charts/workspace/tests/memory_lifecycle_test.py</code>,
+<code>mcp_memory_test.py</code>,
+<code>memory_pending_queue_test.py</code>,
+<code>memory_rollback_compat_test.py</code> and four more</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-16</strong> — <a
+href="https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c"><code class="commit-id" title="1a9008facf0776165c26ff8ba80ceff999b4504c">1a9008fa…</code></a>
+— First reading, at 752 commits. Screened first: 0 auto-run surfaces, 1
+build-time execution path (<code>Makefile</code>), 6 manifests inside
+the seven-day cooldown; nothing was installed, built or run. Four marks
+— <code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>. Three withheld
+and stated in place: no epistemic status (<code>confidence</code> is a
+ranking float), no validity time separate from record time, and no
+rejected-value tombstone — <code>soft_delete</code> writes the removal
+into <code>memory_history</code> and <code>upsert</code> sets
+<code>deleted_at=NULL</code> without consulting it, so re-writing the
+same <code>(namespace, key)</code> revives a deleted memory. No paper;
+the linked <code>kubecoder-bench</code> measures the agent rather than
+the memory.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
