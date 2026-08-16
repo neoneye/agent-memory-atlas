@@ -18975,6 +18975,56 @@ files, six touching the summary miner, and no store of lessons, rejected
 approaches or accumulated preference. Propr enters the day a review
 finding outlives its pull request as a claim a later task must
 consult.</li>
+<li><strong><code>CodebuffAI/freebuff</code> was examined and has no
+report, and it has the most developed <em>prompt</em> for this shape and
+the least machinery behind it.</strong> Apache-2.0, at <a
+href="https://github.com/CodebuffAI/freebuff/commit/d364689645d03aee8d9b90ad4edc90b732e5804e"><code class="commit-id" title="d364689645d03aee8d9b90ad4edc90b732e5804e">d3646896…</code></a>,
+8,451 commits — the open source of the Codebuff products, a coding agent
+across terminal, desktop, browser and GitHub. Its durable memory is
+<strong>knowledge files</strong>: <code>AGENTS.md</code>,
+<code>CLAUDE.md</code> and anything matching
+<code>*.knowledge.md</code>, recognised by <code>isKnowledgeFile</code>
+in <code>common/src/constants/knowledge.ts</code>, plus a home-directory
+tier read by <code>loadUserKnowledgeFiles</code>. The loading code is
+real but thin — <code>selectKnowledgeFilePaths</code> groups candidates
+by directory and <code>selectHighestPriorityKnowledgeFile</code> picks
+one per directory in a fixed order, <code>AGENTS.md</code> before
+<code>CLAUDE.md</code>. Everything else is the prompt, and the prompt is
+the most developed instance of this shape the atlas has read:
+<code>knowledgeFilesPrompt</code> frames the agent as working in a
+<em>"Memento-style environment"</em>, tells it that knowledge files
+<em>"were created by previous engineers working on the codebase, and
+they were given these same instructions"</em>, and then specifies
+<strong>when</strong> to update one (<em>"if the user gives broad advice
+to 'always do x'"</em>; <em>"if the user corrects you because they
+expected something different"</em>), what to include, what
+<strong>not</strong> to include, and to <em>"integrate new knowledge
+into existing sections when possible"</em>. That is a genuinely good
+articulation of the practice — and it is still a prompt plus the
+ordinary <code>write_file</code> tool, with git as the only durability
+guarantee, which is the call already made for <a
+href="#not-in-scope-conversation-window-management">Cline</a>'s Memory
+Bank and for Zoo Code above. There is no store behind the files: no
+identity separate from the path, no status, no supersession, and nothing
+that consults a removal when the same claim is written again.
+<strong>One detail is worth recording for the atlas's
+stored-versus-enforced theme.</strong> The home-directory tier is
+declared off-limits <em>in the prompt</em> — <em>"you cannot edit them
+because they are outside of the project directory. Do not try to edit
+them"</em> — and that boundary is an instruction rather than something
+found asserted on the write path; the CLI resolves writes against a
+project root without a containment check in the code read here. A
+boundary whose enforcement is the model's compliance is exactly the
+distinction this atlas draws between a scope stored and a scope
+enforced, appearing here one layer up, in the prompt itself. The rest of
+what persists is run state —
+<code>cli/src/utils/message-history.ts</code> and
+<code>run-state-storage.ts</code> — which is the checkpointer boundary.
+<code>evals/buffbench</code> is a substantial coding-task eval suite
+with committed task sets, and none of it evaluates memory: the word
+<em>knowledge</em> appears in its fixtures because the repositories
+under test contain knowledge files. freebuff enters the day a knowledge
+file gains a record the write path consults.</li>
 <li><strong><code>Zoo-Code-Org/Zoo-Code</code> was examined and has no
 report, and it has the best editing surface in the corpus with nothing
 behind it.</strong> Apache-2.0, at <a
