@@ -59,7 +59,7 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: number is the whole mechanism: it can only go up, and it is edited by hand in
 #: the same commit that earns it, so raising it is a deliberate act with a diff
 #: rather than a side effect of a build.
-COVERAGE_FLOOR = 60
+COVERAGE_FLOOR = 63
 
 #: Reports analyzed on or after this date must carry an evidence record for
 #: *every* mark they declare. The floor above only stops coverage falling; it

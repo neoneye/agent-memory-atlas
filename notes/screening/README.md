@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 131 of 292 screened at the report's current pin.**
+**Progress: 132 of 293 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
 off, and 142 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 48 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 28 |
-| Repositories with build-time execution (`EXEC`) | 107 |
+| Repositories with an auto-run surface (`RUNS`) | 49 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 29 |
+| Repositories with build-time execution (`EXEC`) | 108 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -71,6 +71,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |

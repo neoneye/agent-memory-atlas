@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **292 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **293 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -287,6 +287,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## R
 
 - [`rainbox`](../systems/rainbox/) **RainBox** — Operator-governed memory · `neoneye/RainBox` · Tombstone, Trust state, Scope enforced, Human review
+- [`reasonix`](../systems/reasonix/) **Reasonix** — Memory inside the prefix cache · `esengine/DeepSeek-Reasonix` · Scope enforced, Human review, Negative evals
 - [`recall-substrate`](../systems/recall-substrate/) **Recall** — Push memory with an integrity gate · `H-XX-D/recall-memory-substrate` · Trust state
 - [`redcell`](../systems/redcell/) **REDCELL** — The finding is the memory unit · `martian56/redcell` · Trust state, Scope enforced, Human review
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
