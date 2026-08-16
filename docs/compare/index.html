@@ -19139,6 +19139,44 @@ files, six touching the summary miner, and no store of lessons, rejected
 approaches or accumulated preference. Propr enters the day a review
 finding outlives its pull request as a claim a later task must
 consult.</li>
+<li><strong><code>arcee-ai/nac</code> was examined and has no report,
+and the word to be careful about is <em>episode</em>.</strong>
+Apache-2.0, at <a
+href="https://github.com/arcee-ai/nac/commit/70666a099a0e98fd2d8189dc753520664a211e84"><code class="commit-id" title="70666a099a0e98fd2d8189dc753520664a211e84">70666a09…</code></a>,
+76 commits, ~108,600 lines of Rust across three crates plus a web
+dashboard. Its architecture is genuinely interesting and worth naming:
+<em>"a central orchestrator plans and decomposes work but cannot execute
+commands or edit files; it only launches threads, which return episodes
+— structured summaries of what they accomplished"</em>, a capability
+boundary drawn between planning and acting rather than assumed.
+<strong>An episode here is a run record, not episodic memory.</strong>
+The <code>episodes</code> table carries <code>thread_name</code>,
+<code>session_id</code>, an <code>action</code>, the summary
+<code>content</code>, and a <code>status</code> constrained to
+<code>ok | error | timed_out | cancelled</code> — an execution outcome,
+not an epistemic state — and every read of it is
+<code>WHERE e.session_id = ?</code>, with
+<code>DELETE FROM episodes WHERE session_id = ?1</code> when a session
+goes. The same key governs everything else durable:
+<code>threads</code>, <code>worksets</code> and
+<code>workset_items</code> (the plan and its acceptance criteria),
+<code>workspace_revisions</code>, <code>session_run_recovery</code>.
+<code>orchestrator_compaction_checkpoints</code> is conversation-window
+management done carefully — a summary, a tail start index, and SHA-256
+hashes of both the source prefix and the system policy so a checkpoint
+cannot be reused against a prompt it was not built from — which is the
+<a href="#not-in-scope-conversation-window-management">boundary this
+page already draws</a>, one layer up from a raw transcript. The two
+things that outlive a session are read-only inputs rather than memory:
+<code>SKILL.md</code> files discovered by scanning project and user
+directories to a bounded depth and mounted into the sandbox at fixed
+guest paths, with <strong>no writer anywhere in the tree</strong>, and
+<code>AGENTS.md</code> files read with a most-specific-wins override
+hierarchy. So nothing here stores a claim that could later be wrong, and
+nothing accumulates across sessions for a correction to name. nac enters
+the day a thread's episode outlives its session as something a later run
+must consult — the same condition the atlas set for Kimi's compaction
+handoff.</li>
 <li><strong><code>CodebuffAI/freebuff</code> was examined and has no
 report, and it has the most developed <em>prompt</em> for this shape and
 the least machinery behind it.</strong> Apache-2.0, at <a
