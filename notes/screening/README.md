@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 141 of 299 screened at the report's current pin.**
+**Progress: 142 of 300 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
 off, and 139 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 51 |
+| Repositories with an auto-run surface (`RUNS`) | 52 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 36 |
 | Repositories with build-time execution (`EXEC`) | 112 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -51,6 +51,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |
+| [`hipocampus`](../../content/systems/hipocampus.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |

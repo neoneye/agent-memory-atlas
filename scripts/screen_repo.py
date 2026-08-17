@@ -81,6 +81,16 @@ AUTORUN_PATHS = [
     (".gitmodules", "submodules pull further untrusted trees on `--recursive`"),
     ("smithery.yaml", "MCP packaging manifest; declares a start command"),
     ("server.json", "MCP server manifest; declares a start command"),
+    # A distributed plugin registers its hooks from its own package root rather
+    # than from the consumer's `.claude/`, so a repository whose entire purpose
+    # is installing hooks can present a clean `.claude/` and still ship three of
+    # them. Hipocampus was screened as zero auto-run surfaces while
+    # `hooks/hooks.json` registered SessionStart, PreCompact and TaskCompleted —
+    # the ledger recorded "screened, nothing found" about a tree built to run on
+    # session start, which is the failure this screen exists to prevent.
+    (".claude-plugin/", "Claude Code plugin manifest; the marketplace entry a harness installs from"),
+    ("hooks/hooks.json", "plugin-root hook registrations (SessionStart / PreCompact / Stop)"),
+    ("hooks/", "hook scripts a plugin manifest can register"),
 ]
 
 # Substrings that make an autorun file worth reading rather than merely noting.

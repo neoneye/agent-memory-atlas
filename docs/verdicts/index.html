@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 299 reports.</strong></p>
+<p><strong>This page covers all 300 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8912,6 +8912,59 @@ enforced by the harness instead of asked for in a prompt.</li>
 any record), an audit of what changed, or a correction that binds — a
 wrong fact can be merged or hand-edited, and nothing stops the same
 extraction re-asserting it tomorrow.</li>
+</ul>
+<h3 id="hipocampus"><a
+href="../systems/hipocampus/"><code>hipocampus</code></a></h3>
+<ul>
+<li>Best idea: <strong>an index of what it knows it knows.</strong>
+<code>memory/ROOT.md</code> is capped near 3K tokens and injected every
+session, and its four sections exist for a judgement rather than an
+answer — a Topics Index giving <em>"O(1) 'do I know about X?'"</em>, so
+the agent decides between searching memory, searching outside, and
+answering directly. The layer spec names the recursion it breaks:
+<em>"determining 'do I know about this?' requires loading memory, but
+loading itself costs tokens."</em> Beside it, a compaction node is
+<code>tentative</code> while its period is open and is regenerated from
+its sources rather than patched, then frozen as <code>fixed</code> when
+the period closes, so a summary cannot drift by increments.</li>
+<li>Biggest risk: <strong>nothing can be corrected, and the store has no
+delete.</strong> Raw daily logs are <em>"permanent leaf nodes"</em>,
+compaction nodes are <em>"index supplements — originals are never
+deleted"</em>, and the specs say never delete in three places. A
+statement that was wrong when written stays in a leaf that traversal
+reaches; the only remedy is to write a newer entry and hope the next
+compaction weights it higher, which is correction by summarisation. The
+single content-keyed removal runs at promotion — entries marked
+temporary, test run or delete later, in English or Korean, are stripped
+on the way up — so a user can keep something out of the index and cannot
+take back what the log already holds.</li>
+<li>Most reusable component: the 69-line secret-scanner test, for its
+negative half. Six patterns redact a whole line into
+<code>[REDACTED: secret detected]</code> on the way into the daily log,
+and the test asserts that a topic heading, <em>"decided to use API key
+rotation"</em>, <em>"password policy requires 12 characters"</em>,
+<em>"token count: 3500"</em> and <em>"the secret to good compaction
+is…"</em> all pass through — the exact lines a conversation
+<em>about</em> security produces, and the ones a careless redactor eats.
+It is also the only test in the repository, guarding the only defence a
+store with no delete has.</li>
+<li>Maturity impression: MIT, version 0.5.3, 86 commits between 15 March
+and 25 April 2026 with <strong>no commit since</strong>; 1,796 lines of
+Node and 2,289 lines of specification, skills and templates; no CI. No
+capability mark — <code>status: tentative|fixed</code> is temporal
+rather than epistemic, the Topics Index <code>?</code> flags a
+reference's age rather than doubt, and the <code>feedback</code> type
+keeps a user's correction at the highest compaction priority with
+rule/reason/trigger while never applying it to what was corrected.</li>
+<li>Study when: your agent's failure is not finding the wrong thing but
+never looking — the ROOT.md-first protocol and the tentative/fixed
+regeneration rule are both worth reading even if you never install it,
+and the layer spec explains its size caps as a prompt-cache decision
+rather than a taste.</li>
+<li>Do not copy when: you need a memory that can be corrected or
+forgotten, or the material is sensitive enough that one line-level regex
+is not a boundary you would rely on — there is no second one, and no way
+to remove what gets through a store that deletes nothing.</li>
 </ul>
         </article>
       </div>

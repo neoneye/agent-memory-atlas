@@ -177,7 +177,22 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
                 # pattern already checks it. Skip the numerator when an "of
                 # <number>" follows, so a subset that grows past the dictionary
                 # floor of sixteen does not start failing the build.
-                if index == 0 and SUBSET_TAIL.match(text, match.end()):
+                #
+                # Test from the end of the NUMBER, not the end of the whole
+                # match: pattern 0 allows up to three words between the number
+                # and the noun, so "Twenty of three hundred systems" matches to
+                # the end of "systems" and the tail check looked past the
+                # denominator it was meant to find. It only ever passed because
+                # every denominator so far was long enough to overflow that
+                # three-word window — "two hundred and ninety-nine" is five
+                # words, "three hundred" is two, and the corpus reaching a round
+                # hundred is what exposed it.
+                # Two shapes put the denominator in different places —
+                # "Twenty of three hundred systems" (tail after the number) and
+                # "Twenty systems of 300" (tail after the noun) — so both
+                # positions are tried.
+                if index == 0 and (SUBSET_TAIL.match(text, match.end(1))
+                                   or SUBSET_TAIL.match(text, match.end())):
                     continue
                 if any(start <= match.start() < end for start, end in cited):
                     continue

@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **299 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **300 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -130,6 +130,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`hexis`](../systems/hexis/) **Hexis** — Reconsolidation after a belief changes · `quixiai/hexis` · Trust state, Mutation audit, Human review
 - [`hillock`](../systems/hillock/) **Hillock** — A gate that is control flow · `roandejager/Hillock` · Negative evals
 - [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced, Mutation audit
+- [`hipocampus`](../systems/hipocampus/) **Hipocampus** — An index of what it knows it knows · `kevin-hs-sohn/hipocampus`
 - [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit
 - [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
 - [`holographic`](../systems/holographic/) **Holographic** — Vector-symbolic memory · `NousResearch/hermes-agent`
