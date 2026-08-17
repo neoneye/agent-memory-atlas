@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Cyb3rb1ade/openclaw-plur1bus-memory"
 source_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory
-revision: b550a2d84f607da28438b39d86f1edd04e0951ff
-revision_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/b550a2d84f607da28438b39d86f1edd04e0951ff
-analyzed_at: 2026-08-15
+revision: 3479373f87dc8f70d460d09ddeb20ffb83355231
+revision_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231
+analyzed_at: 2026-08-17
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval, bitemporal, tombstone"
 stack_storage: "lancedb, sqlite, files"
 stack_retrieval: "lexical, vector, graph"
@@ -19,25 +19,25 @@ matrix:
   retrieval: "Vector plus lexical over LanceDB, graph hydration of neighbours, a decision trace per recall, and additive lens and reactivation passes"
   write: "Deferred to the `agent_end` hook through a per-agent scheduler; nothing blocks the reply"
   update_delete: "`safeUpdate` writes a new version, then supersedes the old row; `/forget` archives behind a confirmation token and writes a durable content-fingerprint tombstone that blocks re-capture of the forgotten value; a claim carries a real-world validity window separate from its record time"
-  scoping: "`checkAccess` fails closed on agent-private, workspace and user scopes, applied as a read filter in the adapter and the recall pipeline"
+   scoping: "`checkAccess` fails closed on agent-private, workspace and user scopes; new dreams, episodes, edges and patterns carry `visibility` and their readers filter on the requester"
   integration: "OpenClaw plugin — chat commands, an `agent_end` capture hook, background crons, and an Obsidian review vault"
   background: "Daily consolidation, garbage collection, skill mining, critical-push classification, and two dream passes"
   trust: "Seven-state record status and a six-level trust ladder scored off the newest revision, plus a separate claim-level epistemic status whose `invalidated` value hard-filters on read, and an append-only reconsolidation event log"
   strengths: "A correction path that demands evidence, records the event, and orders its writes so a crash cannot lose the memory"
-  risks: "Forty-seven config groups over one careful core; the neo doubt states (conflict, demoted) are still ranking penalties rather than filters, though a new epistemic `invalidated` status does hard-filter; and the drift gate is deliberately off"
+   risks: "Forty-seven config groups over one careful core; neo `conflict` remains a ranking penalty rather than a filter; `/correct` still skips the drift gate; the host patch remains, skippable with `PLUR1BUS_SKIP_HOST_PATCH=1`"
 ---
 
 ## 1. Executive Summary
 
-PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.3.0 — around 10,300 lines in `index.js`, 57,000 across `lib/`, and a further 70,000-plus in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 339 test files.
+PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.4.0 — around 10,800 lines in `index.js`, 58,000 across `lib/`, and a further 70,000-plus in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 340-plus test files.
 
 The second unusual thing is the ratio of care to surface. `openclaw.plugin.json` declares forty-seven top-level configuration groups, covering dreaming, emotional state, persona voice, an Obsidian vault bridge, skill mining, reminders, a semantic lens, conversation reactivation, and a proactive governor. Underneath that is a correction path — `lib/safe-update.js`, 414 lines — that is more disciplined than most of the dedicated memory systems in this atlas: a content change is refused unless the caller supplies both an update source and a quoted piece of evidence, the replacement row is written and made durable *before* the old row is marked superseded, and the whole transition is appended to a reconsolidation event log keyed by an idempotency hash.
 
-The most interesting single line in the repository is `safe-update.js:357`. Before a content change is accepted, the new embedding is compared against the old one and the update is rejected if the cosine distance exceeds 0.45 — a machine refusing to let a "correction" quietly replace a memory with something that means something else. It is a genuinely novel gate, and the only caller in the tree, the user-facing `/correct` command at `index.js:6422`, passes `skipDriftGate: true` — deliberately, with the reasoning written at the call site: the gate throws rather than degrades, a large correction is exactly what a user typing `/correct` intends, and the confirmation dialog shows the old and new text in full before anything is written. The measured drift is still recorded on the reconsolidation event. A gate that is off by argument is a different thing from a gate that is off by accident, and this is the first.
+The most interesting single line in the repository is `safe-update.js:357`. Before a content change is accepted, the new embedding is compared against the old one and the update is rejected if the cosine distance exceeds 0.45 — a machine refusing to let a "correction" quietly replace a memory with something that means something else. It is a genuinely novel gate. The user-facing `/correct` command passes `skipDriftGate: true` — deliberately, with the reasoning written at the call site: the gate throws rather than degrades, a large correction is exactly what a user typing `/correct` intends, and the confirmation dialog shows the old and new text in full before anything is written. The measured drift is still recorded on the reconsolidation event. A second live caller exists: confirm-gated conflict apply (`lib/jobs/apply-conflict-resolution.js`) calls `safeUpdate` without skipping the gate, so a high-drift reconsolidation becomes `review_only` rather than a write. A gate that is off by argument on `/correct` is a different thing from a gate that is off by accident.
 
 Where it is strongest: scope. `checkAccess` (`lib/acl-middleware.js:103`) denies by default, denies on a missing owner, denies on a conflicting ownership tuple, and is applied as a filter on the read path in three places. The tests assert the denials rather than the permissions.
 
-Where it is weakest: the system can express doubt and mostly declines to act on it. A record's neo status — `conflict`, `demoted`, `untrusted` — is wired into the ranking arithmetic as penalties of 0.3, 0.35 and 0.3 rather than as filters, so a memory the system has flagged as contradicting another is ranked lower and can still reach the prompt, carrying its status in the rendered line, which is the difference between a model that can weigh the flag and one that cannot see it. The one exception is new and pointed: a separate claim-level epistemic status whose `invalidated` value is a hard filter at all three read layers (`recall-pipeline.js:157`, `neo-arch.js:1385`, and the SQL clause at `db-adapter.js:519`), not a penalty. Doubt withholds in exactly one place now, and ranks everywhere else.
+Where it is weakest: neo `conflict` is still a 0.3 ranking penalty rather than a filter, so a memory the detector has flagged as contradicting another can still reach the prompt, labelled. `demoted` is not in that set: `scoreNeoRecallItem` (`lib/neo-arch.js:1459`) returns `-Infinity` for `pruned`, `tombstoned` and `demoted`. A separate claim-level epistemic status whose `invalidated` value is a hard filter at all three read layers (`recall-pipeline.js`, `neo-arch.js`, and the SQL clause in `db-adapter.js`) withholds on a different axis. `/plur1bus curation resolve` and `drop-injected` are the human exits for neo `conflict`; they do not auto-resolve the herd.
 
 Two mechanisms this atlas looks for are present and unusually well-tested. A claim carries a **real-world validity window** — `validFrom`/`validUntil` on the row, tracked separately from `createdAt`/`updatedAt` and queryable as-of through a `validAt` recall parameter, so "where did he work in 2025" is a different query from "what did we record in 2025". And a **value-keyed tombstone** survives a `/forget`: a content fingerprint is written to a durable append-only registry and checked as step zero of every capture, so the forgotten sentence cannot be silently re-stored.
 
@@ -57,19 +57,18 @@ and an `origin.trustLevel` from `NEO_TRUST_LEVELS` (`lib/neo-arch.js:52`), runni
 
 What moves a record between states is a person. `/plur1bus memory promote|demote|prune|tombstone <id>` (`index.js:5961`) requires authorization, calls `transitionRecordStatus`, and appends the transitioned record back to the JSONL. There is no automatic promoter; a candidate becomes promoted because someone typed the command.
 
-The consequence of each state is where the design divides. `scoreNeoRecallItem` (`lib/neo-arch.js:1379`) returns `-Infinity` for `pruned` and `tombstoned` — those are genuinely withheld. Everything between is arithmetic:
+The consequence of each state is where the design divides. `scoreNeoRecallItem` (`lib/neo-arch.js:1459`) returns `-Infinity` for `pruned`, `tombstoned` and `demoted` — those are genuinely withheld. `conflict` is arithmetic:
 
 ```js
-const trustBoost = ({ curated: 0.3, validated: 0.25, user_asserted: 0.18,
-  tool_observed: 0.18, assistant_asserted: -0.2, untrusted: -0.3 })[item.origin?.trustLevel] ?? 0;
+if (!item || ["pruned", "tombstoned", "demoted"].includes(item.status) || item.hardDeleted === true) return -Infinity;
 …
-const penalties = (item.origin?.role === "assistant" ? 0.2 : 0)
-  + (item.status === "demoted" ? 0.35 : 0)
-  + (item.status === "conflict" ? 0.3 : 0)
-  + (item.stale === true ? 0.15 : 0);
+const penalties =
+  (item.origin?.role === "assistant" ? 0.2 : 0) +
+  (item.status === "conflict" ? 0.3 : 0) +
+  (item.stale === true ? 0.15 : 0);
 ```
 
-So among the neo statuses, the ones that withhold a memory are the deletion states, and the ones that express doubt are ranking adjustments. The mechanism for filtering on status exists, is used, and is pointed at the deletion end of the vocabulary — a record the system has marked `conflict` outranks a `candidate` record about anything sufficiently on-topic.
+So among the neo statuses, the ones that withhold a memory are the deletion states plus `demoted`. `conflict` remains a ranking adjustment. The comment at the call site states why: the detector is an unvalidated LLM, and a live probe found thousands of newest-revision `conflict` behaviour cards that were not pairwise contradictions. `/plur1bus curation resolve keep|drop` and `/plur1bus curation drop-injected` are the authorized exits; they do not auto-clear the status.
 
 The exception lives on a different axis. Alongside the neo status is a claim-level **epistemic status** (`lib/epistemic-status.js`) — `untrusted → observed → corroborated → trusted → disputed → invalidated`, explicitly orthogonal to *who* asserted a memory (`origin.trustLevel`) and to its numeric `confidence`. Most of its values are a ranking boost (`trusted +0.25 … disputed −0.4`), but `invalidated` is a hard filter, dropped on the read path at `recall-pipeline.js:157`, given `-Infinity` at `neo-arch.js:1385`, and excluded in SQL at `db-adapter.js:519` (`epistemicStatus != 'invalidated'`). It is the one doubt-adjacent state in the system that withholds rather than ranks, and the transitions into `trusted` and `invalidated` require an authorized actor, so a memory cannot promote or condemn itself. A conservative merge rule (`combineEpistemicStatusForMerge`) takes the lower of two inputs, so a weakly-trusted memory cannot launder its way up by being merged with a trusted one.
 
@@ -95,7 +94,7 @@ stateDiagram-v2
   pruned --> [*]: score -Infinity
   tombstoned --> [*]: score -Infinity
   conflict --> conflict: ranked down 0.3, still injected
-  demoted --> demoted: ranked down 0.35, still injected
+  demoted --> [*]: score -Infinity
 ```
 
 ## 3. Architecture
@@ -161,7 +160,7 @@ The confirmation dialog is the part worth copying. Target resolution is fuzzy �
 
 It is applied on the read path at `lib/db-adapter.js:361`, `:454` and `:474` (query, search, get), at `lib/recall-pipeline.js:173`, in the shared-memory pool, the wiki command, both dream passes, and the Telegram query and edit commands. `filterMemoriesByAcl` (`:226`) is the batch form, with optional violation logging to `acl-audit.jsonl`.
 
-Note that two scope vocabularies coexist: the ACL's `agent-private | workspace | user` and the neo store's `agent_private | workspace_shared | global_user`, reconciled by `normalizeNeoScope`. Neo records are filtered by `isNeoRecordAccessible` (`lib/neo-arch.js:1364`) rather than by `checkAccess`, and the comment at `neo-arch.js:1704` is candid about the limit: dreams, episodes, graph edges and patterns carry no scope field at all, so passing a requester to those readers would filter every record to nothing rather than filter correctly, and the reader was deliberately left unscoped instead.
+Note that two scope vocabularies coexist: the ACL's `agent-private | workspace | user` and the neo store's `agent_private | workspace_shared | global_user`, reconciled by `normalizeNeoScope`. Neo records are filtered by `isNeoRecordAccessible` rather than by `checkAccess`. New dreams, episodes, edges and patterns are stamped with `visibility` at the append choke (`stampDerivedVisibility`); their readers filter on the requester via `isDerivedRecordAccessible`. A legacy row without a stamp is visible only to the owning agent. rem-dream passes a requester into `readPatterns`.
 
 The dream reader shows the failure direction of a fail-closed ACL, and it is worth recording because it is the opposite of a leak. The REM-dream candidate loader built its scope partition as `user` or `workspace` only — never `agent-private` — so every agent-private candidate was rejected by the partition match. On stores where the week's candidates were all agent-private (measured at 70/70 and 49/49 on two live agents), the job permanently reported `too_few_memories` and did nothing: a correct filter handed the wrong partition produces zero output rather than an exposure. `buildRemPartitions` (`lib/dreaming/rem-dream.js`) now runs every sensible partition, `agent-private` first, with per-partition dedup and vault files; a committed test asserts the old workspace-only partition returns null candidates against the same LanceDB table. The per-card ACL was also extended to the `/critical` review surface (`lib/critical-review.js`), which previously gated only on a destructive-channel check while returning every critical card of the agent.
 
@@ -213,7 +212,7 @@ Two fields the data model previously lacked are now first-class, and both are th
 
 What remains absent:
 
-- **No scope on the derived records.** Dreams, episodes, graph edges and patterns are unscoped, as the code says — though the dream *reader's* partition bug above is now fixed.
+- **Legacy derived rows without `visibility`.** New writes stamp ownership; unstamped rows are readable only by the owning agent. There is no backfill.
 
 ## 6. Retrieval Mechanics
 
@@ -276,9 +275,9 @@ Strengths:
 
 Gaps:
 
-- **Neo doubt still does not withhold.** `conflict`, `demoted` and `untrusted` remain ranking penalties rather than filters, so a memory the system records as contradicted can still reach the prompt labelled with its status, moving the decision to the model. The new epistemic `invalidated` state is the exception that withholds, but it sits on a separate axis and the neo statuses that flag *contradiction* are not it.
-- **The drift gate is off** wherever it could fire, by a reasoned choice that leaves the threshold with no live consumer.
-- **Derived records are unscoped** — dreams, episodes, graph edges, patterns — and the code says the reader was left unfiltered rather than filtering everything to nothing.
+- **Neo `conflict` does not withhold.** It remains a 0.3 ranking penalty, so a contradicted card can still reach the prompt labelled. `demoted` withholds (`-Infinity`). Epistemic `invalidated` withholds on a separate axis. Authorized `curation resolve` and `drop-injected` are the exits; they do not auto-resolve remaining conflicts.
+- **`/correct` skips the drift gate.** Confirm-gated conflict apply does not. Compaction merge is still `table.add`, not `safeUpdate`.
+- **Legacy derived rows without `visibility` fail closed** to anyone but the owning agent. There is no backfill.
 - **`postinstall` patches the host** and is contractually unable to fail.
 - **A prompt-facing value can be produced by four different mapping paths**, and correctness has to be established at each one rather than at the store.
 - **The feature surface is the risk.** Forty-seven config groups, fifteen background jobs and two dream passes over one memory store means the number of paths that can write to a card is large, and only one of them goes through `safeUpdate`.
@@ -297,7 +296,7 @@ What is missing is quality measurement. There is no retrieval-quality eval, no b
 
 `tests/neo-status-transition-dedupe.test.js` is worth reading for its shape as much as its subject: it pins the arithmetic to numbers — `active=0.371` against `demoted=-0.116` at a live `minScore` of `0.08` — so the assertion is about which side of the admission threshold each copy falls on, not about an ordering that a weight change would silently invert.
 
-The test I would want before trusting this in production is now partly present: `tombstone-e2e.test.js` asserts a store→forget→re-store is blocked and `correct-tombstone-guard.test.js` blocks correcting a tombstoned card. What is still not asserted end to end is that *every* internal compaction and dream write routes through `findBlockingTombstoneForCapture` — the guard runs at the capture and correct chokepoints, and whether the bulk background passes all pass through it is untested.
+`tombstone-e2e.test.js` asserts a store→forget→re-store is blocked and `correct-tombstone-guard.test.js` blocks correcting a tombstoned card. `tombstone-bulk-writers.test.js` asserts compaction merge, auto-capture and light-dream rewrite refuse forgotten text (`table.add` count 0) while same-text light-dream replay is allowed.
 
 ## 11. For Your Own Build
 
@@ -319,7 +318,7 @@ The test I would want before trusting this in production is now partly present: 
 - **Deduplicating an append-only log by first appearance.** If a state change appends rather than replaces, the first copy is the pre-change one, and every consumer that keeps it is reading the record as it was before the decision. Pick the newest revision by a field the transition actually sets, and check that the field differs between revisions before relying on it.
 - **Instructing a model to weigh a distinction your renderer omits.** A prompt supplement that says *prefer active over conflicting* needs the status in the payload; otherwise it is an instruction the model has no way to follow and no way to report it cannot.
 - **Patching your host at `postinstall`.** However well-tested and however necessary, an install step that rewrites another package's shipped code — and cannot fail by contract — is a support burden and a supply-chain surface.
-- **Per-feature injection caps with no global budget.** Seven bounded features can still fill a context window.
+- **Per-feature injection caps plus one global char budget.** `recall.globalInjectMaxChars` (default 17000) trims memories first; time and reminder context are kept. The remaining features have no joint token budget.
 
 ### Fit
 
@@ -333,9 +332,9 @@ The part worth taking whatever you are building is `lib/safe-update.js`. It is 4
 
 - What is the lag between capture and vector-retrievability under a real embedding cron? Nothing in the tree measures it.
 - Do the seven weights in `scoreNeoRecallItem` come from measurement or from judgement?
-- Does a consolidation or dream pass resurrect the text of a corrected memory into a new card? The capture and correct chokepoints now consult the content-fingerprint tombstone registry, but whether every bulk background write routes through that check is not asserted.
-- How much does the full feature set inject per turn in aggregate, and at what point do the per-feature caps collectively exceed a sensible budget?
-- Is the host patch upstreamed or proposed to OpenClaw, or does each release re-apply it?
+- Does a consolidation or dream pass resurrect the text of a corrected memory into a new card? Capture, correct, compaction merge, auto-capture and light-dream rewrite consult the tombstone registry before `table.add`; same-text light-dream replay does not rewrite content.
+- How much does the full feature set inject per turn in aggregate? `recall.globalInjectMaxChars` (default 17000) trims memories before time and reminder context; the remaining per-feature caps still have no joint token budget.
+- Is the host patch upstreamed or proposed to OpenClaw, or does each release re-apply it? `PLUR1BUS_SKIP_HOST_PATCH=1` skips apply; the patch remains in tree.
 - How many other prompt-facing fields are produced by more than one mapping path, and is there a check that all of them agree?
 
 ## Appendix: File Index
@@ -352,9 +351,11 @@ The part worth taking whatever you are building is `lib/safe-update.js`. It is 4
 - Human surfaces: `lib/obsidian-control-room.js`, `lib/obsidian-bridge.js`, `lib/obsidian-mutation-policy.js`, `lib/obsidian-review-authority.js`, `lib/critical-review.js`, `lib/telegram-commands/`.
 - Background work: `lib/jobs/`, `lib/dreaming/`, `lib/runtime-scheduler.js`.
 - Install-time host patch: `scripts/setup-feature-crons.mjs`, `patches/apply-cron-plugin-direct-dispatch.mjs`.
-- Tests cited: `tests/crr-status-filter.test.js`, `tests/b13-acl-callsite-adapters.test.js`, `tests/gc-neverforget-guard.test.js`, `tests/safe-update-dataloss.test.js`, `tests/valid-time.test.js`, `tests/tombstone-e2e.test.js`, `tests/correct-tombstone-guard.test.js`, `tests/semantic-lens-status-filter.test.js`, `tests/rem-dream-acl-partition.test.js`.
+- Tests cited: `tests/crr-status-filter.test.js`, `tests/b13-acl-callsite-adapters.test.js`, `tests/gc-neverforget-guard.test.js`, `tests/safe-update-dataloss.test.js`, `tests/valid-time.test.js`, `tests/tombstone-e2e.test.js`, `tests/tombstone-bulk-writers.test.js`, `tests/correct-tombstone-guard.test.js`, `tests/semantic-lens-status-filter.test.js`, `tests/rem-dream-acl-partition.test.js`, `tests/drop-injected-conflicts.test.js`, `tests/neo-demoted-withhold.test.js`.
 
 ## History
+
+**2026-08-17** — [`3479373f87dc8f70d460d09ddeb20ffb83355231`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231) — re-pinned at published tag **v7.4.0**. Screened before reading: 0 auto-run surfaces, 1 build-time exec (`postinstall` host patch), 4 floating ranges with lockfile present, both manifests inside the seven-day cooldown (`FRESH`); nothing was installed or run. Skill-miner admission clusters `observed|corroborated|trusted` plus pre-cutoff legacy `""`. Neo `demoted` is `-Infinity` at `scoreNeoRecallItem` (`lib/neo-arch.js:1459`); `conflict` stays a 0.3 penalty with `/plur1bus curation resolve` and `drop-injected` as authorized exits. Tombstone checks sit in front of store, content-update, updateCard, compaction merge, auto-capture and light-dream rewrite. New derived records stamp `visibility`; rem-dream passes a requester to `readPatterns`. Confirm-gated conflict apply calls `safeUpdate` without `skipDriftGate`; `/correct` still skips. `recall.globalInjectMaxChars` (default 17000) trims memories before time/reminder. `PLUR1BUS_SKIP_HOST_PATCH=1` skips the host patch; the patch remains. No paper or citation file exists in the tree.
 
 **2026-08-15** — [`b550a2d84f607da28438b39d86f1edd04e0951ff`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/b550a2d84f607da28438b39d86f1edd04e0951ff) — re-pinned at release 7.3.0 ("audit fixes, epistemic status, bi-temporal memory"). Screened again before reading: the same `postinstall` host patch, both manifests inside the seven-day cooldown, four floating ranges with the lockfile present; nothing was installed or run, and the new behaviour was read from the source and its committed tests. Three new load-bearing modules close two gaps and add a hard-filtering trust state:
 
