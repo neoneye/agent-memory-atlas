@@ -136,6 +136,15 @@ If the upstream repository 404s, check for a rename before concluding it is
 gone: GitHub redirects renamed repositories, and the new name is in the redirect.
 See "A project that renamed itself" below.
 
+**Wiring moves without the mechanism moving.** A producer can appear or vanish in
+a diff that changes no schema and adds no function, so a mechanism the report
+called live can go dead and one it called unwired can be finished — both have
+happened here. Re-run the producer check from `add-memory-system` against the
+appendix files rather than carrying the previous report's verdict forward. A
+policy loaded from config in one pin and hardcoded `{}` in the next, or a caller
+that starts passing the parameter every caller used to omit, is a one-line diff
+and a different finding.
+
 **Check for a paper, whether or not the code moved.** Grep the README and docs
 for `arxiv`, `bibtex`, `@article`, `@misc`, `Citation`, `CITATION.cff` and `doi`.
 A paper can appear after a report was written, and an existing report may predate

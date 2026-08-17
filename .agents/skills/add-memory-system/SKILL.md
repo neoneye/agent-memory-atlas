@@ -76,9 +76,15 @@ Start broad, then trace concrete state transitions:
 1. Read the README, package manifests, architecture documents, and deployment files.
 2. Locate memory schemas, storage adapters, prompts, APIs, MCP tools, workers, tests, evals, and benchmark artifacts.
 3. Trace capture/write, extraction/consolidation, retrieval/ranking, context injection, correction/deletion/forgetting, and background processing end to end.
-4. Inspect tests beside each important behavior; distinguish tested behavior from documentation claims.
-5. Identify deployment assumptions, concurrency boundaries, trust decisions, provenance, privacy, and failure recovery.
-6. **Look for a paper before writing section 10.** Grep the README and docs for `arxiv`, `bibtex`, `@article`, `@misc`, `Citation`, `CITATION.cff` and `doi`. A citation block at the bottom of a README is easy to scroll past, and missing it produces the specific error this step exists to prevent: a report that says "no ablation" or "no evaluation" when the ablation is in the paper. If a paper exists, read at least its abstract and any ablation table, cite it as `[arXiv:ID](https://arxiv.org/abs/ID)` with the submission date, and keep its claims separate from code claims exactly as README claims are kept separate. Two findings are worth looking for specifically: whether the paper's description of the mechanism matches the code, and whether anything the paper starts from — a seed corpus, a checkpoint, a dataset — is absent from the tree. If no paper exists, the report says so rather than staying silent, because a reader cannot tell an absent paper from an unread one.
+4. **Find the producer of every mechanism before crediting it.** A mechanism can be fully declared — a schema column, an enum value, a function, a spec section, its own passing tests — and have nothing in the repository that ever puts a value into it. This is the most common defect in the corpus; 51 reports carry a version of it. An audit log with a closed action vocabulary where `data.written` and `data.deleted` have no producer. A tombstone whose only writer is a script whose own header says it is "NOT wired into any CLI command", and which the package manifest excludes from what ships. A reviewer quorum that always passes because the policy it consults is hardcoded `{}` at both write paths.
+
+   **The test is not whether the symbol has callers.** All three of those have callers, and a grep for call sites reports them live. The question is whether any path a user or an agent can reach *produces* the state the mechanism acts on, which is a question about data flow rather than the call graph. Work backwards from the field to every assignment, and forwards from each entry point the system actually exposes — MCP tool, HTTP endpoint, CLI command, scheduled worker — to see whether any assignment sits on one. The shapes this keeps taking: a parameter every caller omits, a config key with no setter, a branch on a flag nothing sets, a default no caller overrides, and a writer that exists only in tests or in a file excluded from the published package.
+
+   Then say which it is. **Do not credit a capability mark to a mechanism with no producer** — `capabilities: ""` is a real answer, and an unreachable mechanism is the case it exists for. Declared-and-unwired is not a caveat to bury in a risk bullet; it is often the most informative thing in the repository, because it means the design was understood and the wiring was not finished, which is a sharper finding than an absence.
+
+5. Inspect tests beside each important behavior; distinguish tested behavior from documentation claims.
+6. Identify deployment assumptions, concurrency boundaries, trust decisions, provenance, privacy, and failure recovery.
+7. **Look for a paper before writing section 10.** Grep the README and docs for `arxiv`, `bibtex`, `@article`, `@misc`, `Citation`, `CITATION.cff` and `doi`. A citation block at the bottom of a README is easy to scroll past, and missing it produces the specific error this step exists to prevent: a report that says "no ablation" or "no evaluation" when the ablation is in the paper. If a paper exists, read at least its abstract and any ablation table, cite it as `[arXiv:ID](https://arxiv.org/abs/ID)` with the submission date, and keep its claims separate from code claims exactly as README claims are kept separate. Two findings are worth looking for specifically: whether the paper's description of the mechanism matches the code, and whether anything the paper starts from — a seed corpus, a checkpoint, a dataset — is absent from the tree. If no paper exists, the report says so rather than staying silent, because a reader cannot tell an absent paper from an unread one.
 
 A paper is a third category beside product claims and code claims, and it is the one most likely to be missing rather than wrong: scoping an absence claim to the artifact ("no result is committed to this repository") is correct where an unscoped one ("no ablation exists") is a claim about work that was probably done elsewhere.
 
@@ -141,6 +147,9 @@ Before integration, verify:
 - `analyzed_at` reflects the date the analysis was actually performed.
 - Important architectural claims point to concrete implementation locations.
 - Strengths and risks are supported by evidence.
+- Every mechanism carrying a capability mark has a producer on a path a user or
+  an agent can reach, and any mechanism without one is reported as declared and
+  unwired rather than as present.
 
 ## Integrate the comparative overview
 
