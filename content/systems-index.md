@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **298 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **299 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -121,6 +121,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`graphify`](../systems/graphify/) **Graphify** — Work memory beside a code graph · `Graphify-Labs/graphify` · Trust state, Negative evals
 - [`graphiti`](../systems/graphiti/) **Graphiti** — Bi-temporal context graph · `getzep/graphiti` · Bi-temporal, Scope enforced
 - [`grok-build`](../systems/grok-build/) **Grok Build** — A dream that deletes what it read · `xai-org/grok-build` · Scope enforced, Negative evals
+- [`growmos`](../systems/growmos/) **growmos** — A stop hook that will not let the session end · `codician-team/growmos`
 ## H
 
 - [`helix-agi`](../systems/helix-agi/) **Helix AGI** — Belief physics on a journal · `munch2u-a11y/Helix-AGI` · Negative evals
