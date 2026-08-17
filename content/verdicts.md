@@ -12,10 +12,10 @@ are judgements rather than marks — the evidence behind each is in that system'
 own report, and the mechanisms are compared side by side in the
 [comparative report](../compare/).
 
-This page was part of the comparative report until 4 August 2026 and was split
-out because it is a different thing: the comparison argues about mechanisms
-across the corpus, and this argues about whether any one system is worth your
-time. Reading it end to end is not the point; find the system you are weighing.
+This is a different thing from the comparative report: the comparison argues
+about mechanisms across the corpus, and this argues about whether any one system
+is worth your time. Reading it end to end is not the point; find the system you
+are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
 **This page covers all 301 reports.**

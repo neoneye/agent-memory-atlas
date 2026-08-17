@@ -32,7 +32,7 @@ Six things are worth knowing before reading further.
    largest, for 10.7 points of accuracy. Two other systems record one of the two
    in a harness; none reports bytes on disk per memory. The other exception is a
    *benchmark* rather than a system:
-   [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist)
+   [ForgetEval](#forgeteval--the-one-benchmark-that-scores-the-control-plane)
    puts both in its abstract — `$0.17` per 385-case run, and 2.3 s per case for
    the LLM mutation hook against 64–191 ms per case for the deterministic
    configurations — which is the shape of reporting this bullet is asking for,
@@ -41,7 +41,7 @@ Six things are worth knowing before reading further.
    nowhere**, even though several systems here deliberately delay extraction by
    minutes or by a batch boundary.
 6. **One benchmark scores forgetting, and it stops short of the hard part.**
-   [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist) scores
+   [ForgetEval](#forgeteval--the-one-benchmark-that-scores-the-control-plane) scores
    `supersede`, `release` and `purge` across thirteen system configurations and
    is released under MIT. What it does not test is whether a deleted memory stays
    deleted **after the next background pass** — steps 5–8 of the test below.
@@ -498,7 +498,7 @@ ALFWorld and 87.4 on WebShop, against 0.645 and 66.0 measured here. Recording
 the published figure you did not reach, in the verification script rather than
 in a footnote, is the second thing worth copying.
 
-The same harness makes a second move worth copying, described in that report:
+Zep's harness makes a second move worth copying, described in that report:
 it grades **whether the retrieved context contained the answer** as a separate
 judgement from whether the answer was right. Accuracy conditioned on a complete
 context is flat at 0.92 across a 5.8x swing in retrieved tokens — so in that
@@ -941,8 +941,7 @@ is handed to the model in the prompt, so there is no retrieval layer to fail and
 no store to resurrect anything from. A system could pass PersistBench perfectly
 and still restore every deleted memory on its next nightly distillation.
 
-A released benchmark does now score deletion — see **ForgetEval** below.
-Against PersistBench specifically the narrowing still holds: **PersistBench does
+**ForgetEval** below scores deletion; against PersistBench specifically the narrowing holds: **PersistBench does
 not measure whether a deleted memory stays deleted.** But the adjacent claim — that negative
 retrieval assertions barely exist — now needs qualifying. PersistBench is a
 negative-*use* benchmark with a positive control, released, and running inside a
@@ -951,7 +950,7 @@ standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
 A forgetting benchmark could borrow its structure wholesale and change only what
 sits between the memory and the model.
 
-### ForgetEval — the benchmark this page said did not exist
+### ForgetEval — the one benchmark that scores the control plane
 
 **Read 2026-07-30 at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495), MIT.**
 ForgetEval ships inside [Lethe](../systems/lethe/), as the artifact behind
