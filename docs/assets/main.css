@@ -1670,23 +1670,34 @@ a {
   border-bottom: 1px solid var(--line);
 }
 
-/* Stacked is the default and four columns is the enhancement, not the reverse.
-   The four only fit once the prose track clears ~960px, and forcing them in
-   below that leaves the one field that differs between rows — what the system
-   is — about 40px to wrap in. Stacked, the name still holds its own column, so
-   the edge a reader scans down survives every width. */
 .prose ul.az > li {
-  display: grid;
-  grid-template-columns: 13rem minmax(0, 1fr);
-  gap: 3px 20px;
-  align-items: baseline;
-  padding: 9px 0;
+  padding: 0;
   margin: 0;
   border-top: 1px solid var(--line);
 }
 
+/* The whole row is the link. Stacked is the default and four columns is the
+   enhancement, not the reverse: the four only fit once the prose track clears
+   ~960px, and forcing them in below that leaves the one field that differs
+   between rows — what the system is — about 40px to wrap in. Stacked, the name
+   still holds its own column, so the edge a reader scans down survives every
+   width. */
+.prose ul.az > li > .az-row {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: 3px 20px;
+  align-items: baseline;
+  padding: 9px 10px;
+  margin: 0 -10px;
+  color: inherit;
+  text-decoration: none;
+}
+
 .az-id {
   grid-row: 1 / span 3;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .az-what,
@@ -1706,30 +1717,22 @@ a {
   text-transform: uppercase;
 }
 
-.prose ul.az > li:hover {
-  background: rgb(255 253 248 / 0.75);
+/* Hover and focus paint the row, not the name — the row is what the click
+   hits, so it is what has to light up. The negative margin lets that highlight
+   reach past the text on both sides without moving the columns. */
+.prose ul.az > li > .az-row:hover {
+  background: rgb(255 253 248 / 0.9);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.az-id a {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.az-id a:hover,
-.az-id a:focus-visible {
+.prose ul.az > li > .az-row:hover .az-id {
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Printed only where the title is not already that same word once punctuation
-   is set aside — 23 rows of 301. On the rest it was the name a second time. */
-.az-slug {
-  display: block;
-  margin-top: 2px;
-  color: #9a9284;
-  font-family: var(--mono);
-  font-size: 0.63rem;
+.prose ul.az > li > .az-row:focus-visible {
+  outline: 2px solid var(--sage-dark);
+  outline-offset: -2px;
 }
 
 .az-what {
@@ -1780,7 +1783,7 @@ a {
   }
 
   .az-head,
-  .prose ul.az > li {
+  .prose ul.az > li > .az-row {
     grid-template-columns: 12rem minmax(0, 1fr) 16rem 13rem;
     column-gap: 20px;
   }
@@ -1801,7 +1804,7 @@ a {
 }
 
 @media (max-width: 560px) {
-  .prose ul.az > li {
+  .prose ul.az > li > .az-row {
     grid-template-columns: minmax(0, 1fr);
   }
 

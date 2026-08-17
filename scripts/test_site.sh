@@ -262,16 +262,6 @@ if ! python3 "$project_dir/scripts/check_pattern_stance.py" "$project_dir"; then
   exit 1
 fi
 
-# The A–Z index prints a system's slug only where the title is not already that
-# same word. A wrong answer here does not break the build or look broken on the
-# page — it prints the name twice in two typefaces, or withholds the one field
-# that explains where a row is filed. It has been wrong once, in both of those
-# directions at the same time, so the rule carries controls.
-if ! python3 "$project_dir/scripts/generate_index.py" --self-test; then
-  echo "generate_index.py cannot demonstrate that its slug rule still holds." >&2
-  exit 1
-fi
-
 # build_site.sh wraps every <table> in .table-wrap. A hand-authored wrapper in
 # content/ nests them, and each wrapper grows its own "expand to full width"
 # toggle — which is how the capability grid ended up with two.
