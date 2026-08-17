@@ -2343,10 +2343,19 @@ why this atlas reviews `langmem` and LlamaIndex's newer block-based `Memory`
 instead.
 
 Deciding what stays in the context window is a real problem. It is a different
-problem: nothing survives the session, nothing is retrieved, nothing is scoped,
-corrected, verified, or forgotten on request. A system whose memory is a window
-has no answer to "why do you believe that?" or "forget what I told you last
-week", because it never claimed to remember.
+problem, and the test that separates it is **whether the store holds anything
+that could turn out to be false**. A system whose memory is a window has no
+answer to "why do you believe that?" or "forget what I told you last week",
+because it never claimed to remember.
+
+The shorthand for that test used to be *nothing survives the session*, and
+[SALT](#salt) below is the case that pulls the two apart: it persists a
+per-conversation corpus to disk, resumes it across processes, and selects from
+it by query — while every row in it is a verbatim sentence the session itself
+produced, with no claim, no correction and no provenance beyond which turn said
+it. Persistence and retrieval turn out to be the cheap half. What keeps a system
+on this side of the line is that nothing it stores is the kind of thing a later
+reading could contradict.
 
 **One caveat, from the excluded pile rather than from this list.** The boundary is
 about what the window *is*, not about how carefully it is maintained, and the
@@ -2393,6 +2402,47 @@ policy rather than a memory with a lifecycle — the same category as BeeAI's
 `SummarizeMemory`, several orders of sophistication up. That the best learned
 context compression in the field lands outside this atlas is the clearest
 argument that the boundary is drawn in the right place.
+
+<a id="salt"></a>
+
+**[SALT](https://github.com/oteomamo/SALT) is the instance that persists, and
+still belongs here.** MIT, 19,523 lines of Python, 362 commits since 2 July 2026,
+at [`6e356fa7db1d2076b26178c5c5fda60ed3d4905e`](https://github.com/oteomamo/SALT/commit/6e356fa7db1d2076b26178c5c5fda60ed3d4905e),
+with a paper ([arXiv:2607.17486](https://arxiv.org/abs/2607.17486), 20 July 2026)
+filed under **cs.PF** — performance, not language — whose stated goal is cutting
+prefill compute and KV-cache cost. Its mechanism is a fix for a real failure it
+names: rank sentences by a scalar and under a tight budget the document's
+dominant theme eats the whole budget, dropping the one sentence that links it to
+a second. So SALT organises each sentence's keywords into a trie ordered by
+sentence frequency and spreads the budget across theme branches before choosing
+sentences.
+
+The chat mode is what makes it interesting here. `SessionTrie` keeps one trie per
+conversation in `cache_dir/<conversation_id>/` — `embeddings.npy`, `state.pkl`,
+`config.json`, written embeddings-first on purpose so a crash leaves orphan
+vectors a load can drop rather than sentences with no vectors, which *"nothing
+could repair"*. It survives the process, resumes by id, and each turn re-selects
+under the budget while **seeding the prior turn's per-node coverage so material
+already surfaced is discounted** — cross-turn submodular selection, keyed on the
+canonical frozenset of each node's root-to-node keyword path so it survives the
+trie being rebuilt. There is even per-item eviction: past `max_sentences` the
+oldest conversation rows are masked, their keyword document-frequency
+contribution removed, and — the careful part — their verbatim-dedupe hash
+withdrawn, so re-sending a masked sentence stores it again instead of being
+dropped against a row that is no longer live.
+
+Persistent, retrieved by query, scoped by conversation, bounded, and evicted with
+more care than several systems that do hold beliefs. It is still not memory, and
+the reason is what is *in* the rows. Every one is a verbatim sentence the session
+produced or a document it was handed; nothing anywhere in the tree extracts a
+fact, a claim, an entity or a preference; there is no state a sentence can be in
+other than alive or masked; and correction is `/clear`, which wipes the
+conversation directory (behind a guard that refuses any path outside the sessions
+root). The store can tell you which turn said something and cannot tell you
+whether it was true, which is the question this atlas exists to ask. The delegation
+ledger in its agent mode draws the same line from the other side: it records what
+each worker was asked and what it cost, *"never the worker's prose: the text was
+printed, and a session that wants it in memory ingests it as a turn instead."*
 
 A second boundary is worth naming because it is where this atlas most often
 declines something interesting: **a durable store an agent operates is not
