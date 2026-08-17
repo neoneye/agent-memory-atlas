@@ -233,7 +233,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`neurakeep`](../systems/neurakeep/) **NeuraKeep** — No citation, no memory · `dominiclachance/neurakeep` · Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`neuroca`](../systems/neuroca/) **NeuroCA** — A memory system mid-refactor · `Modern-Prometheus-AI/Neuroca`
 - [`neuron`](../systems/neuron/) **Neuron** — A schema the agent's prompt cannot override · `kovartravis/neuron` · Scope enforced, Negative evals
-- [`nexusmem`](../systems/nexusmem/) **NexusMem** — Shell history as memory · `yaminbkk/NexusMem` · Scope enforced
+- [`nexusmem`](../systems/nexusmem/) **NexusMem** — Shell history as memory · `yaminbkk/NexusMem` · Scope enforced, Negative evals
 - [`nocturne-memory`](../systems/nocturne-memory/) **Nocturne Memory** — The model retypes your text and the match fails · `dataojitori/nocturne_memory` · Scope enforced
 - [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
 - [`noosphere`](../systems/noosphere/) **Noosphere** — A tombstone that survives key rotation · `sweetsophia/noosphere` · Tombstone, Scope enforced, Mutation audit, Human review

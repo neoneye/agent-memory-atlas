@@ -234,12 +234,12 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty tombstones, seventy-nine negative-eval suites — are counts
-<em>over inspectable code</em>, and a closed system could hold any of
-these mechanisms without this method ever knowing. And a mechanism's
-absence here is weaker evidence about the field than its presence:
-finding a tombstone proves someone built one, while not finding one
-proves only that nobody built one <em>in public</em>.</p>
+twenty tombstones, eighty negative-eval suites — are counts <em>over
+inspectable code</em>, and a closed system could hold any of these
+mechanisms without this method ever knowing. And a mechanism's absence
+here is weaker evidence about the field than its presence: finding a
+tombstone proves someone built one, while not finding one proves only
+that nobody built one <em>in public</em>.</p>
 <p><strong>The divergences that actually separate these
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
@@ -3704,17 +3704,22 @@ contract block installed into <code>AGENTS.md</code> and
 Scheduler) supervises the Workbench server; nothing re-reads or rewrites
 the store on a schedule</td>
 <td>A six-value <code>status</code> column — proposed, accepted,
-in_force, rejected, superseded, retired — with tier-driven promotion,
-optional reviewer quorum, and re-approval forced by editing an accepted
-record</td>
+in_force, rejected, superseded, retired — with tier-driven promotion and
+re-approval forced by editing an accepted record. The reviewer quorum
+beside it is projected but unreachable: both write paths hardcode
+<code>review_policy</code> empty and no verb amends it, so
+<code>_decision_quorum_reached</code> returns <code>True</code> on every
+acceptance</td>
 <td>Editing an accepted decision emits <code>decision_revisited</code>,
 clears <code>accepted_utc</code> and returns the record to proposed, so
 a revision cannot silently inherit its predecessor's approval</td>
-<td>The grounding packet still never auto-reads the decision store (it
-regexes posted result bodies), <code>enforcement_mode</code> is printed
-but gates nothing, and two of the five verification fields
-(<code>assumptions</code>, <code>evidence</code>) still have no
-producer</td>
+<td>The grounding packet never auto-reads the decision store (it regexes
+posted result bodies), <code>enforcement_mode</code> is printed but
+gates nothing, and seven payload fields — <code>assumptions</code>,
+<code>evidence</code>, <code>review_policy</code>,
+<code>rejected_alternatives</code>, <code>consequences</code>,
+<code>exemptions</code>, <code>generated_artifact_paths</code> — are
+hardcoded empty at both write paths with no verb that can fill them</td>
 </tr>
 <tr>
 <td><code>agent-working-memory</code></td>
@@ -8767,17 +8772,21 @@ mirror to match</td>
 <td><code>nexusmem</code></td>
 <td>A <code>node</code> — kind, project, event timestamp, source, title,
 body, a <code>signal</code> float and a JSON <code>meta</code> blob —
-with an id of <code>sha256(projectId + kind + naturalKey)</code>; five
-kinds, of which <code>shell_command</code> is the one no other store
-here holds</td>
+with an id of <code>sha256(projectId + kind + naturalKey)</code>; seven
+kinds declared and six collected, of which <code>shell_command</code> is
+the one no other store here holds</td>
 <td>One <code>better-sqlite3</code> file per repository:
 <code>nodes</code> plus an external-content FTS5 index, a
-<code>sqlite-vec</code> vec0 table, a <code>node_files</code> path index
-and a <code>node_links</code> edge table</td>
+<code>sqlite-vec</code> vec0 table, a <code>node_files</code> path
+index, a <code>node_links</code> edge table and a
+<code>file_edges</code> import graph that is not made of nodes and is
+replaced wholesale on every sync</td>
 <td>BM25 over FTS5 fused with cosine over sqlite-vec, then ranked by
 <code>relevance x signal^e x recency^e</code> where the exponents split
 one joint overturn budget between the two query-independent priors, then
-packed to a token budget</td>
+packed to a token budget. A second read path takes no query at all:
+<code>precheck</code> derives match tokens from the basenames of the
+staged files and returns unresolved failures</td>
 <td>Collectors per source, cursor-resumed; an opt-in shell hook appends
 a JSONL of command, cwd and exit code, and scrape fallbacks tail
 bash/zsh/PSReadLine without either; pattern redaction runs before
@@ -8791,10 +8800,14 @@ re-derives what was pruned</td>
 both read arms; a cross-project query opens each registered repository`s
 own database and tags every hit with its origin</td>
 <td>A CLI, a four-tool stdio MCP server (search, sync, status,
-list-recent), and a read-only VS Code panel</td>
-<td>None. Every collector runs inside <code>nexusmem sync</code>,
-invoked by hand, by a shell hook or by the MCP <code>sync_project</code>
-tool</td>
+list-recent), a read-only VS Code panel, and an opt-in
+<code>.git/hooks/pre-commit</code> block that runs
+<code>nexusmem precheck</code> — without <code>--strict</code>, so it
+warns and cannot block a commit</td>
+<td>None on a schedule. Every collector runs inside
+<code>nexusmem sync</code>, invoked by hand, by a shell hook or by the
+MCP <code>sync_project</code> tool; the git hook triggers a read rather
+than a write</td>
 <td>A <code>signal</code> float used only for ranking. No status, no
 provenance beyond the source name, and no state that withholds a node
 from being returned</td>
@@ -8802,13 +8815,16 @@ from being returned</td>
 scrollback loses; a ranker that bounds how far query-independent priors
 may overturn the query, as one budget shared between them; redaction
 split into a high-confidence profile safe to run over source code and a
-broader one that is not</td>
+broader one that is not; a document-frequency filter that drops tokens
+which are boilerplate in this project`s own corpus, because bm25 rewards
+rarity only within the corpus it is run against</td>
 <td>No per-item or per-value deletion, so a secret redaction missed is
 removable only by wiping a whole source — and the append-only hook log
 that produced it survives, so the next full sync brings it back;
-<code>signal</code> is a prior nothing updates from use; the
-failure-to-fix link heuristics are undogfooded by the project`s own
-account</td>
+<code>signal</code> is a prior nothing updates from use; the pre-commit
+signal fires on a basename token match, so it warns about a failure that
+merely shares a word with the file and stays silent about one that does
+not name it</td>
 </tr>
 <tr>
 <td><code>nocturne-memory</code></td>
@@ -12248,7 +12264,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>79 of 296:</em> <a
+<p><em>80 of 296:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -12303,6 +12319,7 @@ href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuron/"><code>neuron</code></a>, <a
+href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
@@ -12346,12 +12363,12 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong>
-Seventy-nine repositories of two hundred and ninety-six assert that
-particular material must <em>not</em> be retrieved — the assertion every
-scope, deletion and correction claim in this document ultimately rests
-on. Read together rather than one at a time, they split cleanly in two,
-and the split says more than the count.</p>
+<p><strong>Negative evidence is almost never tested.</strong> Eighty
+repositories of two hundred and ninety-six assert that particular
+material must <em>not</em> be retrieved — the assertion every scope,
+deletion and correction claim in this document ultimately rests on. Read
+together rather than one at a time, they split cleanly in two, and the
+split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -16760,7 +16777,7 @@ href="https://github.com/Morephine/feltstate">Morephine/feltstate</a> at
 href="https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed"><code class="commit-id" title="45b1c9824326669f7e1855097a3bfe01192084ed">45b1c982…</code></a></li>
 <li><a href="https://github.com/yaminbkk/NexusMem">yaminbkk/NexusMem</a>
 at <a
-href="https://github.com/yaminbkk/NexusMem/commit/eca25c6800fe1f049f60181bedb454a410798c48"><code class="commit-id" title="eca25c6800fe1f049f60181bedb454a410798c48">eca25c68…</code></a></li>
+href="https://github.com/yaminbkk/NexusMem/commit/ed923035b4a0aa34244a042a05e55e040c1e9c8f"><code class="commit-id" title="ed923035b4a0aa34244a042a05e55e040c1e9c8f">ed923035…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
 href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code class="commit-id" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">7f2f16eb…</code></a></li>
@@ -20015,6 +20032,37 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-17</strong> — <strong>A near-miss is a claim about
+the whole suite, so it has to be checked against the whole
+suite.</strong> The <a href="../systems/nexusmem/">NexusMem</a> report
+withheld <code>negative_eval</code>, argued the withholding at length
+against the file it had read most closely — a prune-scope suite that
+asserts about deletion rather than retrieval — and called the near-miss
+<em>"worth more than several awarded marks elsewhere."</em> Two ordinary
+cases in <code>store.test.ts</code> and <code>vector.test.ts</code>,
+both present at that pin, assert that a node belonging to another
+project is absent from a result set, which is the rubric's wording
+exactly. Writing an eloquent paragraph about the closest miss is what
+stopped the search: the more interesting the near-miss, the less likely
+anyone greps for the plain case. The cheap check is to grep the suite
+for the assertion shape the rubric names — <code>toHaveLength(0)</code>,
+<code>not.toContain</code>, <code>toEqual([])</code> on a read call —
+<em>before</em> writing why a system does not have it.</p>
+<p><strong>2026-08-17</strong> — <strong>A correction that appends
+contradicts; the sections nobody edited are where the old position
+survives.</strong> The <a href="../systems/agent-mesh/">Agent Mesh</a>
+report was re-pinned across a release that closed three findings, and
+the executive summary was rewritten to say so. Four later sections still
+described the previous release — <code>Tests. None.</code> in the path
+list, "decision stop lines are not checked here" against a validator
+that now checks them, a code block listing two fields among the
+unwritable that had become writable, and a retrieval note saying the
+Workbench could not create the globs it passes. Each was true when
+written and none was in the paragraph being edited. The rule that
+follows is mechanical: after correcting a claim, grep the report for
+every <em>other</em> mention of the same symbol and read those
+paragraphs too. A report's summary is what a reader quotes; its sections
+are what a reader checks.</p>
 <p><strong>2026-08-11</strong> — <strong>A filter's default argument is
 part of the mechanism, and reading the function that implements
 filtering does not tell you whether it runs.</strong> The <a

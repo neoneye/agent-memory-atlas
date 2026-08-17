@@ -1,15 +1,19 @@
 ---
 title: "Agent Mesh"
 eyebrow: "A decision ledger that validates before it appends"
-description: "A hash-chained event log whose decisions carry tiers, quorum, supersession and executable verification commands — now writable through the CLI and Workbench, validated at append so a malformed event never lands, with verification run through argv rather than a shell; the grounding packet still never reads the decision store."
+description: "A hash-chained event log whose decisions carry tiers, supersession and executable verification commands, validated at append so a malformed event never lands and executed through argv rather than a shell — while seven payload fields, the reviewer quorum among them, are hardcoded empty by both write paths with no verb that can fill them, and the grounding packet an agent receives never reads the decision store at all."
 root: ../..
 page_kind: system
 source_name: "cbalgeman/agent-mesh"
 source_url: https://github.com/cbalgeman/agent-mesh
 revision: 43bfe5cc376c71754c4a627286401825f4599062
 revision_url: https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062
-analyzed_at: 2026-08-15
+analyzed_at: 2026-08-17
 capabilities: "trust_state, audit_log, human_review"
+capability_evidence:
+  trust_state: "the decision store, one status column over the projected `decisions` table | src/agent_mesh/store/rebuild.py | `_project_decision_event` promotes to `accepted` or `in_force` only through `decision_accepted`, `_ensure_supersede_target_valid` refuses a supersession target that is not accepted or in force, and `_project_decision_metadata_updated` clears `accepted_utc` when a revision folds `status` back to `proposed` | tests/public/test_public_contract.py::test_invalid_decision_transition_never_reaches_the_log — the accepted_utc clear itself is untested"
+  audit_log: "the event log, which is the store rather than a sidecar | src/agent_mesh/core/events.py | `append_event` assigns `event_seq` and `prev_event_hash` from the tail and writes one canonical SHA-256-chained line per mutation; `_append_decision_log` keeps the per-decision trail `agent-q decisions log` prints | tests/public/test_public_contract.py::test_hash_chain_detects_tampering"
+  human_review: "the Workbench Decisions tab, over the same decision store | src/agent_mesh/workbench.py | the edit path raises `WorkbenchError` without a `revision_reason`, then emits `decision_revisited` with `status: [old, \"proposed\"]`; `_decision_actor` refuses an actor outside `config.participants` | none"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -22,9 +26,9 @@ matrix:
   scoping: "One `.agent-mesh/` per repository; the multi-repo Workbench resolves an opaque repo ID to a store, but no scope key is stored on a record or applied as a filter"
   integration: "Two CLIs (`agent-mesh`, `agent-q`), a loopback Workbench UI with a supervised background service, and a versioned contract block installed into `AGENTS.md` and `CLAUDE.md`"
   background: "None over memory. A user-level service (launchd, systemd, Task Scheduler) supervises the Workbench server; nothing re-reads or rewrites the store on a schedule"
-  trust: "A six-value `status` column — proposed, accepted, in_force, rejected, superseded, retired — with tier-driven promotion, optional reviewer quorum, and re-approval forced by editing an accepted record"
+  trust: "A six-value `status` column — proposed, accepted, in_force, rejected, superseded, retired — with tier-driven promotion and re-approval forced by editing an accepted record. The reviewer quorum beside it is projected but unreachable: both write paths hardcode `review_policy` empty and no verb amends it, so `_decision_quorum_reached` returns `True` on every acceptance"
   strengths: "Editing an accepted decision emits `decision_revisited`, clears `accepted_utc` and returns the record to proposed, so a revision cannot silently inherit its predecessor's approval"
-  risks: "The grounding packet still never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed but gates nothing, and two of the five verification fields (`assumptions`, `evidence`) still have no producer"
+  risks: "The grounding packet never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed but gates nothing, and seven payload fields — `assumptions`, `evidence`, `review_policy`, `rejected_alternatives`, `consequences`, `exemptions`, `generated_artifact_paths` — are hardcoded empty at both write paths with no verb that can fill them"
 ---
 
 ## 1. Executive Summary
@@ -48,8 +52,7 @@ aliases, a tier, an externalized Markdown body addressed by SHA, an owner, a
 status, an enforcement mode, affected-code globs, exemptions, required checks,
 assumptions, evidence references, tags, and a list of verification commands with
 expected signals. Supersession detects cycles and refuses a target that was never
-accepted. Acceptance can require a reviewer quorum. Three tiers skip `accepted`
-and go straight to `in_force`.
+accepted. Three tiers skip `accepted` and go straight to `in_force`.
 
 **The best thing here is the revision rule, and it is a mechanism rather than a
 convention.** Editing a decision that is `accepted` or `in_force` through the
@@ -59,18 +62,32 @@ Workbench requires a reason, emits a `decision_revisited` event, and sets
 inherit the approval of the thing it replaced. Very little in this atlas closes
 that loop.
 
-**The verification apparatus can now be filled — v0.3.0 closed what was the
-report's central gap.** At the previous pin both write paths hardcoded the
-verification list empty; now `cmd_decision_propose` (`cli/mail.py`, `--verification`)
-and `create_decision` (`workbench.py`) both populate `verification`,
-`required_checks` and `affected_code_globs`, a new `decision amend` verb edits
-them after the fact, and `agent-q decisions verify` executes commands the package
-can actually write. Authoring parses the command into argv and rejects shell
-operators and env-assignments (`core/decision_schema.py`, `reject_unsafe=True`);
-execution is `subprocess.Popen(argv, …, shell=False)` (`q.py:1324`) and refuses a
-verification unless the decision is `accepted`/`in_force`. The narrowed residue:
-two of the five fields, `assumptions` and `evidence`, still have no producer and
-ship empty — the finding survives on those two alone.
+**Seven fields of the decision payload have no producer, and the collections
+that do have one are the collections that execute.** `cmd_decision_propose`
+(`cli/mail.py`) and `create_decision`
+(`workbench.py`) both fill `verification`, `required_checks`,
+`affected_code_globs` and `tags` from their arguments, `decision amend` edits
+those four after the fact, and `agent-q decisions verify` executes what they
+hold: authoring parses each command into argv and rejects shell operators and
+env-assignments (`core/decision_schema.py`, `reject_unsafe=True`), execution is
+`subprocess.Popen(argv, …, shell=False)` (`q.py:1324`), and a verification on a
+decision that is not `accepted`/`in_force` is refused. Both propose payloads then
+hardcode seven further fields to an empty value — `rejected_alternatives`,
+`consequences`, `exemptions`, `generated_artifact_paths`, `assumptions`,
+`evidence` and `review_policy` — and no `amend` flag, Workbench form field or
+other event reaches any of them. Five have a projection waiting: `exemptions` and
+`generated_artifact_paths` are two of the three kinds in `decision_globs`,
+`assumptions` and `evidence` have tables of their own, and `review_policy` has a
+gate.
+
+**The reviewer quorum is one of the seven, which makes it decoration.**
+`_decision_quorum_reached` reads `review_policy.required_reviewers`, computes an
+`approval_quorum`, and counts distinct accepting actors against it — and returns
+`True` immediately when the required list is empty, which it always is, because
+`review_policy` arrives `{}` from both write paths and the string `quorum` does
+not appear in the README or `docs/` at all. Every `decision_accepted` event in a
+store built by shipped commands passes a check that never had anything to
+enforce.
 
 Two further findings follow from reading the read path rather than the schema.
 The dispatch grounding packet that an agent actually receives has a section
@@ -83,8 +100,8 @@ tells the model to go and look. And every `agent-q` read calls
 `projection_is_current` exists and is called from exactly one place, the
 Workbench refresh.
 
-The published tree now ships tests: `tests/public/test_public_contract.py` (a
-four-test behaviour contract) with CI, where the previous pin had none.
+The published tree ships one test file: `tests/public/test_public_contract.py`, a
+four-test behaviour contract, with CI.
 
 ## 2. Mental Model
 
@@ -104,8 +121,8 @@ form, which puts Agent Mesh at the far explicit end of
 
 The state machine is a `status` column and it is real. `decision_proposed`
 inserts at `proposed`. `decision_accepted` first checks a reviewer quorum
-(`_decision_quorum_reached`, which reads `review_policy.required_reviewers` and
-`approval_quorum` and returns `True` when none are configured), then promotes to
+(`_decision_quorum_reached`, which returns `True` when `required_reviewers` is
+empty — and it is empty in every store the shipped verbs can build), then promotes to
 `in_force` if the tier is `architecture_contract`, `production_invariant` or
 `compliance_security`, and to `accepted` otherwise. `decision_rejected` and
 `decision_retired` are terminal marks; `decision_superseded` points the old
@@ -120,12 +137,13 @@ metadata update. `_project_decision_metadata_updated` reads that and sets
 `accepted_utc = NULL`. Approval is attached to a version of the content, not to
 the record, and the code enforces the difference.
 
-Two states in the vocabulary have no producer. `decision_assumption_violated`
-would flip a `decision_assumptions` row to `violated` and stamp the invalidating
-event; `decision_check_failed` would append to the decision's log. Both appear in
-the accepted-kinds set and in the projection's `elif` chain, and neither is
-emitted by any code path in the package. `decision_drift_detected` is emitted, by
-one command.
+Two states in the vocabulary have no producer either, and they are the two that
+would police the fields nothing fills. `decision_assumption_violated` would flip
+a `decision_assumptions` row to `violated` and stamp the invalidating event;
+`decision_check_failed` would append to the decision's log. Both appear in the
+accepted-kinds set and in the projection's `elif` chain, and neither is emitted
+by any code path in the package. `decision_drift_detected` is emitted, by one
+command.
 
 Nothing forgets. There is no delete, no redaction, no expiry and no retention
 policy over decisions or messages — the only `DELETE` statements in the tree
@@ -136,8 +154,8 @@ would describe.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Proposed: "decision_proposed — verification, assumptions, checks and evidence all arrive empty"
-    Proposed --> Accepted: "decision_accepted, quorum met, ordinary tier"
+    [*] --> Proposed: "decision_proposed — verification, checks and globs from arguments; assumptions, evidence and review_policy hardcoded empty"
+    Proposed --> Accepted: "decision_accepted, ordinary tier — the quorum check passes on an empty review_policy"
     Proposed --> InForce: "decision_accepted — architecture_contract, production_invariant or compliance_security"
     Proposed --> Rejected: "decision_rejected"
     Accepted --> InForce: "status set through decision_metadata_updated"
@@ -232,9 +250,11 @@ public."* It also states that configs predating the setting are read as
 
 - **Append.** `core/events.py:append_event` — assigns `event_seq` and
   `prev_event_hash` from the tail, validates provenance
-  (`core/provenance.py:validate_event_provenance`) and dispatch payloads
-  (`core/dispatch_schema.py`), writes the canonical line. **Decision stop lines
-  are not checked here.**
+  (`core/provenance.py:validate_event_provenance`), dispatch payloads
+  (`core/dispatch_schema.py`) and decision stop lines
+  (`_validate_stateful_event_before_append` → `validate_decision_event`, `:150`,
+  `:428`–`:468`), then writes the canonical line. **An invalid decision event
+  fails before it is journalled.**
 - **Project.** `store/rebuild.py:rebuild_all` → `reset_schema` → `apply_record`
   per event → `_project_record`. Decision handling is `_project_decision_event`
   around `:1099` and `_project_decision_proposed` at `:1179`.
@@ -256,7 +276,8 @@ public."* It also states that configs predating the setting are read as
 - **Agent contract.** `skill/render.py:CANONICAL_SKILL_BODY`, installed by
   `adoption.py` into `AGENTS.md` and, when the repository shows signs of it,
   `CLAUDE.md`.
-- **Tests.** None.
+- **Tests.** `tests/public/test_public_contract.py`, four cases, plus a CI
+  workflow. Nothing else in the tree is a test.
 
 ## 5. Memory Data Model
 
@@ -314,8 +335,11 @@ haystack contains the lowercased query. No index, no ranking, no scoring, no
 limit, and the body — the file where the actual argument lives — is not searched
 at all. `agent-q decisions at <path>` is the more interesting query: it joins
 `decision_globs` where `kind='affected'` and `fnmatch`es the relative path, which
-answers *which decisions govern this file*. That is the right question, and the
-Workbench cannot create the globs it needs.
+answers *which decisions govern this file*. That is the right question, and both
+write paths can supply the globs it needs — `--affects` on the CLI, the
+`affected_code_globs` argument in `create_decision`. The `exempt` and `generated`
+glob kinds the same table carries have no producer, so the join is populated in
+one of its three kinds.
 
 Neither query filters on status. A retired, rejected or superseded decision
 prints alongside a live one with its status in the second column, which is the
@@ -362,55 +386,56 @@ interrupted writes, `dispatch/atomic.py` journals its file operations for
 roll-forward, and the Workbench's feedback receipts make an uncertain retry
 return the original request ID.
 
-**The write path now validates decision invariants — the poison-event hazard is
-closed.** At the previous pin decision invariants (a superseded target must be
-accepted or in force, no supersession cycles, no human-ID collision, no alias
-fork, no missing parent) were enforced only at *projection* time by raising
-`DecisionStopLine`, so a stop-line-violating event was durably appended and then
-aborted every subsequent replay — one bad event made the store unreadable.
-v0.3.0 added `_validate_stateful_event_before_append` → `validate_decision_event`
-in `append_event` (`events.py:150,428-468`), so an invalid decision event **fails
-before it is journalled**; the public-contract test asserts the bad event never
-lands and `events.jsonl` stays byte-identical, and a new `agent-q decisions
-diagnose` reports replay health. Validating at the write boundary as well as the
-replay boundary was the standard defence, and the project took it.
+**Decision invariants are checked at both boundaries.** A superseded target must
+be accepted or in force, supersession may not cycle, a human ID may not collide,
+an alias may not fork, a parent may not be missing — and `apply_record` raises
+`DecisionStopLine` at *projection* time when one is broken, which alone would
+make a bad event permanent poison in a log with no delete: appended durably, then
+aborting every subsequent replay. `append_event` therefore runs the same check
+first, through `_validate_stateful_event_before_append` → `validate_decision_event`
+(`events.py:150,428-468`), so an invalid decision event fails before it is
+journalled. The public-contract test asserts the bad event never lands and
+`events.jsonl` stays byte-identical, and `agent-q decisions diagnose` reports
+replay health. Validating at the write boundary as well as the replay boundary is
+the standard defence, and it is a defence a store this shape needs, because the
+replay-only version of it is a durable denial of service against yourself.
 
 The other write-side finding is the one in this report's title. Both propose
-paths hardcode the interesting lists empty:
+paths hardcode the same seven values:
 
 ```python
+"rejected_alternatives": [],
+"consequences": [],
+"exemptions": [],
+"generated_artifact_paths": [],
 "assumptions": [],
 "evidence": {},
-"required_checks": [],
-"verification": [],
+"review_policy": {},
 ```
 
-and `create_decision` in the Workbench adds `"affected_code_globs": []` to that
-set, so the only way to attach a glob is the CLI's `--affects`. The one later
-mutation event covers title, owner, tier, body, human ID, status and the seven
-`meta_fields`; it cannot reach any of the four. The tables, the projection code,
-the drift event and the runner all exist for data no shipped command can create.
-The honest framing is that the substrate is a library — the README says
+The one later mutation event covers title, owner, tier, body, human ID, status,
+tags and the four collections `amend` exposes; five of the seven above sit in its
+`meta_fields` set and no caller ever puts them in `fields_changed`, and the
+remaining two are reachable only from `decision_proposed`, which hardcodes them.
+The tables, the projection code, the assumption-violation transition, the quorum
+gate and the drift event all exist for data no shipped command can create. The
+honest framing is that the substrate is a library — the README says
 *"Project-specific importers should live in the consumer repository"* — so a
 consumer can import `append_event` and construct a fuller payload. But a reader
-who installs the package and follows the documented flow gets a decision with an
-empty verification list and a verify command that prints `no verification
-commands`.
+who installs the package and follows the documented flow gets a decision whose
+argument, alternatives, assumptions and evidence are all empty, and an acceptance
+that no reviewer policy can gate.
 
-Input handling here is much improved since the previous pin, though the shape of
-the risk is worth keeping in view. `agent-q decisions verify` used to run each
-stored verification command through `subprocess.run(..., shell=True)`; v0.3.0
-now parses the command into argv at authoring time, rejecting shell operators and
+Input handling on the fields that *are* writable is careful, and the shape of the
+residual risk is worth keeping in view. `agent-q decisions verify` parses each
+stored command into argv at authoring time, rejecting shell operators and
 env-assignments (`core/decision_schema.py`, `reject_unsafe=True`), executes via
-`shell=False` (`q.py:1324`), and refuses a legacy shell-dependent string and any
-verification on a non-accepted decision. The command string is still memory —
-it arrives in an event payload written by a participant, and the participant set
-includes agents — so a store whose records feed a later executor remains a path
-worth watching, but the unusually short distance to code execution has been
-lengthened by the argv boundary and the authoring rejection. That
-the field is currently unfillable through the shipped surfaces is what keeps it
-theoretical, which is an uncomfortable pair of facts to hold together: the same
-gap that makes the feature useless is the thing making it safe.
+`shell=False` (`q.py:1324`), and refuses both a legacy shell-dependent string and
+any verification on a non-accepted decision. The command is still memory — it
+arrives in an event payload written by a participant, and the participant set
+includes agents — so a store whose records feed a later executor stays a path
+worth watching. What the argv boundary buys is that the executor takes a vector,
+not a string, so the field can hold a command and cannot hold a shell.
 
 ## 8. Agent Integration
 
@@ -470,7 +495,9 @@ revision path. What is absent is any gate on *reading*: an agent that queries
 `enforcement_mode` — computed per tier, stored on every row, and non-null by
 schema — is consulted by no code path in the package. It is printed in a rendered
 Markdown view. A field named for enforcement that enforces nothing is worth
-saying plainly, and it is the same class of finding as the four unwritable tables.
+saying plainly, and it is one of a pair: `enforcement_mode` is read by nothing,
+`review_policy` is written by nothing, and between them the two fields that would
+make acceptance mean something are each disconnected at a different end.
 
 **Audit** is the capability this system has most completely. The event log is not
 a sidecar record of mutations; it *is* the store, append-only, ordered,
@@ -481,9 +508,10 @@ record more load-bearing.
 
 **Human review** exists as a place: the Workbench Decisions tab creates proposals,
 appends revisions with a required reason, and records acceptance, with the
-re-approval rule enforced in code. The caveats above are real — an agent in the
-participant list can accept, and the CLI does not check even that — but a person
-inspecting and adjudicating memory content has somewhere to do it.
+re-approval rule enforced in code. The caveats are real and they compound — an
+agent in the participant list can accept, the CLI does not check even that, and
+the quorum that would require a second acceptance cannot be configured — but a
+person inspecting and adjudicating memory content has somewhere to do it.
 
 **The reference scanner checks the inverse of what the schema suggests.**
 `agent-mesh decision refs` walks the tree for `D001`-shaped tokens and reports
@@ -499,13 +527,16 @@ memory's *identifier* is citable at all — but it runs the opposite direction t
 which asks whether the cited code moved rather than whether the citation
 resolves. Both would be worth having; one is here.
 
-**Failure modes worth naming.** The poison event of section 7 is the sharpest:
-one stop-line violation makes every CLI read fail, permanently, in a store with
-no delete. The full-replay-per-read is the second: correctness is excellent —
-the projection cannot drift, because it is rebuilt — and the cost is linear in
-total history on every query. And a projection whose invariants are enforced only
-during replay means the log can hold a state the code will never accept, which
-is precisely the situation the write-time validator exists to prevent.
+**Failure modes worth naming.** Full-replay-per-read is the standing one:
+correctness is excellent — the projection cannot drift, because it is rebuilt —
+and the cost is linear in total history on every query. Behind it sits the
+failure the write-time validator exists to prevent, which is worth understanding
+even though the validator stands in front of it: a log that can hold a state
+the projection will refuse is a store that can be bricked by one append, and
+`append_event` is the only thing standing between a caller and that. A consumer
+importing `append_event` gets the check; a consumer writing a line to
+`events.jsonl` by hand does not, and there is no repair tool, because repairing
+means rewriting every `prev_event_hash` after the bad line.
 
 **Privacy and deletion.** Local-only by default, deny-all `.gitignore` including
 itself, an explicit allowlist for the shared mode, and a publish checklist that
@@ -519,10 +550,11 @@ label, an intentional redaction path is the obvious next mechanism, and the
 
 ## 10. Tests, Evals, and Benchmarks
 
-The published tree now ships a curated public verification pack:
-`tests/public/test_public_contract.py`, four tests, with a CI workflow. At the
-previous pin there were none — only `.gitignore` entries for a suite kept in the
-larger internal repository. The four are behaviour contracts and they are pointed:
+The published tree ships a curated public verification pack:
+`tests/public/test_public_contract.py`, four tests, with a CI workflow. The only
+test-related line in `.gitignore` is `.pytest_cache/`, which is an artifact path
+and not evidence of a suite kept elsewhere. The four are behaviour contracts and
+they are pointed:
 request→respond→packet round-trips and the packet carries the bodies; a
 hash-chain tamper is detected (`prev_event_hash mismatch`); an invalid decision
 transition raises `DecisionStopLine` **at append** and leaves `events.jsonl`
@@ -533,13 +565,15 @@ must-detect and must-not-write, not must-not-*retrieve*, so they do not earn
 if small, checkable surface.
 
 That matters more here than in most reports, because the design's claims are
-exactly the kind that only a test can support. Idempotent crash recovery, a
-fault-injection hook (`AGENT_MESH_FAULT_AFTER`) that exists specifically to be
-driven by a test, roll-forward of a journaled atomic apply, owner-aware lock
-staleness across a reboot, a projection that must exactly reproduce the log, and
-stop lines that must fire — every one of these is asserted by a docstring and by
-no executable. The fault-injection environment variable is the clearest signal:
-somebody wrote a seam for a test harness, and the harness is not here.
+exactly the kind that only a test can support, and four cases reach one of them.
+Idempotent crash recovery, a fault-injection hook (`AGENT_MESH_FAULT_AFTER`,
+`core/events.py:29`) that exists specifically to be driven by a test,
+roll-forward of a journaled atomic apply, owner-aware lock staleness across a
+reboot, a projection that must exactly reproduce the log, and the re-approval
+rule that is the best thing in the design — every one of these is asserted by a
+docstring and by no executable. The fault-injection environment variable is the
+clearest signal: somebody wrote a seam for a test harness, the seam is exported
+from `core/events.py`, and nothing in the tree drives it.
 
 What ships instead is two runnable examples, `examples/solo-project/run.sh` and a
 parameterized `N=3 examples/n-agent/run.sh`, which exercise the flow and check
@@ -551,16 +585,15 @@ the code's behaviour.
 There is no paper, no benchmark, and no performance claim — grepping the README,
 `docs/` and the source for `arxiv`, `bibtex`, `@article`, `@misc`, `Citation` and
 `doi` returns nothing, and there is no `CITATION.cff`. The README makes no
-quantitative claim at all, which given the absence of tests is the correct
+quantitative claim at all, which given how thin the suite is makes for correct
 restraint: nothing here is asserted that a reader is invited to trust on
 numbers.
 
-Before relying on this I would want, in order: a test that a stop-line violation
-does not brick every subsequent read; a test that the projection of a fixed log
-hashes to a fixed value; a test driving `AGENT_MESH_FAULT_AFTER` through the
-recovery path; and one asserting that a revised decision loses its
-`accepted_utc`, because that is the mechanism the design is best at and nothing
-currently protects it from a refactor.
+Before relying on this I would want, in order: a test asserting that a revised
+decision loses its `accepted_utc`, because that is the mechanism the design is
+best at and nothing protects it from a refactor; a test that the projection of a
+fixed log hashes to a fixed value; and a test driving `AGENT_MESH_FAULT_AFTER`
+through the recovery path.
 
 ## 11. For Your Own Build
 
@@ -595,14 +628,21 @@ currently protects it from a refactor.
   can hold a state your reader will never accept — and in an append-only log with
   no delete, that state is permanent. Validate at both boundaries, or make the
   replay skip and quarantine rather than abort.
-- **Do not ship a table with a consumer and no producer.** Four decision
-  side-tables here have projections, a rebuild path and a runner, and no write
-  surface. A reader inspecting the schema concludes the system verifies its
-  decisions; a reader tracing the write path finds it cannot.
-- **Do not execute memory.** A stored field that a maintenance command feeds to a
-  shell is a memory store with a code-execution path, and the writer of that
-  field is whoever can append an event. If verification commands must be stored,
-  bound them to a declared allowlist and never interpolate them into a shell.
+- **Do not ship a consumer with no producer.** Seven payload fields here have
+  projections, side-tables, a status transition and a gate, and no write surface
+  — `review_policy` is the one that stings, because the code that reads it is a
+  quorum check that therefore always passes. A reader inspecting the schema
+  concludes acceptance can require reviewers; a reader tracing the write path
+  finds nothing that can name one. If a field is not writable yet, the honest
+  shapes are to leave the reader out or to make it fail loudly, not to have it
+  return the permissive answer on empty input.
+- **Do not execute memory through a shell.** A stored field a maintenance command
+  runs is a memory store with a code-execution path, and the writer of that field
+  is whoever can append an event. The defence here is worth copying in both
+  halves: parse to argv at *authoring* time so an unsafe command cannot be
+  stored, and execute with `shell=False` so a stored string cannot become a shell
+  line. Rejecting at authoring is the half most designs skip, and it is the half
+  that keeps a bad value out of an append-only log.
 - **Do not let the derived index be rebuilt from scratch on every read.** The
   correctness argument for full replay is good and the cost is unbounded in
   history. The skip check here is written and correct; it is simply not called
@@ -627,28 +667,32 @@ will disappoint. Nothing is retrieved automatically, nothing is ranked, nothing
 is summarised, and the only thing standing between a decision and the model that
 should honour it is an instruction to go and query. Walk away entirely if you
 need multi-user or multi-tenant boundaries, if you need to delete or redact
-anything you have stored, or if you cannot accept a substrate whose durability
-guarantees are asserted by docstrings and checked by nothing. At 0.2.0, with a
-five-commit published history and no test suite, the right posture is to read the
-design for its ideas — several of which are better than what surrounds them —
-rather than to adopt it for the guarantees.
+anything you have stored, or if you need an approval that more than one person
+has to give — the quorum is schema and projection, with no way to configure it.
+At v0.3.0, with an eight-commit published history and four tests against a
+24,653-line surface, the right posture is to read the design for its ideas —
+several of which are better than what surrounds them — rather than to adopt it
+for guarantees that are mostly asserted by docstrings.
 
 ## 12. Open Questions
 
-- Does the upstream development repository have the test suite the `.gitignore`
-  and `AGENT_MESH_FAULT_AFTER` imply? The published history is five commits
-  beginning with a curated publish, so this cannot be settled from the tree.
-- What was the intended producer for `decision_verifications` and the three
-  sibling tables — a richer Workbench form, a consumer-side importer, or a
-  command that was not part of the published surface?
-- What actually happens to a live project after a stop-line-violating event is
-  appended? The code path says every read fails; whether an operator has a
-  recovery route in practice needs the tool run against a constructed log, which
-  this reading did not do.
-- Does the Workbench expose `review_policy`, and therefore the reviewer quorum,
-  anywhere in its forms? The propose payload hardcodes it empty and
-  `decision_metadata_updated` can carry it, so the capability may exist through a
-  path this reading did not find.
+- Does the upstream development repository hold the suite `AGENT_MESH_FAULT_AFTER`
+  implies? The seam is exported for a harness that is not in the published tree,
+  whose history is eight commits beginning with a curated publish, so this cannot
+  be settled from what is here.
+- What was the intended producer for `review_policy`, `assumptions` and
+  `evidence` — a richer Workbench form, a consumer-side importer, or a command
+  that was not part of the published surface? The quorum check is the one that
+  matters, because a reviewer requirement that cannot be set is a security
+  property a reader will assume is available.
+- What happens to a project whose log already contains a stop-line-violating
+  event written before `append_event` checked for one, or written by a consumer
+  that bypassed it? `agent-q decisions diagnose` reports replay health; whether
+  an operator has a route back needs the tool run against a constructed log,
+  which this reading did not do.
+- `_decision_quorum_reached` counts distinct accepting actors and the
+  participant list routinely includes agents. If the quorum were configurable,
+  would two agents accepting satisfy it?
 
 ## Appendix: File Index
 
@@ -673,6 +717,8 @@ rather than to adopt it for the guarantees.
   `docs/migration.md`, `docs/privacy.md`.
 
 ## History
+
+**2026-08-17** — [`43bfe5cc376c71754c4a627286401825f4599062`](https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062) — read again at the same commit: upstream `main` has not moved, there are no other branches, and `v0.3.0` is still the only tag. Screened again before reading — `pyproject.toml` inside the seven-day cooldown, no auto-run surface, nothing installed or run; the dependency list it declares is empty, so the cooldown has nothing to hold back. Two published claims were wrong and are corrected in the body. **The reviewer quorum has no producer**: `review_policy` is hardcoded `{}` by `cmd_decision_propose` (`cli/mail.py:1568`) and `create_decision` (`workbench.py:655`), `decision amend` has no flag for it, no Workbench field sets it, and `_decision_quorum_reached` returns `True` on an empty `required_reviewers` — so acceptance is single-actor in every store the shipped verbs can build, and the previous entry's "optional reviewer quorum" overstated a gate that cannot be switched on. The same check applied to the whole payload puts the count of fields with a projection and no write surface at seven, not four. Second: `.gitignore` was read as evidence of a suite held back in an internal repository; its only test-related line is `.pytest_cache/`, an artifact path, at this commit and at the first reading's. Three sections still carried the pre-v0.3.0 state beside the corrected summary — `Tests. None.` in the path list, "decision stop lines are not checked here" on `append_event`, a code block listing `verification` and `required_checks` among the hardcoded-empty fields, and "the Workbench cannot create the globs it needs" — all four are rewritten to the current tree. Marks unchanged and now carrying evidence records. Verified afresh at this pin: `enforcement_mode` is stored, projected and rendered by `views/rendering.py:169` and read by nothing; `assumptions` and `evidence` reach `decision_assumptions`/`decision_evidence` only from `decision_proposed`, which hardcodes both; `events.py:150,428-468` and `q.py:1324` are still the validator and the `shell=False` executor. No paper, no `CITATION.cff`.
 
 **2026-08-15** — [`43bfe5cc376c71754c4a627286401825f4599062`](https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062) — re-pinned at release v0.3.0 (24,653 lines, eight commits, PyPI distribution `my-agent-mesh`). Screened again; a manifest inside the cooldown, nothing installed or run. The release fixed all three of this report's central negative findings: the verification apparatus, which both write paths hardcoded empty, is now writable through `--verification`, the Workbench and a new `decision amend` verb (three of the five fields — `verification`, `required_checks`, `affected_code_globs` — now populate; `assumptions` and `evidence` still have no producer); the poison-event hazard is closed by `_validate_stateful_event_before_append` → `validate_decision_event` in `append_event` (`events.py:150,428-468`), so an invalid decision event fails before it is journalled; and the `shell=True` verification runner is now argv/`shell=False` with authoring-time rejection of shell operators (`core/decision_schema.py`, `q.py:1324`). A public-contract test suite ships (`tests/public/test_public_contract.py`, four tests, plus CI) where there were none. The eyebrow and description are rewritten accordingly. Marks are unchanged — `trust_state`, `audit_log` and `human_review` all hold and are lightly strengthened (a completeness gate on acceptance, receipt↔decision binding, direct human approval of revisions); no new mark is earned (the contract tests are must-detect/must-not-write, not must-not-retrieve). What still holds: the grounding packet never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed and gates nothing, and there is no scope key, no validity-time axis and no delete. No paper.
 
