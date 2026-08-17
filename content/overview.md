@@ -2351,13 +2351,22 @@ next chunk, and asked to emit an **updated memory** that overwrites the old one.
 What it keeps is not decided by a heuristic or a prompt-engineered summarizer:
 the whole loop is trained end-to-end with multi-conversation RL against the
 final answer's reward, so the retention policy is *learned* — dropping the wrong
-detail costs reward several chunks later. The published claims are strong (a
-model trained at 8K extrapolating to 3.5M-token tasks with under 5% loss, 95%+
-on 512K RULER), and the mechanism is genuinely novel: nothing else this atlas
-has read learns what to remember rather than being told.
+detail costs reward several chunks later. The mechanism is genuinely novel — nothing
+else this atlas has read learns what to remember rather than being told — and the
+published claims are strong. The paper is
+[arXiv:2507.02259](https://arxiv.org/abs/2507.02259) (submitted 3 July 2025,
+revised 29 July 2026, accepted to ICLR 2026 as an Oral), and its abstract states
+the result as extrapolating *"from an 8K context trained on 32K text to a 3.5M QA
+task with performance loss < 5%"* and 95%+ on the 512K RULER test. The two
+lengths are separate and the distinction matters when the number is repeated: 8K
+is the context window the agent runs in, not the length it was trained on.
 
-It is still out of scope, and the code says so plainly. `self.memory` is a
-NumPy object array allocated in `start()` per batch, carried across chunks of
+It is still out of scope, and the paper and the code say so independently. The
+paper's memory is a **fixed-length sequence of ordinary tokens inside the context
+window** — 1024 of them in the experiments, sized so that per-chunk compute stays
+constant — reset for each input document and consumed by an answer-generation
+step that sees only the problem and the memory. The code agrees: `self.memory` is
+a NumPy object array allocated in `start()` per batch, carried across chunks of
 one input, and discarded; there is no persistence path, no retrieval, no scope,
 and no identity a later correction could name. It is a compressor with a learned
 policy rather than a memory with a lifecycle — the same category as BeeAI's
@@ -5840,6 +5849,7 @@ No internet sources were used for this report. The analysis is based on the chec
 
 ### Known Limitations
 
+- **A paper's headline result was paraphrased wrongly on the scope-boundary page, in the direction that overstates it.** The MemAgent entry read *"a model trained at 8K extrapolating to 3.5M-token tasks"*; the paper's abstract ([arXiv:2507.02259](https://arxiv.org/abs/2507.02259)) says the model extrapolates *from* an 8K context and was trained on 32K text. The 8K is the context window the agent runs in, and collapsing the two lengths into one makes the extrapolation sound larger than the authors claim. The claim was quoted without citing the paper at all, which is what let it drift — the entry now carries the arXiv id, the submission and revision dates, and the ICLR 2026 Oral acceptance, so a reader can check the number rather than trust the paraphrase. Corrected 17 August 2026.
 - **The rejected-value tombstone page described Daimon's key as a hash of exact text, and it is canonical.** `normalize.canonical_text` folds NFKC, case, whitespace and punctuation before the id is taken, so the key is normalised rather than literal — the direction that makes the mechanism stronger, not weaker. The Daimon report recorded the canonical form on 2026-07-30 and the pattern page carried the literal claim until 2026-08-16.
 - Supermemory's hosted backend implementation was not visible in this checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph UI.
 - **A Hillock claim was imprecise when published rather than overtaken.** The report described a third monkey-patch in `talon_engine.py` as overriding `GLiREL._from_pretrained` *"similarly"* to the `check_torch_load_is_safe` bypass beside it. At every commit the atlas has read, that patch defaults two keyword arguments for Hub compatibility and the one beside it supplies missing tied-weight attributes to an older `fastcoref` class. There is one deserialization bypass, applied to two module paths, and the body now says so. The error inflated a security finding, which is the direction a reader is least likely to check.
