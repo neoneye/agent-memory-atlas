@@ -710,6 +710,58 @@ improvement, and with them it does not. A single run of a memory
 benchmark can support a claim about a five-point gap and cannot support
 a claim about a one-point gap, and almost nobody publishes enough to
 tell you which kind of gap you are looking at.</p>
+<p><strong>A study published outside this corpus measured the judge swap
+directly, and the swap moved a score further than the architectures
+did.</strong> <a
+href="https://www.pinglin.tw/blog/the-shapes-of-agent-memory/"><em>The
+Shapes of Agent Memory</em></a> (Ping Lin, 12 August 2026) ran five
+retrieval stores through one reader and one judge, then had a
+<strong>frontier judge from a different vendor re-score the same
+byte-identical published responses</strong> on a frozen hundred-question
+sample. Every arm fell: 0.790 → 0.750, 0.750 → 0.680, 0.680 → 0.620,
+0.560 → 0.490, 0.610 → 0.540, with per-arm agreement of 0.91 to 0.96 and
+Cohen's kappa of 0.82 to 0.89. So the judges agree with each other about
+nine times in ten and still disagree about the score by up to seven
+points — more than the gaps between the stores that tie. Agreement is
+high and the level is not the same, which is the distinction a single
+reported accuracy hides.</p>
+<p>The evidence sits in <a
+href="https://github.com/a40-labs/memory"><code>a40-labs/memory</code></a>
+at <a
+href="https://github.com/a40-labs/memory/commit/f53ad5f64f651e22cd45073ee3e32b546b469858"><code class="commit-id" title="f53ad5f64f651e22cd45073ee3e32b546b469858">f53ad5f6…</code></a>,
+and the shape of that repository is the part worth copying. It publishes
+the <strong>per-question rows</strong> behind every table, with one
+verification script per benchmark that recomputes each figure from those
+rows against a <code>PUBLISHED</code> constant and fails on any mismatch
+— and <code>verify_all.py</code> closes by printing what it
+<em>cannot</em> check: <em>"Every check passed: all published numbers
+THAT HAVE ROWS IN THIS REPO reproduce from them"</em>, followed by the
+three published scores with no rows and the reason for each ("contexts
+never persisted at run time; fixed forward"; "different harness, rows
+unpublished"; "study log only"). A verifier that enumerates its own
+blind spots is the artifact this page has been asking for since it was
+written, and the README states the motive in the same terms: a number
+published without its frame <em>"cannot be checked, only
+believed."</em></p>
+<p>Its opening example is the traceability failure this page documents
+elsewhere, worked through in public: one system's LoCoMo result has been
+published as 84, as 58.44 after a competitor's CTO filed an issue
+arguing the adversarial category sat in the numerator but not the
+denominator, and as 75.14 after a re-run with that error fixed — while
+the competitor's own figure has been cited at both 67 and 92.5. One
+benchmark, one system, a 25-point spread, and the memory architecture
+never changed.</p>
+<p>The same study reports two agentic results that belong beside the
+ablation section above. Using ALFWorld (134 unseen games, scored as a
+per-category macro success rate) and WebShop (partial-credit score and
+strict success rate reported separately), a retrieved experience bank
+moved a 35B actor from 0.603 to 0.645 on ALFWorld and a frontier actor
+from 0.959 to 0.973 — <em>"retrieved memory paid only where the actor
+had headroom."</em> The scripts also record the bar they are measured
+against: MemHarness's published 0.852 in-distribution on ALFWorld and
+87.4 on WebShop, against 0.645 and 66.0 measured here. Recording the
+published figure you did not reach, in the verification script rather
+than in a footnote, is the second thing worth copying.</p>
 <p>The same harness makes a second move worth copying, described in that
 report: it grades <strong>whether the retrieved context contained the
 answer</strong> as a separate judgement from whether the answer was

@@ -295,6 +295,22 @@ could not find"*, which almost nothing else here does, and `match_reasons` names
 why a record ranked — with a test asserting `"recency"` is **absent** when the
 decay term does not clear its threshold.
 
+**The unit question has a literature, and it predates the memory frameworks
+arguing about it.** *Dense X Retrieval: What Retrieval Granularity Should We
+Use?* ([arXiv:2312.06648](https://arxiv.org/abs/2312.06648), submitted 11
+December 2023, last revised 4 October 2024) indexes a corpus at four
+granularities — document, passage, sentence, and a proposed **proposition**, an
+atomic expression of a single fact in natural language — and reports that the
+choice of unit moves both retrieval and downstream question answering, with
+propositions ahead of passages. Read against the `memory_unit` column of the
+matrix below, that is the same decision every system here makes and few of them
+argue for: the systems that extract atomic facts and the systems that keep whole
+messages are picking different points on that axis, usually without citing the
+question. The finding does not transfer unexamined — a proposition extracted
+from a static corpus is not a claim that can later be contradicted, which is the
+property this atlas cares about and retrieval granularity does not address — but
+a design that has not decided its unit deliberately has decided it anyway.
+
 **CAMEL is the family's floor and its clearest warning about stored scope.** Its
 memory unit is the message rather than the fact — `MemoryRecord` is a chat
 message, a backend role, a UUID and a timestamp, with nothing extracted or
