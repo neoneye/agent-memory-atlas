@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **300 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **301 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -181,6 +181,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memcp`](../systems/memcp/) **MemCP** — The baseline column is a constant with a comment · `maydali28/memcp` · Human review
 - [`memento`](../systems/memento/) **Memento** — Memory sealed until a date · `xD4O/memento` · Scope enforced
 - [`memex-zero-rag`](../systems/memex-zero-rag/) **MeMex Zero-RAG** — Enforcement by instruction · `JPeetz/MeMex-Zero-RAG`
+- [`memharness`](../systems/memharness/) **MemHarness** — A prior that updates from outcomes · `KnowledgeXLab/MemHarness`
 - [`memlayer`](../systems/memlayer/) **Memlayer** — Salience by example, with an API key among the examples · `divagr18/memlayer`
 - [`memledger`](../systems/memledger/) **MemLedger** — Provenance that answers, and does not enforce · `riktar/memledger` · Trust state, Mutation audit
 - [`memmachine`](../systems/memmachine/) **MemMachine** — Episode-preserving dual memory · `MemMachine/MemMachine` · Scope enforced
