@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 296 reports.</strong></p>
+<p><strong>This page covers all 297 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8720,6 +8720,66 @@ another's. Isolation is deliberately absent — one shared palace, and a
 text fallback that greps every agent's <code>memory.md</code> including
 archived ones — because the premise is a hive that knows
 collectively.</li>
+</ul>
+<h3 id="one-agent-many-hats"><a
+href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a></h3>
+<ul>
+<li>Best idea: <strong>refuse the memory at write time, and let the rule
+file name the function that refuses it.</strong>
+<code>assertBehavioural</code> (<code>src/memory/lessons.ts</code>)
+tests six patterns against a distilled lesson before it is stored —
+widening a tool, profile or permission; disabling a gate or approval;
+overriding instructions; escaping the workspace; asserting the state of
+the configuration — and throws <code>LESSON_REFUSED</code>, because a
+store containing access-widening text <em>"is one refactor away from
+applying it."</em> <code>packs/rules/lessons-behavioural-only.md</code>
+declares <code>enforced_by: memory.lessons.assertBehavioural</code>, and
+<code>src/registry/loader.ts</code> refuses to load any non-prompt rule
+whose enforcement point is not registered. Beside it, unproven lessons
+are injected into a deterministic hash slice of runs, so the runs
+without them are a control group and promotion reads outcomes rather
+than intentions.</li>
+<li>Biggest risk: <strong>the accountability record never hears about
+memory.</strong> <code>src/core/audit.ts</code> is a hash-chained,
+<code>0600</code>, single-stream log with <code>verifyAuditChain</code>
+and a closed vocabulary that includes <code>data.written</code> and
+<code>data.deleted</code> — and nine of its twenty actions have no
+producer, no memory mutation is recorded, and all thirteen call sites
+use the non-throwing <code>auditQuietly</code> while the awaited
+<code>audit()</code> the module's own docstring argues for is never
+called. Separately, <code>appendJsonl</code> takes a file mode and
+explains why conversation content must not exist world-readable; the
+lesson and takeaway stores call it without one.</li>
+<li>Most reusable component: the three-point defence against a memory
+that records the configuration. A run concluded network egress was off,
+the user turned it on, and later runs kept refusing to call
+<code>fetch_url</code> while the tool sat in the allowlist. The answer
+is a lesson pattern refusing the shape,
+<code>describesEnvironment</code> refusing it as a persona fact — narrow
+on purpose, a capability word <strong>and</strong> a state word — and a
+line in every system prompt: <em>"If you have a memory suggesting
+otherwise, it is stale — ignore it and call the tool."</em></li>
+<li>Maturity impression: PolyForm Noncommercial 1.0.0 with an
+attribution notice, 29,719 lines of TypeScript with <strong>zero runtime
+dependencies</strong>, 298 tests across 32 files with CI, and 36 commits
+over three days (first commit 15 August 2026). Three marks —
+<code>trust_state</code> (draft/canary/active/disabled with confidence
+arithmetic), <code>human_review</code> (feedback as a CLI, REPL and HTTP
+verb), <code>negative_eval</code> (a committed assertion that a rejected
+takeaway never returns). A committed working paper is cited by section
+from the module docstrings; its scoping safeguard is delivered by the
+directory rather than by the <code>scope</code> field it names, and its
+conservative cold-start profile is one paragraph of prompt rather than
+the tighter budgets it describes.</li>
+<li>Study when: you want memory that writes itself and must not be able
+to widen what the agent may touch — the write-time refusal, the canary
+staging and the enforcement-point registry are three separable ideas and
+the first is about forty lines.</li>
+<li>Do not copy when: you need multi-tenancy (the boundary is a
+directory and the one scope field is inert), an audit of what was
+remembered and forgotten, or deletion keyed on a value — a rejected
+takeaway is filtered from retrieval and stays on disk past every
+retention clock in the system.</li>
 </ul>
         </article>
       </div>

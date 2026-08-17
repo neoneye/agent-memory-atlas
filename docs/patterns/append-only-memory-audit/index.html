@@ -483,6 +483,36 @@ with two indexes, a paired rollback, an ORM class and a dashboard
 counter. Nothing inserts into it. Every artifact of an audit trail is
 present except the write, and the forgetting engine named as its
 consumer works from denormalised counters on the memory row instead.</p>
+<p><strong><a href="../../systems/one-agent-many-hats/">Hats</a> is the
+near-miss that fails in the opposite direction: the log is built,
+hash-chained and written to, and memory is not among the things it
+records.</strong> <code>src/core/audit.ts</code> is one of the more
+careful implementations of this page in the corpus — a single stream
+rather than one per run, because <em>"the question is 'everything done
+to this workspace', which cannot be answered by a store partitioned by
+the thing you are searching for"</em>; mode <code>0600</code>;
+serialised writes so <em>"two appends must not interleave or the chain
+forks"</em>; a per-record SHA-256 over the previous hash and this body;
+<code>verifyAuditChain</code> to recompute it; and
+<code>auditForSubject</code> for the query it is shaped around. Its
+docstring then names what belongs in it, including <em>"data export,
+deletion, admin or tool access to workspace data"</em>. Nine of the
+twenty actions in its closed vocabulary have no producer,
+<code>data.written</code> and <code>data.deleted</code> among them, and
+<strong>no memory mutation reaches it at all</strong> — distilling a
+lesson, rejecting a takeaway, forgetting a persona fact, disabling a
+lesson and pruning the memory folder are all invisible to it. Two
+further details are worth carrying into your own review. The module
+argues that completeness is the property the stream exists for, so
+writes are <em>"awaited rather than fire-and-forget, and a failure is
+surfaced to the caller instead of being counted and dropped"</em>, and
+exports <code>audit()</code> to do exactly that — while all thirteen
+call sites use the non-throwing <code>auditQuietly</code>, two of them
+prefixed <code>void</code>. And the retention policy exempts the audit
+stream on the correct ground that trimming the front of the file would
+break the chain. A log this careful, with this vocabulary, that a memory
+system does not write to, is the shape to check for: the schema is not
+the evidence, the call sites are.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

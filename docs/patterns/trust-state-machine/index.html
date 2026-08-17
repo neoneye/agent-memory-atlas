@@ -433,6 +433,28 @@ names: <code>CandidateContentSource</code> for where content came from,
 <code>CandidateResolution</code> for where it stands, so "why do you
 believe that" and "who approved it" have separate answers and both are
 stored.</p>
+<p><strong><a href="../../systems/one-agent-many-hats/">Hats</a> puts a
+staging arm between <code>draft</code> and <code>active</code>, which is
+the only instance of the shape in this corpus.</strong> A lesson
+distilled from a failed run enters at <code>draft</code> with confidence
+0.5, becomes <code>canary</code> on first injection, and while it is
+unproven <code>inCanarySlice</code> — an FNV-1a hash of
+<code>runId:lessonId</code> against a 0.5 share
+(<code>src/memory/lessons.ts</code>) — decides whether this run sees it
+at all. The runs that do not are a control group, deterministically so:
+the same run and the same lesson always decide the same way, so a rerun
+is comparable. Promotion then reads outcomes rather than intentions —
+two acceptances at confidence ≥ 0.6 promotes; three rejections or
+confidence below 0.2 disables with
+<code>retiredReason: 'contradicted by outcomes'</code>; and six
+injections with zero tag matches disables it as <em>"never matched —
+expired as noise"</em>, which separates <em>wrong</em> from
+<em>useless</em> as exits. An explicit human correction skips the ladder
+and is stored <code>active</code> at 0.9, verbatim, because a correction
+is not a hypothesis. What the machine does not do is record its own
+transitions anywhere: the counters and <code>retiredReason</code> are
+overwritten in place by a whole-file rewrite, and the runtime's
+hash-chained audit log is never told.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

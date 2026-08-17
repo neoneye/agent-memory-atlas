@@ -380,6 +380,31 @@ into it. Every artifact of an audit trail is present except the write, and the
 forgetting engine named as its consumer works from denormalised counters on the
 memory row instead.
 
+**[Hats](../../systems/one-agent-many-hats/) is the near-miss that fails in the
+opposite direction: the log is built, hash-chained and written to, and memory is
+not among the things it records.** `src/core/audit.ts` is one of the more careful
+implementations of this page in the corpus — a single stream rather than one per
+run, because *"the question is 'everything done to this workspace', which cannot
+be answered by a store partitioned by the thing you are searching for"*; mode
+`0600`; serialised writes so *"two appends must not interleave or the chain
+forks"*; a per-record SHA-256 over the previous hash and this body;
+`verifyAuditChain` to recompute it; and `auditForSubject` for the query it is
+shaped around. Its docstring then names what belongs in it, including *"data
+export, deletion, admin or tool access to workspace data"*. Nine of the twenty
+actions in its closed vocabulary have no producer, `data.written` and
+`data.deleted` among them, and **no memory mutation reaches it at all** —
+distilling a lesson, rejecting a takeaway, forgetting a persona fact, disabling a
+lesson and pruning the memory folder are all invisible to it. Two further
+details are worth carrying into your own review. The module argues that
+completeness is the property the stream exists for, so writes are *"awaited
+rather than fire-and-forget, and a failure is surfaced to the caller instead of
+being counted and dropped"*, and exports `audit()` to do exactly that — while all
+thirteen call sites use the non-throwing `auditQuietly`, two of them prefixed
+`void`. And the retention policy exempts the audit stream on the correct ground
+that trimming the front of the file would break the chain. A log this careful,
+with this vocabulary, that a memory system does not write to, is the shape to
+check for: the schema is not the evidence, the call sites are.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

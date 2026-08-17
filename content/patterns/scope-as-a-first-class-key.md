@@ -524,6 +524,24 @@ that can reach the store, and for each one ask what happens when the scope
 argument is absent. A single function can be right in one caller and wrong in
 the next, and reading the function will never show you that.
 
+**[Hats](../../systems/one-agent-many-hats/) is the cleanest instance of the
+stored-and-never-applied form, and the field is not vestigial.** `Lesson.scope`
+is typed `'run' | 'workspace' | 'global'`, written on every record, used inside
+`LessonStore.record` as half of the dedupe identity
+(`similar(l.text, text) && l.scope === input.scope`), and printed by
+`hats memory`. `LessonStore.select` — the only read path — filters on `status`,
+on `confidence` and on a canary slice, and never on `scope`, so a `global`
+lesson and a `workspace` lesson behave identically and both are confined to the
+workspace file they sit in. The isolation is real and the directory layout
+delivers it. Two things make this worth naming rather than shrugging at: the
+project's own rule document
+(`packs/rules/lessons-behavioural-only.md`) lists scoping first among the three
+properties that bound a bad lesson — *"a run-scoped or workspace-scoped lesson
+cannot reach another workspace"* — attributing to the field a guarantee the
+filesystem is providing; and `'run'`, the narrowest value, is never written by
+any caller. A scope key that is stored, deduped on, displayed and documented as
+a safeguard, and filtered on by nothing, is what this page means by a tag.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **296 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **297 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -252,6 +252,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`omniintelligence`](../systems/omniintelligence/) **OmniIntelligence** — Evidence-tiered pattern learning · `OmniNode-ai/omniintelligence` · Trust state, Mutation audit, Human review, Negative evals
 - [`omnimemory`](../systems/omnimemory/) **OmniMemory** — A gate that tests whether the gate discriminates · `OmniNode-ai/omnimemory`
 - [`omninode-knowledge-base`](../systems/omninode-knowledge-base/) **OmniNode Knowledge Base** — Every claim needs evidence, and none has any · `OmniNode-ai/knowledge-base` · Trust state
+- [`one-agent-many-hats`](../systems/one-agent-many-hats/) **Hats** — Lessons refused at write time · `klairtech/one-agent-many-hats` · Trust state, Human review, Negative evals
 - [`open-cowork`](../systems/open-cowork/) **open-cowork** — Evaluated memory · `OpenCoworkAI/open-cowork` · Negative evals
 - [`open-second-brain`](../systems/open-second-brain/) **Open Second Brain** — A rejection the next dream cannot undo · `itechmeat/open-second-brain` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review
 - [`openakashic`](../systems/openakashic/) **OpenAkashic** — One memory, every agent · `szara7678/OpenAkashic` · Trust state, Negative evals

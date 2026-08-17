@@ -305,6 +305,23 @@ content came from, `ConfirmationAuthority` for who signed off, and
 `CandidateResolution` for where it stands, so "why do you believe that" and "who
 approved it" have separate answers and both are stored.
 
+**[Hats](../../systems/one-agent-many-hats/) puts a staging arm between `draft`
+and `active`, which is the only instance of the shape in this corpus.** A lesson
+distilled from a failed run enters at `draft` with confidence 0.5, becomes
+`canary` on first injection, and while it is unproven `inCanarySlice` — an FNV-1a
+hash of `runId:lessonId` against a 0.5 share (`src/memory/lessons.ts`) — decides
+whether this run sees it at all. The runs that do not are a control group,
+deterministically so: the same run and the same lesson always decide the same
+way, so a rerun is comparable. Promotion then reads outcomes rather than
+intentions — two acceptances at confidence ≥ 0.6 promotes; three rejections or
+confidence below 0.2 disables with `retiredReason: 'contradicted by outcomes'`;
+and six injections with zero tag matches disables it as *"never matched — expired
+as noise"*, which separates *wrong* from *useless* as exits. An explicit human
+correction skips the ladder and is stored `active` at 0.9, verbatim, because a
+correction is not a hypothesis. What the machine does not do is record its own
+transitions anywhere: the counters and `retiredReason` are overwritten in place
+by a whole-file rewrite, and the runtime's hash-chained audit log is never told.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

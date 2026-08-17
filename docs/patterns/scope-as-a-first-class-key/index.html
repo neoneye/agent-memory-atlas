@@ -644,6 +644,29 @@ on call sites: enumerate every surface that can reach the store, and for
 each one ask what happens when the scope argument is absent. A single
 function can be right in one caller and wrong in the next, and reading
 the function will never show you that.</p>
+<p><strong><a href="../../systems/one-agent-many-hats/">Hats</a> is the
+cleanest instance of the stored-and-never-applied form, and the field is
+not vestigial.</strong> <code>Lesson.scope</code> is typed
+<code>'run' | 'workspace' | 'global'</code>, written on every record,
+used inside <code>LessonStore.record</code> as half of the dedupe
+identity
+(<code>similar(l.text, text) &amp;&amp; l.scope === input.scope</code>),
+and printed by <code>hats memory</code>. <code>LessonStore.select</code>
+— the only read path — filters on <code>status</code>, on
+<code>confidence</code> and on a canary slice, and never on
+<code>scope</code>, so a <code>global</code> lesson and a
+<code>workspace</code> lesson behave identically and both are confined
+to the workspace file they sit in. The isolation is real and the
+directory layout delivers it. Two things make this worth naming rather
+than shrugging at: the project's own rule document
+(<code>packs/rules/lessons-behavioural-only.md</code>) lists scoping
+first among the three properties that bound a bad lesson — <em>"a
+run-scoped or workspace-scoped lesson cannot reach another
+workspace"</em> — attributing to the field a guarantee the filesystem is
+providing; and <code>'run'</code>, the narrowest value, is never written
+by any caller. A scope key that is stored, deduped on, displayed and
+documented as a safeguard, and filtered on by nothing, is what this page
+means by a tag.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
