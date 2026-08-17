@@ -1654,6 +1654,168 @@ a {
   margin: 7px 0;
 }
 
+/* ---- A–Z index -------------------------------------------------------------
+   Four columns, declared in fixed units rather than derived from content.
+   Each letter is its own <ul>, so content-derived widths (a table, or grid with
+   auto columns) would align within a letter and disagree across letters — 27
+   sets of columns down one page, which is the ragged effect this replaced.
+   Fixed units make every row on the page share one set of edges by
+   construction. Not a <table> for the same reason plus a mechanical one:
+   build_site.sh wraps every <table> in a .table-wrap scroller and main.js hangs
+   an expand toggle off each, which on 27 tables is 27 scrollers. */
+.prose ul.az {
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Stacked is the default and four columns is the enhancement, not the reverse.
+   The four only fit once the prose track clears ~960px, and forcing them in
+   below that leaves the one field that differs between rows — what the system
+   is — about 40px to wrap in. Stacked, the name still holds its own column, so
+   the edge a reader scans down survives every width. */
+.prose ul.az > li {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: 3px 20px;
+  align-items: baseline;
+  padding: 9px 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+
+.az-id {
+  grid-row: 1 / span 3;
+}
+
+.az-what,
+.az-repo,
+.az-caps {
+  grid-column: 2;
+}
+
+.az-head {
+  display: none;
+  margin: 30px 0 0;
+  padding: 0 0 7px;
+  color: #9a9284;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.prose ul.az > li:hover {
+  background: rgb(255 253 248 / 0.75);
+}
+
+.az-id a {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.az-id a:hover,
+.az-id a:focus-visible {
+  text-decoration: underline;
+}
+
+/* Printed only where the slug is not already inside the title or the repository
+   path — 22 rows of 301. On the rest it was the same word a third time. */
+.az-slug {
+  display: block;
+  margin-top: 2px;
+  color: #9a9284;
+  font-family: var(--mono);
+  font-size: 0.63rem;
+}
+
+.az-what {
+  font-size: 0.79rem;
+  line-height: 1.5;
+  color: #46536a;
+}
+
+.az-repo {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: #8b8375;
+  overflow-wrap: anywhere;
+}
+
+.az-caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* No border: at up to seven per row across 301 rows, outlined pills turn the
+   right-hand column into a wall of boxes. The tint alone is enough to separate
+   them, and it keeps this column quieter than the name it sits beside. */
+.az-cap {
+  padding: 2px 7px;
+  color: var(--sage-dark);
+  font-size: 0.61rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  background: rgb(143 183 162 / 0.16);
+  border-radius: 3px;
+}
+
+/* The threshold is arithmetic, not taste. The shell spends 230px on the table
+   of contents and 72px on the gutter, plus 56px of page padding, so the prose
+   track is viewport − 358. Four columns cost 12 + 16 + 13rem of fixed width and
+   three 20px gaps — 716px — and the description needs ~280px to hold a median
+   entry on one line. 716 + 280 + 358 lands here, just under the 1366px that is
+   the narrowest common laptop. The name column is the one that can afford to be
+   tight: titles run to 15 characters at the 90th percentile, the repository
+   paths to 29. */
+@media (min-width: 1354px) {
+  .document-shell.is-wide {
+    max-width: 1480px;
+    grid-template-columns: 230px minmax(0, 1080px);
+  }
+
+  .az-head,
+  .prose ul.az > li {
+    grid-template-columns: 12rem minmax(0, 1fr) 16rem 13rem;
+    column-gap: 20px;
+  }
+
+  .az-head {
+    display: grid;
+  }
+
+  .az-id {
+    grid-row: auto;
+  }
+
+  .az-what,
+  .az-repo,
+  .az-caps {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .prose ul.az > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .az-id {
+    grid-row: auto;
+  }
+
+  .az-what,
+  .az-repo,
+  .az-caps {
+    grid-column: 1;
+  }
+}
+
 .prose blockquote {
   padding: 7px 0 7px 24px;
   margin: 30px 0;

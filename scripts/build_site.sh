@@ -96,6 +96,21 @@ render_document() {
     capability_strip="$(python3 "$project_dir/scripts/capability_strip.py" "$input")"
   fi
 
+  # 820px is a reading measure, chosen for paragraphs. A page that is a
+  # directory rather than an argument — the A–Z index, four columns of it —
+  # cannot honour that measure and stay in columns, and shrinking the columns to
+  # fit is what produced a wrapped, ragged list in the first place. `layout:
+  # wide` lets such a page opt out; everything else keeps the measure.
+  local layout
+  local shell_class=""
+  layout="$(sed -n 's/^layout:[[:space:]]*//p' "$input" | head -n 1)"
+  layout="${layout//\"/}"
+  case "$layout" in
+    wide) shell_class=" is-wide" ;;
+    "") ;;
+    *) echo "unknown layout '$layout' in $input" >&2; exit 1 ;;
+  esac
+
   mkdir -p "$(dirname "$destination")"
   pandoc "$input" \
     --from=gfm \
@@ -109,6 +124,7 @@ render_document() {
     --variable="analyzed_at_text:$analyzed_at" \
     --variable="capability_strip:$capability_strip" \
     --variable="stance_label:$stance_label" \
+    --variable="shell_class:$shell_class" \
     --output="$destination"
 
   # The diagrams render client-side, so an unrendered page hands a reader the

@@ -4,362 +4,442 @@ eyebrow: Index
 description: A flat alphabetical index of every system report in the atlas, generated from the reports themselves.
 root: ..
 page_kind: methodology
+layout: wide
 ---
 
-Every one of the **301 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **301 reports**, filed under the slug in its URL — printed beneath the name on the rows where the two differ, which is why `Google ADK` sits under A. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
+<div class="az-head" aria-hidden="true"><span>System</span><span>What it is</span><span>Repository</span><span>Capabilities</span></div>
+
 ## 7
 
-- [`7layermem`](../systems/7layermem/) **7layermem** — Seven tables, one thread key · `Prateek816/7layermem`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/7layermem/">7layermem</a></span><span class="az-what">Seven tables, one thread key</span><code class="az-repo">Prateek816/7layermem</code><span class="az-caps"></span></li>
+</ul>
+
 ## A
 
-- [`a-mem`](../systems/a-mem/) **A-MEM** — Evolving Zettelkasten memory · `agiresearch/A-mem`
-- [`acontext`](../systems/acontext/) **Acontext** — Memory as skill files · `memodb-io/Acontext` · Scope enforced, Human review
-- [`adk-python`](../systems/adk-python/) **Google ADK** — A contract with no delete · `google/adk-python` · Scope enforced
-- [`aeris`](../systems/aeris/) **Aeris** — The model never touches the state · `Cedrick-Coto/Aeris` · Trust state, Scope enforced, Negative evals
-- [`agent-afk`](../systems/agent-afk/) **agent-afk** — A citation or an [unverified] tag · `griffinwork40/agent-afk` · Negative evals
-- [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
-- [`agent-memory-doctrine`](../systems/agent-memory-doctrine/) **Agent Memory (MythologIQ)** — Deletion residue as a partition · `MythologIQ-Labs-LLC/agent-memory` · Tombstone, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced
-- [`agent-memory-techniques`](../systems/agent-memory-techniques/) **Agent Memory Techniques** — Thirty reference implementations · `NirDiamant/Agent_Memory_Techniques` · Scope enforced, Mutation audit
-- [`agent-mesh`](../systems/agent-mesh/) **Agent Mesh** — A decision ledger that validates before it appends · `cbalgeman/agent-mesh` · Trust state, Mutation audit, Human review
-- [`agent-working-memory`](../systems/agent-working-memory/) **AgentWorkingMemory** — Retracting a fact should shake its whole story · `CompleteIdeas/agent-working-memory` · Trust state, Scope enforced, Negative evals
-- [`agentic-context-engine`](../systems/agentic-context-engine/) **Agentic Context Engine** — A decision not to merge, kept · `kayba-ai/agentic-context-engine` · Trust state
-- [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced, Mutation audit
-- [`agentmemory-v4`](../systems/agentmemory-v4/) **agentmemory V4** — The run log names a different dataset from the claim · `jordanmccann/agentmemory`
-- [`agentrecall-x`](../systems/agentrecall-x/) **AgentRecall-X** — A correction that loses its veto · `Goldentrii/AgentRecall-X` · Trust state, Scope enforced
-- [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
-- [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals
-- [`ai-memory`](../systems/ai-memory/) **ai-memory** — Cross-harness handoff · `akitaonrails/ai-memory` · Scope enforced
-- [`aimaos`](../systems/aimaos/) **AIMAOS** — Contradictions embeddings place far apart · `munch2u-a11y/AIMAOS` · Scope enforced
-- [`aipass`](../systems/aipass/) **AIPass** — A budget on how often memory may speak · `AIOSAI/AIPass` · Scope enforced
-- [`alma-memory`](../systems/alma-memory/) **ALMA** — A write guard on one door of six · `RBKunnela/ALMA-memory` · Trust state, Scope enforced, Mutation audit
-- [`always-on-memory-agent`](../systems/always-on-memory-agent/) **Always-On Memory Agent** — No vector DB — the model is the retriever · `GoogleCloudPlatform/generative-ai (always-on-memory-agent)`
-- [`arc-code`](../systems/arc-code/) **arc-code** — The actuator writes the log · `jerber/arc-code`
-- [`arcrift`](../systems/arcrift/) **ArcRift** — A canary secret in each of ten tenants · `eshaan-nair/arcrift` · Scope enforced, Negative evals
-- [`argo`](../systems/argo/) **ARGO** — Architecture as the memory · `derekhu0002/Argo` · Scope enforced, Negative evals
-- [`athena`](../systems/athena/) **Project Athena** — Claims labelled by how well they are known · `winstonkoh87/Athena-Public` · Mutation audit
-- [`atomic-agent`](../systems/atomic-agent/) **Atomic Agent** — Evaluated memory fabric · `AtomicBot-ai/atomic-agent` · Bi-temporal
-- [`aukora-kernel`](../systems/aukora-kernel/) **Aukora Kernel** — Receipted memory · `aumara-xyz/aukora-kernel` · Scope enforced, Mutation audit, Negative evals
-- [`aura`](../systems/aura/) **Aura** — Receipts that chain, beliefs that don't survive · `youngbryan97/aura` · Trust state, Mutation audit
-- [`aurora`](../systems/aurora/) **AURORA** — Adversarial self-verification of a query plan · `hamr0/aurora`
-- [`autogen`](../systems/autogen/) **AutoGen** — Memory without identity · `microsoft/autogen`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/a-mem/">A-MEM</a></span><span class="az-what">Evolving Zettelkasten memory</span><code class="az-repo">agiresearch/A-mem</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/acontext/">Acontext</a></span><span class="az-what">Memory as skill files</span><code class="az-repo">memodb-io/Acontext</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/adk-python/">Google ADK</a></span><span class="az-what">A contract with no delete</span><code class="az-repo">google/adk-python</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/aeris/">Aeris</a></span><span class="az-what">The model never touches the state</span><code class="az-repo">Cedrick-Coto/Aeris</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-afk/">agent-afk</a></span><span class="az-what">A citation or an [unverified] tag</span><code class="az-repo">griffinwork40/agent-afk</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-framework/">Microsoft Agent Framework</a></span><span class="az-what">The contract AutoGen became</span><code class="az-repo">microsoft/agent-framework</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-memory-doctrine/">Agent Memory (MythologIQ)</a><code class="az-slug">agent-memory-doctrine</code></span><span class="az-what">Deletion residue as a partition</span><code class="az-repo">MythologIQ-Labs-LLC/agent-memory</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-memory-supabase/">Agent Memory on Supabase</a></span><span class="az-what">One table, argued for</span><code class="az-repo">reescalder/agent-memory-supabase</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-memory-techniques/">Agent Memory Techniques</a><code class="az-slug">agent-memory-techniques</code></span><span class="az-what">Thirty reference implementations</span><code class="az-repo">NirDiamant/Agent_Memory_Techniques</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-mesh/">Agent Mesh</a></span><span class="az-what">A decision ledger that validates before it appends</span><code class="az-repo">cbalgeman/agent-mesh</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/agent-working-memory/">AgentWorkingMemory</a></span><span class="az-what">Retracting a fact should shake its whole story</span><code class="az-repo">CompleteIdeas/agent-working-memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/agentic-context-engine/">Agentic Context Engine</a></span><span class="az-what">A decision not to merge, kept</span><code class="az-repo">kayba-ai/agentic-context-engine</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/agentmemory/">agentmemory</a></span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">rohitg00/agentmemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/agentmemory-v4/">agentmemory V4</a><code class="az-slug">agentmemory-v4</code></span><span class="az-what">The run log names a different dataset from the claim</span><code class="az-repo">jordanmccann/agentmemory</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/agentrecall-x/">AgentRecall-X</a></span><span class="az-what">A correction that loses its veto</span><code class="az-repo">Goldentrii/AgentRecall-X</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/agentswarms/">AgentSwarms</a></span><span class="az-what">Keyword memory in a trigger</span><code class="az-repo">AgentSwarms-fyi/agentswarms</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/agno/">Agno</a></span><span class="az-what">Framework-native learning stores</span><code class="az-repo">agno-agi/agno</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/ai-memory/">ai-memory</a></span><span class="az-what">Cross-harness handoff</span><code class="az-repo">akitaonrails/ai-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/aimaos/">AIMAOS</a></span><span class="az-what">Contradictions embeddings place far apart</span><code class="az-repo">munch2u-a11y/AIMAOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/aipass/">AIPass</a></span><span class="az-what">A budget on how often memory may speak</span><code class="az-repo">AIOSAI/AIPass</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/alma-memory/">ALMA</a></span><span class="az-what">A write guard on one door of six</span><code class="az-repo">RBKunnela/ALMA-memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/always-on-memory-agent/">Always-On Memory Agent</a></span><span class="az-what">No vector DB — the model is the retriever</span><code class="az-repo">GoogleCloudPlatform/generative-ai (always-on-memory-agent)</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/arc-code/">arc-code</a></span><span class="az-what">The actuator writes the log</span><code class="az-repo">jerber/arc-code</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/arcrift/">ArcRift</a></span><span class="az-what">A canary secret in each of ten tenants</span><code class="az-repo">eshaan-nair/arcrift</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/argo/">ARGO</a></span><span class="az-what">Architecture as the memory</span><code class="az-repo">derekhu0002/Argo</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/athena/">Project Athena</a></span><span class="az-what">Claims labelled by how well they are known</span><code class="az-repo">winstonkoh87/Athena-Public</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/atomic-agent/">Atomic Agent</a></span><span class="az-what">Evaluated memory fabric</span><code class="az-repo">AtomicBot-ai/atomic-agent</code><span class="az-caps"><span class="az-cap">Bi-temporal</span></span></li>
+<li><span class="az-id"><a href="../systems/aukora-kernel/">Aukora Kernel</a></span><span class="az-what">Receipted memory</span><code class="az-repo">aumara-xyz/aukora-kernel</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/aura/">Aura</a></span><span class="az-what">Receipts that chain, beliefs that don&#x27;t survive</span><code class="az-repo">youngbryan97/aura</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/aurora/">AURORA</a></span><span class="az-what">Adversarial self-verification of a query plan</span><code class="az-repo">hamr0/aurora</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/autogen/">AutoGen</a></span><span class="az-what">Memory without identity</span><code class="az-repo">microsoft/autogen</code><span class="az-caps"></span></li>
+</ul>
+
 ## B
 
-- [`basic-memory`](../systems/basic-memory/) **Basic Memory** — Human-editable Markdown graph · `basicmachines-co/basic-memory` · Scope enforced
-- [`brain-md`](../systems/brain-md/) **brain.md** — Compiled truth over an append-only timeline · `mindmuxai/brain.md` · Scope enforced, Mutation audit, Negative evals
-- [`breadcrumbs`](../systems/breadcrumbs/) **breadcrumbs** — Correction that never reaches the retrieval lane · `The-825/breadcrumbs` · Tombstone, Trust state, Mutation audit, Human review, Negative evals
-- [`buzz`](../systems/buzz/) **Buzz** — Memory as an encrypted protocol · `block/buzz` · Scope enforced
-- [`bytechef`](../systems/bytechef/) **ByteChef** — Redaction ordered ahead of persistence · `bytechefhq/bytechef` · Scope enforced, Human review
-- [`byterover`](../systems/byterover/) **ByteRover** — Curated coding-agent memory · `campfirein/cipher`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/basic-memory/">Basic Memory</a></span><span class="az-what">Human-editable Markdown graph</span><code class="az-repo">basicmachines-co/basic-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/brain-md/">brain.md</a><code class="az-slug">brain-md</code></span><span class="az-what">Compiled truth over an append-only timeline</span><code class="az-repo">mindmuxai/brain.md</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/breadcrumbs/">breadcrumbs</a></span><span class="az-what">Correction that never reaches the retrieval lane</span><code class="az-repo">The-825/breadcrumbs</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/buzz/">Buzz</a></span><span class="az-what">Memory as an encrypted protocol</span><code class="az-repo">block/buzz</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/bytechef/">ByteChef</a></span><span class="az-what">Redaction ordered ahead of persistence</span><code class="az-repo">bytechefhq/bytechef</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/byterover/">ByteRover</a></span><span class="az-what">Curated coding-agent memory</span><code class="az-repo">campfirein/cipher</code><span class="az-caps"></span></li>
+</ul>
+
 ## C
 
-- [`cambium`](../systems/cambium/) **Cambium** — A standard, not a store · `KimGLee/Cambium` · Trust state, Human review
-- [`camel`](../systems/camel/) **CAMEL** — Message store with vector recall · `camel-ai/camel`
-- [`claude-code-memory-setup`](../systems/claude-code-memory-setup/) **claude-code-memory-setup** — A recipe that links notes on the way in · `lucasrosati/claude-code-memory-setup`
-- [`claude-mem`](../systems/claude-mem/) **Claude-Mem** — Hook-native coding-agent memory · `thedotmack/claude-mem` · Scope enforced
-- [`claude-total-memory`](../systems/claude-total-memory/) **total-agent-memory** — Search for what would refute the answer · `vbcherepanov/claude-total-memory` · Bi-temporal, Scope enforced, Negative evals
-- [`claudest`](../systems/claudest/) **Claudest (claude-memory)** — A run that only adds is a failure mode · `gupsammy/claudest` · Human review
-- [`clawmem`](../systems/clawmem/) **ClawMem** — On-device vault for coding agents · `yoloshii/clawmem` · Bi-temporal, Scope enforced, Mutation audit
-- [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
-- [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced
-- [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
-- [`cognis`](../systems/cognis/) **Cognis** — A memory policy with a fingerprint · `fpytloun/cognis` · Scope enforced, Negative evals
-- [`cognitive-spatial-memory`](../systems/cognitive-spatial-memory/) **Cognitive Spatial Memory** — Gravity instead of cosine · `munch2u-a11y/Cognitive-Spatial-Memory`
-- [`context-mem`](../systems/context-mem/) **Context Mem** — The unflattering number is committed; the badge is not about it · `JubaKitiashvili/context-mem`
-- [`context-mode`](../systems/context-mode/) **Context Mode** — Session knowledge across seventeen harnesses · `mksglu/context-mode` · Scope enforced, Negative evals
-- [`continuous-claude`](../systems/continuous-claude/) **Continuous Claude** — A daemon mines the thinking blocks · `parcadei/Continuous-Claude-v3`
-- [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`core-redplanet`](../systems/core-redplanet/) **CORE** — Reified temporal knowledge graph · `RedPlanetHQ/core` · Bi-temporal, Scope enforced
-- [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
-- [`cortex-engine`](../systems/cortex-engine/) **cortex-engine** — \"You were wrong\" and \"the world changed\" are different verdicts · `fozikio/cortex-engine` · Mutation audit
-- [`cortexgraph`](../systems/cortexgraph/) **CortexGraph** — Forgetting as the default · `prefrontal-systems/cortexgraph` · Scope enforced
-- [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`
-- [`cowagent`](../systems/cowagent/) **CowAgent** — Daily-distilled memory · `zhayujie/CowAgent` · Scope enforced
-- [`crewai`](../systems/crewai/) **CrewAI** — Hierarchical scope paths · `crewAIInc/crewAI` · Scope enforced, Negative evals
-- [`csm`](../systems/csm/) **CSM** — Deterministic continuity runtime · `NovasPlace/CSM` · Scope enforced, Mutation audit, Negative evals
-- [`ctx`](../systems/ctx/) **ctx** — Guarded consolidation · `ActiveMemory/ctx` · Scope enforced, Mutation audit
+<ul class="az">
+<li><span class="az-id"><a href="../systems/cambium/">Cambium</a></span><span class="az-what">A standard, not a store</span><code class="az-repo">KimGLee/Cambium</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/camel/">CAMEL</a></span><span class="az-what">Message store with vector recall</span><code class="az-repo">camel-ai/camel</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/claude-code-memory-setup/">claude-code-memory-setup</a></span><span class="az-what">A recipe that links notes on the way in</span><code class="az-repo">lucasrosati/claude-code-memory-setup</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/claude-mem/">Claude-Mem</a></span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">thedotmack/claude-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/claude-total-memory/">total-agent-memory</a></span><span class="az-what">Search for what would refute the answer</span><code class="az-repo">vbcherepanov/claude-total-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/claudest/">Claudest (claude-memory)</a></span><span class="az-what">A run that only adds is a failure mode</span><code class="az-repo">gupsammy/claudest</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/clawmem/">ClawMem</a></span><span class="az-what">On-device vault for coding agents</span><code class="az-repo">yoloshii/clawmem</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/clio/">CLIO</a></span><span class="az-what">Corroboration tiers in pure Perl</span><code class="az-repo">SyntheticAutonomicMind/CLIO</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/cognee/">Cognee</a></span><span class="az-what">Knowledge-graph memory control plane</span><code class="az-repo">topoteretes/cognee</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/cognicore/">CogniCore</a></span><span class="az-what">Candidate-to-verified memory with a utility ledger</span><code class="az-repo">cognicore-dev/cognicore-my-openenv</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/cognis/">Cognis</a></span><span class="az-what">A memory policy with a fingerprint</span><code class="az-repo">fpytloun/cognis</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/cognitive-spatial-memory/">Cognitive Spatial Memory</a></span><span class="az-what">Gravity instead of cosine</span><code class="az-repo">munch2u-a11y/Cognitive-Spatial-Memory</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/context-mem/">Context Mem</a></span><span class="az-what">The unflattering number is committed; the badge is not about it</span><code class="az-repo">JubaKitiashvili/context-mem</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/context-mode/">Context Mode</a></span><span class="az-what">Session knowledge across seventeen harnesses</span><code class="az-repo">mksglu/context-mode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/continuous-claude/">Continuous Claude</a></span><span class="az-what">A daemon mines the thinking blocks</span><code class="az-repo">parcadei/Continuous-Claude-v3</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/core-memory/">Core Memory</a></span><span class="az-what">Grounding-gated trust</span><code class="az-repo">JohnnyFiv3r/Core-Memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/core-redplanet/">CORE</a><code class="az-slug">core-redplanet</code></span><span class="az-what">Reified temporal knowledge graph</span><code class="az-repo">RedPlanetHQ/core</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/cortex/">Cortex</a></span><span class="az-what">Approval on the read, not the write</span><code class="az-repo">CortexPrism/cortex</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/cortex-engine/">cortex-engine</a></span><span class="az-what">&quot;You were wrong&quot; and &quot;the world changed&quot; are different verdicts</span><code class="az-repo">fozikio/cortex-engine</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/cortexgraph/">CortexGraph</a></span><span class="az-what">Forgetting as the default</span><code class="az-repo">prefrontal-systems/cortexgraph</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/cosmonapse/">Cosmonapse</a></span><span class="az-what">A memory contract with a failure vocabulary</span><code class="az-repo">Cosmonapse/cosmonapse-core</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/cowagent/">CowAgent</a></span><span class="az-what">Daily-distilled memory</span><code class="az-repo">zhayujie/CowAgent</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/crewai/">CrewAI</a></span><span class="az-what">Hierarchical scope paths</span><code class="az-repo">crewAIInc/crewAI</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/csm/">CSM</a></span><span class="az-what">Deterministic continuity runtime</span><code class="az-repo">NovasPlace/CSM</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/ctx/">ctx</a></span><span class="az-what">Guarded consolidation</span><code class="az-repo">ActiveMemory/ctx</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+</ul>
+
 ## D
 
-- [`daem0n-mcp`](../systems/daem0n-mcp/) **Daem0nMCP** — You may not write until you prove you asked · `dasblueyeddevil/daem0n-mcp` · Bi-temporal, Mutation audit
-- [`daimon`](../systems/daimon/) **Daimon** — Session-boundary checkpoint memory · `Daily-Nerd/daimon` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
-- [`deepcode`](../systems/deepcode/) **DeepCode** — Consolidation with no oracle · `HKUDS/DeepCode` · Scope enforced, Mutation audit, Negative evals
-- [`deepseek-harness`](../systems/deepseek-harness/) **DeepSeek Harness** — The search it ships turned off · `deepseek-ai/deepseek-harness` · Scope enforced, Negative evals
-- [`deer-flow`](../systems/deer-flow/) **DeerFlow** — The best-specified memory contract here · `bytedance/deer-flow` · Scope enforced, Human review
-- [`dexto`](../systems/dexto/) **Dexto** — CRUD, and no retrieval on purpose · `truffle-ai/dexto` · Human review
-- [`diffmem`](../systems/diffmem/) **DiffMem** — A whitelisted shell for the memory repo · `growth-kinetics/diffmem`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/daem0n-mcp/">Daem0nMCP</a></span><span class="az-what">You may not write until you prove you asked</span><code class="az-repo">dasblueyeddevil/daem0n-mcp</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/daimon/">Daimon</a></span><span class="az-what">Session-boundary checkpoint memory</span><code class="az-repo">Daily-Nerd/daimon</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/deepcode/">DeepCode</a></span><span class="az-what">Consolidation with no oracle</span><code class="az-repo">HKUDS/DeepCode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/deepseek-harness/">DeepSeek Harness</a></span><span class="az-what">The search it ships turned off</span><code class="az-repo">deepseek-ai/deepseek-harness</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/deer-flow/">DeerFlow</a></span><span class="az-what">The best-specified memory contract here</span><code class="az-repo">bytedance/deer-flow</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/dexto/">Dexto</a></span><span class="az-what">CRUD, and no retrieval on purpose</span><code class="az-repo">truffle-ai/dexto</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/diffmem/">DiffMem</a></span><span class="az-what">A whitelisted shell for the memory repo</span><code class="az-repo">growth-kinetics/diffmem</code><span class="az-caps"></span></li>
+</ul>
+
 ## E
 
-- [`ean-agentos`](../systems/ean-agentos/) **EAN AgentOS** — A fix that failed, ranked not removed · `eanai-ro/ean-agentos` · Scope enforced
-- [`ecc`](../systems/ecc/) **ECC** — A vault that stays unreviewed · `affaan-m/ECC` · Scope enforced
-- [`echo-agent`](../systems/echo-agent/) **Echo Agent** — Provenance-ranked contradiction memory · `fuyuxiang/echo-agent` · Scope enforced, Mutation audit
-- [`elastic-atlas`](../systems/elastic-atlas/) **Elastic Atlas** — Evaluated demo · `noamschwartz/atlas-memory-demo` · Scope enforced
-- [`empirica`](../systems/empirica/) **Empirica** — A vocabulary argued from its own data · `nubaeon/empirica` · Trust state, Scope enforced, Mutation audit
-- [`empryo`](../systems/empryo/) **Empryo** — Retrieval that reads the repo · `proxysoul/Empryo` · Scope enforced, Human review
-- [`engram`](../systems/engram/) **Engram** — Coding-agent local memory · `Gentleman-Programming/engram` · Scope enforced, Human review
-- [`engram-alpha`](../systems/engram-alpha/) **Engram Alpha** — Time doesn't validate, exposure doesn't validate · `techtheist/engram` · Trust state, Bi-temporal, Mutation audit, Human review, Negative evals
-- [`engram-provable`](../systems/engram-provable/) **Engram Provable** — Erase the content, keep the proof it existed · `Harshitk-cp/engram` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review
-- [`everos`](../systems/everos/) **EverOS** — Cases, skills and a cascade · `EverMind-AI/EverOS` · Scope enforced, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/ean-agentos/">EAN AgentOS</a></span><span class="az-what">A fix that failed, ranked not removed</span><code class="az-repo">eanai-ro/ean-agentos</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/ecc/">ECC</a></span><span class="az-what">A vault that stays unreviewed</span><code class="az-repo">affaan-m/ECC</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/echo-agent/">Echo Agent</a></span><span class="az-what">Provenance-ranked contradiction memory</span><code class="az-repo">fuyuxiang/echo-agent</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/elastic-atlas/">Elastic Atlas</a><code class="az-slug">elastic-atlas</code></span><span class="az-what">Evaluated demo</span><code class="az-repo">noamschwartz/atlas-memory-demo</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/empirica/">Empirica</a></span><span class="az-what">A vocabulary argued from its own data</span><code class="az-repo">nubaeon/empirica</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/empryo/">Empryo</a></span><span class="az-what">Retrieval that reads the repo</span><code class="az-repo">proxysoul/Empryo</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/engram/">Engram</a></span><span class="az-what">Coding-agent local memory</span><code class="az-repo">Gentleman-Programming/engram</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/engram-alpha/">Engram Alpha</a><code class="az-slug">engram-alpha</code></span><span class="az-what">Time doesn&#x27;t validate, exposure doesn&#x27;t validate</span><code class="az-repo">techtheist/engram</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/engram-provable/">Engram Provable</a><code class="az-slug">engram-provable</code></span><span class="az-what">Erase the content, keep the proof it existed</span><code class="az-repo">Harshitk-cp/engram</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/everos/">EverOS</a></span><span class="az-what">Cases, skills and a cascade</span><code class="az-repo">EverMind-AI/EverOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## F
 
-- [`feltstate`](../systems/feltstate/) **feltstate** — Memory that can die · `Morephine/feltstate` · Trust state, Bi-temporal, Mutation audit, Human review, Negative evals
-- [`fidelis`](../systems/fidelis/) **Fidelis Memory** — The gap is not the issue. The metric is. · `hermes-labs-ai/fidelis`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/feltstate/">feltstate</a></span><span class="az-what">Memory that can die</span><code class="az-repo">Morephine/feltstate</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/fidelis/">Fidelis Memory</a></span><span class="az-what">The gap is not the issue. The metric is.</span><code class="az-repo">hermes-labs-ai/fidelis</code><span class="az-caps"></span></li>
+</ul>
+
 ## G
 
-- [`gbrain`](../systems/gbrain/) **GBrain** — Claims graded, holders scored · `garrytan/gbrain` · Scope enforced, Negative evals
-- [`generative-agents`](../systems/generative-agents/) **Generative Agents** — Observation-reflection ancestor · `joonspk-research/generative_agents`
-- [`genericagent`](../systems/genericagent/) **GenericAgent** — Memory as written policy · `lsdefine/GenericAgent`
-- [`gh-aw`](../systems/gh-aw/) **gh-aw** — Memory in CI, on an integrity lattice · `github/gh-aw` · Scope enforced
-- [`gini-agent`](../systems/gini-agent/) **Gini Agent** — Reimplemented memory model · `Open-Curiosity/gini-agent` · Trust state, Bi-temporal, Scope enforced
-- [`gitlord`](../systems/gitlord/) **GitLord** — Git as the agent's event log · `yashneil75/gitlord`
-- [`gitmem`](../systems/gitmem/) **GitMem** — You may not record a lesson without two arguments against it · `gitmem-dev/gitmem` · Scope enforced, Human review
-- [`gmr`](../systems/gmr/) **GMR** — Surface the memory when its basis drifts · `Anchorstate-Lab/GMR` · Trust state, Mutation audit, Negative evals
-- [`gobii`](../systems/gobii/) **Gobii** — Memory as a database the agent writes · `gobii-ai/gobii-platform` · Scope enforced
-- [`goodai-ltm`](../systems/goodai-ltm/) **GoodAI LTM** — The lifecycle the frameworks dropped · `GoodAI/goodai-ltm`
-- [`graphify`](../systems/graphify/) **Graphify** — Work memory beside a code graph · `Graphify-Labs/graphify` · Trust state, Negative evals
-- [`graphiti`](../systems/graphiti/) **Graphiti** — Bi-temporal context graph · `getzep/graphiti` · Bi-temporal, Scope enforced
-- [`grok-build`](../systems/grok-build/) **Grok Build** — A dream that deletes what it read · `xai-org/grok-build` · Scope enforced, Negative evals
-- [`growmos`](../systems/growmos/) **growmos** — A stop hook that will not let the session end · `codician-team/growmos`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/gbrain/">GBrain</a></span><span class="az-what">Claims graded, holders scored</span><code class="az-repo">garrytan/gbrain</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/generative-agents/">Generative Agents</a><code class="az-slug">generative-agents</code></span><span class="az-what">Observation-reflection ancestor</span><code class="az-repo">joonspk-research/generative_agents</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/genericagent/">GenericAgent</a></span><span class="az-what">Memory as written policy</span><code class="az-repo">lsdefine/GenericAgent</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/gh-aw/">gh-aw</a></span><span class="az-what">Memory in CI, on an integrity lattice</span><code class="az-repo">github/gh-aw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/gini-agent/">Gini Agent</a></span><span class="az-what">Reimplemented memory model</span><code class="az-repo">Open-Curiosity/gini-agent</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/gitlord/">GitLord</a></span><span class="az-what">Git as the agent&#x27;s event log</span><code class="az-repo">yashneil75/gitlord</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/gitmem/">GitMem</a></span><span class="az-what">You may not record a lesson without two arguments against it</span><code class="az-repo">gitmem-dev/gitmem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/gmr/">GMR</a></span><span class="az-what">Surface the memory when its basis drifts</span><code class="az-repo">Anchorstate-Lab/GMR</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/gobii/">Gobii</a></span><span class="az-what">Memory as a database the agent writes</span><code class="az-repo">gobii-ai/gobii-platform</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/goodai-ltm/">GoodAI LTM</a></span><span class="az-what">The lifecycle the frameworks dropped</span><code class="az-repo">GoodAI/goodai-ltm</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/graphify/">Graphify</a></span><span class="az-what">Work memory beside a code graph</span><code class="az-repo">Graphify-Labs/graphify</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/graphiti/">Graphiti</a></span><span class="az-what">Bi-temporal context graph</span><code class="az-repo">getzep/graphiti</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/grok-build/">Grok Build</a></span><span class="az-what">A dream that deletes what it read</span><code class="az-repo">xai-org/grok-build</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/growmos/">growmos</a></span><span class="az-what">A stop hook that will not let the session end</span><code class="az-repo">codician-team/growmos</code><span class="az-caps"></span></li>
+</ul>
+
 ## H
 
-- [`helix-agi`](../systems/helix-agi/) **Helix AGI** — Belief physics on a journal · `munch2u-a11y/Helix-AGI` · Negative evals
-- [`helm`](../systems/helm/) **Helm** — Confidence-ratcheted SQLite memory · `GOODMAN-PRO/helm` · Negative evals
-- [`hermes-agent`](../systems/hermes-agent/) **Hermes Agent** — Prompt-cache-bounded memory · `NousResearch/hermes-agent` · Human review
-- [`hexis`](../systems/hexis/) **Hexis** — Reconsolidation after a belief changes · `quixiai/hexis` · Trust state, Mutation audit, Human review
-- [`hillock`](../systems/hillock/) **Hillock** — A gate that is control flow · `roandejager/Hillock` · Negative evals
-- [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced, Mutation audit
-- [`hipocampus`](../systems/hipocampus/) **Hipocampus** — An index of what it knows it knows · `kevin-hs-sohn/hipocampus`
-- [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit
-- [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
-- [`holographic`](../systems/holographic/) **Holographic** — Vector-symbolic memory · `NousResearch/hermes-agent`
-- [`honcho`](../systems/honcho/) **Honcho** — Peer and session representation · `plastic-labs/honcho` · Scope enforced
+<ul class="az">
+<li><span class="az-id"><a href="../systems/helix-agi/">Helix AGI</a></span><span class="az-what">Belief physics on a journal</span><code class="az-repo">munch2u-a11y/Helix-AGI</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/helm/">Helm</a></span><span class="az-what">Confidence-ratcheted SQLite memory</span><code class="az-repo">GOODMAN-PRO/helm</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/hermes-agent/">Hermes Agent</a></span><span class="az-what">Prompt-cache-bounded memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/hexis/">Hexis</a></span><span class="az-what">Reconsolidation after a belief changes</span><code class="az-repo">quixiai/hexis</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/hillock/">Hillock</a></span><span class="az-what">A gate that is control flow</span><code class="az-repo">roandejager/Hillock</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/hindsight/">Hindsight</a></span><span class="az-what">Retain, recall, and reflect</span><code class="az-repo">vectorize-io/hindsight</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/hipocampus/">Hipocampus</a></span><span class="az-what">An index of what it knows it knows</span><code class="az-repo">kevin-hs-sohn/hipocampus</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/hippo-memory/">Hippo</a></span><span class="az-what">Physics-model decay memory</span><code class="az-repo">kitfunso/hippo-memory</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/hipporag/">HippoRAG</a></span><span class="az-what">Associative graph memory</span><code class="az-repo">OSU-NLP-Group/HippoRAG</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/holographic/">Holographic</a></span><span class="az-what">Vector-symbolic memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/honcho/">Honcho</a></span><span class="az-what">Peer and session representation</span><code class="az-repo">plastic-labs/honcho</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+</ul>
+
 ## I
 
-- [`iai-pme`](../systems/iai-pme/) **iai-pme** — A tie, declared as a tie · `CodeAbra/iai-personal-memory-engine` · Human review, Negative evals
-- [`icarus`](../systems/icarus/) **Icarus** — Trust and freshness on separate axes · `esaradev/icarus-memory-infra` · Trust state, Mutation audit, Negative evals
-- [`intaris`](../systems/intaris/) **Intaris** — Memory about the agent, not the world · `fpytloun/intaris` · Scope enforced, Human review
+<ul class="az">
+<li><span class="az-id"><a href="../systems/iai-pme/">iai-pme</a></span><span class="az-what">A tie, declared as a tie</span><code class="az-repo">CodeAbra/iai-personal-memory-engine</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/icarus/">Icarus</a></span><span class="az-what">Trust and freshness on separate axes</span><code class="az-repo">esaradev/icarus-memory-infra</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/intaris/">Intaris</a></span><span class="az-what">Memory about the agent, not the world</span><code class="az-repo">fpytloun/intaris</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+</ul>
+
 ## J
 
-- [`juggler`](../systems/juggler/) **Juggler** — A gitignored notebook with a delete button · `juggler-ai/juggler` · Human review
-- [`jumbo`](../systems/jumbo/) **Jumbo Context** — Event-sourced project memory · `jumbocontext/jumbo.cli` · Mutation audit, Human review
+<ul class="az">
+<li><span class="az-id"><a href="../systems/juggler/">Juggler</a></span><span class="az-what">A gitignored notebook with a delete button</span><code class="az-repo">juggler-ai/juggler</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/jumbo/">Jumbo Context</a></span><span class="az-what">Event-sourced project memory</span><code class="az-repo">jumbocontext/jumbo.cli</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+</ul>
+
 ## K
 
-- [`kage`](../systems/kage/) **Kage** — Memory verified against the code · `kage-core/kage` · Trust state, Human review, Negative evals
-- [`kirocrew`](../systems/kirocrew/) **Kiro Crew** — Seven ways a write is refused · `kirodotdev/KiroCrew` · Mutation audit, Human review, Negative evals
-- [`klypix-mcp`](../systems/klypix-mcp/) **Klypix MCP** — The state machine is a regex over the card's own prose · `dahshanlabs/klypix-mcp` · Trust state, Mutation audit, Human review, Negative evals
-- [`knowledge-worker`](../systems/knowledge-worker/) **knowledge-worker** — The excerpt has to appear in the source · `rahulmranga/knowledge-worker` · Trust state
-- [`kube-coder`](../systems/kube-coder/) **kube-coder** — Scope on every retrieval arm · `imran31415/kube-coder` · Scope enforced, Mutation audit, Human review, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/kage/">Kage</a></span><span class="az-what">Memory verified against the code</span><code class="az-repo">kage-core/kage</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/kirocrew/">Kiro Crew</a></span><span class="az-what">Seven ways a write is refused</span><code class="az-repo">kirodotdev/KiroCrew</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/klypix-mcp/">Klypix MCP</a></span><span class="az-what">The state machine is a regex over the card&#x27;s own prose</span><code class="az-repo">dahshanlabs/klypix-mcp</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/knowledge-worker/">knowledge-worker</a></span><span class="az-what">The excerpt has to appear in the source</span><code class="az-repo">rahulmranga/knowledge-worker</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/kube-coder/">kube-coder</a></span><span class="az-what">Scope on every retrieval arm</span><code class="az-repo">imran31415/kube-coder</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## L
 
-- [`langchain`](../systems/langchain/) **LangChain** — The memory it deprecated · `langchain-ai/langchain`
-- [`langgraph`](../systems/langgraph/) **LangGraph** — A conformance suite for the other half · `langchain-ai/langgraph` · Scope enforced
-- [`langmem`](../systems/langmem/) **LangMem** — Library primitives · `langchain-ai/langmem` · Scope enforced
-- [`lethe`](../systems/lethe/) **Lethe** — Verified forgetting, signed · `deeplethe/lethe` · Mutation audit, Negative evals
-- [`letta`](../systems/letta/) **Letta** — Agent-runtime memory · `letta-ai/letta` · Scope enforced
-- [`livingfeed`](../systems/livingfeed/) **LivingFeed** — Forgetting as a feature, in Korean · `showjihyun/livingfeed` · Scope enforced
-- [`llamaindex`](../systems/llamaindex/) **LlamaIndex** — Composable memory blocks · `run-llama/llama_index`
-- [`llm-wiki-memory`](../systems/llm-wiki-memory/) **llm-wiki-memory** — Filesystem and git memory · `ctxr-dev/llm-wiki-memory` · Scope enforced, Human review
-- [`logseq`](../systems/logseq/) **Logseq** — A human knowledge base agents can write to · `logseq/logseq`
-- [`loongflow`](../systems/loongflow/) **LoongFlow** — Stochastic recall · `baidu-baige/LoongFlow`
-- [`lorekit`](../systems/lorekit/) **LoreKit** — Multi-tenant lesson store · `mthines/lorekit` · Scope enforced, Mutation audit, Human review
+<ul class="az">
+<li><span class="az-id"><a href="../systems/langchain/">LangChain</a></span><span class="az-what">The memory it deprecated</span><code class="az-repo">langchain-ai/langchain</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/langgraph/">LangGraph</a></span><span class="az-what">A conformance suite for the other half</span><code class="az-repo">langchain-ai/langgraph</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/langmem/">LangMem</a></span><span class="az-what">Library primitives</span><code class="az-repo">langchain-ai/langmem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/lethe/">Lethe</a></span><span class="az-what">Verified forgetting, signed</span><code class="az-repo">deeplethe/lethe</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/letta/">Letta</a></span><span class="az-what">Agent-runtime memory</span><code class="az-repo">letta-ai/letta</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/livingfeed/">LivingFeed</a></span><span class="az-what">Forgetting as a feature, in Korean</span><code class="az-repo">showjihyun/livingfeed</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/llamaindex/">LlamaIndex</a></span><span class="az-what">Composable memory blocks</span><code class="az-repo">run-llama/llama_index</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/llm-wiki-memory/">llm-wiki-memory</a></span><span class="az-what">Filesystem and git memory</span><code class="az-repo">ctxr-dev/llm-wiki-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/logseq/">Logseq</a></span><span class="az-what">A human knowledge base agents can write to</span><code class="az-repo">logseq/logseq</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/loongflow/">LoongFlow</a></span><span class="az-what">Stochastic recall</span><code class="az-repo">baidu-baige/LoongFlow</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/lorekit/">LoreKit</a></span><span class="az-what">Multi-tenant lesson store</span><code class="az-repo">mthines/lorekit</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+</ul>
+
 ## M
 
-- [`m-flow`](../systems/m-flow/) **M-flow** — Deterministic first, model second · `FlowElement-ai/m_flow`
-- [`magic-context`](../systems/magic-context/) **Magic Context** — Verified-against-code memory · `cortexkit/magic-context` · Trust state, Scope enforced, Mutation audit
-- [`marsnme`](../systems/marsnme/) **MarsNMe** — An agent can leave a note for another agent · `marsmanleo/marsnme`
-- [`mastra-observational-memory`](../systems/mastra-observational-memory/) **Mastra Observational Memory** — Observer–reflector context · `mastra-ai/mastra` · Scope enforced
-- [`mateclaw`](../systems/mateclaw/) **MateClaw** — Scoped provider SPI · `mateaix/mateclaw` · Scope enforced
-- [`mcp-memory`](../systems/mcp-memory/) **MCP-Memory** — A trust model written and never read · `fellowgeek/mcp-memory` · Scope enforced
-- [`mem0`](../systems/mem0/) **Mem0** — Library-first memory · `mem0ai/mem0` · Scope enforced, Mutation audit
-- [`mem0sharp`](../systems/mem0sharp/) **Mem0Sharp** — Mem0's architecture, rebuilt in C# · `jihadkhawaja/mem0sharp` · Scope enforced, Mutation audit
-- [`mem9`](../systems/mem9/) **mem9** — A test suite for an API that is not here · `mem9-ai/mem9` · Scope enforced
-- [`memanto`](../systems/memanto/) **Memanto** — Resolved conflict · `moorcheh-ai/memanto` · Scope enforced, Human review
-- [`memary`](../systems/memary/) **Memary** — Knowledge-graph agent memory · `kingjulio8238/Memary`
-- [`membase`](../systems/membase/) **Membase** — Signature-owned conversation memory · `unibaseio/membase` · Scope enforced
-- [`memcp`](../systems/memcp/) **MemCP** — The baseline column is a constant with a comment · `maydali28/memcp` · Human review
-- [`memento`](../systems/memento/) **Memento** — Memory sealed until a date · `xD4O/memento` · Scope enforced
-- [`memex-zero-rag`](../systems/memex-zero-rag/) **MeMex Zero-RAG** — Enforcement by instruction · `JPeetz/MeMex-Zero-RAG`
-- [`memharness`](../systems/memharness/) **MemHarness** — A prior that updates from outcomes · `KnowledgeXLab/MemHarness`
-- [`memlayer`](../systems/memlayer/) **Memlayer** — Salience by example, with an API key among the examples · `divagr18/memlayer`
-- [`memledger`](../systems/memledger/) **MemLedger** — Provenance that answers, and does not enforce · `riktar/memledger` · Trust state, Mutation audit
-- [`memmachine`](../systems/memmachine/) **MemMachine** — Episode-preserving dual memory · `MemMachine/MemMachine` · Scope enforced
-- [`memmy-agent`](../systems/memmy-agent/) **Memmy** — One local memory, injected into every agent · `MemTensor/memmy-agent` · Tombstone, Trust state, Mutation audit, Negative evals
-- [`memobase`](../systems/memobase/) **Memobase** — Structured user profiles · `memodb-io/memobase` · Scope enforced
-- [`memoir`](../systems/memoir/) **Memoir** — The collision policy is chosen by memory type · `zhangfengcdt/memoir` · Scope enforced, Mutation audit, Human review
-- [`memoir-cli`](../systems/memoir-cli/) **memoir-cli** — The tombstone nothing can create · `camgitt/memoir` · Mutation audit, Human review, Negative evals
-- [`memomind`](../systems/memomind/) **MemoMind** — Four defects found by running someone else's engine · `24kchengYe/MemoMind`
-- [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review, Negative evals
-- [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced
-- [`memory-compiler`](../systems/memory-compiler/) **Memory Compiler** — A tombstone that blocks the close · `KTVSUN/memory-compiler` · Tombstone, Human review, Negative evals
-- [`memory-engine`](../systems/memory-engine/) **Memory Engine** — Agents as principals · `timescale/memory-engine` · Bi-temporal, Scope enforced
-- [`memory-lancedb-pro`](../systems/memory-lancedb-pro/) **memory-lancedb-pro** — OpenClaw memory plugin · `CortexReach/memory-lancedb-pro` · Bi-temporal, Scope enforced
-- [`memory-palace`](../systems/memory-palace/) **Memory Palace** — Draft-by-default procedural memory · `agi-is-going-to-arrive/memory-palace` · Trust state, Human review
-- [`memory-project`](../systems/memory-project/) **memory-project** — Associative decay memory for a coding agent · `acdesigntech/memory-project` · Mutation audit, Human review
-- [`memory-ts`](../systems/memory-ts/) **memory-ts** — A schema that deleted its own dead fields, with receipts · `rlabs-inc/memory-ts` · Trust state
-- [`memorybank`](../systems/memorybank/) **MemoryBank** — The forgetting curve, inverted · `zhongwanjun/MemoryBank-SiliconFriend`
-- [`memorybear`](../systems/memorybear/) **MemoryBear** — Forgetting that fuses rather than deletes · `SuanmoSuanyangTechnology/MemoryBear` · Scope enforced, Mutation audit
-- [`memoryops-ai`](../systems/memoryops-ai/) **MemoryOps AI** — Governed memory as a runtime · `patibandlavenkatamanideep/memoryops-ai` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
-- [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`
-- [`memos`](../systems/memos/) **MemOS** — Memory operating system · `MemTensor/MemOS` · Scope enforced
-- [`mempalace`](../systems/mempalace/) **MemPalace** — Verbatim evidence memory · `MemPalace/mempalace` · Scope enforced
-- [`memsearch`](../systems/memsearch/) **MemSearch** — A distilled skill is inert until a person installs it · `zilliztech/memsearch` · Human review
-- [`memsem`](../systems/memsem/) **memsem** — A tombstone only a human can set · `WindSeries69/memsem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`memu`](../systems/memu/) **memU** — Documented decisions · `NevaMind-AI/memU`
-- [`memv`](../systems/memv/) **memv** — Store only what you failed to predict · `vstorm-co/memv` · Bi-temporal, Scope enforced
-- [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
-- [`mengram`](../systems/mengram/) **Mengram** — Regression tests for memory · `alibaizhanov/mengram` · Trust state, Scope enforced
-- [`mentisdb`](../systems/mentisdb/) **MentisDB** — A hash-chained memory that refuses to load if tampered · `CloudLLM-ai/mentisdb` · Bi-temporal, Mutation audit, Negative evals
-- [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review
-- [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
-- [`midas`](../systems/midas/) **Midas** — A guard on memory-justified action · `vornicx/Midas` · Bi-temporal, Scope enforced, Mutation audit, Negative evals
-- [`mimir`](../systems/mimir/) **Mimir** — One graph, three node kinds · `MakerViking/mimir` · Scope enforced, Negative evals
-- [`mindcache`](../systems/mindcache/) **MindCache** — A superseded decision leaves the read path · `faisalhussain-devs/MindCache` · Trust state, Scope enforced
-- [`minecontext`](../systems/minecontext/) **MineContext** — Prospective memory, inferred · `volcengine/MineContext`
-- [`mirix`](../systems/mirix/) **MIRIX** — Multi-agent typed memory · `Mirix-AI/MIRIX` · Scope enforced, Negative evals
-- [`mnemopi`](../systems/mnemopi/) **Mnemopi** — A decay curve per memory type · `can1357/oh-my-pi` · Negative evals
-- [`mnemory`](../systems/mnemory/) **mnemory** — fsck for a memory store · `fpytloun/mnemory` · Scope enforced, Human review
-- [`mnemos`](../systems/mnemos/) **mnemos** — Strip the query from the document before you test retrieval · `arhuman/mnemos` · Scope enforced
-- [`mnemosyne`](../systems/mnemosyne/) **Mnemosyne** — Provenance recorded twice, acted on once · `mnemosyne-oss/mnemosyne` · Tombstone, Bi-temporal, Scope enforced, Mutation audit, Negative evals
-- [`mobius`](../systems/mobius/) **Mobius** — Scope is the directory name · `nutshellai-tech/mobius` · Scope enforced, Human review
-- [`moltbrain`](../systems/moltbrain/) **MoltBrain** — The session summary is a form, not a paragraph · `nhevers/moltbrain` · Scope enforced
-- [`moltis`](../systems/moltis/) **Moltis** — File-corpus memory · `moltis-org/moltis`
-- [`monet`](../systems/monet/) **Monet** — Rules read at the moment they bind · `team-monet/monet` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
-- [`munder-difflin`](../systems/munder-difflin/) **Munder Difflin** — Verify the rewrite, not the model · `chaitanyagiri/munder-difflin` · Mutation audit
-- [`muninndb`](../systems/muninndb/) **MuninnDB** — A database whose primitives are cognitive · `scrypster/muninndb` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/m-flow/">M-flow</a></span><span class="az-what">Deterministic first, model second</span><code class="az-repo">FlowElement-ai/m_flow</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/magic-context/">Magic Context</a></span><span class="az-what">Verified-against-code memory</span><code class="az-repo">cortexkit/magic-context</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/marsnme/">MarsNMe</a></span><span class="az-what">An agent can leave a note for another agent</span><code class="az-repo">marsmanleo/marsnme</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/mastra-observational-memory/">Mastra Observational Memory</a><code class="az-slug">mastra-observational-memory</code></span><span class="az-what">Observer–reflector context</span><code class="az-repo">mastra-ai/mastra</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mateclaw/">MateClaw</a></span><span class="az-what">Scoped provider SPI</span><code class="az-repo">mateaix/mateclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mcp-memory/">MCP-Memory</a></span><span class="az-what">A trust model written and never read</span><code class="az-repo">fellowgeek/mcp-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mem0/">Mem0</a></span><span class="az-what">Library-first memory</span><code class="az-repo">mem0ai/mem0</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/mem0sharp/">Mem0Sharp</a></span><span class="az-what">Mem0&#x27;s architecture, rebuilt in C#</span><code class="az-repo">jihadkhawaja/mem0sharp</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/mem9/">mem9</a></span><span class="az-what">A test suite for an API that is not here</span><code class="az-repo">mem9-ai/mem9</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memanto/">Memanto</a></span><span class="az-what">Resolved conflict</span><code class="az-repo">moorcheh-ai/memanto</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memary/">Memary</a></span><span class="az-what">Knowledge-graph agent memory</span><code class="az-repo">kingjulio8238/Memary</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/membase/">Membase</a></span><span class="az-what">Signature-owned conversation memory</span><code class="az-repo">unibaseio/membase</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memcp/">MemCP</a></span><span class="az-what">The baseline column is a constant with a comment</span><code class="az-repo">maydali28/memcp</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memento/">Memento</a></span><span class="az-what">Memory sealed until a date</span><code class="az-repo">xD4O/memento</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memex-zero-rag/">MeMex Zero-RAG</a></span><span class="az-what">Enforcement by instruction</span><code class="az-repo">JPeetz/MeMex-Zero-RAG</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memharness/">MemHarness</a></span><span class="az-what">A prior that updates from outcomes</span><code class="az-repo">KnowledgeXLab/MemHarness</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memlayer/">Memlayer</a></span><span class="az-what">Salience by example, with an API key among the examples</span><code class="az-repo">divagr18/memlayer</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memledger/">MemLedger</a></span><span class="az-what">Provenance that answers, and does not enforce</span><code class="az-repo">riktar/memledger</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/memmachine/">MemMachine</a></span><span class="az-what">Episode-preserving dual memory</span><code class="az-repo">MemMachine/MemMachine</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memmy-agent/">Memmy</a></span><span class="az-what">One local memory, injected into every agent</span><code class="az-repo">MemTensor/memmy-agent</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memobase/">Memobase</a></span><span class="az-what">Structured user profiles</span><code class="az-repo">memodb-io/memobase</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memoir/">Memoir</a></span><span class="az-what">The collision policy is chosen by memory type</span><code class="az-repo">zhangfengcdt/memoir</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memoir-cli/">memoir-cli</a></span><span class="az-what">The tombstone nothing can create</span><code class="az-repo">camgitt/memoir</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memomind/">MemoMind</a></span><span class="az-what">Four defects found by running someone else&#x27;s engine</span><code class="az-repo">24kchengYe/MemoMind</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memora/">Memora</a></span><span class="az-what">Rehearsable correction</span><code class="az-repo">agentic-box/memora</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memori/">Memori</a></span><span class="az-what">Portable store, hosted judgement</span><code class="az-repo">MemoriLabs/Memori</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-compiler/">Memory Compiler</a></span><span class="az-what">A tombstone that blocks the close</span><code class="az-repo">KTVSUN/memory-compiler</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-engine/">Memory Engine</a></span><span class="az-what">Agents as principals</span><code class="az-repo">timescale/memory-engine</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-lancedb-pro/">memory-lancedb-pro</a></span><span class="az-what">OpenClaw memory plugin</span><code class="az-repo">CortexReach/memory-lancedb-pro</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-palace/">Memory Palace</a></span><span class="az-what">Draft-by-default procedural memory</span><code class="az-repo">agi-is-going-to-arrive/memory-palace</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-project/">memory-project</a></span><span class="az-what">Associative decay memory for a coding agent</span><code class="az-repo">acdesigntech/memory-project</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memory-ts/">memory-ts</a></span><span class="az-what">A schema that deleted its own dead fields, with receipts</span><code class="az-repo">rlabs-inc/memory-ts</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/memorybank/">MemoryBank</a></span><span class="az-what">The forgetting curve, inverted</span><code class="az-repo">zhongwanjun/MemoryBank-SiliconFriend</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memorybear/">MemoryBear</a></span><span class="az-what">Forgetting that fuses rather than deletes</span><code class="az-repo">SuanmoSuanyangTechnology/MemoryBear</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/memoryops-ai/">MemoryOps AI</a></span><span class="az-what">Governed memory as a runtime</span><code class="az-repo">patibandlavenkatamanideep/memoryops-ai</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memoryos/">MemoryOS</a></span><span class="az-what">Heat-promoted tiers</span><code class="az-repo">BAI-LAB/MemoryOS</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memos/">MemOS</a></span><span class="az-what">Memory operating system</span><code class="az-repo">MemTensor/MemOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mempalace/">MemPalace</a></span><span class="az-what">Verbatim evidence memory</span><code class="az-repo">MemPalace/mempalace</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memsearch/">MemSearch</a></span><span class="az-what">A distilled skill is inert until a person installs it</span><code class="az-repo">zilliztech/memsearch</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/memsem/">memsem</a></span><span class="az-what">A tombstone only a human can set</span><code class="az-repo">WindSeries69/memsem</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/memu/">memU</a></span><span class="az-what">Documented decisions</span><code class="az-repo">NevaMind-AI/memU</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/memv/">memv</a></span><span class="az-what">Store only what you failed to predict</span><code class="az-repo">vstorm-co/memv</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/memvid/">Memvid</a></span><span class="az-what">Rewindable memory</span><code class="az-repo">memvid/memvid</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/mengram/">Mengram</a></span><span class="az-what">Regression tests for memory</span><code class="az-repo">alibaizhanov/mengram</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mentisdb/">MentisDB</a></span><span class="az-what">A hash-chained memory that refuses to load if tampered</span><code class="az-repo">CloudLLM-ai/mentisdb</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mercury-agent/">Mercury Agent</a></span><span class="az-what">Graded personal memory</span><code class="az-repo">cosmicstack-labs/mercury-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/metaclaw/">MetaClaw</a></span><span class="az-what">Self-tuning memory policy</span><code class="az-repo">aiming-lab/MetaClaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/midas/">Midas</a></span><span class="az-what">A guard on memory-justified action</span><code class="az-repo">vornicx/Midas</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mimir/">Mimir</a></span><span class="az-what">One graph, three node kinds</span><code class="az-repo">MakerViking/mimir</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mindcache/">MindCache</a></span><span class="az-what">A superseded decision leaves the read path</span><code class="az-repo">faisalhussain-devs/MindCache</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/minecontext/">MineContext</a></span><span class="az-what">Prospective memory, inferred</span><code class="az-repo">volcengine/MineContext</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/mirix/">MIRIX</a></span><span class="az-what">Multi-agent typed memory</span><code class="az-repo">Mirix-AI/MIRIX</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mnemopi/">Mnemopi</a></span><span class="az-what">A decay curve per memory type</span><code class="az-repo">can1357/oh-my-pi</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mnemory/">mnemory</a></span><span class="az-what">fsck for a memory store</span><code class="az-repo">fpytloun/mnemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/mnemos/">mnemos</a></span><span class="az-what">Strip the query from the document before you test retrieval</span><code class="az-repo">arhuman/mnemos</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/mnemosyne/">Mnemosyne</a></span><span class="az-what">Provenance recorded twice, acted on once</span><code class="az-repo">mnemosyne-oss/mnemosyne</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/mobius/">Mobius</a></span><span class="az-what">Scope is the directory name</span><code class="az-repo">nutshellai-tech/mobius</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/moltbrain/">MoltBrain</a></span><span class="az-what">The session summary is a form, not a paragraph</span><code class="az-repo">nhevers/moltbrain</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/moltis/">Moltis</a></span><span class="az-what">File-corpus memory</span><code class="az-repo">moltis-org/moltis</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/monet/">Monet</a></span><span class="az-what">Rules read at the moment they bind</span><code class="az-repo">team-monet/monet</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/munder-difflin/">Munder Difflin</a></span><span class="az-what">Verify the rewrite, not the model</span><code class="az-repo">chaitanyagiri/munder-difflin</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/muninndb/">MuninnDB</a></span><span class="az-what">A database whose primitives are cognitive</span><code class="az-repo">scrypster/muninndb</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## N
 
-- [`nanobot`](../systems/nanobot/) **nanobot** — Dual-cursor file memory · `HKUDS/nanobot`
-- [`neko`](../systems/neko/) **Project N.E.K.O.** — Memory that must not reopen a wound · `Project-N-E-K-O/N.E.K.O` · Scope enforced, Mutation audit, Negative evals
-- [`nemoclaw`](../systems/nemoclaw/) **NemoClaw** — Memory as an operand · `NVIDIA/NemoClaw`
-- [`neo4j-agent-memory`](../systems/neo4j-agent-memory/) **Neo4j Agent Memory** — Memory of its own reasoning · `neo4j-labs/agent-memory` · Bi-temporal, Scope enforced
-- [`neurakeep`](../systems/neurakeep/) **NeuraKeep** — No citation, no memory · `dominiclachance/neurakeep` · Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`neuroca`](../systems/neuroca/) **NeuroCA** — A memory system mid-refactor · `Modern-Prometheus-AI/Neuroca`
-- [`neuron`](../systems/neuron/) **Neuron** — A schema the agent's prompt cannot override · `kovartravis/neuron` · Scope enforced, Negative evals
-- [`nexusmem`](../systems/nexusmem/) **NexusMem** — Shell history as memory · `yaminbkk/NexusMem` · Scope enforced, Negative evals
-- [`nocturne-memory`](../systems/nocturne-memory/) **Nocturne Memory** — The model retypes your text and the match fails · `dataojitori/nocturne_memory` · Scope enforced
-- [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
-- [`noosphere`](../systems/noosphere/) **Noosphere** — A tombstone that survives key rotation · `sweetsophia/noosphere` · Tombstone, Scope enforced, Mutation audit, Human review
-- [`nornicdb`](../systems/nornicdb/) **NornicDB** — Temporal validity as a constraint · `orneryd/NornicDB` · Scope enforced, Mutation audit
-- [`nova-ai`](../systems/nova-ai/) **Nova AI** — Symbolic memory, no model · `Whooptie/NOVA_AI` · Tombstone, Trust state, Mutation audit, Human review, Negative evals
-- [`npcpy`](../systems/npcpy/) **npcpy** — Memory that waits for a yes · `npc-worldwide/npcpy` · Trust state, Human review
+<ul class="az">
+<li><span class="az-id"><a href="../systems/nanobot/">nanobot</a></span><span class="az-what">Dual-cursor file memory</span><code class="az-repo">HKUDS/nanobot</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/neko/">Project N.E.K.O.</a><code class="az-slug">neko</code></span><span class="az-what">Memory that must not reopen a wound</span><code class="az-repo">Project-N-E-K-O/N.E.K.O</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/nemoclaw/">NemoClaw</a></span><span class="az-what">Memory as an operand</span><code class="az-repo">NVIDIA/NemoClaw</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/neo4j-agent-memory/">Neo4j Agent Memory</a><code class="az-slug">neo4j-agent-memory</code></span><span class="az-what">Memory of its own reasoning</span><code class="az-repo">neo4j-labs/agent-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/neurakeep/">NeuraKeep</a></span><span class="az-what">No citation, no memory</span><code class="az-repo">dominiclachance/neurakeep</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/neuroca/">NeuroCA</a></span><span class="az-what">A memory system mid-refactor</span><code class="az-repo">Modern-Prometheus-AI/Neuroca</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/neuron/">Neuron</a></span><span class="az-what">A schema the agent&#x27;s prompt cannot override</span><code class="az-repo">kovartravis/neuron</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/nexusmem/">NexusMem</a></span><span class="az-what">Shell history as memory</span><code class="az-repo">yaminbkk/NexusMem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/nocturne-memory/">Nocturne Memory</a><code class="az-slug">nocturne-memory</code></span><span class="az-what">The model retypes your text and the match fails</span><code class="az-repo">dataojitori/nocturne_memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/nooa-memory/">NOOA Memory</a><code class="az-slug">nooa-memory</code></span><span class="az-what">Cognitive-model recall</span><code class="az-repo">NVIDIA-NeMo/labs-OO-Agents</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/noosphere/">Noosphere</a></span><span class="az-what">A tombstone that survives key rotation</span><code class="az-repo">sweetsophia/noosphere</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/nornicdb/">NornicDB</a></span><span class="az-what">Temporal validity as a constraint</span><code class="az-repo">orneryd/NornicDB</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/nova-ai/">Nova AI</a><code class="az-slug">nova-ai</code></span><span class="az-what">Symbolic memory, no model</span><code class="az-repo">Whooptie/NOVA_AI</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/npcpy/">npcpy</a></span><span class="az-what">Memory that waits for a yes</span><code class="az-repo">npc-worldwide/npcpy</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></li>
+</ul>
+
 ## O
 
-- [`obsidian-mind`](../systems/obsidian-mind/) **obsidian-mind** — A silent loss is worse than the bloat · `breferrari/obsidian-mind`
-- [`octopoda-os`](../systems/octopoda-os/) **Octopoda** — RLS as the trust wall · `RyjoxTechnologies/Octopoda-OS` · Scope enforced, Mutation audit
-- [`ods`](../systems/ods/) **ODS** — Forgetting by scheduled reversion · `Osmantic/ODS`
-- [`ollama`](../systems/ollama/) **Ollama** — Procedural memory, and nothing else · `ollama/ollama`
-- [`omega-memory`](../systems/omega-memory/) **OMEGA** — Local-first cross-model memory · `omega-memory/omega-memory` · Bi-temporal, Scope enforced, Mutation audit
-- [`omi`](../systems/omi/) **Omi** — Status decides what a memory may do · `BasedHardware/omi` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`omniclaude`](../systems/omniclaude/) **OmniClaude** — Memory under a standing trial · `OmniNode-ai/omniclaude`
-- [`omniintelligence`](../systems/omniintelligence/) **OmniIntelligence** — Evidence-tiered pattern learning · `OmniNode-ai/omniintelligence` · Trust state, Mutation audit, Human review, Negative evals
-- [`omnimemory`](../systems/omnimemory/) **OmniMemory** — A gate that tests whether the gate discriminates · `OmniNode-ai/omnimemory`
-- [`omninode-knowledge-base`](../systems/omninode-knowledge-base/) **OmniNode Knowledge Base** — Every claim needs evidence, and none has any · `OmniNode-ai/knowledge-base` · Trust state
-- [`one-agent-many-hats`](../systems/one-agent-many-hats/) **Hats** — Lessons refused at write time · `klairtech/one-agent-many-hats` · Trust state, Human review, Negative evals
-- [`open-cowork`](../systems/open-cowork/) **open-cowork** — Evaluated memory · `OpenCoworkAI/open-cowork` · Negative evals
-- [`open-second-brain`](../systems/open-second-brain/) **Open Second Brain** — A rejection the next dream cannot undo · `itechmeat/open-second-brain` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review
-- [`openakashic`](../systems/openakashic/) **OpenAkashic** — One memory, every agent · `szara7678/OpenAkashic` · Trust state, Negative evals
-- [`openclaw`](../systems/openclaw/) **OpenClaw** — Host-runtime plugin memory · `openclaw/openclaw` · Scope enforced
-- [`opencode`](../systems/opencode/) **OpenCode** — Hooks, no contract · `anomalyco/opencode`
-- [`opencode-mem`](../systems/opencode-mem/) **OpenCode Memory** — A path traversal it found in itself, with the payload printed · `tickernelz/opencode-mem` · Scope enforced
-- [`openhuman`](../systems/openhuman/) **OpenHuman** — Taint-gated memory · `tinyhumansai/openhuman` · Scope enforced
-- [`openmemory`](../systems/openmemory/) **OpenMemory** — Twenty-five numbers nobody derived · `CaviraOSS/OpenMemory` · Scope enforced, Negative evals
-- [`opensre`](../systems/opensre/) **OpenSRE** — Grounding as the write gate · `Tracer-Cloud/opensre` · Scope enforced, Human review, Negative evals
-- [`openviking`](../systems/openviking/) **OpenViking** — Filesystem context database · `volcengine/OpenViking` · Scope enforced
-- [`openworker`](../systems/openworker/) **OpenWorker** — Policy over machinery · `andrewyng/openworker` · Scope enforced
-- [`openyak`](../systems/openyak/) **OpenYak** — One document per workspace · `openyak/openyak` · Scope enforced, Human review
-- [`optmem`](../systems/optmem/) **OptMem** — No background work · `VictorTaelin/OptMem` · Mutation audit
-- [`ori-mnemos`](../systems/ori-mnemos/) **Ori Mnemos** — Two benchmark tables that do not reconcile · `aayoawoyemi/ori-mnemos`
-- [`ostk-recall`](../systems/ostk-recall/) **ostk-recall** — A tombstone the write path never reads · `os-tack/ostk-recall` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review
-- [`otis`](../systems/otis/) **Otis** — The binary is pinned, the skills are not · `TrianglLabs/otis`
-- [`ouroboros-agent-os`](../systems/ouroboros-agent-os/) **Ouroboros** — A ledger of intent, not of knowledge · `Q00/ouroboros` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/obsidian-mind/">obsidian-mind</a></span><span class="az-what">A silent loss is worse than the bloat</span><code class="az-repo">breferrari/obsidian-mind</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/octopoda-os/">Octopoda</a></span><span class="az-what">RLS as the trust wall</span><code class="az-repo">RyjoxTechnologies/Octopoda-OS</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/ods/">ODS</a></span><span class="az-what">Forgetting by scheduled reversion</span><code class="az-repo">Osmantic/ODS</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/ollama/">Ollama</a></span><span class="az-what">Procedural memory, and nothing else</span><code class="az-repo">ollama/ollama</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/omega-memory/">OMEGA</a></span><span class="az-what">Local-first cross-model memory</span><code class="az-repo">omega-memory/omega-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/omi/">Omi</a></span><span class="az-what">Status decides what a memory may do</span><code class="az-repo">BasedHardware/omi</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/omniclaude/">OmniClaude</a></span><span class="az-what">Memory under a standing trial</span><code class="az-repo">OmniNode-ai/omniclaude</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/omniintelligence/">OmniIntelligence</a></span><span class="az-what">Evidence-tiered pattern learning</span><code class="az-repo">OmniNode-ai/omniintelligence</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/omnimemory/">OmniMemory</a></span><span class="az-what">A gate that tests whether the gate discriminates</span><code class="az-repo">OmniNode-ai/omnimemory</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/omninode-knowledge-base/">OmniNode Knowledge Base</a><code class="az-slug">omninode-knowledge-base</code></span><span class="az-what">Every claim needs evidence, and none has any</span><code class="az-repo">OmniNode-ai/knowledge-base</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/one-agent-many-hats/">Hats</a></span><span class="az-what">Lessons refused at write time</span><code class="az-repo">klairtech/one-agent-many-hats</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/open-cowork/">open-cowork</a></span><span class="az-what">Evaluated memory</span><code class="az-repo">OpenCoworkAI/open-cowork</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/open-second-brain/">Open Second Brain</a></span><span class="az-what">A rejection the next dream cannot undo</span><code class="az-repo">itechmeat/open-second-brain</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/openakashic/">OpenAkashic</a></span><span class="az-what">One memory, every agent</span><code class="az-repo">szara7678/OpenAkashic</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/openclaw/">OpenClaw</a></span><span class="az-what">Host-runtime plugin memory</span><code class="az-repo">openclaw/openclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/opencode/">OpenCode</a></span><span class="az-what">Hooks, no contract</span><code class="az-repo">anomalyco/opencode</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/opencode-mem/">OpenCode Memory</a></span><span class="az-what">A path traversal it found in itself, with the payload printed</span><code class="az-repo">tickernelz/opencode-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/openhuman/">OpenHuman</a></span><span class="az-what">Taint-gated memory</span><code class="az-repo">tinyhumansai/openhuman</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/openmemory/">OpenMemory</a></span><span class="az-what">Twenty-five numbers nobody derived</span><code class="az-repo">CaviraOSS/OpenMemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/opensre/">OpenSRE</a></span><span class="az-what">Grounding as the write gate</span><code class="az-repo">Tracer-Cloud/opensre</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/openviking/">OpenViking</a></span><span class="az-what">Filesystem context database</span><code class="az-repo">volcengine/OpenViking</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/openworker/">OpenWorker</a></span><span class="az-what">Policy over machinery</span><code class="az-repo">andrewyng/openworker</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/openyak/">OpenYak</a></span><span class="az-what">One document per workspace</span><code class="az-repo">openyak/openyak</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/optmem/">OptMem</a></span><span class="az-what">No background work</span><code class="az-repo">VictorTaelin/OptMem</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/ori-mnemos/">Ori Mnemos</a></span><span class="az-what">Two benchmark tables that do not reconcile</span><code class="az-repo">aayoawoyemi/ori-mnemos</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/ostk-recall/">ostk-recall</a></span><span class="az-what">A tombstone the write path never reads</span><code class="az-repo">os-tack/ostk-recall</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/otis/">Otis</a></span><span class="az-what">The binary is pinned, the skills are not</span><code class="az-repo">TrianglLabs/otis</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/ouroboros-agent-os/">Ouroboros</a><code class="az-slug">ouroboros-agent-os</code></span><span class="az-what">A ledger of intent, not of knowledge</span><code class="az-repo">Q00/ouroboros</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## P
 
-- [`palazzo`](../systems/palazzo/) **Palazzo** — An audit log that can refuse a delete · `calibrae/palazzo` · Mutation audit
-- [`perseus-vault`](../systems/perseus-vault/) **Perseus Vault** — Claims audited against artifacts · `Perseus-Computing-LLC/perseus-vault` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
-- [`pltm-claude`](../systems/pltm-claude/) **PLTM** — A third verdict with nowhere to live · `Alby2007/PLTM-Claude` · Scope enforced
-- [`plur1bus`](../systems/plur1bus/) **PLUR1BUS** — OpenClaw memory plugin · `Cyb3rb1ade/openclaw-plur1bus-memory` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
-- [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
-- [`pro-long`](../systems/pro-long/) **PRO-LONG** — The log is the memory · `alexisfox7/PRO-LONG`
-- [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
-- [`promptx`](../systems/promptx/) **PromptX** — An engram network per role · `deepractice/promptx` · Scope enforced
-- [`provem`](../systems/provem/) **Provem** — Governance as the product · `BernhardJackiewicz/provem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`pydantic-ai-harness`](../systems/pydantic-ai-harness/) **Pydantic AI Harness** — Markdown notebook with database discipline · `pydantic/pydantic-ai-harness` · Scope enforced, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/palazzo/">Palazzo</a></span><span class="az-what">An audit log that can refuse a delete</span><code class="az-repo">calibrae/palazzo</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/perseus-vault/">Perseus Vault</a></span><span class="az-what">Claims audited against artifacts</span><code class="az-repo">Perseus-Computing-LLC/perseus-vault</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/pi/">Pi</a></span><span class="az-what">Branchable session substrate</span><code class="az-repo">earendil-works/pi</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/pltm-claude/">PLTM</a></span><span class="az-what">A third verdict with nowhere to live</span><code class="az-repo">Alby2007/PLTM-Claude</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/plur1bus/">PLUR1BUS</a></span><span class="az-what">OpenClaw memory plugin</span><code class="az-repo">Cyb3rb1ade/openclaw-plur1bus-memory</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/powermem/">PowerMem</a></span><span class="az-what">Decay on the read path</span><code class="az-repo">oceanbase/powermem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/prime-agent/">Prime Agent</a></span><span class="az-what">A harness that edits itself, with an undo</span><code class="az-repo">PrimeIntellect-ai/prime-agent</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/pro-long/">PRO-LONG</a></span><span class="az-what">The log is the memory</span><code class="az-repo">alexisfox7/PRO-LONG</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/project-golem/">Project Golem</a></span><span class="az-what">A list of what the owner said no to</span><code class="az-repo">Arvincreator/project-golem</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/promptx/">PromptX</a></span><span class="az-what">An engram network per role</span><code class="az-repo">deepractice/promptx</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/provem/">Provem</a></span><span class="az-what">Governance as the product</span><code class="az-repo">BernhardJackiewicz/provem</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a></span><span class="az-what">Markdown notebook with database discipline</span><code class="az-repo">pydantic/pydantic-ai-harness</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## Q
 
-- [`qwen-code`](../systems/qwen-code/) **Qwen Code** — Team memory in git · `QwenLM/qwen-code` · Scope enforced, Human review
-- [`qwen-mm-plugins`](../systems/qwen-mm-plugins/) **Qwen MM Plugins** — Memory of what was seen · `QwenLM/Qwen-MM-Plugins`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/qwen-code/">Qwen Code</a></span><span class="az-what">Team memory in git</span><code class="az-repo">QwenLM/qwen-code</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/qwen-mm-plugins/">Qwen MM Plugins</a></span><span class="az-what">Memory of what was seen</span><code class="az-repo">QwenLM/Qwen-MM-Plugins</code><span class="az-caps"></span></li>
+</ul>
+
 ## R
 
-- [`rainbox`](../systems/rainbox/) **RainBox** — Operator-governed memory · `neoneye/RainBox` · Tombstone, Trust state, Scope enforced, Human review
-- [`reasonix`](../systems/reasonix/) **Reasonix** — Memory inside the prefix cache · `esengine/DeepSeek-Reasonix` · Scope enforced, Human review, Negative evals
-- [`recall-substrate`](../systems/recall-substrate/) **Recall** — Push memory with an integrity gate · `H-XX-D/recall-memory-substrate` · Trust state
-- [`redcell`](../systems/redcell/) **REDCELL** — The finding is the memory unit · `martian56/redcell` · Trust state, Scope enforced, Human review
-- [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
-- [`reflexion`](../systems/reflexion/) **Reflexion** — Memory as a plan after failure · `noahshinn/reflexion`
-- [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
-- [`remem-mcp`](../systems/remem-mcp/) **remem-mcp** — A refusal keyed on the content hash · `tinhien11/remem-mcp` · Tombstone, Trust state, Scope enforced, Negative evals
-- [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
-- [`ruflo`](../systems/ruflo/) **ruflo** — A guard on the retrieval path, off by default · `ruvnet/ruflo`
-- [`runar-forge`](../systems/runar-forge/) **RunarForge** — Postmortems in the comment above the fix · `crlome/runar-forge` · Scope enforced, Human review
+<ul class="az">
+<li><span class="az-id"><a href="../systems/rainbox/">RainBox</a></span><span class="az-what">Operator-governed memory</span><code class="az-repo">neoneye/RainBox</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/reasonix/">Reasonix</a></span><span class="az-what">Memory inside the prefix cache</span><code class="az-repo">esengine/DeepSeek-Reasonix</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/recall-substrate/">Recall</a><code class="az-slug">recall-substrate</code></span><span class="az-what">Push memory with an integrity gate</span><code class="az-repo">H-XX-D/recall-memory-substrate</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/redcell/">REDCELL</a></span><span class="az-what">The finding is the memory unit</span><code class="az-repo">martian56/redcell</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/redis-agent-memory-server/">Redis Agent Memory Server</a><code class="az-slug">redis-agent-memory-server</code></span><span class="az-what">Working/long-term memory service</span><code class="az-repo">redis/agent-memory-server</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/reflexion/">Reflexion</a></span><span class="az-what">Memory as a plan after failure</span><code class="az-repo">noahshinn/reflexion</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/reme/">ReMe</a></span><span class="az-what">Markdown memory that publishes its bad scores</span><code class="az-repo">agentscope-ai/ReMe</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/remem-mcp/">remem-mcp</a></span><span class="az-what">A refusal keyed on the content hash</span><code class="az-repo">tinhien11/remem-mcp</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/risuai/">RisuAI</a></span><span class="az-what">Three memory systems, one repository</span><code class="az-repo">kwaroran/RisuAI</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/ruflo/">ruflo</a></span><span class="az-what">A guard on the retrieval path, off by default</span><code class="az-repo">ruvnet/ruflo</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/runar-forge/">RunarForge</a></span><span class="az-what">Postmortems in the comment above the fix</span><code class="az-repo">crlome/runar-forge</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+</ul>
+
 ## S
 
-- [`second-brain-cloudflare`](../systems/second-brain-cloudflare/) **Second Brain** — How fast a fact goes stale depends on what kind of fact it is · `rahilp/second-brain-cloudflare` · Trust state, Negative evals
-- [`second-me`](../systems/second-me/) **Second Me** — The atlas's only memory that is weights · `mindverse/Second-Me` · Human review
-- [`serena`](../systems/serena/) **Serena** — Memory as a link graph, with an integrity checker · `oraios/serena` · Scope enforced
-- [`sesa`](../systems/sesa/) **SESA** — Failure-distilled skill memory · `Zenghuang-Fu/SESA-Self-Evolving-Search-Agents`
-- [`shodh-memory`](../systems/shodh-memory/) **Shodh-Memory** — A cognitive substrate with no LLM · `varun29ankuS/shodh-memory` · Mutation audit
-- [`sillytavern`](../systems/sillytavern/) **SillyTavern** — Memory people write by hand · `SillyTavern/SillyTavern`
-- [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
-- [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
-- [`smythos-sre`](../systems/smythos-sre/) **SmythOS SRE** — A conversation handle in a request header · `SmythOS/sre` · Scope enforced, Negative evals
-- [`sonder-runtime`](../systems/sonder-runtime/) **Sonder Runtime** — A quarantine that checks the base rate before it blames · `Krilliac/Sonder-runtime` · Tombstone, Trust state, Scope enforced, Mutation audit, Negative evals
-- [`soul-of-waifu`](../systems/soul-of-waifu/) **Soul of Waifu** — Rollback that nothing calls · `jofizcd/Soul-of-Waifu` · Mutation audit
-- [`sovereign`](../systems/sovereign/) **AMITY / Archangel-8** — The capacity to refuse · `Renkasha/Sovereign`
-- [`stash`](../systems/stash/) **Stash** — A hypothesis is not a fact, and gets its own table · `alash3al/stash` · Trust state, Scope enforced
-- [`superlocalmemory`](../systems/superlocalmemory/) **SuperLocalMemory** — Governance as the product · `qualixar/superlocalmemory` · Scope enforced, Mutation audit
-- [`supermemory`](../systems/supermemory/) **Supermemory** — Hosted memory product · `supermemoryai/supermemory` · Scope enforced
-- [`swafra`](../systems/swafra/) **Swafra** — Compact local graph-RAG · `kunal12203/swafra`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/second-brain-cloudflare/">Second Brain</a></span><span class="az-what">How fast a fact goes stale depends on what kind of fact it is</span><code class="az-repo">rahilp/second-brain-cloudflare</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/second-me/">Second Me</a></span><span class="az-what">The atlas&#x27;s only memory that is weights</span><code class="az-repo">mindverse/Second-Me</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/serena/">Serena</a></span><span class="az-what">Memory as a link graph, with an integrity checker</span><code class="az-repo">oraios/serena</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/sesa/">SESA</a></span><span class="az-what">Failure-distilled skill memory</span><code class="az-repo">Zenghuang-Fu/SESA-Self-Evolving-Search-Agents</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/shodh-memory/">Shodh-Memory</a></span><span class="az-what">A cognitive substrate with no LLM</span><code class="az-repo">varun29ankuS/shodh-memory</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/sillytavern/">SillyTavern</a></span><span class="az-what">Memory people write by hand</span><code class="az-repo">SillyTavern/SillyTavern</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/simplemem/">SimpleMem</a></span><span class="az-what">Compression-first research memory</span><code class="az-repo">aiming-lab/SimpleMem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/skales/">Skales</a></span><span class="az-what">Ask it to forget</span><code class="az-repo">skalesapp/skales</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/smythos-sre/">SmythOS SRE</a><code class="az-slug">smythos-sre</code></span><span class="az-what">A conversation handle in a request header</span><code class="az-repo">SmythOS/sre</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/sonder-runtime/">Sonder Runtime</a></span><span class="az-what">A quarantine that checks the base rate before it blames</span><code class="az-repo">Krilliac/Sonder-runtime</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/soul-of-waifu/">Soul of Waifu</a></span><span class="az-what">Rollback that nothing calls</span><code class="az-repo">jofizcd/Soul-of-Waifu</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/sovereign/">AMITY / Archangel-8</a></span><span class="az-what">The capacity to refuse</span><code class="az-repo">Renkasha/Sovereign</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/stash/">Stash</a></span><span class="az-what">A hypothesis is not a fact, and gets its own table</span><code class="az-repo">alash3al/stash</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/superlocalmemory/">SuperLocalMemory</a></span><span class="az-what">Governance as the product</span><code class="az-repo">qualixar/superlocalmemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/supermemory/">Supermemory</a></span><span class="az-what">Hosted memory product</span><code class="az-repo">supermemoryai/supermemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/swafra/">Swafra</a></span><span class="az-what">Compact local graph-RAG</span><code class="az-repo">kunal12203/swafra</code><span class="az-caps"></span></li>
+</ul>
+
 ## T
 
-- [`telemem`](../systems/telemem/) **TeleMem** — A charter its own published numbers do not yet meet · `TeleAI-UAGI/telemem` · Scope enforced
-- [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/) **TencentDB Agent Memory** — Layered symbolic memory · `TencentCloud/tencentdb-agent-memory`
-- [`terse-memory`](../systems/terse-memory/) **TERSE Memory** — A linter where the verbs should be · `terse-lang/terse` · Trust state
-- [`tigrimosr`](../systems/tigrimosr/) **TigrimOSR** — Proposed skills, staged on disk · `Sompote/TigrimOSR` · Trust state, Scope enforced, Human review
-- [`token-optimizer`](../systems/token-optimizer/) **token-optimizer** — Cross-session continuity, fenced as data · `alexgreensh/token-optimizer` · Scope enforced, Negative evals
-- [`token-savior`](../systems/token-savior/) **Token Savior** — A learned injection ranker · `Mibayy/token-savior` · Scope enforced, Mutation audit
-- [`tokenmizer`](../systems/tokenmizer/) **TokenMizer** — A status for not knowing · `Shweta-Mishra-ai/tokenmizer` · Trust state, Mutation audit
-- [`truememory`](../systems/truememory/) **TrueMemory** — A leaderboard that puts someone else first · `buildingjoshbetter/TrueMemory` · Trust state, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/telemem/">TeleMem</a></span><span class="az-what">A charter its own published numbers do not yet meet</span><code class="az-repo">TeleAI-UAGI/telemem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a></span><span class="az-what">Layered symbolic memory</span><code class="az-repo">TencentCloud/tencentdb-agent-memory</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/terse-memory/">TERSE Memory</a><code class="az-slug">terse-memory</code></span><span class="az-what">A linter where the verbs should be</span><code class="az-repo">terse-lang/terse</code><span class="az-caps"><span class="az-cap">Trust state</span></span></li>
+<li><span class="az-id"><a href="../systems/tigrimosr/">TigrimOSR</a></span><span class="az-what">Proposed skills, staged on disk</span><code class="az-repo">Sompote/TigrimOSR</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/token-optimizer/">token-optimizer</a></span><span class="az-what">Cross-session continuity, fenced as data</span><code class="az-repo">alexgreensh/token-optimizer</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/token-savior/">Token Savior</a></span><span class="az-what">A learned injection ranker</span><code class="az-repo">Mibayy/token-savior</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/tokenmizer/">TokenMizer</a></span><span class="az-what">A status for not knowing</span><code class="az-repo">Shweta-Mishra-ai/tokenmizer</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/truememory/">TrueMemory</a></span><span class="az-what">A leaderboard that puts someone else first</span><code class="az-repo">buildingjoshbetter/TrueMemory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## U
 
-- [`universal-memory-engine`](../systems/universal-memory-engine/) **Universal Memory Engine** — A suppression the write gate obeys · `12ziyad/universal-memory-engine` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
+<ul class="az">
+<li><span class="az-id"><a href="../systems/universal-memory-engine/">Universal Memory Engine</a></span><span class="az-what">A suppression the write gate obeys</span><code class="az-repo">12ziyad/universal-memory-engine</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+</ul>
+
 ## V
 
-- [`verel`](../systems/verel/) **Verel** — Verification-first memory · `amitpatole/verel` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
-- [`vestige`](../systems/vestige/) **Vestige** — Backward reach and reversible merges · `samvallad33/vestige` · Bi-temporal, Mutation audit, Human review
-- [`vibe-cognition`](../systems/vibe-cognition/) **Vibe Cognition** — Journal first, graph second · `haagndaazer/vibe-cognition` · Mutation audit
-- [`vir`](../systems/vir/) **vir** — Most of your session history is your tooling talking to itself · `djolex999/vir` · Human review
-- [`virtual-context`](../systems/virtual-context/) **virtual-context** — A tag vocabulary that reorganises itself · `virtual-context/virtual-context` · Scope enforced, Mutation audit
-- [`virtualwife`](../systems/virtualwife/) **VirtualWife** — normalize_scores does not normalize · `yakami129/VirtualWife`
-- [`vllm-semantic-router`](../systems/vllm-semantic-router/) **vLLM Semantic Router** — A full memory system inside a router · `vllm-project/semantic-router` · Scope enforced, Negative evals
-- [`voyager`](../systems/voyager/) **Voyager** — Procedural skill memory · `MineDojo/Voyager`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/verel/">Verel</a></span><span class="az-what">Verification-first memory</span><code class="az-repo">amitpatole/verel</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/vestige/">Vestige</a></span><span class="az-what">Backward reach and reversible merges</span><code class="az-repo">samvallad33/vestige</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/vibe-cognition/">Vibe Cognition</a></span><span class="az-what">Journal first, graph second</span><code class="az-repo">haagndaazer/vibe-cognition</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/vir/">vir</a></span><span class="az-what">Most of your session history is your tooling talking to itself</span><code class="az-repo">djolex999/vir</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/virtual-context/">virtual-context</a></span><span class="az-what">A tag vocabulary that reorganises itself</span><code class="az-repo">virtual-context/virtual-context</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/virtualwife/">VirtualWife</a></span><span class="az-what">normalize_scores does not normalize</span><code class="az-repo">yakami129/VirtualWife</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/vllm-semantic-router/">vLLM Semantic Router</a><code class="az-slug">vllm-semantic-router</code></span><span class="az-what">A full memory system inside a router</span><code class="az-repo">vllm-project/semantic-router</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/voyager/">Voyager</a></span><span class="az-what">Procedural skill memory</span><code class="az-repo">MineDojo/Voyager</code><span class="az-caps"></span></li>
+</ul>
+
 ## W
 
-- [`waku-agent`](../systems/waku-agent/) **Waku Agent** — Gated memory · `ShenSeanChen/waku-agent` · Human review
-- [`wax`](../systems/wax/) **Wax** — SIGKILL the writer, then count the frames · `christopherkarani/Wax` · Mutation audit, Human review, Negative evals
-- [`wenlan`](../systems/wenlan/) **Wenlan** — A living wiki over memory · `7xuanlu/origin` · Tombstone, Scope enforced, Human review
-- [`windie-sandbox`](../systems/windie-sandbox/) **Windie Sandbox** — Branches are kept, versions are not · `buiilding/Windie-Sandbox` · Human review, Negative evals
-- [`windieos`](../systems/windieos/) **WindieOS** — When the embedding model changes, rebuild · `buiilding/WindieOS` · Scope enforced
+<ul class="az">
+<li><span class="az-id"><a href="../systems/waku-agent/">Waku Agent</a></span><span class="az-what">Gated memory</span><code class="az-repo">ShenSeanChen/waku-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/wax/">Wax</a></span><span class="az-what">SIGKILL the writer, then count the frames</span><code class="az-repo">christopherkarani/Wax</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/wenlan/">Wenlan</a></span><span class="az-what">A living wiki over memory</span><code class="az-repo">7xuanlu/origin</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></li>
+<li><span class="az-id"><a href="../systems/windie-sandbox/">Windie Sandbox</a></span><span class="az-what">Branches are kept, versions are not</span><code class="az-repo">buiilding/Windie-Sandbox</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></li>
+<li><span class="az-id"><a href="../systems/windieos/">WindieOS</a></span><span class="az-what">When the embedding model changes, rebuild</span><code class="az-repo">buiilding/WindieOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+</ul>
+
 ## Y
 
-- [`yantrikdb`](../systems/yantrikdb/) **YantrikDB** — A memory database that corrects itself · `yantrikos/yantrikdb-server` · Scope enforced, Mutation audit
-- [`yesmem`](../systems/yesmem/) **YesMem** — Continuity for coding agents · `carsteneu/yesmem` · Scope enforced
-- [`yourmemory`](../systems/yourmemory/) **YourMemory** — Decay decides what to prune, never what to rank · `sachitrafa/yourmemory` · Scope enforced, Mutation audit
+<ul class="az">
+<li><span class="az-id"><a href="../systems/yantrikdb/">YantrikDB</a></span><span class="az-what">A memory database that corrects itself</span><code class="az-repo">yantrikos/yantrikdb-server</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+<li><span class="az-id"><a href="../systems/yesmem/">YesMem</a></span><span class="az-what">Continuity for coding agents</span><code class="az-repo">carsteneu/yesmem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/yourmemory/">YourMemory</a></span><span class="az-what">Decay decides what to prune, never what to rank</span><code class="az-repo">sachitrafa/yourmemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></li>
+</ul>
+
 ## Z
 
-- [`z-waif`](../systems/z-waif/) **Z-Waif** — It caps its own voice in its own query · `SugarcaneDefender/z-waif`
-- [`zep`](../systems/zep/) **Zep** — Fifty runs of a closed graph · `getzep/zep` · Bi-temporal, Scope enforced
-- [`zerostack`](../systems/zerostack/) **ZeroStack** — One global file, one project slug · `gi-dellav/zerostack`
+<ul class="az">
+<li><span class="az-id"><a href="../systems/z-waif/">Z-Waif</a></span><span class="az-what">It caps its own voice in its own query</span><code class="az-repo">SugarcaneDefender/z-waif</code><span class="az-caps"></span></li>
+<li><span class="az-id"><a href="../systems/zep/">Zep</a></span><span class="az-what">Fifty runs of a closed graph</span><code class="az-repo">getzep/zep</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></li>
+<li><span class="az-id"><a href="../systems/zerostack/">ZeroStack</a></span><span class="az-what">One global file, one project slug</span><code class="az-repo">gi-dellav/zerostack</code><span class="az-caps"></span></li>
+</ul>
