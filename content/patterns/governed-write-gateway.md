@@ -133,13 +133,14 @@ each of which a caller cannot skip. The sixth is a **semantic drift gate**: the
 correction is rejected outright if the new embedding sits more than 0.45 cosine
 from the old, on the reasoning that a replacement meaning something else is
 corruption rather than correction. It is the only instance of that check in this
-atlas, and the only caller in the tree passes `skipDriftGate: true` — with the
-reasoning at the call site: a nonce-confirmed user correction is exactly the case
-where large drift is intended, the confirmation dialog shows the old and new text
-in full, and the gate throws rather than warns. The drift is still recorded on
-the audit event. Both halves are worth carrying: a gate can meaningfully refuse a
-correction on semantic grounds, and a gate that is right for automated callers
-and wrong for the one human caller it has ends up with no live consumer at all.
+atlas. `/correct` passes `skipDriftGate: true` — with the reasoning at the call
+site: a nonce-confirmed user correction is exactly the case where large drift is
+intended, the confirmation dialog shows the old and new text in full, and the
+gate throws rather than warns. Confirm-gated conflict apply calls `safeUpdate`
+without the skip. The drift is still recorded on the audit event. Both halves
+are worth carrying: a gate can meaningfully refuse a correction on semantic
+grounds, and the human path that would trip it most often is the one that
+disables it.
 
 [Verel](../../systems/verel/) gates promotion rather than writing;
 [engram](../../systems/engram/) surfaces conflict candidates for judgment.

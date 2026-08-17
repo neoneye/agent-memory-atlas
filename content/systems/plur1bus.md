@@ -144,13 +144,11 @@ The most carefully built path in the repository, in order:
 7. **Store the new version first, supersede second** (`:373`, `:377`). The comment is worth reading in full: storing first means a crash leaves both versions active — "a recoverable fork, never a loss" — whereas superseding first would point the old row at an id that was never written.
 8. **Rewrite graph edges** onto the new id, then **append the event** with the action, the source, the evidence, the confidence and the measured drift.
 
-### The drift gate's only caller — `index.js:6422`
+### The drift gate — `/correct` skips, conflict-apply does not
 
-`/correct <old> to <new>` runs a confirmation token exchange, then calls `safeUpdate` with `updateSource: "telegram:/correct"`, an evidence string, and `skipDriftGate: true`. Every other reference to `skipDriftGate` in the tree is in a test, so the gate does not run in production.
+`/correct <old> to <new>` runs a confirmation token exchange, then calls `safeUpdate` with `updateSource: "telegram:/correct"`, an evidence string, and `skipDriftGate: true`. Confirm-gated conflict apply (`lib/jobs/apply-conflict-resolution.js`) calls `safeUpdate` without the skip, so a high-drift reconsolidation becomes `review_only` rather than a write. Compaction merge and dreaming still use `table.add`, not `safeUpdate`.
 
-The reasoning sits at the call site rather than in a commit message: `/correct` is a nonce-confirmed user action, the confirmation dialog shows old and new text in the clear, so high semantic drift there is intended and consented to, and the gate would block a legitimate large correction with an exception rather than a warning. The drift is still computed and written onto the reconsolidation event as `semanticDrift`, so switching the gate off costs the measurement nothing.
-
-What remains is that the gate guards nothing else: the automated bulk paths that would most benefit from it — consolidation, dreaming, conflict resolution — do not call `safeUpdate` at all. A threshold whose only caller has reasoned its way out of it has no live consumer.
+The reasoning sits at the `/correct` call site rather than in a commit message: `/correct` is a nonce-confirmed user action, the confirmation dialog shows old and new text in the clear, so high semantic drift there is intended and consented to, and the gate would block a legitimate large correction with an exception rather than a warning. The drift is still computed and written onto the reconsolidation event as `semanticDrift`.
 
 The confirmation dialog is the part worth copying. Target resolution is fuzzy — candidates are resolved without a minimum score, and "unambiguous" means only that the top match beats the second by more than 0.15 — while `safeUpdate` replaces the entire text. A prompt naming an 80-character title cannot tell a user which memory they are about to overwrite, so it renders the stored text and the replacement at 300 characters each. The same value carries into provenance: `payload.oldText` holds the stored content being replaced rather than the search term that found it, and `updateEvidence` builds its evidence line from that.
 
@@ -314,7 +312,7 @@ What is missing is quality measurement. There is no retrieval-quality eval, no b
 ### Avoid
 
 - **Discrete trust states wired to a score.** If `conflict` is a 0.3 penalty, the system cannot refuse to act on a contradiction — it can only be slightly less enthusiastic. Decide which states filter and which rank, and make the filtering ones filter.
-- **A safety gate whose only caller disables it.** The disabling may be right — an explicitly confirmed user correction outranks a cosine distance — but a threshold with no live consumer is a threshold nobody is maintaining. Either give it a caller or record, at the call site, why it has none.
+- **A safety gate whose human caller disables it.** The `/correct` skip may be right — an explicitly confirmed user correction outranks a cosine distance — but compaction merge still bypasses `safeUpdate` entirely. The live consumer is confirm-gated conflict apply.
 - **Deduplicating an append-only log by first appearance.** If a state change appends rather than replaces, the first copy is the pre-change one, and every consumer that keeps it is reading the record as it was before the decision. Pick the newest revision by a field the transition actually sets, and check that the field differs between revisions before relying on it.
 - **Instructing a model to weigh a distinction your renderer omits.** A prompt supplement that says *prefer active over conflicting* needs the status in the payload; otherwise it is an instruction the model has no way to follow and no way to report it cannot.
 - **Patching your host at `postinstall`.** However well-tested and however necessary, an install step that rewrites another package's shipped code — and cannot fail by contract — is a support burden and a supply-chain surface.
