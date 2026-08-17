@@ -14,21 +14,29 @@ the matrix and the capability index, and therefore complete by construction. A
 report that exists appears here; a report that does not, cannot. That is the
 property the hand-written verdict section cannot offer.
 
-Sorted by slug rather than by title, because the slug is what a reader types into
-a find-in-page — `aukora-kernel`, `powermem`, `second-me` — while the title may
-be styled ("Project N.E.K.O.", "Google ADK") in ways nobody guesses.
+Sorted by title, which is the column the page prints. It was sorted by slug for
+as long as the slug was printed beside the name, on the argument that the slug is
+what a reader types into a find-in-page. Once the slug came off the row that
+argument had nothing to stand on: the letter headings were keyed to a string
+nobody could see, so `Google ADK` sat under A and `Hats` under O, and the only
+thing a reader could check the ordering against was the name. Roughly seven rows
+read as misfiled.
+
+The sort key is the title uppercased, with the slug breaking ties. Uppercasing
+rather than stripping punctuation keeps space-before-letter ordering, so
+`Agent Memory Techniques` precedes `agentmemory V4` — word-by-word, which is what
+a reader scanning a column of names expects.
 
 Rendered as four aligned columns — name, what it is, repository, capabilities —
 and the slug is not printed at all. It was, twice, under two different rules for
 deciding which rows had earned it, and both read as noise on the page: the slug,
 the title and the repository name are one identity, and a row that spells it
-twice costs a scan and returns nothing. The sort order is the only thing the
-slug was still doing, and the opening sentence carries that instead.
+twice costs a scan and returns nothing.
 
 What it costs: a browser's find bar can no longer match a slug that appears
 nowhere in a title or a repository path — `agent-memory-doctrine`, `neko`,
-`recall-substrate` and `sovereign` among them. The row is still filed under the
-slug's letter, and the repository column carries the string on most rows.
+`recall-substrate` and `sovereign` among them. The repository column carries the
+string on most rows, and every row's href is still the slug.
 
 Each row is a single `<a>` with the four columns inside it, so the click target
 is the whole row rather than the name alone.
@@ -87,7 +95,7 @@ def read_field(block: str, key: str) -> str:
 
 
 def main() -> int:
-    reports = sorted(SYSTEMS.glob("*.md"), key=lambda p: p.stem)
+    reports = sorted(SYSTEMS.glob("*.md"))
     if not reports:
         print("no reports found", file=sys.stderr)
         return 1
@@ -119,6 +127,9 @@ def main() -> int:
             }
         )
 
+    # By the printed name, with the slug breaking ties. See the module docstring.
+    rows.sort(key=lambda r: (r["title"].upper(), r["slug"]))
+
     lines = [
         "---",
         # Non-breaking spaces: "A to Z" is one token to a reader, and a
@@ -133,9 +144,8 @@ def main() -> int:
         "layout: wide",
         "---",
         "",
-        f"Every one of the **{len(rows)} reports**, filed under the slug in its "
-        "URL rather than under its title, which is why `Google ADK` sits under "
-        "A and `Hats` under O. Generated from each report's own "
+        f"Every one of the **{len(rows)} reports**, by name. Generated from "
+        "each report's own "
         "frontmatter, so this list cannot drift from what the atlas actually "
         "holds — unlike the [verdicts](../verdicts/), which are hand-written, "
         "and where the difference between *complete by construction* and "
@@ -166,7 +176,11 @@ def main() -> int:
     # reader, which is where `Agent_Memory_Techniques` becomes italic.
     current_letter = ""
     for row in rows:
-        letter = row["slug"][0].upper()
+        # Keyed to the printed name, so a heading always matches the column
+        # under it. `re` is not worth importing for this: no title in the corpus
+        # opens with punctuation, and one that did would want a decision rather
+        # than a silent strip.
+        letter = row["title"][:1].upper()
         if letter != current_letter:
             if current_letter:
                 lines += ["</ul>", ""]
