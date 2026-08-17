@@ -495,8 +495,8 @@ Almost every memory result compares a system against *no memory*, which flatters
 every memory system ever built. The comparison that means something is against
 the cheapest thing that also persists.
 
-[NOOA Memory](../systems/nooa-memory/) is the one instance in this atlas that
-runs it. Its paper reports ARC-AGI-3 fleet-mean RHAE of 50.2% for the world-model
+[NOOA Memory](../systems/nooa-memory/) is the instance that runs it against a
+stronger agent. Its paper reports ARC-AGI-3 fleet-mean RHAE of 50.2% for the world-model
 skill with memory against **38.4% for the identical skill "with markdown files in
 place of memory"** — stated as "+11.8 RHAE points over the identical agent with
 file-based notes". A third arm, a different skill *with* memory, scores 41.7%,
@@ -506,6 +506,25 @@ associations given the sample size and right-censoring.
 
 Design the ablation so a null result is possible. If the baseline cannot in
 principle win, the experiment cannot tell you anything.
+
+**[MemoryOps AI](../systems/memoryops-ai/) is the instance that got the null
+result and published it as the headline.** `benchmark/COMPARISON.md` scores six
+systems on the same deterministic probes: the governed path, an ungoverned
+ablation twin of itself, a full-context baseline, a plain vector baseline, a
+rolling-summary baseline, and Mem0 at a pinned `mem0ai==2.0.17`. Four of the six
+tie at 4/4, and the document states the consequence in bold rather than in a
+limitation — the plain vector baseline passes every case, so *"these probes
+therefore do not, by themselves, demonstrate a governance advantage"*, and
+*"nothing here distinguishes a governed memory layer from an ungoverned one."*
+Three design choices are what make that finding load-bearing rather than
+embarrassing: the cases were fixed before the external systems were added and not
+changed afterwards, the embedder is held constant between the vector baseline and
+Mem0 so the comparison is about memory semantics rather than embedding quality,
+and the external system's chat model is a stub that raises if invoked, *"which is
+what makes '0 provider calls' a checked property rather than an assertion."* A
+project that builds the arm that can beat it, and then reports that it did, is
+the practice this section is asking for; the result is the evidence that the
+practice was real.
 
 #### The stronger version: compare against doing it for no reason
 

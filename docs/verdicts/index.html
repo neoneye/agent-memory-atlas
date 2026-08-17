@@ -3449,7 +3449,13 @@ href="../systems/memoryops-ai/"><code>memoryops-ai</code></a></h3>
 transaction-local GUCs, so a recall path that forgets its tenant
 predicate returns nothing instead of everything — the strongest
 isolation mechanism in this atlas, and stated in the code as defense in
-depth beside the application check.</li>
+depth beside the application check. The behavioural probe that proves it
+is now mandatory once a database answers: it had been printing
+<code>[WARN] behavioral probe skipped</code> on an authentication
+failure and returning 0, so the Postgres job went green while verifying
+only that the policies existed. <code>test_rls_verifier.py</code>
+asserts exit codes rather than log text, because <em>"a message can be
+reworded, an exit code is the contract CI actually consumes."</em></li>
 <li>Biggest risk: deletion is record-keyed. <code>soft_delete</code>
 sets <code>deleted_at</code> and the dedup lookup is filtered to active
 rows, so a value that was deleted and is later re-asserted returns as a
@@ -3459,13 +3465,23 @@ would stop it, is already computed, persisted and compared.</li>
 per-tenant head row, so concurrent mutations cannot fork it into two
 valid-looking histories, with <code>verify_chain</code> exported so a
 caller rather than the writer can check it.</li>
-<li>Maturity impression: 39,000 lines of Python across a monorepo with a
-published SDK, a hosted demo, RLS migrations, and eval sets that plant a
-cross-tenant memory before asserting it is unreachable — none of it run
-for this review, because five dependency surfaces were inside the
-seven-day cooldown.</li>
+<li>Maturity impression: v2.5, 193 commits, ~47,700 lines of Python
+across a monorepo with a published SDK, a hosted demo, RLS migrations,
+115 test files, and eval sets that plant a cross-tenant memory before
+asserting it is unreachable — none of it run for this review, because
+two dependency surfaces were inside the cooldown and four
+<code>conftest.py</code> files execute on collection. Five marks, all
+carrying evidence records. Retrieval is hybrid rather than dense: BM25
+over the vector candidate set, blended by configurable ranker
+weights.</li>
 <li>Study when: multi-tenancy is real and you want to see governance
-placed below the caller rather than beside it.</li>
+placed below the caller rather than beside it — or you want the corpus's
+clearest example of a project running its own ablation arm and
+publishing the null result. <code>benchmark/COMPARISON.md</code> scores
+the governed path, an ungoverned twin, three baselines and Mem0
+identically on cases fixed beforehand, and reports in bold that a plain
+vector baseline passes every probe, so <em>"nothing here distinguishes a
+governed memory layer from an ungoverned one."</em></li>
 <li>Do not copy when: you need a deletion that stays deleted against an
 automatic writer; the machinery for that is present and unused.</li>
 </ul>

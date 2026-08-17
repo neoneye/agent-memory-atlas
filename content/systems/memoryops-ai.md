@@ -6,42 +6,48 @@ root: ../..
 page_kind: system
 source_name: "patibandlavenkatamanideep/memoryops-ai"
 source_url: https://github.com/patibandlavenkatamanideep/memoryops-ai
-revision: 5f8a724b8bd00b1b9e66765a8119096682b7a866
-revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866
-analyzed_at: 2026-08-04
+revision: fe04e91b05edd51f5c0423db7cfb27553a8957d0
+revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/fe04e91b05edd51f5c0423db7cfb27553a8957d0
+analyzed_at: 2026-08-17
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "the memory record | services/api/app/db/entities.py, services/api/app/routes/memories.py | `status` is a discrete field whose values include `pending`, and admission can hold sensitive content there rather than storing it active; the PATCH route moves it through approve, reject and archive, and `retrieve_active` reads `status == _ACTIVE` only, so a pending record reaches no prompt | services/api/tests/test_memory_route_authorization.py and the governance suite"
+  scope_enforced: "the Postgres deployment, every protected table | infra/db/migrations/004_rls_policies.sql, services/api/app/db/postgres_repo.py | `_scoped()` sets `app.tenant_id` and `app.user_id` as transaction-local GUCs and the RLS policies filter on them, so a forgotten predicate returns nothing rather than everything; the in-memory backend enforces the same invariant in application code and raises when `tenant_id` is empty | scripts/check_rls_policies.py runs a behavioural cross-tenant probe that is mandatory once a database answers, and services/api/tests/test_rls_verifier.py asserts its exit codes"
+  audit_log: "the evidence chain, per tenant | services/api/app/evidence/hashchain.py | `compute_entry_hash` is SHA-256 over canonical event fields plus `prev_hash`, `verify_chain` recovers order from the hash links rather than timestamps, and writes serialise through a per-tenant head row so concurrent mutations cannot fork the chain | the evidence suite, plus services/api/tests/test_repo_trust_guards.py for the structural half"
+  human_review: "the memory record, before it is active | services/api/app/routes/memories.py | the PATCH route carries edit, approve, reject and archive as separately authorized actions — `approve` deliberately has no self permission, because requiring only one would let `memory:approve:tenant` grant a content edit and an approver could rewrite the text in the request approving it | services/api/tests/test_memory_route_authorization.py"
+  negative_eval: "the write and read paths, as committed cases | evals/adversarial_cases.json, evals/tenant_isolation_cases.json | the `block` cases assert particular content must not be stored, the isolation cases plant a memory under one tenant and assert it is unreachable from another, and `eval_harness.py` maps case kinds onto the runtime's own save/drop/block/pending vocabulary | services/api/app/services/eval_harness.py is the runner; the cases are the mechanism"
 stack_storage: "postgres, memory"
-stack_retrieval: "vector"
-stack_source: "seeded"
+stack_retrieval: "lexical, vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A record with content and `normalized_content`, embedding, importance, confidence, sensitivity, status, source, weight, reinforcement count and revision"
   storage: "Postgres with pgvector and row-level security, or an in-memory store for keyless local runs"
-  retrieval: "Dense candidate search behind a recall gate, with tenant and user scope applied as database policy rather than as a query predicate"
+  retrieval: "Hybrid: a dense candidate search behind a recall gate, then BM25 over just the returned candidates — a few hundred rows, so no lexical index is needed — blended by configurable ranker weights, with tenant and user scope applied as database policy rather than as a query predicate"
   write: "An admission gate decides save, drop, block or pending-approval; sensitive content is held rather than stored"
   update_delete: "Soft delete with `deleted_at` and a compaction pass; supersession by revision; no value-keyed rejection"
   scoping: "`tenant_id` and `user_id` as transaction-local Postgres GUCs enforced by RLS policies, described as defense in depth beside the application check"
   integration: "A FastAPI service, a published `memoryops-sdk` on PyPI, a worker, a Next.js playground, and a hosted demo"
   background: "Loop runs and worker leases with their own tables; compaction of deleted records; extraction and eval harnesses"
   trust: "A discrete `status` including `pending`, plus separate confidence, importance, sensitivity and reinforcement count"
-  strengths: "Tenancy enforced in the database, a per-tenant tamper-evident audit chain, and committed adversarial and isolation eval cases"
+  strengths: "Tenancy enforced in the database behind a behavioural probe that fails closed once a database answers; a per-tenant tamper-evident audit chain; committed adversarial and isolation eval cases; and an external benchmark against Mem0 with an ablation twin whose published finding is that these probes do not distinguish the governed path from the ungoverned one"
   risks: "Deletion is record-keyed, so a re-asserted value returns as a new active record even though the normalized key that would stop it is already stored"
 ---
 
 ## 1. Executive Summary
 
-MemoryOps AI is a governed memory runtime — roughly 39,000 lines of Python and
-3,300 of TypeScript across a monorepo, MIT-licensed, 169 commits, with a
+MemoryOps AI is a governed memory runtime — roughly 47,700 lines of Python and
+4,200 of TypeScript across a monorepo, MIT-licensed, 193 commits, with a
 published `memoryops-sdk` on PyPI and a hosted playground. Its README states the
 scope as governing *"what becomes memory, what enters context, what must be
 forgotten, what influenced an answer, and what evidence proves each decision"*,
 which is close to a restatement of this atlas's own rubric.
 
 **It was screened before it was read, and nothing in it was executed.** The screen
-reported **zero auto-run surfaces** — no harness hooks, no devcontainer lifecycle,
+reports **zero auto-run surfaces** — no harness hooks, no devcontainer lifecycle,
 no direnv, no checkout filters — which is the cleanest result on that axis of any
-recently added system. It also reported five dependency surfaces changed one to
-two days ago, inside the seven-day cooldown, so this report is a read: no
-install, no test run, no demo.
+system here. It also reports two dependency surfaces changed inside the
+seven-day cooldown and four `conftest.py` files that execute on pytest collection,
+so this report is a read: no install, no test run, no demo.
 
 **Its tenancy is enforced by the database, which is rare here.** `_scoped` opens
 every session with `app.tenant_id` and `app.user_id` set as transaction-local
@@ -80,6 +86,20 @@ needs is **already computed, already persisted on every row, and already used** 
 it is simply scoped to live records. A value that was deleted and is then
 re-asserted matches nothing, and returns as a new active memory. The gap is one
 predicate wide.
+
+**The claim that gap rests on is checked by a probe that fails closed, and the
+reason it had to change is the finding.** `scripts/check_rls_policies.py` proves
+three things — RLS enabled and forced, an isolation policy on each protected
+table, and a live query under tenant A's GUC that must not return tenant B's rows.
+The third is the only one that is evidence, and it was the one that stopped
+running: the Postgres CI job printed *"[WARN] behavioral probe skipped (…
+password authentication failed for user `rls_probe_role`)"* and went green, so for
+as long as that warning was present the pipeline verified only that the policies
+*exist*. The script's own docstring states the correction — *"Structure without
+behaviour is not the guarantee this file claims to make"* — and the probe is now
+mandatory once a database answers. `test_rls_verifier.py` drives it with a fake
+SQLAlchemy and asserts **exit codes rather than log text**, because *"a message can
+be reworded, an exit code is the contract CI actually consumes."*
 
 ## 2. Mental Model
 
@@ -246,15 +266,27 @@ absent, as above, any value-keyed rejection.
 
 ## 6. Retrieval Mechanics
 
-Dense candidate search over pgvector behind a recall gate, then an output gate
-before the answer. The scope filter is the notable part and it is not in the
-query: candidates are constrained by RLS, so a recall path that forgot its tenant
-predicate returns nothing rather than everything.
+**Retrieval is hybrid, and the lexical arm is placed where it costs nothing.**
+`retriever.py` runs the dense candidate search over pgvector behind a recall gate,
+then scores those candidates with BM25 — `bm25_scores` in
+`services/api/app/services/keyword_scoring.py`, pure Python, stopword-aware, no
+dependency — and `ranker.py` blends `keyword_score` with the semantic similarity
+under configurable weights. The placement is the design: BM25 runs *over just the
+candidate set the vector search returned*, a few hundred rows, so the lexical arm
+needs no index infrastructure at all. The module says what it replaced — raw
+query/candidate token-set overlap, where *"the"/"what"/"my" counted the same as
+"cardiologist"* — and names `websearch_to_tsquery`/`ts_rank` as the upgrade path
+for a large Postgres corpus.
+
+The scope filter is the other notable part and it is not in the query: candidates
+are constrained by RLS, so a recall path that forgot its tenant predicate returns
+nothing rather than everything.
 
 `revision` on the record and a `reinforcement_count` suggest supersession and
 repetition both feed ranking, and the gateway composes the pipeline. What this
-report does not establish — because nothing was run — is how the gates behave
-under load or what fraction of candidates a typical recall drops.
+report does not establish — because nothing was run — is what fraction of
+candidates a typical recall drops; the load characterisation the project publishes
+for itself is in section 10.
 
 ## 7. Write Mechanics
 
@@ -317,6 +349,29 @@ Gaps:
 - **Nothing here was run**, so every behavioural claim in this report is read
   from code rather than observed.
 
+**One cross-tenant read was real, and the shape of it is worth carrying away.**
+`InMemoryRepository.list_loop_runs` filtered with `if tenant_id:`, which treats
+an empty string as *no filter requested* — and `tenant_id` is a plain `str` query
+parameter, so `?tenant_id=` arrived as `""` and the call returned every tenant's
+loop runs. Loop runs are governance evidence, so the leak was a cross-tenant read
+of who did what. Postgres refused the same request because RLS does not consult a
+Python truthiness test, which is the defense-in-depth argument working exactly as
+stated — and the fix's comment draws the conclusion the argument does not:
+*"the two backends must not disagree about an invariant."* Both list methods now
+raise when `tenant_id` is empty. The report's standing caveat about the in-memory
+mode being the weaker path is not hypothetical.
+
+**Authorization is now a generated capability set rather than a role hierarchy**,
+and one distinction in it belongs in a memory report. On the memory PATCH route,
+`edit` and `approve` are separately authorized on purpose: requiring only one of
+them would let `memory:approve:tenant` grant a content edit, so *"an approver
+could rewrite the text in the request that approves it."* Separating the right to
+change a memory from the right to bless it is the authorization half of the
+human-review mark, and almost nothing else in this corpus draws it. A related
+evidence defect was fixed beside it — `pending → active` and `archived → active`
+were both recorded as `memory_approved`, so a restore was indistinguishable from
+an approval in the audit chain.
+
 ## 10. Tests, Evals, and Benchmarks
 
 The committed eval sets are the strongest part of the verification story, and
@@ -337,16 +392,62 @@ rather than the kind it complains about:
 `pending` — so the eval vocabulary and the runtime vocabulary are the same one,
 which is why the `negative_eval` mark applies without argument.
 
-The test tree is substantial: 777 lines on memory-route authorization, 613 on
-sensitivity classification, 555 on RBAC, 497 on the governance API, 492 on
-deletion. There is a CI badge and a separate benchmark workflow.
+The test tree is substantial — 115 test files and 1,094 test functions across the
+monorepo — and two files in it are about the tests rather than the code.
 
-**None of it was executed for this review**, and the reason is recorded rather
-than glossed: the screen found five dependency surfaces changed one to two days
-ago, inside the cooldown, and installing from a tree in that window is the
-specific thing the cooldown exists to prevent. A later reading, past the window,
-could run the eval sets — and `test_deletion.py` at 492 lines is the file that
-would settle whether the re-assertion path above behaves as this report reads it.
+**`test_repo_trust_guards.py` states the negative-control discipline in one
+line.** It covers structural guards — no committed secret literals, no demo
+identity in server code, no retired infrastructure, no `sys.path` mutation, a
+canonical Railway config — and every guard is exercised twice: the repository is
+clean today, *and* a synthetic tree in `tmp_path` containing the specific bad edit
+is rejected. The docstring says why the second half is the one that counts:
+*"A guard nobody has watched fail is a guard nobody knows works… the positive half
+passes just as well when the guard is broken."* Its own commit message frames the
+guards as *"structural checks for regressions this repo has actually had"*, which
+is the right provenance for a check.
+
+**An external benchmark is committed, and its headline finding is against the
+project's own thesis.** `benchmark/COMPARISON.md` runs the repository's
+deterministic governance probes through six systems scored identically: MemoryOps
+governed (`S0`), MemoryOps with governance disabled (`S0-U`, the ablation twin), a
+full-context baseline, a plain vector baseline, a rolling-summary baseline, and
+**Mem0** at a pinned `mem0ai==2.0.17`. The four cases are cross-tenant recall,
+cross-user recall, and a deleted memory resurfacing on an exact and a paraphrased
+probe, scored from *retrieved memory* rather than model prose. Outcomes are
+four-valued, and `UNSUPPORTED` — a system having no such capability — *"never
+enters the correctness denominator"*, which is the distinction most comparisons
+collapse.
+
+Four systems tie at 4/4, and the document says so in bold: the plain vector
+baseline passes every case, so *"these probes therefore do not, by themselves,
+demonstrate a governance advantage for MemoryOps"*, and *"nothing here
+distinguishes a governed memory layer from an ungoverned one."* A project running
+its own ablation arm, finding no difference, and publishing that as the headline
+is close to unique in this corpus. Three method decisions hold it up: the cases
+were fixed before the external systems were added and not changed afterwards; the
+embedder is held constant between the vector baseline and Mem0 so the comparison
+is about memory-system semantics rather than embedding quality; and Mem0's chat
+model is a `NeverCalledChatModel` that raises if invoked, *"which is what makes
+'0 provider calls' a checked property rather than an assertion."* The limitations
+are equally direct — `infer=False` means Mem0's extraction, consolidation and
+rewriting are not evaluated at all, and a `PASS` for isolation *"does not imply an
+equivalent enforcement mechanism"*.
+
+**Performance numbers are committed with their provenance rather than quoted.**
+`benchmark/perf/results/*.json` carry the `base_sha` they were measured at, the
+date, the Python, Postgres and pgvector versions, the dataset shape (100,001 rows,
+a 10,000-row target tenant), `latency_basis: "successful (2xx) requests only"`,
+and the disclaimer *"Local single-node laptop measurement. Not a Railway or
+production figure."* A separate commit makes the load harness fail closed on
+missing evidence, which is the same correction applied to the RLS probe.
+
+**None of it was executed for this review**, and the reason is the same one the
+cooldown exists for: two dependency surfaces changed inside the window, and four
+`conftest.py` files execute on pytest collection before any test runs. The eval
+sets and the comparison harness remain reproducible by a reader who waits the
+window out — the commands are in `benchmark/COMPARISON.md`, need no provider
+credentials, and the document reports that results were identical across two
+consecutive full runs.
 
 ## 11. For Your Own Build
 
@@ -369,6 +470,23 @@ would settle whether the re-assertion path above behaves as this report reads it
 - **Write down the design you rejected and why**, next to the code that would
   have changed. `update_service`'s note on why async invalidation is not yet safe
   is worth more than a ticket.
+- **Make a verifier fail closed once its subject is reachable, and test the exit
+  code.** A probe that cannot authenticate and warns is a probe that is not
+  running, and a green pipeline is the only signal anyone reads. Splitting
+  "no infrastructure, skip" from "infrastructure answered, therefore prove it" is
+  the distinction, and asserting exit codes rather than log text is what stops a
+  reworded message from silently changing the contract.
+- **Exercise every guard against the mistake it describes.** Each structural check
+  here is run twice — clean repository, and a synthetic tree carrying the specific
+  bad edit that must be rejected — because *"the positive half passes just as well
+  when the guard is broken."*
+- **Run your own ablation arm and publish it losing.** Scoring a governed path and
+  an ungoverned twin identically, on cases fixed before the comparison was built,
+  is what turns a governance claim into a measurement. The finding here is that at
+  this probe resolution the two are indistinguishable, and stating that is worth
+  more to a reader than the four passing scores above it.
+- **Separate the right to edit a memory from the right to approve it.** Grant them
+  together and an approver can rewrite the text in the request that approves it.
 
 ### Avoid
 
@@ -378,7 +496,13 @@ would settle whether the re-assertion path above behaves as this report reads it
   at the last step.
 - **Letting the quickstart mode be weaker than the documented guarantee.** If the
   strongest isolation only exists with Postgres, the in-memory path a reader
-  actually runs should say so where they will see it.
+  actually runs should say so where they will see it. The concrete failure is on
+  record here: `if tenant_id:` treated an empty string as "no filter", and an
+  empty query parameter read every tenant's governance evidence on the backend
+  without RLS underneath it.
+- **A scope check written as a truthiness test.** `if tenant_id:` and
+  `if user_id:` are the idiom, and they turn an empty value into a wildcard on
+  exactly the path where an empty value is most likely to arrive from a caller.
 
 ### Fit
 
@@ -403,8 +527,17 @@ before relying on a `forget`.
   deployment documented anywhere a quickstart reader would meet it?
 - `revision` and `reinforcement_count` both exist — which one drives supersession,
   and can a re-asserted deleted value inherit either?
-- The paper harness and `research/extraction_eval` suggest published numbers; are
-  the results committed alongside the harness?
+- The comparison's own conclusion is that these four probes do not separate a
+  governed store from an ungoverned one. What case would? The protocol already
+  names the untested capabilities — policy-before-storage, consent, retention,
+  admission and output gates, audit evidence, deletion lineage — and the
+  deletion-lineage case is the one that would exercise the gap this report leads
+  with.
+- The BM25 arm scores only the candidates the vector search returned, so a
+  document the dense arm ranks outside its limit cannot be recovered by an exact
+  term match. What does that cost on a query whose discriminating term is rare
+  enough that the embedding misses it, which is the case the lexical arm is
+  usually added for?
 
 ## Appendix: File Index
 
@@ -422,12 +555,24 @@ before relying on a `forget`.
 - Evals: `evals/adversarial_cases.json`, `evals/tenant_isolation_cases.json`,
   `evals/golden_memory_cases.json`, `evals/run_evals.py`,
   `research/extraction_eval/`.
+- Retrieval: `services/api/app/services/retriever.py`,
+  `services/api/app/services/keyword_scoring.py` (`bm25_scores`),
+  `services/api/app/services/ranker.py` (the blend weights).
+- Verifiers: `scripts/check_rls_policies.py` (the behavioural cross-tenant probe
+  and its fail-closed modes), `scripts/repo_trust_guards.py`.
+- Benchmarks: `benchmark/COMPARISON.md`, `paper/run_experiments.py`,
+  `paper/protocol.md`, `paper/harness/tests/test_mem0_adapter.py`,
+  `benchmark/perf/run_perf.py` and `benchmark/perf/results/*.json`.
 - Tests: `services/api/tests/` (`test_memory_route_authorization.py`,
   `test_sensitivity_classification.py`, `test_api_rbac.py`,
-  `test_governance_api.py`, `test_deletion.py`).
+  `test_governance_api.py`, `test_deletion.py`, `test_rls_verifier.py`,
+  `test_repo_trust_guards.py`, `test_tenant_isolation.py`,
+  `test_hybrid_retrieval.py`).
 - SDK and apps: `packages/memoryops-sdk/`, `apps/web/`, `apps/playground/`.
 - Licence: `LICENSE` (MIT).
 
 ## History
+
+**2026-08-17** — [`fe04e91b05edd51f5c0423db7cfb27553a8957d0`](https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/fe04e91b05edd51f5c0423db7cfb27553a8957d0) — re-pinned at v2.5, 24 commits on and 193 total. Screened again before reading: 0 auto-run surfaces, 2 dependency surfaces inside the seven-day cooldown, 4 `conftest.py` files that execute on pytest collection, 2 agent-directed files; nothing installed, built or run, so the eval sets and the comparison harness are again read rather than executed. **One published claim was wrong when written rather than overtaken.** Retrieval was described as dense-only and the stack row carried `vector`; BM25 over the vector candidate set was already in `services/api/app/services/retriever.py` at `5f8a724`, with `keyword_scoring.py` beside it and `ranker.py` blending the two under configurable weights. The stack row was `seeded` — derived from the report's own summary line rather than from the code — which is the failure mode that label exists to mark; it is promoted to `reviewed` here with both lists checked against the tree. The central finding is unchanged and `postgres_repo.py` has no diff between the two pins: `find_similar_active` still filters `status == _ACTIVE`, so the normalized key a tombstone needs remains one predicate away. Marks unchanged and now carrying evidence records. New since the previous pin, and folded into sections 9 and 10: the RLS behavioural probe was passing green while skipped — the Postgres job printed `[WARN] behavioral probe skipped (… password authentication failed for user "rls_probe_role")` and returned 0, so only the *structural* policy check was running — and is now mandatory once a database answers, with `test_rls_verifier.py` asserting exit codes rather than log text; a real cross-tenant read of governance evidence in the in-memory backend, where `if tenant_id:` treated an empty query parameter as no filter; a capability-based authorization layer that separates `edit` from `approve` so an approver cannot rewrite the text approving it; `test_repo_trust_guards.py`, which exercises every structural guard against the specific bad edit it describes; committed perf results carrying their `base_sha`, versions and dataset shape; and `benchmark/COMPARISON.md`, an external comparison against Mem0 at a pinned version with an ablation twin, whose published conclusion is that its four probes do not distinguish the governed path from the ungoverned one. `paper/` is an experiment protocol and a harness, not a publication: no arXiv id, no BibTeX, no `CITATION.cff`.
 
 **2026-08-04** — [`5f8a724b8bd00b1b9e66765a8119096682b7a866`](https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866) — first reading, and the first report produced under the screening workflow. `scripts/screen_repo.py` reported **zero auto-run surfaces** and five dependency surfaces changed one to two days ago, inside the seven-day cooldown; the tree was therefore read and **nothing in it was executed** — no install, no tests, no demo. Every behavioural claim here is read from code rather than observed, and the eval sets remain unrun.

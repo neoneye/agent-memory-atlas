@@ -7921,8 +7921,11 @@ embedding, importance, confidence, sensitivity, status, source, weight,
 reinforcement count and revision</td>
 <td>Postgres with pgvector and row-level security, or an in-memory store
 for keyless local runs</td>
-<td>Dense candidate search behind a recall gate, with tenant and user
-scope applied as database policy rather than as a query predicate</td>
+<td>Hybrid: a dense candidate search behind a recall gate, then BM25
+over just the returned candidates — a few hundred rows, so no lexical
+index is needed — blended by configurable ranker weights, with tenant
+and user scope applied as database policy rather than as a query
+predicate</td>
 <td>An admission gate decides save, drop, block or pending-approval;
 sensitive content is held rather than stored</td>
 <td>Soft delete with <code>deleted_at</code> and a compaction pass;
@@ -7937,8 +7940,12 @@ deleted records; extraction and eval harnesses</td>
 <td>A discrete <code>status</code> including <code>pending</code>, plus
 separate confidence, importance, sensitivity and reinforcement
 count</td>
-<td>Tenancy enforced in the database, a per-tenant tamper-evident audit
-chain, and committed adversarial and isolation eval cases</td>
+<td>Tenancy enforced in the database behind a behavioural probe that
+fails closed once a database answers; a per-tenant tamper-evident audit
+chain; committed adversarial and isolation eval cases; and an external
+benchmark against Mem0 with an ablation twin whose published finding is
+that these probes do not distinguish the governed path from the
+ungoverned one</td>
 <td>Deletion is record-keyed, so a re-asserted value returns as a new
 active record even though the normalized key that would stop it is
 already stored</td>
@@ -17249,7 +17256,11 @@ href="https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5a
 <li><a
 href="https://github.com/patibandlavenkatamanideep/memoryops-ai">patibandlavenkatamanideep/memoryops-ai</a>
 at <a
-href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866"><code class="commit-id" title="5f8a724b8bd00b1b9e66765a8119096682b7a866">5f8a724b…</code></a></li>
+href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/fe04e91b05edd51f5c0423db7cfb27553a8957d0"><code class="commit-id" title="fe04e91b05edd51f5c0423db7cfb27553a8957d0">fe04e91b…</code></a>
+— read only at v2.5; two dependency surfaces inside the cooldown and
+four <code>conftest.py</code> files that execute on pytest collection,
+so the eval sets, the Mem0 comparison harness and the committed perf
+runs were read rather than executed</li>
 <li><a href="https://github.com/HKUDS/DeepCode">HKUDS/DeepCode</a> at <a
 href="https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5"><code class="commit-id" title="69233821b5dbcf044eb17f91bca1b9c6b1d2fda5">69233821…</code></a></li>
 <li><a

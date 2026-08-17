@@ -508,6 +508,19 @@ because on its own terms it is one. **The gap is one predicate wide**: the same
 comparison run without the `active` filter, or a rejection table keyed on
 `(tenant_id, user_id, normalized_content)` consulted before activation.
 
+**Its own benchmark measures the half of deletion that works, which is the
+distinction this page exists to draw.** `benchmark/COMPARISON.md` runs two
+deletion-leakage probes — a deleted memory must not resurface on an exact probe,
+nor on a paraphrased one — and MemoryOps passes both, as do a plain vector
+baseline, Mem0, and its own governance-disabled ablation twin. Every one of those
+cases is a *read* after a delete. None of them writes the deleted value again,
+which is the event this pattern is about, and a reader taking the four green
+scores as "deletion is settled" would be reading a result that was never
+measured. The document is careful about this in general terms — it says the
+probes leave "deletion lineage" unexercised — and the specific case that would
+exercise it is: delete, re-assert the same value through the ordinary write path,
+and assert that what comes back is a refusal rather than a new active record.
+
 **[AIMAOS](../../systems/aimaos/) is the other near-miss, and it stores the value
 it rejected.** When its duplicate detector decides a new statement contradicts an
 existing belief rather than restating it, the row adopts the newer wording and
