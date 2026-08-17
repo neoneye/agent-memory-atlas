@@ -2,10 +2,9 @@
 """Keep the homepage in step with the reports.
 
 The rendered-report count is derived, but the homepage is hand-written: its
-cards and its "repositories traced" figure drift silently every time a system is
-added. This asserts one card per report and a figure that matches the number of
-distinct source repositories — distinct, because two reports can cover different
-subsystems of one repository.
+cards and its headline figure drift silently every time a system is added. This
+asserts one card per report and a headline figure that matches the number of
+reports.
 """
 
 from __future__ import annotations
@@ -17,13 +16,15 @@ from pathlib import Path
 CARD = re.compile(r'href="\./systems/([^/"]+)/"')
 ARTICLE = re.compile(r'<article class="system-card[^"]*"[^>]*>.*?</article>', re.S)
 CAPS_ATTR = re.compile(r'data-capabilities="([^"]*)"')
-#: The headline stat carries both numbers, because they differ and a reader who
-#: sees only one of them reads the other as an off-by-one. Reports is the bold
-#: figure; distinct repositories is the tail, since two reports can cover
-#: different subsystems of one repository.
-TRACED = re.compile(
-    r"<strong>(\d+)</strong><span>reports, over (\d+) repositories</span>"
-)
+#: The headline stat is the report count and nothing else. It once carried the
+#: distinct-repository count beside it, on the reasoning that a reader seeing one
+#: number would read the other as an off-by-one — but the two differ by one, both
+#: are true, and a strip of single figures is not the place to explain why. The
+#: difference is stated where it can be argued: "Why the two counts differ" in
+#: `content/overview.md`. Distinct `source_url` values are still counted here,
+#: because that is the check that catches a report added under an existing
+#: repository, and the number is reported rather than asserted against the page.
+TRACED = re.compile(r"<strong>(\d+)</strong><span>memory systems reviewed</span>")
 PATTERNS = re.compile(r"<strong>(\d+)</strong><span>reusable design patterns</span>")
 SOURCE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 
@@ -219,12 +220,12 @@ def main() -> int:
     }
     traced = TRACED.search(homepage)
     if traced is None:
-        problems.append('homepage is missing the "N reports, over M repositories" figure')
+        problems.append('homepage is missing the "N memory systems reviewed" figure')
     else:
-        said_reports, said_repos = int(traced.group(1)), int(traced.group(2))
-        if said_reports != len(reports) or said_repos != len(sources):
+        said_reports = int(traced.group(1))
+        if said_reports != len(reports):
             problems.append(
-                f"homepage says {said_reports} reports over {said_repos} repositories; "
+                f"homepage says {said_reports} memory systems reviewed; "
                 f"content has {len(reports)} reports over {len(sources)} distinct source_url values"
             )
 
