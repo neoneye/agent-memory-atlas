@@ -19419,6 +19419,55 @@ analysis <em>"evidence for human review"</em> rather than a guarantee,
 which is the correct posture for an artifact that is regenerated rather
 than believed. bonsai-ninja enters the day a triage verdict is stored
 beside the finding it settles.</li>
+<li><strong><code>pingdotgg/t3code</code> was examined and has no
+report, and it is the corpus's clearest case of a system that
+<em>drives</em> memory without having any.</strong> MIT, 688,235 lines
+of TypeScript across a pnpm monorepo (222,667 of them the server), 2,638
+commits since 7 February 2026, at <a
+href="https://github.com/pingdotgg/t3code/commit/cd096b9ad5a4156ffeab85de617cbb219057007f"><code class="commit-id" title="cd096b9ad5a4156ffeab85de617cbb219057007f">cd096b9a…</code></a>
+— an <em>agent-harness control surface</em>, in its own words: a mobile,
+web and desktop front end that runs Codex, Claude Code, Cursor, Grok
+Build and OpenCode as child processes on your own machine. Five of the
+agents it drives have reports here, which is why a reader would expect
+it and why the boundary is worth stating. Its durable state lives under
+<code>~/.t3</code> in SQLite across forty migrations, and it sorts into
+four piles with nothing left over: an event-sourced orchestration log
+(<code>orchestration_events</code>, command receipts),
+<strong>projections</strong> of it (threads, turns, messages,
+attachments, proposed plans, <code>archived_at</code>, plus denormalised
+counters like <code>pending_approval_count</code> for the thread list),
+checkpoint diff blobs against a git worktree, and auth/pairing/session
+rows. All of it records what happened and what is running — acts and
+coordination state, none of it a claim that could turn out false and
+later be corrected. Same boundary as
+<code>Untrivial-ai/agent-orchestrator</code>,
+<code>perplexityai/numbat</code>, <code>os-factory/har</code> and
+<code>Cohexa-ai/agent-coherence</code> above. Checked rather than
+assumed: the server tree contains no
+<code>AGENTS.md</code>/<code>CLAUDE.md</code> writer, its
+<code>WorkspaceSearchIndex</code> persists nothing (on-demand scanning,
+by its own comment), and the only prompt state it owns is
+<code>CodexDeveloperInstructions</code>, which sets a collaboration mode
+per turn. <strong>The one place memory appears is the finding worth
+recording.</strong>
+<code>makeMemoryConsolidationNotificationFilter</code>
+(<code>apps/server/src/provider/Layers/CodexSessionRuntime.ts:550</code>)
+watches for a <code>thread/started</code> whose
+<code>threadSource</code> or <code>source.subAgent</code> is
+<code>memory_consolidation</code> and suppresses that thread's
+notifications, so Codex's background memory pass does not surface as a
+visible thread beside the user's own. A control plane deciding what to
+show the user about <em>another agent's</em> memory work is a role
+nothing else in this corpus occupies, and it is the shape to expect as
+memory moves down into the providers. One screening note, because it is
+unusual: <code>.repos/</code> holds two entire third-party repositories
+committed into the tree — 12,961 tracked files across
+<code>alchemy-effect</code> and <code>effect-smol</code>, each with its
+own npm <code>prepare</code> script that an ordinary install would run —
+while <code>.vscode/settings.json</code> excludes <code>.repos/**</code>
+from search and file watching, so the execution surface a contributor is
+least likely to look at is the one the editor is configured to
+hide.</li>
 <li><strong><code>Custodian-Labs/custodian-labs-python</code> was
 examined and has no report: it is a samples repository for a hosted
 SDK.</strong> Thirteen files at <a
