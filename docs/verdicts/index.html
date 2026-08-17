@@ -98,7 +98,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 297 reports.</strong></p>
+<p><strong>This page covers all 298 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -8780,6 +8780,70 @@ directory and the one scope field is inert), an audit of what was
 remembered and forgotten, or deletion keyed on a value — a rejected
 takeaway is filtered from retrieval and stays on disk past every
 retention clock in the system.</li>
+</ul>
+<h3 id="bytechef"><a
+href="../systems/bytechef/"><code>bytechef</code></a></h3>
+<ul>
+<li>Best idea: <strong>order redaction ahead of persistence, and say so
+in the ordering constant.</strong>
+<code>SanitizeTextAdvisor.getOrder()</code> returns
+<code>Advisor.DEFAULT_CHAT_MEMORY_PRECEDENCE_ORDER - 1</code>, so PII,
+secret-key and URL masking runs one step upstream of the chat-memory
+advisor and the text that reaches the repository is the masked text. Its
+test builds a spy advisor at the chat-memory order rather than asserting
+the integer, with the property in the assertion message:
+<em>"SanitizeTextAdvisor MUST run before chat-memory advisor, otherwise
+unsanitized text gets persisted."</em> Beside it, the agent throws at
+build time when two guardrails of one kind are configured, because two
+advisors at the same order make Spring AI's ordering undefined — a
+safety property that depends on a total order refusing the configuration
+that makes it a tie.</li>
+<li>Biggest risk: <strong>the scopes around the one real key fail open
+to a live target.</strong>
+<code>TenantContext.getCurrentTenantId()</code> is
+<code>ThreadLocal.withInitial(() -&gt; "public")</code> and selects a
+Postgres schema; <code>EnvironmentContext.getCurrentEnvironment()</code>
+returns <code>PRODUCTION</code> when nothing is bound and logs it at
+<code>debug</code>. A missing binding is indistinguishable from a
+correct binding to the default, and
+<code>TenantRoutingS3ChatMemoryRepository</code> resolves
+<code>&lt;prefix&gt;-&lt;tenantId&gt;</code> and calls
+<code>ensureBucketExists</code>, so an unbound thread does not read the
+wrong place, it creates it. Chat memory has no scope key at all:
+<code>findConversationIds()</code> enumerates every conversation in the
+store, and the workflow editor renders that as a dropdown labelled with
+each conversation's opening message.</li>
+<li>Most reusable component:
+<code>KnowledgeBaseDocumentFacadeImpl.deleteKnowledgeBaseDocument</code>,
+for the <strong>order</strong> rather than the coverage. Vectors by id,
+then chunk content files, then chunk rows, then the source file, then
+the document row. The delete cannot be one transaction across three
+stores, so the sequence is the design: a crash leaves a row whose vector
+is gone — a chunk that cannot be found — where the reverse order leaves
+a vector whose row is gone, which is a chunk that still answers queries
+and can no longer be traced to a document.</li>
+<li>Maturity impression: Apache 2.0 with a commercially licensed
+<code>server/ee/</code> tree, 738,068 lines of Java across 6,998 files,
+18,645 commits since 12 June 2016, at <code>v0.32.1-SNAPSHOT</code>;
+1,817 test files and 5,466 <code>@Test</code> methods, with the
+knowledge base covered by Testcontainers integration tests against a
+real Postgres. Two marks — <code>scope_enforced</code>
+(<code>KnowledgeBaseVectorStoreWrapper</code> AND-s
+<code>knowledge_base_id</code> into every search and a caller filter can
+only narrow it) and <code>human_review</code> (chunk-level edit and
+delete, re-embedded on an event). The class carrying the first has no
+test file, and nothing writes two knowledge bases and asserts a search
+of one misses the other.</li>
+<li>Study when: you are choosing a workflow platform and want agent
+memory to be a component on the canvas rather than a subsystem you
+assemble, or you want a worked example of guardrail ordering that puts
+masking upstream of the write.</li>
+<li>Do not copy when: you need memory rather than storage. There is no
+epistemic state — <code>KnowledgeBaseDocument.status</code> is a
+pipeline stage no read path consults, so a chunk whose re-embed failed
+keeps answering with its pre-edit embedding while the document reads
+ERROR — no audit of what changed, no lexical arm, no fusion, and a
+conversation id that is an address rather than a permission.</li>
 </ul>
         </article>
       </div>
