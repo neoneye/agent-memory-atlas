@@ -109,6 +109,35 @@ a {
   text-decoration: none;
 }
 
+/* The wordmark is hidden in the header and kept in the footer. Eleven nav items
+   plus the GitHub pill need 1,051px, and the brand needs 189px of the 1,240px
+   the header has — exactly zero slack at the widest layout, and a horizontal
+   scrollbar on the whole document from about 1,300px down to the 760px
+   breakpoint where the hamburger takes over. The mark still identifies the site
+   and still links home.
+
+   `.sr-only` rather than `display: none`: `.brand-mark` is aria-hidden, so
+   removing the text outright would leave the home link with no accessible name
+   at all. */
+.site-header .brand-name {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Hiding the wordmark buys 160px, which is not the whole overflow: the eleven
+   32px gaps are 352px on their own. Tightening them closes the rest without
+   dropping an item. */
+.site-header .site-nav {
+  gap: 22px;
+}
+
 .brand-mark {
   position: relative;
   display: block;
@@ -2195,30 +2224,15 @@ a {
   }
 }
 
-@media (max-width: 760px) {
-  /* The figure scales with its viewBox, so at phone widths the annotation
-     layers fall to ~7px. Rather than shrink further, drop to the diagram's
-     core — three layers, three arrows, three verbs — and let the caption
-     below carry the argument in readable prose. */
-  .mf-sub,
-  .mf-note {
-    display: none;
-  }
-
-  .mf-layer {
-    font-size: 34px;
-  }
-
-  .mf-step {
-    font-size: 20px;
-    transform: translateY(16px);
-  }
-
-  .site-header {
-    min-height: 66px;
-    padding: 0 18px;
-  }
-
+/* The nav collapses into the menu here rather than at 760px, because that is
+   where it stops fitting. The row needs 965px — 944 of nav plus the 30px mark —
+   and the header is `viewport - 56` below 1,296px, so 1,021px is the crossing
+   point. It lived at 760px, which left a band roughly 761-1020 wide where
+   eleven items and the GitHub pill ran off the side and took the whole document
+   into horizontal scroll with them. The phone rules below stay at 760px: the
+   header shrink and the memory figure's annotation layers are about small
+   screens, not about how many nav items there are. */
+@media (max-width: 1040px) {
   .menu-toggle {
     display: inline-flex;
   }
@@ -2241,6 +2255,31 @@ a {
 
   .site-nav.is-open {
     display: flex;
+  }
+}
+
+@media (max-width: 760px) {
+  /* The figure scales with its viewBox, so at phone widths the annotation
+     layers fall to ~7px. Rather than shrink further, drop to the diagram's
+     core — three layers, three arrows, three verbs — and let the caption
+     below carry the argument in readable prose. */
+  .mf-sub,
+  .mf-note {
+    display: none;
+  }
+
+  .mf-layer {
+    font-size: 34px;
+  }
+
+  .mf-step {
+    font-size: 20px;
+    transform: translateY(16px);
+  }
+
+  .site-header {
+    min-height: 66px;
+    padding: 0 18px;
   }
 
   .home-hero {
