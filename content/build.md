@@ -115,6 +115,45 @@ scope comes first: it "has to reach the schema, the indexes, the cache keys, and
 every background job", which is why retrofitting it into a store that already has
 data is the hardest migration on its list.
 
+**Each of the other stages has one too**, and in every case it is the version of
+the stage that looks finished from the outside. These are the shapes the corpus
+returns most often, so each names a system that shipped it.
+
+- **Stage 2 — a status column no read path consults.** Adding the enum is the
+  visible half; the invisible half is that a status only exists if a write path
+  can produce every value and a read path filters on it. [memoir](../systems/memoir/)
+  earns no trust-state mark for exactly this reason — the field exists, the
+  reader respects it, and nothing sets it — and [csm](../systems/csm/) states the
+  inverse as a rule after hitting it three times in one codebase: never let a
+  read path filter on a status the write path cannot produce. Both fail silently,
+  rendering an empty section rather than an error.
+- **Stage 3 — filtering at index time and calling it retrieval.** Once vectors
+  arrive, a memory can be excluded when it is embedded and still come back,
+  because the vector was written before the status changed. The fix is to apply
+  the same predicate where the candidate set is *assembled*, not only where rows
+  are indexed; [MindCache](../systems/mindcache/) is the corpus's worked example
+  of getting this right, applying its status filter at the embedding fetch as
+  well as the embedding job. This is also the stage where the §1 warning bites:
+  better recall without scope as a key is a wider blast radius, not a better
+  system.
+- **Stage 4 — an audit that does not hear about memory, and a background job that
+  crosses the line the read path holds.** A mutation audit is judged by whether
+  its actions have producers, not by whether the table exists;
+  [Agent Mesh](../systems/agent-mesh/) ships a hash-chained log in which nine of
+  twenty actions have none. The job half is `scope.background_respects_boundary`,
+  and it is separate from the read-path test because consolidation summarising
+  across a boundary is a leak the retrieval filter never sees.
+- **Stage 5 — a correction surface no user can reach.** The tombstone and the
+  review queue are the two mechanisms most often built and left unreachable.
+  [memoir-cli](../systems/memoir-cli/) argues the merge semantics harder than
+  anything else here and ships no writer for the absolute tombstone that any of
+  its fourteen tools can call; [alma-memory](../systems/alma-memory/) computes a
+  review queue whose `needs_review()` has no callers;
+  [OmniIntelligence](../systems/omniintelligence/) writes its kill-switch events
+  with a required reason and actor, then reads them through a materialized view
+  nothing refreshes. Ask what user action produces the state before building the
+  machinery that consumes it.
+
 **What is safe to defer, stated plainly**, from the pattern index: bi-temporal
 validity, hybrid retrieval fusion, decay and reinforcement, and source-diverse
 context are all improvements to memory that already works. None of them prevents
