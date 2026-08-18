@@ -119,6 +119,22 @@ finding correction and deletion mostly absent from it.
 **open-cowork's harness** is described below and is the most interesting
 evaluation shape in the atlas, precisely because it is not a public benchmark.
 
+**Kitaru is the general-purpose version of the machinery these harnesses each
+rebuild**, and it is worth naming here because [this page's twenty acceptance
+tests ship as specifications with no adapter](../build/#4-verify-by-test-id).
+[It records or imports a production run as a session and re-executes the real
+code against a change](https://github.com/zenml-io/kitaru), and the detail that
+matters for a memory test is that its tool policy is **per tool**: a call can be
+answered from the recording, from a static case, or by live `passthrough`. That
+is the shape a deletion or contradiction sequence needs — hold the conversation
+and every unrelated tool constant from the recording, and let the memory tool run
+live against the store under test, so a difference in the result can only have
+come from the store. Nobody in this corpus has done that, and this page has not
+run it either; what is recorded is that the harness half of the problem has a
+general solution and the memory half of it is still an adapter somebody has to
+write. Kitaru itself is not agent memory and carries no report — see the
+[repositories examined](../compare/#known-limitations) list.
+
 **Waku Agent's "memory arena"** is the repository-local harness worth singling
 out, because it does the thing this page keeps asking for. It holds the model and
 the probe set constant and varies only which store the facts live in — SQLite,

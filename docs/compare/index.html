@@ -20711,6 +20711,45 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>zenml-io/kitaru</code> was examined and has no report:
+it judges agents, it is not memory for one.</strong> Apache-2.0, 72,947
+lines of Python and 33,295 of TypeScript over FastAPI and Postgres, 865
+commits since 5 March 2026, at <a
+href="https://github.com/zenml-io/kitaru/commit/f32a091181e964c3d9a2ecca226a2d4a0b0e2b2c"><code class="commit-id" title="f32a091181e964c3d9a2ecca226a2d4a0b0e2b2c">f32a0911…</code></a>
+— replay-based evaluation from the ZenML team: production runs are
+recorded or imported from Langfuse, LangSmith, Braintrust or Logfire as
+<em>sessions</em>, then re-executed against a changed model, prompt or
+working tree. Twenty-six tables and twelve MCP tools, so a reader would
+reasonably check. <strong>The store is measurement state.</strong>
+Sessions are recorded traces — acts, not claims — cohorts freeze a
+population, experiments and replays record what was run, and the agent
+under test never consults any of it as belief: replay answers its tool
+calls from the recording. Same boundary as <code>pingdotgg/t3code</code>
+and the harnesses on <a href="../benchmarks/">the benchmarks page</a>.
+The vocabulary confirms it rather than merely failing to contradict it:
+<code>remember</code>, <code>recall</code>, <code>belief</code> and
+<code>tombstone</code> are <strong>zero</strong> across
+<code>src/</code>, the three <code>supersede</code> hits are a worker's
+task-claim lease being taken by a newer attempt, and all four
+<code>memory</code> hits are RAM. <strong>The one claim-shaped row is
+the annotation, and it is worth recording because the atlas's own
+finding appears here one level up.</strong> A human judgment is stored
+with an owner, a <code>question_key</code>, a JSONB
+<code>selector</code> pinning it to an exact trace location, and a JSONB
+<code>value</code> — provenance most memory systems in this corpus do
+not manage for their own beliefs. Then
+<code>AnnotationService.update_annotation</code> calls
+<code>Annotation.update_value</code> and writes the row back, so a
+revised judgment <strong>overwrites the previous one in place and
+nothing retains what it said</strong>: no <code>previous_value</code>,
+no supersession, no audit row. The analytics stream is not the missing
+record either — <code>build_annotation_created_properties</code> fires
+on creation only, and carries <code>investigation_answer</code> and
+<code>has_selector</code> as booleans rather than the judgment itself.
+These judgments are what calibrate the evaluators, so the one artifact
+whose correction history would matter most is the one kept without it.
+kitaru enters the day the agent under test reads a kitaru row as a
+belief about its task rather than a fixture for its replay.</li>
 <li><strong><code>tobi/qmd</code> was examined and has no report: the
 agent can search it and cannot write to it.</strong> MIT, 40,233 lines
 of TypeScript across <code>src/</code> and <code>test/</code>, 668
