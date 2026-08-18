@@ -2387,6 +2387,19 @@ step is a cost-control problem rather than a memory one.
 Most agent frameworks ship something called "memory" that is a **chat buffer**,
 and the naming collision misleads people evaluating options.
 
+**The discipline on this side of the line has its own name, and it is not
+memory.** *Context engineering* is the term for deciding which tokens reach the
+model at inference. Elastic's [context engineering vs prompt
+engineering](https://www.elastic.co/search-labs/blog/context-engineering-vs-prompt-engineering)
+sets it against prompt engineering as a question of curating "what information
+the model has access to" rather than of how a request is phrased, and rests the
+account on a model being a stateless function handed one snapshot per call. That
+premise is the boundary. A snapshot cannot turn out to be false, because nothing
+in it was ever claimed to be true, so a context-engineering problem and a memory
+problem stay different problems however far the vocabulary overlaps — and the
+overlap is worth naming here, because a reader who arrives holding the newer word
+will otherwise not find the line drawn in it.
+
 IBM's [BeeAI framework](https://github.com/i-am-bee/beeai-framework) is the
 cleanest example. At commit
 [`21284d7f53d5a50e546350f371c69747bd6a176b`](https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b)
