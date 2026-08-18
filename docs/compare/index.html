@@ -20711,6 +20711,43 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>Tencent/UI-Mate</code> was examined and has no report:
+its procedural memory is a file you hand it and a checkpoint you
+download.</strong> Apache-2.0, at <a
+href="https://github.com/Tencent/UI-Mate/commit/d2b2e0aede83eeacfb1bc86f66503acbc4a6738a"><code class="commit-id" title="d2b2e0aede83eeacfb1bc86f66503acbc4a6738a">d2b2e0ae…</code></a>,
+13 commits since 14 August 2026 — a foundation GUI agent from Tencent HY
+Frontier with a technical report at <a
+href="https://arxiv.org/abs/2608.15930">arXiv:2608.15930</a> and
+checkpoints on Hugging Face, of which this repository is the inference
+side: 2,020 lines of Python across four files, plus example resources
+and screenshots. The screen reports <strong>NOTHING SCANNED</strong> —
+no manifest, hook or agent file at any path it knows — and reading the
+tree by hand explains it rather than contradicting it: twenty-nine
+files, no build file, no dependency declaration. <strong>It is here
+because the pitch is procedural memory almost exactly.</strong>
+<em>"Show the workflow once. Let the agent adapt it to the task at
+hand"</em>: a successful desktop run, already segmented into subtasks,
+is distilled into per-turn guidance — a subtask checklist, a completion
+criterion, key milestones — that the model folds into its prompt, with
+the pointer advancing when it reports <code>subtask_complete</code>.
+What settles it is the direction of the arrow, stated in the source's
+own comment: <em>"the workflow writes them, the agent only reads
+them."</em> Every reference to a <code>trajectory_captioned*.json</code>
+demonstration is a load, a glob or a raise-if-missing; <strong>nothing
+in the tree writes one</strong>, so a completed run teaches the next run
+nothing. <code>reset()</code> clears an index and a boolean, which is
+the whole of what survives a step. The rest of what persists is the
+checkpoint, which is <a
+href="#weights-as-memory-at-adapter-granularity">the weights
+boundary</a>, and a prompt prefix held stable for vLLM's cache, which is
+<a href="#not-in-scope-the-kv-cache">the KV-cache boundary</a>. One
+design note is worth taking even though the system is out of scope,
+because it inverts the failure this atlas keeps reporting: coordinates
+from the demonstration are <strong>never replayed</strong> and the live
+screenshot is authoritative, so the stored procedure is explicitly
+subordinate to present observation rather than trusted over it. UI-Mate
+enters the day a finished run is distilled back into a demonstration the
+next one consults.</li>
 <li><strong><code>zenml-io/kitaru</code> was examined and has no report:
 it judges agents, it is not memory for one.</strong> Apache-2.0, 72,947
 lines of Python and 33,295 of TypeScript over FastAPI and Postgres, 865
