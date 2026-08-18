@@ -31,9 +31,11 @@ Five findings, with the counts they rest on:
 4. **Negative evidence is almost never tested.** 81 of 301 commit a case
    asserting that particular material must *not* appear — the assertion every
    scope, deletion and correction claim ultimately rests on. A 2026-08-08
-   re-score puts 27 of the then-37 on a **read path**; the rest keep material
-   out of a projection, a preamble, a summarization or a write, which is a
-   different and weaker thing. Use 27 for the strict reading.
+   re-score puts 27 of the 37 that carried the mark that day on a **read path**;
+   the rest keep material out of a projection, a preamble, a summarization or a
+   write, which is a different and weaker thing. The 44 marks earned since have
+   not been re-scored, so 27 is a floor on the strict reading rather than its
+   total.
 5. **Trust is usually a number, not a state.** 63 of 301 record a discrete
    epistemic status. The rest store a confidence float, which cannot express
    *rejected* and so cannot survive being wrong.
@@ -100,8 +102,8 @@ rather than left to be discovered by reading four reports against the rule.
 repositories**: `NousResearch/hermes-agent` carries two distinct memory systems
 and is reviewed twice, as [Hermes Agent](../systems/hermes-agent/) and
 [Holographic](../systems/holographic/). It is the only repository reviewed twice,
-so a count of *systems* is 290 and a count of *repositories* is 289 — the gap is
-one, and it is that one.
+so the gap between a count of *systems* and a count of *repositories* is one, and
+it is that one.
 
 **How systems were selected.** Opportunistically: repositories encountered,
 suggested, or found while looking for the ones already here. This is not a
@@ -5998,6 +6000,8 @@ No internet sources were used for this report. The analysis is based on the chec
 
 ### Known Limitations
 
+- **Two counts of the same corpus sat in one paragraph and disagreed.** "Why the two counts differ" opened with **301 reports across 300 repositories** and closed by saying a count of systems is 290 and of repositories 289 — the trailing sentence was written when the corpus was that size and was not updated with the headline. `scripts/check_claim_counts.py` binds 23 count claims to live frontmatter and did not catch it, because it binds the phrasings it knows and this was a free-form restatement. The numbers are gone rather than updated: the headline one sentence earlier already gives both, and a figure stated once cannot drift from itself. Reported by an outside reader and corrected 18 August 2026.
+- **A strict-reading count was quoted against a sample it was not scored on, in the direction that flatters the finding.** Finding 4 read *"81 of 301 commit a case asserting that particular material must not appear… A 2026-08-08 re-score puts 27 of the then-37 on a read path… Use 27 for the strict reading."* The re-score covered only those carrying the mark on that date; the 44 earned since were never re-scored, so 27 is a floor and not the strict total. Instructing a reader to *use 27* invited a ratio against 81 that nothing supports, and it made the shortfall the finding describes look larger than the evidence establishes. The text now says so and calls 27 a floor. Same report, same day.
 - **The benchmarks page said no released benchmark scored forgetting, and one did.** ForgetEval ships inside [Lethe](../systems/lethe/) as the artifact behind [arXiv:2606.15903](https://arxiv.org/abs/2606.15903), scoring `supersede`, `release` and `purge` across thirteen configurations under MIT; it was read on 30 July 2026 and the page's section on it has carried the finding since. The claim was an absence claim about the field rather than about a repository, which is the kind this atlas is least able to support and most likely to get wrong — the honest scope was always "no benchmark this page has found". Recorded here on 17 August 2026, when the correction was found still living in a section heading — *"the benchmark this page said did not exist"* — rather than in this log.
 - **A paper's headline result was paraphrased wrongly on the scope-boundary page, in the direction that overstates it.** The MemAgent entry read *"a model trained at 8K extrapolating to 3.5M-token tasks"*; the paper's abstract ([arXiv:2507.02259](https://arxiv.org/abs/2507.02259)) says the model extrapolates *from* an 8K context and was trained on 32K text. The 8K is the context window the agent runs in, and collapsing the two lengths into one makes the extrapolation sound larger than the authors claim. The claim was quoted without citing the paper at all, which is what let it drift — the entry now carries the arXiv id, the submission and revision dates, and the ICLR 2026 Oral acceptance, so a reader can check the number rather than trust the paraphrase. Corrected 17 August 2026.
 - **The rejected-value tombstone page described Daimon's key as a hash of exact text, and it is canonical.** `normalize.canonical_text` folds NFKC, case, whitespace and punctuation before the id is taken, so the key is normalised rather than literal — the direction that makes the mechanism stronger, not weaker. The Daimon report recorded the canonical form on 2026-07-30 and the pattern page carried the literal claim until 2026-08-16.
