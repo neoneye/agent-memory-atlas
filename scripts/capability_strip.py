@@ -12,6 +12,15 @@ Absence of a flag means the mechanism was not found at the pinned commit. The
 definitions live in scripts/generate_matrix.py and are imported here so the two
 surfaces cannot disagree.
 
+The legend carries the provenance of a mark as well as its meaning, and that is
+deliberate. This strip is the most portable thing on the page — seven names and
+a tick, quotable without the report around it — so it is the surface most likely
+to be read by someone who never reaches the rubric. It said what a *dash* meant
+and nothing about what a *tick* rested on; a reader had no way to learn from
+here that a mark is one language model's reading of code it did not run, and
+that there is no second reader. Both facts live in the rubric's known limits,
+and the legend now points at them from beside the marks they qualify.
+
 The legend deliberately does **not** read as a score. These seven are rare by
 construction — most systems carry none or one — so a bare "1 of 7" invites a
 reader to see a failing grade where the honest reading is "typical, and five of
@@ -100,7 +109,10 @@ def render(path: Path) -> str:
         '<p class="cap-legend">Carries '
         f"<b>{count}</b> of {total} rubric mechanisms."
         f"<span>{context} and a dash means the mechanism was not found at this "
-        "commit — not that the system needed it.</span></p>"
+        "commit — not that the system needed it. Each mark is one LLM "
+        "reviewer's reading of the code at this commit rather than a run of it "
+        '— <a href="../../methodology/atlas-rubric/#known-limits">known '
+        "limits</a>.</span></p>"
         '<ul class="cap-chips">' + "".join(chips) + "</ul>"
         "</div>"
     )
