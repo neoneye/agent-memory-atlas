@@ -6,10 +6,13 @@ root: ../..
 page_kind: system
 source_name: "faisalhussain-devs/MindCache"
 source_url: https://github.com/faisalhussain-devs/MindCache
-revision: 3d18e526f8d72e5681e12e9741d4f195f55e71c8
-revision_url: https://github.com/faisalhussain-devs/MindCache/commit/3d18e526f8d72e5681e12e9741d4f195f55e71c8
-analyzed_at: 2026-08-12
+revision: 45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
+revision_url: https://github.com/faisalhussain-devs/MindCache/commit/45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
+analyzed_at: 2026-08-18
 capabilities: "trust_state, scope_enforced"
+capability_evidence:
+  trust_state: "the decision store — a status column written by the analyzer and filtered wherever candidates are gathered | mindcache/Database/decision_analyzer.py | `DecisionStateAnalyzer.analyze_cluster` validates each returned value against the five-name set before assigning and drops an unrecognised one; `status.in_([\"active\", \"conditional\"])` filters at six sites plus the embedder type map | none"
+  scope_enforced: "retrieval — `user_id` on every memory table, refused rather than defaulted at the assembly fetch | mindcache/retrieval/active_path.py | `_fetch_memories_batch` raises `ValueError(\"user_id is required\")` before querying; `_fetch_topics_batch` beside it defaults to `None` and filters only `if user_id:` | tests/test_client.py::test_reset_does_not_affect_other_users covers cross-user isolation on reset only; the retrieval guard and the ingestion-grounding scope are untested"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -19,12 +22,12 @@ matrix:
   retrieval: "A collapsed-tree cache scored by a lemmatised inverted index and embedding cosine, then an active path through the tree; an optional cross-encoder rerank"
   write: "An LLM extraction into a Pydantic schema with a reasoning step, denoised first, then anchored into the topic tree"
   update_delete: "Supersession by status, decided by an LLM over a semantic cluster of related decisions; no delete beyond a whole-user wipe"
-  scoping: "`user_id` on every memory table and applied on the read path, including in the tree cache and the embedding fetch"
+  scoping: "`user_id` on every memory table and applied on every retrieval path, with `_fetch_memories_batch` refusing a missing one; the ingestion-grounding read is scoped by an exception rather than a filter"
   integration: "A Python client plus an MCP server with five tools — add, process, search, inspect memories, inspect tree"
   background: "Extraction runs as a job queue; the topic tree reorganizes itself, and a repair pass re-anchors detached memories at cache-build time"
   trust: "A five-value decision status — active, inactive, superseded, rejected, conditional — as a database enum, filtered to active and conditional on retrieval"
   strengths: "The epistemic status is applied at every read path including the embedding fetch, so a superseded decision stops being retrievable rather than merely being labelled"
-  risks: "Two benchmark badges over three committed eval files that carry no score of any kind, and a detached-memory repair that re-files by argmax with no similarity floor"
+  risks: "Two benchmark badges over three committed eval files that carry no score of any kind, a detached-memory repair that re-files by argmax with no similarity floor, and an ingestion-grounding lookup whose scope fix raises `TypeError` on every call into a handler that logs at INFO"
 ---
 
 ## 1. Executive Summary
@@ -44,10 +47,12 @@ them are still in effect, writing back a one-sentence `context` explaining each
 verdict and a `last_validated_at` stamp.
 
 What makes it real is where the status is consumed. It is applied as
-`status.in_(["active", "conditional"])` in five separate queries: the embedding
-job that decides which rows get vectors at all, the tree cache's
-missing-embedding check, the tree cache build, the embedding fetch that forms the
-similarity candidate set, and the client's own retrieval query. So a decision
+`status.in_(["active", "conditional"])` at six query sites — four across the tree
+cache, covering its missing-embedding check, its build, and the embedding fetch
+that forms the similarity candidate set; the client's own retrieval query; and
+the analyzer's fetch of the cluster it is about to judge — plus a declared filter
+in the embedder's type map, which decides which rows get vectors at all. So a
+decision
 superseded *after* it was embedded is excluded at query time as well as at index
 time — the leak this atlas has recorded again and again, closed here by filtering
 where the candidates are assembled rather than only where they are written.
@@ -153,7 +158,7 @@ release URL rather than from an index, so what resolves is not pinned by hash.
 ## 4. Essential Implementation Paths
 
 **The status write** — `DecisionStateAnalyzer.analyze_cluster`
-(`Database/decision_analyzer.py:40`) formats the cluster with ids, timestamps,
+(`Database/decision_analyzer.py:48`) formats the cluster with ids, timestamps,
 current status and context, asks for a strict JSON array back, and validates each
 returned status against `{"active", "inactive", "superseded", "rejected",
 "conditional"}` before assigning it. An unrecognised value is dropped rather than
@@ -166,12 +171,39 @@ is fail-closed in both directions.
 query = query.filter(MemClass.status.in_(["active", "conditional"]))
 ```
 
-at `retrieval/root_cache.py:423`, `:465`, `:804`, `:837`, `client.py:300`, and as
-a declared filter in the embedder's type map (`Database/embedder.py:168`).
+at `retrieval/root_cache.py:430`, `:472`, `:811`, `:844`, `client.py:309` and
+`Database/db_manager.py:607`, and as a declared filter in the embedder's type map
+(`Database/embedder.py:168`).
 
 **The scope read** — `user_id` is filtered in the tree cache queries and passed
 into `_fetch_memories_batch` and `_fetch_topics_batch`
-(`retrieval/active_path.py:589`, `:596`).
+(`retrieval/active_path.py:589`, `:596`). The first of the two refuses a missing
+value outright — `if not user_id: raise ValueError("user_id is required")`
+(`:777-784`). The second takes `user_id=None` and filters only `if user_id:`
+(`:800-805`).
+
+**The grounding read, which is the one that was not scoped.** Ingestion grounds
+the extraction prompt in the topic tree: `Memory_Extractor.memory_extract` calls
+`get_top_leaf_paths`, formats the returned paths into `GROUNDING_TEMPLATE`, and
+sends them to the model (`Memory_extract/memory_extractor.py:174-190`). That
+lookup selected topics with `session.query(Topic).all()` — every user's, with no
+filter — so the tree paths of one account were eligible to be written into
+another account's extraction prompt.
+
+The current commit closes it, and closes the feature with it:
+
+```python
+topics = session.query(Topic).filter_by(user_id).all()   # db_manager.py:382
+```
+
+`Query.filter_by` takes `**kwargs` and no positional parameter, so the call
+raises `TypeError` before it reaches the database. `memory_extract` catches
+`Exception`, logs at `INFO`, and continues with `grounded = False`
+(`memory_extractor.py:190`). Every ingestion is ungrounded, and nothing above
+the log line can tell. That the same repository writes the keyword form correctly
+elsewhere — `filter_by(level=current_level, user_id=user_id)`
+(`Database/nodes_summary.py:742`) — is what marks this as a slip rather than a
+convention, and no test in `tests/` references grounding at all.
 
 **The repair** — `repair_detached_memories_for_user`
 (`Database/repair_detached_memories.py`) groups detached rows by `message_id`,
@@ -260,11 +292,14 @@ the recency rule *"usually"* true, and nothing records what the status was befor
 the model changed it. `last_validated_at` tells you when it was last considered,
 not what it said before.
 
-**A permissive default with one correct caller.** `_fetch_memories_batch` and
-`_fetch_topics_batch` apply the `user_id` filter only `if user_id:`. Each has
-exactly one call site and both pass it, so there is no leak at this commit —
-but this is the shape the atlas keeps finding one refactor before it becomes one,
-and the fix is to make the parameter required rather than to remember.
+**A permissive default, fixed on one of the two functions that had it.**
+`_fetch_memories_batch` takes `user_id` as a required positional and raises
+`ValueError("user_id is required")` before it queries anything
+(`retrieval/active_path.py:777-784`) — the parameter is refused rather than
+remembered, which is the durable form. `_fetch_topics_batch` beside it carries
+`user_id=None` and filters only `if user_id:` (`:800-805`). Each has one call
+site and both pass a value, so neither leaks here; the difference is that only
+one of them can be made to.
 
 **The repair has no threshold.** `np.argmax` over cosine similarities always
 returns an index, so a detached memory is always re-anchored, and the fallback
@@ -349,8 +384,12 @@ a result.
 - **A badge that outruns the artifact.** *Passed* is a claim about a scored run;
   committing the unscored traces beside it makes the gap checkable in about a
   minute, which is how this report found it.
-- **An optional scope parameter with a defaulted `None`.** Correct at this commit
-  and one careless caller from not being.
+- **An optional scope parameter with a defaulted `None`.** One of the two that
+  had it refuses a missing value; the other defaults.
+- **A scope fix that fails into a `try` block.** Adding the filter and getting the
+  call wrong turned a leak into a silently disabled feature, because the caller
+  catches `Exception` and logs at `INFO`. A scope repair belongs where a wrong one
+  is loud.
 
 ### Fit
 
@@ -378,7 +417,13 @@ are all asynchronous and none of them is timed.
 - **No audit of status changes.** The analyzer overwrites `status` and `context`
   in place; the previous verdict is gone.
 - **An unlocked dependency surface** including a model wheel fetched from a
-  release URL.
+  release URL, and a lemmatiser that runs `spacy.cli.download` on the
+  retrieval path when `en_core_web_sm` is absent
+  (`retrieval/root_cache.py:17-24`, reached from `:276`), so a read can trigger a
+  network fetch and an install.
+- **Grounding is inert and says nothing about it.** `get_top_leaf_paths` raises on
+  every call, and `last_extraction_grounded` is therefore always `False` with no
+  path that reports it above `INFO`.
 
 ## 13. Build-vs-Borrow Takeaways
 
@@ -421,6 +466,8 @@ says.
 | `mindcache/Database/reorganize_tree.py` | Split, merge, collapse, dedup — every delete moves memories first |
 | `mindcache/Database/repair_detached_memories.py` | The argmax re-anchor, with no floor |
 | `mindcache/Database/embedder.py` | Embedding jobs; the decision filter in the type map |
+| `mindcache/Database/db_manager.py` | `get_top_leaf_paths` and its `filter_by(user_id)`; the sixth status filter |
+| `mindcache/Memory_extract/memory_extractor.py` | The grounding call and the `except Exception` that swallows it |
 | `mindcache/retrieval/root_cache.py` | The collapsed tree cache, the inverted index, four status filters |
 | `mindcache/retrieval/active_path.py` | Path walk, budgeting, context assembly, zero LLM calls |
 | `mindcache/Memory_extract/schema.py` | The extraction contract, written as the prompt |
@@ -430,5 +477,11 @@ says.
 | `tests/` | 66 tests over in-memory SQLite, run by CI |
 
 ## History
+
+**2026-08-18** — [`45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4`](https://github.com/faisalhussain-devs/MindCache/commit/45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4) — re-read three commits on. The screen reported no auto-run file, a `pyproject.toml` changed four days earlier and a `tests/conftest.py` executing on collection, so again nothing was installed and no test was run; `Query.filter_by`'s signature was checked against SQLAlchemy's own documentation rather than by import.
+
+Two claims in the previous reading were wrong in the same place. The scoping row said `user_id` was "applied on the read path" without qualification, and one read did not apply it: `get_top_leaf_paths` selected `session.query(Topic).all()`, and its only caller writes the result into the extraction prompt, so one account's topic paths could reach another's ingestion. This report did not find that at the pin; the project did, and the fix is the current HEAD commit. The status filter was also given as five places when the pin already had six — `Database/db_manager.py:601`, now `:607`, was missed.
+
+The fix itself is the finding now. `filter_by(user_id)` passes a positional argument to a keyword-only method, so the lookup raises before it queries and the caller's `except Exception` logs at `INFO` and continues ungrounded. The leak is closed and the feature is closed with it. Separately, `_fetch_memories_batch` was made to refuse a missing `user_id`, which is the fix the previous reading asked for by name, and `_fetch_topics_batch` beside it was left as it was. `model_name` and `provider` are now threaded into the decision analyzer and the recursive summariser, which constructed `SafeAI()` at its `provider="gemini"` default before, regardless of how the client was configured. Every line number in sections 4 and 9 moved by seven to nine and was re-verified. Marks unchanged.
 
 **2026-08-12** — [`3d18e526f8d72e5681e12e9741d4f195f55e71c8`](https://github.com/faisalhussain-devs/MindCache/commit/3d18e526f8d72e5681e12e9741d4f195f55e71c8) — first reading. The screen reported a `pyproject.toml` changed the day of the reading, a dependency list with no lockfile beside it, and a `tests/conftest.py` that executes on collection, so nothing was installed and no test was run. The status filter's five call sites, the reorganizer's five memory-transferring delete paths and the contents of the three committed eval files were checked by reading and by parsing the JSON.

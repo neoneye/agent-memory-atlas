@@ -7229,14 +7229,22 @@ embedding job, three tree-cache queries and the client's retrieval
 query, including the fetch that builds the similarity candidate set, so
 a decision superseded after it was embedded stops being retrievable
 without anything deleting or re-embedding its vector.</li>
-<li>Biggest risk: two README badges read "BEAM-1M Passed" and "BEAM-10M
-Passed", and the three committed result files contain no score of any
-kind. The harness's fourth stage judges answers against a rubric and
-writes <code>overall_score</code> back into the same file; no committed
-file has been through it — two hold retrieval traces with rubrics and no
-answer, one holds answers with no judgement — and the mem0 baseline the
-judge compares against is loaded from a path outside the
-repository.</li>
+<li>Biggest risk: the scope repair on the ingestion path disabled the
+feature it was repairing. <code>get_top_leaf_paths</code> grounds the
+extraction prompt in the topic tree and selected every user's topics;
+the fix threads <code>user_id</code> down and then calls
+<code>filter_by(user_id)</code>, a positional argument to a keyword-only
+method, so the lookup raises before it queries and the caller's
+<code>except Exception</code> logs at <code>INFO</code> and extracts
+ungrounded. The leak is closed and nothing above the log line reports
+that grounding is gone. Beside it, two README badges read "BEAM-1M
+Passed" and "BEAM-10M Passed", and the three committed result files
+contain no score of any kind. The harness's fourth stage judges answers
+against a rubric and writes <code>overall_score</code> back into the
+same file; no committed file has been through it — two hold retrieval
+traces with rubrics and no answer, one holds answers with no judgement —
+and the mem0 baseline the judge compares against is loaded from a path
+outside the repository.</li>
 <li>Most reusable component: the extraction schema in
 <code>Memory_extract/schema.py</code>, where the Pydantic field
 descriptions carry the formatting rules and worked BAD/GOOD examples and
@@ -7247,7 +7255,10 @@ reasoning step is a schema field rather than a convention.</li>
 with an optional Postgres and pgvector path, local embeddings through
 fastembed, an MCP server with five tools, and 66 tests over a real
 in-memory SQLite run by CI. The dependency list has no lockfile and
-pulls a spaCy model from a GitHub release URL.</li>
+pulls a spaCy model from a GitHub release URL, and the lemmatiser now
+calls <code>spacy.cli.download</code> on the retrieval path when that
+model is absent, so a read can trigger a network fetch and an
+install.</li>
 <li>Study when: you have a status column and want a worked example of
 making it govern rather than label, or you want to see a topic tree that
 reorganizes itself with every delete path moving its memories
