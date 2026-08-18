@@ -20686,6 +20686,56 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>tobi/qmd</code> was examined and has no report: the
+agent can search it and cannot write to it.</strong> MIT, 40,233 lines
+of TypeScript across <code>src/</code> and <code>test/</code>, 668
+commits since 7 December 2025, at <a
+href="https://github.com/tobi/qmd/commit/facd35e01359e59d938bc9418e93fb9318addee3"><code class="commit-id" title="facd35e01359e59d938bc9418e93fb9318addee3">facd35e0…</code></a>
+— an on-device search engine over your own markdown, fusing BM25 and
+vector search with an LLM reranker, every model local through
+<code>node-llama-cpp</code>. Its README calls it <em>"an on-device
+search engine for everything you need to remember"</em>, which is why a
+reader would expect it here. <strong>Four tables settle it</strong>:
+<code>content</code> is content-addressed by hash,
+<code>documents</code> maps a collection and path onto one of those
+hashes, and <code>llm_cache</code> and <code>content_vectors</code> are
+derived from both — every row regenerates from files the user wrote, and
+nothing in the store is a claim qmd made that a later reading could
+contradict. The MCP surface confirms it from the other side:
+<code>query</code>, <code>get</code>, <code>multi_get</code> and
+<code>status</code>, all read-only, so the model can retrieve a document
+and cannot deposit one. Same boundary as
+<code>DeusData/codebase-memory-mcp</code>,
+<code>VectorSpaceLab/general-agentic-memory</code> and
+<code>perplexityai/numbat</code> — a corpus index of the user's own
+material. <strong>The vocabulary is a trap worth naming</strong>,
+because grepping for it would mislead: <code>recall</code> appears 52
+times and every one is <code>recall@k</code> in the benchmark harness,
+the single <code>tombstone</code> marks a soft-deleted row whose file
+has vanished so its content can be collected, and <code>remember</code>,
+<code>belief</code>, <code>supersede</code> and <code>provenance</code>
+are all zero. <strong>What transfers is <code>src/trust.ts</code>, and
+it is better than the approval gates several memory systems here
+ship.</strong> A project-local <code>.qmd/index.yml</code> arrives with
+a <code>git clone</code> and is adopted automatically for any command
+run inside the tree, so three fields in it can reach outside the
+project: an <code>update:</code> shell command, a collection path, and a
+model URI. Those three are gated and nothing else is — the user's own
+global config is never gated, and neither are in-project paths or the
+built-in model defaults, so the prompt fires where it is warranted
+rather than everywhere. Approval is recorded per config file <em>and per
+gated set</em> as a digest in <code>trusted.json</code>, and
+<strong>editing the hook, repointing the collection outside the project
+or changing the model URI changes the digest and re-arms the
+gate</strong>, which is the property a one-time "trust this folder"
+prompt does not have. <code>decideLocalConfigGate</code> has a
+production call site at <code>src/cli/qmd.ts:811</code>, denies by
+skipping when there is no TTY to confirm on, and
+<code>test/update-hook-trust.test.ts</code> covers both decision
+functions — producer, consumer and test all present, which is more than
+the corpus's median for a mechanism of this shape. qmd enters the day
+its own store holds something the source files do not: an agent-written
+annotation, a status, or any row with a lifecycle of its own.</li>
 <li><strong><code>WujiangXu/A-mem</code> was examined and has no report
 because the atlas already reviews the same system.</strong> It is the
 A-MEM paper's (<a

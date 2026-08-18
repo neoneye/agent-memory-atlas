@@ -106,6 +106,16 @@ to answer with the right value; it never asks whether the rejected one is still
 reachable, still in the store, or liable to return. That distinction runs through
 the rest of this page.
 
+**One of the vendors whose score sits on this row says the same thing.** Cognee's
+own guide to agent memory publishes its BEAM figures — 79% at the 100K setting
+against a prior 73.4%, 67% at 10M against 64.1% — and then states that scoring
+well on retrieval "doesn't necessarily translate into a reliable production
+memory system", recommending application-specific evaluation instead. It is a
+concession against interest, in a post that is otherwise an argument for the
+product, and it is worth recording because the rest of this page reaches the same
+conclusion from the other direction: by reading what the benchmarks score and
+finding correction and deletion mostly absent from it.
+
 **open-cowork's harness** is described below and is the most interesting
 evaluation shape in the atlas, precisely because it is not a public benchmark.
 
