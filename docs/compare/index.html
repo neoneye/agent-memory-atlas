@@ -20711,6 +20711,57 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>google/sam</code> was examined and has no report: it
+is the network agents talk over, and the one mechanism worth taking is
+an access-control property, not a memory one.</strong> Apache-2.0,
+46,820 lines of Go across 145 files, 1,130 commits since 18 April 2026,
+at <a
+href="https://github.com/google/sam/commit/b42aaaf2d7f9ec450ab15e97bf704a21539de0e3"><code class="commit-id" title="b42aaaf2d7f9ec450ab15e97bf704a21539de0e3">b42aaaf2…</code></a>
+— <em>Sovereign Agent Mesh</em>, a zero-config, zero-trust libp2p fabric
+in three components (<code>sam-control-plane</code> for identity
+registration and policy, <code>sam-router</code> for bootstrap and
+relay, <code>sam-node</code> for local transport and MCP sidecar
+routing) that lets autonomous agents discover each other and invoke each
+other's tools. <strong>The control plane's twelve tables settle it and
+none of them holds a claim</strong>: <code>nodes</code> and
+<code>routers</code> are membership, <code>keyring</code>,
+<code>bootstrap_tokens</code> and <code>enrollment_requests</code> are
+key material and joining, <code>users</code>, <code>roles</code>,
+<code>role_permissions</code>, <code>role_bindings</code> and
+<code>policies</code> are RBAC, <code>rotation_lock</code> is a mutex
+and <code>schema_migrations</code> is bookkeeping. Identity,
+authorization and coordination state — the boundary already drawn for
+<code>Untrivial-ai/agent-orchestrator</code>,
+<code>perplexityai/numbat</code>, <code>os-factory/har</code> and
+<code>Cohexa-ai/agent-coherence</code>. The vocabulary is clean rather
+than merely quiet: <code>recall</code>, <code>belief</code>,
+<code>supersede</code>, <code>tombstone</code> and <code>forget</code>
+are <strong>zero</strong>, the single <code>remember</code> is a comment
+about caching a failed dial so a node does not retry into a
+fifteen-second timeout, and all seventeen <code>memory</code> hits are
+in-memory hosts in tests. <strong>What transfers is how it says
+no.</strong> Authorization is <a
+href="https://www.biscuitsec.org/">Biscuit</a> tokens — Datalog policies
+carried in the credential and verified offline — and a node attenuates
+its own token from config, adding <code>Attenuation.Policies</code>,
+<code>.Checks</code> and <code>.Rules</code>
+(<code>internal/node/config.go:48-66</code>), with
+<code>Authorize()</code> enforced at
+<code>internal/node/middleware.go:170</code>,
+<code>internal/controlplane/server.go:863</code> and inside
+<code>internal/identity/biscuit.go</code>. Attenuation is one-way: a
+holder can mint a strictly weaker token and cannot mint a stronger one,
+and a verifier needs no call back to the issuer to know that.
+<strong>That is <code>scope.caller_cannot_widen</code> as a
+cryptographic property rather than a code review.</strong> Most systems
+in this corpus implement scope as a predicate the caller supplies, which
+is precisely the widening hazard the test exists for; SAM enforces the
+same property at the transport, where the caller cannot reach it.
+Nothing here remembers anything, and the mechanism is still the clearest
+answer in the corpus to a question memory systems keep failing. sam
+enters the day the mesh carries a durable claim about a peer that a
+later reading could contradict — a reputation, a trust score, a record
+of what an agent got wrong.</li>
 <li><strong><code>Tencent/UI-Mate</code> was examined and has no report:
 its procedural memory is a file you hand it and a checkpoint you
 download.</strong> Apache-2.0, at <a
