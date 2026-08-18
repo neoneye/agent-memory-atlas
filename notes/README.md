@@ -8,6 +8,42 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-18-the-gaps-were-placement-not-content.md](2026-08-18-the-gaps-were-placement-not-content.md) —
+  Four outside reviews in one session (Qwen twice, Grok, Kimi) produced four
+  accepted changes, and only one was missing content: the producer check. The
+  other three were material the atlas already had, in a place the complaining
+  reader had not reached — the rubric's "one language model's reading of code it
+  did not run" was three weeks old and two clicks from the capability strip that
+  needed it. Adds a second triage class beside the rendering one: when a review
+  proposes something the atlas already does, ask where it is relative to what the
+  reader was looking at. Also records why a page-wide "may be unwired" banner was
+  refused — it would have been false, checked against all fifty reports the same
+  day — and why maintenance verdicts, line-number evidence keys and a reference
+  implementation stay declined.
+- [2026-08-18-the-producer-check-and-a-corpus-audit.md](2026-08-18-the-producer-check-and-a-corpus-audit.md) —
+  Declared-and-unwired is the atlas's most common finding and nothing in
+  `add-memory-system` asked for the check; fifty-one reports carried one because
+  someone thought to look. The step is now required, phrased as "find the
+  producer" rather than "grep the callers", because the sharpest cases all have
+  callers and fail on data flow. Auditing all fifty reports with an unwired claim
+  against their marks: zero credit a mark to a mechanism they say has no
+  producer, five state the withholding explicitly. Surfaces the
+  missing-producer / stale-consumer distinction (OmniIntelligence) and a third
+  shape from MindCache — a scope repair that fails into a `try` block. Carries
+  the re-runnable method and its three false-positive classes.
+- [2026-08-18-two-rules-for-one-field-and-then-none.md](2026-08-18-two-rules-for-one-field-and-then-none.md) —
+  The A–Z index printed each system's identity three times on 279 of 301 rows.
+  Two rules were written for when to print the slug; the first was wrong in both
+  directions at once, the second was right, and then the field was deleted
+  anyway. The lesson: a field needing a rule to decide whether to show it is
+  usually a field that should not be shown, and the signal was in the first
+  measurement. Also records the sort change it forced (by title, not by an
+  invisible key) and three layout constraints worth not rediscovering — why not a
+  `<table>`, why fixed column units, and why `layout: wide` exists.
+- [2026-08-16-a-fork-a-successor-and-an-editor.md](2026-08-16-a-fork-a-successor-and-an-editor.md) —
+  Three coding agents read and excluded. One of them, Cline, had been excluded on
+  7 August with a re-entry condition attached, and the condition is checkable —
+  which is the point of attaching one.
 - [2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md](2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md) —
   Chroma's Context Rot report and the Oolong benchmark (arXiv:2511.02817), read
   and triaged — neither a memory system, both measurements that bound what a
@@ -228,6 +264,11 @@ when the work happens.
   as a submission rule. The atlas reads the adapter, not the result. Plus the
   asymmetry that keeps it off a scoreboard: a submission is only ever evidence
   *for* a mechanism, because not running is not failing.
+- [2026-08-09-seventy-one-repositories-from-an-outside-corpus.md](2026-08-09-seventy-one-repositories-from-an-outside-corpus.md) —
+  Seventy reports written and pushed across seventeen batches from an outside
+  candidate list. Every candidate in the tabulated list is now read and either
+  written up or dispositioned in the note; nothing in the join remains
+  unexamined.
 - [2026-08-09-the-corpus-has-a-half-life.md](2026-08-09-the-corpus-has-a-half-life.md) —
   113 of 238 reports were read in the project's first six days and have not been
   touched since; the age distribution is bimodal, so the average report a reader
@@ -442,6 +483,10 @@ when the work happens.
   200 papers with a security category the surveys lack; A-MemGuard writes a
   rejected-value lesson it never persists, MemMachine is an unreviewed system in
   scope, and a site claiming weekly updates carries a title retired in June.
+- [2026-07-29-a-coherence-coordinator-not-a-memory-system.md](2026-07-29-a-coherence-coordinator-not-a-memory-system.md) —
+  Cohexa-ai/agent-coherence read at a pinned commit and excluded as a system:
+  a coherence coordinator rather than a memory store, recorded in overview.md,
+  with one claim that does not hold named in the note.
 - [2026-07-29-a-reading-list-triaged.md](2026-07-29-a-reading-list-triaged.md) —
   a nine-item recent-papers list worked end to end; four surveys link one
   repository between them, no report was added, and three published atlas claims
