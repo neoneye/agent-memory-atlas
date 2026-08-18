@@ -211,6 +211,27 @@ const penalties = (item.origin?.role === &quot;assistant&quot; ? 0.2 : 0)
   + (item.status === &quot;demoted&quot; ? 0.35 : 0)
   + (item.status === &quot;conflict&quot; ? 0.3 : 0)
   + (item.stale === true ? 0.15 : 0);</code></pre>
+<p><strong>The exits from <code>conflict</code> are authorized and
+narrow, which is the right shape for a status a model assigns.</strong>
+Two subcommands sit behind the same authorization check as
+<code>promote</code>/<code>demote</code>/<code>prune</code>/<code>tombstone</code>
+(<code>index.js:5867</code>).
+<code>/plur1bus curation resolve &lt;id&gt; keep|drop</code>
+(<code>lib/curation-resolve.js</code>, dispatched at
+<code>index.js:6940</code>) moves one record and appends a
+<code>curation.resolve</code> event.
+<code>/plur1bus curation drop-injected</code>
+(<code>lib/drop-injected-conflicts.js</code>,
+<code>index.js:6959</code>) is the bulk form, and it is bounded twice
+rather than trusted: <code>previewDropInjected</code> shows the set
+before <code>applyDropInjected</code> touches it, and the apply path
+refuses any record whose <code>status !== "conflict"</code> or whose
+text does not satisfy <code>isInjectedContextText</code>
+(<code>:104</code>), so the bulk verb cannot reach a record the narrow
+predicate does not already describe. Neither auto-resolves: a
+<code>conflict</code> a person never looks at stays a penalty forever,
+which is the honest cost of leaving an unvalidated detector's output in
+the ranking rather than in a filter.</p>
 <p>So the neo statuses now split three ways rather than two: the
 deletion states and <code>demoted</code> withhold, <code>conflict</code>
 and the trust ladder rank, and the split tracks who or what set the
@@ -1043,6 +1064,22 @@ mapping path, and is there a check that all of them agree?</li>
 <code>tests/rem-dream-acl-partition.test.js</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-18</strong> — <a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
+— same pin, three mechanisms added after a re-read prompted by the
+upstream author. The authorized exits from <code>conflict</code> were
+missing from this report: <code>/plur1bus curation resolve</code> and
+<code>/plur1bus curation drop-injected</code> sit behind the same
+authorization gate as the status transitions
+(<code>index.js:5867</code>), and the bulk form is doubly bounded — a
+preview before the apply, and a refusal of any record that is not
+<code>status === "conflict"</code> and does not satisfy
+<code>isInjectedContextText</code>
+(<code>lib/drop-injected-conflicts.js:104</code>). Derived dream records
+stamp a <code>visibility</code> and <code>rem-dream.js</code> hands its
+reader a requester triple, which the scoping row now says. Each was read
+at this pin against <code>index.js</code> and <code>lib/</code>, not
+taken from the report of it.</p>
 <p><strong>2026-08-17</strong> — <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
 — re-pinned at release 7.4.0, 49 commits past the previous pin. Screened

@@ -27,7 +27,7 @@ matrix:
   retrieval: "Vector plus lexical over LanceDB, graph hydration of neighbours, a decision trace per recall, and additive lens and reactivation passes"
   write: "Deferred to the `agent_end` hook through a per-agent scheduler; nothing blocks the reply"
   update_delete: "`safeUpdate` writes a new version, then supersedes the old row; `/forget` archives behind a confirmation token and writes a durable content-fingerprint tombstone that blocks re-capture of the forgotten value; a claim carries a real-world validity window separate from its record time"
-  scoping: "`checkAccess` fails closed on agent-private, workspace and user scopes, applied as a read filter in the adapter and the recall pipeline"
+  scoping: "`checkAccess` fails closed on agent-private, workspace and user scopes, applied as a read filter in the adapter and the recall pipeline; derived dream records stamp a `visibility` and their readers are handed a requester triple"
   integration: "OpenClaw plugin — chat commands, an `agent_end` capture hook, background crons, and an Obsidian review vault"
   background: "Daily consolidation, garbage collection, skill mining, critical-push classification, and two dream passes"
   trust: "Seven-state record status and a six-level trust ladder scored off the newest revision, with `demoted` and `invalidated` both withholding a record from recall outright and `conflict` deliberately left as a penalty, plus an append-only reconsolidation event log"
@@ -94,6 +94,21 @@ const penalties = (item.origin?.role === "assistant" ? 0.2 : 0)
   + (item.status === "conflict" ? 0.3 : 0)
   + (item.stale === true ? 0.15 : 0);
 ```
+
+**The exits from `conflict` are authorized and narrow, which is the right shape
+for a status a model assigns.** Two subcommands sit behind the same
+authorization check as `promote`/`demote`/`prune`/`tombstone`
+(`index.js:5867`). `/plur1bus curation resolve <id> keep|drop`
+(`lib/curation-resolve.js`, dispatched at `index.js:6940`) moves one record and
+appends a `curation.resolve` event. `/plur1bus curation drop-injected`
+(`lib/drop-injected-conflicts.js`, `index.js:6959`) is the bulk form, and it is
+bounded twice rather than trusted: `previewDropInjected` shows the set before
+`applyDropInjected` touches it, and the apply path refuses any record whose
+`status !== "conflict"` or whose text does not satisfy `isInjectedContextText`
+(`:104`), so the bulk verb cannot reach a record the narrow predicate does not
+already describe. Neither auto-resolves: a `conflict` a person never looks at
+stays a penalty forever, which is the honest cost of leaving an unvalidated
+detector's output in the ranking rather than in a filter.
 
 So the neo statuses now split three ways rather than two: the deletion states
 and `demoted` withhold, `conflict` and the trust ladder rank, and the split
@@ -387,6 +402,8 @@ The part worth taking whatever you are building is `lib/safe-update.js`. It is 4
 - Tests cited: `tests/crr-status-filter.test.js`, `tests/b13-acl-callsite-adapters.test.js`, `tests/gc-neverforget-guard.test.js`, `tests/safe-update-dataloss.test.js`, `tests/valid-time.test.js`, `tests/tombstone-e2e.test.js`, `tests/correct-tombstone-guard.test.js`, `tests/semantic-lens-status-filter.test.js`, `tests/rem-dream-acl-partition.test.js`.
 
 ## History
+
+**2026-08-18** — [`3479373f87dc8f70d460d09ddeb20ffb83355231`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231) — same pin, three mechanisms added after a re-read prompted by the upstream author. The authorized exits from `conflict` were missing from this report: `/plur1bus curation resolve` and `/plur1bus curation drop-injected` sit behind the same authorization gate as the status transitions (`index.js:5867`), and the bulk form is doubly bounded — a preview before the apply, and a refusal of any record that is not `status === "conflict"` and does not satisfy `isInjectedContextText` (`lib/drop-injected-conflicts.js:104`). Derived dream records stamp a `visibility` and `rem-dream.js` hands its reader a requester triple, which the scoping row now says. Each was read at this pin against `index.js` and `lib/`, not taken from the report of it.
 
 **2026-08-17** — [`3479373f87dc8f70d460d09ddeb20ffb83355231`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231) — re-pinned at release 7.4.0, 49 commits past the previous pin. Screened again: the same `postinstall` host patch, both manifests inside the seven-day cooldown, four floating ranges behind the lockfile; nothing installed or run, and the new behaviour was read from the source and its committed tests. Marks unchanged at all seven and now carrying evidence records. **Two published criticisms are corrected, both in the direction that understated the system.**
 
