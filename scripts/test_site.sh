@@ -364,6 +364,44 @@ then
   exit 1
 fi
 
+# A markdown link missing its closing paren does not become a broken link — it
+# stops being a link at all, and pandoc renders the whole run as literal text.
+# check_anchors.py validates the links that exist and structurally cannot see
+# this one, which is how `[`qwen-mm-plugins`](../systems/qwen-mm-plugins/, [...`
+# sat on the comparative report until a reader reported it.
+#
+# The rendered page is the right place to look: after a successful parse, `](`
+# survives only inside code, so anywhere else it is an unparsed link.
+if ! python3 - "$site_dir" <<'PYLINK'
+import html as h
+import re
+import sys
+from pathlib import Path
+
+found = []
+for page in sorted(Path(sys.argv[1]).rglob("*.html")):
+    text = page.read_text(encoding="utf-8")
+    # A markdown example inside code or pre is legitimate and stays.
+    text = re.sub(r"<(pre|code)\b.*?</\1>", "", text, flags=re.S)
+    for match in re.finditer(r"\]\(", text):
+        context = h.unescape(text[max(0, match.start() - 70):match.start() + 70])
+        found.append(f"{page}: unparsed link -- {' '.join(context.split())}")
+
+if found:
+    print("\n".join(found), file=sys.stderr)
+    print(
+        f"{len(found)} markdown link(s) rendered as literal text. A missing "
+        "closing paren stops a link being a link, so the anchor check never "
+        "sees it.",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+print("no markdown link rendered as literal text.")
+PYLINK
+then
+  exit 1
+fi
+
 missing_dates="$(grep -RLs '^analyzed_at:' "$project_dir/content/systems" --include='*.md' || true)"
 if [[ -n "$missing_dates" ]]; then
   echo "System reports missing analyzed_at frontmatter:" >&2

@@ -1612,7 +1612,7 @@ stand up, and still exactly one scope axis.
 
 [`graphiti`](../systems/graphiti/), [`cognee`](../systems/cognee/), [`hipporag`](../systems/hipporag/), [`holographic`](../systems/holographic/), [`gini-agent`](../systems/gini-agent/), [`memvid`](../systems/memvid/),
 [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`memary`](../systems/memary/), [`m-flow`](../systems/m-flow/), [`nova-ai`](../systems/nova-ai/), [`argo`](../systems/argo/),
-[`qwen-mm-plugins`](../systems/qwen-mm-plugins/, [`hillock`](../systems/hillock/), [`growmos`](../systems/growmos/)
+[`qwen-mm-plugins`](../systems/qwen-mm-plugins/), [`hillock`](../systems/hillock/), [`growmos`](../systems/growmos/)
 
 Structure is the retrieval mechanism. **Graphiti** tracks transaction time and
 real-world validity separately, invalidating facts by closing an interval
