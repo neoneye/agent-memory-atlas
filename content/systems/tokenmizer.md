@@ -6,10 +6,14 @@ root: ../..
 page_kind: system
 source_name: "Shweta-Mishra-ai/tokenmizer"
 source_url: https://github.com/Shweta-Mishra-ai/tokenmizer
-revision: ed7860e626ccc5c67fdf28c5cd12532ba337aeee
-revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf28c5cd12532ba337aeee
-analyzed_at: 2026-07-30
-capabilities: "trust_state, audit_log"
+revision: 8495e2598b8c11547c64e5dc1f19cd198d5e363d
+revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d
+analyzed_at: 2026-08-18
+capabilities: "trust_state, scope_enforced, audit_log"
+capability_evidence:
+  trust_state: "the decision graph — a nine-value status on decision nodes with the excluded set named as one constant | tokenmizer/graph_memory/types.py | `NodeStatus` and `INACTIVE_STATUSES`, a frozenset of SUPERSEDED, MODIFIED (its backward-compatible alias), INVALIDATED and ARCHIVED; `decision_tracker.py` supersedes on clear evidence and writes CONTESTED on both sides when the evidence is ambiguous, and CONTESTED stays retrievable on purpose | tests/unit/test_contested_decisions.py"
+  scope_enforced: "the HTTP read path — a principal derived from the credential, claimed per session and checked before any session-scoped route answers | tokenmizer/security/ownership.py | `principal_for_key` and `OwnershipStore.check_access`, reached through the `verify_session_access` dependency in tokenmizer/api/routes_graph.py, which claims only on write methods, fails closed to 503 when no principal was established, and answers 404 rather than 403 so the route cannot be used as a session-name oracle | tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http"
+  audit_log: "the graph store — every decision status transition appended beside the node it moved | tokenmizer/graph_memory/persistence.py | `persist_transition` writes the transition row and pruning is written to keep transitions alive past the node | tests/unit/test_graph_persistence.py"
 stack_storage: "sqlite"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -19,10 +23,10 @@ matrix:
   retrieval: "`query()` over the graph, excluding superseded, archived and invalidated nodes; `to_context_block()` renders a resume block"
   write: "A hybrid extractor over session messages, with an ontology and a validator, then a contradiction check on every decision node"
   update_delete: "Supersession when the evidence is clear, `CONTESTED` on both sides when it is not, `INVALIDATED` for explicitly wrong, plus pruning"
-  scoping: "Per-project graph caches; no scope predicate inside a graph"
+  scoping: "A principal derived from the API key, claimed per session and enforced by a fail-closed dependency on every session-scoped route; no scope predicate inside a graph"
   integration: "A CLI and server for coding sessions — checkpointing, compression, a dashboard and a visualiser"
   background: "Decay, pruning and compression passes, with idempotence and correctness suites of their own"
-  trust: "Eight statuses — pending, in_progress, completed, failed, superseded, invalidated, archived, contested — with three excluded from retrieval and one deliberately not"
+  trust: "Nine statuses — pending, in_progress, completed, failed, superseded, modified, invalidated, archived, contested — with the excluded four named in one frozenset and contested deliberately left retrievable"
   strengths: "A status for unresolved ambiguity that keeps both sides visible instead of guessing, and a committed ground-truth measurement of extraction recall"
   risks: "The redaction functions are unit-tested in isolation and nothing asserts a secret fails to reach the rendered context block"
 ---
@@ -157,10 +161,30 @@ withheld.
 SUPERSEDED nodes"* — from a path that needed the hidden ones, which is the
 ordinary cost of expressing exclusion as a filter every reader has to remember.
 
-**Scope is a per-project cache, not a predicate.** `test_cache_scoping.py`
-covers keeping projects apart at the cache layer; inside a graph there is no
-scope key, which is coherent for a per-project session tool and means the mark is
-withheld.
+**Scope is a claimed session, and the claim is where the key is applied.** A
+principal is derived from the presented credential by `principal_for_key`
+(`tokenmizer/security/ownership.py`), a session is claimed by the first principal
+that writes to it, and `verify_session_access`
+(`tokenmizer/api/routes_graph.py:44-90`) checks the claim before any
+session-scoped route answers. Three details make it more than a permission check.
+It **claims only on write methods**, so a GET for a session that was never
+created falls through to its ordinary empty response instead of staking a claim
+as a side effect. It **fails closed twice** — 503 when no principal was
+established, 503 again when the ownership store is unreachable. And it answers
+**404 rather than 403**, with the reason written down: confirming that a session
+exists but belongs to someone else turns the endpoint into a session-name oracle.
+`tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http`
+asserts the refusal over HTTP rather than against a helper.
+
+The module's own header states what it closes: every session-scoped route took
+`session_id` straight from the URL, authentication proved only that the caller
+held *the* deployment key, and clients choose their own `session_id` in the chat
+request body — so "pick a plausible name" was enough to read another caller's
+graph, and `/api/decision/invalidate` made it a write primitive too.
+
+Inside a graph there is still no scope key, which remains coherent for a
+per-session tool: the session is the unit, and the key is applied where the
+session is handed out.
 
 ## 7. Write Mechanics
 
@@ -297,5 +321,9 @@ session history.
 | `tests/chaos/test_recovery.py` | — | Storage corruption |
 
 ## History
+
+**2026-08-18** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — re-read seventeen commits on, and the scope finding is the one that moved. `scope_enforced` is awarded: `tokenmizer/security/ownership.py` derives a principal from the credential, claims a session for it, and `verify_session_access` refuses a foreign principal on every session-scoped route. The previous reading withheld the mark on the ground that a graph carries no scope key inside it, which is still true and is no longer the whole question — the rubric asks for a stored scope key applied on the read path, and the claim is applied there. The module header describes the hole it closes: `session_id` came from the URL, clients choose it themselves in the chat request body, and authentication proved only that a caller held the deployment key.
+
+The status vocabulary grew a `MODIFIED` alias for `SUPERSEDED` and, more usefully, an `INACTIVE_STATUSES` frozenset, so the excluded set is one constant rather than comparisons repeated at each read; the matrix row and section 6 say nine and four rather than eight and three. `patterns.py` (827 lines) and `filelock.py` (254) are new, `persistence.py` gained 703 lines and `hybrid_extractor.py` was substantially rewritten; the extraction and decision mechanisms this report describes survive those changes. Every mark now carries an evidence record. The screen reported three auto-run manifests — a `.mcp.json` pointing at the local package, the MCP registry `server.json` and a Claude Code plugin manifest, all publication metadata — plus a `conftest.py` executing on collection; nothing was installed and no test was run.
 
 **2026-07-30** — [`ed7860e626ccc5c67fdf28c5cd12532ba337aeee`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf28c5cd12532ba337aeee) — first reading.
