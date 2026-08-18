@@ -59,6 +59,13 @@ gateway and a tombstone are the answer for memory that must be defensible under
 a correction. Most products are not that, and the pattern index says so in its
 own words.
 
+**And every one of those choices costs something.**
+[What you buy, and what it costs](../tensions/) collects the six axes where the
+corpus shows these mechanisms trading against each other — recall against
+abstention, retention against correctability, scope against reuse — with the
+systems at each end and what the choice forced them to build. Read it if you are
+deciding between two profiles rather than following one.
+
 ### The question before all of them
 
 Does anything need to survive the session at all? If the answer is that the
