@@ -20711,6 +20711,60 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>warpdotdev/warp</code> was examined and has no report,
+and it is the cleanest example in the corpus of a published contract
+with an unpublished mechanism.</strong> Dual AGPL-3.0 and MIT, 3,983
+Rust files and 278 SQL migrations, 2,120 commits since 28 April 2026, at
+<a
+href="https://github.com/warpdotdev/warp/commit/d13a30f4aed1dbcbb297347e0012497e6ccec1ae"><code class="commit-id" title="d13a30f4aed1dbcbb297347e0012497e6ccec1ae">d13a30f4…</code></a>
+— the Warp terminal's own client. It has agent memory, and the memory is
+the part that stayed on the server:
+<code>app/src/server/server_api/ai.rs</code> is a REST client against
+<code>memory_stores/{uid}/memories</code>, so extraction, retrieval,
+deduplication and what a tombstone <em>does to a read</em> are all
+outside this tree. That is the atlas's stated exclusion — the mechanism
+closed behind an open wrapper — and it is worth recording rather than
+passing over, because <strong>the contract those serde types describe is
+more complete than most systems here implement</strong>. A
+<code>MemoryItem</code> carries <code>content</code>, a
+<code>version_id</code>, a <code>source</code>, a <code>source_id</code>
+and a <code>source_run_id</code> — provenance down to the run that
+produced it — beside <code>is_tombstoned</code> and
+<code>tombstoned_at</code>. A <code>MemoryVersionItem</code> carries a
+full prior <code>content</code> and the <code>reason</code> it changed.
+<code>CreateMemoryRequest</code> and <code>UpdateMemoryRequest</code>
+both take <code>reason: String</code>, <strong>not an
+<code>Option</code></strong>, so the API cannot be called without saying
+why — a discipline <a href="../systems/mindcache/">MindCache</a>, <a
+href="../systems/aura/">Aura</a> and most of the trust-state family do
+not impose on their own writes. A store has an <code>owner_type</code>
+and <code>owner_uid</code>, and agents attach to it through an
+<code>AgentAttachmentItem</code> carrying an <code>access</code> level.
+<strong>Two findings survive being unable to read the server.</strong>
+<code>MemorySource</code> is an enum with exactly one variant,
+<code>Manual</code>: <code>source_id</code> and
+<code>source_run_id</code> exist on the read model and imply a server
+that writes memories from runs, and nothing in the open client can
+produce anything but a memory a person typed. And
+<code>is_tombstoned</code> / <code>tombstoned_at</code> are deserialised
+and <strong>read nowhere in <code>app/</code></strong> — the client is
+told which memories are dead and does not filter, mark or otherwise act
+on it, so whether a tombstoned memory stops being retrievable is decided
+somewhere a reader cannot check. What the client <em>does</em> own is
+not memory: <code>project_rules</code> is
+<code>(id, path, project_root)</code>, a registry of which rule files
+exist with their content left on disk, and
+<code>agent_conversations</code> is transcript persistence, which is <a
+href="#not-in-scope-conversation-window-management">the
+conversation-window boundary</a>. One screening note, because a
+vocabulary probe on this repository lies: <code>tombstone</code>,
+<code>supersede</code> and <code>forget</code> return dozens of hits
+inflated by a committed BERT tokenizer vocabulary and the vendored
+Alacritty licence, and once those are excluded the remainder are TUI
+event tombstones, recalling a command from shell history, and
+<code>core::mem::forget</code>. Warp enters the day the store behind
+that API is inspectable at a commit, or a client-side memory gains a
+correctable identity of its own.</li>
 <li><strong><code>google/sam</code> was examined and has no report: it
 is the network agents talk over, and the one mechanism worth taking is
 an access-control property, not a memory one.</strong> Apache-2.0,
