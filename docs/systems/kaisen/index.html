@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An evolutionary coding harness
+whose project memory is four plain files — and whose durable visited-set
+of code hashes grows without bound while the history explaining why
+anything was skipped is a 500-entry ring.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="KAISEN — Agent Memory Atlas">
+    <meta property="og:description" content="An evolutionary coding
+harness whose project memory is four plain files — and whose durable
+visited-set of code hashes grows without bound while the history
+explaining why anything was skipped is a 500-entry ring.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KAISEN — Agent Memory Atlas">
+    <meta name="twitter:description" content="An evolutionary coding
+harness whose project memory is four plain files — and whose durable
+visited-set of code hashes grows without bound while the history
+explaining why anything was skipped is a 500-entry ring.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>KAISEN — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "KAISEN",
+      "description": "An evolutionary coding harness whose project memory is four plain files \u2014 and whose durable visited-set of code hashes grows without bound while the history explaining why anything was skipped is a 500-entry ring.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The block outlives the reason for it</p>
+          <h1>KAISEN</h1>
+          <p class="document-deck">An evolutionary coding harness whose
+project memory is four plain files — and whose durable visited-set of
+code hashes grows without bound while the history explaining why
+anything was skipped is a 500-entry ring.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RAZZULLIX/KAISEN">
+              <span>Source</span>
+              <strong>RAZZULLIX/KAISEN</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78" title="f56a980bdd9daa8395e56a91eeb50bdbc625cd78">
+              <span>Analyzed revision</span>
+              <code>f56a980b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-19</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>KAISEN is an evolutionary coding harness — MIT, 15,315 lines of
+Python across 41 files, 9 commits since 4 August 2026 — that takes a
+program description, runs a swarm of local or frontier models through a
+build → verify → score pipeline, and keeps a champion. It ships a
+node-editor dashboard, a multi-turn agent loop, and
+<strong>KAI</strong>, a line-oriented stdio protocol that lets another
+LLM spawn KAISEN as an optimization sidecar and collect improved code
+later.</p>
+<p>Its memory is four plain files per project, and their asymmetry is
+the finding.</p>
+<p><code>lessons.txt</code> is one blob, overwritten each time.
+<code>memos/gen_NNNNNN.md</code> is one file per deep-work generation.
+<code>history</code> lives inside <code>state.json</code>. And
+<code>seen_hashes.json</code> holds a semantic hash of every candidate
+the engine has ever scored: <code>_dedup_check</code> refuses a
+candidate whose hash is already present, records
+<code>duplicate_skip</code>, and moves on.</p>
+<p>That visited set is the closest thing here to a value-keyed refusal,
+and the distance between it and a real one is instructive. It is keyed
+on the content, it is durable, and it does prevent a later generation
+from silently re-proposing the same code — but it contains the
+<em>accepted</em> candidates too, including the champion. It says
+"already tried", not "rejected", so it cannot tell a consumer which of
+the two a hash represents, and the atlas's tombstone mark is withheld on
+exactly that distinction.</p>
+<p>The asymmetry underneath it is worse than the ambiguity.
+<strong><code>seen_hashes.json</code> grows without bound, and
+<code>history</code> is truncated to the newest 500 entries.</strong>
+The <code>duplicate_skip</code> record naming which hash was refused
+ages out; the refusal itself is permanent. After enough generations the
+system is declining candidates for reasons no longer written down
+anywhere, and the only durable artifact is a sorted list of hex
+strings.</p>
+<p>Two smaller defects are checkable and both sit on the same path.
+<code>_dedup_check</code> calls <code>semantic_hash(code)</code> with no
+language argument, so <code>normalize_code</code> defaults to
+<code>language="c"</code> — and its C-family branch strips
+<code>//</code> to end of line as a comment. On a Python project that is
+the floor-division operator, so <code>x = a // b</code> normalizes to
+<code>x = a</code> before hashing, and two genuinely different
+candidates can collide into a false duplicate that is silently skipped.
+The engine has <code>self._code_lang</code> in scope at the call
+site.</p>
+<p>And the keyword counter, which the prompt presents to the model as
+<code>KEYWORD FREQUENCIES (lessons/memos)</code>, filters by nothing.
+Its docstring says it <em>"lets the model see how often a technique
+failed without reading everything"</em>, but the implementation counts
+every token of three or more characters and returns the top ten by raw
+frequency, so on English prose the model receives function words. The
+module defines a ten-entry <code>FAILURE_KEYWORDS</code> tuple used
+elsewhere, and a <code>load_keywords</code> reader for a user-supplied
+<code>keywords.txt</code> — which <strong>has no caller anywhere in the
+repository</strong>. Both of the things that would have made the counter
+mean what its docstring says are present and unused.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>KAISEN is a loop with a champion. Each generation, the engine builds
+a prompt from the project's memory, asks the models for a candidate,
+guards it, scores it against a real pipeline, and keeps it if it
+wins.</p>
+<p>Memory exists to stop the loop repeating itself, and it does that
+three ways at three different strengths.</p>
+<p><strong>Hard</strong>: the visited hash set, which refuses a
+byte-equivalent candidate outright.</p>
+<p><strong>Prompted</strong>: the lesson and the memo, prose the model
+is shown.</p>
+<p><strong>Statistical</strong>: the keyword frequency line, meant to
+convey repetition without the model reading everything.</p>
+<p>Only the first is enforced. The second and third are text in a
+prompt, and the third is currently noise.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Four memory files with different lifetimes: the visited hash set grows forever and hard-blocks a repeat candidate, while the history entry recording why it was blocked is truncated to the newest 500 — so the refusal outlives its own explanation.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Four memory files with different lifetimes: the visited hash set grows forever and hard-blocks a repeat candidate, while the history entry recording why it was blocked is truncated to the newest 500 — so the refusal outlives its own explanation.
+flowchart TD
+    G[&quot;generation N: model proposes code&quot;] --&gt; D{&quot;_dedup_check&lt;br/&gt;semantic_hash(code)&lt;br/&gt;&lt;i&gt;language defaults to c&lt;/i&gt;&quot;}
+    D --&gt;|&quot;hash already present&quot;| SK[&quot;append duplicate_skip to history&lt;br/&gt;candidate discarded&quot;]
+    D --&gt;|&quot;new&quot;| ADD[&quot;hash added to seen_hashes.json&lt;br/&gt;&lt;i&gt;grows without bound&lt;/i&gt;&quot;]
+    ADD --&gt; SC[&quot;guardrails + pipeline scoring&quot;]
+    SC --&gt; H[&quot;state.json history&lt;br/&gt;&lt;i&gt;ring: newest 500 kept&lt;/i&gt;&quot;]
+    SK --&gt; H
+    H --&gt;|&quot;last 8 entries&quot;| PB[&quot;prompt memory block&quot;]
+    L[&quot;lessons.txt&lt;br/&gt;overwritten wholesale&quot;] --&gt; PB
+    M[&quot;memos/gen_NNNNNN.md&lt;br/&gt;one per deep-work pass&quot;] --&gt; PB
+    KC[&quot;keyword_counts — top 10 by raw frequency&lt;br/&gt;&lt;i&gt;no stopword or failure filter&lt;/i&gt;&quot;] --&gt; PB
+    H -.-&gt;|&quot;failure substrings hoisted&quot;| FF[&quot;EXPLICIT FAILURE FEEDBACK banner&lt;br/&gt;placed above ordinary history&quot;]
+    FF --&gt; PB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>engine.py</code> is the generation loop. <code>memory.py</code>
+is 110 lines and holds the whole memory model. <code>state.py</code> is
+the per-project state with the bounded history. <code>skills.py</code>
+carries <code>normalize_code</code> and <code>semantic_hash</code>.
+<code>snapshots.py</code> keeps up to 25 full project copies.
+<code>guardrails.py</code> and <code>linters.py</code> police
+candidates, <code>autofix.py</code> repairs mechanical errors,
+<code>swarm.py</code> runs parallel agents, <code>kai.py</code> is the
+LLM-facing protocol, and <code>server.py</code> serves the
+dashboard.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>kaisen/memory.py</code> is short enough to read in full and is
+where the design is.</p>
+<p><code>build_history_blob</code> is the part worth copying. It walks
+the recent history and builds two things at once: a plain line per
+entry, and a separate list of failures, detected by testing the outcome
+string against ten substrings — <code>fail</code>, <code>error</code>,
+<code>timeout</code>, <code>rejected</code>, <code>skip</code>,
+<code>crash</code>, <code>violat</code>, <code>no_metrics</code>,
+<code>no_code</code>, <code>cancelled</code>. If any failures were
+found, the blob is assembled with them <strong>first</strong>, under an
+<code>--- EXPLICIT FAILURE FEEDBACK ---</code> banner, above the
+ordinary chronology.</p>
+<p>That is a real idea. The information was already in the history; the
+model would have had to notice it among seven other lines. Hoisting
+negative outcomes to the top of the block is a cheap way to make a
+repeated mistake the first thing read, and it costs nothing but the
+ordering.</p>
+<p><code>engine.py:608-619</code> is <code>_dedup_check</code>, and
+<code>engine.py:790-800</code> is the prompt assembly where the lesson,
+memo, keyword line and history blob are concatenated.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. A lesson is a string in a file; a memo is
+markdown named by generation; a history entry is a dict with
+<code>generation</code>, <code>outcome</code> and <code>detail</code>,
+truncated to 500 characters for the line and 800 for the failure form; a
+visited hash is a hex string in a sorted JSON array.</p>
+<p>Nothing carries a timestamp, a source, a confidence or a status. The
+generation number in a memo filename is the only ordering key in the
+memory layer, and history entries carry a <code>generation</code> field
+that serves the same purpose.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>None, in any sense this atlas measures — the retrieval stack is
+recorded empty, which here is an accurate description rather than a gap.
+The prompt builder takes the whole lesson (truncated to 2,000
+characters), the whole latest memo (likewise), the keyword line, and the
+last eight history entries. Nothing is selected by relevance to the
+current candidate, nothing is ranked, and nothing is searched.</p>
+<p>For a loop that works on one program with one champion, that is a
+defensible choice: the corpus is small and the relevant material is
+recent by construction. It also means the keyword counter is the only
+mechanism that compresses anything, which makes its being unfiltered the
+more costly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous, and mostly wholesale. <code>save_lesson</code> writes
+the file, replacing whatever was there. A memo is written once under its
+generation's name and never revised. <code>append_history</code> appends
+and then truncates the list to <code>MAX_HISTORY = 500</code>.
+<code>_dedup_check</code> adds a hash and rewrites the sorted array.</p>
+<p>The snapshot system is the safety net for all of it:
+<code>.kaisen_snapshots/</code> keeps up to 25 full project copies, each
+carrying <code>meta.json</code> with
+<code>{created, reason, kind}</code>, described in the module docstring
+as <em>"the 'unified standard we can always revert back to'."</em> A
+snapshot carrying a <strong>reason</strong> rather than only a timestamp
+is the right shape, and it means a lesson overwritten by mistake is
+recoverable for 25 snapshots — a coarse undo, but a real one, and the
+only history the lesson file has.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A local dashboard, a <code>Ctrl+K</code> natural-language command
+surface whose actions are described as <em>"always revertible"</em>, and
+an agent tool loop that reads the spec, history, champion and lessons,
+runs the pipeline, and edits the spec with validation — snapshotting
+before every mutation.</p>
+<p><strong>KAI</strong> is the interesting surface: a line-oriented
+stdio protocol (<code>python main.py --kai</code>) where another LLM
+sends <code>BASELINE</code>, <code>GOAL</code>, and then
+<code>ACCEPT &lt;id&gt;</code> to instantiate. The prompt for that step
+is <em>"review the spec JSON, then ACCEPT <id> (or CREATE <id>
+<spec-json> to edit it first)"</em> — a draft-then-confirm gate before a
+project exists. It is a gate on configuration rather than on memory
+content, and the party reviewing is the calling model rather than a
+person, so the human-review mark does not apply; but the shape —
+generate a spec, show it, require an explicit accept — is the right one
+for an agent handing work to another agent.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>There is no epistemic state. A candidate is scored or it is not; a
+lesson is whatever prose the last pass wrote.</p>
+<p>The nearest thing to a trust signal is the failure vocabulary, and it
+is applied in one place only. <code>FAILURE_KEYWORDS</code> drives the
+banner in <code>build_history_blob</code> and is not consulted by
+<code>keyword_counts</code>, which is the function whose docstring
+claims to report how often a technique failed. The two halves of the
+"how many times did X fail" idea are in the same 110-line file and are
+not connected.</p>
+<p>Guardrails do real work on the write path: an edit-scope check
+refuses a candidate that changes functions outside an allowed set, with
+the message naming them, and <code>_check_baseline_source</code> hashes
+the baseline file and warns loudly when it has changed since the
+champion was measured — <em>"instead of silently scoring against the
+wrong reference."</em> That second one is a genuine staleness check on a
+stored artifact, and it is the sort of thing most harnesses discover the
+hard way.</p>
+<p>No capability mark is carried. That is a real answer rather than an
+omission: history is a ring rather than an audit log, the visited set is
+a visited set rather than a tombstone, there is no status field, no
+scope key inside any record, no human gate on memory content, and the
+206 committed test functions assert things about autofix, routing, gates
+and the KAI protocol rather than about what memory must not return.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>206 test functions across ten files — autofix, KAI, LLM repair,
+routing, safe flight, the server API, skill stats, suggest gates, and
+two release-specific suites. The autofix tests are the most detailed,
+asserting both directions of mechanical repairs, including that an
+include is not added twice.</p>
+<p><code>test_failure_feedback_includes_constraint_violations</code> is
+the only test touching the memory path, and it asserts the positive: a
+constraint violation <em>does</em> reach the failure feedback. Nothing
+asserts a negative — that a duplicate is skipped, that a lesson does not
+leak between projects, that the keyword line contains anything useful.
+The dedup path, which is the one mechanism with permanent consequences,
+has no test at all.</p>
+<p>There is no benchmark and no measurement of whether the memory helps.
+For a system whose premise is measurable improvement — every candidate
+is scored by a real pipeline — the absence is notable: the machinery to
+A/B a prompt-memory change against a fixed baseline is already built and
+pointed at the code instead.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<p><strong>Hoist failures above chronology.</strong> The information is
+usually already in the history; putting it first under its own banner
+costs an ordering and changes what the model reads first.</p>
+<p><strong>Put a reason on a snapshot.</strong>
+<code>{created, reason, kind}</code> turns a backup directory into
+something a person can navigate six weeks later.</p>
+<p><strong>Hash the baseline your champion was measured
+against.</strong> Detecting that the reference moved is cheaper than
+discovering it through a mysteriously improved score.</p>
+<p><strong>Do not let a permanent block outlive its
+explanation.</strong> If a decision is enforced forever, the record of
+why belongs in a store with the same lifetime — otherwise the system
+accumulates refusals it cannot justify.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the C normalizer produce a false duplicate on Python
+projects? The mechanism is deterministic and the collision is easy to
+construct, but nothing logs a near-miss, so the rate on a real run is
+unknown and the symptom — a silently discarded candidate — is
+indistinguishable from a genuine repeat.</li>
+<li>Was <code>keywords.txt</code> meant to filter the counter? A reader
+exists, no caller does, and the file name suggests exactly the missing
+argument to <code>keyword_counts</code>. Reading the tree cannot tell a
+dropped intention from an unfinished one.</li>
+<li>What happens to the visited set across a snapshot restore?
+<code>seen_hashes.json</code> is in the snapshot ignore list, so
+reverting a project to an earlier snapshot keeps every hash learned
+since — deliberate if the intent is never to re-evaluate, surprising if
+the intent is to return to an earlier state.</li>
+<li>Does anything ever shrink <code>seen_hashes.json</code>? For a
+system designed to run <em>"forever by default"</em>, an unbounded set
+read and rewritten every generation is the one structure whose cost
+grows without a stated bound.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kaisen/memory.py</code></td>
+<td>All four memory kinds, the failure vocabulary, and the keyword
+counter</td>
+</tr>
+<tr>
+<td><code>kaisen/state.py</code></td>
+<td>Project state and the 500-entry history ring</td>
+</tr>
+<tr>
+<td><code>kaisen/engine.py</code></td>
+<td><code>_dedup_check</code>, the baseline-drift check, and prompt
+assembly</td>
+</tr>
+<tr>
+<td><code>kaisen/skills.py</code></td>
+<td><code>normalize_code</code> and <code>semantic_hash</code>, with the
+language branch</td>
+</tr>
+<tr>
+<td><code>kaisen/snapshots.py</code></td>
+<td>Up to 25 full project copies, each with a reason</td>
+</tr>
+<tr>
+<td><code>kaisen/guardrails.py</code></td>
+<td>Edit-scope enforcement on candidates</td>
+</tr>
+<tr>
+<td><code>kaisen/kai.py</code></td>
+<td>The line-oriented sidecar protocol and the ACCEPT gate</td>
+</tr>
+<tr>
+<td><code>docs/KAI.md</code></td>
+<td>The LLM-facing protocol reference</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78"><code class="commit-id" title="f56a980bdd9daa8395e56a91eeb50bdbc625cd78">f56a980b…</code></a>
+— first reading. Screened before reading: no auto-run surface, one
+dependency manifest inside the seven-day cooldown, one unpinned range,
+and a <code>tests/conftest.py</code> that executes on collection.
+Nothing was installed and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

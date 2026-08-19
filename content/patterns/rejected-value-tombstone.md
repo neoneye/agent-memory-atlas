@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-one systems of three hundred and five
+> **This is not an established best practice.** Twenty-one systems of three hundred and seven
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -129,7 +129,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-one systems of 305 in the atlas have this.** That is still the most
+**Twenty-one systems of 307 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -219,8 +219,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of three hundred and four
-would suggest a hard idea that a few teams reach independently. One of three hundred and four, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of three hundred and seven
+would suggest a hard idea that a few teams reach independently. One of three hundred and seven, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 

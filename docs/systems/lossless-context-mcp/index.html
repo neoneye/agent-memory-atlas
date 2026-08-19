@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A content-addressed archive of
+every file version an agent was shown, hook-fed so a compaction cannot
+destroy the working set — and a benchmark whose headline result is that
+its own compression saves nothing on real sessions.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="lossless-context-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="A content-addressed archive
+of every file version an agent was shown, hook-fed so a compaction
+cannot destroy the working set — and a benchmark whose headline result
+is that its own compression saves nothing on real sessions.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="lossless-context-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A content-addressed
+archive of every file version an agent was shown, hook-fed so a
+compaction cannot destroy the working set — and a benchmark whose
+headline result is that its own compression saves nothing on real
+sessions.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>lossless-context-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "lossless-context-mcp",
+      "description": "A content-addressed archive of every file version an agent was shown, hook-fed so a compaction cannot destroy the working set \u2014 and a benchmark whose headline result is that its own compression saves nothing on real sessions.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It publishes the number where it loses</p>
+          <h1>lossless-context-mcp</h1>
+          <p class="document-deck">A content-addressed archive of every
+file version an agent was shown, hook-fed so a compaction cannot destroy
+the working set — and a benchmark whose headline result is that its own
+compression saves nothing on real sessions.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NORTHTEKDevs/lossless-context-mcp">
+              <span>Source</span>
+              <strong>NORTHTEKDevs/lossless-context-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/47440a012e701fd8eddd4167fb5c3fa7faa44fdb" title="47440a012e701fd8eddd4167fb5c3fa7faa44fdb">
+              <span>Analyzed revision</span>
+              <code>47440a01…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-19</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>lossless-context-mcp is a flight recorder for a coding agent's
+context — MIT, TypeScript, roughly 4,800 lines across seventeen modules,
+20 commits and 4 contributors since 31 May 2026. It archives every file
+version the agent was shown, content-addressed, with an append-only
+event log of when and how, and stands four products on that substrate:
+<strong>restore</strong> (put the working set back after a compaction),
+<strong>packs</strong> (one cache-friendly prefix for a fan-out fleet),
+<strong>receipts</strong> (git-bound attestation of exactly what the
+model saw), and <strong>metering</strong> (where the read tokens
+went).</p>
+<p>The engineering is careful and well argued throughout, but the reason
+this report exists is <code>BENCHMARK.md</code>, which is the most
+honest benchmark document in this corpus.</p>
+<p>It defines two mandatory metrics. Savings is
+<code>1 − (sent / baseline)</code> with a real tokenizer. Losslessness
+is a <strong>byte-for-byte reconstruction of the view the model would
+hold, after every single operation</strong>, where <em>"one divergence =
+fail"</em> — and the document states the reason a savings number alone
+is not a result: <em>"A savings number without a reconstruction proof is
+a marketing number."</em></p>
+<p>Then it publishes three workloads, and the headline is the one that
+does not flatter the project. The synthetic ceiling saves
+<strong>72.1%</strong>. The synthetic floor saves <strong>0.0%</strong>
+— correct, since first-contact reads must never be reduced. And the
+real-session replay, over 1,839 transcripts and 16,823 reads, measures
+<strong>−1.4%</strong>: the tool costs tokens. A re-measurement on a
+grown corpus of 3,363 transcripts and 26,041 reads puts it at
+<strong>−2.6%</strong>.</p>
+<p>The explanation is given rather than hedged around: only 7–8% of
+reads are re-reads, the median session re-reads nothing, most re-reads
+arrive <em>changed</em>, and a unified diff regularly exceeds the
+content it patches — because <em>"the harness's native file-state cache
+already eliminated redundant re-reads."</em> The document even grades a
+competing approach through the same harness on the same corpus, at
+−0.2%. And it draws the general rule: <em>"Any context tool that quotes
+only its ceiling is quoting the wrong number."</em></p>
+<p>A project publishing, as a headline table row, that its compression
+feature has negative value on the workload people actually run is rare
+enough to be the finding. It also reframes the system: what remains
+valuable is everything the benchmark does <em>not</em> score — surviving
+compaction, blocking a blind edit, and proving after the fact what the
+model saw.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two ideas do the work.</p>
+<p><strong>A file version is a memory with an identity, and the identity
+is its content.</strong> Blobs are stored under the SHA-256 of what they
+contain, with a git blob sha1 recorded beside it so a version can be
+tied to a commit. Writes are idempotent by construction — temp file then
+rename — and the design note draws the conclusion that matters
+operationally: <em>"two writers racing on the same hash produce the same
+bytes."</em></p>
+<p><strong>Concurrency is designed away rather than locked
+away.</strong> Each writing process appends only to its own
+<code>events/&lt;writer&gt;.jsonl</code>. There is no lock anywhere in
+the archive, and multi-process safety is a property of the file layout
+instead of a protocol anyone has to honour. Readers merge the logs.</p>
+<p>The third idea is the one worth stealing, and it is about what
+<em>not</em> to store. Paths matching a secret deny list are never
+written to blobs — but the event is still appended, carrying
+<code>excluded: true</code>. <strong>The record that the agent read
+something survives; the content does not.</strong> Most systems facing
+this choice drop both, and lose the ability to say afterwards what was
+touched.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Reads arrive from MCP tools and from transcript sweeps at PreCompact; content-addressed blobs are written once and never updated, while deny-listed paths get an event with excluded:true and no blob — so the record of the access survives without the secret. Restore, packs and receipts all read from that one substrate.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Reads arrive from MCP tools and from transcript sweeps at PreCompact; content-addressed blobs are written once and never updated, while deny-listed paths get an event with excluded:true and no blob — so the record of the access survives without the secret. Restore, packs and receipts all read from that one substrate.
+flowchart TD
+    M[&quot;MCP read_file&quot;] --&gt; A
+    S[&quot;PreCompact sweep&lt;br/&gt;parses transcript — native Read/Edit/Write too&quot;] --&gt; A
+    A{&quot;isExcluded(path)?&lt;br/&gt;deny list + LOSSLESS_ARCHIVE_EXCLUDE&lt;br/&gt;+ symlink target resolved&quot;}
+    A --&gt;|&quot;denied&quot;| E1[&quot;event appended, excluded: true&lt;br/&gt;&lt;i&gt;no blob written&lt;/i&gt;&quot;]
+    A --&gt;|&quot;allowed&quot;| B[&quot;blob written under SHA-256&lt;br/&gt;temp file + rename, idempotent&quot;]
+    B --&gt; E2[&quot;event appended to events/&amp;lt;writer&amp;gt;.jsonl&lt;br/&gt;ts, session, path, repo, hash,&lt;br/&gt;gitBlobSha1, bytes, tokens, op, sidechain&quot;]
+    E1 --&gt; L[&quot;append-only log, one file per writer&lt;br/&gt;&lt;i&gt;no locking anywhere&lt;/i&gt;&quot;]
+    E2 --&gt; L
+    L --&gt; R[&quot;restore_context&lt;br/&gt;ranked working set, budget-capped,&lt;br/&gt;changed files annotated&quot;]
+    L --&gt; P[&quot;packs — stable hot files&lt;br/&gt;across sessions&quot;]
+    L --&gt; C[&quot;receipts — git-bound&lt;br/&gt;what did it see&quot;]
+    G[&quot;PreToolUse guard&quot;] --&gt;|&quot;model has not seen&lt;br/&gt;current version&quot;| X[&quot;edit BLOCKED&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Seventeen modules. <code>archive.ts</code> is the substrate.
+<code>sweep.ts</code> parses transcripts. <code>guard.ts</code> and
+<code>session-guard.ts</code> decide whether an edit may proceed.
+<code>restore.ts</code> writes and reads working-set manifests.
+<code>pack.ts</code>, <code>slice.ts</code> and <code>outline.ts</code>
+shape what gets emitted. <code>receipt.ts</code> and
+<code>gitid.ts</code> do attestation. <code>meter.ts</code> does the
+token accounting. <code>presence.ts</code> and <code>blame.ts</code>
+handle multi-agent coordination.</p>
+<p>Five hooks in <code>hooks/</code> are the integration surface, and
+the screen flags the directory as auto-running for exactly that reason:
+these are scripts a harness executes on its own schedule.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The guard's self-vouch rule</strong> is the sharpest piece of
+reasoning in the repository, and it is a general lesson about any system
+that decides whether a caller has earned a permission by reading a log
+the caller is already in:</p>
+<blockquote>
+<p>SELF-VOUCH RULE (the guard's load-bearing invariant): for guarded
+tools (Edit/Write/MultiEdit), only tool RESULTS may mark a file as seen
+— never the tool_use intent block. The current call's own tool_use is
+already in the transcript when PreToolUse fires, so intent-based marking
+would let every edit approve itself … Results only exist after
+successful execution, so a pending call can never vouch for itself,
+regardless of hook/transcript write ordering.</p>
+</blockquote>
+<p>The exception is stated with its failure direction named rather than
+buried: intent-based marks are allowed for the server's own read tools,
+where <em>"worst case here is a false ALLOW when a read later errors,
+which is the fail-open direction."</em> Knowing which way your exception
+fails, and writing it down beside the exception, is the practice this
+atlas keeps asking for.</p>
+<p><strong>The sweep</strong> runs on the compaction path, which means
+its cost is a correctness constraint rather than a nice-to-have. The
+README publishes the measurement — one real 14 MB transcript swept in
+361 ms — and ships the command to reproduce it on your own
+transcript.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ArchiveEvent</code> carries <code>ts</code>,
+<code>session</code>, <code>path</code>, <code>repo</code>,
+<code>hash</code> (SHA-256 of the content version), optional
+<code>gitBlobSha1</code>, <code>bytes</code>, <code>approxTokens</code>,
+<code>source</code> (<code>mcp</code> or <code>sweep</code>),
+<code>op</code> (<code>read</code>, <code>edit</code> or
+<code>write</code>), <code>view</code>, and two booleans worth naming:
+<code>sidechain</code>, true when the event came from a subagent
+transcript line, and <code>excluded</code>, true when the path matched
+the deny list.</p>
+<p><code>sidechain</code> is a small field with a large implication.
+Subagent transcripts are a known contamination source for systems that
+mine transcripts for durable content — this atlas found exactly that
+failure in another system read the same day. Here the provenance is
+recorded on the row rather than the subagent runs being silently folded
+in or silently dropped, which leaves the decision to the consumer.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search index and no ranking model. Retrieval is
+re-emission from a ranked working set: <code>restore_context</code>
+replays the manifest from <strong>current disk state</strong>, capped by
+a token budget, <em>"annotating any file that changed since the model
+last saw it."</em></p>
+<p>That annotation is the part that matters. Re-emitting a stale copy
+would be worse than not restoring at all, because the model would
+proceed confidently on a file that has since moved. Marking drift at the
+moment of restore keeps the mechanism honest about the one thing it
+cannot control — the disk.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Hook-fed and append-only. The PreCompact sweep parses the session
+transcript and archives everything the session touched, explicitly
+including native <code>Read</code>, <code>Edit</code> and
+<code>Write</code> results rather than only this server's own MCP reads
+— which is what makes it a recorder of the agent's context rather than
+of its own usage.</p>
+<p>Nothing is ever updated. A changed file is a new blob under a new
+hash, and the old version remains addressable.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server plus five hooks: <code>sweep-transcript</code> at
+PreCompact, <code>inject-manifest</code> at SessionStart(compact),
+<code>guard-edit</code> at PreToolUse, <code>publish-edit</code>, and
+<code>reset-epoch</code>. The demo recordings in the README are
+generated by a script that <em>"drives the real hooks and server and
+renders what they actually said"</em>, and the README tells the reader
+to re-run it — a recording generated from the shipped code is a
+materially different claim from a recording made by hand, and the
+distinction is stated rather than assumed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Secret hygiene is the strongest part, and it is tested where it
+should be. The deny list covers <code>.env</code>,
+<code>.env.production</code>, a Windows-shaped <code>.env.local</code>
+and <code>secrets.json</code>; a near-miss (<code>environment.ts</code>)
+is asserted <strong>not</strong> to be denied, which is the half of a
+deny-list test that usually goes missing; a user-supplied
+<code>LOSSLESS_ARCHIVE_EXCLUDE</code> glob is honoured; and there is a
+case for <em>"an innocuously named symlink pointing at a secret"</em>,
+so the check resolves the target rather than trusting the name.</p>
+<p>There is no epistemic state on content — nothing stored is a claim,
+and a blob is a byte sequence the model was shown. What the system does
+track is whether the model has seen the <em>current</em> version of a
+file, and it refuses an edit when it has not. That is authorization
+derived from history rather than a trust ladder, and the trust mark is
+withheld for that reason.</p>
+<p>Scope is recorded but not enforced on a read path:
+<code>session</code> and <code>repo</code> sit on every event and
+manifests are per-session files, while the boundary that is genuinely
+enforced — the deny list — is applied at write time. A reader wanting
+tenant-style isolation should not read the recorded keys as one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twelve test files covering the archive, engine, guard, session guard,
+receipts (two generations), restore and packs, slice, sweep, meter,
+presence and blame.</p>
+<p>The benchmark is covered in section 1 and is the reason to read this
+repository even if you never install it. Three properties are worth
+restating as transferable practice:</p>
+<ul>
+<li><strong>Losslessness is a gate, not a metric.</strong> Reconstruct
+the model's view after <em>every</em> operation and compare
+byte-for-byte; one divergence fails the run.</li>
+<li><strong>Publish the floor and the ceiling and the realistic
+case</strong>, and let the realistic case be the headline when it is the
+unflattering one.</li>
+<li><strong>Grade the competitor through your own harness on your own
+corpus</strong>, and publish that number too — here, −0.2% for a
+marker-only dedup approach, which makes the −2.6% legible as a property
+of the workload rather than of the tool.</li>
+</ul>
+<p>What is not committed is the raw per-transcript output. The corpus is
+the author's own <code>~/.claude/projects</code> history and cannot be
+published, which is stated; the harness and the commands to re-run it on
+your own history are shipped, which is the reproducible half of the
+claim and is the right trade for a corpus made of private
+transcripts.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<p><strong>Record the access, withhold the content.</strong>
+<code>excluded: true</code> keeps the audit trail complete while the
+secret never lands on disk. Dropping the event too would make the
+archive quietly incomplete in exactly the cases someone will later ask
+about.</p>
+<p><strong>Design concurrency out of the format.</strong> One
+append-only file per writer plus content-addressed idempotent blobs
+removes the need for a lock, and therefore the need for every future
+writer to remember one.</p>
+<p><strong>A pending call must never vouch for itself.</strong> Any
+check that reads a log the subject is already in has this bug available
+to it; the fix is to accept only evidence that could not exist before
+the fact.</p>
+<p><strong>Name the direction your exception fails in.</strong> "The
+fail-open direction", written beside the exception, tells the next
+reader what they are trading.</p>
+<p><strong>Annotate drift at re-emission.</strong> Restoring from
+current disk is right; saying which files moved since the model last saw
+them is what keeps it safe.</p>
+<p><strong>Publish the number where you lose.</strong> The credibility
+the −2.6% row buys is worth more than the 72.1% row it sits beside, and
+the document says why.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What is the system worth when the compression is worth nothing?
+Restore, coordination and receipts are the surviving value and none of
+them is scored by the benchmark; the project has built the harness
+culture to measure them and has not pointed it at them.</li>
+<li>Does the archive have a retention policy? Every version of every
+file the agent ever read is kept, content-addressed, and no eviction,
+TTL or size cap appears in the archive module.</li>
+<li>What does a consumer do with <code>sidechain</code>? The provenance
+is recorded on every event, and whether ranking, packs or receipts treat
+a subagent read differently from a main-thread read is not something the
+field's presence answers.</li>
+<li>Is <code>excluded: true</code> reachable in a receipt? An
+attestation of what the model saw is most interesting precisely where
+content was withheld, and how a receipt renders an excluded event
+decides whether the audit trail survives into the artifact people would
+actually show someone.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/archive.ts</code></td>
+<td>The content-addressed store, the event schema, the deny list, and
+the no-locking argument</td>
+</tr>
+<tr>
+<td><code>src/guard.ts</code></td>
+<td>The self-vouch rule and the edit decision</td>
+</tr>
+<tr>
+<td><code>src/session-guard.ts</code></td>
+<td>Single-claim coordination between concurrent agents</td>
+</tr>
+<tr>
+<td><code>src/sweep.ts</code></td>
+<td>Transcript parsing at PreCompact, including native
+Read/Edit/Write</td>
+</tr>
+<tr>
+<td><code>src/restore.ts</code></td>
+<td>Working-set manifests, per-session, and budget-capped
+re-emission</td>
+</tr>
+<tr>
+<td><code>src/receipt.ts</code>, <code>src/gitid.ts</code></td>
+<td>Git-bound attestation of exact versions</td>
+</tr>
+<tr>
+<td><code>hooks/</code></td>
+<td>The five Claude Code hooks — the auto-running surface the screen
+flags</td>
+</tr>
+<tr>
+<td><code>test/archive.test.ts</code></td>
+<td>Deny-list cases, the near-miss, the glob, and the symlink</td>
+</tr>
+<tr>
+<td><code>BENCHMARK.md</code></td>
+<td>Two mandatory metrics, three workloads, and the negative
+headline</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/47440a012e701fd8eddd4167fb5c3fa7faa44fdb"><code class="commit-id" title="47440a012e701fd8eddd4167fb5c3fa7faa44fdb">47440a01…</code></a>
+— first reading. Screened before reading: two auto-run surfaces — the
+<code>hooks/</code> directory, which is the product, and
+<code>server.json</code>, an MCP manifest — one build-time
+<code>package.json</code> lifecycle script, one unpinned range with a
+<code>package-lock.json</code> beside it. Nothing was installed and
+nothing was executed; the benchmark numbers were read rather than
+reproduced, and the corpus they were measured on is the author's own
+transcript history and is not published.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

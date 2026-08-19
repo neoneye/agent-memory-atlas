@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **305 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **307 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -184,6 +184,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/kage/"><span class="az-id">Kage</span><span class="az-what">Memory verified against the code</span><code class="az-repo">kage-core/kage</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/kaisen/"><span class="az-id">KAISEN</span><span class="az-what">The block outlives the reason for it</span><code class="az-repo">RAZZULLIX/KAISEN</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/kirocrew/"><span class="az-id">Kiro Crew</span><span class="az-what">Seven ways a write is refused</span><code class="az-repo">kirodotdev/KiroCrew</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/klypix-mcp/"><span class="az-id">Klypix MCP</span><span class="az-what">The state machine is a regex over the card&#x27;s own prose</span><code class="az-repo">dahshanlabs/klypix-mcp</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/knowledge-worker/"><span class="az-id">knowledge-worker</span><span class="az-what">The excerpt has to appear in the source</span><code class="az-repo">rahulmranga/knowledge-worker</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
@@ -204,6 +205,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/logseq/"><span class="az-id">Logseq</span><span class="az-what">A human knowledge base agents can write to</span><code class="az-repo">logseq/logseq</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/loongflow/"><span class="az-id">LoongFlow</span><span class="az-what">Stochastic recall</span><code class="az-repo">baidu-baige/LoongFlow</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/lorekit/"><span class="az-id">LoreKit</span><span class="az-what">Multi-tenant lesson store</span><code class="az-repo">mthines/lorekit</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/lossless-context-mcp/"><span class="az-id">lossless-context-mcp</span><span class="az-what">It publishes the number where it loses</span><code class="az-repo">NORTHTEKDevs/lossless-context-mcp</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## M
