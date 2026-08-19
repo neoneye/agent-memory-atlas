@@ -21503,6 +21503,59 @@ for paper dolls satisfies the shorthand without being one — which is the
 useful part, because the same shape describes any interface that
 persists per-agent decoration beside a real memory system and would read
 as memory in a directory listing.</li>
+<li><strong><code>NVIDIA/SkillEvaluator</code> was examined and has no
+report: it grades procedural memory rather than holding any, and two of
+its mechanisms are worth more than that boundary suggests.</strong>
+Apache-2.0, 125,985 lines of Python, 59 commits and 7 contributors since
+26 July 2026, at <a
+href="https://github.com/NVIDIA/SkillEvaluator/commit/aa195cacf1f115c86fd11d3c2821ea267c843ef2"><code class="commit-id" title="aa195cacf1f115c86fd11d3c2821ea267c843ef2">aa195cac…</code></a>.
+It is a three-tier evaluation framework for <a
+href="https://agentskills.io/">Agent Skills</a> — deterministic
+validation gates, semantic overlap detection, synthetic eval-dataset
+generation, and sandboxed live agent runs through <a
+href="https://github.com/harbor-framework/harbor">Harbor</a>. The scope
+call is the one already drawn for <code>zenml-io/kitaru</code> above:
+<strong>it judges agents, it is not memory for them.</strong> The
+vocabulary confirms it and also demonstrates why the probe alone cannot
+be trusted — <code>forget</code> is zero, all 35 <code>memory</code>
+hits are RAM (<code>--override-memory-mb</code>, "in-memory agents
+data"), and all ten apparent <code>recall</code> hits are the substring
+inside <code>IgnoreCallback</code>. What it persists is an embedding
+catalog of skills built to answer "is this new one a duplicate", which
+is the corpus-index boundary already drawn for
+<code>ShamGaneshan2008/Kodiak</code> — an index of artifacts, not a
+store of anything an agent believes. <strong>The first mechanism worth
+recording is that catalog's load contract</strong>, which is the
+strictest embedding-provenance check in anything read for this atlas. A
+saved catalog carries <code>schema_version</code>,
+<code>provider</code>, <code>model</code>, <code>mode</code>
+(<code>full-body</code> or <code>description</code>), an endpoint
+fingerprint, a vector dimension, and a SHA-256
+<code>content_fingerprint</code> per entry; <code>load_catalog</code>
+<strong>refuses</strong> — raises, rather than warning or degrading — on
+a mismatch of any of them, so the same model name served from a
+different endpoint is rejected, and a catalog built over descriptions
+cannot be queried as though it were built over bodies. This atlas
+repeatedly finds vector stores that silently mix embeddings from
+different models and compare them anyway; here it is impossible by
+construction, and the refusal is the whole difference. <strong>The
+second is the Tier 3 lift verdict</strong>, which is the ablation the
+atlas keeps asking for and rarely finds: the same eval dataset is run
+<code>with_skill</code> and <code>without_skill</code>, and the delta
+decides whether the skill earned its place. The thresholds are
+asymmetric and there is a deliberate dead zone — pass at
+<code>+0.05</code>, fail at <code>−0.10</code>, neutral between — with
+the reason committed beside the constants: <em>"Small deltas stay
+neutral because live agent runs are noisy, especially with low attempt
+counts."</em> A measurement that declines to call a result in the band
+where it cannot tell signal from noise is the practice the <a
+href="../benchmarks/">benchmarks page</a> exists to ask for, and a
+procedural-memory system that cannot say whether its instructions help
+is the common case. Recorded by name because a repository whose product
+is <em>evaluating the thing this atlas reviews</em> would otherwise look
+like an oversight in a candidate list, and because both mechanisms are
+separable from the framework: neither needs a skill, an agent, or
+NVIDIA's pipeline to be worth copying.</li>
 <li><strong>A count in the headline findings drifted for want of a
 binding, and the hedge beside it is why.</strong> The gaps section read
 <em>"Sixteen, in this entire atlas, can record that a value was rejected
