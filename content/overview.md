@@ -71,7 +71,7 @@ literature survey is not: nine of the fifteen systems it works through
 survey and not a coded corpus, so it is weaker evidence than the study above;
 the overlap is what makes it worth citing.
 
-Where it agrees, it agrees on the thing this report already argues at length:
+Where it agrees, it agrees on ground this report argues at length:
 that a verifier has to be able to disagree on grounds the workers cannot
 manufacture by agreeing with each other, which is the same objection as
 [retrieval certifying its own outputs](#retrieval-certifying-its-own-outputs)
@@ -887,9 +887,9 @@ search split into an optional `SearchableMemoryStore` extension. It is a
 targeted, addressed removal in the contract itself, and it is the only one. The
 three contracts added since — Agno's `LearningStore`, Microsoft's
 `ContextProvider`, and CAMEL's `AgentMemory`, whose only removal verb is `clear`
-— leave the shape unchanged. So the honest statement is no longer "nobody
-declares deletion" but **one of nine does**, which is the stronger claim: it
-proves the thing is expressible in a small protocol, and names who bothered. See
+— leave the shape unchanged. So the statement the contracts support is that
+**one of nine declares deletion**, which is the stronger claim: it proves the
+thing is expressible in a small protocol, and it names who bothered. See
 [pluggable memory provider](../patterns/pluggable-memory-provider/).
 
 **Microsoft's next contract is the third from these two vendors and keeps the
@@ -2461,7 +2461,7 @@ that could turn out to be false**. A system whose memory is a window has no
 answer to "why do you believe that?" or "forget what I told you last week",
 because it never claimed to remember.
 
-The shorthand for that test used to be *nothing survives the session*, and
+*Nothing survives the session* is the wrong shorthand for that test, and
 [SALT](#salt) below is the case that pulls the two apart: it persists a
 per-conversation corpus to disk, resumes it across processes, and selects from
 it by query — while every row in it is a verbatim sentence the session itself
@@ -3390,7 +3390,7 @@ compaction-summary exclusion, `nanobot`'s internal-session filter, and
 `cowagent`'s distillation rules. Any system that both generates text and
 captures text will eventually capture its own.
 
-Five systems in the atlas now call consolidation **dreaming**, arrived at
+Five systems in the atlas call consolidation **dreaming**, arrived at
 independently: `magic-context`'s dreamer subagent, `nanobot`'s Dream pass,
 `cowagent`'s Deep Dream, `deepcode`'s `autodream`, and — under a different name
 for the same idea — `metaclaw`'s replay. The convergence is not only nominal. All
@@ -4034,7 +4034,7 @@ answer to *is it gone*. Two reports already do this reasoning one layer higher �
 `membase` records that deletion by `memory_index` leaves the Chroma document and
 the uploaded hub blob behind, and `voyager` that old versions stay on disk but
 unreachable — and step 9 of the deletion sequence on the
-[benchmarks page](../benchmarks/) already names embeddings among the derived
+[benchmarks page](../benchmarks/) names embeddings among the derived
 artifacts a forgetting test would have to check. The method anticipated this
 layer. No per-system review has entered it, because entering it means leaving
 the repository under review.
@@ -4697,7 +4697,7 @@ nothing audits compliance, and the action-verified axiom leaves no record of the
 tool call that justified a write.
 
 **The largest artifact of this kind in the field is not in any repository this
-atlas reports on, and it is now measurable.**
+atlas reports on, and it is measurable.**
 [Piebald-AI/claude-code-system-prompts](https://github.com/Piebald-AI/claude-code-system-prompts),
 read on 2026-08-09 at
 [`61e5bb8a47fcb657c1258c29516e262fd1468820`](https://github.com/Piebald-AI/claude-code-system-prompts/commit/61e5bb8a47fcb657c1258c29516e262fd1468820),
