@@ -172,17 +172,17 @@ Where the atlas has an exact count — the seven mechanisms on
 <!-- BEGIN GENERATED SPREAD -->
 | Mechanism | Systems carrying it |
 | --- | --- |
-| Scope enforced in retrieval | 165 of 302 |
-| Append-only mutation audit | 87 of 302 |
-| Negative retrieval assertion | 83 of 302 |
-| Human review surface | 79 of 302 |
-| Explicit trust state | 64 of 302 |
-| Bi-temporal validity | 35 of 302 |
-| Rejected-value tombstone | 21 of 302 |
+| Scope enforced in retrieval | 165 of 303 |
+| Append-only mutation audit | 88 of 303 |
+| Negative retrieval assertion | 84 of 303 |
+| Human review surface | 79 of 303 |
+| Explicit trust state | 65 of 303 |
+| Bi-temporal validity | 35 of 303 |
+| Rejected-value tombstone | 21 of 303 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in thirty-three
-systems of three hundred and two — or in nineteen — is **not a best
+systems of three hundred and three — or in nineteen — is **not a best
 practice**. There is no consensus behind it, no library that gives it to you, and nobody to
 ask when your implementation has a hole.
 Adopting it means building it.
@@ -346,7 +346,7 @@ No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
 
-**And be clear about what that thinning means.** Twenty-one of three hundred and two systems carry a
+**And be clear about what that thinning means.** Twenty-one of three hundred and three systems carry a
 tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
 failure it will pay for later, or the cost genuinely exceeds the benefit for most

@@ -118,7 +118,7 @@ trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>302 memory systems with publicly readable source, each read at a
+<p>303 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. "Readable" is not "open source" — sixteen carry a
 non-open-source licence, listed in the <a
@@ -126,7 +126,7 @@ href="#what-the-licences-actually-say">appendix</a>. Five findings, with
 the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 21
-systems of 302 carry a rejected-value tombstone — a record keyed on the
+systems of 303 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -221,7 +221,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>302 reports across 301 repositories</strong>:
+<strong>303 reports across 302 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -267,7 +267,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-one tombstones, eighty-three negative-eval suites — are counts
+twenty-one tombstones, eighty-four negative-eval suites — are counts
 <em>over inspectable code</em>, and a closed system could hold any of
 these mechanisms without this method ever knowing. And a mechanism's
 absence here is weaker evidence about the field than its presence:
@@ -296,7 +296,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 165 of
-302 systems here have, and is what the mark means. A scope
+303 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -315,7 +315,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Three hundred and two systems do not fall into one hundred and
+<p>Three hundred and three systems do not fall into one hundred and
 seventy categories. They cluster around eight architectural commitments,
 and most systems belong to more than one — a coding-agent memory can
 also be verification-first, and a host runtime's plugin can also be a
@@ -3598,7 +3598,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 302 systems by the seven mechanisms judged against strict
+filters all 303 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -11048,6 +11048,54 @@ store; and <code>override_rejection</code> is a plain tool argument the
 model can set for itself</td>
 </tr>
 <tr>
+<td><code>repowise</code></td>
+<td>Five layers over one index — a generated wiki page (versioned), a
+graph node or edge, a decision record with N evidence rows beneath it, a
+health or security finding, and a git-derived commit and blame
+record</td>
+<td>SQLAlchemy async over SQLite by default at
+<code>&lt;repo&gt;/.repowise/wiki.db</code>, or PostgreSQL; FTS5 or a
+Postgres GIN index for lexical, and LanceDB, pgvector or an in-memory
+store for dense</td>
+<td>Lexical and dense over generated pages, fused and neighbor-reranked,
+with a graph walk for structural questions; the answer path grades its
+own output twice, as <code>confidence</code> and as
+<code>retrieval_quality</code></td>
+<td>Batch, through an indexing pipeline with a full and an incremental
+mode; decision candidates from inline markers, git archaeology, README
+mining, session transcripts and an LLM docs harvest all pass the same
+grounding gate before persistence</td>
+<td>Re-indexing overwrites a page and archives the prior version; a
+decision is superseded by pointer (<code>superseded_by</code>, status
+<code>deprecated</code> or <code>superseded</code>) and carries a
+<code>staleness_score</code> recomputed against the git history of the
+files it governs. No tombstone — nothing blocks a superseded decision
+from being re-extracted</td>
+<td>Per store, not per query. The default is one SQLite file inside the
+repository; <code>FullTextSearch.search</code> takes no repository
+argument and the Postgres statement carries no repository predicate, so
+the boundary is which engine the router selected</td>
+<td>An MCP server, a CLI, a FastAPI server, a VS Code extension, a web
+dashboard and a Claude Code plugin; the MCP surface is a small tool set
+built around <code>get_answer</code>, <code>search_codebase</code>,
+<code>blast_radius</code> and <code>change_risk</code></td>
+<td>A watch command and an incremental pipeline re-index on change;
+staleness rescoring and health snapshots run as invoked passes</td>
+<td>Three separate axes on a decision — <code>status</code> (proposed,
+active, deprecated, superseded), <code>confidence</code> derived from
+the best source rank plus corroboration count, and
+<code>verification</code> (exact, fuzzy, unverified) recording whether a
+verbatim span of the source supports the text</td>
+<td>A grounding gate that deletes an ungrounded field rather than
+flagging it, and refuses to invent a rejection it cannot justify; and a
+benchmark page that pre-registers a split, publishes the rows it loses,
+and writes 'not measured' where a checkmark would have served</td>
+<td>The gate's guarantee is conditional on the producer having recorded
+a <code>source_text</code> to check against — a candidate that supplies
+none is kept and merely labelled unverified; and scope is a property of
+the store rather than of the query</td>
+</tr>
+<tr>
 <td><code>risuai</code></td>
 <td>A summary of a contiguous run of chat messages, carrying the set of
 message ids it was derived from, an importance pin, a category and
@@ -12393,7 +12441,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>21 of 302:</em> <a
+<p><em>21 of 303:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -12418,7 +12466,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>64 of 302:</em> <a
+<p><em>65 of 303:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -12478,6 +12526,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/recall-substrate/"><code>recall-substrate</code></a>,
 <a href="../systems/redcell/"><code>redcell</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a>,
 <a href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/stash/"><code>stash</code></a>, <a
@@ -12489,7 +12538,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>35 of 302:</em> <a
+<p><em>35 of 303:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -12531,7 +12580,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>165 of 302:</em> <a
+<p><em>165 of 303:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -12704,7 +12753,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>87 of 302:</em> <a
+<p><em>88 of 303:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -12779,6 +12828,7 @@ href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/potpie/"><code>potpie</code></a>, <a
 href="../systems/prime-agent/"><code>prime-agent</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/shodh-memory/"><code>shodh-memory</code></a>, <a
 href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
@@ -12797,7 +12847,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>79 of 302:</em> <a
+<p><em>79 of 303:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -12882,7 +12932,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>83 of 302:</em> <a
+<p><em>84 of 303:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -12958,6 +13008,7 @@ href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
 <a href="../systems/reasonix/"><code>reasonix</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a>,
 <a href="../systems/smythos-sre/"><code>smythos-sre</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
@@ -12986,7 +13037,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-Eighty-three repositories of three hundred and two assert that
+Eighty-four repositories of three hundred and three assert that
 particular material must <em>not</em> be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests
 on. Read together rather than one at a time, they split cleanly in two,
@@ -16623,7 +16674,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across three hundred
-and two systems, almost none can explain why they are shaped the way
+and three systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -18158,6 +18209,16 @@ href="https://github.com/potpie-ai/potpie/commit/a341978880b9d4c1b403831931279cc
 collection, so nothing was installed and the conformance assertions were
 read rather than run</li>
 <li><a
+href="https://github.com/repowise-dev/repowise">repowise-dev/repowise</a>
+at <a
+href="https://github.com/repowise-dev/repowise/commit/370793f9b4e3357f6bf605f0bb86ef421a567548"><code class="commit-id" title="370793f9b4e3357f6bf605f0bb86ef421a567548">370793f9…</code></a>
+— read only; a <code>.claude-plugin/</code> directory and an MCP
+<code>server.json</code> declare start commands, five dependency
+surfaces were inside the seven-day cooldown, and a pytest tree of this
+size carries many <code>conftest.py</code> files that execute on
+collection, so nothing was installed and the published benchmark numbers
+were read rather than reproduced</li>
+<li><a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">Cyb3rb1ade/openclaw-plur1bus-memory</a>
 at <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
@@ -18641,8 +18702,8 @@ from 19 August 2026, and the lesson is narrower than the fix: a mark is
 about what the corpus of committed tests asserts, not about whether one
 harness can express it.</li>
 <li><strong>Two counts of the same corpus sat in one paragraph and
-disagreed.</strong> "Why the two counts differ" opened with <strong>302
-reports across 301 repositories</strong> and closed by saying a count of
+disagreed.</strong> "Why the two counts differ" opened with <strong>303
+reports across 302 repositories</strong> and closed by saying a count of
 systems is 290 and of repositories 289 — the trailing sentence was
 written when the corpus was that size and was not updated with the
 headline. <code>scripts/check_claim_counts.py</code> binds 23 count

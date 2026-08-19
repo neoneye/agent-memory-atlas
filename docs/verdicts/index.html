@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 302 reports.</strong></p>
+<p><strong>This page covers all 303 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7487,6 +7487,73 @@ replayed by aggregate id or loaded by key. Also do not assume an
 interview answer is safe at rest: length validation is not redaction,
 and a credential pasted into one is written to disk in the clear at 0600
 and travels into the Seed.</li>
+</ul>
+<h3 id="repowise"><a
+href="../systems/repowise/"><code>repowise</code></a></h3>
+<ul>
+<li>Best idea: a substring gate that deletes the sentence it cannot
+quote. Every produced <code>decision</code>, <code>rationale</code> and
+<code>source_quote</code> must substring- or token-match the verbatim
+source span its producer recorded; an ungrounded field is cleared rather
+than flagged, a candidate with no surviving grounded field is rejected
+outright, and what survives is stamped <code>exact</code>,
+<code>fuzzy</code> or <code>unverified</code>. It became necessary when
+the page generator started <em>producing</em> decision candidates
+instead of only reading them — the gate is what stops "a
+fluent-but-invented rationale from being stored as institutional
+memory". It is typed on a five-attribute Protocol rather than on either
+producer's class, so the extractor and the generator cannot drift into
+separate definitions of grounded.</li>
+<li>Biggest risk: the gate cannot check what its producer did not
+record. A candidate arriving with no <code>source_text</code> is kept
+and merely labelled <code>unverified</code>, on the stated and
+defensible ground that the system will "never fabricate a rejection we
+cannot justify" — but <code>unverified</code> is one value covering two
+different situations, a source that had nothing quotable and a producer
+that passed nothing, and the schema does not separate them. The strength
+of the product guarantee is therefore a property of the extractors
+rather than of the gate.</li>
+<li>Most reusable component: the answer path's two ratings and its
+demotion-only cascade. <code>confidence</code> says how much to trust
+the synthesized text and <code>retrieval_quality</code> says how good
+the retrieval that fed it was — "the agent reads the first to decide
+whether to re-read the source, the second to decide whether to search
+again" — and the grade starts from retrieval dominance and passes
+through gates that can only demote it. One of those gates reads the
+answer for an admitted non-answer, and carries its own bug in its
+docstring: the hedge markers used an ASCII apostrophe, the model emits
+U+2019, and every apostrophe-bearing marker missed until two Unicode
+apostrophes were normalized first.</li>
+<li>Maturity impression: AGPL-3.0, v0.44.0, roughly 284,000 lines of
+Python across core, server and CLI plus TypeScript surfaces, 1,310
+commits and 64 contributors since 23 March 2026. The benchmark page is
+the maturity signal: a 112-instance corpus split 70/42 by instance id
+"pinned before any of it started" with the 42 sealed until final
+measurement, deterministic grading with no LLM judge, the unflattering
+precision column published beside the coverage column, one row headed
+<strong>we lose</strong> by 22x on indexing time, and two capability
+comparisons labelled "not measured" because the project would "rather
+write 'not measured' than let a checkmark do a number's job". The
+harnesses and graded cells live in a separate
+<code>repowise-bench</code> repository, so this tree holds the claim
+rather than the proof.</li>
+<li>Study when: you are storing claims a model produced about code and
+need a rule for which of them may be persisted. The gate is 110 lines
+and separable, and the three-axis split underneath it — lifecycle
+<code>status</code>, evidence-weight <code>confidence</code>, grounding
+<code>verification</code> — is the part most systems collapse into one
+number.</li>
+<li>Do not copy when: you need scope or retraction.
+<code>FullTextSearch.search</code> takes no repository argument and the
+PostgreSQL statement carries no repository predicate, so the boundary
+between two repositories is which engine the router selected; the
+default of one SQLite file per repository makes that safe, and the
+documented global <code>~/.repowise/wiki.db</code> and the hosted
+PostgreSQL offering do not. And supersession is not retraction:
+<code>superseded_by</code>, the <code>deprecated</code> status and the
+<code>supersedes</code> edge all record a replacement, but nothing
+carries a rejected verdict that the next indexing pass must respect, so
+a superseded decision can simply be extracted again.</li>
 </ul>
 <h3 id="memoir-cli"><a
 href="../systems/memoir-cli/"><code>memoir-cli</code></a></h3>
