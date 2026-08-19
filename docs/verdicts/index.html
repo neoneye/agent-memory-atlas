@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 307 reports.</strong></p>
+<p><strong>This page covers all 308 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7502,6 +7502,56 @@ replayed by aggregate id or loaded by key. Also do not assume an
 interview answer is safe at rest: length validation is not redaction,
 and a credential pasted into one is written to disk in the clear at 0600
 and travels into the Seed.</li>
+</ul>
+<h3 id="fx"><a href="../systems/fx/"><code>fx</code></a></h3>
+<ul>
+<li>Best idea: the write policy is stated where the writer will read it.
+The memory tool's description ends "When NOT to use: store task notes,
+secrets, project facts, temporary context, or anything the user did not
+ask to persist" — a consent rule for memory writes delivered to the only
+component that can honour it, and the direct answer to the
+self-reinforcement problem this atlas keeps naming. The same template
+runs through every tool here, including <code>semantic_search</code>
+telling the model outright that "this is not embedding or true semantic
+search".</li>
+<li>Biggest risk: four different read failures share one answer, and the
+next write acts on it. <code>loadMemories</code> returns an empty list
+when <code>~/.fx/memories.json</code> is missing, unreadable,
+unparseable, past its 1 MiB cap, or rooted at a non-array — no error
+reaches anyone — and <code>save</code> then appends the new fact to that
+empty list and rewrites the file. A hand-edited or truncated store is
+silently replaced by a one-element array, and the tool reports
+"remembered". The failed-<code>clear</code> message names the path and
+invites the user to go look at it, which is the likeliest way the file
+becomes unparseable.</li>
+<li>Most reusable component: <code>isIrreversible</code> returning true
+for <code>clear</code>, which lets every layer above the tool treat that
+call differently without knowing what the tool does. It is also the only
+place in the memory path where the possibility of regret is represented
+at all.</li>
+<li>Maturity impression: Apache-2.0, ~677,000 lines of Zig under
+<code>src/</code>, 394 commits and 6 contributors since 11 August 2026,
+8,286 test blocks, a 7.8 MiB binary, and a README that labels itself
+Experimental. The striking thing is two standards in one repository: the
+session layer has an append-only event log, a two-phase intent/commit
+protocol, lock files with a 2-second deadline, log generations and an
+<code>ImmutableSessionIdentity</code> invariant on compaction — while
+the store the user explicitly asked to keep forever is read-modify-write
+over a whole file with no lock. The memory tests cover the happy path
+(exact dedup, idempotent clear, missing <code>$HOME</code>) and none of
+the four read failures.</li>
+<li>Study when: you want the smallest defensible shape for durable user
+preferences in a coding agent, and a worked example of stating a
+memory-write policy in a tool description when the store cannot enforce
+one.</li>
+<li>Do not copy when: you need memory to be corrected, scoped or shared.
+A memory is a bare string — no id, no timestamp, no origin — so there is
+no per-fact edit or delete and correcting one means clearing all of
+them; <code>list</code> returns the entire store with no query or limit,
+so its size and the context cost of consulting it are the same unbounded
+number; and one file under <code>$HOME</code> is shared by every
+workspace, with two concurrent fx processes losing each other's
+writes.</li>
 </ul>
 <h3 id="lossless-context-mcp"><a
 href="../systems/lossless-context-mcp/"><code>lossless-context-mcp</code></a></h3>

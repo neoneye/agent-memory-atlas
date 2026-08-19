@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A coding agent in Zig whose
+durable memory is a flat JSON array of strings — with a tool description
+that forbids writing anything the user did not ask to persist, and a
+loader that answers every read error with 'no memories' just before the
+next save overwrites the file.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="fx — Agent Memory Atlas">
+    <meta property="og:description" content="A coding agent in Zig whose
+durable memory is a flat JSON array of strings — with a tool description
+that forbids writing anything the user did not ask to persist, and a
+loader that answers every read error with 'no memories' just before the
+next save overwrites the file.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="fx — Agent Memory Atlas">
+    <meta name="twitter:description" content="A coding agent in Zig
+whose durable memory is a flat JSON array of strings — with a tool
+description that forbids writing anything the user did not ask to
+persist, and a loader that answers every read error with 'no memories'
+just before the next save overwrites the file.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>fx — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "fx",
+      "description": "A coding agent in Zig whose durable memory is a flat JSON array of strings \u2014 with a tool description that forbids writing anything the user did not ask to persist, and a loader that answers every read error with 'no memories' just before the next save overwrites the file.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A read failure and an empty store are the
+same value</p>
+          <h1>fx</h1>
+          <p class="document-deck">A coding agent in Zig whose durable
+memory is a flat JSON array of strings — with a tool description that
+forbids writing anything the user did not ask to persist, and a loader
+that answers every read error with 'no memories' just before the next
+save overwrites the file.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vercel-labs/fx">
+              <span>Source</span>
+              <strong>vercel-labs/fx</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9" title="a0f73b4db3b367662728639263f4c7983725e8f9">
+              <span>Analyzed revision</span>
+              <code>a0f73b4d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-19</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>fx is a coding agent harness and CLI in Zig from vercel-labs —
+Apache-2.0, roughly 677,000 lines under <code>src/</code>, 394 commits
+and 6 contributors since 11 August 2026, shipping as a 7.8 MiB binary
+and labelled <strong>Experimental</strong> in its own README. It is
+deliberately minimal, closer to a Unix shell than a terminal IDE.</p>
+<p>It has two durable stores and they are built to completely different
+standards.</p>
+<p>The <strong>session layer</strong> is serious infrastructure: an
+<code>events.jsonl</code> append-only log, a two-phase
+<code>authority.pending.json</code> / <code>authority.json</code>
+protocol, a separate <code>commit.pending.json</code> publication
+intent, lock files with a 2-second deadline, 0700/0600 permissions, log
+generations, replay and projections, and a compaction that rewrites the
+log to a snapshot while refusing — with a named error,
+<code>ImmutableSessionIdentity</code> — any replacement that would alter
+the session's id, creation time or workspace roots.</p>
+<p>The <strong>memory tool</strong> is a JSON array of strings in
+<code>~/.fx/memories.json</code> with three verbs: <code>save</code>,
+<code>list</code>, <code>clear</code>.</p>
+<p>The gap between those two is the report. The memory tool is not badly
+written — it is 350 lines, it dedupes exactly, it writes atomically, and
+its <code>clear</code> is declared irreversible to the harness so the UI
+can treat it accordingly. It is simply built as though nothing could go
+wrong with a file, and one path through it loses data silently.</p>
+<p><code>loadMemories</code> returns an empty list when the file is
+missing, when the read fails, when the JSON does not parse, and when the
+root is not an array — four different conditions, one answer, no error
+surfaced to anyone. <code>save</code> then appends the new fact to that
+empty list and rewrites the file. So a <code>memories.json</code> that
+has been hand-edited into invalid JSON, truncated by an interrupted
+write, or grown past the 1 MiB read cap does not produce a warning: it
+produces <strong>"remembered"</strong>, and a file containing exactly
+one memory where there used to be many. The tool's own error message for
+a failed <code>clear</code> names the path and invites the user to look
+at it, which is the most likely way a file becomes unparseable in the
+first place.</p>
+<p>Against that, the thing fx gets right is the part most systems in
+this atlas leave to chance. The description the model reads says what
+must <strong>not</strong> be written:</p>
+<blockquote>
+<p>When NOT to use: store task notes, secrets, project facts, temporary
+context, or anything the user did not ask to persist.</p>
+</blockquote>
+<p>That is a consent rule for memory writes, placed where the writer
+will see it, and it is the direct answer to the self-reinforcement
+problem this atlas keeps naming — a model that decides on its own what
+is worth remembering.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Hold the two stores apart, because their designers clearly did.</p>
+<p>A <strong>session</strong> is machinery. It is event-sourced,
+crash-safe, multi-process-aware, and reduced by compaction into a
+snapshot when it grows. It answers "what happened in this run, and can I
+resume it".</p>
+<p>A <strong>memory</strong> is a sentence the user asked to keep. It
+has no id, no date, no origin and no shape. It answers "what did the
+user tell me about how they like to work", and it survives every session
+because it lives outside all of them.</p>
+<p>That second store is the smallest thing that could be called agent
+memory, and the design is coherent at its own scale: with ten
+preferences, returning all of them costs nothing, exact-match dedup is
+sufficient, and clearing everything is a reasonable correction. The
+failure modes are all failures of <em>growth</em> — of the file, of the
+count, of the number of machines writing it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — The memory tool's three verbs over one JSON array. Four different read failures collapse into the same empty list, and because save appends to whatever load returned, the next save writes a one-element array over a file that could not be read.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: The memory tool&#39;s three verbs over one JSON array. Four different read failures collapse into the same empty list, and because save appends to whatever load returned, the next save writes a one-element array over a file that could not be read.
+flowchart TD
+    M[&quot;model calls memory tool&lt;br/&gt;{action, fact}&quot;] --&gt; A{action}
+    A --&gt;|save| L[&quot;loadMemories(~/.fx/memories.json)&quot;]
+    A --&gt;|list| L2[&quot;loadMemories&quot;] --&gt; P[&quot;print every entry&lt;br/&gt;&lt;i&gt;no query, no ranking, no cap&lt;/i&gt;&quot;]
+    A --&gt;|clear| D[&quot;deleteFileAbsolute&lt;br/&gt;&lt;i&gt;isIrreversible = true&lt;/i&gt;&quot;]
+    L --&gt; F{&quot;file opens?&lt;br/&gt;read under 1 MiB?&lt;br/&gt;parses as JSON?&lt;br/&gt;root is an array?&quot;}
+    F --&gt;|&quot;any one fails&quot;| E[&quot;return EMPTY list&lt;br/&gt;&lt;b&gt;no error surfaced&lt;/b&gt;&quot;]
+    F --&gt;|&quot;all pass&quot;| K[&quot;existing facts&quot;]
+    E --&gt; S[&quot;append fact → saveMemories&lt;br/&gt;&lt;b&gt;one-element array overwrites the file&lt;/b&gt;&quot;]
+    K --&gt; DE{&quot;byte-equal to an existing fact?&quot;}
+    DE --&gt;|yes| R[&quot;return &#39;remembered&#39;, write nothing&quot;]
+    DE --&gt;|no| S2[&quot;append → rewrite whole array&quot;]
+    S --&gt; OK[&quot;returns &#39;remembered&#39;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/core</code> holds the agent runtime, session store,
+permissions, skills, hooks, MCP client, subagents and terminal
+integration. <code>src/tools</code> holds the tool implementations —
+filesystem, shell, terminal, session, skills, web, and memory.
+<code>src/builtins/tools.zig</code> is the registry that binds each
+tool's decode, validate, call, presentation and permission behaviour
+into one <code>ToolSpec</code>.</p>
+<p>The memory tool is registered there like any other, with
+<code>permission_target_kind = .none</code> — no approval gate — and an
+<code>isIrreversible</code> predicate returning true for
+<code>clear</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/tools/memory/memory.zig</code> is the whole memory system
+in 350 lines, and <code>runMemory</code> is the function to read.</p>
+<p><code>save</code> resolves <code>$HOME</code>, loads the array, walks
+it comparing with <code>std.mem.eql</code> — exact bytes, no
+normalisation, so <em>"prefers tabs"</em> and <em>"Prefers tabs"</em>
+are two memories — appends when nothing matches, and rewrites the file.
+A duplicate returns <code>"remembered"</code> without writing, so the
+tool reports success identically whether or not it stored anything.</p>
+<p><code>list</code> returns every entry as <code>- {s}\n</code> lines.
+There is no argument to filter or limit it.</p>
+<p><code>clear</code> deletes the file, treating
+<code>FileNotFound</code> as success, so it is idempotent.</p>
+<p><code>loadMemories</code> is where the risk is. Four
+<code>catch return list</code> paths and one
+<code>if (parsed.value != .array) return list</code> all produce the
+same empty result, and the 1 MiB ceiling in <code>readFileToEnd</code>
+is one of them.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A JSON array of strings. That is the entire schema.</p>
+<p>No identifier means a memory cannot be referenced, so it cannot be
+updated or individually removed. No timestamp means nothing can age or
+be ordered by recency. No origin means a preference the user stated and
+one the model inferred are indistinguishable once written — which is
+exactly what the tool description tries to prevent by policy, having no
+way to enforce it by structure.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>list</code> returns the whole store, and this report's
+retrieval stack is empty because there is nothing to describe. At the
+intended scale that is the right answer: a query planner over eleven
+preferences would be worse than useless.</p>
+<p>The cost is that the store's size and the context cost of consulting
+it are the same number, and nothing bounds either. There is no cap on
+entries, no cap on the length of a fact, and no way for the model to ask
+for a subset — so the only mechanism that keeps the memory affordable is
+the tool description telling the model not to save much.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous, whole-file, on every save. <code>saveMemories</code>
+creates the parent directory, serialises the array with two-space
+indentation, and calls <code>writeFileAtomic</code> — a proper
+temp-file-plus-rename that preserves existing permissions and refuses a
+read-only target. If that fails it falls back to
+<code>createFileAbsolute</code> with <code>.truncate = true</code> and a
+streaming write, which is the one non-atomic path in the tool and the
+one that can leave a partial file behind.</p>
+<p>A partial file is unparseable JSON. Unparseable JSON reads as an
+empty store. An empty store plus one save is a one-element file. The
+three steps are individually reasonable and compose into silent
+loss.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A builtin tool with a gateway schema, offered to the model alongside
+the filesystem and shell tools, with no permission prompt.</p>
+<p>The tool descriptions across this repository follow a consistent
+<strong>"When to use / When NOT to use"</strong> template, and it is
+worth reading a few together. <code>semantic_search</code> says of
+itself: <em>"This is not embedding or true semantic search."</em>
+<code>memory</code> rules out secrets, project facts, task notes and
+<em>"anything the user did not ask to persist."</em> Writing the
+negative half of a tool's contract into the description is cheap, and it
+is where a harness gets to state a memory-write policy at all when the
+store cannot enforce one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>No epistemic state, no provenance, no scope. One file in
+<code>$HOME</code> is shared by every workspace, so a preference saved
+while working on one project is in context for all of them — defensible
+for <em>"durable user preferences"</em>, which is what the description
+says the tool is for, and a mismatch with fx being otherwise strictly
+per-project.</p>
+<p>Two concurrent fx processes will lose writes: <code>save</code> is
+read-modify-write over the whole file with no lock, while the session
+layer three directories away has lock files, a two-phase intent protocol
+and a 2-second acquisition deadline. The same repository demonstrates
+the technique it does not apply here.</p>
+<p><code>clear</code> being declared irreversible to the harness is the
+right instinct, and it is the only place in the memory path where the
+possibility of regret is represented at all.</p>
+<p>No capability mark is carried, and that is a real answer rather than
+an omission: there is no rejected-value record, no status field, no
+scope key, no mutation audit of the memory store, no human gate, and no
+committed case asserting that anything must not be returned.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>8,286 <code>test</code> blocks across <code>src/</code> — an
+unusually high density, and the session layer, the tool registry and the
+UI runtime are all covered in depth.</p>
+<p>The memory tool is tested through the tool runtime: saving the same
+fact twice yields one entry, <code>clear</code> is idempotent,
+<code>list</code> after <code>clear</code> reports no memories, and a
+missing <code>$HOME</code> produces
+<code>"memory unavailable: HOME not set"</code>. Those are the right
+cases for the happy path.</p>
+<p>None of them covers a <code>memories.json</code> that exists and
+cannot be read. There is no test for malformed JSON, for a root that is
+not an array, or for a file past the 1 MiB cap — which is to say the
+four conditions that share an answer are the four the suite does not
+distinguish either. A test that writes <code>{"oops":1}</code> to the
+path, calls <code>save</code>, and asserts the prior facts survive would
+fail today.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<p><strong>Write the negative half of the tool contract.</strong> "When
+NOT to use: … anything the user did not ask to persist" is a
+memory-write policy delivered to the only component that can honour it,
+and it costs one sentence.</p>
+<p><strong>Declare irreversibility to the harness.</strong>
+<code>isIrreversible</code> returning true for <code>clear</code> lets
+every layer above the tool treat that call differently without knowing
+what the tool does.</p>
+<p><strong>Say what your search is not.</strong>
+<code>semantic_search</code>'s description states plainly that it is not
+embedding search — a name that overclaims, corrected where the model
+reads it.</p>
+<h3 id="and-three-to-avoid">And three to avoid</h3>
+<p><strong>One value for "empty" and "unreadable".</strong> A loader
+that returns the same result for <em>nothing stored</em> and <em>cannot
+read what is stored</em> hands its caller a decision it cannot make
+correctly, and here the caller's next action overwrites the file.</p>
+<p><strong>A read cap with no error.</strong> Silently truncating to
+empty at 1 MiB converts a capacity limit into data loss.</p>
+<p><strong>Two standards in one repository.</strong> Locks, two-phase
+commit and an immutability invariant for session bookkeeping;
+read-modify-write with no lock for the thing the user explicitly asked
+to keep forever.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the corrupt-file path reachable in practice? It needs a
+<code>memories.json</code> that exists and does not parse, and the
+likeliest source is a person editing the file the
+failed-<code>clear</code> message points them at.</li>
+<li>Was the 1 MiB cap chosen for memories or inherited? It is a general
+<code>readFileToEnd</code> argument, and at roughly a hundred bytes a
+preference it allows about ten thousand of them — plausibly beyond any
+intended use, which would make it a latent limit rather than a live
+one.</li>
+<li>Does the session log's discipline reflect a plan for the memory
+store? The session layer already has the locking, the generations and
+the atomic replacement this tool lacks, so the question is whether the
+memory tool is deliberately scoped small or simply earlier.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/tools/memory/memory.zig</code></td>
+<td>The entire memory system: save, list, clear, and
+<code>loadMemories</code></td>
+</tr>
+<tr>
+<td><code>src/builtins/tools.zig</code></td>
+<td>Tool registration, the memory description, and the irreversibility
+hook</td>
+</tr>
+<tr>
+<td><code>src/core/shared/profile_paths.zig</code></td>
+<td><code>~/.fx/memories.json</code></td>
+</tr>
+<tr>
+<td><code>src/core/shared/io.zig</code></td>
+<td><code>writeFileAtomic</code> and the read cap</td>
+</tr>
+<tr>
+<td><code>src/core/session/session_log.zig</code></td>
+<td>The event log, locks, two-phase commit and log compaction</td>
+</tr>
+<tr>
+<td><code>src/core/session/session_event.zig</code></td>
+<td><code>ImmutableSessionIdentity</code> and the replacement
+guards</td>
+</tr>
+<tr>
+<td><code>src/core/tooling/tool_runtime.zig</code></td>
+<td>The memory tool's happy-path tests</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9"><code class="commit-id" title="a0f73b4db3b367662728639263f4c7983725e8f9">a0f73b4d…</code></a>
+— first reading, at an experimental stage the README labels as such.
+Screened before reading: no auto-run surface, one dependency manifest
+inside the seven-day cooldown, two unpinned ranges in test packages, and
+an <code>AGENTS.md</code> carrying instructions addressed to a reading
+agent, which this atlas records as data rather than following. Nothing
+was installed and no test was run; the corrupt-file path was established
+by reading <code>loadMemories</code> and its caller, not by executing
+them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
