@@ -78,17 +78,17 @@ enforced in the query and suspended on purpose for consolidation.</p>
               <strong>kitfunso/hippo-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186" title="35815a04026c685594e7d80ecb94f73662508186">
+            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c" title="e928179a3b35e8fe5837878aed071d6025ced45c">
               <span>Analyzed revision</span>
-              <code>35815a04…</code>
+              <code>e928179a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -286,12 +286,18 @@ enforces <code>valid_to &gt; valid_from</code> with its own error, and
 carries a fix note for a read-path bug where a datetime
 <code>valid_from</code> "otherwise made a same-day policy invisible" —
 which is only possible in a system whose reads filter on it.</p>
-<p>The unevenness is worth stating: the <code>memories</code> table also
-has <code>valid_from</code>/<code>valid_to</code> columns, backfilled
-from <code>created</code> (<code>src/db.ts:238-240</code>), and no
-read-path filter on them was found. Validity time is a first-class
-queryable axis for policies and a pair of unused columns for
-memories.</p>
+<p>Memories carry the same axis in a thinner form. Migration 11 adds
+<strong><code>valid_from</code> and <code>superseded_by</code></strong>
+to <code>memories</code> — and no <code>valid_to</code>, which is the
+point: expiry is derived from the successor rather than stored.
+<code>--as-of</code> recall reads it in both pipelines, mapping each
+entry to its successor's <code>valid_from</code>
+(<code>src/search.ts:429</code>, <code>:1113</code>) and dropping
+anything whose own <code>valid_from</code> is later than the requested
+instant (<code>:433</code>, <code>:1117</code>). So policies get an
+explicit half-open interval and memories get a successor-chain
+derivation of the same thing; <code>valid_to</code> exists on
+<code>policies</code> alone (<code>src/db.ts:1344</code>).</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p><code>hybridSearch</code> runs BM25 over an in-repo corpus and a
 vector arm, fuses them, then <code>mmrRerank</code> trades relevance
@@ -396,9 +402,17 @@ not run the suite.</p>
 <p><code>src/eval-suite.ts</code> defines <code>FeatureTestCase</code>
 as <code>id</code>, <code>category</code>, <code>query</code>,
 <code>expectedIds</code>, <code>description</code>. <strong>There is no
-must-not-appear field</strong>, so the suite can assert what recall
-should return and has no way to express what it must not — which is why
-the negative-eval mark is withheld. <code>src/ablation.ts</code> and
+must-not-appear field</strong>, so that suite can assert what recall
+should return and has no way to express what it must not. The mark is
+carried anyway, because the rubric asks for committed evaluation cases
+rather than for a fixture schema, and the cases exist beside the suite:
+<code>tests/l9-tenant-scoping.test.ts</code> asserts
+<code>expect(result.targets).not.toContain(bId)</code>
+(<code>:101</code>) and that a second tenant's entry never acquires the
+first's <code>invalidated</code> tag (<code>:106</code>,
+<code>:495</code>). Those are boundary assertions rather than content
+ones — the narrower half of what this mark covers, and the half most of
+the corpus does not have either. <code>src/ablation.ts</code> and
 <code>src/compare.ts</code> suggest ablation runs, and no results are
 committed.</p>
 <p>The near-miss worth more than the mark:
@@ -525,8 +539,43 @@ intervals</li>
 <code>src/ablation.ts</code>, <code>src/compare.ts</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c"><code class="commit-id" title="e928179a3b35e8fe5837878aed071d6025ced45c">e928179a…</code></a>
+— re-read six commits on, prompted by hippo's own roadmap publishing a
+source-verified rebuttal of this report. Two of its three claims hold
+and are corrected here.</p>
+<p><strong>The bi-temporal paragraph was wrong twice in one
+sentence.</strong> It said <code>memories</code> carries
+<code>valid_from</code>/<code>valid_to</code> backfilled from
+<code>created</code>, and that no read-path filter on them was found.
+Migration 11 adds <code>valid_from</code> and <code>superseded_by</code>
+and no <code>valid_to</code> at all; <code>valid_to</code> exists on
+<code>policies</code> alone (<code>src/db.ts:1344</code>). And the
+filter is there in both recall pipelines — successor
+<code>valid_from</code> mapped at <code>src/search.ts:429</code> and
+<code>:1113</code>, entries later than the requested instant dropped at
+<code>:433</code> and <code>:1117</code>. "A pair of unused columns" was
+one column, and it is used. The error understated the system on the axis
+the report otherwise credits it for.</p>
+<p><strong><code>negative_eval</code> is carried.</strong> The mark was
+withheld because <code>src/eval-suite.ts</code>'s
+<code>FeatureTestCase</code> has no must-not-appear field. That is a
+fact about one fixture schema, and the rubric asks for committed
+evaluation cases: <code>tests/l9-tenant-scoping.test.ts</code> asserts
+<code>not.toContain(bId)</code> at <code>:101</code> and that a second
+tenant's entry never acquires the first's <code>invalidated</code> tag
+at <code>:106</code> and <code>:495</code>. Boundary assertions rather
+than content ones, which is the narrower half of the mark and the half
+most of the corpus lacks.</p>
+<p>The third claim does not apply to this text: the staleness paragraph
+already records that <code>resolveConfidence</code> short-circuits on
+<code>pinned</code> and <code>verified</code>, corrected in the 15
+August reading. Every mark now carries an evidence record. The screen
+reported no auto-run file, three manifests inside the cooldown and two
+<code>package.json</code> build hooks; nothing was installed and no test
+was run.</p>
 <p><strong>2026-08-15</strong> — <a
-href="https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186"><code class="commit-id" title="35815a04026c685594e7d80ecb94f73662508186">35815a04…</code></a>
+href="https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c"><code class="commit-id" title="e928179a3b35e8fe5837878aed071d6025ced45c">e928179a…</code></a>
 — re-pinned at release v1.31.0. Screened again before reading: no
 auto-run surface, several manifests inside the cooldown, build-time
 execs; nothing was installed or run. <a

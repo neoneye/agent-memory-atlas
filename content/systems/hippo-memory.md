@@ -6,10 +6,17 @@ root: ../..
 page_kind: system
 source_name: "kitfunso/hippo-memory"
 source_url: https://github.com/kitfunso/hippo-memory
-revision: 35815a04026c685594e7d80ecb94f73662508186
-revision_url: https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186
-analyzed_at: 2026-08-15
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, tombstone"
+revision: e928179a3b35e8fe5837878aed071d6025ced45c
+revision_url: https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c
+analyzed_at: 2026-08-19
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, tombstone, negative_eval"
+capability_evidence:
+  trust_state: "the memory row — a stored confidence tier, with staleness derived rather than stored | src/memory.ts | `resolveConfidence` short-circuits on `pinned` and `verified`, then returns `stale` when `last_retrieved` is older than thirty days, so `verified | observed | inferred` are stored and `stale` is computed | tests/ — committed cases exercise the tiers; no test pins the verified/pinned short-circuit itself"
+  bitemporal: "two axes in two shapes — an explicit interval on policies, a successor-derived one on memories | src/policies.ts, src/search.ts | policies carry a required `valid_from` and a nullable `valid_to` read by the as-of query; memories carry `valid_from` and `superseded_by` with no `valid_to`, and `--as-of` recall derives expiry from the successor's `valid_from` at src/search.ts:429 and :1113, dropping later entries at :433 and :1117 | tests/ — the policy as-of path carries a committed fix note and test; the memory as-of derivation was read rather than run"
+  scope_enforced: "recall — `tenant_id` carried on the row and applied in the search pipeline | src/search.ts | tenant scoping threaded through the recall path, with the sleep-time quality audit the known exception because `auditMemories` and `deleteEntry` run host-wide | tests/l9-tenant-scoping.test.ts"
+  audit_log: "the store — an append-only mutation trail carrying tenant from the first migration | src/db.ts | `audit_log` created at :424, in the same migration block whose comment states both it and `memories` carry `tenant_id` from day one | tests/ — committed cases assert audit rows on mutation"
+  tombstone: "the write path — a rejection digest checked before an entry is written | src/store.ts | the AT1 tombstone, shipped 2026-08-15 in PR #142: merged content's rejection digest is checked against the tenant's tombstones before the write, and a matching entry is skipped rather than stored (:1229, :1242) | tests/ — AT1 probes run under BEGIN IMMEDIATE, noted at src/store.ts:2027"
+  negative_eval: "recall, as committed cases rather than as an eval-suite field | tests/l9-tenant-scoping.test.ts | `expect(result.targets).not.toContain(bId)` at :101, plus assertions that a second tenant's entry never acquires the first's `invalidated` tag at :106 and :495; `src/eval-suite.ts`'s `FeatureTestCase` still has no must-not-appear field, so the suite cannot express these and the tests carry them | tests/l9-tenant-scoping.test.ts"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -187,10 +194,14 @@ normalises dates to fixed width so they sort lexically, enforces
 read-path bug where a datetime `valid_from` "otherwise made a same-day policy
 invisible" — which is only possible in a system whose reads filter on it.
 
-The unevenness is worth stating: the `memories` table also has
-`valid_from`/`valid_to` columns, backfilled from `created` (`src/db.ts:238-240`),
-and no read-path filter on them was found. Validity time is a first-class
-queryable axis for policies and a pair of unused columns for memories.
+Memories carry the same axis in a thinner form. Migration 11 adds **`valid_from`
+and `superseded_by`** to `memories` — and no `valid_to`, which is the point:
+expiry is derived from the successor rather than stored. `--as-of` recall reads
+it in both pipelines, mapping each entry to its successor's `valid_from`
+(`src/search.ts:429`, `:1113`) and dropping anything whose own `valid_from` is
+later than the requested instant (`:433`, `:1117`). So policies get an explicit
+half-open interval and memories get a successor-chain derivation of the same
+thing; `valid_to` exists on `policies` alone (`src/db.ts:1344`).
 
 ## 6. Retrieval Mechanics
 
@@ -289,9 +300,15 @@ real DB for tests" rather than mocking the store — visible in
 exercises the actual recall pipeline. I did not run the suite.
 
 `src/eval-suite.ts` defines `FeatureTestCase` as `id`, `category`, `query`,
-`expectedIds`, `description`. **There is no must-not-appear field**, so the
+`expectedIds`, `description`. **There is no must-not-appear field**, so that
 suite can assert what recall should return and has no way to express what it
-must not — which is why the negative-eval mark is withheld. `src/ablation.ts`
+must not. The mark is carried anyway, because the rubric asks for committed
+evaluation cases rather than for a fixture schema, and the cases exist beside
+the suite: `tests/l9-tenant-scoping.test.ts` asserts
+`expect(result.targets).not.toContain(bId)` (`:101`) and that a second tenant's
+entry never acquires the first's `invalidated` tag (`:106`, `:495`). Those are
+boundary assertions rather than content ones — the narrower half of what this
+mark covers, and the half most of the corpus does not have either. `src/ablation.ts`
 and `src/compare.ts` suggest ablation runs, and no results are committed.
 
 The near-miss worth more than the mark: `RecallResult.suppressionSummary`
@@ -389,6 +406,14 @@ design stops at hiding rows.
 
 ## History
 
-**2026-08-15** — [`35815a04026c685594e7d80ecb94f73662508186`](https://github.com/kitfunso/hippo-memory/commit/35815a04026c685594e7d80ecb94f73662508186) — re-pinned at release v1.31.0. Screened again before reading: no auto-run surface, several manifests inside the cooldown, build-time execs; nothing was installed or run. [`6d12a00e9d1426d89a53f545dbc297d027068ee0`](https://github.com/kitfunso/hippo-memory/commit/6d12a00e9d1426d89a53f545dbc297d027068ee0) (AT1) added a rejected-value tombstone — a `rejected_values` table (migration v41) keyed on `(tenant_id, digest)` where the digest is a SHA-256 of the normalized content, with no foreign key so the record outlives the memory, and a `checkRejectionGuard` at the single write choke point (`src/store.ts:1172`, and the consolidation batch path at `:1986`) that refuses to re-write a rejected value across capture, import, sync and index rebuild. That earns `tombstone` and reverses this report's former central finding; the residual limit is exact-normalized-value matching, so a paraphrase evades it. The audit op union grew to cover `reject_value`/`reject_refusal`/`unreject_value` and the previously-missing `conflict_resolve`. Two additive features are context: [`2a4619aef20b2e920f8d4e37980b11a91bae0e53`](https://github.com/kitfunso/hippo-memory/commit/2a4619aef20b2e920f8d4e37980b11a91bae0e53) (CS1) installs PreCompact-capture and compact-aware re-injection hooks so working state survives a context compaction, and LC2-E3 adds an opt-in (default-off) learned-value *rescue* veto over the sleep decay pass that can only spare a condemned memory, never condemn one. Size grew to ~50,000 lines of TypeScript; the stack row is promoted from seeded to reviewed. The four prior marks (`trust_state`, `bitemporal`, `scope_enforced`, `audit_log`) were re-verified against `src/memory.ts`, `src/policies.ts`, `src/store.ts` and `src/audit.ts`. No paper exists.
+**2026-08-19** — [`e928179a3b35e8fe5837878aed071d6025ced45c`](https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c) — re-read six commits on, prompted by hippo's own roadmap publishing a source-verified rebuttal of this report. Two of its three claims hold and are corrected here.
+
+**The bi-temporal paragraph was wrong twice in one sentence.** It said `memories` carries `valid_from`/`valid_to` backfilled from `created`, and that no read-path filter on them was found. Migration 11 adds `valid_from` and `superseded_by` and no `valid_to` at all; `valid_to` exists on `policies` alone (`src/db.ts:1344`). And the filter is there in both recall pipelines — successor `valid_from` mapped at `src/search.ts:429` and `:1113`, entries later than the requested instant dropped at `:433` and `:1117`. "A pair of unused columns" was one column, and it is used. The error understated the system on the axis the report otherwise credits it for.
+
+**`negative_eval` is carried.** The mark was withheld because `src/eval-suite.ts`'s `FeatureTestCase` has no must-not-appear field. That is a fact about one fixture schema, and the rubric asks for committed evaluation cases: `tests/l9-tenant-scoping.test.ts` asserts `not.toContain(bId)` at `:101` and that a second tenant's entry never acquires the first's `invalidated` tag at `:106` and `:495`. Boundary assertions rather than content ones, which is the narrower half of the mark and the half most of the corpus lacks.
+
+The third claim does not apply to this text: the staleness paragraph already records that `resolveConfidence` short-circuits on `pinned` and `verified`, corrected in the 15 August reading. Every mark now carries an evidence record. The screen reported no auto-run file, three manifests inside the cooldown and two `package.json` build hooks; nothing was installed and no test was run.
+
+**2026-08-15** — [`e928179a3b35e8fe5837878aed071d6025ced45c`](https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c) — re-pinned at release v1.31.0. Screened again before reading: no auto-run surface, several manifests inside the cooldown, build-time execs; nothing was installed or run. [`6d12a00e9d1426d89a53f545dbc297d027068ee0`](https://github.com/kitfunso/hippo-memory/commit/6d12a00e9d1426d89a53f545dbc297d027068ee0) (AT1) added a rejected-value tombstone — a `rejected_values` table (migration v41) keyed on `(tenant_id, digest)` where the digest is a SHA-256 of the normalized content, with no foreign key so the record outlives the memory, and a `checkRejectionGuard` at the single write choke point (`src/store.ts:1172`, and the consolidation batch path at `:1986`) that refuses to re-write a rejected value across capture, import, sync and index rebuild. That earns `tombstone` and reverses this report's former central finding; the residual limit is exact-normalized-value matching, so a paraphrase evades it. The audit op union grew to cover `reject_value`/`reject_refusal`/`unreject_value` and the previously-missing `conflict_resolve`. Two additive features are context: [`2a4619aef20b2e920f8d4e37980b11a91bae0e53`](https://github.com/kitfunso/hippo-memory/commit/2a4619aef20b2e920f8d4e37980b11a91bae0e53) (CS1) installs PreCompact-capture and compact-aware re-injection hooks so working state survives a context compaction, and LC2-E3 adds an opt-in (default-off) learned-value *rescue* veto over the sleep decay pass that can only spare a condemned memory, never condemn one. Size grew to ~50,000 lines of TypeScript; the stack row is promoted from seeded to reviewed. The four prior marks (`trust_state`, `bitemporal`, `scope_enforced`, `audit_log`) were re-verified against `src/memory.ts`, `src/policies.ts`, `src/store.ts` and `src/audit.ts`. No paper exists.
 
 **2026-08-04** — [`a9c7cca3613b6571bfb37ad1fb6c070b7c976197`](https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb6c070b7c976197) — first reading.
