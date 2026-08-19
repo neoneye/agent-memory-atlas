@@ -64,10 +64,10 @@ the suspension fenced at the transport layer instead. That is a position, not an
 oversight, and the version reference in the error string says the project met
 the hazard in production.
 
-**What was the weakest thing is now built.** At the previous pin the tagline —
-knowing what to forget — outran the mechanism: `forget` was a hard
+**The mechanism has caught up with the tagline.** Until release v1.31.0 the
+promise — knowing what to forget — outran what the code did: `forget` was a hard
 `DELETE FROM memories`, correction was record-keyed supersession, and the word
-*tombstone* appeared nowhere in `src/`. Release v1.31.0 closed that gap with a
+*tombstone* appeared nowhere in `src/`. That release closed the gap with a
 purpose-built rejected-value tombstone (`src/rejection.ts`, migration v41). A
 `rejected_values` table is keyed on `(tenant_id, digest)` where the digest is a
 SHA-256 of the NFC-normalized, lowercased, whitespace-collapsed content — the
@@ -137,7 +137,7 @@ The edges into the deletion box are one half of the finding. One is a user askin
 to forget; the other is a background quality audit deciding a memory is junk, and
 it runs host-wide. The other half is what closed the former gap: `reject` writes a
 digest into `rejected_values`, and the dashed edge is the write-path guard that
-now refuses re-asserting a rejected value — so supersession still only changes
+refuses re-asserting a rejected value — so supersession only changes
 what is *shown*, but rejection changes what may be *written*.
 
 ## 3. Architecture
@@ -266,13 +266,13 @@ operators investigating "where did old rows go" have one row left to find
 regardless of retention floor. A retention policy that records its own execution
 in the log it truncates is worth copying directly.
 
-**Correction now has two layers, and the value-keyed one is new.** Supersession
-still only hides a row on read; but `reject` writes the rejected value's digest
+**Correction has two layers, and only one of them is keyed on the value.**
+Supersession hides a row on read; `reject` writes the rejected value's digest
 into `rejected_values`, and a guard at the single write choke point
 (`src/store.ts:1172`) refuses a later extraction that rediscovers the same claim —
-so the system now *does* know a value was judged wrong and turns it away, across
-capture, import, sync and the markdown-mirror rebuild, with the refusal itself
-audited (`reject_refusal`). The audit op union grew to cover it —
+so the system knows a value was judged wrong and turns it away, across capture,
+import, sync and the markdown-mirror rebuild, with the refusal itself audited
+(`reject_refusal`). The audit op union covers it —
 `reject_value`, `reject_refusal`, `unreject_value` and, closing a separate gap,
 `conflict_resolve`. The residual limit is that the guard matches the exact
 normalized value, so a paraphrase of a rejected claim still evades it; semantic

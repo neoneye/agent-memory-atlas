@@ -135,12 +135,12 @@ enforced in the query on the read path and deliberately suspended for
 consolidation, with the suspension fenced at the transport layer
 instead. That is a position, not an oversight, and the version reference
 in the error string says the project met the hazard in production.</p>
-<p><strong>What was the weakest thing is now built.</strong> At the
-previous pin the tagline — knowing what to forget — outran the
-mechanism: <code>forget</code> was a hard
+<p><strong>The mechanism has caught up with the tagline.</strong> Until
+release v1.31.0 the promise — knowing what to forget — outran what the
+code did: <code>forget</code> was a hard
 <code>DELETE FROM memories</code>, correction was record-keyed
 supersession, and the word <em>tombstone</em> appeared nowhere in
-<code>src/</code>. Release v1.31.0 closed that gap with a purpose-built
+<code>src/</code>. That release closed the gap with a purpose-built
 rejected-value tombstone (<code>src/rejection.ts</code>, migration v41).
 A <code>rejected_values</code> table is keyed on
 <code>(tenant_id, digest)</code> where the digest is a SHA-256 of the
@@ -215,9 +215,9 @@ user asking to forget; the other is a background quality audit deciding
 a memory is junk, and it runs host-wide. The other half is what closed
 the former gap: <code>reject</code> writes a digest into
 <code>rejected_values</code>, and the dashed edge is the write-path
-guard that now refuses re-asserting a rejected value — so supersession
-still only changes what is <em>shown</em>, but rejection changes what
-may be <em>written</em>.</p>
+guard that refuses re-asserting a rejected value — so supersession only
+changes what is <em>shown</em>, but rejection changes what may be
+<em>written</em>.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Node/TypeScript package with three front doors over one SQLite
 file. There is no separate database process, no vector service, and no
@@ -362,15 +362,15 @@ so, in its own words, operators investigating "where did old rows go"
 have one row left to find regardless of retention floor. A retention
 policy that records its own execution in the log it truncates is worth
 copying directly.</p>
-<p><strong>Correction now has two layers, and the value-keyed one is
-new.</strong> Supersession still only hides a row on read; but
+<p><strong>Correction has two layers, and only one of them is keyed on
+the value.</strong> Supersession hides a row on read;
 <code>reject</code> writes the rejected value's digest into
 <code>rejected_values</code>, and a guard at the single write choke
 point (<code>src/store.ts:1172</code>) refuses a later extraction that
-rediscovers the same claim — so the system now <em>does</em> know a
-value was judged wrong and turns it away, across capture, import, sync
-and the markdown-mirror rebuild, with the refusal itself audited
-(<code>reject_refusal</code>). The audit op union grew to cover it —
+rediscovers the same claim — so the system knows a value was judged
+wrong and turns it away, across capture, import, sync and the
+markdown-mirror rebuild, with the refusal itself audited
+(<code>reject_refusal</code>). The audit op union covers it —
 <code>reject_value</code>, <code>reject_refusal</code>,
 <code>unreject_value</code> and, closing a separate gap,
 <code>conflict_resolve</code>. The residual limit is that the guard
