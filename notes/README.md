@@ -8,6 +8,37 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-19-the-same-bug-twice-in-one-session.md](2026-08-19-the-same-bug-twice-in-one-session.md) —
+  A blanket sha replace is the obvious way to re-pin a report and it rewrites the
+  commit id inside every *older* History entry, so each past reading silently
+  claims a commit it was not made at. Caught on two reports, written up as a
+  lesson in the commit message, and then repeated hours later across eight —
+  three already pushed. The finding is that the note did not prevent the
+  recurrence: prose in a commit message is a record, not a control. Carries the
+  three-line duplicate-sha grep that would have failed the build both times, the
+  check_history.py gap it exposes (newest entry only), and a near-miss where a
+  fabricated sha tail hid behind a truncated display.
+- [2026-08-19-evidence-records-rot-and-only-a-re-read-finds-it.md](2026-08-19-evidence-records-rot-and-only-a-re-read-finds-it.md) —
+  Two capability_evidence records went stale the same day: Perseus Vault's
+  human_review named a symbol that had been deleted, NexusMem's scope_enforced
+  named a file a refactor had emptied. Both marks still held; only the
+  coordinates rotted. check_capability_evidence.py validates shape and cannot
+  open the subject repository, so an evidence record is true at the commit it was
+  written against and unverified at every commit after — a dated citation, not a
+  durable one. Four rules follow, including prefer the symbol to the line number
+  and the test id to both.
+- [2026-08-19-the-atlas-is-being-read-by-the-systems-it-reviews.md](2026-08-19-the-atlas-is-being-read-by-the-systems-it-reviews.md) —
+  Four events in one week where an upstream acted on a report: memoir-cli shipped
+  the retraction verb whose absence was the report's central criticism and
+  credited the review in its commit message, Hippo published a source-verified
+  audit of the atlas that was right twice, PLUR1BUS's author filed a PR rewriting
+  his own report, and MeMex-Zero-RAG removed the committed credentials file.
+  Three consequences: a sharp finding now has a half-life and should be re-read
+  before an old one, being right is not being current, and the reports are read
+  as scorecards whether or not they are written as ones — which is an argument
+  for evidence records over ticks. And the thing not to do: none of it is a
+  reason to soften a finding or let a maintainer's description stand in for a
+  reading.
 - [2026-08-19-the-vocabulary-probe-lies.md](2026-08-19-the-vocabulary-probe-lies.md) —
   Grepping a tree for `remember`/`tombstone`/`supersede` settled four repositories
   in minutes and was wrong in every one until the hits were read. Five recurring
