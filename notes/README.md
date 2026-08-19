@@ -8,6 +8,32 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md](2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md) —
+  Verifying the one criticism an upstream said it had closed, then advancing the
+  pin, left the report pinning 3.12.0 and describing 3.11 in two other places.
+  An upstream note about one gap is a reason to widen the re-read, not to narrow
+  it — and the verdict file went stale in the same pass.
+- [2026-08-19-a-test-that-restates-a-constant.md](2026-08-19-a-test-that-restates-a-constant.md) —
+  A retention cap was inverted so a paying account kept less than a free one,
+  and the unit test covering it pinned the literal numbers, so it moved with the
+  bug and asserted the inversion. Assert the property the constant exists to
+  satisfy, with the general form for caps, limits, timeouts and TTLs.
+- [2026-08-19-two-ways-to-be-wrong-about-your-own-benchmark.md](2026-08-19-two-ways-to-be-wrong-about-your-own-benchmark.md) —
+  repowise and Gortex are mirror images: a sealed external split whose evidence
+  lives in another repository, against a committed ground truth of ten queries
+  the project wrote about its own codebase. "Committed" and "independent" are
+  two axes, and the benchmarks page currently sorts on one.
+- [2026-08-19-nothing-moved-is-when-to-audit-the-report.md](2026-08-19-nothing-moved-is-when-to-audit-the-report.md) —
+  When HEAD is already the pinned commit there is no diff, the code becomes a
+  frozen reference, and every disagreement with the report is yours. One such
+  pass found a missing mark, two line numbers wrong when written, frontmatter
+  contradicting itself, and a verdict claim with nothing in the report behind it.
+- [2026-08-19-one-field-asked-two-questions.md](2026-08-19-one-field-asked-two-questions.md) —
+  Gortex weights its provenance ladder twice, discounting its *most* trusted tier
+  for centrality because abundant evidence inflates authority. repowise's gate
+  stamps `unverified` on both "checked and failed" and "could not check". Same
+  error from opposite ends: enumerate a judgment field's writers and readers
+  separately.
 - [2026-08-19-the-same-bug-twice-in-one-session.md](2026-08-19-the-same-bug-twice-in-one-session.md) —
   A blanket sha replace is the obvious way to re-pin a report and it rewrites the
   commit id inside every *older* History entry, so each past reading silently
