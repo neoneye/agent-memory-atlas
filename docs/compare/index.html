@@ -20715,6 +20715,54 @@ not a store an agent writes a belief into and later corrects across
 sessions. Memory-branded and paper-backed, so recorded by name; a
 <em>visual skill memory</em> that shapes RL reward is not what this
 atlas means by memory.</li>
+<li><strong><code>towardsai/ai-tutor-app</code> was examined and has no
+report, and it is worth recording as a worked implementation of a
+retrieval idea rather than as memory.</strong> Apache-2.0, 15,330 lines
+of Python across <code>app/</code> and <code>evals/</code>, 227 commits
+since 30 January 2025, at <a
+href="https://github.com/towardsai/ai-tutor-app/commit/b04c0a0303d1434696e8a854f2238bebcf4e2d91"><code class="commit-id" title="b04c0a0303d1434696e8a854f2238bebcf4e2d91">b04c0a03…</code></a>
+— an agentic RAG tutor behind a LangGraph agent core, and the backing
+repository for a workshop on context engineering. <strong>Its long-term
+memory is a student profile that does not outlive the process, and the
+code says so at the definition</strong>:
+<code>STORE = InMemoryStore()</code>, under a comment reading
+<em>"In-process like the checkpointer: profiles survive across
+threads/sessions within one server lifetime… Swap for a persistent
+LangGraph store to survive restarts."</em> The profile has a real
+identity — namespace <code>("student", &lt;id&gt;)</code>, key
+<code>profile</code>, updated by <code>_update_student_profile</code>
+and appended to the system prompt — so it is the shape of a memory
+without the durability, and the atlas draws the same line here it drew
+where nothing survives the process. Everything else in the repository is
+on the other side of a boundary this page already keeps:
+<code>memory_presets.py</code> bundles summarization and
+tool-output-clearing middlewares, which is <a
+href="#not-in-scope-conversation-window-management">conversation-window
+management</a>, and the knowledge base is a corpus index of the course's
+own material. <strong>What is worth carrying is
+<code>kb_shell.py</code>, and it is the same idea as <a
+href="https://arxiv.org/abs/2605.05242">arXiv:2605.05242</a></strong> —
+<em>Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search
+via Direct Corpus Interaction</em> (Li et al., 3 May 2026), which argues
+that a fixed similarity interface is the bottleneck and has agents
+search raw corpora with general-purpose tools instead, reporting gains
+over sparse, dense and reranking baselines on BRIGHT and BEIR. The
+repository ships that as an agent-facing tool with the hardening the
+paper does not have to specify: an allowlist of exactly <code>rg</code>,
+<code>grep</code>, <code>find</code>, <code>ls</code>, <code>sed</code>,
+<code>head</code>, <code>cat</code> and <code>wc</code>, a refusal of
+every shell metacharacter that would compose them (<code>|</code>,
+<code>&amp;&amp;</code>, <code>;</code>, <code>&gt;</code>, backtick and
+the rest), an eight-second timeout and a 40,000-character output cap.
+Anyone giving an agent grep over a corpus needs that list; it is a
+better starting point than writing it from scratch. Its
+<code>evals/</code> also holds a named-preset comparison —
+<code>compaction_study.py</code> asks whether a long established context
+is better kept every turn or compacted, holding the rest constant —
+which is the harness shape <a href="../benchmarks/#judge-variance">the
+benchmarks page</a> keeps asking for, pointed at context management
+rather than at memory. ai-tutor-app enters the day the student profile
+is written somewhere that survives a restart.</li>
 <li><strong><code>a40-labs/memory</code> was examined and has no report,
 and its second half is the nearest thing the corpus has to an answer to
 <a href="#reading-this-report">what this method structurally cannot
