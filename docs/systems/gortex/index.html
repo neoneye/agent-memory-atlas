@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A code knowledge graph where every
+edge records how it was resolved, from compiler-grade down to
+text-matched — and where the most trusted tier is deliberately
+attenuated for ranking, because abundant evidence and reliable evidence
+are not the same thing.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gortex — Agent Memory Atlas">
+    <meta property="og:description" content="A code knowledge graph
+where every edge records how it was resolved, from compiler-grade down
+to text-matched — and where the most trusted tier is deliberately
+attenuated for ranking, because abundant evidence and reliable evidence
+are not the same thing.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gortex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A code knowledge graph
+where every edge records how it was resolved, from compiler-grade down
+to text-matched — and where the most trusted tier is deliberately
+attenuated for ranking, because abundant evidence and reliable evidence
+are not the same thing.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gortex — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Gortex",
+      "description": "A code knowledge graph where every edge records how it was resolved, from compiler-grade down to text-matched \u2014 and where the most trusted tier is deliberately attenuated for ranking, because abundant evidence and reliable evidence are not the same thing.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Five tiers of how-we-know, and the best one
+is discounted</p>
+          <h1>Gortex</h1>
+          <p class="document-deck">A code knowledge graph where every
+edge records how it was resolved, from compiler-grade down to
+text-matched — and where the most trusted tier is deliberately
+attenuated for ranking, because abundant evidence and reliable evidence
+are not the same thing.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zzet/gortex">
+              <span>Source</span>
+              <strong>zzet/gortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36" title="1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36">
+              <span>Analyzed revision</span>
+              <code>1145b9f3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-19</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Gortex is a code-intelligence engine in Go — roughly 960,000 lines,
+Apache-2.0, 3,814 commits and 30 contributors since 6 April 2026 — that
+parses 257 tree-sitter grammars into a persistent knowledge graph and
+serves it over MCP, a CLI and a web UI as a single static binary.</p>
+<p>The idea this atlas is here for is on the edges. Every edge in the
+graph carries an <code>Origin</code>: one of <code>lsp_resolved</code>,
+<code>lsp_dispatch</code>, <code>ast_resolved</code>,
+<code>ast_inferred</code> or <code>text_matched</code>. That is not a
+confidence score, it is a record of <strong>how the claim was
+established</strong> — a compiler told us, a dispatch table told us, the
+syntax tree was unambiguous, a type was inferred, or two strings looked
+alike. <code>EdgeTierScore</code> maps the ladder to a 0–1 weight, and
+it is deliberately the <em>one</em> shared mapping, so that a path
+confidence returned by <code>flow_between</code>,
+<code>taint_paths</code> and <code>trace_path</code> means the same
+thing in all three.</p>
+<p>Then it does something better than that, and it is the thing worth
+taking away. For graph centrality — HITS and PageRank over the call
+graph — the tiers are weighted <strong>differently</strong>, and the
+most trustworthy tier is <em>discounted</em>. The reasoning is written
+out: LSP providers materialise a dense layer of framework-wiring and
+interface-dispatch edges, and <em>"counting every such edge at full
+weight inflates the apparent centrality of utility and framework code
+over genuine domain authorities."</em> So <code>ast_resolved</code>
+becomes the 1.0 baseline, <code>text_matched</code> sits at 0.5 as a
+possible false positive, and the abundant compiler-grade tier is pulled
+down to 0.6.</p>
+<p>That is a distinction most systems in this atlas never make:
+<strong>how much you believe a fact and how much it should count toward
+ranking are different quantities</strong>, and the most reliable
+evidence can be the most misleading when it is also the most plentiful.
+A single confidence number cannot express it.</p>
+<p>The provenance model also survives contact with an old index, which
+is rarer than it sounds. <code>EffectiveOrigin</code> exists because
+reading <code>e.Origin</code> raw is <em>"almost always a bug"</em>:
+most stored edges predate per-provider stamping, and the comment
+supplies the count — in a 3.4-million-edge graph, 141,000 resolved
+<code>calls</code> edges carry no <code>Origin</code> at all. Since
+<code>OriginRank</code> maps the empty string to 0, below even
+<code>speculative</code>, a raw read sorts the single largest bucket of
+call edges beneath the weakest tagged tier. <code>EffectiveOrigin</code>
+backfills from edge kind, confidence and semantic source — and,
+critically, it is the <em>same</em> backfill that stamps the wire
+<code>origin</code> shown to the agent, so a gating decision made in the
+engine matches the provenance the agent was shown for that edge.</p>
+<p>The weak seam is measurement, and it is a mirror image of the one in
+<a href="../repowise/"><code>repowise</code></a>, read the same day.
+Gortex ships its ground truth <em>inside the repository</em> —
+<code>bench/baselines/groundtruth.json</code> and
+<code>queries.json</code> are right there, which repowise's are not. But
+that ground truth is <strong>ten queries whose expected file paths were
+hand-written against Gortex's own repository</strong>, the timings come
+from <em>"a single operator's machine"</em>, and the one surface that
+would be graded by somebody else — SWE-bench, whose harness is fully
+built and shipped in <code>eval/</code> and
+<code>cmd/gortex/eval_swebench.go</code> — has a results table in which
+every cell reads <code>TBD</code>. The README's <em>"Reproducible
+benchmarks"</em> is true; what is reproducible is a self-graded
+measurement.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Gortex treats a codebase the way a compiler treats a translation unit
+and then keeps the result. Parse to an AST, resolve what can be
+resolved, and store the resolution <em>together with the reason it was
+possible</em>.</p>
+<p>The key move is that resolution quality is <strong>first-class and
+persisted</strong>, not a transient property of the parse. The store
+comment makes the comparison explicit: Gortex persists the resolved
+target <em>and</em> its five-tier provenance, where a competitor
+persists only the target. Once the tier is on the row, three different
+consumers can each decide what to do with it — a ranker can score it, a
+query can refuse anything below a floor via <code>MeetsMinTier</code>,
+and a UI can collapse it to <code>lsp</code> / <code>ast</code> /
+<code>heuristic</code> via <code>ResolvedBy</code> without inventing its
+own thresholds.</p>
+<p>The second idea is that the same ladder is read through two different
+lenses. Confidence asks <em>is this edge real</em>. Centrality
+attenuation asks <em>should this edge confer authority</em>. The answers
+diverge precisely where evidence is both strong and abundant.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — One provenance ladder on every edge, read two different ways — as a confidence weight where compiler-grade ranks highest, and as a centrality weight where the abundant compiler-grade tier is deliberately attenuated below the structurally-unambiguous AST baseline.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: One provenance ladder on every edge, read two different ways — as a confidence weight where compiler-grade ranks highest, and as a centrality weight where the abundant compiler-grade tier is deliberately attenuated below the structurally-unambiguous AST baseline.
+flowchart TD
+    P[&quot;tree-sitter AST&lt;br/&gt;+ in-process resolvers&lt;br/&gt;+ optional LSP providers&quot;] --&gt; E[&quot;edge stored with Origin tier&quot;]
+    E --&gt; EO{&quot;EffectiveOrigin&lt;br/&gt;Origin stamped?&quot;}
+    EO --&gt;|&quot;no — 141k of 3.4M edges&quot;| BF[&quot;DefaultOriginFor backfill&lt;br/&gt;from kind + confidence + semantic_source&quot;]
+    EO --&gt;|&quot;yes&quot;| T[&quot;tier&quot;]
+    BF --&gt; T
+    T --&gt; C[&quot;EdgeTierScore — is it real&lt;br/&gt;lsp_resolved 1.0&lt;br/&gt;lsp_dispatch 0.95&lt;br/&gt;ast_resolved 0.9&lt;br/&gt;ast_inferred 0.7&lt;br/&gt;text_matched 0.4&quot;]
+    T --&gt; A[&quot;centrality weight — should it confer authority&lt;br/&gt;ast_resolved 1.0 (baseline)&lt;br/&gt;ast_inferred 0.8&lt;br/&gt;lsp tiers 0.6 (abundant, attenuated)&lt;br/&gt;text_matched 0.5&quot;]
+    C --&gt; PC[&quot;path confidence, shared across&lt;br/&gt;flow_between / taint_paths / trace_path&quot;]
+    A --&gt; HR[&quot;HITS / PageRank / rerank signal&quot;]
+    T --&gt; W[&quot;wire origin shown to the agent&lt;br/&gt;&lt;i&gt;same backfill, so gating matches display&lt;/i&gt;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>internal/graph</code> holds the node, edge and store model and
+is where the provenance work lives. <code>internal/indexer</code> walks
+and parses; <code>internal/search</code> carries a trigram index, an FTS
+normalisation layer, a vector arm, a rerank stage and a hybrid combiner
+behind a swappable backend. <code>internal/dataflow</code> implements
+flow and taint analysis with per-edge provenance threaded through.
+<code>internal/pathguard</code> confines filesystem access.
+<code>internal/lsp*</code> and <code>internal/serverstack</code> manage
+language servers and embedders.</p>
+<p>Storage is SQLite through the pure-Go <code>modernc.org/sqlite</code>
+driver, which is what lets the whole thing ship as a static binary with
+no dependency chain — a real distribution decision with a visible cost
+in query surface.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>internal/graph/edge.go</code> is the file. Five constants
+define the ladder; <code>OriginRank</code> orders it;
+<code>MeetsMinTier</code> turns it into a query filter with the explicit
+note that an empty filter always passes and an empty origin fails any
+non-empty filter; <code>ResolvedBy</code> collapses it for display;
+<code>EdgeTierScore</code> maps it to confidence; the
+<code>ProvenanceWeight*</code> constants map it, differently, to
+centrality; and <code>EffectiveOrigin</code> is the accessor everything
+is supposed to use.</p>
+<p>The docstring on <code>EffectiveOrigin</code> is the best piece of
+hazard documentation in this reading. It states the bug
+(<code>e.Origin</code> raw is almost always wrong), gives the magnitude
+(141k of 3.4M edges unstamped), explains the mechanism (empty string
+ranks below <code>speculative</code>, so the largest bucket sorts last),
+and closes the loop that matters (the backfill is also what the agent is
+shown, so gating on <code>EffectiveOrigin</code> keeps the decision
+consistent with the displayed provenance). A nil edge reports the
+trusted baseline rather than the weakest tier.</p>
+<p><code>internal/pathguard/pathguard.go</code> is the second path, and
+it separates its two halves on purpose: admission keeps escaping
+symlinks out of the corpus so every downstream reader inherits the fix,
+and each content sink re-checks so a corpus built some other way — an
+older on-disk index, a caller assembling its own file list — still
+cannot serve out-of-repository bytes. Confinement is relative to
+<em>"the ONE root that owns the file, never to the union of every
+tracked root: repo A must not read repo B's files."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nodes carry an id, kind, name, file path and a
+<code>RepoPrefix</code>. Edges carry a kind, a numeric confidence, an
+<code>Origin</code> tier, a coarse <code>Tier</code> label and a
+<code>Meta</code> map in which <code>semantic_source</code> participates
+in the backfill. Enrichment rows — churn, coverage, release blame — hang
+off node ids and carry their own <code>RepoPrefix</code>.</p>
+<p><code>EdgeProvenanceUpdate</code> exists as a distinct update shape,
+which is the schema admitting that provenance can be revised without the
+edge being rewritten — for instance when an LSP provider comes online
+after an initial AST-only pass and lifts an <code>ast_inferred</code>
+edge to <code>lsp_resolved</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A trigram searcher, an FTS arm with a normalisation mode, a vector
+arm and a rerank stage, combined by a hybrid searcher behind a swappable
+backend interface, with <code>equivalence.go</code> and a suite of
+equivalence tests holding the backends to the same answers. Structural
+questions are graph traversals, and the traversal results carry a path
+confidence computed from <code>EdgeTierScore</code> over the edges
+walked — which is why the shared mapping matters: a taint path and a
+call path that both report 0.7 mean the same thing about their weakest
+link.</p>
+<p><code>MeetsMinTier</code> is the abstention lever. A caller can
+demand <code>ast_resolved</code> or better and receive nothing rather
+than a text match, which is the shape this atlas keeps asking for — a
+retrieval path that can return fewer results on purpose.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Batch indexing through tree-sitter, lifted by in-process resolvers
+and, where available, by real language servers. A watcher drives
+incremental reindexing. Deletion is by disappearance:
+<code>DeleteFileMtimes</code> and <code>DeleteFileMetasByFiles</code>
+prune paths that no longer exist, scoped by <code>repoPrefix</code>.</p>
+<p>There is no record of a <em>wrong</em> edge. If a resolver produced a
+bad <code>text_matched</code> edge and a later pass produces the correct
+<code>lsp_resolved</code> one, the graph ends up with the right answer
+and no memory of the wrong one — which is correct for a derived index
+and is why the tombstone mark does not apply. The distinction worth
+holding is that Gortex's graph is <em>derived</em>, so re-deriving is a
+complete repair; a system storing asserted claims cannot repair itself
+that way, which is why the rest of this atlas argues about tombstones
+and this report does not.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with 175 configurable tools — the point of the number
+being that a deployment mounts a subset. <code>docs/cli.md</code>
+describes a <code>tools receipt</code> command that emits a
+<em>"context-budget receipt"</em> naming advertised versus deferred tool
+counts and <code>registered_tool_schemas: 0</code>, as an auditable
+record that driving Gortex from the CLI mounts no tool schemas into the
+model's context, with search and describe explicitly inspection-only so
+they <em>"never promote a tool into the live set."</em></p>
+<p>Making the context cost of a tool surface into an auditable artifact
+is a good idea and an unusual one; a 175-tool server that could not
+prove what it mounted would be a liability.</p>
+<p>One install configures every one of 19 detected coding agents.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Supply-chain posture is the strongest in this corpus: Sigstore-signed
+releases, SLSA Level 3, an OpenSSF Scorecard badge, and no dependency
+chain to speak of in the shipped binary. Screening the tree found no
+auto-executing surface — a <code>Makefile</code> executes at build time,
+<code>go.mod</code> and <code>go.sum</code> were inside the seven-day
+cooldown, four unpinned manifests live in benchmark fixtures and the
+Python eval harness, and <code>CLAUDE.md</code> carries instructions
+addressed to a reading agent, which this atlas records as data rather
+than following.</p>
+<p><code>pathguard</code> is a genuine security boundary treated as one,
+with the attack it prevents named in the package comment and both halves
+— admission and read-time — argued separately.</p>
+<p>The scope hazard is real and the project has documented it as a test
+rather than resolved it. The empty repo prefix is
+<strong>overloaded</strong>: in one family of calls
+(<code>ChurnRows</code>, <code>GetRepoNonContentNodes</code>,
+<code>NodeIDNamesByKindsSeq</code>) it is a wildcard meaning every
+repository; in another (<code>GetRepoContentNodes</code>,
+<code>GetRepoNodes</code>) it is an exact match on the repository whose
+prefix is empty. They share a signature.
+<code>empty_prefix_wildcard_test.go</code> exists as <em>"the
+fence"</em> against a future reader normalising one to the other, and
+states the failure mode precisely: collapsing a wildcard into an exact
+match does not error, it returns an empty slice, and <em>"the global
+pass built on it silently stops doing anything."</em></p>
+<p>Pinning both behaviours in tests is a defensible response to an API
+that cannot be changed without breaking callers. It is not the same as a
+boundary that cannot be widened by accident, and a reader adopting this
+store should treat the empty string as a value requiring a comment at
+every call site.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,323 Go test files. <code>equivalence_test.go</code> holds the
+swappable search backends to identical results, which is the right shape
+for a component with four implementations.</p>
+<p><code>BENCHMARK.md</code> documents five benchmark surfaces —
+reference-repo performance, token efficiency, a wire-format scorecard,
+daemon MCP-tool latency, and <code>search_symbols</code> retrieval
+recall — each with a headline number, a published table, a "How to
+reproduce" block and a link to source artifacts, plus an update protocol
+saying to re-run the subcommand and paste the new table.</p>
+<p>What that page is honest about, and what a reader should carry:</p>
+<ul>
+<li>The retrieval ground truth is
+<code>bench/baselines/groundtruth.json</code>: <strong>ten
+queries</strong>, with per-query expected file paths <em>"against the
+gortex repo"</em>, hand-curated by the project. It is committed and
+inspectable, which is more than most, and it is the project grading
+itself on its own codebase.</li>
+<li>The timings <em>"come from a single operator's machine"</em>, which
+the document states in its opening, along with the caveat that other
+hardware will show the same relative shape and different absolute
+numbers.</li>
+<li><code>BENCHMARK-SWE.md</code> is <em>"the public results
+template"</em>. The harness is real —
+<code>cmd/gortex/eval_swebench.go</code> plus the Python side in
+<code>eval/</code> — and the instructions for populating it are
+specific, down to requiring the harness commit SHA, the run date, and a
+<code>results/swebench/&lt;run-id&gt;/</code> directory with per-task
+JSON <em>"so any reviewer can spot-check the count."</em> The results
+section reads <strong>Last run: TBD</strong> and every cell is a
+dash.</li>
+</ul>
+<p>Shipping a rigorous empty template rather than a soft number is a
+defensible choice, and the reproduction instructions are better than
+most published results. The claim a reading of this tree supports is
+that <strong>no externally graded result is committed to this
+repository</strong>, which is a statement about the artifact and not
+about the engine.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<p><strong>Persist how you know, not just what you know.</strong> An
+edge that records <code>lsp_resolved</code> versus
+<code>text_matched</code> lets every downstream consumer set its own
+bar. An edge carrying only a float does not.</p>
+<p><strong>One shared tier→score function.</strong> Three different path
+tools return comparable confidences because exactly one mapping exists.
+Two mappings would have drifted.</p>
+<p><strong>Weight trust and authority separately.</strong> The most
+reliable evidence can be the most abundant, and abundance inflates
+centrality. Discounting the strongest tier for ranking while keeping it
+strongest for confidence is the correct answer to a problem most systems
+do not notice they have.</p>
+<p><strong>Make the accessor the safe one and say why.</strong>
+<code>EffectiveOrigin</code> over <code>e.Origin</code>, with the
+docstring carrying the count of unstamped rows and the consequence of
+reading raw. The unsafe field is still there; the comment is what stops
+it being used.</p>
+<p><strong>Back-fill toward the trusted baseline, not the weakest
+tier.</strong> A nil edge reports <code>ast_resolved</code>, and
+unstamped edges are inferred rather than sorted last. Treating "unknown"
+as "worst" silently buries the largest bucket in a maturing index.</p>
+<p><strong>Confine at admission <em>and</em> at every read.</strong> One
+check would have been cheaper; two means a corpus assembled by some
+other path still cannot serve out-of-root bytes.</p>
+<p><strong>Turn an unresolvable API ambiguity into a test.</strong> If
+the empty string must mean two things, pin both meanings with a failure
+message that explains the confusion, so the next reader's tidy-up fails
+loudly.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What is the real distribution of <code>Origin</code> tiers in a
+large index? The 3.4M-edge figure in the <code>EffectiveOrigin</code>
+comment is the only population number in the tree, and the value of a
+five-tier ladder depends entirely on whether the bottom tiers are rare
+or dominant.</li>
+<li>Were the centrality attenuation weights derived or chosen? 0.6 for
+the LSP tiers against a 1.0 AST baseline is a strong claim about how
+much framework wiring distorts authority, and nothing in the repository
+measures the rebalancing it produces.</li>
+<li>Does a lifted edge keep its history?
+<code>EdgeProvenanceUpdate</code> revises provenance in place, so an
+edge promoted from <code>ast_inferred</code> to
+<code>lsp_resolved</code> appears to lose the record that it was once a
+guess — which matters for a cached answer computed while it was
+one.</li>
+<li>What would ten queries become? The retrieval ground truth is the
+smallest committed eval in this reading, and it grades the project on
+its own repository; the SWE-bench harness that would answer this is
+built and unrun.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/graph/edge.go</code></td>
+<td>The five-tier ladder, both weight mappings, and
+<code>EffectiveOrigin</code></td>
+</tr>
+<tr>
+<td><code>internal/graph/store.go</code></td>
+<td>The store interface, <code>repoPrefix</code> throughout, and the
+resolved-target persistence note</td>
+</tr>
+<tr>
+<td><code>internal/graph/empty_prefix_wildcard_test.go</code></td>
+<td>The fence around the overloaded empty prefix</td>
+</tr>
+<tr>
+<td><code>internal/pathguard/pathguard.go</code></td>
+<td>Filesystem confinement at admission and at every content sink</td>
+</tr>
+<tr>
+<td><code>internal/dataflow/dataflow.go</code></td>
+<td>Flow and taint with per-edge provenance threaded through</td>
+</tr>
+<tr>
+<td><code>internal/search/</code></td>
+<td>Trigram, FTS, vector and rerank behind a swappable backend, with
+equivalence tests</td>
+</tr>
+<tr>
+<td><code>bench/baselines/groundtruth.json</code></td>
+<td>Ten queries, expected paths, curated against this repository</td>
+</tr>
+<tr>
+<td><code>BENCHMARK.md</code></td>
+<td>Five surfaces, with reproduction blocks and a single-machine
+caveat</td>
+</tr>
+<tr>
+<td><code>BENCHMARK-SWE.md</code></td>
+<td>The SWE-bench template; results still <code>TBD</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36"><code class="commit-id" title="1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36">1145b9f3…</code></a>
+— first reading. Screened before reading: no auto-run surface, a
+build-time <code>Makefile</code>, <code>go.mod</code> and
+<code>go.sum</code> inside the seven-day cooldown, four unpinned
+manifests in benchmark fixtures and the Python eval harness, and a
+<code>CLAUDE.md</code> carrying instructions addressed to a reading
+agent, recorded as data. Nothing was installed and nothing was executed;
+the benchmark tables were read, not reproduced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

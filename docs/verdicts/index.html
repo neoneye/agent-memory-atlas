@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 303 reports.</strong></p>
+<p><strong>This page covers all 304 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7487,6 +7487,72 @@ replayed by aggregate id or loaded by key. Also do not assume an
 interview answer is safe at rest: length validation is not redaction,
 and a credential pasted into one is written to disk in the clear at 0600
 and travels into the Seed.</li>
+</ul>
+<h3 id="gortex"><a
+href="../systems/gortex/"><code>Gortex</code></a></h3>
+<ul>
+<li>Best idea: the same provenance ladder read two different ways. Every
+edge carries an <code>Origin</code> — <code>lsp_resolved</code>,
+<code>lsp_dispatch</code>, <code>ast_resolved</code>,
+<code>ast_inferred</code>, <code>text_matched</code> — recording
+<em>how</em> the edge was established rather than how much it is
+believed. <code>EdgeTierScore</code> maps it to confidence with the
+compiler-grade tier highest, and it is the one shared mapping, so a path
+score means the same thing in <code>flow_between</code>,
+<code>taint_paths</code> and <code>trace_path</code>. For graph
+centrality the same ladder is weighted differently and the strongest
+tier is <em>discounted</em> to 0.6 against an <code>ast_resolved</code>
+baseline of 1.0, because LSP providers materialise a dense layer of
+framework wiring and "counting every such edge at full weight inflates
+the apparent centrality of utility and framework code over genuine
+domain authorities". How much you believe a fact and how much it should
+confer authority are different quantities, and one confidence number
+cannot carry both.</li>
+<li>Biggest risk: the measurement. The populated benchmarks are
+self-graded — <code>bench/baselines/groundtruth.json</code> is ten
+queries whose expected file paths were hand-curated "against the gortex
+repo", and the timings "come from a single operator's machine", both
+stated plainly in the documents. The one surface somebody else would
+grade, SWE-bench, ships as a results template: the harness is fully
+built in <code>cmd/gortex/eval_swebench.go</code> and
+<code>eval/</code>, the reproduction instructions demand the harness SHA
+and per-task JSON "so any reviewer can spot-check the count", and every
+cell of the results table reads <code>TBD</code>. No externally graded
+result is committed to this repository.</li>
+<li>Most reusable component: the <code>EffectiveOrigin</code> docstring,
+and the accessor it protects. Reading <code>e.Origin</code> raw is
+"almost always a bug" because most stored edges predate per-provider
+stamping — in a 3.4-million-edge graph, 141,000 resolved
+<code>calls</code> edges carry no <code>Origin</code> — and the empty
+string ranks below even <code>speculative</code>, so a raw read sorts
+the largest bucket of call edges beneath the weakest tagged tier. The
+backfill infers from kind, confidence and semantic source, returns the
+<em>trusted</em> baseline for a nil edge rather than the weakest tier,
+and is the same backfill that stamps the wire <code>origin</code> shown
+to the agent, so a gating decision matches the provenance the agent
+saw.</li>
+<li>Maturity impression: Apache-2.0, roughly 960,000 lines of Go, 3,814
+commits and 30 contributors since 6 April 2026, 2,323 test files, a
+single static binary with no dependency chain. Sigstore-signed releases,
+SLSA Level 3, an OpenSSF Scorecard. 175 configurable MCP tools with a
+<code>tools receipt</code> command that emits an auditable
+context-budget record naming advertised versus deferred counts and
+<code>registered_tool_schemas: 0</code>.</li>
+<li>Study when: you are storing derived facts whose reliability varies
+by how they were derived. The ladder is five constants and six small
+functions in one file, and the separation of a confidence weight from a
+centrality weight is the part that does not occur to most designs until
+the ranking is already wrong.</li>
+<li>Do not copy when: you need an unambiguous scope argument. The empty
+repo prefix means "every repository" in one family of store calls and
+"the repository whose prefix is empty" in another, and the two families
+share a signature; <code>empty_prefix_wildcard_test.go</code> exists as
+"the fence" against a future reader normalising one to the other, and
+names the failure mode — collapsing a wildcard into an exact match
+returns an empty slice rather than an error, so "the global pass built
+on it silently stops doing anything". Pinning both meanings in tests is
+a reasonable answer to an API that cannot change; it is not a boundary
+that resists being widened by accident.</li>
 </ul>
 <h3 id="repowise"><a
 href="../systems/repowise/"><code>repowise</code></a></h3>
