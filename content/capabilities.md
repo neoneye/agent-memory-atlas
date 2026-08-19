@@ -232,24 +232,24 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| SQLite | 140 | 36 | | Vector | 177 | 37 |
+| SQLite | 140 | 37 | | Vector | 177 | 38 |
 | Files on disk | 132 | 46 | | Lexical | 152 | 46 |
-| Postgres | 59 | 14 | | Graph | 54 | 9 |
+| Postgres | 59 | 15 | | Graph | 54 | 9 |
 | Delegated to the adopter | 31 | 6 | | No arm named in the review | 81 | 20 |
-| In-process only | 22 | 4 | |  |  |  |
+| In-process only | 22 | 5 | |  |  |  |
 | Chroma | 19 | 2 | |  |  |  |
-| Qdrant | 15 | 1 | |  |  |  |
-| Graph database | 14 | 2 | |  |  |  |
+| Qdrant | 15 | 2 | |  |  |  |
+| Graph database | 14 | 3 | |  |  |  |
 | Redis | 11 | 2 | |  |  |  |
 | LanceDB | 9 | 2 | |  |  |  |
 | Embedded key-value | 5 | 0 | |  |  |  |
-| Milvus | 5 | 1 | |  |  |  |
+| Milvus | 5 | 2 | |  |  |  |
 | FAISS | 5 | 2 | |  |  |  |
 | MongoDB | 2 | 0 | |  |  |  |
 | Elasticsearch | 1 | 0 | |  |  |  |
 | Pinecone | 1 | 0 | |  |  |  |
 | DuckDB | 1 | 0 | |  |  |  |
 
-Counted across 307 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 75 of 307 reports have been read that way, and the other 232 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 307 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 76 of 307 reports have been read that way, and the other 231 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

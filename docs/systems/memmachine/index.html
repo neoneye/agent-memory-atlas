@@ -106,14 +106,14 @@ loop.</p>
               <strong>MemMachine/MemMachine</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997" title="a681abf9623299bba8ad931e5d9af02fb6ef0997">
+            <a class="meta-pill revision-pill" href="https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f" title="2d28c1c1e57d1026335c4a829b1a9b0a918c114f">
               <span>Analyzed revision</span>
-              <code>a681abf9…</code>
+              <code>2d28c1c1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -255,7 +255,7 @@ way it is not for systems that keep only embeddings.</li>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Capture/write.</strong> <code>MemMachine.add_episodes</code>
-(<code>main/memmachine.py:680</code>). Writes to
+(<code>main/memmachine.py:682</code>). Writes to
 <code>episode_storage.add_episodes</code> first and awaits it, then fans
 out to episodic memory and
 <code>semantic_session_manager.add_message</code>. The semantic branch
@@ -275,13 +275,13 @@ features by tag, keeps groups at or above
 <code>_deduplicate_features</code> (line 447), which merges via LLM and
 unions the input citations (line 484).</p>
 <p><strong>Retrieval.</strong> <code>MemMachine.query_search</code>
-(line 947) and <code>list_search</code> (line 1025), with
-<code>_search_episodic_memory</code> (line 742) and the agent-mediated
-<code>_query_episodic_with_retrieval_agent</code> (line 800) plus
-<code>_dedupe_and_score_agent_long_term_episodes</code> (line 927).</p>
+(line 949) and <code>list_search</code> (line 1027), with
+<code>_search_episodic_memory</code> (line 744) and the agent-mediated
+<code>_query_episodic_with_retrieval_agent</code> (line 802) plus
+<code>_dedupe_and_score_agent_long_term_episodes</code> (line 929).</p>
 <p><strong>Delete/forget.</strong> Four distinct paths:</p>
 <ul>
-<li><code>delete_features</code> (line 1179) — hard delete by feature
+<li><code>delete_features</code> (line 1181) — hard delete by feature
 ID.</li>
 <li><code>delete_episodes</code> (line 1131) with
 <code>_cleanup_semantic_history</code> (line 1166).</li>
@@ -329,12 +329,40 @@ storage calls rather than merely stored — see
 org-level, so an org-level feature set is deliberately visible across
 projects. Because the key is applied as a filter on the read path, this
 earns <code>scope_enforced</code>.</p>
+<p>The key is a <strong>composed string</strong>, and that is where its
+limit sits. <code>_generate_set_id</code> builds
+<code>mem_{set_type}_{org_project}_{n_tags}_{hash(tag_keys)}__{sorted_tags}</code>,
+where <code>org_project</code> is <code>org_{org_id}</code> or
+<code>org_{org_id}_project_{project_id}</code>. Two pieces of that do
+real disambiguating work: a set-type discriminator separates an
+org-level set from a project-level one, and a hash of the metadata
+<em>keys</em> plus their count separates differently-shaped tag sets.
+Those together close the collisions that a plain concatenation would
+open between set types.</p>
+<p>What they do not close is a collision <em>within</em> one set type,
+because <code>org_id</code>, <code>project_id</code> and the tag values
+are interpolated unescaped and the separator is an ordinary underscore.
+An org of <code>acme_project_x</code> with project <code>y</code> and an
+org of <code>acme</code> with project <code>x_project_y</code> compose
+the same <code>org_project</code> segment, the same set type and the
+same tag shape — and therefore the same set id. Nothing constrains the
+inputs: <code>org_id</code> reaches the server as a bare
+<code>str = Field(default="")</code> on the MCP request model, with no
+pattern, and no validator for either identifier exists anywhere in the
+tree.</p>
+<p>Whether that is reachable depends on something outside this
+repository — who supplies <code>org_id</code>. A deployment deriving it
+from an authenticated token is fine; one that accepts it from the
+caller, which the shipped request model permits, has a scope key an
+untrusted party can shape. The mark stands, because what it certifies is
+that the key reaches the query, and it does. What it does not certify is
+that the key is injective, and here it is not.</p>
 <p><strong>No versioning, no correction chain, no TTL, no
 pinning.</strong> The <code>deleted_at</code> string appears once in the
 repository and not as a column on either memory type.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Two subsystems queried in parallel and merged by
-<code>SearchResponse</code> (<code>main/memmachine.py:736</code>), which
+<code>SearchResponse</code> (<code>main/memmachine.py:738</code>), which
 is simply <code>episodic_memory</code> and <code>semantic_memory</code>
 side by side — the caller receives both rather than one fused
 ranking.</p>
@@ -350,6 +378,25 @@ path: run a long-term search, pull short-term context, then dedupe and
 score across the results.
 <code>_dedupe_and_score_agent_long_term_episodes</code> is where
 cross-arm overlap is resolved.</p>
+<p>A second agent fills the same slot for multi-hop questions.
+<code>RaragQueryAgent</code> decomposes a query into hops, searches the
+direct and the two-step formulation <strong>in parallel</strong>,
+intersects the results, builds combined queries from the top overlaps,
+dedupes, and returns up to 200 episodes. Its decomposer is the part
+worth noting: hop-splitting is attempted first by a non-LLM spaCy pass,
+and the language model is the <em>fallback</em> when the optional
+<code>multihop</code> dependency group is absent — the cheap
+deterministic path is the default and the model is the degradation,
+which is the opposite of the usual arrangement. The prompt used in the
+fallback cites its source in the file (<a
+href="https://arxiv.org/abs/2508.03680">arXiv:2508.03680</a>).</p>
+<p>Both switches default off: <code>use_optimized_coq</code> selects the
+agent for the ChainOfQuery slot and <code>multi_hop_decomposer</code>
+enables the spaCy splitter, and a deployment that sets neither gets the
+original agent. So this is shipped and opt-in rather than shipped and
+live, and the import guard that makes the fallback possible logs a full
+stack trace at error level when the optional dependency is merely
+absent.</p>
 <p>A filter language (<code>common/filter/filter_parser.py</code>, with
 <code>And</code> and <code>Comparison</code> nodes and
 <code>to_property_filter</code>) is shared between the search and delete
@@ -456,7 +503,7 @@ twenty features decides what to do with them.</p>
 <p><strong>The deletion path is the weakest code in the repository, in
 two ways.</strong></p>
 <p><em>Deletion is acknowledged before it is performed.</em>
-<code>delete_session</code> (<code>main/memmachine.py:580</code>) sets
+<code>delete_session</code> (<code>main/memmachine.py:582</code>) sets
 the session status to <code>Deleted</code> and then calls
 <code>self._deletion_queue.put_nowait(session_data)</code>. The caller's
 request returns successfully at that point. The actual removal happens
@@ -470,14 +517,14 @@ between acknowledgement and completion loses the request entirely.</p>
 <p><em>A duplicated method silently drops error handling on that same
 path.</em> Class <code>MemMachine</code> defines
 <code>_cleanup_semantic_history</code> <strong>twice</strong> — at line
-563 and again at line 1166. Verified by AST: both are members of the
+565 and again at line 1168. Verified by AST: both are members of the
 same class, and Python binds the later one. They are not identical. The
 first wraps <code>get_semantic_service()</code> in
 <code>try/except ResourceNotReadyError</code>, logs, and returns so
 cleanup can be skipped. The second has no error handling at all. The
 defensive version is dead code.</p>
 <p>That matters because of where the sole caller sits
-(<code>_delete_session_episode_store</code>, line 367):</p>
+(<code>_delete_session_episode_store</code>, line 369):</p>
 <pre class="python"><code>while True:
     episode_ids = await episode_store.get_episode_ids(...)
     if not episode_ids:
@@ -691,6 +738,45 @@ under a poor query was not traced.</li>
 <code>evaluation/data/locomo10.json</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f"><code class="commit-id" title="2d28c1c1e57d1026335c4a829b1a9b0a918c114f">2d28c1c1…</code></a>
+— re-read two commits on. The mechanism this report describes is
+unchanged and the criticisms all still hold; what moved is retrieval,
+and what this reading adds is a limit on the one capability mark.</p>
+<p><code>RaragQueryAgent</code> fills the ChainOfQuery slot for
+multi-hop questions, intersecting a direct and a two-step search and
+building combined queries from the overlap. Its hop-splitter tries a
+non-LLM spaCy pass first and falls back to the language model when the
+optional dependency group is absent, which is the inverse of the usual
+ordering. Both switches — <code>use_optimized_coq</code> and
+<code>multi_hop_decomposer</code> — default to false, so it is shipped
+and opt-in. Section 6 carries it.</p>
+<p><strong>The <code>scope_enforced</code> mark now carries an evidence
+record, and the record is what surfaced the limit.</strong> The scope
+key is a composed string: a set-type discriminator and a hash of the
+metadata keys close the collisions between set <em>types</em>, and
+nothing closes a collision within one, because <code>org_id</code>,
+<code>project_id</code> and the tag values are interpolated unescaped
+between underscores. An org of <code>acme_project_x</code> with project
+<code>y</code> composes the same set id as an org of <code>acme</code>
+with project <code>x_project_y</code>. No validator for either
+identifier exists in the tree, and <code>org_id</code> arrives on the
+MCP request model as a bare <code>str = Field(default="")</code>. The
+mark stands — it certifies the key reaches the query, which it does —
+and section 9 now states what it does not certify.</p>
+<p>Every line number cited against <code>main/memmachine.py</code> moved
+by two: a two-line insertion at line 330 shifted everything below it,
+including the duplicated <code>_cleanup_semantic_history</code>, which
+an AST check confirms is still defined twice in class
+<code>MemMachine</code> — now at 565 and 1168. The citations in
+<code>semantic_ingestion.py</code> are unchanged because the file is.
+<code>stack_source</code> moves from seeded to reviewed, the storage
+rows having been read rather than inferred at this pin.</p>
+<p>Screened again: three dependency surfaces inside the seven-day
+cooldown, six <code>conftest.py</code> executing on collection, one
+<code>package.json</code> lifecycle script in an integration, and four
+unpinned manifests in examples and integrations. Nothing was installed
+and no test was run.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997"><code class="commit-id" title="a681abf9623299bba8ad931e5d9af02fb6ef0997">a681abf9…</code></a>
 — first reading.</p>

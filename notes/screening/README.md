@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 144 of 301 screened at the report's current pin.**
+**Progress: 147 of 307 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
-off, and 138 report(s) have no record at all.
+off, and 141 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 52 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 37 |
-| Repositories with build-time execution (`EXEC`) | 114 |
+| Repositories with an auto-run surface (`RUNS`) | 53 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 42 |
+| Repositories with build-time execution (`EXEC`) | 117 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -62,6 +62,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mempalace`](../../content/systems/mempalace.md) | `.devcontainer/devcontainer.json`, `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
+| [`mnemosyne`](../../content/systems/mnemosyne.md) | `.githooks/` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
@@ -78,7 +79,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
-| [`tokenmizer`](../../content/systems/tokenmizer.md) | `.mcp.json`, `server.json` |
+| [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 

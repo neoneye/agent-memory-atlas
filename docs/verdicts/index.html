@@ -2302,7 +2302,18 @@ than merely produce one. This is the strongest starting point in the
 atlas for that.</li>
 <li>Do not copy when: you want a library — the smallest useful
 deployment is a server, a database and a model provider — or your
-correctness bar includes "a deleted thing is provably gone".</li>
+correctness bar includes "a deleted thing is provably gone", or you are
+separating tenants who do not trust each other. Scope is real and
+reaches the query, but the key is a composed string:
+<code>mem_{set_type}_org_{org_id}[_project_{project_id}]_...</code>,
+with the identifiers interpolated unescaped between underscores. A
+set-type discriminator and a hash of the metadata keys close collisions
+<em>between</em> set types; nothing closes one <em>within</em> a type,
+so an org of <code>acme_project_x</code> with project <code>y</code>
+composes the same set id as an org of <code>acme</code> with project
+<code>x_project_y</code>. No validator for either identifier exists in
+the tree, and <code>org_id</code> arrives on the MCP request model as a
+bare <code>str = Field(default="")</code>.</li>
 </ul>
 <h3 id="memobase"><a
 href="../systems/memobase/"><code>memobase</code></a></h3>

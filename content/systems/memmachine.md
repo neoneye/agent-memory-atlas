@@ -6,17 +6,19 @@ root: ../..
 page_kind: system
 source_name: "MemMachine/MemMachine"
 source_url: https://github.com/MemMachine/MemMachine
-revision: a681abf9623299bba8ad931e5d9af02fb6ef0997
-revision_url: https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997
-analyzed_at: 2026-07-29
+revision: 2d28c1c1e57d1026335c4a829b1a9b0a918c114f
+revision_url: https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f
+analyzed_at: 2026-08-19
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "semantic memory — org, project and session composed into the set id that every read is filtered by | packages/server/src/memmachine_server/semantic_memory/semantic_session_manager.py | `_org_set_id` builds `org_{org_id}` or `org_{org_id}_project_{project_id}`, `_generate_set_id` prefixes a set-type discriminator and a hash of the metadata keys, and search passes the resulting set ids down to storage rather than filtering after the fact | packages/server/server_tests/memmachine_server/semantic_memory/test_semantic_session_manager.py::test_search_passes_set_ids_and_filters"
 stack_storage: "sqlite, postgres, graph, qdrant, milvus, memory"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Raw `Episode` (a conversation message) plus derived `SemanticFeature` — category, tag, feature name, value — carrying citations back to episode IDs"
   storage: "Episodes in SQLAlchemy (SQLite or Postgres); semantic features in Neo4j or Postgres/pgvector; vectors in sqlite-vec, Qdrant, Milvus or in-process hnswlib"
-  retrieval: "Parallel episodic and semantic search, optionally orchestrated by a retrieval agent that reranks and dedupes long-term hits"
+  retrieval: "Parallel episodic and semantic search, optionally orchestrated by a retrieval agent that reranks and dedupes long-term hits, or by a multi-hop variant that intersects a direct and a two-step search and splits hops with spaCy before falling back to a model"
   write: "Raw episode committed synchronously; semantic extraction deferred to a background loop polling every 2s in batches of five per set"
   update_delete: "LLM emits add/delete commands; features hard-delete; episode deletion cascades to semantic history; no rejected-value record"
   scoping: "org_id, project_id and session_key threaded through the read path, with org-level set types bypassing project_id"
@@ -24,7 +26,7 @@ matrix:
   background: "Ingestion loop with backoff, consolidation above a 20-feature threshold, and a queued session-deletion worker"
   trust: "Citations from every feature to the episodes that produced it, resolvable because episodes are retained; no candidate/verified/rejected state"
   strengths: "Provenance that actually resolves; a fast and stated write lag; reserved-key impersonation guard; ~1,978 test functions"
-  risks: "Deletion is acknowledged before it happens; a duplicated method silently drops error handling on the delete path; consolidation dilutes citations"
+  risks: "Deletion is acknowledged before it happens; a duplicated method silently drops error handling on the delete path; the scope key is a composed string whose identifiers are interpolated unescaped and validated nowhere; consolidation dilutes citations"
 ---
 
 ## 1. Executive Summary
@@ -153,7 +155,7 @@ LLM provider before anything is stored.
 
 ## 4. Essential Implementation Paths
 
-**Capture/write.** `MemMachine.add_episodes` (`main/memmachine.py:680`). Writes
+**Capture/write.** `MemMachine.add_episodes` (`main/memmachine.py:682`). Writes
 to `episode_storage.add_episodes` first and awaits it, then fans out to episodic
 memory and `semantic_session_manager.add_message`. The semantic branch only
 records history rows; no LLM runs here.
@@ -170,14 +172,14 @@ features by tag, keeps groups at or above `consolidation_threshold`, and hands
 each to `_deduplicate_features` (line 447), which merges via LLM and unions the
 input citations (line 484).
 
-**Retrieval.** `MemMachine.query_search` (line 947) and `list_search` (line
-1025), with `_search_episodic_memory` (line 742) and the agent-mediated
-`_query_episodic_with_retrieval_agent` (line 800) plus
-`_dedupe_and_score_agent_long_term_episodes` (line 927).
+**Retrieval.** `MemMachine.query_search` (line 949) and `list_search` (line
+1027), with `_search_episodic_memory` (line 744) and the agent-mediated
+`_query_episodic_with_retrieval_agent` (line 802) plus
+`_dedupe_and_score_agent_long_term_episodes` (line 929).
 
 **Delete/forget.** Four distinct paths:
 
-- `delete_features` (line 1179) — hard delete by feature ID.
+- `delete_features` (line 1181) — hard delete by feature ID.
 - `delete_episodes` (line 1131) with `_cleanup_semantic_history` (line 1166).
 - `delete_session` (line 580) — marks the session `Deleted`, then **enqueues**
   the real work on `_deletion_queue`.
@@ -215,13 +217,38 @@ set type is not org-level, so an org-level feature set is deliberately visible
 across projects. Because the key is applied as a filter on the read path, this
 earns `scope_enforced`.
 
+The key is a **composed string**, and that is where its limit sits.
+`_generate_set_id` builds
+`mem_{set_type}_{org_project}_{n_tags}_{hash(tag_keys)}__{sorted_tags}`, where
+`org_project` is `org_{org_id}` or `org_{org_id}_project_{project_id}`. Two
+pieces of that do real disambiguating work: a set-type discriminator separates
+an org-level set from a project-level one, and a hash of the metadata *keys*
+plus their count separates differently-shaped tag sets. Those together close the
+collisions that a plain concatenation would open between set types.
+
+What they do not close is a collision *within* one set type, because `org_id`,
+`project_id` and the tag values are interpolated unescaped and the separator is
+an ordinary underscore. An org of `acme_project_x` with project `y` and an org
+of `acme` with project `x_project_y` compose the same `org_project` segment,
+the same set type and the same tag shape — and therefore the same set id.
+Nothing constrains the inputs: `org_id` reaches the server as a bare
+`str = Field(default="")` on the MCP request model, with no pattern, and no
+validator for either identifier exists anywhere in the tree.
+
+Whether that is reachable depends on something outside this repository — who
+supplies `org_id`. A deployment deriving it from an authenticated token is
+fine; one that accepts it from the caller, which the shipped request model
+permits, has a scope key an untrusted party can shape. The mark stands, because
+what it certifies is that the key reaches the query, and it does. What it does
+not certify is that the key is injective, and here it is not.
+
 **No versioning, no correction chain, no TTL, no pinning.** The `deleted_at`
 string appears once in the repository and not as a column on either memory type.
 
 ## 6. Retrieval Mechanics
 
 Two subsystems queried in parallel and merged by `SearchResponse`
-(`main/memmachine.py:736`), which is simply `episodic_memory` and
+(`main/memmachine.py:738`), which is simply `episodic_memory` and
 `semantic_memory` side by side — the caller receives both rather than one fused
 ranking.
 
@@ -235,6 +262,24 @@ The optional **retrieval agent** (`retrieval_agent/`, wired at
 long-term search, pull short-term context, then dedupe and score across the
 results. `_dedupe_and_score_agent_long_term_episodes` is where cross-arm
 overlap is resolved.
+
+A second agent fills the same slot for multi-hop questions.
+`RaragQueryAgent` decomposes a query into hops, searches the direct and the
+two-step formulation **in parallel**, intersects the results, builds combined
+queries from the top overlaps, dedupes, and returns up to 200 episodes. Its
+decomposer is the part worth noting: hop-splitting is attempted first by a
+non-LLM spaCy pass, and the language model is the *fallback* when the optional
+`multihop` dependency group is absent — the cheap deterministic path is the
+default and the model is the degradation, which is the opposite of the usual
+arrangement. The prompt used in the fallback cites its source in the file
+([arXiv:2508.03680](https://arxiv.org/abs/2508.03680)).
+
+Both switches default off: `use_optimized_coq` selects the agent for the
+ChainOfQuery slot and `multi_hop_decomposer` enables the spaCy splitter, and a
+deployment that sets neither gets the original agent. So this is shipped and
+opt-in rather than shipped and live, and the import guard that makes the
+fallback possible logs a full stack trace at error level when the optional
+dependency is merely absent.
 
 A filter language (`common/filter/filter_parser.py`, with `And` and `Comparison`
 nodes and `to_property_filter`) is shared between the search and delete paths,
@@ -339,7 +384,7 @@ with them.
 **The deletion path is the weakest code in the repository, in two ways.**
 
 *Deletion is acknowledged before it is performed.* `delete_session`
-(`main/memmachine.py:580`) sets the session status to `Deleted` and then calls
+(`main/memmachine.py:582`) sets the session status to `Deleted` and then calls
 `self._deletion_queue.put_nowait(session_data)`. The caller's request returns
 successfully at that point. The actual removal happens later in
 `_delete_session_worker`, whose exception handler is
@@ -350,15 +395,15 @@ and no dead-letter path; the queue is an in-process `asyncio.Queue`, so a
 restart between acknowledgement and completion loses the request entirely.
 
 *A duplicated method silently drops error handling on that same path.* Class
-`MemMachine` defines `_cleanup_semantic_history` **twice** — at line 563 and
-again at line 1166. Verified by AST: both are members of the same class, and
+`MemMachine` defines `_cleanup_semantic_history` **twice** — at line 565 and
+again at line 1168. Verified by AST: both are members of the same class, and
 Python binds the later one. They are not identical. The first wraps
 `get_semantic_service()` in `try/except ResourceNotReadyError`, logs, and
 returns so cleanup can be skipped. The second has no error handling at all. The
 defensive version is dead code.
 
 That matters because of where the sole caller sits
-(`_delete_session_episode_store`, line 367):
+(`_delete_session_episode_store`, line 369):
 
 ```python
 while True:
@@ -559,5 +604,15 @@ like work before the first memory exists.
 - `evaluation/README.md`, `evaluation/retrieval_agent/`, `evaluation/data/locomo10.json`
 
 ## History
+
+**2026-08-19** — [`2d28c1c1e57d1026335c4a829b1a9b0a918c114f`](https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f) — re-read two commits on. The mechanism this report describes is unchanged and the criticisms all still hold; what moved is retrieval, and what this reading adds is a limit on the one capability mark.
+
+`RaragQueryAgent` fills the ChainOfQuery slot for multi-hop questions, intersecting a direct and a two-step search and building combined queries from the overlap. Its hop-splitter tries a non-LLM spaCy pass first and falls back to the language model when the optional dependency group is absent, which is the inverse of the usual ordering. Both switches — `use_optimized_coq` and `multi_hop_decomposer` — default to false, so it is shipped and opt-in. Section 6 carries it.
+
+**The `scope_enforced` mark now carries an evidence record, and the record is what surfaced the limit.** The scope key is a composed string: a set-type discriminator and a hash of the metadata keys close the collisions between set *types*, and nothing closes a collision within one, because `org_id`, `project_id` and the tag values are interpolated unescaped between underscores. An org of `acme_project_x` with project `y` composes the same set id as an org of `acme` with project `x_project_y`. No validator for either identifier exists in the tree, and `org_id` arrives on the MCP request model as a bare `str = Field(default="")`. The mark stands — it certifies the key reaches the query, which it does — and section 9 now states what it does not certify.
+
+Every line number cited against `main/memmachine.py` moved by two: a two-line insertion at line 330 shifted everything below it, including the duplicated `_cleanup_semantic_history`, which an AST check confirms is still defined twice in class `MemMachine` — now at 565 and 1168. The citations in `semantic_ingestion.py` are unchanged because the file is. `stack_source` moves from seeded to reviewed, the storage rows having been read rather than inferred at this pin.
+
+Screened again: three dependency surfaces inside the seven-day cooldown, six `conftest.py` executing on collection, one `package.json` lifecycle script in an integration, and four unpinned manifests in examples and integrations. Nothing was installed and no test was run.
 
 **2026-07-29** — [`a681abf9623299bba8ad931e5d9af02fb6ef0997`](https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997) — first reading.
