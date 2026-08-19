@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 304 reports.</strong></p>
+<p><strong>This page covers all 305 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7491,6 +7491,63 @@ replayed by aggregate id or loaded by key. Also do not assume an
 interview answer is safe at rest: length validation is not redaction,
 and a credential pasted into one is written to disk in the clear at 0600
 and travels into the Seed.</li>
+</ul>
+<h3 id="trueforge"><a
+href="../systems/trueforge/"><code>TrueForge</code></a></h3>
+<ul>
+<li>Best idea: a message's identity and its position live in different
+tables. Every context body goes into <code>thread_context_log</code>,
+append-only, "written exactly once" under an AUTOINCREMENT id; what a
+turn <em>has</em> is ordered <code>(pos, append_id)</code> rows pointing
+into it. Continuation, fork and compaction then become the same
+operation — rewrite a pointer list — and no body is ever destroyed to
+make room. The design states the property it buys: "Turns share no
+mutable structure … structural leaks are impossible." <a
+href="../systems/deepseek-harness/"><code>deepseek-harness</code></a>
+reaches the same shadow-don't-delete property with a
+<code>surface</code> column and a replace op; this reaches it from
+underneath, in the schema, with no status column at all, and gets
+branching for free.</li>
+<li>Biggest risk: nothing reads the retained history back. Every
+superseded body survives with an <code>append_id</code>, in a SQL
+database that also holds the <code>agent.context.overwrite</code> events
+that superseded it, and no tool, route or query returns one to an agent
+or a person. A question like "what was in this thread before the last
+compaction" is a join, and nothing implements it. The property is a fact
+about the schema rather than a capability the product offers.</li>
+<li>Most reusable component: the four store invariants, and the
+freeze-before-you-branch rule in particular. A turn cannot be a
+<code>previous_turn_id</code> while it is still <code>running</code>,
+every turn-scoped write is fenced on that status, and terminal turns are
+immutable — "a terminal read is a final read" — so what a fork inherits
+can never change underneath it. One 2,085-line contract suite asserts
+all of it against three store backends.</li>
+<li>Maturity impression: MIT, TypeScript, 411 commits and 26
+contributors since 23 July 2026, 183 test files, three
+<code>ISessionStore</code> implementations behind one contract suite.
+The compaction threshold adds its own summarisation prompt's 931 tokens
+before comparing, so the check accounts for the cost of the check; the
+usage number it reports afterwards carries an inline
+<code>NOTE(agent)</code> admitting it omits tool definitions and saying
+when it self-corrects. The benchmark uses a third-party dataset it
+declines to redistribute, a judge blind to both the reference value and
+the arm, all-or-nothing grading, and claims a <em>tie</em> on accuracy
+(10.7 against 10.7) with a token-cost win — the restrained claim where
+the flattering one was available. Its graded cells are not
+committed.</li>
+<li>Study when: you are building anything that compacts, branches or
+replays a conversation. The body/pointer split is the construction to
+reach for before adding a <code>superseded</code> column, and it is
+perhaps 60 lines of schema.</li>
+<li>Do not copy when: you need memory rather than history. Nothing
+stored is a claim — there is no status, confidence or provenance beyond
+which turn produced a message, and no notion of a message being wrong,
+only of its no longer being selected. Skills look like procedural memory
+and are not: they are <code>SKILL.md</code> packs sparse-cloned from a
+git ref, read-only, with no path by which an agent writes one. Scope is
+a <code>tenant_id</code> predicate on session reads only — turn queries
+take <code>session_id</code> alone — and the shipped server declares
+itself single-tenant and passes a constant.</li>
 </ul>
 <h3 id="gortex"><a
 href="../systems/gortex/"><code>Gortex</code></a></h3>

@@ -118,7 +118,7 @@ trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>304 memory systems with publicly readable source, each read at a
+<p>305 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. "Readable" is not "open source" — sixteen carry a
 non-open-source licence, listed in the <a
@@ -126,7 +126,7 @@ href="#what-the-licences-actually-say">appendix</a>. Five findings, with
 the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 21
-systems of 304 carry a rejected-value tombstone — a record keyed on the
+systems of 305 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -139,10 +139,10 @@ the embedding survives the delete until an unscheduled compaction — see
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 166 of 304 apply a scope key as a filter on the
+shallowest.</strong> 167 of 305 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 86 of 304
+<li><strong>Negative evidence is almost never tested.</strong> 87 of 305
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. A 2026-08-08 re-score puts 27 of the 37 that
@@ -151,7 +151,7 @@ material out of a projection, a preamble, a summarization or a write,
 which is a different and weaker thing. The 44 marks earned since have
 not been re-scored, so 27 is a floor on the strict reading rather than
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 66 of 304
+<li><strong>Trust is usually a number, not a state.</strong> 66 of 305
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -221,7 +221,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>304 reports across 303 repositories</strong>:
+<strong>305 reports across 304 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -267,7 +267,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-one tombstones, eighty-six negative-eval suites — are counts
+twenty-one tombstones, eighty-seven negative-eval suites — are counts
 <em>over inspectable code</em>, and a closed system could hold any of
 these mechanisms without this method ever knowing. And a mechanism's
 absence here is weaker evidence about the field than its presence:
@@ -295,8 +295,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 166 of
-304 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 167 of
+305 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -315,7 +315,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Three hundred and four systems do not fall into one hundred and
+<p>Three hundred and five systems do not fall into one hundred and
 seventy categories. They cluster around eight architectural commitments,
 and most systems belong to more than one — a coding-agent memory can
 also be verification-first, and a host runtime's plugin can also be a
@@ -3598,7 +3598,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 304 systems by the seven mechanisms judged against strict
+filters all 305 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -11866,6 +11866,46 @@ extraction recall</td>
 asserts a secret fails to reach the rendered context block</td>
 </tr>
 <tr>
+<td><code>trueforge</code></td>
+<td>A context message body in an append-only log, addressed by an
+<code>AUTOINCREMENT append_id</code> and written exactly once; what a
+turn <em>has</em> is an ordered set of <code>(pos, append_id)</code>
+rows pointing into that log</td>
+<td>SQLite or PostgreSQL behind one <code>ISessionStore</code>
+interface, with an in-process implementation beside them; six tables —
+session, turn, turn_thread, turn_thread_context, session_event,
+thread_context_log</td>
+<td>None in the search sense. A turn's context is assembled by reading
+its pointer rows in <code>pos</code> order; nothing ranks, scores or
+searches, and no agent-facing tool queries history</td>
+<td>Synchronous, inside a transaction, fenced on the turn still being
+<code>running</code>. Appends write a body row and a pointer row; an
+overwrite deletes the pointer rows and writes new ones</td>
+<td>Bodies are immutable and never deleted individually. Compaction
+replaces a thread's pointer list with two entries — a generated summary
+and a continuation message — leaving every superseded body in the log.
+<code>deleteSession</code> cascades and removes everything for that
+session</td>
+<td><code>tenant_id</code> on the session row, applied as a predicate on
+session reads and asserted in both directions by the store contract.
+Turn-level queries take <code>session_id</code> alone, and the shipped
+HTTP server passes one constant tenant</td>
+<td>A chat UI, an HTTP API with a TypeScript SDK, an embeddable UI SDK,
+MCP servers with OAuth, git-sourced <code>SKILL.md</code> packs
+sparse-cloned into a sandbox, and subagents</td>
+<td>None over the store. Compaction runs as a pre-LLM processor inside
+the turn when the context crosses a token threshold</td>
+<td>No epistemic state. Nothing stored is a claim — a body is a message
+that was sent, and the only judgement in the system is whether a message
+is currently in force</td>
+<td>Separating a message's identity from its position, so that forking,
+continuation and compaction are one copy path over immutable bodies and
+the design can state that structural leaks are impossible</td>
+<td>There is no reader. The superseded bodies are retained, addressable
+and never exposed — no tool, route or query returns pre-compaction
+context to an agent or a person</td>
+</tr>
+<tr>
 <td><code>truememory</code></td>
 <td>A message row, plus derived rows in fact_timeline, summaries and
 entity profiles</td>
@@ -12485,7 +12525,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>21 of 304:</em> <a
+<p><em>21 of 305:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -12510,7 +12550,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>66 of 304:</em> <a
+<p><em>66 of 305:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -12583,7 +12623,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>35 of 304:</em> <a
+<p><em>35 of 305:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -12625,7 +12665,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>166 of 304:</em> <a
+<p><em>167 of 305:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -12785,6 +12825,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
 href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
+href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
@@ -12799,7 +12840,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>88 of 304:</em> <a
+<p><em>89 of 305:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -12882,6 +12923,7 @@ href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a>, <a
 href="../systems/superlocalmemory/"><code>superlocalmemory</code></a>,
 <a href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
+href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vestige/"><code>vestige</code></a>, <a
@@ -12893,7 +12935,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>79 of 304:</em> <a
+<p><em>79 of 305:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -12978,7 +13020,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>86 of 304:</em> <a
+<p><em>87 of 305:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -13061,6 +13103,7 @@ href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code><
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
+href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/truememory/"><code>truememory</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
@@ -13084,12 +13127,12 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Eighty-six
-repositories of three hundred and four assert that particular material
-must <em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Read together
-rather than one at a time, they split cleanly in two, and the split says
-more than the count.</p>
+<p><strong>Negative evidence is almost never tested.</strong>
+Eighty-seven repositories of three hundred and five assert that
+particular material must <em>not</em> be retrieved — the assertion every
+scope, deletion and correction claim in this document ultimately rests
+on. Read together rather than one at a time, they split cleanly in two,
+and the split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -16722,7 +16765,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across three hundred
-and four systems, almost none can explain why they are shaped the way
+and five systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -18275,6 +18318,18 @@ eval harness, and a <code>CLAUDE.md</code> addressed to a reading agent
 that this atlas records as data; the benchmark tables were read rather
 than reproduced</li>
 <li><a
+href="https://github.com/truefoundry/trueforge">truefoundry/trueforge</a>
+at <a
+href="https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8"><code class="commit-id" title="bd156190ac0c6ab865a5cc549535a14a805f06e8">bd156190…</code></a>
+— read only; one auto-run surface (a <code>.cursor/rules/</code>
+directory), nine dependency manifests inside the seven-day cooldown on a
+repository under a month old, eight unpinned ranges with a
+<code>pnpm-lock.yaml</code> beside them, a build-time
+<code>benchmark/setup.py</code> and two <code>package.json</code>
+lifecycle scripts, and <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+addressed to a reading agent, recorded as data; the benchmark table was
+read rather than reproduced</li>
+<li><a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">Cyb3rb1ade/openclaw-plur1bus-memory</a>
 at <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
@@ -18758,8 +18813,8 @@ from 19 August 2026, and the lesson is narrower than the fix: a mark is
 about what the corpus of committed tests asserts, not about whether one
 harness can express it.</li>
 <li><strong>Two counts of the same corpus sat in one paragraph and
-disagreed.</strong> "Why the two counts differ" opened with <strong>304
-reports across 303 repositories</strong> and closed by saying a count of
+disagreed.</strong> "Why the two counts differ" opened with <strong>305
+reports across 304 repositories</strong> and closed by saying a count of
 systems is 290 and of repositories 289 — the trailing sentence was
 written when the corpus was that size and was not updated with the
 headline. <code>scripts/check_claim_counts.py</code> binds 23 count
