@@ -178,7 +178,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Human review surface | 79 of 301 |
 | Explicit trust state | 63 of 301 |
 | Bi-temporal validity | 34 of 301 |
-| Rejected-value tombstone | 20 of 301 |
+| Rejected-value tombstone | 21 of 301 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in thirty-three
@@ -346,7 +346,7 @@ No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
 
-**And be clear about what that thinning means.** Twenty of three hundred and one systems carry a
+**And be clear about what that thinning means.** Twenty-one of three hundred and one systems carry a
 tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
 failure it will pay for later, or the cost genuinely exceeds the benefit for most

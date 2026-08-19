@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty systems of three hundred and one
+> **This is not an established best practice.** Twenty-one systems of three hundred and one
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -129,7 +129,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty systems of 301 in the atlas have this.** That is still the most
+**Twenty-one systems of 301 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness

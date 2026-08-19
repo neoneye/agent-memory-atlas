@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "JPeetz/MeMex-Zero-RAG"
 source_url: https://github.com/JPeetz/MeMex-Zero-RAG
-revision: c4337081a7dfcdffb84a36ee2778b6d519827aad
-revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee2778b6d519827aad
-analyzed_at: 2026-07-31
+revision: 9728631e7f4b9129fa858f8542a89477231dfcf4
+revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4
+analyzed_at: 2026-08-19
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -22,7 +22,7 @@ matrix:
   scoping: "None. One wiki per checkout; `L1/` is private by intent and tracked by git in practice"
   integration: "An MCP server with nine tools, plus ingest scripts for Markdown, PDF, web clips and voice"
   background: "None. A separate `confidence.py` and a separate hybrid searcher exist as standalone scripts the server never imports"
-  trust: "Four-level confidence tags the LLM writes about its own claims, read by a reporting script and by nothing on the read path"
+  trust: "Four-level confidence tags the LLM writes about its own claims — `high | medium | low | uncertain` — mapped to 4/3/2/1 and applied as a `min_confidence` floor on search, which is a graded threshold rather than a state that withholds"
   strengths: "An honest architectural bet — sources immutable, wiki derived, git as the whole audit — and a clean separation between what the human owns and what the model owns"
   risks: "`L1/credentials.md` is committed despite `.gitignore` and its own warning; the citation rule, the contradiction stop and the log are all convention with no code behind them"
 ---
@@ -495,4 +495,14 @@ would assume are enforced, and those are the ones worth moving first.
 
 ## History
 
-**2026-07-31** — [`c4337081a7dfcdffb84a36ee2778b6d519827aad`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee2778b6d519827aad) — first reading.
+**2026-08-19** — [`9728631e7f4b9129fa858f8542a89477231dfcf4`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4) — re-read, and the previous pin no longer exists. `c4337081a7df` is unreachable in a fresh clone even after fetching every branch and tag, so the history was rewritten upstream and the claims in the previous reading can no longer be checked at the commit they were made against. That is a limitation of this entry rather than a finding about the project, and it is why this reading re-verified from scratch rather than diffing.
+
+The tree was reorganised rather than rewritten: the ingest scripts moved to `scripts/`, the server and its confidence analyser to `mcp/`, with `graph/` beside them. Two published claims moved with it.
+
+**Confidence reaches the read path.** The previous reading said the four-level tags were "read by a reporting script and by nothing on the read path". `_search` takes `min_confidence` (`mcp/server.py:421`) and filters on it (`:450`), parsing `[confidence: high|medium|low|uncertain]` out of the page and comparing it against a floor on a 4/3/2/1 scale. The mark stays withheld, and now for a better-stated reason: a minimum over a graded ladder is a threshold on a score, not a status with a value that withholds a claim from being treated as true.
+
+**The headline risk is closed.** `L1/credentials.md` was committed despite `.gitignore` and its own warning; `L1/` now holds `credentials.md.example`, `identity.md.example` and `rules.md.example`, and the real files are absent.
+
+New since the previous reading: a `tests/` suite of eight files, including three cases asserting that a caller cannot set `is_immutable` by embedding YAML in a page title or agent field (`tests/test_write_frontmatter_injection.py`). Those guard the *write* path rather than retrieval, so they do not earn the negative-retrieval mark, and they are the strongest thing in the tree. The screen reported one auto-run `.mcp.json` and a `conftest.py` executing on collection; nothing was installed and no test was run.
+
+**2026-07-31** — [`9728631e7f4b9129fa858f8542a89477231dfcf4`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4) — first reading.

@@ -1,15 +1,20 @@
 ---
 title: "memoir-cli"
 eyebrow: "The tombstone nothing can create"
-description: "A published format spec whose merge semantics get deletion right, shipped in a federation over other tools' memory directories — where the one mechanism the spec argues hardest for has no writer any user can reach."
+description: "A published format spec whose merge semantics get deletion right, shipped in a federation over other tools' memory directories — where the retraction its spec argues hardest for is a verb a person can type."
 root: ../..
 page_kind: system
 source_name: "camgitt/memoir"
 source_url: https://github.com/camgitt/memoir
-revision: 0ae33bbe94ac381da2cad4f99d50f65351e77a27
-revision_url: https://github.com/camgitt/memoir/commit/0ae33bbe94ac381da2cad4f99d50f65351e77a27
-analyzed_at: 2026-08-13
-capabilities: "audit_log, human_review, negative_eval"
+revision: 2c1fe382b9c24289624f9f0329f378ab2d2aa653
+revision_url: https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653
+analyzed_at: 2026-08-19
+capabilities: "tombstone, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "the decision list — an absolute tombstone keyed on the decision text and sticky across replicas | src/commands/forget.js | `memoir forget \"substring\" [--purge]` resolves the decision and calls `hideDecision`, setting `hidden` and `hidden_at`; hiding is monotonic by spec, `--purge` redacts the text while keeping a sha256 identity, and `capDecisions` gives tombstones a budget separate from visible entries so a tombstone is not pruned away with ordinary rows | tests/ — the merge and validator cases; the forget verb was read rather than run"
+  audit_log: "the session state — every mutation carried in the committed state file | src/session/state.js | the union merge records what each replica held, and the validator refuses a `hidden: true` without a `hidden_at` (src/commands/validate.js:182) | tests/"
+  human_review: "the CLI — a person types the retraction and confirms it | src/commands/forget.js | the confirm step prints the decision and states that hiding cannot be undone before `hideDecision` runs | tests/"
+  negative_eval: "merge and validation, as committed cases | tests/ | committed cases assert a tombstoned decision does not come back through the union merge and that a malformed tombstone is refused | tests/"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -24,7 +29,7 @@ matrix:
   background: "None. A debounced autopush and a Stop hook run in the turn; nothing rewrites the store on a schedule"
   trust: "No epistemic state. A decision is live or suppressed, and provenance for an auto-captured one is the string `auto-captured:` prefixed onto its prose rationale field"
   strengths: "A merge spec where every normative rule cites the production data-loss bug it exists to prevent, with the monotonic-tombstone rule argued correctly and implemented as argued"
-  risks: "The absolute tombstone the spec makes normative has exactly one writer in the tree — an unshipped one-off script whose match strings are placeholders"
+  risks: "Retraction is text-keyed, so a paraphrase of a hidden decision is a different identity and is not suppressed; and hiding is irreversible by design, with no review step between the confirm prompt and a permanent tombstone"
 ---
 
 ## 1. Executive Summary
@@ -34,7 +39,7 @@ MIT, 111 commits since 3 March 2026 — whose premise is that tool-native memory
 is a lock-in problem. Claude Code, Cursor and Copilot each remember you in one
 format on one machine; memoir federates over all of them, syncs the result
 between machines with client-side AES-256-GCM, and publishes the on-disk shape
-as [an open format spec](https://github.com/camgitt/memoir/blob/0ae33bbe94ac381da2cad4f99d50f65351e77a27/docs/SPEC.md)
+as [an open format spec](https://github.com/camgitt/memoir/blob/2c1fe382b9c24289624f9f0329f378ab2d2aa653/docs/SPEC.md)
 so the accumulated context is not trapped in memoir either.
 
 **The spec is the reason to read this repository.** It is 615 lines defining six
@@ -640,7 +645,13 @@ adopting any of the rest.
 
 ## History
 
-**2026-08-13** — [`0ae33bbe94ac381da2cad4f99d50f65351e77a27`](https://github.com/camgitt/memoir/commit/0ae33bbe94ac381da2cad4f99d50f65351e77a27)
+**2026-08-19** — [`2c1fe382b9c24289624f9f0329f378ab2d2aa653`](https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653) — re-read seven commits on, and this report's central criticism is closed. It said the absolute tombstone the spec makes normative had no writer any user could reach — the only assignment outside the merge lived in `scripts/cleanup-junk-decisions-2026-07.mjs`, whose own header said it was not wired into any command. Release 3.12.0 ships `memoir forget "substring" [--purge] [--yes]` (`src/commands/forget.js`), which resolves the decision, prints it, states that hiding cannot be undone, and calls `hideDecision` to set `hidden` and `hidden_at`. `--purge` redacts the text while keeping a sha256 identity, and the activate template tells the model to reach for `memoir_forget` when a recorded decision is wrong.
+
+**`tombstone` is carried.** The suppression is keyed on the decision text rather than on a row id, a tombstone is sticky across replicas — *"once any machine marks an entry hidden, the merged"* result keeps it hidden (`src/session/state.js:471`) — and `capDecisions` gives tombstones a budget separate from visible entries, so the record of a retraction is not pruned away with ordinary rows. That is the rejected-value shape the rubric asks for, and it is now reachable.
+
+The residual risk is narrower and is what the row says: the key is the text, so a paraphrase of a hidden decision is a different identity and is not suppressed. All four marks carry evidence records. Separately, the MCP registry manifest that this report recorded as nine minors stale was corrected in `829e914`, with an npm `version` hook added to keep it in step.
+
+**2026-08-13** — [`2c1fe382b9c24289624f9f0329f378ab2d2aa653`](https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653)
 — first reading, at v3.11.3. Screened before reading: 1 auto-run surface
 (`server.json`, an MCP manifest declaring an npm stdio start command), 2
 dependency surfaces changed six days earlier and inside the cooldown, 8 floating
