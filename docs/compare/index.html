@@ -7953,10 +7953,12 @@ an item in the session working set keyed on its normalized text</td>
 host tools' own directories. Its own files are
 <code>~/.config/memoir/session.json</code>, <code>events.jsonl</code>,
 and AES-256-GCM ciphertext in Supabase storage</td>
-<td>Substring term-count over whole file contents, plus a depth-3 crawl
-of <code>$HOME</code> for <code>CLAUDE.md</code>,
-<code>.cursorrules</code> and kin on every query. No index, no frequency
-weighting, no scope filter</td>
+<td>Field-weighted lexical scoring over parsed docs — aliases, name,
+description, headings, body — with saturating term frequency, a
+coverage-squared multiplier and prefix/plural folding, returning matched
+passages rather than files. A depth-3 <code>$HOME</code> crawl backs it,
+behind a 60-second index cache that a fresh CLI process never hits. No
+scope filter</td>
 <td>Synchronous. Explicit writes through 14 MCP tools; auto-capture
 parses Claude Code's own JSONL transcripts with regex extractors behind
 a quality gate, redacting secrets against 27 patterns first</td>

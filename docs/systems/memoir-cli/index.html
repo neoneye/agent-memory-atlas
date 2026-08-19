@@ -187,11 +187,11 @@ because a global floor of eight characters let
 <code>password: s3cr3t</code> through into a backup. The file lock is a
 correct <code>wx</code> create-exclusive with stale recovery and a
 comment explaining that tmp-then-rename prevents torn writes but not
-lost updates. Against that, retrieval is a substring count with no index
-and a <code>$HOME</code> crawl on every query, provenance for an
-auto-captured decision is a prefix on a prose field, and
-<code>cleanupOldBackups</code> gives a paying user a retention cap of 50
-where a free user gets 100.</p>
+lost updates. Against that, provenance for an auto-captured decision is
+a prefix on a prose field, and the two walkers over Claude Code's
+transcript tree disagree about which files are transcripts — one
+excludes subagent runs, the other does not and ships what it finds to a
+third party.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>memoir holds two kinds of memory with different lifecycles, and the
 split is the design.</p>
@@ -433,35 +433,63 @@ no user, tenant or auth boundary; the store is one person's files.</p>
 stable per-machine UUID paired with a mutable human label, with the spec
 noting that <em>"Labels may change; UUIDs MUST NOT."</em></p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p><code>searchMemories(query)</code> splits the query on whitespace
-and, for every file from every adapter, computes
-<code>score = terms.filter(t =&gt; content.includes(t)).length</code>,
-keeping anything above zero and sorting descending.
-<code>relevance</code> is that score over the term count.</p>
-<p>This is presence counting, not ranking. A file mentioning a term once
-outranks nothing that mentions it fifty times, because frequency is not
-measured. Nothing weights the title, the type, recency, or the section a
-hit lands in — and the unit returned is the <strong>whole file</strong>,
-so a 40 KB <code>CLAUDE.md</code> that happens to contain "auth" is
-returned in full alongside a three-line entry that is about auth.</p>
-<p>Then it crawls. Every query walks <code>$HOME</code> to depth 3
-looking for six filenames, skipping a hardcoded list
-(<code>node_modules</code>, <code>.git</code>, <code>dist</code>,
-<code>Library</code>, <code>Downloads</code> and others), reading and
-scoring each hit. There is no index and no cache, so the cost is paid
-per call and grows with the home directory rather than with the memory
-store.</p>
+<p><code>searchMemories(query)</code> tokenizes on punctuation, drops a
+60-word stoplist, and folds the commonest English inflections with rules
+that are deliberately timid — every one keeps a stem of at least four
+characters, so <code>deploys</code>, <code>deploying</code> and
+<code>deployed</code> collapse to <code>deploy</code> while
+<code>was</code> and <code>ring</code> are left alone. A term may also
+match by prefix from four characters at 0.6 of an exact hit, which is
+what lets <code>auth</code> reach <code>authentication</code> without
+letting <code>in</code> reach <code>index</code>.</p>
+<p>Each file is parsed into five scored fields with fixed weights —
+<code>aliases</code> 6, <code>name</code> 4, <code>description</code> 3,
+headings 2, body 1. A term takes its best field plus a quarter of the
+rest, capped; body term frequency saturates, so a file saying
+<code>deploy</code> forty times is worth about twice one saying it once,
+not forty times. The per-file total is then multiplied by
+<strong>coverage squared</strong>, where coverage is the fraction of
+query terms matched anywhere: a file covering two of three terms keeps
+44% of its raw score and one covering a third keeps 11%. Non-markdown
+files are halved on the grounds that <code>settings.json</code> is
+config rather than memory.</p>
+<p>The unit returned is a <strong>passage</strong>, not a file. Matched
+lines are taken with one line of context either side, adjacent hits
+merged into windows, windows ranked by distinct terms matched and then
+emitted in document order within a 700-byte budget, joined by
+<code>⋯</code>. Frontmatter is never included; a file whose only hit was
+in its description falls back to the first six non-blank body lines, so
+a description match still returns prose.</p>
+<p>The weighting is where the design commits to something.
+<code>aliases</code> outranks every other field because it exists for
+one purpose — the other names a memory might be searched under — and
+<code>memoir_remember</code> asks the model to supply them at write
+time, folding them into frontmatter through
+<code>withFrontmatterLists</code>. That is the dependency-free answer to
+semantic matching, and the module says so plainly: there is no concept
+matching, so <code>tiktok</code> reaches a memory about a vertical swipe
+feed only if something wrote <code>tiktok</code> into its aliases. The
+guarantee is prompt-shaped rather than structural — the
+<code>aliases</code> parameter is optional, and nothing refuses a memory
+that arrives without one.</p>
+<p>The <code>$HOME</code> crawl is bounded by caching rather than by
+scope. Discovery walks to depth three for six filenames past a skip
+list, and the file list is cached for 60 seconds and each parsed
+document is cached against its mtime and size, so a long-lived MCP
+process pays the walk once a minute instead of once a call. The CLI does
+not benefit: <code>memoir recall</code> is a fresh process per
+invocation, so both caches start cold and every run pays the full
+crawl.</p>
 <p>Retrieval is tool-mediated: the model calls
 <code>memoir_recall</code> and decides what to do with the result.
 Automatic injection is separate and unranked — the pinned block is the
 working set rendered whole, with hidden decisions filtered and decisions
 capped at a render limit.</p>
-<p>The failure modes follow directly. Over-recall is the default: a
-common term matches every file that mentions it. Under-recall is the
-complement, since matching is literal substring — "authentication" does
-not match a memory that says "auth", and there is no stemming, synonym
-or embedding path. And because the pinned block is prepended into files
-the host loads as part of its standing context, every working-set change
+<p>Two failure modes remain, and they are the ones lexical scoring
+cannot reach. A memory is findable by the words it or its aliases
+contain, so an unaliased entry is reachable only through its own
+vocabulary. And because the pinned block is prepended into files the
+host loads as part of its standing context, every working-set change
 rewrites a prefix the provider was caching.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are <strong>synchronous</strong> and there is no background
@@ -488,6 +516,32 @@ a model's own <em>"let's use Redis for the session cache"</em> mints a
 durable decision — the self-reinforcement shape this atlas keeps naming
 — and the only trace of it on the record is that <code>why</code> begins
 with <code>auto-captured:</code>.</p>
+<p>Which files count as a transcript is decided twice, by two walkers
+over <code>~/.claude/projects</code>, and they disagree.
+<code>src/context/capture.js</code> — the one that mints decisions —
+skips the <code>subagents</code>, <code>workflows</code> and
+<code>tool-results</code> directories and any
+<code>agent-*.jsonl</code>, with a comment naming the incident: a
+subagent transcript's first user message is the orchestrator's prompt,
+so <code>USER_NOTE_RE</code> was minting decisions out of system
+prompts, and <em>"three of the author's own pinned decisions were
+subagent-prompt fragments."</em> The filename check alone never caught
+them, because the files are <code>agent-&lt;id&gt;.jsonl</code> and the
+test was for the substring <code>subagent</code>.</p>
+<p><code>src/commands/snapshot.js:25</code> carries exactly that
+defeated test. It recurses into every directory without exception and
+admits any <code>.jsonl</code> whose name lacks the substring
+<code>subagent</code>, which is every
+<code>agent-&lt;id&gt;.jsonl</code> the other walker was taught to
+refuse. The sink is different and further out: the messages it collects
+are labelled <em>"User messages (what they asked for)"</em> in a prompt
+posted to <code>generativelanguage.googleapis.com</code>, which is asked
+for a <em>"Key decisions"</em> section. So the contamination one walker
+excludes reaches a summariser through the other, and that path leaves
+the machine. A fix applied at one walker is the general shape here — the
+predicate is duplicated rather than shared, and
+<code>src/adapters/index.js:58</code> is a third copy with a fourth
+spelling.</p>
 <p>Deduplication is exact-match on lowercased text at the auto-capture
 call site and inside <code>unionByText</code> at merge; there is no
 fuzzy or semantic dedup, which is what <code>memoir consolidate</code>
@@ -501,9 +555,17 @@ completions resurrect"</em> — and
 <code>visible</code>/<code>tombstones</code> are sliced separately so
 tombstones never consume the live budget. On the cloud side,
 <code>cleanupOldBackups</code> deletes every backup past a cap that is
-<code>MAX_BACKUPS_PRO</code> (50) for a paying account and
-<code>MAX_BACKUPS_FREE</code> (100) otherwise, so Pro prunes twice as
-aggressively as free on a destructive path.</p>
+<code>MAX_BACKUPS_PRO</code> (100) for a paying account and
+<code>MAX_BACKUPS_FREE</code> (10) otherwise.</p>
+<p>The way that cap is tested is the transferable part. A unit test
+covered it before, and it agreed with the constants — it pinned the
+literal numbers, so when the two were swapped the test moved with them
+and asserted that a paying account retained less.
+<code>test-cloud.mjs:34</code> asserts the relationship instead —
+<code>MAX_BACKUPS_PRO &gt; MAX_BACKUPS_FREE</code> — alongside a
+type-and-sign check. A test that restates a constant cannot detect a
+wrong constant; only one that states the property the constant exists to
+satisfy can.</p>
 <p>Malicious input has one strong defence and one gap. The strong one:
 every model-supplied filename in <code>memoir_remember</code> and
 <code>memoir_read</code> is required to be a bare markdown name with no
@@ -583,14 +645,14 @@ correction primitive the design argues hardest for is unavailable to the
 person whose memory it is.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Seventeen suites — fifteen Node, two bash — run by an aggregating
+<p>Sixteen suites — fourteen Node, two bash — run by an aggregating
 runner that <em>"runs every suite regardless of individual failures (the
 old <code>&amp;&amp;</code> chain short-circuited and masked
 co-occurring failures)"</em> and skips the bash suites on Windows.
 Coverage is memory-specific: session state and merge, cross-machine sync
 end to end, schema migration, the session lock, secret scanning,
 encryption, the MCP contract over real stdio, capture quality,
-auto-activation, tidy, and hidden decisions.</p>
+auto-activation, tidy, the event log, hidden decisions, and recall.</p>
 <p><code>test-decisions-hidden.mjs</code> is a <strong>negative
 retrieval assertion</strong> done properly: it asserts the non-hidden
 decision is present and the hidden one absent at three independent
@@ -613,18 +675,38 @@ fixture strings after every suite. It matches fixture markers rather
 than diffing, because a concurrent <code>memoir push</code> from another
 Claude Code session can legitimately rewrite the file mid-run and a hash
 compare would false-positive.</p>
-<p>What is missing is any measurement of the thing the product claims.
-There is no retrieval-quality eval — no fixture corpus with expected
-hits, no precision or recall number, nothing that would notice if the
-substring scorer got worse. The README's comparison table against
-claude-mem, basic-memory and mem0 is sourced to <em>"public docs, June
-2026"</em> and is a feature-matrix claim rather than a measured one,
-which it says. And the <code>fired_count</code> /
-<code>last_fired</code> feedback loop the spec reserves for lessons has
-no writer, which the spec labels as roadmap rather than shipped.</p>
-<p>One artifact contradicts the tree it ships in:
-<code>server.json</code>, the MCP registry manifest, declares version
-3.2.2 while <code>package.json</code> is at 3.11.3.</p>
+<p><code>test-recall.mjs</code> is the retrieval eval, and it is a real
+one at small scale. Six fixture documents are written into a scratch
+<code>$HOME</code> — an aliased entry, an authentication reference, a
+file that says <code>deploy</code> five times, a file that mentions
+every query term once in passing, a bare-markdown entry with no
+frontmatter at all, and a per-project <code>CLAUDE.md</code> — and seven
+queries assert which file comes back first. The cases are chosen to
+separate the scorer's claims from each other: <code>tiktok</code> must
+reach the swipe-feed entry through its aliases, <code>auth cookie</code>
+must reach the authentication file by prefix,
+<code>deploy tape authentication</code> must put the file covering all
+three terms above the files that hammer one, and <code>zzzz qqqq</code>
+must return nothing. Two structural assertions sit alongside them — that
+a returned passage never contains frontmatter, and that it stays within
+the byte budget — plus a cache test that stubs <code>readFile</code>,
+counts reads across two identical searches, touches one file and asserts
+exactly one re-read.</p>
+<p>What it is not is a measurement. There is no metric over the query
+set, no precision or recall number, and no held-out queries: the six
+documents and the seven questions were written by the author of the
+ranker, against the ranking rules as designed, so the suite is a
+regression guard on intended behaviour rather than evidence about
+behaviour on a real store. That distinction is the one the atlas draws
+everywhere, and it is worth naming here because the fixtures are
+unusually well chosen — good fixtures make a good regression test, and a
+good regression test is still not an eval.</p>
+<p>The README's comparison table against claude-mem, basic-memory and
+mem0 is sourced to <em>"public docs, June 2026"</em> and is a
+feature-matrix claim rather than a measured one, which it says. And the
+<code>fired_count</code> / <code>last_fired</code> feedback loop the
+spec reserves for lessons has no writer, which the spec labels as
+roadmap rather than shipped.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Write the merge rules down, and cite the bug beside each
@@ -700,10 +782,12 @@ it.</p>
 <p>It does not suit anything with more than one user, because there is
 no scope, no tenancy and no auth boundary anywhere — the store is one
 person's home directory. It does not suit a large corpus, because
-retrieval is an unindexed substring count over whole files plus a
-filesystem crawl, and that cost is paid per query. And it does not suit
-anyone who needs to be sure a memory is <em>gone</em>, because the
-mechanism for that is the one thing the product cannot do.</p>
+ranking is lexical with no index behind it and a home-directory crawl on
+the cold path, so cost scales with the filesystem rather than with the
+store. And it does not suit anyone who needs to be sure a memory is
+<em>gone</em> in the strong sense: retraction is reachable and
+monotonic, but it is keyed on the decision's text, so it suppresses the
+sentence rather than the belief.</p>
 <p>The maintenance budget it assumes is small — 11,932 lines, eight
 dependencies, one dominant author — and the code is dense with the kind
 of comment that makes a small codebase maintainable by someone else. The
@@ -712,16 +796,16 @@ a reader who takes section 5 and implements it against their own store
 gets most of the value here without adopting any of the rest.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>Was the absent tombstone writer a deliberate deferral or an
-oversight? The cleanup script's header reads as a stopgap for one
-incident, and the spec treats <code>hidden</code> as a standing
-mechanism; nothing in the tree says which was intended.</li>
-<li>Is the Pro/Free backup-cap inversion a typo or a policy? Reading the
-code cannot distinguish a swapped constant from an intentional tier
-design, and no test covers <code>cleanupOldBackups</code>.</li>
-<li>How does the substring scorer behave on a real store? The Appendix A
-survey describes one of 326 entry files, which is where the ranking
-would start to matter, and no eval measures it.</li>
+<li>How does the field-weighted scorer behave on a real store? The
+Appendix A survey describes one of 326 entry files, which is where the
+ranking would start to matter; the committed fixture corpus is six
+documents written alongside the ranker, and nothing measures the gap
+between the two.</li>
+<li>What fraction of memories carry aliases in practice? The field is
+weighted heaviest and is what stands in for semantic matching, but it is
+optional and populated by asking the model for it, so the retrieval
+quality of a real store is a function of how often that request was
+honoured — which a reading of the repository cannot see.</li>
 <li>Has any second implementation of the format appeared? The spec asks
 for one and a conformance claim would be the test of whether section 5
 is implementable from the text alone.</li>
@@ -796,7 +880,37 @@ the text, so a paraphrase of a hidden decision is a different identity
 and is not suppressed. All four marks carry evidence records.
 Separately, the MCP registry manifest that this report recorded as nine
 minors stale was corrected in <code>829e914</code>, with an npm
-<code>version</code> hook added to keep it in step.</p>
+<code>version</code> hook added to keep it in step;
+<code>server.json</code> and <code>package.json</code> both read
+3.12.0.</p>
+<p><strong>Two further published claims were stale in the same release
+and are corrected here, both in the direction of the project having
+closed a gap.</strong> Retrieval was not a substring count:
+<code>src/memory/search.js</code> scores five weighted fields with
+saturating term frequency and a coverage-squared multiplier, folds
+plurals and matches by prefix from four characters, and returns matched
+passages with a line of context instead of the head of each file. The
+<code>$HOME</code> crawl survives behind a 60-second index cache and an
+mtime document cache, which amortise for the long-lived MCP server and
+not for the CLI. And the backup retention constants are
+<code>MAX_BACKUPS_FREE</code> 10 against <code>MAX_BACKUPS_PRO</code>
+100, so the inversion this report reported is gone — with
+<code>test-cloud.mjs:34</code> now asserting
+<code>MAX_BACKUPS_PRO &gt; MAX_BACKUPS_FREE</code> rather than the
+literal numbers, which is why the earlier test agreed with the earlier
+bug. <code>test-recall.mjs</code> is new and is the retrieval eval
+section 10 recorded as absent: six fixture documents, seven ranking
+assertions and a no-match case.</p>
+<p>One finding is added rather than corrected.
+<code>src/context/capture.js</code> was taught to skip subagent
+transcripts, whose first user message is an orchestrator prompt — the
+source of three of the author's own spurious pinned decisions.
+<code>src/commands/snapshot.js:25</code> was not, and still admits any
+<code>.jsonl</code> whose name lacks the substring
+<code>subagent</code>, which every <code>agent-&lt;id&gt;.jsonl</code>
+does; it forwards the messages it finds to a third-party model as
+<em>"User messages (what they asked for)"</em>. The predicate is spelled
+a fourth way at <code>src/adapters/index.js:58</code>.</p>
 <p><strong>2026-08-13</strong> — <a
 href="https://github.com/camgitt/memoir/commit/0ae33bbe94ac381da2cad4f99d50f65351e77a27"><code class="commit-id" title="0ae33bbe94ac381da2cad4f99d50f65351e77a27">0ae33bbe…</code></a>
 — first reading, at v3.11.3. Screened before reading: 1 auto-run surface
