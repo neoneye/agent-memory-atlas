@@ -57,6 +57,46 @@ Its evaluation protocol, and the pilot in which the actual `mem0ai` package
 satisfies 3 of 15 governance obligations, is read against this atlas's own
 demands on the [benchmarks page](../benchmarks/#aoep).
 
+**A second survey names the axis this rubric is missing.** *The Architecture of
+Multi-Agent Systems* ([Code Pointer](https://codepointer.dev/p/the-architecture-of-multi-agent-systems),
+Yongkyun, 19 August 2026) decomposes multi-agent coordination into four planes —
+control, communication, state, and verification — and reads implementations
+rather than papers, which makes it checkable against this corpus in a way a
+literature survey is not: nine of the fifteen systems it works through
+([Letta](../systems/letta/), [Buzz](../systems/buzz/),
+[Prime Agent](../systems/prime-agent/), [OpenCode](../systems/opencode/),
+[CrewAI](../systems/crewai/), [AutoGen](../systems/autogen/),
+[LangGraph](../systems/langgraph/), [Agent Framework](../systems/agent-framework/),
+[Hermes Agent](../systems/hermes-agent/)) carry reports here. It is a blog
+survey and not a coded corpus, so it is weaker evidence than the study above;
+the overlap is what makes it worth citing.
+
+Where it agrees, it agrees on the thing this report already argues at length:
+that a verifier has to be able to disagree on grounds the workers cannot
+manufacture by agreeing with each other, which is the same objection as
+[retrieval certifying its own outputs](#retrieval-certifying-its-own-outputs)
+and the reason finding 4 above treats a negative assertion as the load-bearing
+one.
+
+Where it goes past this rubric is its **state plane**, and the gap is real. Its
+question is not what a memory holds or who may read it, but **who currently holds
+the right to change it** — claims, leases, atomic transitions, conditional
+updates that refuse a second claimant. None of the seven marks measures that.
+`scope_enforced` certifies a key on the read path and says nothing about
+concurrent writers, and the atlas has walked past the question repeatedly while
+recording its answers: [TrueForge](../systems/trueforge/) fences every
+turn-scoped write on the turn still being `running` and takes `BEGIN IMMEDIATE`;
+[lossless-context-mcp](../systems/lossless-context-mcp/) has no locking anywhere
+and does not need it, because content-addressed idempotent blobs and one
+append-only event file per writer remove the contention rather than guarding it;
+and [fx](../systems/fx/) contains both answers at once — lock files with a
+two-second deadline and a two-phase commit for its session log, and
+read-modify-write over a whole file with no lock for the memories a user asked
+it to keep. Three designs, three different theories of who owns a write, and no
+column in the matrix that would let a reader find them. That belongs in
+[the rubric's open work](../methodology/atlas-rubric/#open-work-on-this-rubric)
+beside authority and recoverability.
+
 **Start here:** [find a system](#2-comparative-matrix) in the matrix ·
 [filter by mechanism](../capabilities/) on the capability index ·
 [read one verdict](../verdicts/) per system ·

@@ -365,6 +365,36 @@ fixed yet.
   [a proposal](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-12-what-would-make-rollback-a-mark.md)
   states one in three clauses and the corpus sweep that would test it before
   anything is added.
+- **A third axis, named by a survey that reads implementations rather than
+  papers: who currently holds the right to write.** *The Architecture of
+  Multi-Agent Systems* ([Code Pointer](https://codepointer.dev/p/the-architecture-of-multi-agent-systems),
+  19 August 2026) separates coordination into control, communication, state and
+  verification planes, and its state plane asks a question none of the seven
+  marks asks: not what a record holds, and not who may read it, but which writer
+  owns it right now — claims, leases, atomic transitions, a conditional update
+  that refuses a second claimant.
+
+  `scope_enforced` is the nearest mark and it is not close: it certifies that a
+  key reaches the read path and says nothing about two processes writing at
+  once. The corpus already holds the answers without a column to put them in.
+  [TrueForge](../../systems/trueforge/) fences every turn-scoped write on the
+  turn still being `running`, takes `BEGIN IMMEDIATE`, and makes terminal turns
+  immutable, so ownership is a state machine.
+  [lossless-context-mcp](../../systems/lossless-context-mcp/) has no lock
+  anywhere and argues it does not need one, because content-addressed idempotent
+  blobs and one append-only event file per writer remove the contention instead
+  of guarding it. [fx](../../systems/fx/) holds both positions in one
+  repository — lock files with a two-second deadline and a two-phase intent/commit
+  protocol for its session log, and read-modify-write over a whole file with no
+  lock for the memories a user asked it to keep forever.
+
+  Three designs and three different theories of ownership is more instances than
+  either axis above had when it was named. What keeps this one off the list is
+  the same thing that keeps recoverability off: a definition that separates a
+  real ownership protocol from an incidental file lock, and that does not award
+  the mark to a system which simply never has two writers. Until that exists the
+  distinction belongs in prose, where each of those three reports already carries
+  it.
 
   Both omissions have one origin: the seven were chosen against failures found by
   reading implementations, which under-weights a failure whose implementations

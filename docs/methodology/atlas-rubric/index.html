@@ -480,7 +480,40 @@ definition is the failure this page records below for
 <code>audit_log</code>. The definition is the work, not the count; <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-12-what-would-make-rollback-a-mark.md">a
 proposal</a> states one in three clauses and the corpus sweep that would
-test it before anything is added.</p>
+test it before anything is added.</p></li>
+<li><p><strong>A third axis, named by a survey that reads
+implementations rather than papers: who currently holds the right to
+write.</strong> <em>The Architecture of Multi-Agent Systems</em> (<a
+href="https://codepointer.dev/p/the-architecture-of-multi-agent-systems">Code
+Pointer</a>, 19 August 2026) separates coordination into control,
+communication, state and verification planes, and its state plane asks a
+question none of the seven marks asks: not what a record holds, and not
+who may read it, but which writer owns it right now — claims, leases,
+atomic transitions, a conditional update that refuses a second
+claimant.</p>
+<p><code>scope_enforced</code> is the nearest mark and it is not close:
+it certifies that a key reaches the read path and says nothing about two
+processes writing at once. The corpus already holds the answers without
+a column to put them in. <a
+href="../../systems/trueforge/">TrueForge</a> fences every turn-scoped
+write on the turn still being <code>running</code>, takes
+<code>BEGIN IMMEDIATE</code>, and makes terminal turns immutable, so
+ownership is a state machine. <a
+href="../../systems/lossless-context-mcp/">lossless-context-mcp</a> has
+no lock anywhere and argues it does not need one, because
+content-addressed idempotent blobs and one append-only event file per
+writer remove the contention instead of guarding it. <a
+href="../../systems/fx/">fx</a> holds both positions in one repository —
+lock files with a two-second deadline and a two-phase intent/commit
+protocol for its session log, and read-modify-write over a whole file
+with no lock for the memories a user asked it to keep forever.</p>
+<p>Three designs and three different theories of ownership is more
+instances than either axis above had when it was named. What keeps this
+one off the list is the same thing that keeps recoverability off: a
+definition that separates a real ownership protocol from an incidental
+file lock, and that does not award the mark to a system which simply
+never has two writers. Until that exists the distinction belongs in
+prose, where each of those three reports already carries it.</p>
 <p>Both omissions have one origin: the seven were chosen against
 failures found by reading implementations, which under-weights a failure
 whose implementations are rare. Recording the gap is the answer while
