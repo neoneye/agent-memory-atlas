@@ -85,14 +85,14 @@ tombstone stores a digest rather than the value it refuses.</p>
               <strong>Perseus-Computing-LLC/perseus-vault</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785" title="60d7ac4fc41bff182a6a53826f0b230bc6b9b785">
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9" title="443239f45d39106169a2f37d193897c609850bd9">
               <span>Analyzed revision</span>
-              <code>60d7ac4f…</code>
+              <code>443239f4…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-08</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -561,6 +561,50 @@ than restating figures.</p>
 <p>The untested surface is the one the tool-count finding exposes:
 nothing in CI runs the audit's verification command, so a claim with a
 documented check went stale anyway.</p>
+<h2 id="10a-three-mechanisms-added-since-the-previous-reading">10a.
+Three mechanisms added since the previous reading</h2>
+<p>125 commits and roughly 109,000 added lines in <code>src/</code>
+alone sit between the two pins. Most of it extends machinery this report
+already describes; three pieces are new in kind and belong here.</p>
+<p><strong>A zero-token write gate.</strong>
+<code>src/write_gate.rs</code> is a deterministic precheck the provider
+flow calls <em>before</em> LLM enrichment: content-hash dedup, key
+supersession, and a stored-signature near-duplicate scan return
+<code>Store</code>, <code>Duplicate</code>, <code>Supersede</code>,
+<code>Forget</code> or <code>Adjudicate</code>, and only the last
+escalates to a model or an operator. Two properties are stated as
+contract rather than left to reading: the gate is <strong>read-only by
+construction</strong> — it never mutates — and <code>Forget</code> is
+<em>"deliberately conservative (only vague/empty notes) so the gate can
+never drop a substantive fact"</em>. Putting the cheap deterministic
+layer in front of the expensive one is the <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> pattern,
+applied to the <em>decision</em> rather than to the capture.</p>
+<p><strong>A self-audit that distinguishes "could not check" from
+"passed."</strong> <code>src/verify.rs</code> re-asserts the store's
+invariants against a live database over a
+<code>SQLITE_OPEN_READ_ONLY</code> connection, across eight checks, and
+its status enum is three-valued: <code>Pass</code>,
+<code>Unverified</code>, <code>Fail</code>. The exit contract makes the
+middle state load-bearing — <strong>0 all pass, 2 a check could not run
+(UNVERIFIED, never PASS), 3 an invariant is violated</strong> — so a
+verifier that cannot reach a check reports that rather than reporting
+success. Findings print <code>path:key</code> only, never values, so
+running it against a real store does not spill one. This is the same
+discipline the benchmarks page credits <code>a40-labs/memory</code> for,
+and the two are the only instances in the corpus.</p>
+<p><strong>A memory red-team harness, honest about being a
+skeleton.</strong> <code>benchmark/redteam/</code> aims three published
+attack families — MAFIA, MemCollusion and Chronos — at the recall and
+admission surfaces, with a <code>manifest.json</code> fixing budgets
+(300 probes, 90 poison writes) and an outcome taxonomy, worked probe and
+scenario datasets, and <code>harness.py</code> carrying deterministic
+validators for the four MemCollusion construction constraints plus
+sha256 pinning of harness and datasets. Its README opens by calling
+itself a <strong>skeleton</strong>, and lists what exists rather than
+what it found: no results are committed and no run is claimed. An
+adversarial suite for a memory store is something this atlas has asked
+for and not found; this is the first, and it has not been run.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -665,8 +709,39 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9"><code class="commit-id" title="443239f45d39106169a2f37d193897c609850bd9">443239f4…</code></a>
+— re-read 125 commits on, roughly 109,000 added lines in
+<code>src/</code> across 69 files. Every one of the seven marks was
+re-verified at this pin and every one holds, but one evidence record had
+gone stale under it: <code>human_review</code> named
+<code>mimir_action_approve</code> in <code>src/mcp.rs</code>, which
+existed at the previous pin and does not exist at this one. The approval
+surface is <code>admission_decide</code> in <code>src/tools.rs</code>,
+refusing any decision that is not <code>approve</code> or
+<code>reject</code>, and the record is re-anchored to it with
+<code>none</code> for its test, because no committed test names the
+path. Nothing in the previous reading was found stale, so this is an
+extension rather than a correction: section 10a adds the three
+mechanisms that are new in kind — <code>write_gate.rs</code>, a
+deterministic read-only precheck that decides
+Store/Duplicate/Supersede/Forget before any model call and refuses to
+let <code>Forget</code> drop a substantive fact; <code>verify.rs</code>,
+a runtime self-audit whose three-valued status makes
+<code>Unverified</code> a distinct exit code from <code>Pass</code>; and
+<code>benchmark/redteam/</code>, an adversarial harness against MAFIA,
+MemCollusion and Chronos whose README calls itself a skeleton and
+commits datasets and validators without results.</p>
+<p>The remaining growth was read at the level of what it changes about
+this report's claims rather than line by line, and it changed none of
+them. The screen reported two auto-run publication manifests —
+<code>server.json</code> and <code>smithery.yaml</code>, both registry
+metadata — plus a <code>build.rs</code> and a <code>Cargo.lock</code>
+inside its cooldown; nothing was installed and no test was run. One skew
+worth recording: <code>server.json</code> declares version 2.23.0 while
+the OCI package it lists pins 2.20.2.</p>
 <p><strong>2026-08-08</strong> — <a
-href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785"><code class="commit-id" title="60d7ac4fc41bff182a6a53826f0b230bc6b9b785">60d7ac4f…</code></a>
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9"><code class="commit-id" title="443239f45d39106169a2f37d193897c609850bd9">443239f4…</code></a>
 — re-pinned three commits after the previous reading, which was one day
 old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read
 against the previous pin.</p>

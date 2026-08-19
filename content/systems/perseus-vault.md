@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 60d7ac4fc41bff182a6a53826f0b230bc6b9b785
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785
-analyzed_at: 2026-08-08
+revision: 443239f45d39106169a2f37d193897c609850bd9
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9
+analyzed_at: 2026-08-19
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -19,7 +19,7 @@ capability_evidence:
   bitemporal: "entity store | src/schema.rs | valid_from_unix_ms and valid_to_unix_ms beside recorded_at_unix_ms | CI Bi-temporal gate"
   scope_enforced: "entity store — recall and journal listing | src/db.rs | workspace_hash predicate on recall; get_recent_journal(workspace_hash, limit) since #877 | src/db.rs::rejected_value_tombstone_scopes_isolate_workspaces"
   audit_log: "entity store — hash-chained journal | src/db.rs | journal() chaining prev_hash from genesis | src/db.rs::purge_erases_history_and_redacts_journal_for_purged_entities"
-  human_review: "entity store — action approval | src/mcp.rs | mimir_action_approve with mimir_action_resolve_timeout defaulting to deny | unknown"
+  human_review: "admission — an operator decision recorded on the entity it admits | src/tools.rs | `admission_decide` refuses any decision that is not `approve` or `reject` (:1854) and routes an approval through `.approve(reason)` (:1977), with `reviewable_write_result` (:29) marking a write reviewable rather than settled | none — no committed test names the approval path"
   negative_eval: "entity store — purge and journal redaction | src/db.rs | purge_erases_history_and_redacts_journal_for_purged_entities, paired with purge_does_not_redact_other_workspace_live_journal_rows | both are the tests"
 matrix:
   memory_unit: "An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds"
@@ -466,6 +466,46 @@ The untested surface is the one the tool-count finding exposes: nothing in CI
 runs the audit's verification command, so a claim with a documented check went
 stale anyway.
 
+## 10a. Three mechanisms added since the previous reading
+
+125 commits and roughly 109,000 added lines in `src/` alone sit between the two
+pins. Most of it extends machinery this report already describes; three pieces
+are new in kind and belong here.
+
+**A zero-token write gate.** `src/write_gate.rs` is a deterministic precheck the
+provider flow calls *before* LLM enrichment: content-hash dedup, key
+supersession, and a stored-signature near-duplicate scan return `Store`,
+`Duplicate`, `Supersede`, `Forget` or `Adjudicate`, and only the last escalates
+to a model or an operator. Two properties are stated as contract rather than
+left to reading: the gate is **read-only by construction** — it never mutates —
+and `Forget` is *"deliberately conservative (only vague/empty notes) so the gate
+can never drop a substantive fact"*. Putting the cheap deterministic layer in
+front of the expensive one is the [zero-LLM capture](../../patterns/zero-llm-capture/)
+pattern, applied to the *decision* rather than to the capture.
+
+**A self-audit that distinguishes "could not check" from "passed."**
+`src/verify.rs` re-asserts the store's invariants against a live database over
+a `SQLITE_OPEN_READ_ONLY` connection, across eight checks, and its status enum
+is three-valued: `Pass`, `Unverified`, `Fail`. The exit contract makes the
+middle state load-bearing — **0 all pass, 2 a check could not run (UNVERIFIED,
+never PASS), 3 an invariant is violated** — so a verifier that cannot reach a
+check reports that rather than reporting success. Findings print `path:key`
+only, never values, so running it against a real store does not spill one. This
+is the same discipline the benchmarks page credits `a40-labs/memory` for, and
+the two are the only instances in the corpus.
+
+**A memory red-team harness, honest about being a skeleton.**
+`benchmark/redteam/` aims three published attack families — MAFIA,
+MemCollusion and Chronos — at the recall and admission surfaces, with a
+`manifest.json` fixing budgets (300 probes, 90 poison writes) and an outcome
+taxonomy, worked probe and scenario datasets, and `harness.py` carrying
+deterministic validators for the four MemCollusion construction constraints
+plus sha256 pinning of harness and datasets. Its README opens by calling itself
+a **skeleton**, and lists what exists rather than what it found: no results are
+committed and no run is claimed. An adversarial suite for a memory store is
+something this atlas has asked for and not found; this is the first, and it has
+not been run.
+
 ## 11. For Your Own Build
 
 ### Steal
@@ -556,7 +596,11 @@ background consolidation passes are the leg no committed test walks.
 
 ## History
 
-**2026-08-08** — [`60d7ac4fc41bff182a6a53826f0b230bc6b9b785`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785) — re-pinned three commits after the previous reading, which was one day old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read against the previous pin.
+**2026-08-19** — [`443239f45d39106169a2f37d193897c609850bd9`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9) — re-read 125 commits on, roughly 109,000 added lines in `src/` across 69 files. Every one of the seven marks was re-verified at this pin and every one holds, but one evidence record had gone stale under it: `human_review` named `mimir_action_approve` in `src/mcp.rs`, which existed at the previous pin and does not exist at this one. The approval surface is `admission_decide` in `src/tools.rs`, refusing any decision that is not `approve` or `reject`, and the record is re-anchored to it with `none` for its test, because no committed test names the path. Nothing in the previous reading was found stale, so this is an extension rather than a correction: section 10a adds the three mechanisms that are new in kind — `write_gate.rs`, a deterministic read-only precheck that decides Store/Duplicate/Supersede/Forget before any model call and refuses to let `Forget` drop a substantive fact; `verify.rs`, a runtime self-audit whose three-valued status makes `Unverified` a distinct exit code from `Pass`; and `benchmark/redteam/`, an adversarial harness against MAFIA, MemCollusion and Chronos whose README calls itself a skeleton and commits datasets and validators without results.
+
+The remaining growth was read at the level of what it changes about this report's claims rather than line by line, and it changed none of them. The screen reported two auto-run publication manifests — `server.json` and `smithery.yaml`, both registry metadata — plus a `build.rs` and a `Cargo.lock` inside its cooldown; nothing was installed and no test was run. One skew worth recording: `server.json` declares version 2.23.0 while the OCI package it lists pins 2.20.2.
+
+**2026-08-08** — [`443239f45d39106169a2f37d193897c609850bd9`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9) — re-pinned three commits after the previous reading, which was one day old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read against the previous pin.
 
 **A claim in this report was wrong at the pin it was made on, and is retracted.** The scoping row said `workspace_hash` was applied in read queries on entities *and journal rows*. At `4008228` it was not: `get_recent_journal(limit)` selected `FROM journal ORDER BY created_at_unix_ms DESC LIMIT ?1` with no workspace predicate and blanked the field on the way out, under a comment reading *"Not selected by this listing query; purge-scoping metadata only."* A caller in one workspace listing recent journal events received every workspace's. `8e26619` (#877) fixed it upstream: the reader now takes a `workspace_hash`, and the unscoped variant is `get_recent_journal_admin`, gated on an in-process `JournalAdminAuthorization` whose own comment says no public transport mints one. The `scope_enforced` mark stands — entity recall was scoped throughout, and the rubric's mark measures the memory read path — but the matrix sentence overstated it and now says which pin changed it.
 

@@ -5805,7 +5805,7 @@ Privacy/deletion:
 - [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`16c28a940beac69fc060eb6bf5828061ad881d1a`](https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a)
 - [KimGLee/Cambium](https://github.com/KimGLee/Cambium) at [`78140714426d66b01246eb9cdefae00d7d93f74f`](https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f)
 - [os-tack/ostk-recall](https://github.com/os-tack/ostk-recall) at [`5f25e8444219e6bec5eb080112a1150abe78657f`](https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f)
-- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`60d7ac4fc41bff182a6a53826f0b230bc6b9b785`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785)
+- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`443239f45d39106169a2f37d193897c609850bd9`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9)
 - [BernhardJackiewicz/provem](https://github.com/BernhardJackiewicz/provem) at [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5)
 - [derekhu0002/Argo](https://github.com/derekhu0002/Argo) at [`9cd3e70fa28f4336b6df1181a771af9289f0f0f7`](https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7)
 - [Renkasha/Sovereign](https://github.com/Renkasha/Sovereign) at [`86018d651acb6500ea4d3c79acf5acbbaf547a76`](https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76)
