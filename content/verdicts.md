@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 301 reports.**
+**This page covers all 302 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -671,6 +671,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 102,862 lines of pure Perl with no CPAN dependency, atomic writes throughout, a stated memory-poisoning threat model — and, since 31 July 2026, a 412-line regression file on the tier mechanism that had none. I ran it: 92 assertions, none failing.
 - Study when: you want the best-shaped answer here to "how do I stop my agent believing something it made up once", and a short lesson in what an unset variable does to it.
 - Do not copy when: more than one person shares the store (there is no scope key and every entry is stamped `source_agent: 'unknown'`), or you need memory that survives being wrong — decay, age-out, dedup and prune all delete without a record.
+
+### [`potpie`](../systems/potpie/)
+
+- Best idea: an invalidation that cannot be recorded without a reason and does not delete anything. `InvalidationOp` takes a target entity key or edge, a **required** `reason`, and an optional `superseded_by_key`; the withdrawn node gets `valid_to` stamped "rather than being deleted, preserving the audit trail", and a `SUPERSEDES` edge is written from the replacement. There is no delete verb for a claim at all, and `ProvenanceRef` is stamped on the invalidation itself, so a retraction records who retracted it and from which source event.
+- Biggest risk: nothing is keyed on the value. Invalidation targets an entity key or an edge triple, so a claim withdrawn once and re-derived later under a different key is a new entity rather than a refused write. Everything a rejected-value tombstone needs — the reason, the provenance, the supersession edge — is already present, and only the key is row-shaped. Beside it there is no human review surface: an LLM-planned mutation that passes the shape validator is applied, and nothing holds it for a person.
+- Most reusable component: the `verification` record type. Corroboration is modelled as a *write* against an existing fix carrying `worked | didnt_work | partial`, rather than as a confidence increment — auditable in a way a score adjustment is not. Beside it, `FixRecord.attempted_failed_fixes` and `DecisionRecord.alternatives_rejected` keep the road not taken, which most stores here discard.
+- Maturity impression: Apache-2.0, 693 Python files across five packages, 764 commits since August 2024, 159 test files, and a graph behind a port so the same claim semantics run on FalkorDB, an embedded FalkorDB-lite, Neo4j or in-process NetworkX. The domain package's own test asserts it imports only the standard library and pydantic. `results.md` is a working scratchpad committed at the root.
+- Study when: you are designing a withdrawal path. This is the corpus's cleanest worked answer to "record a retraction with provenance and keep the history queryable", including an `as_of` claim query and a conformance test asserting the invalidated claim is absent from a default read.
+- Do not copy when: you need a rejected value to stay rejected through re-extraction, or a person in the loop before a model-planned mutation lands. Both are absent, and the first is one digest away.
 
 ### [`powermem`](../systems/powermem/)
 - Best idea: forgetting split into four separate predicates — `should_promote`, `should_forget`, `should_archive` and `reinforce`, each with its own threshold — so archival is a different decision from forgetting rather than the same score crossing a second line.

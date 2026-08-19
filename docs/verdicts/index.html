@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 301 reports.</strong></p>
+<p><strong>This page covers all 302 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -1651,6 +1651,49 @@ scope key and every entry is stamped
 <code>source_agent: 'unknown'</code>), or you need memory that survives
 being wrong — decay, age-out, dedup and prune all delete without a
 record.</li>
+</ul>
+<h3 id="potpie"><a
+href="../systems/potpie/"><code>potpie</code></a></h3>
+<ul>
+<li>Best idea: an invalidation that cannot be recorded without a reason
+and does not delete anything. <code>InvalidationOp</code> takes a target
+entity key or edge, a <strong>required</strong> <code>reason</code>, and
+an optional <code>superseded_by_key</code>; the withdrawn node gets
+<code>valid_to</code> stamped "rather than being deleted, preserving the
+audit trail", and a <code>SUPERSEDES</code> edge is written from the
+replacement. There is no delete verb for a claim at all, and
+<code>ProvenanceRef</code> is stamped on the invalidation itself, so a
+retraction records who retracted it and from which source event.</li>
+<li>Biggest risk: nothing is keyed on the value. Invalidation targets an
+entity key or an edge triple, so a claim withdrawn once and re-derived
+later under a different key is a new entity rather than a refused write.
+Everything a rejected-value tombstone needs — the reason, the
+provenance, the supersession edge — is already present, and only the key
+is row-shaped. Beside it there is no human review surface: an
+LLM-planned mutation that passes the shape validator is applied, and
+nothing holds it for a person.</li>
+<li>Most reusable component: the <code>verification</code> record type.
+Corroboration is modelled as a <em>write</em> against an existing fix
+carrying <code>worked | didnt_work | partial</code>, rather than as a
+confidence increment — auditable in a way a score adjustment is not.
+Beside it, <code>FixRecord.attempted_failed_fixes</code> and
+<code>DecisionRecord.alternatives_rejected</code> keep the road not
+taken, which most stores here discard.</li>
+<li>Maturity impression: Apache-2.0, 693 Python files across five
+packages, 764 commits since August 2024, 159 test files, and a graph
+behind a port so the same claim semantics run on FalkorDB, an embedded
+FalkorDB-lite, Neo4j or in-process NetworkX. The domain package's own
+test asserts it imports only the standard library and pydantic.
+<code>results.md</code> is a working scratchpad committed at the
+root.</li>
+<li>Study when: you are designing a withdrawal path. This is the
+corpus's cleanest worked answer to "record a retraction with provenance
+and keep the history queryable", including an <code>as_of</code> claim
+query and a conformance test asserting the invalidated claim is absent
+from a default read.</li>
+<li>Do not copy when: you need a rejected value to stay rejected through
+re-extraction, or a person in the loop before a model-planned mutation
+lands. Both are absent, and the first is one digest away.</li>
 </ul>
 <h3 id="powermem"><a
 href="../systems/powermem/"><code>powermem</code></a></h3>
