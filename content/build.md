@@ -121,7 +121,19 @@ property of it**. A tool whose whole value is finding the passage a lexical quer
 misses has no shippable version at the end of Stage 1, and staging vectors last
 would mean withholding the product to defend against a failure it does not have
 yet. Read the ordering as a claim about where correctness debt accumulates, not
-as a release plan for every shape. What still transfers in that case is the
+as a release plan for every shape.
+
+**There is adjacent measurement, and it is worth reading with its distance
+stated.** [arXiv:2605.05242](https://arxiv.org/abs/2605.05242) — *Beyond Semantic
+Similarity* (Li et al., 3 May 2026) — has agents work a raw corpus with
+general-purpose tools rather than through a similarity interface, and reports
+gains over sparse, dense and reranking baselines on BRIGHT and BEIR. That is
+evidence that a lexical floor can beat a dense index at *search over a fixed
+corpus*. It is not evidence for this staging order, which is about a store an
+agent writes to and later has to correct — a write path the paper does not
+touch. It is cited here because the nearest measurement to a claim is worth
+knowing even when it does not reach it, and because a reader who finds it later
+should not have to guess whether this page had seen it. What still transfers in that case is the
 cheap-before-the-index half — scope as a schema key and raw evidence retained —
 because both cost far more to retrofit once an index and its embeddings exist
 than they do to put in first.

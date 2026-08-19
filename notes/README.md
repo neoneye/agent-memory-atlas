@@ -8,6 +8,42 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-19-the-vocabulary-probe-lies.md](2026-08-19-the-vocabulary-probe-lies.md) —
+  Grepping a tree for `remember`/`tombstone`/`supersede` settled four repositories
+  in minutes and was wrong in every one until the hits were read. Five recurring
+  poisons: a committed BERT tokenizer vocabulary and a vendored licence (Warp),
+  the IR sense of `recall@k` (qmd), the systems sense of `memory` as RAM (SAM),
+  and a framework whose chat buffer is called memory (ai-tutor-app). The worse
+  failure is the clean probe: a `crates/`-scoped search made Warp's wired memory
+  client look declared-and-unwired until the producer check ran over the whole
+  tree. Five rules, including exclude `models/` and `LICENSE*` before counting.
+- [2026-08-19-when-the-systems-author-sends-a-patch.md](2026-08-19-when-the-systems-author-sends-a-patch.md) —
+  PLUR1BUS's maintainer filed a re-pin request and a PR rewriting the atlas's
+  report on his own system, carefully and accurately. Precedent recorded: check
+  what is already published first (most of it was, in more detail), fold in only
+  what survives independent reading at the pin and restate it in the atlas's
+  voice, and close rather than merge — the patch was against a superseded
+  baseline, indented two `matrix:` keys three spaces so they would not parse,
+  and, decisively, a reader cannot tell afterwards whose words a report carries.
+  Both threads answered publicly; outward-facing acts were confirmed first.
+- [2026-08-19-there-is-no-ideal-memory-only-a-frontier.md](2026-08-19-there-is-no-ideal-memory-only-a-frontier.md) —
+  Why the request for a page describing "the ideal memory — continuous learning,
+  never forgets, max on all KPIs" produced the tensions page instead. Each third
+  is refuted by the corpus: never-forgetting is the most-documented failure here,
+  Engram Alpha fits an abstention line per graph because abstention is not free,
+  and two systems found and deliberately cut the loop where retrieval certifies
+  its own outputs. Also the second argument — an ideal-memory page would fight
+  `/build/`'s "the correctable stack is not the default" — and the two decisions
+  inside the page that keep it from reading as an argument for building nothing.
+- [2026-08-19-measure-the-chrome-before-restyling-it.md](2026-08-19-measure-the-chrome-before-restyling-it.md) —
+  "The nav bar is crowded" was a horizontal-scroll bug: eleven items plus the
+  GitHub pill need 1,051px against a 1,240px header with the brand's 189px, so
+  zero slack at the widest layout and the whole document scrolling sideways from
+  ~1,300px down to the 760px breakpoint. The fix was sized from that arithmetic
+  rather than guessed. Carries the accessibility trap — `.brand-mark` is
+  aria-hidden, so `display: none` on the wordmark would have left the home link
+  with no accessible name — and the observation that the real pressure is eleven
+  top-level items, where the next fix is grouping rather than more shaving.
 - [2026-08-18-the-gaps-were-placement-not-content.md](2026-08-18-the-gaps-were-placement-not-content.md) —
   Four outside reviews in one session (Qwen twice, Grok, Kimi) produced four
   accepted changes, and only one was missing content: the producer check. The
