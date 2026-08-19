@@ -85,14 +85,14 @@ is the primary key.</p>
               <strong>mnemosyne-oss/mnemosyne</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01" title="bd22c0896b9726eb951a100a5015e04ae8769c01">
+            <a class="meta-pill revision-pill" href="https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0" title="19048f5c8adcaf84af226e475b056663007df6c0">
               <span>Analyzed revision</span>
-              <code>bd22c089…</code>
+              <code>19048f5c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -877,7 +877,7 @@ edges</li>
 <ul>
 <li><code>mnemosyne/core/beam.py:4203</code> —
 <code>invalidate</code></li>
-<li><code>mnemosyne/core/beam.py:8163</code> —
+<li><code>mnemosyne/core/beam.py:8705</code> —
 <code>degrade_episodic</code>, the uncalled compressor</li>
 <li><code>mnemosyne/core/beam.py:8504</code> — <code>sleep</code></li>
 <li><code>mnemosyne/core/hygiene.py</code> — noise audit, cleanup,
@@ -916,8 +916,33 @@ threat model</li>
 <li><code>_benchmarks/</code>, <code>docs/beam-benchmark.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0"><code class="commit-id" title="19048f5c8adcaf84af226e475b056663007df6c0">19048f5c…</code></a>
+— re-read 157 commits on, at the 4.0.0b1 beta. Most of that run is
+release machinery, changelog sweeps and tests; the memory package itself
+took 4,516 added lines across 25 files, and no claim in this report went
+stale under them. All five marks re-verified and all five now carry
+evidence records, which this report did not have.</p>
+<p><strong>The central finding sharpened rather than closed.</strong>
+<code>degrade_episodic</code> — the one unattended pass, which rewrites
+episodic content in place — still has no production caller. What changed
+is that it now has a dedicated regression suite:
+<code>tests/test_degrade_vector.py</code> exercises it across six cases
+under the marker <code>[C18.b]</code>, asserting that the content text
+is updated and the vector kept in step. So the pass is tested and
+unreachable at once, which is a narrower and more interesting statement
+than the previous reading could make: the argument for it is no longer
+that nobody wrote it, and it is still not a CLI verb and not an MCP
+tool. Its definition moved from <code>beam.py:8163</code> to
+<code>:8705</code> and the appendix now says so.</p>
+<p>The screen reported a <code>.githooks/</code> directory carrying a
+PII-blocking pre-commit and a tag-validating pre-push, neither installed
+— they require <code>git config core.hooksPath .githooks</code> — plus a
+<code>setup.py</code> and a <code>conftest.py</code> executing on
+collection and two manifests inside the cooldown. Nothing was installed
+and no test was run.</p>
 <p><strong>2026-08-06</strong> — <a
-href="https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01"><code class="commit-id" title="bd22c0896b9726eb951a100a5015e04ae8769c01">bd22c089…</code></a>
+href="https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0"><code class="commit-id" title="19048f5c8adcaf84af226e475b056663007df6c0">19048f5c…</code></a>
 — first reading. Screened before reading: committed
 <code>.githooks/</code>, a <code>setup.py</code> and a
 <code>tests/conftest.py</code> that execute at install and collection

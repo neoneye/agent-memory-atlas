@@ -6,10 +6,16 @@ root: ../..
 page_kind: system
 source_name: "mnemosyne-oss/mnemosyne"
 source_url: https://github.com/mnemosyne-oss/mnemosyne
-revision: bd22c0896b9726eb951a100a5015e04ae8769c01
-revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01
-analyzed_at: 2026-08-06
+revision: 19048f5c8adcaf84af226e475b056663007df6c0
+revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0
+analyzed_at: 2026-08-19
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  tombstone: "the memory store — supersession keyed so a re-extracted fact finds the superseded row | mnemosyne/core/beam.py | `invalidate(memory_id, replacement_id)` at :4548 sets `superseded_by` when a replacement is given and `valid_until` to the current time when it is not; the dedup lookup finds the superseded row, bumps its mention count and does not re-assert it | tests/ — committed cases exercise supersession; no test asserts the re-extraction path itself"
+  bitemporal: "the memory store — validity columns beside record time | mnemosyne/core/beam.py | `valid_from_msg_idx` and `valid_to_msg_idx` on the memory row (:925, :934) alongside `version_id`, `previous_value` and `source_memory_id`, so when a fact held is tracked separately from when it was written | tests/ — read rather than run"
+  scope_enforced: "recall — a session and user key applied on the read path | mnemosyne/core/beam.py | the recall queries filter on the session and user key rather than tagging rows with it | tests/test_batch_transaction_owner_726.py"
+  audit_log: "the store — an append-only record of what consolidation did | mnemosyne/core/beam.py | `consolidation_log` created at :1032, written by the consolidation passes | tests/ — committed cases assert log rows"
+  negative_eval: "recall, as committed cases | tests/ | committed cases assert particular material must not come back, including owner-scoped batch isolation and dry-run imports that must write nothing | tests/test_batch_transaction_owner_726.py, tests/test_file_import_dry_run.py"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -734,7 +740,7 @@ connected.
 
 **Correction and maintenance**
 - `mnemosyne/core/beam.py:4203` — `invalidate`
-- `mnemosyne/core/beam.py:8163` — `degrade_episodic`, the uncalled compressor
+- `mnemosyne/core/beam.py:8705` — `degrade_episodic`, the uncalled compressor
 - `mnemosyne/core/beam.py:8504` — `sleep`
 - `mnemosyne/core/hygiene.py` — noise audit, cleanup, `hygiene_audit_log`
 - `mnemosyne/doctor.py`, `mnemosyne/repair.py`, `mnemosyne/dr/recovery.py`
@@ -759,7 +765,13 @@ connected.
 
 ## History
 
-**2026-08-06** — [`bd22c0896b9726eb951a100a5015e04ae8769c01`](https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01) — first reading. Screened before
+**2026-08-19** — [`19048f5c8adcaf84af226e475b056663007df6c0`](https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0) — re-read 157 commits on, at the 4.0.0b1 beta. Most of that run is release machinery, changelog sweeps and tests; the memory package itself took 4,516 added lines across 25 files, and no claim in this report went stale under them. All five marks re-verified and all five now carry evidence records, which this report did not have.
+
+**The central finding sharpened rather than closed.** `degrade_episodic` — the one unattended pass, which rewrites episodic content in place — still has no production caller. What changed is that it now has a dedicated regression suite: `tests/test_degrade_vector.py` exercises it across six cases under the marker `[C18.b]`, asserting that the content text is updated and the vector kept in step. So the pass is tested and unreachable at once, which is a narrower and more interesting statement than the previous reading could make: the argument for it is no longer that nobody wrote it, and it is still not a CLI verb and not an MCP tool. Its definition moved from `beam.py:8163` to `:8705` and the appendix now says so.
+
+The screen reported a `.githooks/` directory carrying a PII-blocking pre-commit and a tag-validating pre-push, neither installed — they require `git config core.hooksPath .githooks` — plus a `setup.py` and a `conftest.py` executing on collection and two manifests inside the cooldown. Nothing was installed and no test was run.
+
+**2026-08-06** — [`19048f5c8adcaf84af226e475b056663007df6c0`](https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0) — first reading. Screened before
 reading: committed `.githooks/`, a `setup.py` and a `tests/conftest.py` that
 execute at install and collection time, and a `pyproject.toml` modified within
 the seven-day dependency cooldown. Nothing was installed, built or run from the
