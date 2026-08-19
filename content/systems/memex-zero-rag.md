@@ -505,4 +505,4 @@ The tree was reorganised rather than rewritten: the ingest scripts moved to `scr
 
 New since the previous reading: a `tests/` suite of eight files, including three cases asserting that a caller cannot set `is_immutable` by embedding YAML in a page title or agent field (`tests/test_write_frontmatter_injection.py`). Those guard the *write* path rather than retrieval, so they do not earn the negative-retrieval mark, and they are the strongest thing in the tree. The screen reported one auto-run `.mcp.json` and a `conftest.py` executing on collection; nothing was installed and no test was run.
 
-**2026-07-31** — [`9728631e7f4b9129fa858f8542a89477231dfcf4`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4) — first reading.
+**2026-07-31** — [`c4337081a7dfcdffb84a36ee2778b6d519827aad`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee2778b6d519827aad) — first reading.

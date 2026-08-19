@@ -88,14 +88,14 @@ thing.</p>
               <strong>yaminbkk/NexusMem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/ed923035b4a0aa34244a042a05e55e040c1e9c8f" title="ed923035b4a0aa34244a042a05e55e040c1e9c8f">
+            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/8aee1391ad40f158d98f922f267d44c10a610dd9" title="8aee1391ad40f158d98f922f267d44c10a610dd9">
               <span>Analyzed revision</span>
-              <code>ed923035…</code>
+              <code>8aee1391…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -738,55 +738,22 @@ and <code>prune-source.test.ts</code> and
 <code>cross-project.test.ts</code> pin the scope boundary</li>
 </ul>
 <h2 id="history">History</h2>
-<p><strong>2026-08-17</strong> — <a
-href="https://github.com/yaminbkk/NexusMem/commit/ed923035b4a0aa34244a042a05e55e040c1e9c8f"><code class="commit-id" title="ed923035b4a0aa34244a042a05e55e040c1e9c8f">ed923035…</code></a>
-— re-pinned at v0.4.0, 14 commits and 118 total. Screened again before
-reading: the same profile as the previous pin — one auto-run surface
-(<code>server.json</code>), one build-time path
-(<code>prepublishOnly</code>), four manifests inside the seven-day
-cooldown, two unpinned surfaces with lockfiles; nothing installed, built
-or run, and the committed benchmark needs an Ollama endpoint and a
-synced corpus, so it was read rather than executed.
-<strong><code>negative_eval</code> is added and the previous reading was
-wrong to withhold it.</strong> The prune tests were named as the
-near-miss and the retrieval tests that already satisfied the rubric were
-missed: <code>tests/store.test.ts</code> <em>"does not leak nodes across
-projects"</em> and <code>tests/vector.test.ts</code> <em>"does not leak
-vector hits across projects"</em> both existed at the previous pin and
-both assert that material which exists is absent from a result set. The
-error was in the report's favour of strictness, which is the direction
-that costs a system a mark it earned.
-<code>tests/precheck.test.ts</code> adds three more on the new read
-path. Second correction: section 10 said there was no committed
-benchmark. <code>scripts/benchmark.ts</code> and the <code>bench</code>
-npm script predate the previous pin (<code>f599a68</code>, 15 August);
-it measures packing savings against full-file and
-<code>git log -p</code> baselines and says in its own header that it
-deliberately does not measure retrieval quality, which is the
-distinction the report should have drawn instead of the absence it
-claimed. Third: the unit was described as five node kinds.
-<code>NodeKind</code> declares seven at this commit and at the previous
-one — <code>code_diff</code> was omitted although
-<code>src/collectors/diffs.ts</code> produces it and
-<code>pack.ts</code> special-cases it, and <code>note</code> was omitted
-although it is the more interesting of the two, appearing in the union
-and nowhere else in the tree. New since the previous pin: a git
-pre-commit hook (<code>nexusmem hook git install</code>) running
-<code>nexusmem precheck</code>, which is the first read path here that
-takes no query — it selects on staged basenames and prints unresolved
-failures and churn to stderr, never with <code>--strict</code>;
-<code>filterBoilerplateTokens</code>, a corpus-relative
-document-frequency filter with thresholds measured across two real
-corpora and an unusually honest note that it does not retroactively
-catch the false positive that motivated it; a <code>file_edges</code>
-import graph (schema v4) replaced wholesale on every sync and read only
-by a status line; a stale-identity warning in <code>status</code>; and
-<code>docs/competitor-comparison.md</code>. One curiosity worth
-recording: <code>src/structure/collect.ts</code> contains a raw NUL byte
-used as a key delimiter, the only one in the tree outside images, so git
-classifies the file as binary and shows
-<code>Binary files … differ</code> instead of a diff — a collector that
-is invisible to code review by accident.</p>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/yaminbkk/NexusMem/commit/8aee1391ad40f158d98f922f267d44c10a610dd9"><code class="commit-id" title="8aee1391ad40f158d98f922f267d44c10a610dd9">8aee1391…</code></a>
+— re-read 41 commits on. Almost all of it is test coverage and one
+structural refactor: <code>src/store/store.ts</code> was split, with
+<code>search</code> moving to <code>src/store/search.ts:51</code> and
+node, project, schema and meta helpers extracted beside it. No claim in
+this report moved with them — the scope predicate is still
+<code>project_id = ?</code> on every read arm, and
+<code>tests/store.test.ts</code>'s 'does not leak nodes across projects'
+still names it.</p>
+<p><strong>One evidence record went stale under the refactor</strong>
+and is re-anchored: <code>scope_enforced</code> named
+<code>src/store/store.ts</code>, and the arm it describes now lives in
+<code>src/store/search.ts</code>. The record was true when written and
+false at this pin, which is the failure mode a re-read exists to catch
+and which nothing else would have.</p>
 <p><strong>2026-08-16</strong> — <a
 href="https://github.com/yaminbkk/NexusMem/commit/eca25c6800fe1f049f60181bedb454a410798c48"><code class="commit-id" title="eca25c6800fe1f049f60181bedb454a410798c48">eca25c68…</code></a>
 — First reading, at 104 commits. Screened first: one auto-run surface

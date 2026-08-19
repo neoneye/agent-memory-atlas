@@ -651,7 +651,7 @@ adopting any of the rest.
 
 The residual risk is narrower and is what the row says: the key is the text, so a paraphrase of a hidden decision is a different identity and is not suppressed. All four marks carry evidence records. Separately, the MCP registry manifest that this report recorded as nine minors stale was corrected in `829e914`, with an npm `version` hook added to keep it in step.
 
-**2026-08-13** — [`2c1fe382b9c24289624f9f0329f378ab2d2aa653`](https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653)
+**2026-08-13** — [`0ae33bbe94ac381da2cad4f99d50f65351e77a27`](https://github.com/camgitt/memoir/commit/0ae33bbe94ac381da2cad4f99d50f65351e77a27)
 — first reading, at v3.11.3. Screened before reading: 1 auto-run surface
 (`server.json`, an MCP manifest declaring an npm stdio start command), 2
 dependency surfaces changed six days earlier and inside the cooldown, 8 floating

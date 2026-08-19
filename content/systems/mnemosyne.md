@@ -771,7 +771,7 @@ connected.
 
 The screen reported a `.githooks/` directory carrying a PII-blocking pre-commit and a tag-validating pre-push, neither installed — they require `git config core.hooksPath .githooks` — plus a `setup.py` and a `conftest.py` executing on collection and two manifests inside the cooldown. Nothing was installed and no test was run.
 
-**2026-08-06** — [`19048f5c8adcaf84af226e475b056663007df6c0`](https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0) — first reading. Screened before
+**2026-08-06** — [`bd22c0896b9726eb951a100a5015e04ae8769c01`](https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01) — first reading. Screened before
 reading: committed `.githooks/`, a `setup.py` and a `tests/conftest.py` that
 execute at install and collection time, and a `pyproject.toml` modified within
 the seven-day dependency cooldown. Nothing was installed, built or run from the
