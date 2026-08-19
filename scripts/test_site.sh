@@ -403,6 +403,42 @@ then
   exit 1
 fi
 
+# The JSON-LD block interpolates the page's own title and description, and a
+# description containing a double quote produced a block that did not parse —
+# invisible on the page, because a browser ignores an unparseable ld+json and
+# renders exactly the same. The values are escaped in build_site.sh; this checks
+# the result rather than trusting the escaping.
+if ! python3 - "$site_dir" <<'PYLD'
+import json
+import re
+import sys
+from pathlib import Path
+
+bad = []
+checked = 0
+for page in sorted(Path(sys.argv[1]).rglob("index.html")):
+    text = page.read_text(encoding="utf-8")
+    for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', text, re.S):
+        checked += 1
+        try:
+            json.loads(block)
+        except ValueError as error:
+            bad.append(f"{page}: {error}")
+
+if bad:
+    print("\n".join(bad), file=sys.stderr)
+    print(
+        f"{len(bad)} JSON-LD block(s) do not parse. A browser ignores these "
+        "silently, so nothing on the page looks wrong.",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+print(f"{checked} JSON-LD blocks parse.")
+PYLD
+then
+  exit 1
+fi
+
 missing_dates="$(grep -RLs '^analyzed_at:' "$project_dir/content/systems" --include='*.md' || true)"
 if [[ -n "$missing_dates" ]]; then
   echo "System reports missing analyzed_at frontmatter:" >&2

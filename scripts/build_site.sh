@@ -111,6 +111,15 @@ render_document() {
     *) echo "unknown layout '$layout' in $input" >&2; exit 1 ;;
   esac
 
+  # The JSON-LD block needs JSON-escaped values, and pandoc interpolates a
+  # template variable verbatim. Several descriptions here contain double quotes
+  # — build.md's opens with "my agent needs memory" — so the raw substitution
+  # produced a block that did not parse. Escape once, here, and pass it in.
+  local ld_title
+  local ld_description
+  ld_title="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$(sed -n 's/^title:[[:space:]]*//p' "$input" | head -n 1 | sed 's/^"//; s/"$//')")"
+  ld_description="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$(sed -n 's/^description:[[:space:]]*//p' "$input" | head -n 1 | sed 's/^"//; s/"$//')")"
+
   mkdir -p "$(dirname "$destination")"
   pandoc "$input" \
     --from=gfm \
@@ -125,6 +134,8 @@ render_document() {
     --variable="capability_strip:$capability_strip" \
     --variable="stance_label:$stance_label" \
     --variable="shell_class:$shell_class" \
+    --variable="ld_title:$ld_title" \
+    --variable="ld_description:$ld_description" \
     --output="$destination"
 
   # The diagrams render client-side, so an unrendered page hands a reader the
