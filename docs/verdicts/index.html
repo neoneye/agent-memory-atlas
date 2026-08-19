@@ -2695,9 +2695,13 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a></h3>
 both candidate decisions visible instead of guessing between them — the
 atlas's only state that means "I do not know which of these is in
 force".</li>
-<li>Biggest risk: the redaction functions are unit-tested in isolation
-and nothing asserts a secret fails to reach the rendered context
-block.</li>
+<li>Biggest risk: redaction is verified everywhere except where it is
+read. The predicate is unit-tested and the <em>store</em> is covered end
+to end — <code>test_secrets_redacted_in_nodes</code> drives a
+live-shaped <code>sk-ant</code> key through the real extraction path and
+asserts it reaches no node's label or summary — but nothing asserts the
+same of <code>to_context_block()</code>, the text actually handed to the
+model, which a separate renderer assembles from those nodes.</li>
 <li>Most reusable component: the status model and its transition table,
 worth copying even if you never run the tool; and storing the
 <em>argument</em> for a correction rather than only the fact of it.</li>

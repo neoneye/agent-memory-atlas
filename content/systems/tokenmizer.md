@@ -8,17 +8,18 @@ source_name: "Shweta-Mishra-ai/tokenmizer"
 source_url: https://github.com/Shweta-Mishra-ai/tokenmizer
 revision: 8495e2598b8c11547c64e5dc1f19cd198d5e363d
 revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d
-analyzed_at: 2026-08-18
-capabilities: "trust_state, scope_enforced, audit_log"
+analyzed_at: 2026-08-19
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the decision graph — a nine-value status on decision nodes with the excluded set named as one constant | tokenmizer/graph_memory/types.py | `NodeStatus` and `INACTIVE_STATUSES`, a frozenset of SUPERSEDED, MODIFIED (its backward-compatible alias), INVALIDATED and ARCHIVED; `decision_tracker.py` supersedes on clear evidence and writes CONTESTED on both sides when the evidence is ambiguous, and CONTESTED stays retrievable on purpose | tests/unit/test_contested_decisions.py"
   scope_enforced: "the HTTP read path — a principal derived from the credential, claimed per session and checked before any session-scoped route answers | tokenmizer/security/ownership.py | `principal_for_key` and `OwnershipStore.check_access`, reached through the `verify_session_access` dependency in tokenmizer/api/routes_graph.py, which claims only on write methods, fails closed to 503 when no principal was established, and answers 404 rather than 403 so the route cannot be used as a session-name oracle | tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http"
   audit_log: "the graph store — every decision status transition appended beside the node it moved | tokenmizer/graph_memory/persistence.py | `persist_transition` writes the transition row and pruning is written to keep transitions alive past the node | tests/unit/test_graph_persistence.py"
+  negative_eval: "extraction and the supersession matcher — committed cases that particular material must not reach the graph | tests/unit/test_graph.py | `test_secrets_redacted_in_nodes` puts an Anthropic-shaped key through the real `extract_from_messages` path and asserts `sk-ant` appears in no node's label or summary, and `test_contested_decisions.py` asserts a decision about a different purpose in the same topic bucket is not returned as a contradiction | tests/unit/test_graph.py, tests/unit/test_contested_decisions.py"
 stack_storage: "sqlite"
 stack_retrieval: "graph"
 stack_source: "seeded"
 matrix:
-  memory_unit: "A graph node — one of fourteen types (task, decision, file, error, endpoint, schema, goal, test…) carrying a label, a summary and one of eight statuses"
+  memory_unit: "A graph node — one of fourteen types (task, decision, file, error, endpoint, schema, goal, test…) carrying a label, a summary and one of nine statuses"
   storage: "SQLite: nodes and edges plus a separate `decision_transitions` table that survives graph pruning"
   retrieval: "`query()` over the graph, excluding superseded, archived and invalidated nodes; `to_context_block()` renders a resume block"
   write: "A hybrid extractor over session messages, with an ontology and a validator, then a contradiction check on every decision node"
@@ -157,15 +158,34 @@ withheld.
 
 `query()` walks the graph and excludes `SUPERSEDED`, `ARCHIVED` and
 `INVALIDATED`; `to_context_block()` renders the resume. A comment at
-`graph.py:744` records a fixed bug — *"was calling query() which excludes
+`graph.py:832` records a fixed bug — *"was calling query() which excludes
 SUPERSEDED nodes"* — from a path that needed the hidden ones, which is the
 ordinary cost of expressing exclusion as a filter every reader has to remember.
+
+The path that needed them is `query_at_time`, which answers the question its
+docstring gives as *"What did we decide last Tuesday?"* by scanning every node
+and keeping those whose interval covers the instant — `valid_from <= at_time`
+and `valid_until` either zero or later. That is the right shape, and the
+interval is half-built. `valid_until` has one producer, `graph.py:379`, which
+stamps `time.time()` on the old node at the moment of supersession. **`valid_from`
+has no producer anywhere in the repository** — it is never assigned outside its
+`field(default_factory=time.time)` default, so it always holds the instant the
+node was created, and `created_at` beside it holds the same instant.
+
+The declaration and the use disagree about what that field is, in the same tree.
+`types.py:98` comments `valid_from` as *"when this fact became true"*; the
+docstring inside `query_at_time` says *"when the node was created (always
+set)"*. The second one is what the code does. So the query answers what the
+system had recorded by a past instant, not what was true at it, and the two
+coincide only because nothing can say otherwise. This is why the bi-temporal
+mark is withheld rather than awarded on the field names: a validity axis that no
+writer can move is the record axis under a second label.
 
 **Scope is a claimed session, and the claim is where the key is applied.** A
 principal is derived from the presented credential by `principal_for_key`
 (`tokenmizer/security/ownership.py`), a session is claimed by the first principal
 that writes to it, and `verify_session_access`
-(`tokenmizer/api/routes_graph.py:44-90`) checks the claim before any
+(`tokenmizer/api/routes_graph.py:46-94`) checks the claim before any
 session-scoped route answers. Three details make it more than a permission check.
 It **claims only on write methods**, so a GET for a session that was never
 created falls through to its ordinary empty response instead of staking a claim
@@ -274,11 +294,17 @@ down where CI enforces it, and has not dressed it up.
 
 ### Avoid
 
-- **Testing your redactor and not your output.** The functions are covered; the
-  surface a model actually reads is not, and those are different claims.
+- **Testing your redactor further than your rendering.** Two of the three layers
+  are covered and the third is the one a model reads. The predicate is unit-tested
+  (`test_decision_cache_async.py` asserts `_is_session_sensitive` fires on an
+  `sk-ant` string), and the *store* is tested end to end — `test_secrets_redacted_in_nodes`
+  drives a live-shaped key through the real `extract_from_messages` path and
+  asserts it appears in no node's label or summary. Nothing asserts the same
+  about `to_context_block()`, which is the text that actually reaches the model,
+  and which is assembled from those nodes by a separate renderer.
 - **Exclusion by filter with no accessor.** `query()` hiding three statuses means
   every caller that needs the hidden ones has to remember — and the comment at
-  `graph.py:744` is the bug that produced.
+  `graph.py:832` is the bug that produced.
 
 ### Fit
 
@@ -321,6 +347,18 @@ session history.
 | `tests/chaos/test_recovery.py` | — | Storage corruption |
 
 ## History
+
+**2026-08-19** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — re-read at the same commit: `HEAD` is the pinned revision, so nothing upstream moved and this entry is about what a second reading of the same tree found. Four corrections and one added mark, all of them the atlas's own errors rather than the project's.
+
+**`negative_eval` is awarded.** `tests/unit/test_graph.py::test_secrets_redacted_in_nodes` drives an Anthropic-shaped key through the real `extract_from_messages` path and asserts `sk-ant` appears in no node's label or summary, and `test_contested_decisions.py` asserts a decision about a different purpose in the same topic bucket is not returned as a contradiction. Both are committed cases that particular material must not come back; the previous reading credited the retention suite's recall floors and did not look for the exclusion assertions beside them.
+
+**The temporal layer was in the verdict and not in the report.** `content/verdicts.md` already closed on *"every clock is a record clock"*; the report itself named no clock at all, so the claim stood in the atlas with nothing behind it a reader could check. `query_at_time` answers a point-in-time question by walking `valid_from` / `valid_until`, and the interval is half-built: `valid_until` is stamped at supersession by `graph.py:379`, while **`valid_from` has no producer anywhere in the repository** and therefore always equals the creation instant that `created_at` already holds. `types.py:98` calls it *"when this fact became true"* and the `query_at_time` docstring calls it *"when the node was created"*; the second is what the code does. Section 6 now carries the mechanism and the producer check behind that verdict line, and the reason the bi-temporal mark stays withheld.
+
+**Two cited line numbers were wrong when published.** The fixed-bug comment is at `graph.py:832`, not 744, which is a synonym table; `verify_session_access` spans `routes_graph.py:46-94`, not 44-90. Neither was carried forward from the earlier pin — both files postdate it — so they were mis-cited at the reading that introduced them, and re-verifying every cited line is the check that catches it.
+
+**The frontmatter disagreed with itself.** `memory_unit` said eight statuses where `trust` said nine; `NodeStatus` defines nine. And the *Avoid* bullet claiming the redactor's output is untested was too broad: the predicate and the store are both covered, and only the rendered `to_context_block()` is not.
+
+Screened again at this commit: three auto-run manifests — `.mcp.json`, the MCP registry `server.json`, and a Claude Code plugin manifest — one dependency surface inside the seven-day cooldown, one unpinned range, and a `conftest.py` executing on collection. Nothing was installed and no test was run. The commit named in the 30 July entry below is not reachable from a fresh clone of the default branch.
 
 **2026-08-18** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — re-read seventeen commits on, and the scope finding is the one that moved. `scope_enforced` is awarded: `tokenmizer/security/ownership.py` derives a principal from the credential, claims a session for it, and `verify_session_access` refuses a foreign principal on every session-scoped route. The previous reading withheld the mark on the ground that a graph carries no scope key inside it, which is still true and is no longer the whole question — the rubric asks for a stored scope key applied on the read path, and the claim is applied there. The module header describes the hole it closes: `session_id` came from the URL, clients choose it themselves in the chat request body, and authentication proved only that a caller held the deployment key.
 

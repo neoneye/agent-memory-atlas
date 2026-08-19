@@ -1027,7 +1027,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`tokenmizer`](../systems/tokenmizer/)
 - Best idea: a status for *unresolved ambiguity* that keeps both candidate decisions visible instead of guessing between them — the atlas's only state that means "I do not know which of these is in force".
-- Biggest risk: the redaction functions are unit-tested in isolation and nothing asserts a secret fails to reach the rendered context block.
+- Biggest risk: redaction is verified everywhere except where it is read. The predicate is unit-tested and the *store* is covered end to end — `test_secrets_redacted_in_nodes` drives a live-shaped `sk-ant` key through the real extraction path and asserts it reaches no node's label or summary — but nothing asserts the same of `to_context_block()`, the text actually handed to the model, which a separate renderer assembles from those nodes.
 - Most reusable component: the status model and its transition table, worth copying even if you never run the tool; and storing the *argument* for a correction rather than only the fact of it.
 - Maturity impression: 440 cases in 38 files with the most informative names in the corpus — `memory_accuracy/test_retention`, `chaos/test_recovery`, `test_contested_decisions`, `test_decay_idempotence` — and a committed ground-truth measurement of extraction recall.
 - Study when: your memory is a coding session and your hardest problem is knowing which of two plausible decisions still holds.

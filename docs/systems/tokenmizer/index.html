@@ -121,10 +121,10 @@ recovers.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-18</strong>
+              <strong>2026-08-19</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -273,17 +273,40 @@ is withheld.</p>
 <p><code>query()</code> walks the graph and excludes
 <code>SUPERSEDED</code>, <code>ARCHIVED</code> and
 <code>INVALIDATED</code>; <code>to_context_block()</code> renders the
-resume. A comment at <code>graph.py:744</code> records a fixed bug —
+resume. A comment at <code>graph.py:832</code> records a fixed bug —
 <em>"was calling query() which excludes SUPERSEDED nodes"</em> — from a
 path that needed the hidden ones, which is the ordinary cost of
 expressing exclusion as a filter every reader has to remember.</p>
+<p>The path that needed them is <code>query_at_time</code>, which
+answers the question its docstring gives as <em>"What did we decide last
+Tuesday?"</em> by scanning every node and keeping those whose interval
+covers the instant — <code>valid_from &lt;= at_time</code> and
+<code>valid_until</code> either zero or later. That is the right shape,
+and the interval is half-built. <code>valid_until</code> has one
+producer, <code>graph.py:379</code>, which stamps
+<code>time.time()</code> on the old node at the moment of supersession.
+<strong><code>valid_from</code> has no producer anywhere in the
+repository</strong> — it is never assigned outside its
+<code>field(default_factory=time.time)</code> default, so it always
+holds the instant the node was created, and <code>created_at</code>
+beside it holds the same instant.</p>
+<p>The declaration and the use disagree about what that field is, in the
+same tree. <code>types.py:98</code> comments <code>valid_from</code> as
+<em>"when this fact became true"</em>; the docstring inside
+<code>query_at_time</code> says <em>"when the node was created (always
+set)"</em>. The second one is what the code does. So the query answers
+what the system had recorded by a past instant, not what was true at it,
+and the two coincide only because nothing can say otherwise. This is why
+the bi-temporal mark is withheld rather than awarded on the field names:
+a validity axis that no writer can move is the record axis under a
+second label.</p>
 <p><strong>Scope is a claimed session, and the claim is where the key is
 applied.</strong> A principal is derived from the presented credential
 by <code>principal_for_key</code>
 (<code>tokenmizer/security/ownership.py</code>), a session is claimed by
 the first principal that writes to it, and
 <code>verify_session_access</code>
-(<code>tokenmizer/api/routes_graph.py:44-90</code>) checks the claim
+(<code>tokenmizer/api/routes_graph.py:46-94</code>) checks the claim
 before any session-scoped route answers. Three details make it more than
 a permission check. It <strong>claims only on write methods</strong>, so
 a GET for a session that was never created falls through to its ordinary
@@ -400,13 +423,22 @@ difference between a degraded system and an invisible one.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Testing your redactor and not your output.</strong> The
-functions are covered; the surface a model actually reads is not, and
-those are different claims.</li>
+<li><strong>Testing your redactor further than your rendering.</strong>
+Two of the three layers are covered and the third is the one a model
+reads. The predicate is unit-tested
+(<code>test_decision_cache_async.py</code> asserts
+<code>_is_session_sensitive</code> fires on an <code>sk-ant</code>
+string), and the <em>store</em> is tested end to end —
+<code>test_secrets_redacted_in_nodes</code> drives a live-shaped key
+through the real <code>extract_from_messages</code> path and asserts it
+appears in no node's label or summary. Nothing asserts the same about
+<code>to_context_block()</code>, which is the text that actually reaches
+the model, and which is assembled from those nodes by a separate
+renderer.</li>
 <li><strong>Exclusion by filter with no accessor.</strong>
 <code>query()</code> hiding three statuses means every caller that needs
 the hidden ones has to remember — and the comment at
-<code>graph.py:744</code> is the bug that produced.</li>
+<code>graph.py:832</code> is the bug that produced.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Take this if your memory is a coding session and your hardest problem
@@ -501,6 +533,59 @@ resume block ever shows the argument was not established.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d"><code class="commit-id" title="8495e2598b8c11547c64e5dc1f19cd198d5e363d">8495e259…</code></a>
+— re-read at the same commit: <code>HEAD</code> is the pinned revision,
+so nothing upstream moved and this entry is about what a second reading
+of the same tree found. Four corrections and one added mark, all of them
+the atlas's own errors rather than the project's.</p>
+<p><strong><code>negative_eval</code> is awarded.</strong>
+<code>tests/unit/test_graph.py::test_secrets_redacted_in_nodes</code>
+drives an Anthropic-shaped key through the real
+<code>extract_from_messages</code> path and asserts <code>sk-ant</code>
+appears in no node's label or summary, and
+<code>test_contested_decisions.py</code> asserts a decision about a
+different purpose in the same topic bucket is not returned as a
+contradiction. Both are committed cases that particular material must
+not come back; the previous reading credited the retention suite's
+recall floors and did not look for the exclusion assertions beside
+them.</p>
+<p><strong>The temporal layer was in the verdict and not in the
+report.</strong> <code>content/verdicts.md</code> already closed on
+<em>"every clock is a record clock"</em>; the report itself named no
+clock at all, so the claim stood in the atlas with nothing behind it a
+reader could check. <code>query_at_time</code> answers a point-in-time
+question by walking <code>valid_from</code> / <code>valid_until</code>,
+and the interval is half-built: <code>valid_until</code> is stamped at
+supersession by <code>graph.py:379</code>, while
+<strong><code>valid_from</code> has no producer anywhere in the
+repository</strong> and therefore always equals the creation instant
+that <code>created_at</code> already holds. <code>types.py:98</code>
+calls it <em>"when this fact became true"</em> and the
+<code>query_at_time</code> docstring calls it <em>"when the node was
+created"</em>; the second is what the code does. Section 6 now carries
+the mechanism and the producer check behind that verdict line, and the
+reason the bi-temporal mark stays withheld.</p>
+<p><strong>Two cited line numbers were wrong when published.</strong>
+The fixed-bug comment is at <code>graph.py:832</code>, not 744, which is
+a synonym table; <code>verify_session_access</code> spans
+<code>routes_graph.py:46-94</code>, not 44-90. Neither was carried
+forward from the earlier pin — both files postdate it — so they were
+mis-cited at the reading that introduced them, and re-verifying every
+cited line is the check that catches it.</p>
+<p><strong>The frontmatter disagreed with itself.</strong>
+<code>memory_unit</code> said eight statuses where <code>trust</code>
+said nine; <code>NodeStatus</code> defines nine. And the <em>Avoid</em>
+bullet claiming the redactor's output is untested was too broad: the
+predicate and the store are both covered, and only the rendered
+<code>to_context_block()</code> is not.</p>
+<p>Screened again at this commit: three auto-run manifests —
+<code>.mcp.json</code>, the MCP registry <code>server.json</code>, and a
+Claude Code plugin manifest — one dependency surface inside the
+seven-day cooldown, one unpinned range, and a <code>conftest.py</code>
+executing on collection. Nothing was installed and no test was run. The
+commit named in the 30 July entry below is not reachable from a fresh
+clone of the default branch.</p>
 <p><strong>2026-08-18</strong> — <a
 href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d"><code class="commit-id" title="8495e2598b8c11547c64e5dc1f19cd198d5e363d">8495e259…</code></a>
 — re-read seventeen commits on, and the scope finding is the one that
