@@ -6,10 +6,13 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
-revision: 78140714426d66b01246eb9cdefae00d7d93f74f
-revision_url: https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f
-analyzed_at: 2026-08-07
+revision: 7181c94e9676f32aacc800030c0c83c3579e315e
+revision_url: https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e
+analyzed_at: 2026-08-20
 capabilities: "trust_state, human_review"
+capability_evidence:
+  trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/ — the check ships with the distribution and runs in `make`; no case named for a status axis was located at this pin"
+  human_review: "the gate runtime and the applier that only an Integrator may run | Tools/apply_metadata_transition.py, Tools/metadata_gate_runtime.py, Tools/record_gate_attestation.py | `apply_metadata_transition --apply` is restricted to the Integrator, validates a typed current-catalog producer receipt before acting, compare-and-swaps Profile, K00, metadata-contract, page and Coverage under a shared runtime writer lock, and restores both Coverage and the exact page before-image on a pre-commit failure; `record_gate_attestation.py` files the human attestation the gate consumes | Tools/tests/ — no case exercising the Integrator restriction was located at this pin"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -20,7 +23,7 @@ matrix:
   write: "An LLM proposes a Coverage Delta; `apply_delta.py` merges it deterministically, dry-run by default, aborting if the merged file no longer parses"
   update_delete: "Supersession must retain the relationship and the reason — historical judgments must not be silently deleted; no delete path and no value-keyed rejection"
   scoping: "Batches scope work and `apply_delta` rejects a page whose batch does not match the delta; no scope key on any read path, because there is no read path"
-  integration: "Twelve Python check scripts, nine schema templates, twelve kernel modules and twelve runtime routes; no runtime, no server, no agent framework"
+  integration: "Check scripts, schema templates, kernel modules and runtime routes, plus an MCP stdio server whose tool list is compiled from the CLI contract and which imports nothing from the distribution it serves"
   background: "A maintenance run that produces candidate lists; candidates never change a status axis by themselves"
   trust: "Four independent status axes that must not be merged, an evidence-maturity ladder from signal to validated, and an explicit ban on automated promotion"
   strengths: "Checks that distinguish nothing-checkable from passed, a governed write path an LLM cannot hand-edit, and a filled example profile that binds every interface slot"
@@ -491,6 +494,14 @@ which have neither.
 - Licensing: `LICENSE.md`, `LICENSES/`, `NOTICE`, `ATTRIBUTION.md`.
 
 ## History
+
+**2026-08-20** — [`7181c94e9676f32aacc800030c0c83c3579e315e`](https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e) — re-pinned 127 commits on, 272 files and +73,434 lines, across `Tools/` (137 files), `profiles/` and `kernel/`. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest of any kind, so nothing was installed. Marks unchanged at `trust_state` and `human_review`. **One published claim in this report stopped being true, and two mechanisms are new.**
+
+**There is a server now, and the way it is kept from becoming a judgment is the interesting part.** `Tools/mcp_server.py` is an MCP stdio server at protocol revision `2025-11-25`, whose `tools/list` is projected straight out of `Tools/compiled/mcp-tools.json`, itself compiled from the CLI contract by `compile_cli_contract.py`. Two properties are enforced rather than intended. It declares no `argparse` parser and no `main()`, so `discover_tools` cannot see it and it never appears in its own tool list — *"a transport that advertised itself as a callable operation would be the exact layer smear this file exists to avoid."* And it imports **nothing from the distribution** — not a check, not an applier, not `kblib` — with `Tools/tests/test_mcp_server.py` asserting the import set statically, *"so the property survives future edits."* The stated reason is the one this atlas keeps asking for: *"a module that cannot reach a judgment module cannot make a judgment."* The cost is a hand-rolled sha256 and a hand-rolled canonical `json.dumps`, and the file says so.
+
+**Metadata authority became executable.** `Tools/apply_metadata_transition.py` (489 lines) consumes one typed Profile Gate receipt as a canonical metadata transition: only the Integrator may run `--apply`, a current-catalog producer receipt is validated first, Profile, K00, metadata-contract, page and Coverage inputs are compare-and-swapped under a shared runtime writer lock, and a pre-commit failure restores both Coverage and the exact page before-image. An authority that was a documented role is now a gate with an actor, a receipt and a rollback.
+
+Also at this pin: freshness evidence closed over the full scan rather than a sampled one, legacy observations recording the field's vocabulary rather than the gate's enum, per-host registration and binding configs rendered with the run that produced them named in the header, and `compile_cli_contract` no longer claiming complete receipt extraction.
 
 **2026-08-07** — [`78140714426d66b01246eb9cdefae00d7d93f74f`](https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f) — 32 commits and 52,570 inserted lines on, and the work is the project auditing its own distinguishing property. Screened first: 0 auto-run surfaces, 1 build-time execution path, 0 unpinned surfaces, nothing inside the cooldown; nothing was built or run. Marks are unchanged. Seven remediation batches left 106 findings open, and the commit that matters separates them: most were wording and ownership consistency, while six *"had the same shape as the S1s this work started by fixing, which is that something passes by saying nothing"* — the failure class this report already credits the project for naming. The worked example is the vocabulary gate: `compose_vocab` was the one artifact writer not going through `atomic_write_text`, and `check_vocab` only asked whether the file existed, so **a zero-byte `vocab.yaml` made every controlled frontmatter value legal and exited 0**. Both sides now share one predicate — the artifact must parse, be a mapping, and carry a non-empty field set — and CI was added that would have caught the original two findings. A separate batch closes *"the bypasses an independent review found in the new checks"*, which is the second-order version of the same discipline: the checks that catch vacuous passes were themselves checked for vacuous passes.
 

@@ -110,14 +110,14 @@ irreversible action.</p>
               <strong>BasedHardware/omi</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/BasedHardware/omi/commit/4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8" title="4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8">
+            <a class="meta-pill revision-pill" href="https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52ed91bcf3332" title="bacd4cf2985bdab6098994345bd52ed91bcf3332">
               <span>Analyzed revision</span>
-              <code>4ab6fa0c…</code>
+              <code>bacd4cf2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -715,6 +715,61 @@ somewhere not in the repository.</li>
 <code>backend/tests/eval/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52ed91bcf3332"><code class="commit-id" title="bacd4cf2985bdab6098994345bd52ed91bcf3332">bacd4cf2…</code></a>
+— re-pinned 1,925 commits on. The repository moved 3,318 files and
++393,125 lines in that span, and <strong>the memory subsystem moved 435
+lines across five files</strong>: the rest is apps, SDKs, desktop and
+firmware. Screened again: two auto-run surfaces
+(<code>.cursor/mcp.json</code> and <code>.cursor/rules/</code>), twelve
+build-time execution points, two manifests inside the cooldown across
+thirty-three unpinned surfaces; nothing was installed and nothing was
+run. Marks unchanged at six of seven — still no rejected-value
+tombstone. Four changes are worth recording.</p>
+<p><strong>A review resolution may no longer mutate the protected
+historical collection.</strong>
+<code>backend/database/review_queue.py</code> routes <code>accept</code>
+and <code>correct</code> through <code>MemoryService</code> rather than
+calling <code>memories_db.merge_contradict_memory</code> directly, under
+a comment that states the new boundary: <em>"Historical review rows
+remain readable, but their resolution may not mutate the protected
+historical memory collection."</em> The accept path writes the accepted
+fact and then calls <code>_delete_review_conflicts_idempotently</code>,
+so resolving the same row twice cannot double-delete. The human review
+surface keeps its authority over current memory and loses it over the
+frozen slice — a distinction most review queues in this corpus do not
+draw at all.</p>
+<p><strong>Extraction failure became a contract of its own.</strong>
+<code>MemoryExtractionError</code> in
+<code>backend/models/memory_contracts.py</code> carries the extractor's
+name and exists so <em>"callers decide what an absent batch means for
+their write, and they must be able to catch it without importing an LLM
+client."</em> A write path can now distinguish <em>the extractor
+failed</em> from <em>the extractor produced nothing</em>, which is the
+distinction that decides whether an empty result should be
+persisted.</p>
+<p><strong>The compatibility projection stayed lossless without
+loosening the strict contract.</strong>
+<code>CandidateCompatibilityMetadata</code>
+(<code>backend/models/candidate.py</code>, <code>extra='forbid'</code>)
+carries <code>metadata</code>, <code>category</code> and a bounded
+<code>relevance_score</code> on the Candidate envelope rather than in
+the canonical task payload, because <em>"staged-task clients
+historically supplied these fields for presentation and ordering."</em>
+Released-client annotations ride beside the contract instead of widening
+it.</p>
+<p><strong>And one dated operational fact, written where it
+happened.</strong> <code>backend/database/memories.py</code> gains a
+dual-window list order — <code>updated_at</code> with a
+<code>created_at</code> fallback — because the released collection is
+missing <code>updated_at</code> on a material slice and no single index
+covers the key. The comment says why the shape is what it is: content
+decryption <em>"must not run on the prefix an offset skips — that prefix
+decrypt is what took GET /v3/memories past HTTP_GET_TIMEOUT on
+2026-08-18."</em> Beside it, <code>prepare_memory_for_read</code>,
+<code>_memory_passes_list_visibility(include_invalidated=...)</code> and
+paged historical scans by <code>updated_at</code> and
+<code>created_at</code>.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/BasedHardware/omi/commit/4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8"><code class="commit-id" title="4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8">4ab6fa0c…</code></a>
 — first reading. Screened before reading: 2 auto-run surfaces

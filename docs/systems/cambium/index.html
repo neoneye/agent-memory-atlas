@@ -110,14 +110,14 @@ passed'.</p>
               <strong>KimGLee/Cambium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f" title="78140714426d66b01246eb9cdefae00d7d93f74f">
+            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e" title="7181c94e9676f32aacc800030c0c83c3579e315e">
               <span>Analyzed revision</span>
-              <code>78140714…</code>
+              <code>7181c94e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-07</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -664,6 +664,49 @@ parser <code>kblib.py</code>.</li>
 <code>NOTICE</code>, <code>ATTRIBUTION.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e"><code class="commit-id" title="7181c94e9676f32aacc800030c0c83c3579e315e">7181c94e…</code></a>
+— re-pinned 127 commits on, 272 files and +73,434 lines, across
+<code>Tools/</code> (137 files), <code>profiles/</code> and
+<code>kernel/</code>. Screened again: no auto-run surface, one
+build-time <code>Makefile</code>, no dependency manifest of any kind, so
+nothing was installed. Marks unchanged at <code>trust_state</code> and
+<code>human_review</code>. <strong>One published claim in this report
+stopped being true, and two mechanisms are new.</strong></p>
+<p><strong>There is a server now, and the way it is kept from becoming a
+judgment is the interesting part.</strong>
+<code>Tools/mcp_server.py</code> is an MCP stdio server at protocol
+revision <code>2025-11-25</code>, whose <code>tools/list</code> is
+projected straight out of <code>Tools/compiled/mcp-tools.json</code>,
+itself compiled from the CLI contract by
+<code>compile_cli_contract.py</code>. Two properties are enforced rather
+than intended. It declares no <code>argparse</code> parser and no
+<code>main()</code>, so <code>discover_tools</code> cannot see it and it
+never appears in its own tool list — <em>"a transport that advertised
+itself as a callable operation would be the exact layer smear this file
+exists to avoid."</em> And it imports <strong>nothing from the
+distribution</strong> — not a check, not an applier, not
+<code>kblib</code> — with <code>Tools/tests/test_mcp_server.py</code>
+asserting the import set statically, <em>"so the property survives
+future edits."</em> The stated reason is the one this atlas keeps asking
+for: <em>"a module that cannot reach a judgment module cannot make a
+judgment."</em> The cost is a hand-rolled sha256 and a hand-rolled
+canonical <code>json.dumps</code>, and the file says so.</p>
+<p><strong>Metadata authority became executable.</strong>
+<code>Tools/apply_metadata_transition.py</code> (489 lines) consumes one
+typed Profile Gate receipt as a canonical metadata transition: only the
+Integrator may run <code>--apply</code>, a current-catalog producer
+receipt is validated first, Profile, K00, metadata-contract, page and
+Coverage inputs are compare-and-swapped under a shared runtime writer
+lock, and a pre-commit failure restores both Coverage and the exact page
+before-image. An authority that was a documented role is now a gate with
+an actor, a receipt and a rollback.</p>
+<p>Also at this pin: freshness evidence closed over the full scan rather
+than a sampled one, legacy observations recording the field's vocabulary
+rather than the gate's enum, per-host registration and binding configs
+rendered with the run that produced them named in the header, and
+<code>compile_cli_contract</code> no longer claiming complete receipt
+extraction.</p>
 <p><strong>2026-08-07</strong> — <a
 href="https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f"><code class="commit-id" title="78140714426d66b01246eb9cdefae00d7d93f74f">78140714…</code></a>
 — 32 commits and 52,570 inserted lines on, and the work is the project
