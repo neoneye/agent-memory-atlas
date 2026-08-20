@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 310 reports.</strong></p>
+<p><strong>This page covers all 312 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -9584,6 +9584,92 @@ community structure in a way the query API alone would not suggest.</li>
 the workload where the rebuild runs often and the human's judgements are
 lost each time; or when anyone who did not watch the graph being built
 has to trust it, since nothing records who approved what.</li>
+</ul>
+<h3 id="outworked"><a
+href="../systems/outworked/"><code>outworked</code></a></h3>
+<ul>
+<li>Best idea: <strong>a memory small enough to be legible.</strong>
+Three tools named in the user's own vocabulary — <code>remember</code>,
+<code>recall</code>, <code>forget</code> — with the namespace rules
+written in the tool description where the writer reads them, over one
+SQLite table with <code>UNIQUE(scope, key)</code>. The write path calls
+no model, computes no embedding and runs no background job, so a memory
+is retrievable the instant the tool returns and the write cannot fail
+because a provider is down. The search escapes <code>%</code>,
+<code>_</code> and <code>\</code> before interpolating, which is two
+lines against a class of surprise most stores here leave open.</li>
+<li>Biggest risk: <strong>the scope is a string the model supplies, and
+the session already knows better.</strong> The MCP server is mounted per
+agent at a URL carrying <code>agentId</code>,
+<code>handleMcpRequest</code> receives it, and
+<code>mcp-server.js:831-833</code> injects it into every tool that
+declares an <code>agentId</code> parameter. The memory tools declare
+<code>scope</code> instead, so an agent told to keep notes in
+<code>agent:me</code> has nothing between it and an agent that passes
+<code>agent:someone-else</code> — in an app whose premise is several
+employees working at once. The identity is present at the boundary and
+unused by the store; resolving <code>agent:&lt;id&gt;</code> server-side
+would close it without changing the surface the model sees.</li>
+<li>Maturity impression: GPL-3.0, v0.4.3, ~41,000 lines, four
+hand-rolled <code>node</code> test scripts and <strong>no test of the
+memory subsystem at all</strong> — <code>memorySet</code>,
+<code>memorySearch</code> and <code>memoryDelete</code> are the three
+easiest functions here to pin and none is pinned. One capability mark,
+<code>scope_enforced</code>, and the rubric's caveat is the whole story:
+every read is <code>WHERE scope = ?</code>, which means the key reaches
+the query and nothing more. No trust state, no provenance, no audit, no
+memory viewer in the UI, and <code>recall</code> truncates each value at
+500 characters without telling the model.</li>
+<li>Study when: you want the smallest agent memory that still works — an
+upsert, a filtered <code>LIKE</code>, a hard delete — or a worked
+example of mounting your own MCP server unconditionally and filtering
+the user's duplicate so the memory cannot be half-configured away.</li>
+<li>Do not copy when: more than one principal shares the store, or
+anything must be <em>remembered reliably</em> rather than merely
+rememberable. Nothing injects memory into a prompt, so if the model does
+not call <code>recall</code>, the store might as well be empty and no
+one is checking that it did.</li>
+</ul>
+<h3 id="corbell"><a
+href="../systems/corbell/"><code>corbell</code></a></h3>
+<ul>
+<li>Best idea: <strong>the source pointer on the derived claim.</strong>
+Every <code>Decision</code> extracted from a team's ADRs carries
+<code>source_file</code>, every embedded chunk carries repo, path and
+line range, and the graph is rebuilt from the repositories rather than
+edited — so a wrong statement is one hop from the document that produced
+it, and the code-derived half needs no correction path because it is a
+projection.</li>
+<li>Biggest risk: <strong>a review gate that cannot be closed.</strong>
+<code>CandidateDoc.confirmed</code> exists and
+<code>learner.py:57</code> honours it, and the only assignment is
+<code>docs.py:71-72</code> setting it true for <em>every</em> candidate
+when <code>existing_docs.auto_scan</code> is on — which
+<code>workspace.py:47</code> defaults to <code>True</code> and the
+generated <code>corbell.yaml</code> writes as <code>true</code>. There
+is no <code>docs:confirm</code> command, so a selective approval means
+hand-editing <code>doc_candidates.json</code>, and
+<code>docs:scan</code> writes that file whole without reading it first,
+which loses the edit. Beside it, <code>docs/store.py:34</code> answers
+every parse failure with <code>return []</code>, and the next
+<code>docs:learn</code> writes over the emptiness — a forgiving loader
+and an overwriting saver, the third instance of that composition this
+atlas has read this month.</li>
+<li>Maturity impression: Apache-2.0, 15,073 lines of Python, fifteen
+test files covering the graph, embeddings, exports and MCP, and none
+covering the document store where both defects live. No capability mark:
+<code>service_id</code> is a subject filter rather than a scope key, the
+<code>confirmed</code> boolean has no deliberate producer, and a
+decision store built for ADRs carries no date, no supersession and no
+deletion — in a domain whose primary artefact is a dated decision that a
+later one reverses.</li>
+<li>Study when: you want a code-map an agent can query over MCP, or the
+pattern of keeping a document's own section headings, frontmatter fields
+and terminology so a generated spec matches a team's form instead of
+imposing a template.</li>
+<li>Do not copy when: the decision store has to be the system of record.
+Turn <code>auto_scan</code> off, read what it extracted, and do not let
+a generated spec cite a rationale nobody checked.</li>
 </ul>
         </article>
       </div>

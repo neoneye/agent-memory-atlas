@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **310 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **312 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -81,6 +81,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/context-mem/"><span class="az-id">Context Mem</span><span class="az-what">The unflattering number is committed; the badge is not about it</span><code class="az-repo">JubaKitiashvili/context-mem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/context-mode/"><span class="az-id">Context Mode</span><span class="az-what">Session knowledge across seventeen harnesses</span><code class="az-repo">mksglu/context-mode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/continuous-claude/"><span class="az-id">Continuous Claude</span><span class="az-what">A daemon mines the thinking blocks</span><code class="az-repo">parcadei/Continuous-Claude-v3</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/corbell/"><span class="az-id">Corbell</span><span class="az-what">Architecture graph as team memory</span><code class="az-repo">Corbell-AI/Corbell</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/core-redplanet/"><span class="az-id">CORE</span><span class="az-what">Reified temporal knowledge graph</span><code class="az-repo">RedPlanetHQ/core</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/core-memory/"><span class="az-id">Core Memory</span><span class="az-what">Grounding-gated trust</span><code class="az-repo">JohnnyFiv3r/Core-Memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cortex/"><span class="az-id">Cortex</span><span class="az-what">Approval on the read, not the write</span><code class="az-repo">CortexPrism/cortex</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
@@ -326,6 +327,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/ostk-recall/"><span class="az-id">ostk-recall</span><span class="az-what">A tombstone the write path never reads</span><code class="az-repo">os-tack/ostk-recall</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/otis/"><span class="az-id">Otis</span><span class="az-what">The binary is pinned, the skills are not</span><code class="az-repo">TrianglLabs/otis</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/ouroboros-agent-os/"><span class="az-id">Ouroboros</span><span class="az-what">A ledger of intent, not of knowledge</span><code class="az-repo">Q00/ouroboros</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/outworked/"><span class="az-id">Outworked</span><span class="az-what">Memory under a desktop office</span><code class="az-repo">outworked/outworked</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 </ul>
 
 ## P

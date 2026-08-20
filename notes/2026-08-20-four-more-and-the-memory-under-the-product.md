@@ -1,8 +1,10 @@
 # Four more, and the memory under the product
 
 **Status:** triage. Three repositories and one paper, read on 2026-08-20 — two
-excluded, two in scope with reports not yet written. Every checkout was screened
-before a file was read; nothing was installed and nothing was run.
+excluded, and two that became reports the same day,
+[Outworked](../content/systems/outworked.md) and
+[Corbell](../content/systems/corbell.md). Every checkout was screened before a
+file was read; nothing was installed and nothing was run.
 **Origin:** four links submitted together, alongside the reports for
 [OpenWolf](../content/systems/openwolf.md) and
 [sift-kg](../content/systems/sift-kg.md) written the same day.
@@ -23,7 +25,7 @@ reading of the pitch.
 
 ## outworked — `outworked/outworked` at [`89ed7b99`](https://github.com/outworked/outworked/commit/89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f)
 
-**In scope. Report not yet written.** An Electron desktop app, v0.4.3, that runs
+**In scope; [reported](../content/systems/outworked.md).** An Electron desktop app, v0.4.3, that runs
 Claude as "a team of AI employees" in a pixel-art office — sprites, furniture,
 asset packs, a cost dashboard. Screened: no auto-run surface, one build-time
 lifecycle script, one unpinned surface behind a lockfile. Last commit
@@ -43,7 +45,7 @@ Underneath the office is a scoped key-value memory with a tool surface:
 
 So the durable thing is a value stored under a caller-supplied scope and key,
 which can be wrong, can be searched, and can be deleted by the agent that wrote
-it. Three further surfaces are worth naming before a report is attempted.
+it. Three further surfaces are worth naming beside it.
 `src/lib/storage.ts:153` writes a `memory:` field into a subagent's frontmatter
 and `:481` reads it back, so an *agent definition* selects a memory mode.
 `src/components/McpServersModal.tsx:73-76` offers
@@ -52,14 +54,15 @@ and `:481` reads it back, so an *agent definition* selects a memory mode.
 switch on beside the built-in one. And `src/lib/sessions.ts:169` migrates an
 agent's in-memory history into a persisted session.
 
-What a report has to settle: whether `scope` is enforced anywhere or is just a
-string the caller passes, what `memorySearch` actually matches on, and whether
-the two memories — the built-in table and the optional MCP server — can both be
-live at once without either knowing about the other.
+The report settles the first of those: the scope is the model's own tool
+argument, and the MCP session already carries an `agentId` it injects into every
+other tool family. `memorySearch` is an escaped `LIKE` over key and value inside
+one scope. Whether the built-in table and the optional MCP server can be live at
+once is left open there, because it depends on what an operator configures.
 
 ## Corbell — `Corbell-AI/Corbell` at [`75c7b20a`](https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66)
 
-**In scope. Report not yet written.** Apache-2.0, 15,073 lines of Python, a
+**In scope; [reported](../content/systems/corbell.md).** Apache-2.0, 15,073 lines of Python, a
 multi-repo architecture graph with MCP tools — `graph_query`,
 `get_architecture_context`, `code_search`, `list_services`
 (`corbell/core/mcp/server.py`) — so a model queries it directly. Screened: no

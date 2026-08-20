@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-repo architecture graph
+and design-decision store an agent queries over MCP, whose one review
+gate is open by default and whose confirmations do not survive the next
+scan.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Corbell — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-repo architecture
+graph and design-decision store an agent queries over MCP, whose one
+review gate is open by default and whose confirmations do not survive
+the next scan.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Corbell — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-repo architecture
+graph and design-decision store an agent queries over MCP, whose one
+review gate is open by default and whose confirmations do not survive
+the next scan.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Corbell — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Corbell",
+      "description": "A multi-repo architecture graph and design-decision store an agent queries over MCP, whose one review gate is open by default and whose confirmations do not survive the next scan.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Architecture graph as team memory</p>
+          <h1>Corbell</h1>
+          <p class="document-deck">A multi-repo architecture graph and
+design-decision store an agent queries over MCP, whose one review gate
+is open by default and whose confirmations do not survive the next
+scan.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Corbell-AI/Corbell">
+              <span>Source</span>
+              <strong>Corbell-AI/Corbell</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66" title="75c7b20ac95292185b5fef6a4680e3e10de9da66">
+              <span>Analyzed revision</span>
+              <code>75c7b20a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Corbell builds a knowledge graph of a backend architecture across
+several repositories — services, data stores, queues, methods, call
+paths, infra patterns and git coupling — and serves it to a coding agent
+over MCP so that a generated spec respects the patterns a team already
+uses. Apache-2.0, 15,073 lines of Python, an MCP server, a CLI and
+exporters to Linear, Jira and Notion.</p>
+<p>Most of what it stores is a <strong>map of the code</strong>:
+re-derived from the repositories, wrong only in the way a parser is
+wrong, and not a claim anybody needs to correct. The part that makes
+this a memory system is <code>corbell/core/docs/</code> — a
+<code>Decision</code> is <em>"A design decision extracted from an
+existing design document"</em>, carrying <code>id</code>,
+<code>summary</code>, <code>rationale</code>, <code>source_file</code>
+and <code>services_mentioned</code>, distilled by a model from a team's
+ADRs and RFCs and then fed into every spec the tool generates. A
+rationale extracted by a model can be wrong, and it will be quoted back
+into work that gets built.</p>
+<p><strong>Strongest:</strong> provenance is not optional. Every
+<code>Decision</code> names its <code>source_file</code>, every embedded
+chunk records repo, path and line range, and the graph is rebuilt from
+the repositories rather than edited in place — so a wrong claim can
+always be walked back to the document that produced it.</p>
+<p><strong>Weakest, and the reason this report awards no capability
+mark:</strong> the one gate that would make the doc-derived half
+reviewable is open by default and cannot be selectively closed.
+<code>CandidateDoc.confirmed</code> exists, <code>learner.py:57</code>
+honours it (<code>if not doc.confirmed: continue</code>), and the only
+code that ever sets it true is <code>docs.py:71-72</code>, which sets it
+for <strong>every</strong> candidate when
+<code>existing_docs.auto_scan</code> is on — and <code>auto_scan</code>
+defaults to <code>True</code> in <code>workspace.py:47</code> and is
+written as <code>true</code> into every generated
+<code>corbell.yaml</code>. There is no <code>docs:confirm</code>
+command. A person who wants to approve some documents and not others
+edits <code>doc_candidates.json</code> by hand, and loses those edits
+the next time <code>docs:scan</code> runs, because that command writes
+the file whole without reading it first.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three kinds of durable thing, and only one of them can be false in a
+way that matters.</p>
+<pre class="text"><code>DERIVED FROM CODE            re-derivable, no correction needed
+  ServiceNode, DataStoreNode, QueueNode, MethodNode
+  edges: depends-on, publishes-to, calls, …
+  embedding_chunks (repo, file, lines, symbol, vector)
+        │
+        │  graph:build / embeddings:index re-run and replace
+        ▼
+DERIVED FROM DOCUMENTS       a model&#39;s reading of a human&#39;s prose
+  DocPattern { section_headings, frontmatter_fields, terminology,
+               decisions: [ Decision { summary, rationale, source_file } ] }
+        │
+        │  docs:scan → CandidateDoc.confirmed → docs:learn → store.save()
+        ▼
+CONSUMED BY
+  spec:generate  — patterns_context is interpolated into the prompt
+  MCP            — graph_query, get_architecture_context, code_search</code></pre>
+<p>There is no state machine and no lifecycle. A <code>Decision</code>
+is created by extraction and disappears only when the file it came from
+stops being scanned or the whole pattern file is rewritten. Nothing
+marks a decision superseded — which is the odd gap here, because
+<em>superseded architectural decisions</em> are the central fact of the
+domain the tool is built for. An ADR that was reversed in a later ADR
+produces two <code>Decision</code> records with no relation between
+them, and the spec generator sees both.</p>
+<p>Control is <strong>operator-driven</strong>: every stage is a command
+a person runs. The model reads and never writes.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the graph half is re-derived from the repositories and needs no correction, while the document half carries a model's reading of a team's prose through a confirmation flag whose only writer sets it for every candidate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the graph half is re-derived from the repositories and needs no correction, while the document half carries a model&#39;s reading of a team&#39;s prose through a confirmation flag whose only writer sets it for every candidate
+    REPOS[(&quot;repos/*&quot;)]
+    DOCS[(&quot;ADR-*.md, RFC-*.md,&lt;br/&gt;*.design.md&quot;)]
+
+    BUILD[&quot;graph:build&lt;br/&gt;parsers, flow tracer,&lt;br/&gt;infra scanner, git coupling&quot;]
+    EMB[&quot;embeddings:index&quot;]
+    SCAN[&quot;docs:scan&quot;]
+    LEARN[&quot;docs:learn&lt;br/&gt;LLM extraction&quot;]
+
+    GDB[(&quot;SQLite&lt;br/&gt;graph_nodes / graph_edges&quot;)]
+    EDB[(&quot;SQLite&lt;br/&gt;embedding_chunks + float32 blob&quot;)]
+    CAND[(&quot;.corbell/doc_candidates.json&lt;br/&gt;confirmed: bool&quot;)]
+    PAT[(&quot;.corbell/doc_patterns.json&lt;br/&gt;DocPattern + Decision&quot;)]
+
+    SPEC[&quot;spec:generate&quot;]
+    MCP[&quot;MCP server&quot;]
+    AGENT[&quot;coding agent&quot;]
+    EXPORT[&quot;Linear · Jira · Notion&quot;]
+
+    REPOS --&gt; BUILD --&gt; GDB
+    REPOS --&gt; EMB --&gt; EDB
+    DOCS --&gt; SCAN --&gt;|&quot;writes the whole file,&lt;br/&gt;never reads it first&quot;| CAND
+    CAND --&gt;|&quot;only confirmed docs&quot;| LEARN --&gt; PAT
+    GDB --&gt; SPEC
+    EDB --&gt; SPEC
+    PAT --&gt;|&quot;patterns_context&quot;| SPEC --&gt; EXPORT
+    GDB --&gt; MCP --&gt; AGENT
+    EDB --&gt; MCP</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> A Typer CLI (<code>corbell</code>)
+with command groups for <code>init</code>, <code>graph</code>,
+<code>embeddings</code>, <code>docs</code>, <code>spec</code>,
+<code>export</code>, <code>ui</code> and <code>mcp</code>. The MCP
+server runs over stdio or SSE
+(<code>corbell/cli/commands/mcp.py</code>). No daemon, no queue, no
+scheduled work.</p>
+<p><strong>Persistence.</strong> Two SQLite databases and two JSON files
+under <code>.corbell/</code>.
+<code>graph_nodes(id, node_type, data)</code> stores each node's
+dataclass as a JSON blob;
+<code>graph_edges(source_id, target_id, kind, metadata)</code> carries
+<code>UNIQUE(source_id, target_id, kind)</code> with indexes on both
+endpoints. <code>embedding_chunks</code> holds <code>service_id</code>,
+<code>repo</code>, <code>file_path</code>, <code>start_line</code>,
+<code>end_line</code>, <code>content</code>, <code>language</code>,
+<code>chunk_type</code>, <code>symbol</code> and the vector as a raw
+float32 <code>BLOB</code>, with <code>idx_chunks_service</code>.</p>
+<p><strong>Search.</strong> Cosine similarity computed in process over
+the decoded blobs, with <code>service_id</code> as a pre-filter; graph
+traversal by node id and edge kind. No lexical index over chunk content,
+so the retrieval stack is vector plus graph with no exact-match
+channel.</p>
+<p><strong>External dependencies.</strong> An LLM provider for
+<code>docs:learn</code> and <code>spec:generate</code>, an embedding
+provider behind <code>embeddings/factory.py</code>, and network access
+for the exporters.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install</code>, no services, no lockfile beside
+<code>pyproject.toml</code>. It needs the repositories on disk and an
+API key before any document-derived memory exists. Both stores are
+SQLite and both JSON files are readable, so the state is inspectable and
+hand-repairable — which matters more here than usual, because
+hand-editing <code>doc_candidates.json</code> is the only way to review
+anything.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Graph build.</strong>
+<code>corbell/core/graph/builder.py</code>, with
+<code>method_graph.py</code>, <code>flow_tracer.py</code>,
+<code>infra_scanner.py</code>, <code>git_coupling.py</code> and the
+cloud pattern matchers under <code>graph/providers/</code>. Nodes and
+edges are written through
+<code>graph/sqlite_store.py::SQLiteGraphStore</code>.</p>
+<p><strong>Embedding index.</strong>
+<code>core/embeddings/extractor.py</code> chunks source,
+<code>factory.py</code> selects a model,
+<code>sqlite_store.py::upsert_batch</code> writes vectors as
+<code>_vec_to_blob</code>, and <code>query()</code> decodes and ranks by
+cosine with an optional <code>service_id</code> filter.</p>
+<p><strong>Document scan.</strong> <code>cli/commands/docs.py:27</code>
+<code>docs_scan</code> — <code>DocScanner.scan()</code> returns
+<code>CandidateDoc</code>s (<code>confirmed=False</code> by default),
+the command prints a table, sets <code>c.confirmed = True</code> for all
+of them when <code>cfg.existing_docs.auto_scan</code> is true
+(<code>:71-72</code>), and calls
+<code>store.save_candidates(candidates)</code> at <code>:73</code>.
+<code>save_candidates</code> (<code>docs/store.py:71</code>) serialises
+the list and calls <code>write_text</code> on
+<code>doc_candidates.json</code>. <strong>No
+<code>load_candidates()</code> precedes it</strong>, so anything a
+person set in that file is replaced.</p>
+<p><strong>Document learn.</strong> <code>docs.py:77</code>
+<code>docs_learn</code> — <code>store.load_candidates()</code>, filter
+<code>c.confirmed</code>, refuse with <em>"No confirmed docs. Run
+<code>docs:scan</code> first."</em> if the list is empty, then
+<code>learner.learn_from_docs(confirmed)</code> and
+<code>store.save(patterns)</code>. <code>learner.py:57</code> re-checks
+<code>if not doc.confirmed: continue</code>.</p>
+<p><strong>Pattern store.</strong> <code>docs/store.py:25</code>
+<code>save()</code> writes the whole pattern list with
+<code>write_text</code>. <code>:34</code> <code>load()</code> returns
+<code>[]</code> when the file is missing <strong>and also</strong> when
+parsing raises anything at all —
+<code>except Exception: return []</code>.</p>
+<p><strong>Spec generation.</strong> <code>core/spec/generator.py</code>
+loads the graph, the embeddings and the <code>DocPatternStore</code>,
+and interpolates <code>patterns_context</code> (<code>:157</code>) into
+the prompt so a generated spec follows the team's own section headings,
+terminology and past decisions.</p>
+<p><strong>Agent surface.</strong> <code>core/mcp/server.py</code> —
+<code>graph_query(service_id, include_dependencies, include_methods)</code>
+at <code>:41</code>,
+<code>get_architecture_context( feature_description, top_k_services)</code>
+at <code>:62</code>, <code>code_search(query, service_id, top_k)</code>
+at <code>:78</code>, <code>list_services()</code> at <code>:98</code>.
+All read-only.</p>
+<p><strong>Tests.</strong> Fifteen files under <code>tests/</code>,
+covering the graph store, export, embeddings, infra scanning, flow
+tracing, git coupling, method graph, language support, spec, MCP and
+workspace.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Unit</th>
+<th>Correction affordance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>graph_nodes</code> / <code>graph_edges</code></td>
+<td>typed node with a JSON <code>data</code> blob; typed edge</td>
+<td>re-derived by the next <code>graph:build</code></td>
+</tr>
+<tr>
+<td><code>embedding_chunks</code></td>
+<td>a code chunk with a float32 vector and line range</td>
+<td><code>clear(service_id)</code> then re-index</td>
+</tr>
+<tr>
+<td><code>doc_patterns.json</code></td>
+<td><code>DocPattern</code> holding <code>decisions[]</code>,
+<code>terminology</code>, <code>section_headings</code>,
+<code>format_example</code></td>
+<td>whole-file rewrite by <code>docs:learn</code></td>
+</tr>
+<tr>
+<td><code>doc_candidates.json</code></td>
+<td><code>CandidateDoc(path, detected_type, title, confirmed)</code></td>
+<td>whole-file rewrite by <code>docs:scan</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping.</strong> A workspace directory, and
+<code>service_id</code> as a subject filter on both the graph and the
+embedding query. That filter is about <em>which part of the
+architecture</em>, not <em>whose memory</em>: there is no user, tenant,
+team or agent key anywhere, and nothing constrains what a caller may
+read. For a tool a team runs against its own repositories that is a
+coherent non-choice, and it is why <code>scope_enforced</code> is not
+marked — the rubric asks for a scope key on the read path, and
+<code>service_id</code> is a subject, not a scope.</p>
+<p><strong>Provenance and time.</strong> Strong on source, absent on
+time. <code>Decision.source_file</code> and the chunk's
+<code>repo</code>/<code>file_path</code>/<code>start_line</code>/<code>end_line</code>
+are exactly the fields a reader needs to check a claim. There is no
+<code>created_at</code>, no <code>learned_at</code>, no document mtime
+carried through, and therefore no way to ask which of two contradictory
+decisions is the later one — in a domain whose primary artefact is a
+dated decision record.</p>
+<p><strong>Versioning and contradiction.</strong> None. No supersession,
+no rejection, no tombstone, and <code>format_example</code> keeps only
+the first 500 characters of the source document, so the record is a
+lossy quotation with no pointer to a revision.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>graph_query</code> walks the graph from a service id,
+optionally including dependencies and extracted methods.
+<code>code_search</code> embeds the query and ranks chunks by cosine,
+filtered to a service when one is given.
+<code>get_architecture_context</code> assembles a feature-shaped context
+from the top <em>k</em> services. The spec generator combines all three
+plus the learned patterns.</p>
+<p>There is <strong>no lexical channel</strong>. A search for an exact
+symbol or an error string goes through the embedding model, which is the
+failure the atlas's <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval</a> page
+describes: vector search is good at the paraphrase and unreliable at the
+identifier, and identifiers are most of what a staff engineer searches
+an architecture for.</p>
+<p><strong>Token budgeting</strong> exists only as
+<code>top_k_services</code> and <code>top_k</code>; nothing counts
+tokens, and <code>graph_query(include_methods=True)</code> on a large
+service returns whatever the graph holds.</p>
+<p><strong>Failure modes.</strong> A stale index is invisible:
+<code>embedding_chunks</code> rows carry no content hash or commit, so a
+chunk indexed before a refactor returns its old <code>content</code> and
+its old line numbers with no signal that the file moved. The graph half
+has the same property with a shorter half-life, since
+<code>graph:build</code> is cheap to re-run.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit command; nothing runs in the background
+and nothing is hot-path. Two writers use a model —
+<code>docs:learn</code> for extraction and <code>spec:generate</code>
+for output — and everything else is deterministic parsing.</p>
+<p><strong>Update is replacement</strong>, at every layer.
+<code>graph:build</code> re-derives, <code>docs:learn</code> rewrites
+the pattern file whole, <code>docs:scan</code> rewrites the candidate
+file whole. That is a defensible shape for the code-derived half, where
+the repositories are the source of truth and the store is a projection.
+It is the wrong shape for the document half, because the human judgement
+about <em>which documents count</em> lives in the file that gets
+replaced.</p>
+<p><strong>A read failure and an empty store are the same
+value.</strong> <code>docs/store.py:34-49</code>: <code>load()</code>
+catches every exception and returns <code>[]</code>. A truncated write,
+a partial disk, a JSON syntax error introduced by the hand-editing the
+review flow requires — each of them reports <em>no patterns
+learned</em>, which is indistinguishable from a project that has learned
+none. The next <code>docs:learn</code> then writes a fresh list over it.
+This is the composition the atlas has seen twice this month in unrelated
+code: a forgiving loader and an overwriting saver, which together turn a
+corrupt store into an empty one with no error anywhere.</p>
+<p><strong>Conflict handling.</strong> None. Two design documents that
+decided the same question differently produce two <code>Decision</code>
+records, both interpolated into the next spec's prompt.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p><code>graph:build</code> and <code>embeddings:index</code> are
+proportional to the repositories and are re-run by hand;
+<code>docs:learn</code> is one LLM pass over the confirmed documents;
+<code>spec:generate</code> is one more. Nothing re-reads the corpus on a
+schedule, so there is no recurring token bill. Write-to-readable lag is
+however long the operator waits before re-running the pipeline — which,
+for a store meant to hold <em>"the decisions your team keeps
+re-litigating"</em>, is the interesting number and is entirely outside
+the tool.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four read-only MCP tools, stdio or SSE, with docstring descriptions
+the model sees. The agent cannot write, cannot correct, and cannot mark
+anything doubtful; its relationship to this memory is exactly a
+reader's.</p>
+<p>The more consequential integration is the export path.
+<code>core/export/linear.py</code>, <code>jira.py</code> and
+<code>notion.py</code> push generated tasks into a tracker, and the
+README's claim is that each task carries the method signatures, call
+paths and cross-service impacts an agent needs to work autonomously. So
+the memory reaches other agents indirectly, as text pasted into an
+issue, where none of the provenance survives — the
+<code>source_file</code> that makes a <code>Decision</code> checkable
+does not travel with the task.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The review gate is open and cannot be closed
+selectively.</strong> <code>auto_scan</code> defaults to
+<code>True</code> (<code>workspace.py:47</code>) and the scaffolded
+<code>corbell.yaml</code> writes <code>auto_scan: true</code>
+(<code>:399</code>), so the ordinary path confirms every candidate the
+scanner matched by glob — <code>*.design.md</code>,
+<code>*-spec.md</code>, <code>RFC-*.md</code>, <code>ADR-*.md</code>.
+The <code>confirmed</code> field, the filter in
+<code>learn_from_docs</code>, and the docstring promising <em>"confirmed
+design documents"</em> are all real; what is missing is any producer of
+a <em>deliberate</em> false. Turning <code>auto_scan</code> off leaves
+no way to confirm anything except editing JSON by hand, and that edit
+does not survive the next scan.</p>
+<p><strong>Provenance is the strong point</strong> and is worth
+crediting against the above: <code>source_file</code> on every decision,
+and repo/path/line on every chunk. Nothing here is unfalsifiable, which
+is more than most of the corpus manages.</p>
+<p><strong>Prompt injection.</strong> Text from design documents is
+extracted by a model and later interpolated into the spec prompt as
+<code>patterns_context</code>, and served to a coding agent through MCP
+with no fence or envelope. A repository whose ADRs anyone can edit is an
+injection surface into the specs a team then builds from.</p>
+<p><strong>Deletion.</strong> There is no delete for a decision or a
+pattern. Removing one means deleting or editing the source document and
+re-running <code>docs:learn</code>, which is coherent with the
+projection design and is documented nowhere.</p>
+<p><strong>Concurrency.</strong> Single-process CLI, no locking on
+either JSON file; two runs against one workspace interleave whole-file
+writes.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Fifteen test files, and they cover the deterministic half properly:
+the SQLite graph store, graph export, the embeddings store, the infra
+scanner, the flow tracer, git coupling, method-graph improvements, new
+language support, the spec path, the MCP surface and the workspace
+loader.</p>
+<p><strong>Nothing tests the document store.</strong> There is no
+<code>test_docs.py</code>. The two defects in this report are each one
+test away: run <code>docs:scan</code> twice with a confirmation set
+between them and assert it survives; corrupt
+<code>doc_patterns.json</code> and assert that <code>load()</code> does
+not report success. The absence is the same shape as the code — the
+parts that were built carefully are the parts that got tests.</p>
+<p>No benchmark, no eval, no published numbers, no paper.
+<code>graph.json</code> at the repository root is a committed sample
+graph rather than a measurement.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the source pointer on the derived claim,
+always.</strong> <code>Decision.source_file</code> and the chunk's
+repo/path/line turn every statement this tool makes into something a
+reader can check in one hop. It costs a column.</li>
+<li><strong>Make the derived store a projection of something you still
+have.</strong> The graph is rebuilt from repositories, the chunks from
+source; neither needs a correction path because neither is
+authoritative.</li>
+<li><strong>Keep the raw shape of what you learned from.</strong>
+<code>section_headings</code>, <code>frontmatter_fields</code> and
+<code>terminology</code> let a generated document match a team's
+existing form instead of imposing a template, which is a genuinely good
+use of extraction.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not ship a review flag whose only producer sets it to
+true.</strong> A gate that cannot be selectively closed reads to a
+reviewer as a control and functions as a default. Either give it a
+command that closes it, or delete the field and be honest that
+everything matched is ingested.</li>
+<li><strong>Do not write a decision file without reading it
+first.</strong> If a pass both proposes items and persists them, it has
+to merge on a stable key — <code>docs:scan</code> has the path, and
+could keep the answer for a candidate it has already asked about.</li>
+<li><strong>Do not let <code>except Exception: return []</code> stand
+between a store and its caller.</strong> Return the failure. An empty
+list from a corrupt file is a lie the next save makes permanent.</li>
+<li><strong>Do not extract dated decisions without carrying the
+date.</strong> Supersession is the whole point of an ADR corpus, and a
+decision store with no time cannot express it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for a staff engineer at a company where a feature touches
+several services and the architectural context lives in people's heads —
+and for that reader the graph half is genuinely useful and cheap to keep
+current. Take it as a code-map-with-MCP and treat the doc-learning half
+as a draft feature: turn <code>auto_scan</code> off, look at what it
+extracted, and do not let a generated spec cite a rationale nobody
+checked. Walk away if you need the decision store to be the system of
+record; it has no dates, no supersession, no deletion and no review you
+can actually perform.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>auto_scan: true</code> the intended default, or a
+development convenience that shipped? A <code>docs:confirm</code>
+command would settle which reading is right.</li>
+<li>What does <code>docs:learn</code> cost on a real ADR corpus, and
+does the LLM extractor hold up on documents that record a decision and
+then reverse it later in the same file?</li>
+<li>Does anything downstream of the exporters preserve
+<code>source_file</code>? The README's claim about tasks carrying enough
+context for an autonomous agent depends on what survives the push, which
+is not visible from the tree.</li>
+<li>No commit since 2026-05-23 at this pin.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage / schema:</strong>
+<code>corbell/core/graph/sqlite_store.py:22-40</code>,
+<code>corbell/core/embeddings/sqlite_store.py:21-34</code>,
+<code>corbell/core/docs/store.py</code>,
+<code>corbell/core/docs/models.py</code></li>
+<li><strong>Write path:</strong>
+<code>corbell/core/graph/builder.py</code>,
+<code>corbell/core/embeddings/extractor.py</code>,
+<code>corbell/core/docs/scanner.py</code>,
+<code>corbell/core/docs/learner.py</code></li>
+<li><strong>The review gate:</strong>
+<code>corbell/cli/commands/docs.py:27-110</code>,
+<code>corbell/core/workspace.py:44-53</code>, <code>:396-405</code></li>
+<li><strong>Retrieval:</strong>
+<code>corbell/core/embeddings/sqlite_store.py:120</code>
+(<code>query</code>), <code>corbell/core/graph/method_graph.py</code>,
+<code>corbell/core/spec/generator.py:157</code></li>
+<li><strong>Agent surface:</strong>
+<code>corbell/core/mcp/server.py:40-118</code>,
+<code>corbell/cli/commands/mcp.py</code></li>
+<li><strong>Exports:</strong>
+<code>corbell/core/export/linear.py</code>, <code>jira.py</code>,
+<code>notion.py</code></li>
+<li><strong>Tests:</strong>
+<code>tests/test_graph_sqlite_store.py</code>,
+<code>tests/test_embeddings.py</code>, <code>tests/test_spec.py</code>,
+<code>tests/test_mcp.py</code>,
+<code>tests/test_workspace.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66"><code class="commit-id" title="75c7b20ac95292185b5fef6a4680e3e10de9da66">75c7b20a…</code></a>
+— first reading. Screened before anything was read: no auto-executing
+surface, a <code>tests/conftest.py</code> that executes on pytest
+collection, and an unpinned <code>pyproject.toml</code> with no lockfile
+beside it; nothing was installed and no command was run. The
+<code>auto_scan</code> finding was established by reading the default in
+<code>workspace.py</code> against the only assignment to
+<code>CandidateDoc.confirmed</code>, and the scan overwrite by reading
+<code>docs_scan</code> against <code>save_candidates</code>. No commit
+on the repository since 2026-05-23.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

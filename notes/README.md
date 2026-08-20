@@ -33,7 +33,7 @@ when the work happens.
   stores questions awaiting answers, not claims that could be false, and gives
   the vocabulary probe a new poison: every `memory` hit is credential RAM.
   Proteus is parametric memory inside a sequence model and is kept only as a
-  boundary marker. The rule: when a repository's memory is not what the
+  boundary marker. Outworked and Corbell became reports the same day. The rule: when a repository's memory is not what the
   repository is for, the tool registry finds it and the README does not.
 - [2026-08-20-three-candidates-and-the-half-that-can-be-false.md](2026-08-20-three-candidates-and-the-half-that-can-be-false.md) —
   OpenWolf, piodide and sift-kg triaged; two in scope with no report yet, one
