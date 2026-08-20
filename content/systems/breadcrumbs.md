@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
-revision: abd08addf5f778fc8050894fe57eb1b0b57a8710
-revision_url: https://github.com/The-825/breadcrumbs/commit/abd08addf5f778fc8050894fe57eb1b0b57a8710
-analyzed_at: 2026-08-19
+revision: e398e3521b8eaaecc726d4f4587f69ebb35de58e
+revision_url: https://github.com/The-825/breadcrumbs/commit/e398e3521b8eaaecc726d4f4587f69ebb35de58e
+analyzed_at: 2026-08-20
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -1042,6 +1042,10 @@ teams have never asked about the memory they already have.
 - `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-08-20** — [`e398e3521b8eaaecc726d4f4587f69ebb35de58e`](https://github.com/The-825/breadcrumbs/commit/e398e3521b8eaaecc726d4f4587f69ebb35de58e) — six commits on, and **not one line of code among them**: README, `SESSION_STATE.md`, the whitepaper, four new essays, `planning/DECISIONS.md`, `llms.txt` and a CI-kit note. Every mechanism claim in this report was made against a tree that is byte-identical here, so the marks stand at five without a re-derivation. Screened again: one `CLAUDE.md` addressed to a reading agent, recorded as data; no auto-run surface, no dependency manifest, nothing installed.
+
+**One of those commits is a disclosure worth recording as a fact about the repository.** [`4d1b5dd4d95504cc8d72904286502102ec2e1c6b`](https://github.com/The-825/breadcrumbs/commit/4d1b5dd4d95504cc8d72904286502102ec2e1c6b) adds eight lines to `docs/prospective-memory-watches.md`: *"Pattern only. None of this ships as code in this kit. The watch table, the event log, and the freshness gate are each a schema plus a scheduled job against your own store."* Its message states why the line was added — the doc had grown two mechanism sections that day, *"A reader could reasonably have finished it thinking the kit contained a watch engine"* — and names this atlas's rubric as the prompt: *"A correction-adjacent mechanism described with no code behind it and no statement saying so is precisely what that rubric exists to catch, and it would have been a fair finding."* It would have been. This report never claimed a watch engine, because the reading found none; what changed is that the repository now says so where a reader meets the pattern rather than leaving it to be discovered.
 
 **2026-08-19** — [`abd08addf5f778fc8050894fe57eb1b0b57a8710`](https://github.com/The-825/breadcrumbs/commit/abd08addf5f778fc8050894fe57eb1b0b57a8710) — re-read 29 commits on. Most are essays added to a repository whose documentation is a substantial part of what it is, and none of them changes a claim here. Two additions are mechanism.
 

@@ -266,3 +266,15 @@ cleared.
 Still not memory, for the reason the first reading gave: the refusal is about
 whether a path is synced, not about a claim that could be false. Re-running the
 boundary test is what makes that sentence worth anything the second time.
+
+**Read again at 0.62.2** —
+[`b58c1afed95b333f14141053e2406ad1f06fb5db`](https://github.com/os-factory/har/commit/b58c1afed95b333f14141053e2406ad1f06fb5db),
+two commits later the same day: an iOS fix that generates the Xcode project at
+launch and detects the real target, a shared `provision-toolchain.sh` grown by
+122 lines across four boilerplate templates, two new test files, and a release
+bump. Nothing touches the registry, the sync loop or the unregister blocklist,
+and the screen is unchanged apart from six manifests now inside the cooldown
+after the version bump. Recorded because a re-read that finds nothing is worth
+the same sentence as one that finds something, and because the pin in the
+overview's exclusion entry should not drift silently past what was actually
+read.

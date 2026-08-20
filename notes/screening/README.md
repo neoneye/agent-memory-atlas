@@ -9,10 +9,10 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 152 of 313 screened at the report's current pin.**
+**Progress: 153 of 313 screened at the report's current pin.**
 
 19 further record(s) describe a revision the report has since moved
-off, and 142 report(s) have no record at all.
+off, and 141 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
