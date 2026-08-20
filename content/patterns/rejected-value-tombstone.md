@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-one systems of three hundred and thirteen
+> **This is not an established best practice.** Twenty-one systems of three hundred and fourteen
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -129,7 +129,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-one systems of 313 in the atlas have this.** That is still the most
+**Twenty-one systems of 314 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -150,7 +150,7 @@ and the plainest — a suppression table the write gate consults at four points,
 discussed below.
 [Noosphere](../../systems/noosphere/) is the most rigorous — its tombstone is
 keyed on an HMAC subject hash and checked across every retained key version, so
-rotating the key cannot resurrect a revocation, at the price of a ninety-day
+rotating the key cannot resurrect a revocation, at the price of a ninety-one-day
 expiry discussed below.
 [Wenlan](../../systems/wenlan/) puts one on the *suggestion* layer rather than
 the fact layer: a dismissed mind-map node keeps its row so its fingerprint stays
@@ -219,8 +219,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of three hundred and thirteen
-would suggest a hard idea that a few teams reach independently. One of three hundred and thirteen, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of three hundred and fourteen
+would suggest a hard idea that a few teams reach independently. One of three hundred and fourteen, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -645,9 +645,9 @@ stays full, the check keeps running, and nothing ever matches again.
 
 It also introduces the first deliberate **expiry** in this atlas's tombstones.
 Retaining the historical keys is what makes the check work, so the keyring is
-bounded by the tombstone's ninety-day TTL. That is a defensible trade for a
+bounded by the tombstone's ninety-one-day TTL. That is a defensible trade for a
 privacy revocation whose source data expires anyway, and it means the guarantee
-is *not again for ninety days* rather than *never again* — a distinction worth
+is *not again for ninety-one days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
 
 ### The one that answered the question twice, differently, in two stores
@@ -782,7 +782,7 @@ implementations here also leave open.
   finding is that this walks a rejected value back to verified in three steps,
   and it is the concrete attack this pattern exists to stop.
 - Age the store past every TTL and prune you have, then run the laundering
-  sequence again. Verel's round 8 was exactly this, at ninety idle days.
+  sequence again. Verel's round 8 was exactly this, at ninety-one idle days.
 - Attack the key normalization with unicode look-alikes and case and whitespace
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system

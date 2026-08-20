@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **313 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **314 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -238,6 +238,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/memoir-cli/"><span class="az-id">memoir-cli</span><span class="az-what">The tombstone nothing can create</span><code class="az-repo">camgitt/memoir</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memomind/"><span class="az-id">MemoMind</span><span class="az-what">Four defects found by running someone else&#x27;s engine</span><code class="az-repo">24kchengYe/MemoMind</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memora/"><span class="az-id">Memora</span><span class="az-what">Rehearsable correction</span><code class="az-repo">agentic-box/memora</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/memorax-code/"><span class="az-id">MemoraX Code</span><span class="az-what">Four hosts, one hosted store</span><code class="az-repo">memorax-ai/memorax-code</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memori/"><span class="az-id">Memori</span><span class="az-what">Portable store, hosted judgement</span><code class="az-repo">MemoriLabs/Memori</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/memory-compiler/"><span class="az-id">Memory Compiler</span><span class="az-what">A tombstone that blocks the close</span><code class="az-repo">KTVSUN/memory-compiler</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memory-engine/"><span class="az-id">Memory Engine</span><span class="az-what">Agents as principals</span><code class="az-repo">timescale/memory-engine</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></a></li>

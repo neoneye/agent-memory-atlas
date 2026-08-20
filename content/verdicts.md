@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 313 reports.**
+**This page covers all 314 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2734,3 +2734,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.1.0, 5,415 lines of Python with a committed stdlib-only check, CI, and unit, integration, adapter, security and quality suites — including a committed `quality_report.json`. One capability mark, `negative_eval`, and it is earned in the strict form: `test_secrets_are_redacted_without_disclosing_the_match` asserts the secret is absent from the rendered Markdown *and* that its `[REDACTED:github]` marker is present in the same fixture, which is an absence assertion carrying its own positive control.
 - Study when: you are deciding what a model may be trusted to assert about its own work. This is the most carefully reasoned artifact in the corpus on that question, and the two-phase split — local code supplies the facts, the model supplies the meaning — is worth copying whole.
 - Do not copy when: you need memory that accumulates. There is no store, no query, no supersession across capsules and no way to ask what is true now rather than what was true at the end of one session.
+
+### [`memorax-code`](../systems/memorax-code/)
+
+- Best idea: **redaction before the payload leaves the machine, with an allowlist that keeps the memory useful.** `payload-redaction.ts` strips private-key blocks, `Authorization` headers, Bearer and Basic tokens, JWTs and sensitive key/value pairs, while `SAFE_CREDENTIAL_VALUE_PATTERN` exempts `${ENV_VAR}`, `process.env.X`, `<placeholder>`, `example` and `change-me` — the half that stops an aggressive rule set from eating a config snippet. Its committed tests carry the shape this atlas argues for: an absence assertion per category, a positive control that representative non-sensitive coding text survives, an idempotence case, and a check that a payload of nothing but placeholders is not meaningful content.
+- Second idea: **a scope that is refused rather than defaulted.** `RepositoryMemoryScope` distinguishes `git-repository`, `local-directory` and `codex-projectless`, names its fallback reason (`git_metadata_invalid`), and `adapter.ts:456` errors with *"memory scope is required for MemoraX search/add"* rather than falling back to a global namespace. Beside it, a retrieval that reports `skipReason` when it does not fire, and an add that is a task with a status endpoint — the honest way to describe a write that is not readable yet.
+- Biggest risk: **there is no delete.** Not "no tombstone" — no removal of any kind in the client, and none among the three endpoints it speaks (`/v1/memories/search`, `/add`, `/add/status/{taskId}`). A user asking for a memory to be removed has nothing here to call. Beside that, the whole epistemic layer is on the far side of an HTTP boundary: what a `memory_type` means, how a search is ranked, whether scope is enforced server-side and whether two contradictory facts are ever reconciled cannot be determined from this tree, and the recalled `<memories>` block is rendered into context with no sentence telling the model its contents are data from an earlier session.
+- Maturity impression: MIT (covering the client only), ~27,000 lines of TypeScript across six packages, ten memory test files plus per-client hook-runtime suites, four host integrations. One capability mark, `negative_eval`, earned on the outbound payload rather than on a read path. `stack_storage` is `delegated` and `stack_retrieval` is empty because neither the store nor the ranking is in this repository.
+- Study when: you are shipping session text to a store you do not own and want a worked redaction boundary, or you want the pattern of a required, kind-distinguished scope with a named fallback.
+- Do not copy when: deletion or correction matters, or you need to be able to answer what your memory contains. The local half is careful and the questions this atlas asks are all answered somewhere else.
