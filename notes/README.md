@@ -21,6 +21,19 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-a-curriculum-a-position-paper-and-a-stale-record.md](2026-08-20-a-curriculum-a-position-paper-and-a-stale-record.md) —
+  three non-systems triaged beside the Heimdall report. Marble's curriculum
+  taxonomy is not memory and is the worked example the promotion-between-tiers
+  page has been asking for: evidence criteria required on every node, a
+  prerequisite DAG whose edges are typed hard or soft and carry a one-line reason
+  each. The scientific-teams position paper is the thinnest adjacency here and is
+  recorded so nobody checks it twice. And a Cipher Brief essay about export
+  controls carries the best compression of the staleness argument in this
+  directory — *"a larger model querying the same stale record returns the same
+  coordinates faster and with more confidence"* — which lands on the same side as
+  Heimdall: staleness is not something a bigger model detects, it is something
+  that has to be checked. Two rules: *not in scope* and *nothing to learn* are
+  different verdicts, and where a claim comes from predicts its relevance badly.
 - [2026-08-20-two-platforms-and-the-window-that-persists.md](2026-08-20-two-platforms-and-the-window-that-persists.md) —
   Hybro and Future AGI triaged, both excluded. Hybro is the closest call in a
   while: a `backend/context_memory/` package the five-word operation probe cannot
