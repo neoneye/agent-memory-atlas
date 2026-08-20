@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-20-ninety-four-notes-clustered.md](2026-08-20-ninety-four-notes-clustered.md) —
+  the other ninety-four notes sorted into ten kinds, with the most significant
+  document and the most significant insight named per cluster. Three findings
+  from the distribution: the scope boundary got more writing (12 notes) than the
+  acquisition it bounds (8); the largest and fastest-growing cluster is the
+  project auditing its own method (12), whose best items are engineering findings
+  with no dependence on agent memory; and the nine notes specifying harnesses,
+  eval suites and conformance runs have shipped one artifact between them and no
+  harness at all, which makes cluster G a decision rather than a backlog. Also the
+  chronological turn at 2026-08-09, where the corpus stopped being the thing
+  under construction and became the thing under audit.
 - [2026-08-20-the-corpus-held-the-answer-the-rubric-had-no-column.md](2026-08-20-the-corpus-held-the-answer-the-rubric-had-no-column.md) —
   An outside survey named an axis — who currently holds the right to write —
   that three reports written in the previous two days each answered differently.

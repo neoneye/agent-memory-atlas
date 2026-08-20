@@ -401,7 +401,16 @@ def check(root: Path, show_list: bool) -> int:
     listed: list[str] = []
     bound = 0
 
-    for source in sorted((root / "content").rglob("*.md")):
+    # `AGENTS.md` is scanned beside `content/` because it is the file an agent
+    # reads first and the only prose outside the site that states corpus totals.
+    # Its opening figure sat eighteen reports stale while every generated number
+    # it points at was current.
+    sources = sorted((root / "content").rglob("*.md"))
+    agents_file = root / "AGENTS.md"
+    if agents_file.exists():
+        sources.append(agents_file)
+
+    for source in sources:
         if source.name in GENERATED_FILES:
             continue
         raw = source.read_text(encoding="utf-8")
