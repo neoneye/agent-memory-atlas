@@ -21,6 +21,21 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-someone-built-the-contract.md](2026-08-20-someone-built-the-contract.md) —
+  Perseus Vault shipped `benchmark/scoped_memory/`, a versioned portable
+  capability contract with the two properties nine of this project's notes
+  specified and never built: the same contract run against a deterministic
+  reference surface *and* an MCP adapter over the real system, and an outcome
+  vocabulary — allow, deny, scope_mismatch, stale_conflict, abstain,
+  unavailable — where *"a missing semantic provider or surface is represented as
+  `unavailable`; it is never converted to a fabricated zero or pass"*, pinned by
+  a committed test. Scope is bound out of band with a named refusal for caller
+  injection, filtering runs before the ranker sees candidate IDs, and the
+  published report is hash-only with a stable signature. Cluster G's honest
+  third answer: part of it got built somewhere else, by a system already in the
+  corpus. What follows — the atlas's twenty tests are a boolean plus a control
+  where an outcome vocabulary would be structural, and the atlas still has not
+  run anything.
 - [2026-08-20-what-it-cannot-recheck-it-does-not-carry.md](2026-08-20-what-it-cannot-recheck-it-does-not-carry.md) —
   commaai/openpilot triaged and excluded on a boundary this corpus had not drawn
   before: its persisted state *is* falsifiable — learned steering ratio, camera

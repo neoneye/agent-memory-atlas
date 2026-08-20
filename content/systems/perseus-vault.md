@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 443239f45d39106169a2f37d193897c609850bd9
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9
-analyzed_at: 2026-08-19
+revision: 1bf7041e428a7302281c67f5d597a06f33d38cce
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce
+analyzed_at: 2026-08-20
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -595,6 +595,19 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-20** — [`1bf7041e428a7302281c67f5d597a06f33d38cce`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce) — re-pinned nine commits on, 46 files and +6,561 lines, most of it under `benchmark/`. Screened again: two auto-run surfaces, one build-time execution point, one manifest inside the cooldown across eight unpinned surfaces; nothing was installed and no benchmark was run. Marks unchanged at seven of seven. **The addition is the artifact this atlas specified and has not built.**
+
+`benchmark/scoped_memory/` is a *portable scoped-memory capability contract*, versioned `perseus-vault-scoped-memory-contract/v1` and described in its own README as *"a capability boundary, not a second memory API"*. Four properties make it worth reading whatever you think of the rest of the system.
+
+- **Scope is bound out of band and the model cannot reach it.** The contract binds `user_id`, `workspace_hash`, `agent_id` and `session_id` supplied by the host, and states that *"model-authored arguments cannot supply or override any of those fields"*; `contract.py:190` returns `_result("deny", "caller_scope_injection")` when they try. *"Scope and policy filtering happens before a ranker receives candidate IDs"*, and `RecordingRanker` exists so a test can prove what the ranker was handed.
+- **The outcome vocabulary refuses to collapse an absence into a pass.** `OUTCOMES` is `allow`, `deny`, `scope_mismatch`, `stale_conflict`, `abstain`, `unavailable`, and the README states the rule directly: *"A missing semantic provider or surface is represented as `unavailable`; it is never converted to a fabricated zero or pass."* `test_publication.py::test_failed_surface_is_explicitly_partial_not_zero` pins it.
+- **It runs against two surfaces.** `InProcessSurface` is a deterministic reference, and `McpSurface` is an adapter over the shipped `VaultClient` and the canonical MCP tools `recall`, `context`, `get_entity`, `remember`, `correct` and `supersede` — so the same contract exercises a reference implementation and the real system, which is what makes a passing run mean anything.
+- **The published artifact is hash-only and stable.** `test_report_is_hash_only_and_repeated_signature_is_stable` asserts the report carries hashes rather than content and that a repeated run signs identically.
+
+Writes require a trusted authority whose capability set includes the operation, a stale expected version fails closed, and corrections and supersessions retain the prior record with a deterministic successor relationship — the same semantics the report describes in the store, restated as an executable contract.
+
+Also at this pin: `benchmark/recall/test_fusion_regression.py` adds conflict-magnet fusion regressions, `test_replay.py` a shared retrieval replay envelope, evidence-sufficiency curves and protocol-comparability lanes under `longmemeval`, corpus inputs certified and redacted before use, proposal-admission writes isolated, and `src/db.rs` and `src/tools.rs` grown by 237 and 157 lines.
 
 **2026-08-19** — [`443239f45d39106169a2f37d193897c609850bd9`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9) — re-read 125 commits on, roughly 109,000 added lines in `src/` across 69 files. Every one of the seven marks was re-verified at this pin and every one holds, but one evidence record had gone stale under it: `human_review` named `mimir_action_approve` in `src/mcp.rs`, which existed at the previous pin and does not exist at this one. The approval surface is `admission_decide` in `src/tools.rs`, refusing any decision that is not `approve` or `reject`, and the record is re-anchored to it with `none` for its test, because no committed test names the path. Nothing in the previous reading was found stale, so this is an extension rather than a correction: section 10a adds the three mechanisms that are new in kind — `write_gate.rs`, a deterministic read-only precheck that decides Store/Duplicate/Supersede/Forget before any model call and refuses to let `Forget` drop a substantive fact; `verify.rs`, a runtime self-audit whose three-valued status makes `Unverified` a distinct exit code from `Pass`; and `benchmark/redteam/`, an adversarial harness against MAFIA, MemCollusion and Chronos whose README calls itself a skeleton and commits datasets and validators without results.
 

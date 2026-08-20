@@ -115,14 +115,14 @@ tombstone stores a digest rather than the value it refuses.</p>
               <strong>Perseus-Computing-LLC/perseus-vault</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9" title="443239f45d39106169a2f37d193897c609850bd9">
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce" title="1bf7041e428a7302281c67f5d597a06f33d38cce">
               <span>Analyzed revision</span>
-              <code>443239f4…</code>
+              <code>1bf7041e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-19</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -739,6 +739,67 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce"><code class="commit-id" title="1bf7041e428a7302281c67f5d597a06f33d38cce">1bf7041e…</code></a>
+— re-pinned nine commits on, 46 files and +6,561 lines, most of it under
+<code>benchmark/</code>. Screened again: two auto-run surfaces, one
+build-time execution point, one manifest inside the cooldown across
+eight unpinned surfaces; nothing was installed and no benchmark was run.
+Marks unchanged at seven of seven. <strong>The addition is the artifact
+this atlas specified and has not built.</strong></p>
+<p><code>benchmark/scoped_memory/</code> is a <em>portable scoped-memory
+capability contract</em>, versioned
+<code>perseus-vault-scoped-memory-contract/v1</code> and described in
+its own README as <em>"a capability boundary, not a second memory
+API"</em>. Four properties make it worth reading whatever you think of
+the rest of the system.</p>
+<ul>
+<li><strong>Scope is bound out of band and the model cannot reach
+it.</strong> The contract binds <code>user_id</code>,
+<code>workspace_hash</code>, <code>agent_id</code> and
+<code>session_id</code> supplied by the host, and states that
+<em>"model-authored arguments cannot supply or override any of those
+fields"</em>; <code>contract.py:190</code> returns
+<code>_result("deny", "caller_scope_injection")</code> when they try.
+<em>"Scope and policy filtering happens before a ranker receives
+candidate IDs"</em>, and <code>RecordingRanker</code> exists so a test
+can prove what the ranker was handed.</li>
+<li><strong>The outcome vocabulary refuses to collapse an absence into a
+pass.</strong> <code>OUTCOMES</code> is <code>allow</code>,
+<code>deny</code>, <code>scope_mismatch</code>,
+<code>stale_conflict</code>, <code>abstain</code>,
+<code>unavailable</code>, and the README states the rule directly:
+<em>"A missing semantic provider or surface is represented as
+<code>unavailable</code>; it is never converted to a fabricated zero or
+pass."</em>
+<code>test_publication.py::test_failed_surface_is_explicitly_partial_not_zero</code>
+pins it.</li>
+<li><strong>It runs against two surfaces.</strong>
+<code>InProcessSurface</code> is a deterministic reference, and
+<code>McpSurface</code> is an adapter over the shipped
+<code>VaultClient</code> and the canonical MCP tools
+<code>recall</code>, <code>context</code>, <code>get_entity</code>,
+<code>remember</code>, <code>correct</code> and <code>supersede</code> —
+so the same contract exercises a reference implementation and the real
+system, which is what makes a passing run mean anything.</li>
+<li><strong>The published artifact is hash-only and stable.</strong>
+<code>test_report_is_hash_only_and_repeated_signature_is_stable</code>
+asserts the report carries hashes rather than content and that a
+repeated run signs identically.</li>
+</ul>
+<p>Writes require a trusted authority whose capability set includes the
+operation, a stale expected version fails closed, and corrections and
+supersessions retain the prior record with a deterministic successor
+relationship — the same semantics the report describes in the store,
+restated as an executable contract.</p>
+<p>Also at this pin:
+<code>benchmark/recall/test_fusion_regression.py</code> adds
+conflict-magnet fusion regressions, <code>test_replay.py</code> a shared
+retrieval replay envelope, evidence-sufficiency curves and
+protocol-comparability lanes under <code>longmemeval</code>, corpus
+inputs certified and redacted before use, proposal-admission writes
+isolated, and <code>src/db.rs</code> and <code>src/tools.rs</code> grown
+by 237 and 157 lines.</p>
 <p><strong>2026-08-19</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9"><code class="commit-id" title="443239f45d39106169a2f37d193897c609850bd9">443239f4…</code></a>
 — re-read 125 commits on, roughly 109,000 added lines in
