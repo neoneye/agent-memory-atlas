@@ -21,6 +21,22 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-what-it-cannot-recheck-it-does-not-carry.md](2026-08-20-what-it-cannot-recheck-it-does-not-carry.md) —
+  commaai/openpilot triaged and excluded on a boundary this corpus had not drawn
+  before: its persisted state *is* falsifiable — learned steering ratio, camera
+  extrinsics, torque response — but there is no agent for whom it is memory, no
+  model with tools and no registry to grep. Read anyway for four mechanisms the
+  memory corpus mostly lacks. It names the one learned value whose producing
+  condition it cannot re-observe — stiffness, lowered by wet roads — and resets
+  it every drive with the reason in a comment. It keys a cached belief on the
+  car, the tuning scheme, the constants and the learner's own `VERSION`, so a
+  changed algorithm makes every belief it produced unrestorable without a
+  migration. Its forgiving loader is safe because it `remove()`s what it could
+  not parse, and on a validity failure it refuses the fitted parameters while
+  restoring the raw points. Retention is a flag per key in one header, executed
+  by the lifecycle owner. Plus hysteresis applied to a trust state rather than to
+  retrieval, and a fifth vocabulary-probe poison: `tombstone` here is a crash
+  dump.
 - [2026-08-20-four-more-and-the-memory-under-the-product.md](2026-08-20-four-more-and-the-memory-under-the-product.md) —
   outworked, Corbell, mission-control and the Proteus paper triaged. Two of the
   three repositories read like memory systems and are not; the third is a
