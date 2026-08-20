@@ -8905,15 +8905,31 @@ power that makes its range worth its share, and a third prior re-divides
 rather than enlarges it. Beside it, the cheapest good idea in the
 corpus: capture the shell exit code, which git cannot supply and
 scrollback loses.</li>
-<li>Biggest risk: nothing can be forgotten. There is no per-item delete,
-no delete by value, and no record that anything was removed; the finest
-granule is <code>--prune-source</code>, which wipes a whole source.
-Worse, the append-only hook log the shell nodes were derived from is
-untouched by every removal path, so <code>sync --rebuild</code>
-re-derives exactly what was pruned. For a store that deliberately
-ingests assistant transcripts and shell command lines — the two places a
-pasted credential lives — a redaction miss is unrecoverable by any
-command in the tree.</li>
+<li>Second idea: <strong>the deletion that survives the
+rebuild.</strong> <code>forget &lt;value&gt;</code> writes a
+<code>deny_list</code> row keyed on the value — literal or regex,
+over-broad patterns refused up front, including a regex matching the
+empty string — and <code>upsertNodes</code> consults it before every
+insert, so a value forgotten today cannot re-enter from the untouched
+append-only hook log on a later <code>sync --rebuild</code>. The removal
+record is hash-only by design: <em>"this table exists to prove a value
+was removed, not to retain a second copy of it… so the record that
+something was forgotten never itself becomes something worth
+forgetting."</em> The committed test proves the failure case rather than
+the feature — ingest a secret, confirm it is retrievable, forget,
+rebuild, assert it returns <code>[]</code> while a control command in
+the same log still returns hits.</li>
+<li>Biggest risk: <strong>the coarse deletion path is the unrecorded
+one, and staleness is entirely manual.</strong>
+<code>pruneSourceNodes</code> wipes a whole source and writes neither a
+tombstone nor a <code>mutation_audit</code> row, whose only producer is
+<code>forget</code> — so the removal history covers the fine-grained
+case and not the blunt one. Separately, nothing detects a contradiction:
+<code>mark-stale</code> is a command a person runs, and
+<code>stale</code> only lists <code>inferred</code> nodes older than 45
+days that nothing supersedes, its own header refusing the stronger claim
+as <em>"a heuristic surfacing list, not contradiction detection."</em> A
+wrong document sits at full weight until someone notices.</li>
 <li>Most reusable component: <code>src/conversation/redact.ts</code>,
 for the distinction rather than the rules. Shape rules (private-key
 blocks, <code>AKIA</code>, <code>gh[pousr]_</code>, JWTs) match strings
@@ -8927,11 +8943,12 @@ of a project's own history is dropped from the match query, because bm25
 rewards rarity only within the corpus it runs against — a measured false
 positive scored −9.685, stronger than two real links at −5.899 and
 −6.559.</li>
-<li>Maturity impression: MIT, v0.4.0 at 118 commits, ~9,100 lines of
-TypeScript, 451 tests across 29 files, CI, an npm package, a four-tool
-MCP server, a VS Code panel and an opt-in git pre-commit hook. Two
-capability marks — <code>scope_enforced</code> (<code>project_id</code>
-a required predicate on every read arm) and <code>negative_eval</code>
+<li>Maturity impression: MIT, v0.4.0 at 118 commits, ~10,850 lines of
+TypeScript, 619 tests across 47 files, CI, an npm package, a four-tool
+MCP server, a VS Code panel and an opt-in git pre-commit hook. Four
+capability marks — <code>tombstone</code>, <code>audit_log</code>,
+<code>scope_enforced</code> (<code>project_id</code> a required
+predicate on every read arm) and <code>negative_eval</code>
 (cross-project leak tests on both retrieval arms, plus three suppression
 cases on the pre-commit arm). Two near-misses stated in the report: a
 bi-temporal pair whose record-time column no read path queries, and a
@@ -8942,10 +8959,10 @@ stored text through a good ranker than summaries through a model — or
 you want a worked example of memory delivered at a decision point rather
 than on request, in a git pre-commit hook that warns and cannot
 block.</li>
-<li>Do not copy when: anything you capture must be removable on request.
-Deletion here is keyed on the source while the source survives on disk,
-which is the pattern this atlas argues against, applied to the one
-collector most likely to hold a secret.</li>
+<li>Do not copy when: you need staleness handled rather than surfaced,
+or you need the coarse deletion path recorded. A source prune leaves
+nothing behind, and a document that stopped being true stays at full
+weight until a person runs <code>mark-stale</code> on it.</li>
 </ul>
 <h3 id="feltstate"><a
 href="../systems/feltstate/"><code>feltstate</code></a></h3>

@@ -1,16 +1,18 @@
 ---
 title: "NexusMem"
 eyebrow: "Shell history as memory"
-description: "A local SQLite store of what actually happened on the machine — shell commands with exit codes, git patches, docs, transcripts — ranked and token-budgeted on the way out, with a scope key on every read, a git pre-commit hook that surfaces what already failed in the files you staged, and no way to forget one thing."
+description: "A local SQLite store of what actually happened on the machine — shell commands with exit codes, git patches, docs, transcripts — ranked and token-budgeted on the way out, with a scope key on every read and a value-keyed deny list that survives the rebuild it would otherwise be undone by."
 root: ../..
 page_kind: system
 source_name: "yaminbkk/NexusMem"
 source_url: https://github.com/yaminbkk/NexusMem
-revision: 8aee1391ad40f158d98f922f267d44c10a610dd9
-revision_url: https://github.com/yaminbkk/NexusMem/commit/8aee1391ad40f158d98f922f267d44c10a610dd9
-analyzed_at: 2026-08-19
-capabilities: "scope_enforced, negative_eval"
+revision: c52dac9ceae08c4ee55df304bef0097d8b985f03
+revision_url: https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03
+analyzed_at: 2026-08-20
+capabilities: "tombstone, audit_log, scope_enforced, negative_eval"
 capability_evidence:
+  tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
+  audit_log: "removals, in the store's own tables | src/store/forget.ts:129, src/store/schema.ts (V5 `mutation_audit`, `tombstones`) | `forget` opens a `mutation_audit` row before the delete sweep — action, project, a JSON detail of the pattern, match type, case flag, reason and the project ids in scope, started and finished timestamps — and each removed node leaves a `tombstones` row carrying kind, source, ts, signal, body length and `body_sha256`/`title_sha256`, foreign-keyed to both the deny-list entry and the audit row. The schema states the reason for hashing: *\"this table exists to prove a value was removed, not to retain a second copy of it… so the record that something was forgotten never itself becomes something worth forgetting.\"* One audit row is written whether or not anything matched. The gap is coverage: `pruneSourceNodes`, the other destructive path, writes neither an audit row nor a tombstone | tests/forget.test.ts:231 asserts one `mutation_audit` row and at least one `tombstones` row survive `sync --rebuild`"
   scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
   negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
 stack_storage: "sqlite"
@@ -21,13 +23,13 @@ matrix:
   storage: "One `better-sqlite3` file per repository: `nodes` plus an external-content FTS5 index, a `sqlite-vec` vec0 table, a `node_files` path index, a `node_links` edge table and a `file_edges` import graph that is not made of nodes and is replaced wholesale on every sync"
   retrieval: "BM25 over FTS5 fused with cosine over sqlite-vec, then ranked by `relevance x signal^e x recency^e` where the exponents split one joint overturn budget between the two query-independent priors, then packed to a token budget. A second read path takes no query at all: `precheck` derives match tokens from the basenames of the staged files and returns unresolved failures"
   write: "Collectors per source, cursor-resumed; an opt-in shell hook appends a JSONL of command, cwd and exit code, and scrape fallbacks tail bash/zsh/PSReadLine without either; pattern redaction runs before anything reaches the index"
-  update_delete: "Nothing per item and nothing by value. `--prune-source` wipes one source across the live project id and its prior identities behind a `--yes` gate; `sync --rebuild` clears the project. The hook log the nodes came from is never touched, so a rebuild re-derives what was pruned"
+  update_delete: "Three granules. `forget <value>` deletes every matching node and writes a standing deny list consulted at every future write, with a hash-only tombstone and an audit row per operation; `--prune-source` wipes one source across the live project id and its prior identities, unaudited; `sync --rebuild` clears the project. `mark-stale <id> --supersedes <newId>` down-weights without deleting"
   scoping: "`project_id` on every node and a required predicate on both read arms; a cross-project query opens each registered repository`s own database and tags every hit with its origin"
   integration: "A CLI, a four-tool stdio MCP server (search, sync, status, list-recent), a read-only VS Code panel, and an opt-in `.git/hooks/pre-commit` block that runs `nexusmem precheck` — without `--strict`, so it warns and cannot block a commit"
   background: "None on a schedule. Every collector runs inside `nexusmem sync`, invoked by hand, by a shell hook or by the MCP `sync_project` tool; the git hook triggers a read rather than a write"
-  trust: "A `signal` float used only for ranking. No status, no provenance beyond the source name, and no state that withholds a node from being returned"
-  strengths: "Shell commands with exit codes, which git cannot supply and scrollback loses; a ranker that bounds how far query-independent priors may overturn the query, as one budget shared between them; redaction split into a high-confidence profile safe to run over source code and a broader one that is not; a document-frequency filter that drops tokens which are boilerplate in this project`s own corpus, because bm25 rewards rarity only within the corpus it is run against"
-  risks: "No per-item or per-value deletion, so a secret redaction missed is removable only by wiping a whole source — and the append-only hook log that produced it survives, so the next full sync brings it back; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
+  trust: "A `signal` float for ranking, plus `provenance` as `observed` or `inferred` — set per collector, consumed by the ranker as a faster decay and printed in the packed context. Two values, so not a status; nothing withholds a node from being returned"
+  strengths: "A value-keyed deny list whose test proves the resurrection case — forget, rebuild from the untouched append-only log, and the value stays gone while a control survives; shell commands with exit codes, which git cannot supply and scrollback loses; a ranker that bounds how far query-independent priors may overturn the query, as one budget shared between them; redaction split into a high-confidence profile safe to run over source code and a broader one that is not; a document-frequency filter that drops tokens which are boilerplate in this project`s own corpus, because bm25 rewards rarity only within the corpus it is run against"
+  risks: "The deletion story is complete only through `forget`: `--prune-source` writes no tombstone and no audit row, so the coarse path is the unrecorded one; staleness is entirely manual and `stale` only lists candidates; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
 ---
 
 ## 1. Executive Summary
@@ -84,14 +86,27 @@ than pooling them. The precheck path does not go through those methods: it takes
 holds; what is worth noting is that only one of the two files enforcing it is the
 store, and the escape hatch invites the third.
 
-**What it cannot do is forget one thing.** There is no per-item deletion, no
-deletion by value, and no record that anything was removed. The coarsest granule
-available is `--prune-source`, which wipes one source across the live project id
-and its prior identities; below that, `sync --rebuild` clears the project. And
-the append-only hook log the shell nodes were derived *from* is never touched by
-either, so a full re-sync re-derives exactly what was pruned. For a store that
-deliberately ingests assistant transcripts and shell command lines — the two
-places a pasted credential actually lives — that is the risk worth stating first.
+**The answer to "a credential got in" is the mechanism worth the report.** A store
+that deliberately ingests assistant transcripts and shell command lines is
+ingesting the two places a pasted credential actually lives, and deleting the
+node is not enough, because the hook log those nodes were derived *from* is
+append-only and a `sync --rebuild` reads it again from line zero. So
+`nexusmem forget <value>` does not delete: it writes a `deny_list` row keyed on
+the value — literal or regex — and `upsertNodes` consults that list before every
+insert, forever. The comment on `deny-list.ts` states the shape in one line:
+*"a standing rule that a specific value (a leaked key, a name) must never become
+a node, checked on every insert rather than swept after the fact."*
+
+Two details make it more than a filter. Over-broad patterns are refused at write
+time — an empty literal, a regex that will not compile, and a regex that matches
+the empty string, on the stated ground that each *"matches every node just as
+broadly as an empty literal does."* And the record of the removal is
+**hash-only**: each deleted node leaves a `tombstones` row with kind, source,
+timestamp, signal, body length and `sha256` of body and title, never the text,
+because *"this table exists to prove a value was removed, not to retain a second
+copy of it… so the record that something was forgotten never itself becomes
+something worth forgetting."* That sentence is the best argument in this corpus
+for why a tombstone should not store what it tombstones.
 
 ## 2. Mental Model
 
@@ -126,14 +141,22 @@ flowchart TD
     STAGED["git diff --cached<br/>staged file basenames"] --> PRE["precheck: unresolved failures + churn<br/>no query, no ranker, no budget"]
     N --> PRE
     PRE --> HOOK2["pre-commit hook, on stderr<br/>never --strict, never blocks"]
-    N -. "the only removals" .-> PRUNE["--prune-source (whole source)<br/>--rebuild (whole project)"]
+    N -. "unrecorded removals" .-> PRUNE["--prune-source (whole source)<br/>--rebuild (whole project)"]
     PRUNE -. "re-derives on next sync" .-> LOG
+    FORGET["forget &lt;value&gt;"] --> DENY[("deny_list<br/>+ hash-only tombstones<br/>+ mutation_audit")]
+    FORGET -. "deletes matching nodes" .-> N
+    DENY -->|"consulted on every insert"| N
+    LOG -. "rebuild re-reads from line 0" .-> N
 ```
 
-The dotted path is the finding. Removal is keyed on the *source*, the source file
-is still on disk, and nothing anywhere records that a value was meant to be gone
-— so the next full sync restores it and no code consults anything to prevent
-that.
+The two dotted paths out of the node store are the finding, and they end
+differently. A prune is keyed on the *source*: the append-only hook log is still
+on disk, nothing records that the data was meant to be gone, and the next full
+sync restores it. A `forget` is keyed on the *value*, and the rule it writes is
+consulted on every subsequent insert — including the insert a rebuild performs
+from that same untouched log. The coarse operation is the reversible one; the
+fine one is not, which is the opposite of the usual arrangement and the right way
+round.
 
 ## 3. Architecture
 
@@ -216,8 +239,26 @@ read path accepts an as-of parameter, so the store cannot answer "what did you
 hold last Tuesday" — only "what happened last Tuesday". The columns are there and
 one of them is inert on the read path.
 
-There is no status field, no supersession pointer, no `deleted_at` and no
-provenance beyond the source name.
+Two schema-v6 columns carry the epistemics. `provenance` is `observed` or
+`inferred`, backfilled by kind on migration — *"since an unchanged node is never
+rewritten by a later sync… and so would never otherwise pick up the right
+value"* — and set explicitly by each collector with its reasoning in the source:
+shell commands, commits and diffs are `observed`; docs are `inferred` with the
+note *"a written claim, and the kind of content most likely to go stale"*;
+session summaries are `inferred` because they are *"a model's distillation, not a
+directly observed event"*; conversation turns because they are *"discourse about
+what happened, not the event itself"*. `supersedes` is a nullable pointer from
+the newer node to the one it replaces, with a partial index over the non-null
+rows.
+
+**Two values are not a state machine, which is why `trust_state` is withheld.**
+`observed` versus `inferred` distinguishes where a claim came from, not whether
+anyone has checked it; there is no candidate, no verified, no rejected, and no
+value that withholds a node from a result set. What the field does earn is a real
+consumer on the read path, which most provenance fields in this atlas do not
+have — see section 6.
+
+There is no `deleted_at`, because a deletion is a row in a different table.
 
 ## 6. Retrieval Mechanics
 
@@ -296,6 +337,19 @@ says so, restricting the claim to the class the numbers support. When every toke
 is boilerplate the heuristic returns nothing rather than falling back unfiltered,
 because its design *"already prefers a missed link over a false one."*
 
+**Two query-independent priors ride on top of the fused score, and provenance
+tunes one of them.** Recency decays on a half-life that depends on where the
+claim came from: `INFERRED_HALF_LIFE_RATIO = 0.5`, so an `inferred` node's
+relevance halves twice as fast as an `observed` one's, commented as *"a judgment
+call, not a measured optimum"*. A superseded node is multiplied by
+`SUPERSEDED_PENALTY = 0.5` rather than dropped, *"not near-zero, since it must
+stay reachable if it's still the best match"* — a supersession that demotes and
+refuses to hide. And `pack.ts` prints the provenance into the packed context as
+`[observed]` or `[inferred]`, one bracket per line, so the model reading the
+memory is told which kind of claim it is looking at. A field that is set by every
+producer, consumed by the ranker and rendered to the reader is a rarer thing than
+its two lines of code suggest.
+
 ## 7. Write Mechanics
 
 Writes are synchronous and happen inside a `sync`; there is no queue and no
@@ -311,13 +365,37 @@ the very lines a diff is indexed for."* So conversation text gets the full set
 and code diffs get `high-confidence` only. The header calls it *"a safety net,
 not a guarantee."*
 
-Deletion is where the design is thinnest. `pruneSourceNodes` wipes one source,
-and `runPruneSources` applies it across the live project id **and every prior
-identity of the same repository** — a scope derived from `listOtherProjectIds`
-rather than from "every `project_id` in the table", which is the conservative
-choice. Without `--yes` it prints the matching count and removes nothing; with
-it, the output says *"this cannot be undone."* Below that granule there is
-nothing.
+**Deletion has three granules and only the finest one is recorded.**
+`forget <value>` is the finest: one transaction inserts the deny-list entry,
+opens a `mutation_audit` row *before* the sweep so tombstones can foreign-key a
+real id, deletes every matching node across the live project and its prior
+identities, writes a hash-only tombstone each, and closes the audit row with the
+affected count. The audit row is written *"whether or not anything matched —
+pre-emptively blocking a value that hasn't appeared yet is a valid, auditable
+call."* Without `--yes` it counts and prints, matching the prune convention
+exactly. `forget --list` shows the standing rules, and `--export`/`--import`
+move them between checkouts, since `deny_list` lives in the gitignored
+`.nexusmem/memory.db` and *"is exactly what… never travels with `git clone`."*
+
+`pruneSourceNodes` is the middle granule: one source, applied across the live
+project id **and every prior identity of the same repository** — a scope derived
+from `listOtherProjectIds` rather than from "every `project_id` in the table",
+which is the conservative choice. Without `--yes` it prints the matching count
+and removes nothing; with it, the output says *"this cannot be undone."* It
+writes no audit row and no tombstone, so the coarse path is the unrecorded one
+and a store's removal history covers only what was removed by value.
+`sync --rebuild` is the coarsest and is likewise silent.
+
+**Supersession is the non-destructive option and it is entirely manual.**
+`mark-stale <nodeId> --supersedes <newNodeId>` sets one pointer, validates that
+neither id is the other and that both belong to the current project, and says so
+plainly: *"No automatic staleness detection — a human or agent has to notice the
+contradiction and run this."* `nexusmem stale` is the prompt for it, listing
+`inferred` nodes older than 45 days that nothing supersedes, oldest first, with
+the command to run — and its own header refuses the stronger claim: *"a heuristic
+surfacing list, not contradiction detection. Mutates nothing."* A staleness
+surface that declines to call itself a staleness detector is doing the harder,
+more honest thing.
 
 `nexusmem status` closes half of the gap that leaves: it calls
 `listOtherProjectIds` and `countProjectNodes` and prints how many nodes prior
@@ -359,8 +437,20 @@ so.
 `signal` is a float in `[0.2, 1]` consulted only by the ranker. It is set at
 ingest from the kind and source and nothing updates it from use, so a node that
 is retrieved constantly and one that is never retrieved carry the same prior
-forever. There is no state that withholds a node from being returned, which is
-why `trust_state` is withheld.
+forever. Nothing withholds a node from being returned — `provenance` and
+`supersedes` both change a node's *weight* and neither changes its
+*admissibility* — which with the two-value provenance domain is why
+`trust_state` is withheld.
+
+**The audit is real and its coverage is partial, which is the thing to check
+before relying on it.** `mutation_audit` is append-only, has one producer, and
+that producer sits on a user-reachable CLI command. It is also the only producer:
+a grep for `INSERT INTO mutation_audit` across `src/store/` returns exactly one
+file. So the store can answer "what values have been forgotten here, when, by
+what pattern, and how many nodes went" and cannot answer the same question about
+a pruned source. The asymmetry runs the useful way — the recorded path is the one
+a compliance question is about — and it is still an asymmetry a reader should
+know before quoting the table as a removal history.
 
 The local-first posture is genuine — no network egress on the read path, no
 account, no telemetry — and the failure modes chosen under it are consistently
@@ -369,11 +459,17 @@ by design: *"a cross-project query that refuses to answer because one of six
 repositories is on an unplugged drive would be worse than one that answers from
 five and says so."*
 
-The privacy exposure is the honest weak point, and it is structural rather than a
-bug. The two collectors most likely to capture a credential are the two the
-design most wants — assistant transcripts and shell command lines — redaction is
-declared best-effort, and the remedy for a miss is to wipe a whole source and
-then avoid a full re-sync forever, because the hook log still holds the line.
+The privacy exposure is structural and the remedy is the deny list. The two
+collectors most likely to capture a credential are the two the design most wants
+— assistant transcripts and shell command lines — and redaction declares itself
+*"a safety net, not a guarantee."* What closes the loop is that the remedy
+survives the operation that would undo it: the hook log still holds the line
+after a `forget`, and the deny list is what stops it becoming a node again. The
+committed test is the one that proves the claim rather than the code — ingest a
+secret, confirm it is retrievable, forget it, `sync --rebuild` from the untouched
+log, then assert the secret returns `[]` *and* that a control command in the same
+log still returns hits, which is what separates a working deny list from a broken
+rebuild.
 
 The pre-commit path widens where that text can surface without widening what is
 stored. A failed command is printed, truncated to 90 characters, into the output
@@ -384,12 +480,27 @@ the module that wrote it calls itself *"a safety net, not a guarantee."*
 
 ## 10. Tests, Evals, and Benchmarks
 
-451 test cases across 29 files, over roughly 9,100 lines of source. Coverage
+619 test cases across 47 files, over roughly 10,850 lines of source. Coverage
 tracks the mechanisms: `store.test.ts`, `query-pipeline.test.ts`,
 `retrieval.test.ts`, `vector.test.ts`, `reconcile.test.ts`, `cross-project.test.ts`,
-`conversation.test.ts`, `correlate.test.ts`, `precheck.test.ts`,
-`git-hook-install.test.ts`, `structure.test.ts`, and per-parser shell tests. I did
-not run the suite.
+`conversation.test.ts`, `correlate.test.ts`, `precheck.test.ts`, `forget.test.ts`,
+`stale.test.ts`, `git-hook-install.test.ts`, `structure.test.ts`, a per-command
+CLI file for each `scan-*` subcommand, and per-parser shell tests. I did not run
+the suite.
+
+**`forget.test.ts` is the file to read first, because it tests the failure the
+feature exists to prevent rather than the feature.** Its central case is titled
+*"the resurrection bug is fixed: a forgotten value does not come back after
+`sync --rebuild`, while an unrelated command in the same log does"*, and it is
+built as a positive control around a negative assertion: append a fake key and a
+control command to the hook log, sync, **assert the secret is retrievable** —
+the comment says why, *"confirms the secret was actually ingested before we try
+to forget it"* — forget it, rebuild from the untouched append-only log, then
+assert `search(projectId, secret, 10)` returns `[]` while the control command
+still returns hits, *"proves it's the deny-list, not a broken rebuild"*. It then
+checks `deny_list` still holds one row, because *"`--rebuild` must not wipe the
+deny-list along with the nodes"*. Four of the five assertions exist to rule out a
+way of passing for the wrong reason.
 
 **The negative assertions are on the read path, which is what earns the mark.**
 `store.test.ts` writes a node under one project and asserts `search('proj-b', …)`
@@ -508,19 +619,23 @@ an agent to know what you already tried, and you are comfortable that the store
 is append-only in practice. It is small, dependency-light, genuinely local, and
 the ingest side is more carefully reasoned than most stores twice its size.
 
-Walk away if anything you capture must be removable on request. There is no
-per-item delete, no delete by value, no audit of removals, and a re-sync
-resurrects what a prune removed — so a store containing a customer's pasted
-credential, or anything under a deletion obligation, cannot be brought into
-compliance by any command in this tree. That is a design gap rather than an
-oversight in a young project: the append-only hook log is load-bearing for the
-feature the whole system is built around.
+Walk away if you need staleness handled rather than surfaced. Nothing detects a
+contradiction, `stale` is an age-and-successor heuristic over `inferred` nodes,
+and a wrong document stays in the corpus at full weight until a person runs
+`mark-stale` on it — which, for a store whose whole pitch is that documents go
+stale faster than commits, is the gap that will bite first. The deletion story,
+by contrast, is one of the more complete in this atlas for the *value*-keyed
+case, and thin for the source-keyed one: a prune leaves no record that it
+happened.
 
 ## 12. Open Questions
 
-- Where would a value-keyed refusal live? The hook log is append-only by design
-  and the collectors are cursor-resumed, so the natural place is a consulted
-  deny-list at the collector seam rather than a delete on the table.
+- Why is `pruneSourceNodes` outside the audit? The transaction shape `forget`
+  uses would drop onto it with little change, and the coarser operation is the
+  one whose blast radius is hardest to reconstruct afterwards.
+- The deny list is checked per node at insert, with entries loaded once per
+  project per batch. What does a project with hundreds of regex entries cost on
+  a full rebuild, and is there a point where the check becomes the sync?
 - Does the 8x overfetch on the vector arm hold for a sparse project in a large
   database, and what does under-return look like when it does not?
 - The ranker's exponents are the most argued code in the tree and rest on
@@ -544,7 +659,16 @@ feature the whole system is built around.
   graph could not reuse `node_links`
 - `src/store/store.ts` — writes, both retrieval arms, `clearProject`,
   `pruneSourceNodes`, `node_links`, `replaceFileEdges`, and the `raw` escape hatch
-- `src/store/reconcile.ts` — project-id migration preserving `created_at`
+- `src/store/reconcile.ts` — project-id migration preserving `created_at`, and
+  the second place the deny list is consulted
+- `src/store/deny-list.ts` — the value-keyed rule, its matcher, and the guards
+  against a pattern that would deny everything
+- `src/store/forget.ts` — the one transaction that writes the deny-list entry,
+  the audit row, the deletes and the hash-only tombstones
+- `src/cli/commands/forget.ts` — the dry-run default, `--list`, and the
+  export/import payload that carries the list between checkouts
+- `src/cli/commands/mark-stale.ts`, `src/cli/commands/stale.ts` — manual
+  supersession and the heuristic list that prompts it
 - `src/store/fts.ts` — query construction and `significantTokens`, exported for
   the corpus-relative filter that layers on top of it
 
@@ -580,6 +704,8 @@ feature the whole system is built around.
   `prune-source.test.ts` and `cross-project.test.ts` pin the scope boundary
 
 ## History
+
+**2026-08-20** — [`c52dac9ceae08c4ee55df304bef0097d8b985f03`](https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03) — second reading, 35 commits on. Screened again first: one auto-run surface (`server.json`), one build-time execution point, two unpinned surfaces, three files inside the seven-day cooldown; nothing was installed and no test was run. Two marks were added that the code supports at both this pin and the previous one — `src/store/schema.ts` is byte-identical between them, and `deny-list.ts` and `forget.ts` are unchanged — so `tombstone` and `audit_log` are awarded here on mechanisms that were present and unread before. Sections 1, 5, 7, 9, 11 and 12 were rewritten around them. New at this pin: `nexusmem stale`, a provenance-dependent recency half-life in `rank.ts`, extractors and resolvers for Go, Java, PHP, Python and Rust, a Dockerfile, and a per-command CLI test file for each `scan-*` subcommand.
 
 **2026-08-19** — [`8aee1391ad40f158d98f922f267d44c10a610dd9`](https://github.com/yaminbkk/NexusMem/commit/8aee1391ad40f158d98f922f267d44c10a610dd9) — re-read 41 commits on. Almost all of it is test coverage and one structural refactor: `src/store/store.ts` was split, with `search` moving to `src/store/search.ts:51` and node, project, schema and meta helpers extracted beside it. No claim in this report moved with them — the scope predicate is still `project_id = ?` on every read arm, and `tests/store.test.ts`'s 'does not leak nodes across projects' still names it.
 

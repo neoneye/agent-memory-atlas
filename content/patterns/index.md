@@ -174,11 +174,11 @@ Where the atlas has an exact count — the seven mechanisms on
 | --- | --- |
 | Scope enforced in retrieval | 170 of 318 |
 | Negative retrieval assertion | 94 of 318 |
-| Append-only mutation audit | 90 of 318 |
+| Append-only mutation audit | 91 of 318 |
 | Human review surface | 81 of 318 |
 | Explicit trust state | 66 of 318 |
 | Bi-temporal validity | 35 of 318 |
-| Rejected-value tombstone | 21 of 318 |
+| Rejected-value tombstone | 22 of 318 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in thirty-three
@@ -346,7 +346,7 @@ No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
 
-**And be clear about what that thinning means.** Twenty-one of three hundred and eighteen systems carry a
+**And be clear about what that thinning means.** Twenty-two of three hundred and eighteen systems carry a
 tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
 failure it will pay for later, or the cost genuinely exceeds the benefit for most

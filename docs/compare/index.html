@@ -125,7 +125,7 @@ non-open-source licence, listed in the <a
 href="#what-the-licences-actually-say">appendix</a>. Five findings, with
 the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 21
+<li><strong>Correction is the phase that goes unbuilt.</strong> 22
 systems of 318 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -313,7 +313,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-one tombstones, ninety-four negative-eval suites — are counts
+twenty-two tombstones, ninety-four negative-eval suites — are counts
 <em>over inspectable code</em>, and a closed system could hold any of
 these mechanisms without this method ever knowing. And a mechanism's
 absence here is weaker evidence about the field than its presence:
@@ -323,13 +323,14 @@ proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Twenty-one systems in this entire
-atlas carry a rejected-value tombstone — a record that extraction cannot
-bring back what was refused. This is the widest gap this atlas has
-found, and it is invisible on every benchmark. <em>Widest gap
-found</em>, not widest gap in the field: the corpus is opportunistic, so
-a ratio over it describes what has been read and cannot be quoted as
-prevalence — and four of the five strongest implementations <a
+everything can overwrite or supersede. Twenty-two of three hundred and
+eighteen systems carry a rejected-value tombstone — a record that
+extraction cannot bring back what was refused. This is the widest gap
+this atlas has found, and it is invisible on every benchmark. <em>Widest
+gap found</em>, not widest gap in the field: the corpus is
+opportunistic, so a ratio over it describes what has been read and
+cannot be quoted as prevalence — and four of the five strongest
+implementations <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">arrived
 through this atlas's own orbit</a>, which is the opposite of an
 independent measurement.</li>
@@ -9881,11 +9882,14 @@ staged files and returns unresolved failures</td>
 a JSONL of command, cwd and exit code, and scrape fallbacks tail
 bash/zsh/PSReadLine without either; pattern redaction runs before
 anything reaches the index</td>
-<td>Nothing per item and nothing by value. <code>--prune-source</code>
-wipes one source across the live project id and its prior identities
-behind a <code>--yes</code> gate; <code>sync --rebuild</code> clears the
-project. The hook log the nodes came from is never touched, so a rebuild
-re-derives what was pruned</td>
+<td>Three granules. <code>forget &lt;value&gt;</code> deletes every
+matching node and writes a standing deny list consulted at every future
+write, with a hash-only tombstone and an audit row per operation;
+<code>--prune-source</code> wipes one source across the live project id
+and its prior identities, unaudited; <code>sync --rebuild</code> clears
+the project.
+<code>mark-stale &lt;id&gt; --supersedes &lt;newId&gt;</code>
+down-weights without deleting</td>
 <td><code>project_id</code> on every node and a required predicate on
 both read arms; a cross-project query opens each registered repository`s
 own database and tags every hit with its origin</td>
@@ -9898,23 +9902,28 @@ warns and cannot block a commit</td>
 <code>nexusmem sync</code>, invoked by hand, by a shell hook or by the
 MCP <code>sync_project</code> tool; the git hook triggers a read rather
 than a write</td>
-<td>A <code>signal</code> float used only for ranking. No status, no
-provenance beyond the source name, and no state that withholds a node
-from being returned</td>
-<td>Shell commands with exit codes, which git cannot supply and
-scrollback loses; a ranker that bounds how far query-independent priors
-may overturn the query, as one budget shared between them; redaction
-split into a high-confidence profile safe to run over source code and a
-broader one that is not; a document-frequency filter that drops tokens
-which are boilerplate in this project`s own corpus, because bm25 rewards
-rarity only within the corpus it is run against</td>
-<td>No per-item or per-value deletion, so a secret redaction missed is
-removable only by wiping a whole source — and the append-only hook log
-that produced it survives, so the next full sync brings it back;
-<code>signal</code> is a prior nothing updates from use; the pre-commit
-signal fires on a basename token match, so it warns about a failure that
-merely shares a word with the file and stays silent about one that does
-not name it</td>
+<td>A <code>signal</code> float for ranking, plus
+<code>provenance</code> as <code>observed</code> or
+<code>inferred</code> — set per collector, consumed by the ranker as a
+faster decay and printed in the packed context. Two values, so not a
+status; nothing withholds a node from being returned</td>
+<td>A value-keyed deny list whose test proves the resurrection case —
+forget, rebuild from the untouched append-only log, and the value stays
+gone while a control survives; shell commands with exit codes, which git
+cannot supply and scrollback loses; a ranker that bounds how far
+query-independent priors may overturn the query, as one budget shared
+between them; redaction split into a high-confidence profile safe to run
+over source code and a broader one that is not; a document-frequency
+filter that drops tokens which are boilerplate in this project`s own
+corpus, because bm25 rewards rarity only within the corpus it is run
+against</td>
+<td>The deletion story is complete only through <code>forget</code>:
+<code>--prune-source</code> writes no tombstone and no audit row, so the
+coarse path is the unrecorded one; staleness is entirely manual and
+<code>stale</code> only lists candidates; <code>signal</code> is a prior
+nothing updates from use; the pre-commit signal fires on a basename
+token match, so it warns about a failure that merely shares a word with
+the file and stays silent about one that does not name it</td>
 </tr>
 <tr>
 <td><code>nocturne-memory</code></td>
@@ -13188,7 +13197,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>21 of 318:</em> <a
+<p><em>22 of 318:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -13198,6 +13207,7 @@ href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/noosphere/"><code>noosphere</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
@@ -13506,7 +13516,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>90 of 318:</em> <a
+<p><em>91 of 318:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -13564,6 +13574,7 @@ href="../systems/munder-difflin/"><code>munder-difflin</code></a>, <a
 href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
+href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/noosphere/"><code>noosphere</code></a>, <a
 href="../systems/nornicdb/"><code>nornicdb</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
@@ -18338,7 +18349,7 @@ href="https://github.com/Morephine/feltstate">Morephine/feltstate</a> at
 href="https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed"><code class="commit-id" title="45b1c9824326669f7e1855097a3bfe01192084ed">45b1c982…</code></a></li>
 <li><a href="https://github.com/yaminbkk/NexusMem">yaminbkk/NexusMem</a>
 at <a
-href="https://github.com/yaminbkk/NexusMem/commit/8aee1391ad40f158d98f922f267d44c10a610dd9"><code class="commit-id" title="8aee1391ad40f158d98f922f267d44c10a610dd9">8aee1391…</code></a></li>
+href="https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03"><code class="commit-id" title="c52dac9ceae08c4ee55df304bef0097d8b985f03">c52dac9c…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
 href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code class="commit-id" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">7f2f16eb…</code></a></li>
@@ -22392,11 +22403,12 @@ matches a number against a nearby mechanism noun and the sentence never
 used the word <em>tombstone</em> — it spelled the mechanism out in prose
 instead. The pointer to the live count made the staleness feel handled
 without making it checkable, which is the failure mode of hedging a
-number rather than binding it. The sentence now reads <em>"Twenty-one
-systems in this entire atlas carry a rejected-value tombstone"</em>,
-which the existing windowed check catches; corrupting it to another
-number was confirmed to fail the build before this was committed.
-Corrected 19 August 2026.</li>
+number rather than binding it. The sentence was rewritten to bind the
+count to the corpus denominator, so the windowed check catches it — a
+bare "N systems in this entire atlas" passes only while N coincides with
+some other live total, which is what it had been doing; corrupting it to
+another number was confirmed to fail the build before this was
+committed. Corrected 19 August 2026.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
@@ -22449,6 +22461,29 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-20</strong> — <strong>The second miss in the same
+report is a fact about the method, not the reader.</strong> The <a
+href="../systems/nexusmem/">NexusMem</a> report was corrected on
+2026-08-17 for withholding <code>negative_eval</code> from a suite that
+asserts exactly what the rubric names. Re-read at a later pin, it turned
+out to have missed more: a <code>deny_list</code> table keyed on the
+value, consulted at every node-write seam, with hash-only tombstones and
+a <code>mutation_audit</code> row per operation — two further marks, all
+of it present at the pin the first reading covered, and
+<code>schema.ts</code> byte-identical between the two. The report's own
+open questions had asked <em>"where would a value-keyed refusal
+live?"</em> and answered <em>"a consulted deny-list at the collector
+seam"</em>, which is the file that was already there.</p>
+<p>The common cause in both misses is the same and it is not
+carelessness: the report reasoned from the <em>prose</em> it had built —
+an append-only design, a load-bearing hook log — to what the code could
+not do, and the reasoning was good enough to stop the search. The cheap
+defence is mechanical and belongs before the argument, not after it:
+<strong>read the schema file end to end before writing any absence claim
+about storage.</strong> Every table this report missed is declared in
+one 150-line file, in a migration block with a comment explaining
+itself. Three minutes of reading would have replaced two rounds of
+correction.</p>
 <p><strong>2026-08-20</strong> — <strong>An optional scope argument is a
 scope that is off by default, and the tests say which.</strong> The <a
 href="../systems/aipass/">AIPass</a> report described branch scoping as
