@@ -21,6 +21,32 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-three-candidates-and-the-half-that-can-be-false.md](2026-08-20-three-candidates-and-the-half-that-can-be-false.md) —
+  OpenWolf, piodide and sift-kg triaged; two in scope with no report yet, one
+  excluded. The same shape in all three: the durable state splits into a half
+  that cannot be wrong and a half that can, and the second is the unprotected
+  one. OpenWolf's only belief-writer is a weekly cron that overwrites cerebrum.md
+  with a model's stdout, routed by a substring check, while every mechanical
+  store has a hook — and the repo ships a `cerebrum_stale` detector advising you
+  to check the hooks that do not exist. piodide keeps nothing falsifiable at all
+  and states that contract to the model in its own system prompt. sift-kg
+  rebuilds its graph from retained extractions and the rebuild is what reverts
+  every human rejection: `sift resolve` truncates the merge decisions while the
+  relation-review branch twenty lines below reads, dedupes on the value triple
+  and extends. Carries the rule that follows — a rebuildable projection is only
+  safe if every correction is an input to the rebuild.
+- [2026-08-20-three-re-reads-and-a-trust-state-with-no-reader.md](2026-08-20-three-re-reads-and-a-trust-state-with-no-reader.md) —
+  llm-wiki-memory, PLUR1BUS and har re-read at newer commits; no pin advanced and
+  no mark changed, because none of them got a whole re-reading. llm-wiki-memory
+  woke from dormancy (29 commits, 510 files) with a fail-closed quality judge
+  whose `memory.quality:"unverified"` flag has four writers, two preservers, two
+  clearers and no reader — declared-and-unwired with the halves reversed — plus a
+  test-isolation guard written after its own suite hard-deleted ~590 real leaves
+  from the developer's store. PLUR1BUS fixed an embedding drain that ran before
+  capture inside the same 60-second budget and starved it, which is a failure
+  mode the recoverable-background-work page does not have. har doubled in size
+  and added no memory surface, and the refusal mechanism it was kept for now
+  prints its own name: an unregister blocklist.
 - [2026-08-20-ninety-four-notes-clustered.md](2026-08-20-ninety-four-notes-clustered.md) —
   the other ninety-four notes sorted into ten kinds, with the most significant
   document and the most significant insight named per cluster. Three findings

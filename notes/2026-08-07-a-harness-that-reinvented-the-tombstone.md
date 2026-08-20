@@ -231,3 +231,38 @@ commit:
 Test files went 87 → 94 and test lines 10,157 → 11,893. So the rarest mechanism
 in the atlas's orbit is no longer the untested one; the overview known-limitations
 entry is re-pinned and corrected to match. Nothing else moved.
+
+## Re-read at 0.62.1 (2026-08-20)
+
+Read again at
+[`f6ec0fb87c0db8226bbce8db5481c7c6f2ba2987`](https://github.com/os-factory/har/commit/f6ec0fb87c0db8226bbce8db5481c7c6f2ba2987),
+release 0.62.1, 32 commits and seven minor releases past the 0.55.0 reading:
++11,697 / −1,153 across 184 files, and the tree from 16,065 to 40,925
+TypeScript lines. Screened first: 1 auto-run surface (`CLAUDE.md`, instructions
+addressed to a reading agent, read as data), six manifests inside the seven-day
+cooldown, three build-time exec surfaces. Nothing installed, nothing run.
+
+**The exclusion is firmer than when it was written.** The vocabulary probe that
+returned two hits in 16,065 lines returns three in 40,925 — *"Remember a repo so
+Mission Control can sync it"* (`src/core/control-registry.ts:76`), a
+*"fire-and-forget"* comment (`src/core/control-sync.ts:920`), and one shell-output
+test. The project more than doubled and added no memory surface, which is a
+stronger result than the original reading could give: a boundary decision checked
+against a tree that has since doubled is worth more than the same decision made
+once.
+
+**The tombstone mechanism hardened and acquired a name.**
+`src/core/control-unregister.ts` is now a module of its own: unregistering prompts
+with a default of No and *proposes* the session worktrees it would delete rather
+than deleting them. `control-sync.ts:62` documents the escape hatch as *"Re-register
+even if the path was previously unregistered"*; `control-sync.ts:597` drops a
+previously unregistered path from the local registry *"so auto-sync stops
+retrying"*; and `src/cli/commands/control.ts:352` prints the noun outright — an
+**unregister blocklist**, cleared only by an explicit `control reset` that reports
+how many entries it removed. Refusal keyed on the value, consulted by the loop
+that would otherwise re-assert it, overridable only on purpose, countable when
+cleared.
+
+Still not memory, for the reason the first reading gave: the refusal is about
+whether a path is synced, not about a claim that could be false. Re-running the
+boundary test is what makes that sentence worth anything the second time.

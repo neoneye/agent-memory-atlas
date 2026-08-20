@@ -1,7 +1,8 @@
 # Ninety-four notes, clustered — what this project has actually been writing down
 
-**Status:** survey of `notes/` itself. No atlas content changed; three
-observations about the shape of the pile, and one standing debt named.
+**Status:** survey of `notes/` itself, over the ninety-four notes present when
+it was written. No atlas content changed; three observations about the shape of
+the pile, and one standing debt named.
 **Origin:** the question of what the notes directory has become, asked after it
 passed ninety files. `notes/README.md` describes each note; nothing described
 the set.
