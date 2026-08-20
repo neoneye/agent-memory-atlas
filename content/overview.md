@@ -5053,9 +5053,9 @@ this and mostly does not know it.
 
 ### Treating LLM-extracted facts as truth
 
-Most systems extract with an LLM. Without trust state, provenance, and correction semantics, hallucinations become durable. `verel` addresses this directly; `honcho` preserves source events; `mem0`, `langmem`, `cognee`, `claude-mem`, `a-mem`, and `llm-wiki-memory` need stronger promotion guardrails.
+Most systems extract with an LLM. Without trust state, provenance, and correction semantics, hallucinations become durable. [Verel](../systems/verel/) addresses this directly; [Honcho](../systems/honcho/) preserves source events; [Mem0](../systems/mem0/), [LangMem](../systems/langmem/), [Cognee](../systems/cognee/), [Claude-Mem](../systems/claude-mem/), [A-MEM](../systems/a-mem/), and [llm-wiki-memory](../systems/llm-wiki-memory/) need stronger promotion guardrails.
 
-`mnemosyne` shows the failure one step past extraction, in what a system does
+[Mnemosyne](../systems/mnemosyne/) shows the failure one step past extraction, in what a system does
 with the label afterwards. Every row carries two independent provenance fields.
 `veracity` multiplies the recall score through a weight table where `unknown` is
 0.8, above `tool` at 0.5 and `inferred` at 0.7 — the same inverted ordering the
@@ -5067,9 +5067,9 @@ score and no filter anywhere in the tree. A provenance field written on every
 path and read on none is worse than an absent one, because it reads to a
 reviewer like the defense exists.
 
-`mempalace` is the clearest counterexample in this workspace: it makes verbatim evidence the primary store and treats derived structures as indexes. That does not solve truth, but it avoids losing the original context during extraction.
+[MemPalace](../systems/mempalace/) is the clearest counterexample in this workspace: it makes verbatim evidence the primary store and treats derived structures as indexes. That does not solve truth, but it avoids losing the original context during extraction.
 
-`daimon` is the sharpest counterexample, because it names the failure precisely
+[Daimon](../systems/daimon/) is the sharpest counterexample, because it names the failure precisely
 rather than routing around it. Verifying a quote proves the sentence was *said*;
 it says nothing about whether the sentence was *right*, and the code comments
 say so — the model concludes X, X is false, and the transcript faithfully
@@ -5082,24 +5082,24 @@ score.
 
 ### Vector-only memory
 
-Vector search misses exact constraints and can retrieve plausible but wrong memories. Every serious design should include lexical search or structured filters. `engram` demonstrates the value of boring FTS. `mempalace` demonstrates vector plus BM25 plus metadata plus fallback paths. `mem0` and `honcho` show hybrid approaches. `llm-wiki-memory` has strong metadata filters and deterministic topology lookup, but its lexical-hash mode is a fallback backend rather than a fused exact-search channel. Claude-Mem and A-MEM additionally show why having both lexical and vector code—or simply using Chroma—does not make an ordinary query path hybrid.
+Vector search misses exact constraints and can retrieve plausible but wrong memories. Every serious design should include lexical search or structured filters. [Engram](../systems/engram/) demonstrates the value of boring FTS. [MemPalace](../systems/mempalace/) demonstrates vector plus BM25 plus metadata plus fallback paths. [Mem0](../systems/mem0/) and [Honcho](../systems/honcho/) show hybrid approaches. [llm-wiki-memory](../systems/llm-wiki-memory/) has strong metadata filters and deterministic topology lookup, but its lexical-hash mode is a fallback backend rather than a fused exact-search channel. [Claude-Mem](../systems/claude-mem/) and [A-MEM](../systems/a-mem/) additionally show why having both lexical and vector code—or simply using Chroma—does not make an ordinary query path hybrid.
 
 ### Ranking positions used as identities
 
-Retrieval order is ephemeral, not object identity. A-MEM shows the failure
+Retrieval order is ephemeral, not object identity. [A-MEM](../systems/a-mem/) shows the failure
 directly: it returns vector rank positions and later applies them to insertion
 order, so an LLM can rewrite a different neighbor than the one it saw. Carry
 stable memory IDs through prompts, responses, validation, mutation, and audit.
 
 ### Recall@k without enforcing k
 
-A retrieval benchmark is invalid at a stated cutoff if the system scores more than `k` returned items. Swafra's committed `k=10` artifact evaluated all returned sessions while returning 28–46 sessions per question (35.4 on average); it only truncated the displayed `retrieved_sessions` list. Benchmark harnesses should assert the result count, score exactly the first `k`, record token volume, and bind artifacts to a code/config/embedder manifest.
+A retrieval benchmark is invalid at a stated cutoff if the system scores more than `k` returned items. [Swafra](../systems/swafra/)'s committed `k=10` artifact evaluated all returned sessions while returning 28–46 sessions per question (35.4 on average); it only truncated the displayed `retrieved_sessions` list. Benchmark harnesses should assert the result count, score exactly the first `k`, record token volume, and bind artifacts to a code/config/embedder manifest.
 
 ### Weak correction semantics
 
 Pattern guide: [Rejected-value tombstone](../patterns/rejected-value-tombstone/).
 
-Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. Verel's rejected tombstones are the clearest research-grade countermeasure; RainBox has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. `llm-wiki-memory` shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again. [LoreKit](../systems/lorekit/) shows the same limit with the mechanism made
+Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. [Verel](../systems/verel/)'s rejected tombstones are the clearest research-grade countermeasure; [RainBox](../systems/rainbox/) has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. [llm-wiki-memory](../systems/llm-wiki-memory/) shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again. [LoreKit](../systems/lorekit/) shows the same limit with the mechanism made
 explicit in a migration comment: archiving a lesson drops the unique constraint
 and recreates it as a partial index `where archived_at is null`, *"so the same
 (user_id, scope, key) can be re-created after an archive."* Freeing the address
@@ -5109,15 +5109,15 @@ makes re-asserting it easiest.
 
 ### Semantic deletion
 
-Deleting by "similar memory" is dangerous. It is useful as a discovery aid, but the actual forget operation should target exact IDs or require review. Supermemory's MCP client fallback semantic deletion is a risk pattern to treat carefully.
+Deleting by "similar memory" is dangerous. It is useful as a discovery aid, but the actual forget operation should target exact IDs or require review. [Supermemory](../systems/supermemory/)'s MCP client fallback semantic deletion is a risk pattern to treat carefully.
 
 ### Treating git deletion as privacy deletion
 
-`llm-wiki-memory` removes exact leaves and embedding entries, but private wiki commits retain prior bodies. Git history is excellent for recovery and audit, but it is not an erasure guarantee. Any git-backed memory needs an explicit procedure for history rewriting, clones, backups, stashes, and derived caches.
+[llm-wiki-memory](../systems/llm-wiki-memory/) removes exact leaves and embedding entries, but private wiki commits retain prior bodies. Git history is excellent for recovery and audit, but it is not an erasure guarantee. Any git-backed memory needs an explicit procedure for history rewriting, clones, backups, stashes, and derived caches.
 
 ### Core memory as a junk drawer
 
-Editable prompt memory is powerful and dangerous. Letta's core memory tools are useful, but any system with long-lived core blocks needs provenance, review, and compaction policy. Otherwise it accumulates stale identity and preference claims.
+Editable prompt memory is powerful and dangerous. [Letta](../systems/letta/)'s core memory tools are useful, but any system with long-lived core blocks needs provenance, review, and compaction policy. Otherwise it accumulates stale identity and preference claims.
 
 ### Tool descriptions as policy
 
@@ -5125,22 +5125,22 @@ Several systems rely on tool docs telling the agent when to save memory. This is
 
 ### Telemetry mistaken for truth
 
-RainBox explicitly avoids this: retrieval events and downvotes are signals for inspection/evals, not automatic confidence changes or deletion. This matters because "memory was used in a bad answer" does not prove the memory was false.
+[RainBox](../systems/rainbox/) explicitly avoids this: retrieval events and downvotes are signals for inspection/evals, not automatic confidence changes or deletion. This matters because "memory was used in a bad answer" does not prove the memory was false.
 
-`holographic` is the atlas's clearest counterexample, and it is worth studying precisely because the mechanism looks reasonable in isolation. A `fact_feedback` tool lets the model or user rate a fact helpful or unhelpful, adjusting a single `trust_score` by +0.05 or −0.10. That same score is multiplied directly into relevance during ranking *and* gates retrieval through a `min_trust` floor defaulting to 0.3. From the default trust of 0.5, three unhelpful ratings put a fact at 0.2 — below every default retrieval path, permanently, with no tombstone, no review queue, and no record that a suppression occurred. Feedback has quietly become deletion, and "unhelpful" has quietly become "false".
+[Holographic](../systems/holographic/) is the atlas's clearest counterexample, and it is worth studying precisely because the mechanism looks reasonable in isolation. A `fact_feedback` tool lets the model or user rate a fact helpful or unhelpful, adjusting a single `trust_score` by +0.05 or −0.10. That same score is multiplied directly into relevance during ranking *and* gates retrieval through a `min_trust` floor defaulting to 0.3. From the default trust of 0.5, three unhelpful ratings put a fact at 0.2 — below every default retrieval path, permanently, with no tombstone, no review queue, and no record that a suppression occurred. Feedback has quietly become deletion, and "unhelpful" has quietly become "false".
 
-`atomic-agent` sits at the disciplined end of the same range. Votes are written
+[Atomic Agent](../systems/atomic-agent/) sits at the disciplined end of the same range. Votes are written
 to an append-only `vote_events` table (`kind`, `target_id`, `direction`,
 `session_id`, `turn_index`, `created_at`) and `vote_score` is a derived, indexed
 column on memories, lessons, and profile facts. Because the raw events are
 retained, a scoring rule can be recomputed, a suspicious pattern can be audited,
 and no single vote is destructive — the atlas's own "keep retrieval events
 append-only; derive counters from events" recommendation, implemented. Ranged
-against Holographic's in-place mutation, RainBox's human gate, and MetaClaw's
+against Holographic's in-place mutation, RainBox's human gate, and [MetaClaw](../systems/metaclaw/)'s
 replay-gated policy tuning, it is the option that preserves the most future
 choices.
 
-`csm` shows the failure one level further down, where the telemetry is not even
+[CSM](../systems/csm/) shows the failure one level further down, where the telemetry is not even
 about the memory. Its self-model maintains a confidence and an uncertainty per
 capability, updated from experience packets, with two thoughtful guards: a hard
 ceiling of 0.9 because *"raw tool-call success cannot prove 100% capability"*,
@@ -5155,9 +5155,9 @@ place. Careful arithmetic on the wrong signal is still the wrong signal.
 
 ### The harness's own output captured as evidence
 
-A system that generates text and also captures text will eventually capture its own output. `openclaw` strips media notes, context markers, reply headers, sender prefixes, and timestamps from every message before capture, then rejects whatever still `looksLikeEnvelopeSludge`. `holographic` had to exclude its host's compaction handoff summaries, which arrive as `role="user"` messages and reliably matched its own decision-extraction regexes, so the compactor's output was being stored as durable facts on every context rollover.
+A system that generates text and also captures text will eventually capture its own output. [OpenClaw](../systems/openclaw/) strips media notes, context markers, reply headers, sender prefixes, and timestamps from every message before capture, then rejects whatever still `looksLikeEnvelopeSludge`. [Holographic](../systems/holographic/) had to exclude its host's compaction handoff summaries, which arrive as `role="user"` messages and reliably matched its own decision-extraction regexes, so the compactor's output was being stored as durable facts on every context rollover.
 
-`csm` is the third case and the unfixed one, in the store whose whole purpose is
+[CSM](../systems/csm/) is the third case and the unfixed one, in the store whose whole purpose is
 to answer "what is happening in this project". Its AgentBook journal appends an
 event for tool executions, summarised as the first 200 characters of the tool's
 output — and the `csm_*` tools are not excluded, so `csm_memory_list`,
@@ -5168,7 +5168,7 @@ of the nine entries under "Recent Work", seven are truncated dumps of CSM
 reading its own memory, and none describes work on the repository. The store did
 not fail; it faithfully recorded the wrong thing.
 
-`graphify` is the one that did it first, and it is the reason this entry can
+[Graphify](../systems/graphify/) is the one that did it first, and it is the reason this entry can
 stop being a recommendation and start being a citation. Its generated
 `LESSONS.md` deliberately carries no YAML frontmatter, so `parse_memory_doc`
 rejects it and `load_memory_docs` skips it **even if the file lands inside
@@ -5193,7 +5193,7 @@ against [NOOA](../systems/nooa-memory/)'s myelination, and against the
 reinforcement terms in [Mnemopi](../systems/mnemopi/) and
 [PowerMem](../systems/powermem/). A use signal feeding a trust field means the
 memories that get retrieved most become the memories that are trusted most,
-which is a popularity contest wearing an epistemics costume. Engram also refuses
+which is a popularity contest wearing an epistemics costume. [Engram](../systems/engram/) also refuses
 to let its own drift scan demote anything, on the ground that a bad scan would
 mass-bury the graph — knowing which of your signals are too noisy to act on is
 the same discipline applied twice.
@@ -5209,7 +5209,7 @@ lie. A single score cannot represent either. It then keeps a discrete
 `epistemic_status` beside both, so certainty and decidedness are not the same
 column.
 
-**`breadcrumbs` splits it a fourth way, into two instruments rather than two
+**[breadcrumbs](../systems/breadcrumbs/) splits it a fourth way, into two instruments rather than two
 fields**, and the split is the whole design: `conclusions_audit.py` asks whether
 an entry is still *true*, `retrieval_exam.py` asks whether it can ever be
 *seen*, and the repo insists they are different failures with different
@@ -5222,122 +5222,134 @@ that this is structural in every system built the way that repo describes —
 *"writing is instrumented and retrieval is not"* — and that the natural response
 to doubt, writing more signage, crowds the boot lane and makes it worse.
 
-Separating epistemic confidence from retrieval strength is one of the atlas's recurring recommendations, and the new systems split cleanly on it. `openviking`'s `hotness_score` is explicitly a reachability signal blended into ranking and never touches correctness; `redis-agent-memory-server` keeps recency weights entirely inside ranking and retention. `holographic` collapses both into `trust_score`, so there is no way to ask for the most relevant memory independent of how it has been rated, and no way to record that a rarely-retrieved fact is nonetheless certainly true.
+Separating epistemic confidence from retrieval strength is one of the atlas's recurring recommendations, and the new systems split cleanly on it. [OpenViking](../systems/openviking/)'s `hotness_score` is explicitly a reachability signal blended into ranking and never touches correctness; [Redis Agent Memory Server](../systems/redis-agent-memory-server/) keeps recency weights entirely inside ranking and retention. [Holographic](../systems/holographic/) collapses both into `trust_score`, so there is no way to ask for the most relevant memory independent of how it has been rated, and no way to record that a rarely-retrieved fact is nonetheless certainly true.
 
 ### Platform-only claims hidden behind OSS APIs
 
-Mem0 and Supermemory both have product surfaces where advanced behavior may live outside the inspected source. For build decisions, separate what is visible in code from what is promised by hosted APIs.
+[Mem0](../systems/mem0/) and [Supermemory](../systems/supermemory/) both have product surfaces where advanced behavior may live outside the inspected source. For build decisions, separate what is visible in code from what is promised by hosted APIs.
 
-`byterover` adds a licensing variant of the same problem: it is widely described as an open-source memory engine, but the repository inspected here carries the Elastic License 2.0, which prohibits offering the software as a hosted service. Check the `LICENSE` file rather than the positioning before planning to reuse anything.
+[ByteRover](../systems/byterover/) adds a licensing variant of the same problem: it is widely described as an open-source memory engine, but the repository inspected here carries the Elastic License 2.0, which prohibits offering the software as a hosted service. Check the `LICENSE` file rather than the positioning before planning to reuse anything.
 
 ### Published benchmark numbers without committed artifacts
 
-It takes three shapes here. Swafra committed a `k=10` artifact that scored every returned session. TencentDB published gains with no harness in the repository at all. `openviking` is the most advanced case and the most nearly right: it commits a genuinely reproducible harness — ingest, QA, LLM judge, statistics, runners for six competing systems, and token accounting alongside accuracy, which is exactly what this atlas asks for — yet the headline figures in its README (LoCoMo accuracy of 82.08% versus 24.20% native for OpenClaw, and comparable deltas for Hermes and Claude Code) point to an off-repo blog post, and no raw result files are committed.
+It takes three shapes here. [Swafra](../systems/swafra/) committed a `k=10` artifact that scored every returned session. TencentDB published gains with no harness in the repository at all. [OpenViking](../systems/openviking/) is the most advanced case and the most nearly right: it commits a genuinely reproducible harness — ingest, QA, LLM judge, statistics, runners for six competing systems, and token accounting alongside accuracy, which is exactly what this atlas asks for — yet the headline figures in its README (LoCoMo accuracy of 82.08% versus 24.20% native for [OpenClaw](../systems/openclaw/), and comparable deltas for Hermes and Claude Code) point to an off-repo blog post, and no raw result files are committed.
 
 A reproducible harness and a reproducible result are different claims. See [benchmarking agent memory](../benchmarks/) for what the published numbers are and are not measuring. These are also vendor-run comparisons of "competitor's native memory" against "competitor plus our product", judged by an LLM, so the native baselines deserve independent scrutiny before the deltas are quoted.
 
 ### Throwing away raw evidence too early
 
-Extraction-first systems can look elegant while deleting the only material needed to debug a wrong memory. MemPalace is the strongest evidence that raw text plus retrieval deserves to be the baseline before adding lossy summarization or fact extraction.
+Extraction-first systems can look elegant while deleting the only material needed to debug a wrong memory. [MemPalace](../systems/mempalace/) is the strongest evidence that raw text plus retrieval deserves to be the baseline before adding lossy summarization or fact extraction.
 
 ### Treating local JSON rewrites as durable storage
 
-Swafra loads and rewrites chunks, edges, and sources as three independent JSON files. Without locks, atomic replace, transactions, repair, or cascading deletion, concurrent agents can lose writes and partial failure can split graph state. Human-readable export is valuable; it is not a substitute for transactional primary storage.
+[Swafra](../systems/swafra/) loads and rewrites chunks, edges, and sources as three independent JSON files. Without locks, atomic replace, transactions, repair, or cascading deletion, concurrent agents can lose writes and partial failure can split graph state. Human-readable export is valuable; it is not a substitute for transactional primary storage.
 
 ## 7. What Seems to Work
 
-SQLite plus FTS works for local coding-agent memory. It gives inspectable state, transactional writes, simple backup/sync, and exact search. Engram, Verel, and Claude-Mem are good references. MemPalace shows how to combine local SQLite-style operational machinery with a vector backend and fallback BM25/FTS paths.
+### Storage and retrieval
+
+SQLite plus FTS works for local coding-agent memory. It gives inspectable state, transactional writes, simple backup/sync, and exact search. [Engram](../systems/engram/), [Verel](../systems/verel/), and [Claude-Mem](../systems/claude-mem/) are good references. [MemPalace](../systems/mempalace/) shows how to combine local SQLite-style operational machinery with a vector backend and fallback BM25/FTS paths.
 
 Hybrid retrieval is the default serious choice. Pair semantic search with lexical matching and metadata filters. Add reranking only after basic retrieval metrics exist. MemPalace's "closets boost but never gate drawers" rule is a particularly reusable retrieval principle.
 
-Source diversity is useful when the context should cover sessions or documents rather than repeat adjacent chunks from one source. Swafra makes this explicit with best-chunk-per-source selection. The production version needs a hard result/token cap, stable source identity, and an escape hatch for questions requiring multiple chunks from one source.
-
-Scope must be part of the primary design, not a later filter. User/agent/project/session/workspace boundaries determine whether recall is useful or harmful.
-
-Make write destinations explicit in layered memory. `llm-wiki-memory` lets reads fan out across private and repository scopes while requiring every mutation to name a concrete target. This prevents a shared scope from silently becoming a shared write.
-
-Keep raw evidence. Messages, source IDs, documents, drawers, and provenance make correction possible. Honcho, Verel, and MemPalace benefit from this; systems that only store extracted facts lose auditability.
-
-Separate truth from usefulness. Retrieval strength should not mean the memory is true. Verel's split between `epistemic_confidence` and `retrieval_strength` is one of the strongest ideas in the workspace.
-
-Render recalled memory defensively. Verel's untrusted-memory fence is a practical prompt-injection mitigation. Context should be quoted as data, not instructions.
-
-Use small, explicit mutation APIs. Letta's append/replace/patch operations are easier to reason about than free-form "update my memory" text.
+Source diversity is useful when the context should cover sessions or documents rather than repeat adjacent chunks from one source. [Swafra](../systems/swafra/) makes this explicit with best-chunk-per-source selection. The production version needs a hard result/token cap, stable source identity, and an escape hatch for questions requiring multiple chunks from one source.
 
 Record embedder identity. MemPalace's explicit model/dimension checks are a useful operational guardrail: a vector index searched with the wrong embedding model can silently degrade.
 
-Make automatic capture recoverable. `llm-wiki-memory` preserves failed chunk inputs, raw fenced fallbacks, retry state, and provider provenance, which is a stronger failure posture than treating a failed summarization call as a lost session.
-
-Keep capture model-independent. Agentmemory's synthetic observation path and
-Claude-Mem's durable hook queue preserve the event before model compression.
-Zero-LLM capture is the reliable floor; enrichment can be added later.
-
 Treat semantic indexes as projections. Claude-Mem commits SQLite before
-best-effort Chroma sync, and Cognee can retain sources while deleting and
+best-effort Chroma sync, and [Cognee](../systems/cognee/) can retain sources while deleting and
 rebuilding derived memory. The authoritative store and repair direction should
 be obvious.
 
-Make background derivation reversible by provenance. Cognee's pipeline-run
+Name the physical memory form. [MemOS](../systems/memos/) usefully expands memory beyond text, but KV cache, graph text, and LoRA memory need different compatibility, deletion, and evaluation guarantees.
+
+### Scope and write destination
+
+Scope must be part of the primary design, not a later filter. User/agent/project/session/workspace boundaries determine whether recall is useful or harmful.
+
+Make write destinations explicit in layered memory. [llm-wiki-memory](../systems/llm-wiki-memory/) lets reads fan out across private and repository scopes while requiring every mutation to name a concrete target. This prevents a shared scope from silently becoming a shared write.
+
+Make scope structurally inseparable from the query. [OpenClaw](../systems/openclaw/) composes agent scope and user filter into a single predicate so an unscoped read is not expressible, and scopes deletes the same way. This is stronger than applying a scope filter somewhere in the read path, and it is the kind of guarantee that survives refactoring.
+
+Put scope on the provider contract. [MateClaw](../systems/mateclaw/)'s SPI carries an `ownerKey` on
+`prefetch` and `syncTurn`, and its decorators give every backend retry and
+metrics without per-plugin code — the two things the other host runtimes leave
+to each plugin to solve, or not.
+
+### Evidence, truth, and correction
+
+Keep raw evidence. Messages, source IDs, documents, drawers, and provenance make correction possible. [Honcho](../systems/honcho/), [Verel](../systems/verel/), and [MemPalace](../systems/mempalace/) benefit from this; systems that only store extracted facts lose auditability.
+
+Separate truth from usefulness. Retrieval strength should not mean the memory is true. Verel's split between `epistemic_confidence` and `retrieval_strength` is one of the strongest ideas in the workspace.
+
+Decay reachability, not truth. Verel keeps retrieval strength separate from
+confidence and protects important lifecycle states. Reinforcement should record
+usefulness or corroboration, never silently upgrade factual authority.
+
+Separate durability from importance. [Mercury Agent](../systems/mercury-agent/) grades confidence,
+importance, and durability independently, which is the schema-level answer to
+this atlas's warning against applying one half-life to every memory kind.
+
+Separate event time from ingestion time when facts change. [Graphiti](../systems/graphiti/)'s bi-temporal edges preserve historical truth and backfilled events without destructive overwrite.
+
+Specify retention as a policy, not a TTL. [Redis Agent Memory Server](../systems/redis-agent-memory-server/)'s `select_ids_for_forgetting` combines age and inactivity so recent use buys a memory time but not immunity, honours pinning and per-type allowlists, and prunes to a budget using separate half-lives for last access and creation. Most systems here either never forget or forget on one crude axis.
+
+### Capture and background work
+
+Keep capture model-independent. [Agentmemory](../systems/agentmemory/)'s synthetic observation path and
+[Claude-Mem](../systems/claude-mem/)'s durable hook queue preserve the event before model compression.
+Zero-LLM capture is the reliable floor; enrichment can be added later.
+
+Make automatic capture recoverable. [llm-wiki-memory](../systems/llm-wiki-memory/) preserves failed chunk inputs, raw fenced fallbacks, retry state, and provider provenance, which is a stronger failure posture than treating a failed summarization call as a lost session.
+
+Make background derivation reversible by provenance. [Cognee](../systems/cognee/)'s pipeline-run
 rollback is the strongest cross-store example in the atlas, even though it
 cannot make every backend combination atomic.
 
-Number your invariants and cite them from the code. `atomic-agent`'s schema
+Prepare compaction before the context cliff. [Mastra Observational Memory](../systems/mastra-observational-memory/)'s inactive buffers and exact coverage ranges make expensive observation/reflection recoverable and mostly non-blocking.
+
+Sanitize your own scaffolding out of captured text, and test that it stays out. Two systems in the Hermes/OpenClaw ecosystem shipped fixes for their own generated text being stored as user memory.
+
+Guard generated rewrites against deletion. [ByteRover](../systems/byterover/)'s structural-loss detection parses before and after, counts only what would be removed, and merges it back. It is a few hundred lines, requires no model, and directly addresses the reason this atlas warns against premature summarization.
+
+### What reaches the model, and what a person can change
+
+Render recalled memory defensively. [Verel](../systems/verel/)'s untrusted-memory fence is a practical prompt-injection mitigation. Context should be quoted as data, not instructions.
+
+Score the prompt prefix, not the retriever. Between retrieval and the model sit
+truncation, deduplication, ordering, and formatting — any of which can drop a
+memory that retrieval correctly found. [open-cowork](../systems/open-cowork/) scores what reached the
+model.
+
+Use small, explicit mutation APIs. [Letta](../systems/letta/)'s append/replace/patch operations are easier to reason about than free-form "update my memory" text.
+
+Make memory use inspectable. [RainBox](../systems/rainbox/)'s debug rows, retrieval events, and review UI are the best reference here. Users need to know which memories entered a prompt and need a way to correct or reject them.
+
+Keep human-owned source canonical when that is the product promise. [Basic Memory](../systems/basic-memory/)'s Markdown/projection boundary makes memory portable and repairable, provided every derived index has a reconciliation path.
+
+### Testing, rollout, and the decision record
+
+Test what memory must **not** surface. [open-cowork](../systems/open-cowork/)'s eval cases carry
+`forbiddenHits` alongside `expectedHits`, and a leak floors the case score
+regardless of how much correct material was also retrieved. Every "tests to
+require" list in the pattern library asks for scope-leakage, rejected-value, and
+sensitivity assertions; this is what they look like as an executable fixture.
+
+Ship new memory behaviour off by default until an evaluation says otherwise.
+[Atomic Agent](../systems/atomic-agent/)'s v2.5 features are all `default: false` while its campaign runs.
+
+Number your invariants and cite them from the code. Atomic Agent's schema
 comments reference "cross-phase invariant 7 in `MEMORY_FABRIC_V2.md` §13.7",
 invariant 20 on never auto-executing procedures, and invariant 21 bounding
 distillation to one LLM call per cluster. It costs almost nothing and turns an
 implicit constraint into a reviewable one — and across the atlas, nothing else
 does it.
 
-Ship new memory behaviour off by default until an evaluation says otherwise.
-`atomic-agent`'s v2.5 features are all `default: false` while its campaign runs.
-
-Put scope on the provider contract. `mateclaw`'s SPI carries an `ownerKey` on
-`prefetch` and `syncTurn`, and its decorators give every backend retry and
-metrics without per-plugin code — the two things the other host runtimes leave
-to each plugin to solve, or not.
-
-Test what memory must **not** surface. `open-cowork`'s eval cases carry
-`forbiddenHits` alongside `expectedHits`, and a leak floors the case score
-regardless of how much correct material was also retrieved. Every "tests to
-require" list in the pattern library asks for scope-leakage, rejected-value, and
-sensitivity assertions; this is what they look like as an executable fixture.
-
-Score the prompt prefix, not the retriever. Between retrieval and the model sit
-truncation, deduplication, ordering, and formatting — any of which can drop a
-memory that retrieval correctly found. `open-cowork` scores what reached the
-model.
-
-Separate durability from importance. `mercury-agent` grades confidence,
-importance, and durability independently, which is the schema-level answer to
-this atlas's warning against applying one half-life to every memory kind.
-
-Write your memory decisions down. `gini-agent` keeps ADRs recording the
+Write your memory decisions down. [Gini Agent](../systems/gini-agent/) keeps ADRs recording the
 decision, its context, and the failure that motivated it — its per-agent
 isolation ADR states plainly that a coding agent's pinned memories were
 polluting a research agent's recall. Across three hundred and eight systems, almost none can
 explain why they are shaped the way they are.
-
-Make scope structurally inseparable from the query. OpenClaw composes agent scope and user filter into a single predicate so an unscoped read is not expressible, and scopes deletes the same way. This is stronger than applying a scope filter somewhere in the read path, and it is the kind of guarantee that survives refactoring.
-
-Specify retention as a policy, not a TTL. Redis Agent Memory Server's `select_ids_for_forgetting` combines age and inactivity so recent use buys a memory time but not immunity, honours pinning and per-type allowlists, and prunes to a budget using separate half-lives for last access and creation. Most systems here either never forget or forget on one crude axis.
-
-Guard generated rewrites against deletion. ByteRover's structural-loss detection parses before and after, counts only what would be removed, and merges it back. It is a few hundred lines, requires no model, and directly addresses the reason this atlas warns against premature summarization.
-
-Sanitize your own scaffolding out of captured text, and test that it stays out. Two systems in the Hermes/OpenClaw ecosystem shipped fixes for their own generated text being stored as user memory.
-
-Make memory use inspectable. RainBox's debug rows, retrieval events, and review UI are the best reference here. Users need to know which memories entered a prompt and need a way to correct or reject them.
-
-Separate event time from ingestion time when facts change. Graphiti's bi-temporal edges preserve historical truth and backfilled events without destructive overwrite.
-
-Decay reachability, not truth. Verel keeps retrieval strength separate from
-confidence and protects important lifecycle states. Reinforcement should record
-usefulness or corroboration, never silently upgrade factual authority.
-
-Prepare compaction before the context cliff. Mastra Observational Memory's inactive buffers and exact coverage ranges make expensive observation/reflection recoverable and mostly non-blocking.
-
-Keep human-owned source canonical when that is the product promise. Basic Memory's Markdown/projection boundary makes memory portable and repairable, provided every derived index has a reconciliation path.
-
-Name the physical memory form. MemOS usefully expands memory beyond text, but KV cache, graph text, and LoRA memory need different compatibility, deletion, and evaluation guarantees.
 
 ## 8. What I Would Build
 

@@ -16,7 +16,7 @@ commit; a dash means it was not found, which is different from impossible,
 planned, or badly built. The definitions, the evidence threshold, and why these
 seven rather than others are on [the atlas rubric](../methodology/atlas-rubric/).
 
-**Read the `of 7` column as a shape, not a score.** Just over half of the systems
+**Read the `of 7` column as a shape, not a score.** Around half of the systems
 here carry none or one — the exact share is computed per report and printed in
 the strip at the top of each one — so a low number is the ordinary case rather
 than a poor one, and most of these columns are outside what most of these systems set out to

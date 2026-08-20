@@ -8,6 +8,19 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-20-the-build-page-judged-as-a-recommendation.md](2026-08-20-the-build-page-judged-as-a-recommendation.md) —
+  the paved path read end to end as a builder would, and six defects, almost all
+  in packaging rather than argument. The sharpest: of the twenty acceptance
+  tests, only two have a `then` clause requiring a memory to be *present*, so a
+  system whose recall always returns the empty set satisfies sixteen outright and
+  two more with an audit row — the anti-vacuity guard the catalogue applies
+  correctly to `evidence.rebuild_from_retained` did not propagate to the other
+  nineteen. Also: the profile chosen in §1 is never consumed by §3 or §4 though
+  the join already exists in two committed artifacts; deferrability cuts across
+  the stages rather than along them, so the most deferrable stage is scheduled
+  before the two that close silent failures; "an afternoon" is an invented number
+  on a page that refuses to invent numbers; and Stage 1's row promises a scope
+  *boundary* where the atlas reserves that word for something stronger.
 - [2026-08-20-ninety-four-notes-clustered.md](2026-08-20-ninety-four-notes-clustered.md) —
   the other ninety-four notes sorted into ten kinds, with the most significant
   document and the most significant insight named per cluster. Three findings

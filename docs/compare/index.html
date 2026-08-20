@@ -16544,86 +16544,99 @@ know it.</p>
 <h3 id="treating-llm-extracted-facts-as-truth">Treating LLM-extracted
 facts as truth</h3>
 <p>Most systems extract with an LLM. Without trust state, provenance,
-and correction semantics, hallucinations become durable.
-<code>verel</code> addresses this directly; <code>honcho</code>
-preserves source events; <code>mem0</code>, <code>langmem</code>,
-<code>cognee</code>, <code>claude-mem</code>, <code>a-mem</code>, and
-<code>llm-wiki-memory</code> need stronger promotion guardrails.</p>
-<p><code>mnemosyne</code> shows the failure one step past extraction, in
-what a system does with the label afterwards. Every row carries two
-independent provenance fields. <code>veracity</code> multiplies the
-recall score through a weight table where <code>unknown</code> is 0.8,
-above <code>tool</code> at 0.5 and <code>inferred</code> at 0.7 — the
-same inverted ordering the atlas found in its Bun port — so labelling a
-memory's origin honestly lowers its standing. <code>trust_tier</code>,
-documented as prompt-injection defense, resolves an unrecognized source
-to <code>STATED</code>, the highest tier, under a map entry commented
-<em>"Unknown source, conservative default"</em> — and appears in no
-<code>WHERE</code> clause, no score and no filter anywhere in the tree.
-A provenance field written on every path and read on none is worse than
-an absent one, because it reads to a reviewer like the defense
-exists.</p>
-<p><code>mempalace</code> is the clearest counterexample in this
-workspace: it makes verbatim evidence the primary store and treats
-derived structures as indexes. That does not solve truth, but it avoids
-losing the original context during extraction.</p>
-<p><code>daimon</code> is the sharpest counterexample, because it names
-the failure precisely rather than routing around it. Verifying a quote
-proves the sentence was <em>said</em>; it says nothing about whether the
-sentence was <em>right</em>, and the code comments say so — the model
-concludes X, X is false, and the transcript faithfully records the model
-saying X. The narrow fix it ships is the transferable part: for claims
-that assert an <em>outcome</em>, demand a pointer to a tool result and
-downgrade the claim when there is none. That covers exactly the class
-where a false memory does the most damage — believing work is finished
-when it is not — and leaves the general case openly unsolved rather than
-papered over with a confidence score.</p>
+and correction semantics, hallucinations become durable. <a
+href="../systems/verel/">Verel</a> addresses this directly; <a
+href="../systems/honcho/">Honcho</a> preserves source events; <a
+href="../systems/mem0/">Mem0</a>, <a
+href="../systems/langmem/">LangMem</a>, <a
+href="../systems/cognee/">Cognee</a>, <a
+href="../systems/claude-mem/">Claude-Mem</a>, <a
+href="../systems/a-mem/">A-MEM</a>, and <a
+href="../systems/llm-wiki-memory/">llm-wiki-memory</a> need stronger
+promotion guardrails.</p>
+<p><a href="../systems/mnemosyne/">Mnemosyne</a> shows the failure one
+step past extraction, in what a system does with the label afterwards.
+Every row carries two independent provenance fields.
+<code>veracity</code> multiplies the recall score through a weight table
+where <code>unknown</code> is 0.8, above <code>tool</code> at 0.5 and
+<code>inferred</code> at 0.7 — the same inverted ordering the atlas
+found in its Bun port — so labelling a memory's origin honestly lowers
+its standing. <code>trust_tier</code>, documented as prompt-injection
+defense, resolves an unrecognized source to <code>STATED</code>, the
+highest tier, under a map entry commented <em>"Unknown source,
+conservative default"</em> — and appears in no <code>WHERE</code>
+clause, no score and no filter anywhere in the tree. A provenance field
+written on every path and read on none is worse than an absent one,
+because it reads to a reviewer like the defense exists.</p>
+<p><a href="../systems/mempalace/">MemPalace</a> is the clearest
+counterexample in this workspace: it makes verbatim evidence the primary
+store and treats derived structures as indexes. That does not solve
+truth, but it avoids losing the original context during extraction.</p>
+<p><a href="../systems/daimon/">Daimon</a> is the sharpest
+counterexample, because it names the failure precisely rather than
+routing around it. Verifying a quote proves the sentence was
+<em>said</em>; it says nothing about whether the sentence was
+<em>right</em>, and the code comments say so — the model concludes X, X
+is false, and the transcript faithfully records the model saying X. The
+narrow fix it ships is the transferable part: for claims that assert an
+<em>outcome</em>, demand a pointer to a tool result and downgrade the
+claim when there is none. That covers exactly the class where a false
+memory does the most damage — believing work is finished when it is not
+— and leaves the general case openly unsolved rather than papered over
+with a confidence score.</p>
 <h3 id="vector-only-memory">Vector-only memory</h3>
 <p>Vector search misses exact constraints and can retrieve plausible but
 wrong memories. Every serious design should include lexical search or
-structured filters. <code>engram</code> demonstrates the value of boring
-FTS. <code>mempalace</code> demonstrates vector plus BM25 plus metadata
-plus fallback paths. <code>mem0</code> and <code>honcho</code> show
-hybrid approaches. <code>llm-wiki-memory</code> has strong metadata
-filters and deterministic topology lookup, but its lexical-hash mode is
-a fallback backend rather than a fused exact-search channel. Claude-Mem
-and A-MEM additionally show why having both lexical and vector code—or
-simply using Chroma—does not make an ordinary query path hybrid.</p>
+structured filters. <a href="../systems/engram/">Engram</a> demonstrates
+the value of boring FTS. <a href="../systems/mempalace/">MemPalace</a>
+demonstrates vector plus BM25 plus metadata plus fallback paths. <a
+href="../systems/mem0/">Mem0</a> and <a
+href="../systems/honcho/">Honcho</a> show hybrid approaches. <a
+href="../systems/llm-wiki-memory/">llm-wiki-memory</a> has strong
+metadata filters and deterministic topology lookup, but its lexical-hash
+mode is a fallback backend rather than a fused exact-search channel. <a
+href="../systems/claude-mem/">Claude-Mem</a> and <a
+href="../systems/a-mem/">A-MEM</a> additionally show why having both
+lexical and vector code—or simply using Chroma—does not make an ordinary
+query path hybrid.</p>
 <h3 id="ranking-positions-used-as-identities">Ranking positions used as
 identities</h3>
-<p>Retrieval order is ephemeral, not object identity. A-MEM shows the
-failure directly: it returns vector rank positions and later applies
-them to insertion order, so an LLM can rewrite a different neighbor than
-the one it saw. Carry stable memory IDs through prompts, responses,
-validation, mutation, and audit.</p>
+<p>Retrieval order is ephemeral, not object identity. <a
+href="../systems/a-mem/">A-MEM</a> shows the failure directly: it
+returns vector rank positions and later applies them to insertion order,
+so an LLM can rewrite a different neighbor than the one it saw. Carry
+stable memory IDs through prompts, responses, validation, mutation, and
+audit.</p>
 <h3 id="recallk-without-enforcing-k">Recall@k without enforcing k</h3>
 <p>A retrieval benchmark is invalid at a stated cutoff if the system
-scores more than <code>k</code> returned items. Swafra's committed
-<code>k=10</code> artifact evaluated all returned sessions while
-returning 28–46 sessions per question (35.4 on average); it only
-truncated the displayed <code>retrieved_sessions</code> list. Benchmark
-harnesses should assert the result count, score exactly the first
-<code>k</code>, record token volume, and bind artifacts to a
-code/config/embedder manifest.</p>
+scores more than <code>k</code> returned items. <a
+href="../systems/swafra/">Swafra</a>'s committed <code>k=10</code>
+artifact evaluated all returned sessions while returning 28–46 sessions
+per question (35.4 on average); it only truncated the displayed
+<code>retrieved_sessions</code> list. Benchmark harnesses should assert
+the result count, score exactly the first <code>k</code>, record token
+volume, and bind artifacts to a code/config/embedder manifest.</p>
 <h3 id="weak-correction-semantics">Weak correction semantics</h3>
 <p>Pattern guide: <a
 href="../patterns/rejected-value-tombstone/">Rejected-value
 tombstone</a>.</p>
 <p>Update/delete APIs are not enough. A system needs to model
 contradiction, supersession, source, timestamp, and rejected values.
-Otherwise a wrong fact can be reintroduced by later extraction. Verel's
-rejected tombstones are the clearest research-grade countermeasure;
-RainBox has adopted equivalent machinery in a product context:
-<code>MemoryRejectedValue</code> tombstones block future model
-re-assertion of rejected or superseded values,
+Otherwise a wrong fact can be reintroduced by later extraction. <a
+href="../systems/verel/">Verel</a>'s rejected tombstones are the
+clearest research-grade countermeasure; <a
+href="../systems/rainbox/">RainBox</a> has adopted equivalent machinery
+in a product context: <code>MemoryRejectedValue</code> tombstones block
+future model re-assertion of rejected or superseded values,
 <code>correct_belief</code> is an atomic governed correction path, and
 write-time conflict detection is lattice-aware across the scope
-hierarchy. <code>llm-wiki-memory</code> shows the limit of operational
-supersession without epistemic state: it can archive a selected
-predecessor, but cannot prevent the rejected value from being distilled
-again. <a href="../systems/lorekit/">LoreKit</a> shows the same limit
-with the mechanism made explicit in a migration comment: archiving a
-lesson drops the unique constraint and recreates it as a partial index
+hierarchy. <a href="../systems/llm-wiki-memory/">llm-wiki-memory</a>
+shows the limit of operational supersession without epistemic state: it
+can archive a selected predecessor, but cannot prevent the rejected
+value from being distilled again. <a
+href="../systems/lorekit/">LoreKit</a> shows the same limit with the
+mechanism made explicit in a migration comment: archiving a lesson drops
+the unique constraint and recreates it as a partial index
 <code>where archived_at is null</code>, <em>"so the same (user_id,
 scope, key) can be re-created after an archive."</em> Freeing the
 address is a defensible ergonomic choice, and it is the exact inverse of
@@ -16632,44 +16645,47 @@ a tombstone — the one operation a user reaches for when a lesson is
 <h3 id="semantic-deletion">Semantic deletion</h3>
 <p>Deleting by "similar memory" is dangerous. It is useful as a
 discovery aid, but the actual forget operation should target exact IDs
-or require review. Supermemory's MCP client fallback semantic deletion
-is a risk pattern to treat carefully.</p>
+or require review. <a href="../systems/supermemory/">Supermemory</a>'s
+MCP client fallback semantic deletion is a risk pattern to treat
+carefully.</p>
 <h3 id="treating-git-deletion-as-privacy-deletion">Treating git deletion
 as privacy deletion</h3>
-<p><code>llm-wiki-memory</code> removes exact leaves and embedding
-entries, but private wiki commits retain prior bodies. Git history is
-excellent for recovery and audit, but it is not an erasure guarantee.
-Any git-backed memory needs an explicit procedure for history rewriting,
-clones, backups, stashes, and derived caches.</p>
+<p><a href="../systems/llm-wiki-memory/">llm-wiki-memory</a> removes
+exact leaves and embedding entries, but private wiki commits retain
+prior bodies. Git history is excellent for recovery and audit, but it is
+not an erasure guarantee. Any git-backed memory needs an explicit
+procedure for history rewriting, clones, backups, stashes, and derived
+caches.</p>
 <h3 id="core-memory-as-a-junk-drawer">Core memory as a junk drawer</h3>
-<p>Editable prompt memory is powerful and dangerous. Letta's core memory
-tools are useful, but any system with long-lived core blocks needs
-provenance, review, and compaction policy. Otherwise it accumulates
-stale identity and preference claims.</p>
+<p>Editable prompt memory is powerful and dangerous. <a
+href="../systems/letta/">Letta</a>'s core memory tools are useful, but
+any system with long-lived core blocks needs provenance, review, and
+compaction policy. Otherwise it accumulates stale identity and
+preference claims.</p>
 <h3 id="tool-descriptions-as-policy">Tool descriptions as policy</h3>
 <p>Several systems rely on tool docs telling the agent when to save
 memory. This is necessary but insufficient. The backend still needs
 dedupe, conflict detection, trust gates, and review.</p>
 <h3 id="telemetry-mistaken-for-truth">Telemetry mistaken for truth</h3>
-<p>RainBox explicitly avoids this: retrieval events and downvotes are
-signals for inspection/evals, not automatic confidence changes or
-deletion. This matters because "memory was used in a bad answer" does
-not prove the memory was false.</p>
-<p><code>holographic</code> is the atlas's clearest counterexample, and
-it is worth studying precisely because the mechanism looks reasonable in
-isolation. A <code>fact_feedback</code> tool lets the model or user rate
-a fact helpful or unhelpful, adjusting a single <code>trust_score</code>
-by +0.05 or −0.10. That same score is multiplied directly into relevance
-during ranking <em>and</em> gates retrieval through a
-<code>min_trust</code> floor defaulting to 0.3. From the default trust
-of 0.5, three unhelpful ratings put a fact at 0.2 — below every default
-retrieval path, permanently, with no tombstone, no review queue, and no
-record that a suppression occurred. Feedback has quietly become
-deletion, and "unhelpful" has quietly become "false".</p>
-<p><code>atomic-agent</code> sits at the disciplined end of the same
-range. Votes are written to an append-only <code>vote_events</code>
-table (<code>kind</code>, <code>target_id</code>,
-<code>direction</code>, <code>session_id</code>,
+<p><a href="../systems/rainbox/">RainBox</a> explicitly avoids this:
+retrieval events and downvotes are signals for inspection/evals, not
+automatic confidence changes or deletion. This matters because "memory
+was used in a bad answer" does not prove the memory was false.</p>
+<p><a href="../systems/holographic/">Holographic</a> is the atlas's
+clearest counterexample, and it is worth studying precisely because the
+mechanism looks reasonable in isolation. A <code>fact_feedback</code>
+tool lets the model or user rate a fact helpful or unhelpful, adjusting
+a single <code>trust_score</code> by +0.05 or −0.10. That same score is
+multiplied directly into relevance during ranking <em>and</em> gates
+retrieval through a <code>min_trust</code> floor defaulting to 0.3. From
+the default trust of 0.5, three unhelpful ratings put a fact at 0.2 —
+below every default retrieval path, permanently, with no tombstone, no
+review queue, and no record that a suppression occurred. Feedback has
+quietly become deletion, and "unhelpful" has quietly become "false".</p>
+<p><a href="../systems/atomic-agent/">Atomic Agent</a> sits at the
+disciplined end of the same range. Votes are written to an append-only
+<code>vote_events</code> table (<code>kind</code>,
+<code>target_id</code>, <code>direction</code>, <code>session_id</code>,
 <code>turn_index</code>, <code>created_at</code>) and
 <code>vote_score</code> is a derived, indexed column on memories,
 lessons, and profile facts. Because the raw events are retained, a
@@ -16677,14 +16693,14 @@ scoring rule can be recomputed, a suspicious pattern can be audited, and
 no single vote is destructive — the atlas's own "keep retrieval events
 append-only; derive counters from events" recommendation, implemented.
 Ranged against Holographic's in-place mutation, RainBox's human gate,
-and MetaClaw's replay-gated policy tuning, it is the option that
-preserves the most future choices.</p>
-<p><code>csm</code> shows the failure one level further down, where the
-telemetry is not even about the memory. Its self-model maintains a
-confidence and an uncertainty per capability, updated from experience
-packets, with two thoughtful guards: a hard ceiling of 0.9 because
-<em>"raw tool-call success cannot prove 100% capability"</em>, and a
-diminishing-returns rate after twenty observations. Both guard the
+and <a href="../systems/metaclaw/">MetaClaw</a>'s replay-gated policy
+tuning, it is the option that preserves the most future choices.</p>
+<p><a href="../systems/csm/">CSM</a> shows the failure one level further
+down, where the telemetry is not even about the memory. Its self-model
+maintains a confidence and an uncertainty per capability, updated from
+experience packets, with two thoughtful guards: a hard ceiling of 0.9
+because <em>"raw tool-call success cannot prove 100% capability"</em>,
+and a diminishing-returns rate after twenty observations. Both guard the
 <em>number</em>. Neither guards the <em>observable</em>, which
 <code>determineOutcome</code> defines as the absence of an error field
 and a zero exit code — so what is being counted is that the edit tool
@@ -16698,19 +16714,20 @@ signal.</p>
 <h3 id="the-harnesss-own-output-captured-as-evidence">The harness's own
 output captured as evidence</h3>
 <p>A system that generates text and also captures text will eventually
-capture its own output. <code>openclaw</code> strips media notes,
-context markers, reply headers, sender prefixes, and timestamps from
-every message before capture, then rejects whatever still
-<code>looksLikeEnvelopeSludge</code>. <code>holographic</code> had to
-exclude its host's compaction handoff summaries, which arrive as
-<code>role="user"</code> messages and reliably matched its own
-decision-extraction regexes, so the compactor's output was being stored
-as durable facts on every context rollover.</p>
-<p><code>csm</code> is the third case and the unfixed one, in the store
-whose whole purpose is to answer "what is happening in this project".
-Its AgentBook journal appends an event for tool executions, summarised
-as the first 200 characters of the tool's output — and the
-<code>csm_*</code> tools are not excluded, so
+capture its own output. <a href="../systems/openclaw/">OpenClaw</a>
+strips media notes, context markers, reply headers, sender prefixes, and
+timestamps from every message before capture, then rejects whatever
+still <code>looksLikeEnvelopeSludge</code>. <a
+href="../systems/holographic/">Holographic</a> had to exclude its host's
+compaction handoff summaries, which arrive as <code>role="user"</code>
+messages and reliably matched its own decision-extraction regexes, so
+the compactor's output was being stored as durable facts on every
+context rollover.</p>
+<p><a href="../systems/csm/">CSM</a> is the third case and the unfixed
+one, in the store whose whole purpose is to answer "what is happening in
+this project". Its AgentBook journal appends an event for tool
+executions, summarised as the first 200 characters of the tool's output
+— and the <code>csm_*</code> tools are not excluded, so
 <code>csm_memory_list</code>, <code>csm_continuity_report</code>,
 <code>csm_agentbook_events</code> and <code>csm_self_model</code> all
 land in the project's operational history as project activity. The
@@ -16719,10 +16736,11 @@ proof, because it is generated: of the nine entries under "Recent Work",
 seven are truncated dumps of CSM reading its own memory, and none
 describes work on the repository. The store did not fail; it faithfully
 recorded the wrong thing.</p>
-<p><code>graphify</code> is the one that did it first, and it is the
-reason this entry can stop being a recommendation and start being a
-citation. Its generated <code>LESSONS.md</code> deliberately carries no
-YAML frontmatter, so <code>parse_memory_doc</code> rejects it and
+<p><a href="../systems/graphify/">Graphify</a> is the one that did it
+first, and it is the reason this entry can stop being a recommendation
+and start being a citation. Its generated <code>LESSONS.md</code>
+deliberately carries no YAML frontmatter, so
+<code>parse_memory_doc</code> rejects it and
 <code>load_memory_docs</code> skips it <strong>even if the file lands
 inside <code>memory/</code></strong> — and
 <code>test_lessons_artifact_cannot_be_globbed_back_into_memory</code> is
@@ -16752,10 +16770,10 @@ href="../systems/mnemopi/">Mnemopi</a> and <a
 href="../systems/powermem/">PowerMem</a>. A use signal feeding a trust
 field means the memories that get retrieved most become the memories
 that are trusted most, which is a popularity contest wearing an
-epistemics costume. Engram also refuses to let its own drift scan demote
-anything, on the ground that a bad scan would mass-bury the graph —
-knowing which of your signals are too noisy to act on is the same
-discipline applied twice.</p>
+epistemics costume. <a href="../systems/engram/">Engram</a> also refuses
+to let its own drift scan demote anything, on the ground that a bad scan
+would mass-bury the graph — knowing which of your signals are too noisy
+to act on is the same discipline applied twice.</p>
 <h3 id="one-score-for-truth-and-reachability">One score for truth and
 reachability</h3>
 <p><strong><a href="../systems/omi/">Omi</a> splits it a third way and
@@ -16768,55 +16786,61 @@ statement heard wrong, and a perfectly clear statement that is a lie. A
 single score cannot represent either. It then keeps a discrete
 <code>epistemic_status</code> beside both, so certainty and decidedness
 are not the same column.</p>
-<p><strong><code>breadcrumbs</code> splits it a fourth way, into two
-instruments rather than two fields</strong>, and the split is the whole
-design: <code>conclusions_audit.py</code> asks whether an entry is still
-<em>true</em>, <code>retrieval_exam.py</code> asks whether it can ever
-be <em>seen</em>, and the repo insists they are different failures with
-different symptoms. A stale entry is wrong and gets caught the moment
-somebody reads it. An unreachable entry is <em>"correct, well written,
-and silently absent from every session that needed it"</em>, so nothing
-ever prompts anyone to look. Running one sweep and skipping the other
-gives a healthy-looking score over a broken lane. The uncomfortable
-corollary, stated plainly in <code>docs/memory-measurement.md</code>, is
-that this is structural in every system built the way that repo
-describes — <em>"writing is instrumented and retrieval is not"</em> —
-and that the natural response to doubt, writing more signage, crowds the
-boot lane and makes it worse.</p>
+<p><strong><a href="../systems/breadcrumbs/">breadcrumbs</a> splits it a
+fourth way, into two instruments rather than two fields</strong>, and
+the split is the whole design: <code>conclusions_audit.py</code> asks
+whether an entry is still <em>true</em>, <code>retrieval_exam.py</code>
+asks whether it can ever be <em>seen</em>, and the repo insists they are
+different failures with different symptoms. A stale entry is wrong and
+gets caught the moment somebody reads it. An unreachable entry is
+<em>"correct, well written, and silently absent from every session that
+needed it"</em>, so nothing ever prompts anyone to look. Running one
+sweep and skipping the other gives a healthy-looking score over a broken
+lane. The uncomfortable corollary, stated plainly in
+<code>docs/memory-measurement.md</code>, is that this is structural in
+every system built the way that repo describes — <em>"writing is
+instrumented and retrieval is not"</em> — and that the natural response
+to doubt, writing more signage, crowds the boot lane and makes it
+worse.</p>
 <p>Separating epistemic confidence from retrieval strength is one of the
 atlas's recurring recommendations, and the new systems split cleanly on
-it. <code>openviking</code>'s <code>hotness_score</code> is explicitly a
-reachability signal blended into ranking and never touches correctness;
-<code>redis-agent-memory-server</code> keeps recency weights entirely
-inside ranking and retention. <code>holographic</code> collapses both
-into <code>trust_score</code>, so there is no way to ask for the most
+it. <a href="../systems/openviking/">OpenViking</a>'s
+<code>hotness_score</code> is explicitly a reachability signal blended
+into ranking and never touches correctness; <a
+href="../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> keeps recency weights entirely inside ranking and retention.
+<a href="../systems/holographic/">Holographic</a> collapses both into
+<code>trust_score</code>, so there is no way to ask for the most
 relevant memory independent of how it has been rated, and no way to
 record that a rarely-retrieved fact is nonetheless certainly true.</p>
 <h3 id="platform-only-claims-hidden-behind-oss-apis">Platform-only
 claims hidden behind OSS APIs</h3>
-<p>Mem0 and Supermemory both have product surfaces where advanced
-behavior may live outside the inspected source. For build decisions,
-separate what is visible in code from what is promised by hosted
-APIs.</p>
-<p><code>byterover</code> adds a licensing variant of the same problem:
-it is widely described as an open-source memory engine, but the
-repository inspected here carries the Elastic License 2.0, which
-prohibits offering the software as a hosted service. Check the
-<code>LICENSE</code> file rather than the positioning before planning to
-reuse anything.</p>
+<p><a href="../systems/mem0/">Mem0</a> and <a
+href="../systems/supermemory/">Supermemory</a> both have product
+surfaces where advanced behavior may live outside the inspected source.
+For build decisions, separate what is visible in code from what is
+promised by hosted APIs.</p>
+<p><a href="../systems/byterover/">ByteRover</a> adds a licensing
+variant of the same problem: it is widely described as an open-source
+memory engine, but the repository inspected here carries the Elastic
+License 2.0, which prohibits offering the software as a hosted service.
+Check the <code>LICENSE</code> file rather than the positioning before
+planning to reuse anything.</p>
 <h3
 id="published-benchmark-numbers-without-committed-artifacts">Published
 benchmark numbers without committed artifacts</h3>
-<p>It takes three shapes here. Swafra committed a <code>k=10</code>
-artifact that scored every returned session. TencentDB published gains
-with no harness in the repository at all. <code>openviking</code> is the
-most advanced case and the most nearly right: it commits a genuinely
+<p>It takes three shapes here. <a href="../systems/swafra/">Swafra</a>
+committed a <code>k=10</code> artifact that scored every returned
+session. TencentDB published gains with no harness in the repository at
+all. <a href="../systems/openviking/">OpenViking</a> is the most
+advanced case and the most nearly right: it commits a genuinely
 reproducible harness — ingest, QA, LLM judge, statistics, runners for
 six competing systems, and token accounting alongside accuracy, which is
 exactly what this atlas asks for — yet the headline figures in its
-README (LoCoMo accuracy of 82.08% versus 24.20% native for OpenClaw, and
-comparable deltas for Hermes and Claude Code) point to an off-repo blog
-post, and no raw result files are committed.</p>
+README (LoCoMo accuracy of 82.08% versus 24.20% native for <a
+href="../systems/openclaw/">OpenClaw</a>, and comparable deltas for
+Hermes and Claude Code) point to an off-repo blog post, and no raw
+result files are committed.</p>
 <p>A reproducible harness and a reproducible result are different
 claims. See <a href="../benchmarks/">benchmarking agent memory</a> for
 what the published numbers are and are not measuring. These are also
@@ -16826,146 +16850,180 @@ deserve independent scrutiny before the deltas are quoted.</p>
 <h3 id="throwing-away-raw-evidence-too-early">Throwing away raw evidence
 too early</h3>
 <p>Extraction-first systems can look elegant while deleting the only
-material needed to debug a wrong memory. MemPalace is the strongest
-evidence that raw text plus retrieval deserves to be the baseline before
-adding lossy summarization or fact extraction.</p>
+material needed to debug a wrong memory. <a
+href="../systems/mempalace/">MemPalace</a> is the strongest evidence
+that raw text plus retrieval deserves to be the baseline before adding
+lossy summarization or fact extraction.</p>
 <h3 id="treating-local-json-rewrites-as-durable-storage">Treating local
 JSON rewrites as durable storage</h3>
-<p>Swafra loads and rewrites chunks, edges, and sources as three
-independent JSON files. Without locks, atomic replace, transactions,
-repair, or cascading deletion, concurrent agents can lose writes and
-partial failure can split graph state. Human-readable export is
-valuable; it is not a substitute for transactional primary storage.</p>
+<p><a href="../systems/swafra/">Swafra</a> loads and rewrites chunks,
+edges, and sources as three independent JSON files. Without locks,
+atomic replace, transactions, repair, or cascading deletion, concurrent
+agents can lose writes and partial failure can split graph state.
+Human-readable export is valuable; it is not a substitute for
+transactional primary storage.</p>
 <h2 id="7-what-seems-to-work">7. What Seems to Work</h2>
+<h3 id="storage-and-retrieval">Storage and retrieval</h3>
 <p>SQLite plus FTS works for local coding-agent memory. It gives
 inspectable state, transactional writes, simple backup/sync, and exact
-search. Engram, Verel, and Claude-Mem are good references. MemPalace
-shows how to combine local SQLite-style operational machinery with a
-vector backend and fallback BM25/FTS paths.</p>
+search. <a href="../systems/engram/">Engram</a>, <a
+href="../systems/verel/">Verel</a>, and <a
+href="../systems/claude-mem/">Claude-Mem</a> are good references. <a
+href="../systems/mempalace/">MemPalace</a> shows how to combine local
+SQLite-style operational machinery with a vector backend and fallback
+BM25/FTS paths.</p>
 <p>Hybrid retrieval is the default serious choice. Pair semantic search
 with lexical matching and metadata filters. Add reranking only after
 basic retrieval metrics exist. MemPalace's "closets boost but never gate
 drawers" rule is a particularly reusable retrieval principle.</p>
 <p>Source diversity is useful when the context should cover sessions or
-documents rather than repeat adjacent chunks from one source. Swafra
-makes this explicit with best-chunk-per-source selection. The production
-version needs a hard result/token cap, stable source identity, and an
-escape hatch for questions requiring multiple chunks from one
-source.</p>
+documents rather than repeat adjacent chunks from one source. <a
+href="../systems/swafra/">Swafra</a> makes this explicit with
+best-chunk-per-source selection. The production version needs a hard
+result/token cap, stable source identity, and an escape hatch for
+questions requiring multiple chunks from one source.</p>
+<p>Record embedder identity. MemPalace's explicit model/dimension checks
+are a useful operational guardrail: a vector index searched with the
+wrong embedding model can silently degrade.</p>
+<p>Treat semantic indexes as projections. Claude-Mem commits SQLite
+before best-effort Chroma sync, and <a
+href="../systems/cognee/">Cognee</a> can retain sources while deleting
+and rebuilding derived memory. The authoritative store and repair
+direction should be obvious.</p>
+<p>Name the physical memory form. <a href="../systems/memos/">MemOS</a>
+usefully expands memory beyond text, but KV cache, graph text, and LoRA
+memory need different compatibility, deletion, and evaluation
+guarantees.</p>
+<h3 id="scope-and-write-destination">Scope and write destination</h3>
 <p>Scope must be part of the primary design, not a later filter.
 User/agent/project/session/workspace boundaries determine whether recall
 is useful or harmful.</p>
-<p>Make write destinations explicit in layered memory.
-<code>llm-wiki-memory</code> lets reads fan out across private and
-repository scopes while requiring every mutation to name a concrete
-target. This prevents a shared scope from silently becoming a shared
-write.</p>
+<p>Make write destinations explicit in layered memory. <a
+href="../systems/llm-wiki-memory/">llm-wiki-memory</a> lets reads fan
+out across private and repository scopes while requiring every mutation
+to name a concrete target. This prevents a shared scope from silently
+becoming a shared write.</p>
+<p>Make scope structurally inseparable from the query. <a
+href="../systems/openclaw/">OpenClaw</a> composes agent scope and user
+filter into a single predicate so an unscoped read is not expressible,
+and scopes deletes the same way. This is stronger than applying a scope
+filter somewhere in the read path, and it is the kind of guarantee that
+survives refactoring.</p>
+<p>Put scope on the provider contract. <a
+href="../systems/mateclaw/">MateClaw</a>'s SPI carries an
+<code>ownerKey</code> on <code>prefetch</code> and
+<code>syncTurn</code>, and its decorators give every backend retry and
+metrics without per-plugin code — the two things the other host runtimes
+leave to each plugin to solve, or not.</p>
+<h3 id="evidence-truth-and-correction">Evidence, truth, and
+correction</h3>
 <p>Keep raw evidence. Messages, source IDs, documents, drawers, and
-provenance make correction possible. Honcho, Verel, and MemPalace
-benefit from this; systems that only store extracted facts lose
-auditability.</p>
+provenance make correction possible. <a
+href="../systems/honcho/">Honcho</a>, <a
+href="../systems/verel/">Verel</a>, and <a
+href="../systems/mempalace/">MemPalace</a> benefit from this; systems
+that only store extracted facts lose auditability.</p>
 <p>Separate truth from usefulness. Retrieval strength should not mean
 the memory is true. Verel's split between
 <code>epistemic_confidence</code> and <code>retrieval_strength</code> is
 one of the strongest ideas in the workspace.</p>
-<p>Render recalled memory defensively. Verel's untrusted-memory fence is
-a practical prompt-injection mitigation. Context should be quoted as
-data, not instructions.</p>
-<p>Use small, explicit mutation APIs. Letta's append/replace/patch
-operations are easier to reason about than free-form "update my memory"
-text.</p>
-<p>Record embedder identity. MemPalace's explicit model/dimension checks
-are a useful operational guardrail: a vector index searched with the
-wrong embedding model can silently degrade.</p>
-<p>Make automatic capture recoverable. <code>llm-wiki-memory</code>
-preserves failed chunk inputs, raw fenced fallbacks, retry state, and
-provider provenance, which is a stronger failure posture than treating a
-failed summarization call as a lost session.</p>
-<p>Keep capture model-independent. Agentmemory's synthetic observation
-path and Claude-Mem's durable hook queue preserve the event before model
-compression. Zero-LLM capture is the reliable floor; enrichment can be
-added later.</p>
-<p>Treat semantic indexes as projections. Claude-Mem commits SQLite
-before best-effort Chroma sync, and Cognee can retain sources while
-deleting and rebuilding derived memory. The authoritative store and
-repair direction should be obvious.</p>
-<p>Make background derivation reversible by provenance. Cognee's
-pipeline-run rollback is the strongest cross-store example in the atlas,
-even though it cannot make every backend combination atomic.</p>
-<p>Number your invariants and cite them from the code.
-<code>atomic-agent</code>'s schema comments reference "cross-phase
-invariant 7 in <code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on
-never auto-executing procedures, and invariant 21 bounding distillation
-to one LLM call per cluster. It costs almost nothing and turns an
-implicit constraint into a reviewable one — and across the atlas,
-nothing else does it.</p>
-<p>Ship new memory behaviour off by default until an evaluation says
-otherwise. <code>atomic-agent</code>'s v2.5 features are all
-<code>default: false</code> while its campaign runs.</p>
-<p>Put scope on the provider contract. <code>mateclaw</code>'s SPI
-carries an <code>ownerKey</code> on <code>prefetch</code> and
-<code>syncTurn</code>, and its decorators give every backend retry and
-metrics without per-plugin code — the two things the other host runtimes
-leave to each plugin to solve, or not.</p>
-<p>Test what memory must <strong>not</strong> surface.
-<code>open-cowork</code>'s eval cases carry <code>forbiddenHits</code>
-alongside <code>expectedHits</code>, and a leak floors the case score
-regardless of how much correct material was also retrieved. Every "tests
-to require" list in the pattern library asks for scope-leakage,
-rejected-value, and sensitivity assertions; this is what they look like
-as an executable fixture.</p>
-<p>Score the prompt prefix, not the retriever. Between retrieval and the
-model sit truncation, deduplication, ordering, and formatting — any of
-which can drop a memory that retrieval correctly found.
-<code>open-cowork</code> scores what reached the model.</p>
-<p>Separate durability from importance. <code>mercury-agent</code>
-grades confidence, importance, and durability independently, which is
-the schema-level answer to this atlas's warning against applying one
-half-life to every memory kind.</p>
-<p>Write your memory decisions down. <code>gini-agent</code> keeps ADRs
-recording the decision, its context, and the failure that motivated it —
-its per-agent isolation ADR states plainly that a coding agent's pinned
-memories were polluting a research agent's recall. Across three hundred
-and eight systems, almost none can explain why they are shaped the way
-they are.</p>
-<p>Make scope structurally inseparable from the query. OpenClaw composes
-agent scope and user filter into a single predicate so an unscoped read
-is not expressible, and scopes deletes the same way. This is stronger
-than applying a scope filter somewhere in the read path, and it is the
-kind of guarantee that survives refactoring.</p>
-<p>Specify retention as a policy, not a TTL. Redis Agent Memory Server's
-<code>select_ids_for_forgetting</code> combines age and inactivity so
-recent use buys a memory time but not immunity, honours pinning and
-per-type allowlists, and prunes to a budget using separate half-lives
-for last access and creation. Most systems here either never forget or
-forget on one crude axis.</p>
-<p>Guard generated rewrites against deletion. ByteRover's
-structural-loss detection parses before and after, counts only what
-would be removed, and merges it back. It is a few hundred lines,
-requires no model, and directly addresses the reason this atlas warns
-against premature summarization.</p>
-<p>Sanitize your own scaffolding out of captured text, and test that it
-stays out. Two systems in the Hermes/OpenClaw ecosystem shipped fixes
-for their own generated text being stored as user memory.</p>
-<p>Make memory use inspectable. RainBox's debug rows, retrieval events,
-and review UI are the best reference here. Users need to know which
-memories entered a prompt and need a way to correct or reject them.</p>
-<p>Separate event time from ingestion time when facts change. Graphiti's
-bi-temporal edges preserve historical truth and backfilled events
-without destructive overwrite.</p>
 <p>Decay reachability, not truth. Verel keeps retrieval strength
 separate from confidence and protects important lifecycle states.
 Reinforcement should record usefulness or corroboration, never silently
 upgrade factual authority.</p>
-<p>Prepare compaction before the context cliff. Mastra Observational
-Memory's inactive buffers and exact coverage ranges make expensive
+<p>Separate durability from importance. <a
+href="../systems/mercury-agent/">Mercury Agent</a> grades confidence,
+importance, and durability independently, which is the schema-level
+answer to this atlas's warning against applying one half-life to every
+memory kind.</p>
+<p>Separate event time from ingestion time when facts change. <a
+href="../systems/graphiti/">Graphiti</a>'s bi-temporal edges preserve
+historical truth and backfilled events without destructive
+overwrite.</p>
+<p>Specify retention as a policy, not a TTL. <a
+href="../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a>'s <code>select_ids_for_forgetting</code> combines age and
+inactivity so recent use buys a memory time but not immunity, honours
+pinning and per-type allowlists, and prunes to a budget using separate
+half-lives for last access and creation. Most systems here either never
+forget or forget on one crude axis.</p>
+<h3 id="capture-and-background-work">Capture and background work</h3>
+<p>Keep capture model-independent. <a
+href="../systems/agentmemory/">Agentmemory</a>'s synthetic observation
+path and <a href="../systems/claude-mem/">Claude-Mem</a>'s durable hook
+queue preserve the event before model compression. Zero-LLM capture is
+the reliable floor; enrichment can be added later.</p>
+<p>Make automatic capture recoverable. <a
+href="../systems/llm-wiki-memory/">llm-wiki-memory</a> preserves failed
+chunk inputs, raw fenced fallbacks, retry state, and provider
+provenance, which is a stronger failure posture than treating a failed
+summarization call as a lost session.</p>
+<p>Make background derivation reversible by provenance. <a
+href="../systems/cognee/">Cognee</a>'s pipeline-run rollback is the
+strongest cross-store example in the atlas, even though it cannot make
+every backend combination atomic.</p>
+<p>Prepare compaction before the context cliff. <a
+href="../systems/mastra-observational-memory/">Mastra Observational
+Memory</a>'s inactive buffers and exact coverage ranges make expensive
 observation/reflection recoverable and mostly non-blocking.</p>
+<p>Sanitize your own scaffolding out of captured text, and test that it
+stays out. Two systems in the Hermes/OpenClaw ecosystem shipped fixes
+for their own generated text being stored as user memory.</p>
+<p>Guard generated rewrites against deletion. <a
+href="../systems/byterover/">ByteRover</a>'s structural-loss detection
+parses before and after, counts only what would be removed, and merges
+it back. It is a few hundred lines, requires no model, and directly
+addresses the reason this atlas warns against premature
+summarization.</p>
+<h3 id="what-reaches-the-model-and-what-a-person-can-change">What
+reaches the model, and what a person can change</h3>
+<p>Render recalled memory defensively. <a
+href="../systems/verel/">Verel</a>'s untrusted-memory fence is a
+practical prompt-injection mitigation. Context should be quoted as data,
+not instructions.</p>
+<p>Score the prompt prefix, not the retriever. Between retrieval and the
+model sit truncation, deduplication, ordering, and formatting — any of
+which can drop a memory that retrieval correctly found. <a
+href="../systems/open-cowork/">open-cowork</a> scores what reached the
+model.</p>
+<p>Use small, explicit mutation APIs. <a
+href="../systems/letta/">Letta</a>'s append/replace/patch operations are
+easier to reason about than free-form "update my memory" text.</p>
+<p>Make memory use inspectable. <a
+href="../systems/rainbox/">RainBox</a>'s debug rows, retrieval events,
+and review UI are the best reference here. Users need to know which
+memories entered a prompt and need a way to correct or reject them.</p>
 <p>Keep human-owned source canonical when that is the product promise.
-Basic Memory's Markdown/projection boundary makes memory portable and
-repairable, provided every derived index has a reconciliation path.</p>
-<p>Name the physical memory form. MemOS usefully expands memory beyond
-text, but KV cache, graph text, and LoRA memory need different
-compatibility, deletion, and evaluation guarantees.</p>
+<a href="../systems/basic-memory/">Basic Memory</a>'s
+Markdown/projection boundary makes memory portable and repairable,
+provided every derived index has a reconciliation path.</p>
+<h3 id="testing-rollout-and-the-decision-record">Testing, rollout, and
+the decision record</h3>
+<p>Test what memory must <strong>not</strong> surface. <a
+href="../systems/open-cowork/">open-cowork</a>'s eval cases carry
+<code>forbiddenHits</code> alongside <code>expectedHits</code>, and a
+leak floors the case score regardless of how much correct material was
+also retrieved. Every "tests to require" list in the pattern library
+asks for scope-leakage, rejected-value, and sensitivity assertions; this
+is what they look like as an executable fixture.</p>
+<p>Ship new memory behaviour off by default until an evaluation says
+otherwise. <a href="../systems/atomic-agent/">Atomic Agent</a>'s v2.5
+features are all <code>default: false</code> while its campaign
+runs.</p>
+<p>Number your invariants and cite them from the code. Atomic Agent's
+schema comments reference "cross-phase invariant 7 in
+<code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on never
+auto-executing procedures, and invariant 21 bounding distillation to one
+LLM call per cluster. It costs almost nothing and turns an implicit
+constraint into a reviewable one — and across the atlas, nothing else
+does it.</p>
+<p>Write your memory decisions down. <a
+href="../systems/gini-agent/">Gini Agent</a> keeps ADRs recording the
+decision, its context, and the failure that motivated it — its per-agent
+isolation ADR states plainly that a coding agent's pinned memories were
+polluting a research agent's recall. Across three hundred and eight
+systems, almost none can explain why they are shaped the way they
+are.</p>
 <h2 id="8-what-i-would-build">8. What I Would Build</h2>
 <h3 id="ship-first">Ship First</h3>
 <p>Build a local-first core even if a hosted version is planned
