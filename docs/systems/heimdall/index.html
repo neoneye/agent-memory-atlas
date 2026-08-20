@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A verification layer over someone
+else's memory store, where each search result is labelled STRONG, WEAK,
+STALE or REBUILT by checking its anchor at read time — and the verdict
+outranks the similarity score.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Heimdall — Agent Memory Atlas">
+    <meta property="og:description" content="A verification layer over
+someone else's memory store, where each search result is labelled
+STRONG, WEAK, STALE or REBUILT by checking its anchor at read time — and
+the verdict outranks the similarity score.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Heimdall — Agent Memory Atlas">
+    <meta name="twitter:description" content="A verification layer over
+someone else's memory store, where each search result is labelled
+STRONG, WEAK, STALE or REBUILT by checking its anchor at read time — and
+the verdict outranks the similarity score.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Heimdall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Heimdall",
+      "description": "A verification layer over someone else's memory store, where each search result is labelled STRONG, WEAK, STALE or REBUILT by checking its anchor at read time \u2014 and the verdict outranks the similarity score.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A verdict on every hit</p>
+          <h1>Heimdall</h1>
+          <p class="document-deck">A verification layer over someone
+else's memory store, where each search result is labelled STRONG, WEAK,
+STALE or REBUILT by checking its anchor at read time — and the verdict
+outranks the similarity score.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ArihantDeva/heimdall">
+              <span>Source</span>
+              <strong>ArihantDeva/heimdall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ArihantDeva/heimdall/commit/f9bc25abd27351d1af04ebe24b7deb555ba42102" title="f9bc25abd27351d1af04ebe24b7deb555ba42102">
+              <span>Analyzed revision</span>
+              <code>f9bc25ab…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Heimdall is a verification and orchestration layer that sits
+<strong>on top of</strong> a semantic memory store rather than being
+one. Its README states the thesis plainly: <em>"Heimdall fixes
+retrieval, not storage. The insight: agent memory fails not from lack of
+storage but from lack of retrieval with trust."</em> The store
+underneath is <a
+href="https://github.com/ArihantDeva/heimdall">Graft</a>, a separate
+daemon; Heimdall seeds it, keeps it current, and labels what comes
+out.</p>
+<p>The mechanism the report exists for is in
+<code>bin/kb_search_verify.py</code>. Every search hit is checked
+against the filesystem at read time and assigned a verdict —
+<code>STRONG</code> (lexical coverage plus a live path),
+<code>REBUILT</code> (the path moved and the node was rebuilt),
+<code>WEAK</code> (semantic only), <code>STALE</code> (the anchor is
+gone, and the node is removed), plus <code>REMOVED</code> and
+<code>NOPATH</code>. Then the results are sorted by <strong>verdict
+class first</strong>, with the similarity score demoted to a tiebreak,
+under a comment that says why: it <em>"keeps the true STRONG hit on top
+instead of burying"</em> it beneath a better-scoring unverified one.</p>
+<p>That is the atlas's most repeated complaint answered directly. This
+corpus is full of systems where retrieval strength and truth end up in
+one number; here they are two, and the one that means <em>this still
+exists</em> wins.</p>
+<p><strong>Also strong:</strong> <code>extensions/kb-autosync.ts</code>
+keeps the graph honest by parsing the agent's own <code>mv</code>,
+<code>rm</code>, <code>rmdir</code>, <code>trash</code> and
+<code>git rm</code> out of <code>tool_result</code> and calling
+<code>graft delete</code> when an anchor disappears — deletion
+propagating from the filesystem into the memory rather than the other
+way round.</p>
+<p><strong>Weakest:</strong> nothing about trust is stored. A verdict is
+computed, used to sort one result set, and discarded; the next search
+recomputes it. A node cannot be doubted between searches, and no history
+exists of what was once STALE. That, plus a store this repository does
+not own, is why no capability mark is awarded below.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Graft node whose identity is a <strong>filesystem
+path</strong> — and the system's whole epistemics is whether that path
+is still there.</p>
+<pre class="text"><code>graft retrieve ──► candidates ──► for each hit: extract_paths(body)
+                                        │
+                        ┌───────────────┴───────────────┐
+                   path exists?                    path gone
+                        │                               │
+              coverage ≥ 0.5 ?                  handle_stale():
+              ┌─────────┴─────────┐             bounded basename search
+           STRONG              WEAK                    │
+                                          ┌────────────┴────────────┐
+                                     found: REBUILT           not found: STALE
+                                                                (node removed)
+
+sort key = vrank{STRONG:0, REBUILT:0, WEAK:1, STALE:2, REMOVED:2, NOPATH:3}
+           then score        ← the score only breaks ties</code></pre>
+<p><strong>The state is not a property of the memory; it is a property
+of the memory's relationship to the world at the moment you
+asked.</strong> That is a different design from every trust-state system
+in this corpus, which stores a status a writer set. Here nothing is set:
+the verdict is derived, every time, from whether the thing the note
+points at still exists.</p>
+<p>Control is <strong>background-managed</strong> for freshness and
+<strong>agent-facing</strong> for reading. The agent searches and is
+warned when it does not; it does not file memories through Heimdall at
+all.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the trust verdict is computed at read time by checking whether the note's anchor path still exists, and it becomes the primary sort key — a better-scoring hit whose file is gone ranks below a verified one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the trust verdict is computed at read time by checking whether the note&#39;s anchor path still exists, and it becomes the primary sort key — a better-scoring hit whose file is gone ranks below a verified one
+    AGENT[&quot;coding agent session&quot;]
+
+    subgraph ext[&quot;extensions&quot;]
+        ORIENT[&quot;kb-orient&lt;br/&gt;first-prompt injection&quot;]
+        GUARD[&quot;kb-search-guard&lt;br/&gt;warn after 3 grep-style searches&quot;]
+        SYNC[&quot;kb-autosync&lt;br/&gt;hooks tool_result&quot;]
+    end
+
+    subgraph bin[&quot;shell + python tools&quot;]
+        SEARCH[&quot;kb-search.sh&lt;br/&gt;ranked + graph walk + --scope&quot;]
+        VERIFY[&quot;kb_search_verify.py&lt;br/&gt;STRONG · REBUILT · WEAK · STALE&quot;]
+        STALE[&quot;kb-stale-scan.py&lt;br/&gt;kb-rehome.sh&quot;]
+        HEALTH[&quot;kb-health.sh · telemetry.sh&quot;]
+    end
+
+    GRAFT[(&quot;Graft daemon&lt;br/&gt;the actual store&quot;)]
+    FS[(&quot;filesystem&lt;br/&gt;anchor paths&quot;)]
+
+    AGENT --&gt; ORIENT --&gt;|&quot;graft retrieve --top-k 3, time-capped&quot;| GRAFT
+    AGENT --&gt; SEARCH --&gt; GRAFT
+    SEARCH --&gt; VERIFY
+    VERIFY --&gt;|&quot;does the anchor exist?&quot;| FS
+    VERIFY --&gt;|&quot;STALE → graft delete&quot;| GRAFT
+    AGENT --&gt;|&quot;edits, mv, rm, git rm&quot;| SYNC --&gt;|&quot;update or delete nodes&quot;| GRAFT
+    GUARD -.-&gt;|&quot;warn only, never block&quot;| AGENT
+    STALE --&gt; GRAFT
+    HEALTH --&gt; GRAFT</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> Shell scripts and small Python
+programs under <code>bin/</code>, three TypeScript agent extensions
+under <code>extensions/</code>, a launchd job, a YAML config example,
+and one test file. Roughly two dozen files; there is no service of its
+own beyond the scheduled jobs.</p>
+<p><strong>Persistence.</strong> None. The store is Graft, reached over
+its CLI (<code>graft retrieve</code>, <code>graft delete</code>,
+<code>graft stats</code>), seeded by <code>bin/seed-graft.sh</code> from
+<code>~/knowledge-base/.inventory.tsv</code> — idempotently, because
+<em>"graft dedupes by (title, body) — re-runs add nothing"</em>.
+<code>seed-graft.sh</code> refuses to run when the daemon is unreachable
+rather than seeding into nothing.</p>
+<p><strong>Search stack.</strong> Graft supplies semantic candidates and
+Heimdall adds a lexical coverage measure over the query tokens plus a
+graph walk, so the arms are vector and lexical with the lexical half
+used for <em>verification</em> rather than recall.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A personal-machine tool: Node, Python, bash, a launchd plist, and a
+Graft daemon you must be running. <code>~/knowledge-base/</code> is the
+assumed root. Nothing is containerised and nothing is multi-user. The
+store is inspectable only through Graft, which is the part a reader of
+this repository cannot check.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Verification.</strong> <code>bin/kb_search_verify.py</code> —
+<code>extract_paths(text)</code> pulls candidate anchors out of a node's
+body; coverage is a token overlap between the query and the hit;
+<code>verdict = "STRONG" if cov &gt;= 0.5 else "WEAK"</code> when the
+path exists (<code>:164</code>), <code>STALE</code> when it does not
+(<code>:166</code>). A STALE hit with an id goes to
+<code>handle_stale</code> (<code>:83</code>), whose docstring gives the
+reason it exists — <em>"Desktop gets reorganized aggressively"</em> —
+and which runs a bounded basename search, returning <code>REBUILT</code>
+when it finds the file elsewhere and <code>STALE</code> when it does
+not, in which case the node is removed. The output line documents the
+vocabulary for the reader: <em>"STRONG=lex+path, REBUILT=path moved+node
+rebuilt, WEAK=semantic-only, STALE=path gone (auto-removed),
+REMOVED=deleted just now"</em>.</p>
+<p><strong>Ranking.</strong>
+<code>vrank = {"STRONG": 0, "REBUILT": 0, "WEAK": 1, "STALE": 2, "REMOVED": 2, "NOPATH": 3}</code>
+is the primary sort key and the score is secondary
+(<code>:172-175</code>).</p>
+<p><strong>Search.</strong> <code>bin/kb-search.sh</code> — top-k
+candidates, a related-edge walk, <code>-n N</code>,
+<code>--no-explore</code>, and <code>--scope S</code> which keeps
+<em>"only results whose path contains S"</em>.</p>
+<p><strong>Session orientation.</strong>
+<code>extensions/kb-orient.ts</code> injects a knowledge block into the
+first prompt from <code>graft retrieve --top-k 3</code> plus an edge
+walk, with the retrieval time capped because <em>"a hung graft must
+never stall the first prompt"</em>, and a stated preference for
+answering what the agent <em>"actually asks, not burn context on
+speculative injection"</em>.</p>
+<p><strong>The guard.</strong>
+<code>extensions/kb-search-guard.ts</code> with
+<code>lib/kb-guard-core.mjs</code> warns after three consecutive
+grep-style searches that did not consult knowledge. It is
+<em>"warn-only, never block"</em>, one warning per firing action, and
+<code>tests/guard.test.mjs</code> is the repository's only test.</p>
+<p><strong>Autosync.</strong> <code>extensions/kb-autosync.ts</code>
+hooks <code>tool_result</code> for edit/write/hashline_edit/bash, parses
+shell commands into <code>{kind: "move" | "remove", paths}</code> —
+including <code>mv a b dir/</code> multi-source semantics — resolves
+them deterministically because <em>"tool_result has no cwd"</em>, and
+calls <code>graft delete &lt;id&gt;</code> for nodes anchored at a
+removed path.</p>
+<p><strong>Maintenance.</strong> <code>bin/kb-stale-scan.py</code>,
+<code>bin/kb-rehome.sh</code>, <code>bin/kb-rebuild.sh</code>,
+<code>bin/kb-health.sh</code>, <code>bin/telemetry.sh</code>, on a
+launchd schedule.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Heimdall defines no schema. A node is whatever Graft holds — a title,
+a body, and, by convention, one or more filesystem paths inside the body
+that <code>extract_paths</code> can find. <strong>The anchor is the
+identity</strong>, and the entire verification model rests on it: a note
+whose body names no path can only ever be <code>NOPATH</code>, which
+sorts last.</p>
+<p><strong>Scoping</strong> is a substring match against the path at
+query time. There is no stored scope key, no user or project field, and
+nothing prevents a search without <code>--scope</code> from returning
+anything in the store — which for a single-user tool over one home
+directory is consistent, and is why the mark is withheld rather than
+awarded narrowly.</p>
+<p><strong>Provenance and time.</strong> None recorded by Heimdall.
+Freshness is observed rather than stored: the question is never <em>when
+was this written</em> but <em>does its anchor exist now</em>.</p>
+<p><strong>Correction.</strong> There is none for content. A node is
+verified, rehomed or deleted; nothing edits what a note says, and
+nothing records that a note was once wrong.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two stages: Graft returns semantic candidates and a graph walk widens
+them, then every hit is verified and the set is sorted by verdict before
+score. The second stage is the contribution, and it inverts the usual
+arrangement — most systems in this corpus rank by similarity and, at
+best, annotate. Here a WEAK hit with a high score sits below a STRONG
+hit with a lower one, on purpose.</p>
+<p><strong>Failure modes.</strong> Coverage at <code>≥ 0.5</code> is a
+blunt threshold: a correct note phrased differently from the query lands
+in WEAK and drops a whole rank class. Verification is filesystem
+existence, so a file that still exists but no longer says what the note
+claims is STRONG — the anchor is checked, the content is not. And
+<code>--scope</code> matching a path substring will match anything
+sharing the string, which for a personal knowledge base is usually fine
+and is not a boundary.</p>
+<p><strong>Cost.</strong> Every search stats the filesystem once per hit
+and may run a bounded basename search for each STALE one, so read
+latency scales with results and with how disorganised the disk is.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Heimdall does not write memories.</strong> Seeding is a
+one-off from an inventory file; after that the only mutations it
+performs are corrective — rehome a moved anchor, delete a node whose
+file is gone.</p>
+<p>That makes its write path an unusual one for this atlas: it is a
+<strong>deletion propagation path</strong>, driven by parsing what the
+agent did. When a session moves or removes files,
+<code>kb-autosync</code> observes it in <code>tool_result</code> and
+updates the graph live, rather than waiting for a scan to notice.</p>
+<p>The fragility is in the same place as the ambition: the parser has to
+understand shell. <code>mv a b dir/</code> moving multiple sources into
+a final directory is handled explicitly, and the space of shell commands
+that relocate a file is much larger than the space this parser covers.
+Anything it misses becomes a STALE hit later, which the read path then
+cleans up — so the two mechanisms cover for each other, and the design
+says so by having both.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call anywhere in this repository. The read path pays one
+filesystem check per hit; the background jobs pay a scan. Session
+orientation is capped in time and to three retrieved items,
+deliberately. There is no injection per turn, so nothing here
+invalidates a prompt-prefix cache repeatedly.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three extensions and a set of shell tools. The agent's relationship
+to memory is <strong>read and be nudged</strong>: <code>kb-orient</code>
+puts prior work in the first prompt, <code>kb-search</code> is the tool
+it calls, and <code>kb-search-guard</code> warns when it has run three
+grep-style searches without consulting knowledge — a behavioural
+intervention on the read path that this corpus has almost no other
+examples of.</p>
+<p>The guard being warn-only is the right call and is stated as one. A
+blocking guard would be an enforcement point, and the <a
+href="../../patterns/gate-the-expensive-path/">pattern this atlas argues
+for</a> is about deciding whether the costly operation is worth doing
+rather than forbidding the cheap one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The trust model is real and entirely transient.</strong> Four
+verdicts, computed per hit, used to sort, then discarded. Nothing
+persists, so nothing can accumulate: a node that was STALE last week and
+REBUILT today leaves no record of either, and a reader cannot ask which
+parts of the store have been unstable. The mark is withheld on exactly
+that basis — the rubric asks for a discrete status <em>as a field</em>,
+and this is a computation — while noting that the <em>effect</em> is
+stronger than what the mark measures, because STALE does not merely
+withhold a memory, it deletes it.</p>
+<p><strong>Data loss.</strong> That deletion is the risk. A STALE
+verdict removes the node, and the only guard is the bounded basename
+search that precedes it. A file moved to a path the search does not
+cover — a rename, an archive, an unmounted volume — is indistinguishable
+from a file deleted, and the note about it goes with it. For a knowledge
+base whose anchors are on a machine that gets <em>"reorganized
+aggressively"</em>, that is a real exposure, and the honest
+counterweight is that the underlying note usually still exists in
+Graft's source inventory.</p>
+<p><strong>Provenance, audit, review:</strong> none. No record of
+mutations, no surface for a person to adjudicate anything, and no
+protection against a poisoned note beyond the anchor check.</p>
+<p><strong>Multi-user:</strong> not attempted, and correctly so — this
+is a tool for one person's home directory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>One test file, <code>tests/guard.test.mjs</code>, covering the search
+guard's counting behaviour. The verification logic — the thing this
+system is for — has no test: <code>extract_paths</code>, the coverage
+threshold, the <code>vrank</code> ordering and <code>handle_stale</code>
+are all uncovered, and the last of them deletes data.</p>
+<p>The tests I would want before running this over a real knowledge
+base, in order: that a STRONG hit outranks a higher-scoring WEAK one;
+that <code>handle_stale</code> returns REBUILT rather than deleting when
+the file exists under a different directory; and that a node whose
+anchor is on an unmounted path is not removed. The third is the one that
+would change the design.</p>
+<p><code>docs/heimdall_compare.dot</code> and its rendered PNG compare
+Heimdall against <a href="../../systems/graphify/">Graphify</a> and
+Graft; it is a positioning diagram, not a measurement, and no benchmark
+or result artifact is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Sort by verified-ness first and by score second.</strong>
+Four lines of <code>vrank</code> ahead of the similarity comparison is
+the whole idea, and it directly prevents the failure this atlas names
+most often — a confident, well-scoring memory that is no longer true
+outranking a duller one that is.</li>
+<li><strong>Verify a memory by checking the thing it points at.</strong>
+An anchor that can be stat'd turns freshness from a decay heuristic into
+an observation. Where your memories reference files, commits, tickets or
+URLs, the same check is available and costs one syscall.</li>
+<li><strong>Try to rehome before you delete, and bound the
+search.</strong> A moved file is the common case and a deleted one is
+the rare case; treating the first as the second loses notes.</li>
+<li><strong>Warn the agent when it is not using memory, and do not block
+it.</strong> Three consecutive grep-style searches without a knowledge
+lookup is a cheap, observable signal that the store is being
+ignored.</li>
+<li><strong>Cap the time of any first-prompt injection.</strong> <em>"A
+hung graft must never stall the first prompt"</em> is the right instinct
+for anything that runs before the user sees a response.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a read-path verdict be the only record of
+trust.</strong> Compute it if you like, but persist the transitions — a
+store where nodes go stale and come back has a maintenance story that
+nobody can see if the state lives only in one sorted result set.</li>
+<li><strong>Do not delete on a failed existence check alone</strong>
+unless you can distinguish moved, archived and unmounted from deleted.
+The bounded search helps and does not close the gap.</li>
+<li><strong>Do not verify the anchor and call the content
+verified.</strong> A file that still exists is not a note that is still
+right; this check answers a narrower question than the verdict names
+suggest.</li>
+<li><strong>Do not leave the data-destroying path untested.</strong>
+<code>handle_stale</code> removes nodes and has no test.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer with a large personal knowledge base spread
+across projects, already running Graft, who has noticed their agent
+re-solving problems it has notes on. Within that shape it is a sharp,
+small tool with one genuinely good idea. Walk away if you need the store
+itself — Heimdall owns none of it — or if your notes do not anchor to
+files, because the entire trust model is the path check. And treat the
+deletion behaviour as the thing to configure before running it against
+notes you cannot regenerate.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What is Graft's own model, and does it record anything Heimdall's
+verdicts could be persisted into? The store is a dependency this
+repository does not contain.</li>
+<li>How often does <code>handle_stale</code> delete a node whose file
+merely moved outside the bounded search? Only a real knowledge base
+would show the rate.</li>
+<li>Does the coverage threshold of 0.5 discriminate on real queries? It
+is the one number in the system and nothing reports its effect.</li>
+<li>The comparison diagram sets Heimdall against Graphify and Graft;
+whether that reflects a measurement or a positioning choice is not
+visible from the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Verification and ranking:</strong>
+<code>bin/kb_search_verify.py</code> (<code>extract_paths</code>,
+<code>handle_stale</code> at <code>:83</code>, verdict at
+<code>:164</code>, <code>vrank</code> at <code>:172</code>)</li>
+<li><strong>Search:</strong> <code>bin/kb-search.sh</code></li>
+<li><strong>Agent extensions:</strong>
+<code>extensions/kb-orient.ts</code>,
+<code>extensions/kb-search-guard.ts</code>,
+<code>extensions/kb-autosync.ts</code>,
+<code>lib/kb-guard-core.mjs</code></li>
+<li><strong>Store boundary:</strong> <code>bin/seed-graft.sh</code></li>
+<li><strong>Maintenance:</strong> <code>bin/kb-stale-scan.py</code>,
+<code>bin/kb-rehome.sh</code>, <code>bin/kb-rebuild.sh</code>,
+<code>bin/kb-health.sh</code>, <code>bin/telemetry.sh</code>,
+<code>launchd/</code></li>
+<li><strong>Tests:</strong> <code>tests/guard.test.mjs</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/ArihantDeva/heimdall/commit/f9bc25abd27351d1af04ebe24b7deb555ba42102"><code class="commit-id" title="f9bc25abd27351d1af04ebe24b7deb555ba42102">f9bc25ab…</code></a>
+— first reading. Screened before anything was read: no auto-executing
+surface, no build-time execution, both <code>package.json</code> and
+<code>package-lock.json</code> inside the seven-day cooldown and one
+unpinned range; nothing was installed, no daemon was started and no
+search was run. The verdict ordering and the stale-handling path were
+established by reading <code>kb_search_verify.py</code>, and the store
+beneath — Graft — is a separate program that this reading did not
+inspect.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

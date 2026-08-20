@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 315 reports.</strong></p>
+<p><strong>This page covers all 316 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -9836,6 +9836,59 @@ second implementation could conform.</li>
 recall to find what you cannot name. The search is a case-insensitive
 substring scan in file order, capped at twenty, and the folder structure
 is doing all the work relevance normally does.</li>
+</ul>
+<h3 id="heimdall"><a
+href="../systems/heimdall/"><code>heimdall</code></a></h3>
+<ul>
+<li>Best idea: <strong>the verdict outranks the score.</strong> Every
+search hit is verified at read time by checking whether the path its
+note anchors to still exists, and labelled <code>STRONG</code> (lexical
+coverage plus a live path), <code>REBUILT</code> (moved and rebuilt),
+<code>WEAK</code> (semantic only) or <code>STALE</code> (gone). Results
+are then sorted by verdict class first —
+<code>vrank = {STRONG: 0, REBUILT: 0, WEAK: 1, STALE: 2, NOPATH: 3}</code>
+— with similarity demoted to a tiebreak, under a comment saying why: it
+<em>"keeps the true STRONG hit on top instead of burying"</em> it. This
+atlas complains repeatedly that retrieval strength and truth end up in
+one number; here they are two, and the one meaning <em>this still
+exists</em> wins.</li>
+<li>Second idea: <strong>deletion propagates from the filesystem into
+the memory.</strong> <code>kb-autosync</code> hooks
+<code>tool_result</code>, parses the agent's own <code>mv</code>,
+<code>rm</code>, <code>rmdir</code>, <code>trash</code> and
+<code>git rm</code> — including <code>mv a b dir/</code> multi-source
+semantics — resolves paths deterministically because <em>"tool_result
+has no cwd"</em>, and calls <code>graft delete</code> for nodes anchored
+at a removed path. Beside it, a warn-only guard that fires after three
+consecutive grep-style searches without a knowledge lookup, and a
+first-prompt injection capped in time because <em>"a hung graft must
+never stall the first prompt"</em>.</li>
+<li>Biggest risk: <strong>a failed existence check deletes the
+node</strong>, guarded only by a bounded basename search — so a file
+moved outside that search, archived, or on an unmounted volume is
+indistinguishable from one deleted, and the note goes with it.
+<code>handle_stale</code> is the data-destroying path and has no test;
+the repository's single test file covers the search guard. And nothing
+about trust is persisted: a verdict is computed, used to sort one result
+set, and discarded, so a node that was stale last week and rebuilt today
+leaves no record of either.</li>
+<li>Maturity impression: roughly two dozen files of shell, Python and
+three TypeScript extensions, a launchd job, one test. No capability
+mark. <code>trust_state</code> is withheld deliberately and it is the
+report's most interesting sentence — the rubric asks for a discrete
+status <em>as a field</em>, and this is a computation, while its effect
+is stronger than the mark measures because <code>STALE</code> does not
+withhold a memory, it removes it. <code>scope_enforced</code> is
+withheld too: <code>--scope</code> is a path substring applied at query
+time, not a stored key. The store itself is Graft, a separate daemon
+this repository does not contain.</li>
+<li>Study when: your memories reference something checkable — files,
+commits, tickets, URLs — and you want freshness to be an observation
+rather than a decay heuristic. The four-line rank change is the whole
+idea and it transfers to any store.</li>
+<li>Do not copy when: you need the store, the trust history, or a
+boundary between principals. Heimdall owns none of the three, and its
+entire epistemics is one <code>stat</code>.</li>
 </ul>
         </article>
       </div>
