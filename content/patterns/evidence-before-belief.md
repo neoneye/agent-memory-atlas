@@ -66,6 +66,24 @@ it.
 
 ## Seen in the atlas
 
+[sift-kg](../../systems/sift-kg/) is the pattern implemented without being
+named, and the case that shows what it does not cover. Extraction output is kept
+per document under `extractions/`, every entity node carries `source_documents`,
+every relation carries an `evidence` quote, and `sift build` reconstructs the
+graph from that layer rather than mutating it — so a bad extraction is
+traceable and the derived store is honestly disposable. The gap is that the
+*corrections* are not part of the retained layer: merges and rejected relations
+are applied to the rebuilt artifact, and the rebuild reads only the extractions,
+so every human judgement is undone by the command that grows the corpus.
+[Corbell](../../systems/corbell/) has the same shape one level up — a `Decision`
+lifted from a team's ADRs keeps its `source_file`, and the flag recording which
+documents a person approved is overwritten by the next scan.
+
+**The rule both of them establish: retaining evidence makes a projection safe to
+rebuild, and it makes nothing else safe.** A decision about the projection has to
+live in the rebuild's input or it is a scheduled undo — which is a test worth
+requiring: apply a correction, run the regeneration, assert the correction held.
+
 [nanobot](../../systems/nanobot/) states the principle more plainly than this
 page does. Its documentation says of the append-only summary archive:
 *"It is not the final memory. It is the material from which final memory is

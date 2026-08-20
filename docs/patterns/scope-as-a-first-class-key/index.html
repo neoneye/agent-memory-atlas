@@ -200,6 +200,22 @@ filter parameter does not.</p>
 forever. Retrofitting is painful, so be honest about whether that is
 true.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/outworked/">Outworked</a> is the cheapest
+possible instance of the key and a clean demonstration of what the key
+alone does not buy. Every read is <code>WHERE scope = ?</code> against a
+<code>UNIQUE(scope, key)</code> table, and the three scopes —
+<code>global</code>, <code>agent:&lt;id&gt;</code>,
+<code>project:&lt;path&gt;</code> — are documented in the tool
+description where the writing model reads them. The scope is also the
+model's own tool argument. Its MCP server is mounted per agent at a URL
+carrying <code>agentId</code>, <code>handleMcpRequest</code> receives
+that value, and the server already injects it into every tool that
+declares an <code>agentId</code> parameter — the memory tools declare
+<code>scope</code> instead, and nothing maps one to the other. So one
+employee reads another's private scope by naming it, in an app whose
+premise is several agents running at once. <strong>Where the transport
+carries an identity, resolve the namespace from it and treat a
+caller-supplied scope as a request to validate.</strong></p>
 <p><strong><a href="../../systems/pydantic-ai-harness/">Pydantic AI
 Harness</a> adds the step the rest of this list is missing: it checks
 that the filter worked.</strong> Two mechanisms, both small. The

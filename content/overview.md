@@ -734,7 +734,7 @@ memory to the framework, prompt assembly, and tool loop.
 
 Hosts: [`hermes-agent`](../systems/hermes-agent/), [`openclaw`](../systems/openclaw/), [`pi`](../systems/pi/), [`mateclaw`](../systems/mateclaw/), [`opencode`](../systems/opencode/), [`nemoclaw`](../systems/nemoclaw/),
 [`tigrimosr`](../systems/tigrimosr/), [`adk-python`](../systems/adk-python/), [`autogen`](../systems/autogen/), [`agno`](../systems/agno/), [`agent-framework`](../systems/agent-framework/), [`dexto`](../systems/dexto/), [`cognis`](../systems/cognis/), [`gh-aw`](../systems/gh-aw/),
-[`smythos-sre`](../systems/smythos-sre/), [`bytechef`](../systems/bytechef/)
+[`smythos-sre`](../systems/smythos-sre/), [`bytechef`](../systems/bytechef/), [`outworked`](../systems/outworked/)
 Plugins mounted on them: [`holographic`](../systems/holographic/), [`magic-context`](../systems/magic-context/), [`metaclaw`](../systems/metaclaw/),
 [`byterover`](../systems/byterover/), [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/), [`plur1bus`](../systems/plur1bus/), plus hosted providers
 
@@ -948,13 +948,29 @@ tests. A permissive identity provider selected by default is the cheapest way to
 turn working access control into decoration, and it is invisible from the
 inside.
 
+
+**Outworked is the family's smallest memory and its clearest scope lesson.**
+Under a macOS app that runs Claude agents as pixel-art employees sits one SQLite
+table, `memory_entries(id, scope, key, value, created_at, updated_at)` with
+`UNIQUE(scope, key)`, behind three MCP tools named `remember`, `recall` and
+`forget` that `src/lib/ai.ts` mounts into every agent session, filtering out any
+user-configured duplicate so the memory cannot be half-configured away. The write
+path calls no model and the search escapes `LIKE` wildcards before
+interpolating. What it does not do is the finding: the MCP server is mounted per
+agent at a URL carrying `agentId`, `handleMcpRequest` receives it, and
+`mcp-server.js:831-833` injects it into every tool that declares the parameter —
+while the memory tools declare `scope` and take it from the model, so an agent
+told to keep notes in `agent:me` has nothing between it and an agent that passes
+`agent:someone-else`. The identity is present at the boundary and unused by the
+store. See [Outworked](../systems/outworked/).
+
 ### Local coding-agent memory
 
 [`engram`](../systems/engram/), [`mempalace`](../systems/mempalace/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`basic-memory`](../systems/basic-memory/), [`moltis`](../systems/moltis/),
 [`open-cowork`](../systems/open-cowork/), [`byterover`](../systems/byterover/), [`magic-context`](../systems/magic-context/), [`swafra`](../systems/swafra/), [`memora`](../systems/memora/), [`ai-memory`](../systems/ai-memory/),
 [`ctx`](../systems/ctx/), [`optmem`](../systems/optmem/), [`openworker`](../systems/openworker/), [`qwen-code`](../systems/qwen-code/), [`daimon`](../systems/daimon/), [`reme`](../systems/reme/), [`acontext`](../systems/acontext/),
 [`logseq`](../systems/logseq/), [`everos`](../systems/everos/), [`ecc`](../systems/ecc/), [`skales`](../systems/skales/), [`csm`](../systems/csm/), [`graphify`](../systems/graphify/), [`clio`](../systems/clio/), [`empryo`](../systems/empryo/),
-[`project-golem`](../systems/project-golem/), [`openyak`](../systems/openyak/), [`memento`](../systems/memento/), [`palazzo`](../systems/palazzo/), [`memex-zero-rag`](../systems/memex-zero-rag/), [`agentrecall-x`](../systems/agentrecall-x/), [`terse-memory`](../systems/terse-memory/), [`ean-agentos`](../systems/ean-agentos/), [`memsem`](../systems/memsem/), [`cambium`](../systems/cambium/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`sovereign`](../systems/sovereign/), [`memoryops-ai`](../systems/memoryops-ai/), [`deepcode`](../systems/deepcode/), [`prime-agent`](../systems/prime-agent/), [`kirocrew`](../systems/kirocrew/), [`engram-alpha`](../systems/engram-alpha/), [`mimir`](../systems/mimir/), [`brain-md`](../systems/brain-md/), [`iai-pme`](../systems/iai-pme/), [`ostk-recall`](../systems/ostk-recall/), [`breadcrumbs`](../systems/breadcrumbs/), [`context-mode`](../systems/context-mode/), [`ollama`](../systems/ollama/), [`serena`](../systems/serena/), [`claude-code-memory-setup`](../systems/claude-code-memory-setup/), [`token-optimizer`](../systems/token-optimizer/), [`klypix-mcp`](../systems/klypix-mcp/), [`agent-mesh`](../systems/agent-mesh/), [`tdai-memory-mcp`](../systems/tdai-memory-mcp/), [`memory-compiler`](../systems/memory-compiler/), [`ods`](../systems/ods/), [`neurakeep`](../systems/neurakeep/), [`omninode-knowledge-base`](../systems/omninode-knowledge-base/), [`otis`](../systems/otis/), [`memoir-cli`](../systems/memoir-cli/), [`deepseek-harness`](../systems/deepseek-harness/), [`mobius`](../systems/mobius/), [`hipocampus`](../systems/hipocampus/)
+[`project-golem`](../systems/project-golem/), [`openyak`](../systems/openyak/), [`memento`](../systems/memento/), [`palazzo`](../systems/palazzo/), [`memex-zero-rag`](../systems/memex-zero-rag/), [`agentrecall-x`](../systems/agentrecall-x/), [`terse-memory`](../systems/terse-memory/), [`ean-agentos`](../systems/ean-agentos/), [`memsem`](../systems/memsem/), [`cambium`](../systems/cambium/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`sovereign`](../systems/sovereign/), [`memoryops-ai`](../systems/memoryops-ai/), [`deepcode`](../systems/deepcode/), [`prime-agent`](../systems/prime-agent/), [`kirocrew`](../systems/kirocrew/), [`engram-alpha`](../systems/engram-alpha/), [`mimir`](../systems/mimir/), [`brain-md`](../systems/brain-md/), [`iai-pme`](../systems/iai-pme/), [`ostk-recall`](../systems/ostk-recall/), [`breadcrumbs`](../systems/breadcrumbs/), [`context-mode`](../systems/context-mode/), [`ollama`](../systems/ollama/), [`serena`](../systems/serena/), [`claude-code-memory-setup`](../systems/claude-code-memory-setup/), [`token-optimizer`](../systems/token-optimizer/), [`klypix-mcp`](../systems/klypix-mcp/), [`agent-mesh`](../systems/agent-mesh/), [`tdai-memory-mcp`](../systems/tdai-memory-mcp/), [`memory-compiler`](../systems/memory-compiler/), [`ods`](../systems/ods/), [`neurakeep`](../systems/neurakeep/), [`omninode-knowledge-base`](../systems/omninode-knowledge-base/), [`otis`](../systems/otis/), [`memoir-cli`](../systems/memoir-cli/), [`deepseek-harness`](../systems/deepseek-harness/), [`mobius`](../systems/mobius/), [`hipocampus`](../systems/hipocampus/), [`openwolf`](../systems/openwolf/)
 
 **Hipocampus asks the question this family's retrieval sections usually skip:
 whether to search at all.** A files-only harness — 1,796 lines of Node, 2,289 of
@@ -1648,11 +1664,29 @@ multi-tenancy, or rich user modelling. CSM is the exception to the first half
 and not to the second — Postgres, pgvector and a local embedding server to
 stand up, and still exactly one scope axis.
 
+
+**OpenWolf splits the family's usual arrangement in half, and the half it leaves
+unguarded is the one that can be wrong.** Seven lifecycle hooks maintain
+everything mechanical — the file map, the per-turn action log, the bug index —
+with atomic writes, a lock around the anatomy store and a secrets denylist that
+keeps `.env` and key material out of the generated files. `.wolf/cerebrum.md`,
+which holds User Preferences, Key Learnings, Do-Not-Repeat and a Decision Log,
+has no hook at all: it is written by the model when it obeys a generated
+Markdown instruction, and replaced *in full* by a weekly cron that pipes the file
+through `claude -p` and accepts the reply if it contains one of three heading
+strings (`src/daemon/cron-engine.ts:403-413`). No merge, no diff, no floor, and
+the sink chosen by a substring test. The repository then ships a `cerebrum_stale`
+detector advising the operator to *"check if cerebrum is being updated by
+hooks."* Its read path is the opposite story and worth copying: `pre-read.ts`
+returns `permissionDecision: "deny"` for a file already read this session and
+unchanged on disk, with deny-eligibility cleared after a compaction because the
+eviction makes a re-read legitimate. See [OpenWolf](../systems/openwolf/).
+
 ### Graph, temporal, and symbolic memory
 
 [`graphiti`](../systems/graphiti/), [`cognee`](../systems/cognee/), [`hipporag`](../systems/hipporag/), [`holographic`](../systems/holographic/), [`gini-agent`](../systems/gini-agent/), [`memvid`](../systems/memvid/),
 [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`memary`](../systems/memary/), [`m-flow`](../systems/m-flow/), [`nova-ai`](../systems/nova-ai/), [`argo`](../systems/argo/),
-[`qwen-mm-plugins`](../systems/qwen-mm-plugins/), [`hillock`](../systems/hillock/), [`growmos`](../systems/growmos/)
+[`qwen-mm-plugins`](../systems/qwen-mm-plugins/), [`hillock`](../systems/hillock/), [`growmos`](../systems/growmos/), [`sift-kg`](../systems/sift-kg/), [`corbell`](../systems/corbell/)
 
 Structure is the retrieval mechanism. **Graphiti** tracks transaction time and
 real-world validity separately, invalidating facts by closing an interval
@@ -1782,6 +1816,28 @@ else accumulates.
 Tradeoff: structure answers questions flat stores cannot, but extraction and
 resolution mistakes have a blast radius proportional to how connected the graph
 is.
+
+
+**sift-kg and Corbell arrive at the same defect from opposite directions, and
+between them they state the rule.** Both derive a store from documents a team
+already has, and both apply the human's judgement to the artifact a later pass
+regenerates. sift-kg keeps every extraction per document, so its graph is a
+genuine projection and a bad extraction is always traceable — and `sift build`
+reconstructs `graph_data.json` from those extractions while reading neither
+decision file, so an applied merge and a rejected relation are undone by the
+rebuild its own agent skill tells you to run when documents arrive. Both
+persistence semantics sit in one function twenty lines apart: the merge branch
+writes with no prior read, truncating every `CONFIRMED` and `REJECTED` back to
+`DRAFT`, while the relation branch reads, dedupes on `(source_id, target_id,
+relation_type)` and extends. Corbell has the provenance half right — every
+`Decision` extracted from an ADR carries its `source_file` — and the gate wrong:
+`CandidateDoc.confirmed` is honoured by the learner and set by exactly one
+caller, for *every* candidate, when `auto_scan` is on, which
+`workspace.py:47` defaults to `True`; there is no command that closes it
+selectively, and the next `docs:scan` overwrites the file a person would have
+hand-edited. **A rebuildable projection is only safe when every correction is an
+input to the rebuild.** See [sift-kg](../systems/sift-kg/) and
+[Corbell](../systems/corbell/).
 
 ### Verification and trust-first memory
 

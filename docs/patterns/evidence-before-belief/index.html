@@ -177,6 +177,27 @@ so it needs to be run regularly rather than kept for emergencies.</p>
 somewhere you control (a transcript store, a git history) and you can
 reference it rather than copying it.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/sift-kg/">sift-kg</a> is the pattern
+implemented without being named, and the case that shows what it does
+not cover. Extraction output is kept per document under
+<code>extractions/</code>, every entity node carries
+<code>source_documents</code>, every relation carries an
+<code>evidence</code> quote, and <code>sift build</code> reconstructs
+the graph from that layer rather than mutating it — so a bad extraction
+is traceable and the derived store is honestly disposable. The gap is
+that the <em>corrections</em> are not part of the retained layer: merges
+and rejected relations are applied to the rebuilt artifact, and the
+rebuild reads only the extractions, so every human judgement is undone
+by the command that grows the corpus. <a
+href="../../systems/corbell/">Corbell</a> has the same shape one level
+up — a <code>Decision</code> lifted from a team's ADRs keeps its
+<code>source_file</code>, and the flag recording which documents a
+person approved is overwritten by the next scan.</p>
+<p><strong>The rule both of them establish: retaining evidence makes a
+projection safe to rebuild, and it makes nothing else safe.</strong> A
+decision about the projection has to live in the rebuild's input or it
+is a scheduled undo — which is a test worth requiring: apply a
+correction, run the regeneration, assert the correction held.</p>
 <p><a href="../../systems/nanobot/">nanobot</a> states the principle
 more plainly than this page does. Its documentation says of the
 append-only summary archive: <em>"It is not the final memory. It is the

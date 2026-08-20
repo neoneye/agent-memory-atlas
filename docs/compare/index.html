@@ -1142,9 +1142,10 @@ href="../systems/dexto/"><code>dexto</code></a>, <a
 href="../systems/cognis/"><code>cognis</code></a>, <a
 href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/smythos-sre/"><code>smythos-sre</code></a>, <a
-href="../systems/bytechef/"><code>bytechef</code></a> Plugins mounted on
-them: <a href="../systems/holographic/"><code>holographic</code></a>, <a
-href="../systems/magic-context/"><code>magic-context</code></a>, <a
+href="../systems/bytechef/"><code>bytechef</code></a>, <a
+href="../systems/outworked/"><code>outworked</code></a> Plugins mounted
+on them: <a href="../systems/holographic/"><code>holographic</code></a>,
+<a href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/byterover/"><code>byterover</code></a>, <a
 href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a>,
@@ -1397,6 +1398,25 @@ real while the boundary behind it widens to nothing. The machinery still
 runs, still logs, and still passes its tests. A permissive identity
 provider selected by default is the cheapest way to turn working access
 control into decoration, and it is invisible from the inside.</p>
+<p><strong>Outworked is the family's smallest memory and its clearest
+scope lesson.</strong> Under a macOS app that runs Claude agents as
+pixel-art employees sits one SQLite table,
+<code>memory_entries(id, scope, key, value, created_at, updated_at)</code>
+with <code>UNIQUE(scope, key)</code>, behind three MCP tools named
+<code>remember</code>, <code>recall</code> and <code>forget</code> that
+<code>src/lib/ai.ts</code> mounts into every agent session, filtering
+out any user-configured duplicate so the memory cannot be
+half-configured away. The write path calls no model and the search
+escapes <code>LIKE</code> wildcards before interpolating. What it does
+not do is the finding: the MCP server is mounted per agent at a URL
+carrying <code>agentId</code>, <code>handleMcpRequest</code> receives
+it, and <code>mcp-server.js:831-833</code> injects it into every tool
+that declares the parameter — while the memory tools declare
+<code>scope</code> and take it from the model, so an agent told to keep
+notes in <code>agent:me</code> has nothing between it and an agent that
+passes <code>agent:someone-else</code>. The identity is present at the
+boundary and unused by the store. See <a
+href="../systems/outworked/">Outworked</a>.</p>
 <h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
 <p><a href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
@@ -1463,7 +1483,8 @@ href="../systems/omninode-knowledge-base/"><code>omninode-knowledge-base</code><
 href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
 href="../systems/deepseek-harness/"><code>deepseek-harness</code></a>,
 <a href="../systems/mobius/"><code>mobius</code></a>, <a
-href="../systems/hipocampus/"><code>hipocampus</code></a></p>
+href="../systems/hipocampus/"><code>hipocampus</code></a>, <a
+href="../systems/openwolf/"><code>openwolf</code></a></p>
 <p><strong>Hipocampus asks the question this family's retrieval sections
 usually skip: whether to search at all.</strong> A files-only harness —
 1,796 lines of Node, 2,289 of specification and prompts, MIT, installed
@@ -2351,6 +2372,26 @@ tests.</p>
 ranking, multi-tenancy, or rich user modelling. CSM is the exception to
 the first half and not to the second — Postgres, pgvector and a local
 embedding server to stand up, and still exactly one scope axis.</p>
+<p><strong>OpenWolf splits the family's usual arrangement in half, and
+the half it leaves unguarded is the one that can be wrong.</strong>
+Seven lifecycle hooks maintain everything mechanical — the file map, the
+per-turn action log, the bug index — with atomic writes, a lock around
+the anatomy store and a secrets denylist that keeps <code>.env</code>
+and key material out of the generated files.
+<code>.wolf/cerebrum.md</code>, which holds User Preferences, Key
+Learnings, Do-Not-Repeat and a Decision Log, has no hook at all: it is
+written by the model when it obeys a generated Markdown instruction, and
+replaced <em>in full</em> by a weekly cron that pipes the file through
+<code>claude -p</code> and accepts the reply if it contains one of three
+heading strings (<code>src/daemon/cron-engine.ts:403-413</code>). No
+merge, no diff, no floor, and the sink chosen by a substring test. The
+repository then ships a <code>cerebrum_stale</code> detector advising
+the operator to <em>"check if cerebrum is being updated by hooks."</em>
+Its read path is the opposite story and worth copying:
+<code>pre-read.ts</code> returns <code>permissionDecision: "deny"</code>
+for a file already read this session and unchanged on disk, with
+deny-eligibility cleared after a compaction because the eviction makes a
+re-read legitimate. See <a href="../systems/openwolf/">OpenWolf</a>.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h3>
 <p><a href="../systems/graphiti/"><code>graphiti</code></a>, <a
@@ -2366,7 +2407,9 @@ href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/qwen-mm-plugins/"><code>qwen-mm-plugins</code></a>, <a
 href="../systems/hillock/"><code>hillock</code></a>, <a
-href="../systems/growmos/"><code>growmos</code></a></p>
+href="../systems/growmos/"><code>growmos</code></a>, <a
+href="../systems/sift-kg/"><code>sift-kg</code></a>, <a
+href="../systems/corbell/"><code>corbell</code></a></p>
 <p>Structure is the retrieval mechanism. <strong>Graphiti</strong>
 tracks transaction time and real-world validity separately, invalidating
 facts by closing an interval rather than erasing history.
@@ -2513,6 +2556,31 @@ normaliser, so everything else accumulates.</p>
 <p>Tradeoff: structure answers questions flat stores cannot, but
 extraction and resolution mistakes have a blast radius proportional to
 how connected the graph is.</p>
+<p><strong>sift-kg and Corbell arrive at the same defect from opposite
+directions, and between them they state the rule.</strong> Both derive a
+store from documents a team already has, and both apply the human's
+judgement to the artifact a later pass regenerates. sift-kg keeps every
+extraction per document, so its graph is a genuine projection and a bad
+extraction is always traceable — and <code>sift build</code>
+reconstructs <code>graph_data.json</code> from those extractions while
+reading neither decision file, so an applied merge and a rejected
+relation are undone by the rebuild its own agent skill tells you to run
+when documents arrive. Both persistence semantics sit in one function
+twenty lines apart: the merge branch writes with no prior read,
+truncating every <code>CONFIRMED</code> and <code>REJECTED</code> back
+to <code>DRAFT</code>, while the relation branch reads, dedupes on
+<code>(source_id, target_id, relation_type)</code> and extends. Corbell
+has the provenance half right — every <code>Decision</code> extracted
+from an ADR carries its <code>source_file</code> — and the gate wrong:
+<code>CandidateDoc.confirmed</code> is honoured by the learner and set
+by exactly one caller, for <em>every</em> candidate, when
+<code>auto_scan</code> is on, which <code>workspace.py:47</code>
+defaults to <code>True</code>; there is no command that closes it
+selectively, and the next <code>docs:scan</code> overwrites the file a
+person would have hand-edited. <strong>A rebuildable projection is only
+safe when every correction is an input to the rebuild.</strong> See <a
+href="../systems/sift-kg/">sift-kg</a> and <a
+href="../systems/corbell/">Corbell</a>.</p>
 <h3 id="verification-and-trust-first-memory">Verification and
 trust-first memory</h3>
 <p><a href="../systems/verel/"><code>verel</code></a>, <a

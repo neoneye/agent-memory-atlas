@@ -92,6 +92,20 @@ painful, so be honest about whether that is true.
 
 ## Seen in the atlas
 
+[Outworked](../../systems/outworked/) is the cheapest possible instance of the
+key and a clean demonstration of what the key alone does not buy. Every read is
+`WHERE scope = ?` against a `UNIQUE(scope, key)` table, and the three scopes —
+`global`, `agent:<id>`, `project:<path>` — are documented in the tool
+description where the writing model reads them. The scope is also the model's
+own tool argument. Its MCP server is mounted per agent at a URL carrying
+`agentId`, `handleMcpRequest` receives that value, and the server already
+injects it into every tool that declares an `agentId` parameter — the memory
+tools declare `scope` instead, and nothing maps one to the other. So one
+employee reads another's private scope by naming it, in an app whose premise is
+several agents running at once. **Where the transport carries an identity,
+resolve the namespace from it and treat a caller-supplied scope as a request to
+validate.**
+
 **[Pydantic AI Harness](../../systems/pydantic-ai-harness/) adds the step the
 rest of this list is missing: it checks that the filter worked.** Two mechanisms,
 both small. The namespace is `str | Callable[[RunContext], str]`, resolved by
