@@ -8,6 +8,26 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-20-the-corpus-held-the-answer-the-rubric-had-no-column.md](2026-08-20-the-corpus-held-the-answer-the-rubric-had-no-column.md) —
+  An outside survey named an axis — who currently holds the right to write —
+  that three reports written in the previous two days each answered differently.
+  Reading more systems does not produce a new axis; a different decomposition
+  does, and the evidence had been accumulating in prose with nowhere to go.
+- [2026-08-20-a-failure-that-reads-as-empty.md](2026-08-20-a-failure-that-reads-as-empty.md) —
+  A loader that returns the empty value on every read failure, and a save that
+  appends to whatever the loader returned, compose into silent data loss. The
+  corrupted store and the empty store are indistinguishable to every test that
+  does not deliberately corrupt one.
+- [2026-08-20-the-good-pattern-is-one-subsystem-away.md](2026-08-20-the-good-pattern-is-one-subsystem-away.md) —
+  fx, memoir and KAISEN each solve a problem correctly in one subsystem and not
+  in another that has it too. Rigor attaches to the subsystem that visibly
+  needed it, not to the property. One grep turns a complaint into an
+  observation.
+- [2026-08-20-the-evidence-record-is-a-review-instrument.md](2026-08-20-the-evidence-record-is-a-review-instrument.md) —
+  Verifying a mark asks whether a claim is true; writing its evidence record
+  asks where exactly it happens, which is one level deeper than the rubric ever
+  requires. Three weeks of a correct mark, one hour of writing four fields to
+  find its boundary.
 - [2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md](2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md) —
   Verifying the one criticism an upstream said it had closed, then advancing the
   pin, left the report pinning 3.12.0 and describing 3.11 in two other places.
