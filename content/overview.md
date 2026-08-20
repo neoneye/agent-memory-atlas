@@ -6148,7 +6148,7 @@ Privacy/deletion:
 - [winstonkoh87/Athena-Public](https://github.com/winstonkoh87/Athena-Public) at [`2e4898e3bd28a79a58dc1b17437ace050bea2479`](https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479)
 - [mem9-ai/mem9](https://github.com/mem9-ai/mem9) at [`ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f`](https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f)
 - [hamr0/aurora](https://github.com/hamr0/aurora) at [`750a39da51ed947aab851e9fd5c06a2587402e2b`](https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b)
-- [AIOSAI/AIPass](https://github.com/AIOSAI/AIPass) at [`0d27e5ef282fca141c08c1d76fa3a8647a3eeea4`](https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4) — memory is one of nineteen subsystems in a ~377,000-line monorepo
+- [AIOSAI/AIPass](https://github.com/AIOSAI/AIPass) at [`f9bf2d6a60710c51b85da093fd104785d88b2a3b`](https://github.com/AIOSAI/AIPass/commit/f9bf2d6a60710c51b85da093fd104785d88b2a3b) — memory is one of nineteen subsystems in a ~377,000-line monorepo
 - [vbcherepanov/claude-total-memory](https://github.com/vbcherepanov/claude-total-memory) at [`616d9a6f8b507c16b4cdfef4e823af59d949cc09`](https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09) — renamed to `total-agent-memory`; the old URL still redirects
 - [OmniNode-ai/omnimemory](https://github.com/OmniNode-ai/omnimemory) at [`5dacb73c3319fad338870916bfb30025af5cf39c`](https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c) — the lifecycle dispatch handler is a documented no-op; retrieval defaults to in-memory stubs
 - [christopherkarani/Wax](https://github.com/christopherkarani/Wax) at [`93cbf51f76f7db4f837c744f84d26554f7fc9f66`](https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66) — Swift; read on macOS notes only, never built
@@ -6520,6 +6520,20 @@ Dated changes to this atlas's own method and reading. Per-system reading
 history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
+
+**2026-08-20** — **An optional scope argument is a scope that is off by default,
+and the tests say which.** The [AIPass](../systems/aipass/) report described
+branch scoping as *"applied consistently"* across files, limits, lint, search and
+templates. Four of those five are structural — the branch is a directory
+component. The fifth is a keyword argument: `search_vectors_subprocess` takes
+`branch: str | None = None`, and the suite's own baseline case asserts the CLI
+passes `branch=None` when no `--branch` is given, so the default archive search
+crosses branches. The mark survives on the file tier and the report now says
+which tier it covers. The method rule: when a scope key reaches a read path as a
+*parameter* rather than as a path component or a session-bound value, the
+question is not whether the filter exists but what every caller passes — and the
+fastest place to find that out is the test that asserts the default call, which
+in this case states it in one line.
 
 **2026-08-17** — **A near-miss is a claim about the whole suite, so it has to be
 checked against the whole suite.** The [NexusMem](../systems/nexusmem/) report

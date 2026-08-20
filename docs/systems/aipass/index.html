@@ -110,14 +110,14 @@ recently.</p>
               <strong>AIOSAI/AIPass</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4" title="0d27e5ef282fca141c08c1d76fa3a8647a3eeea4">
+            <a class="meta-pill revision-pill" href="https://github.com/AIOSAI/AIPass/commit/f9bf2d6a60710c51b85da093fd104785d88b2a3b" title="f9bf2d6a60710c51b85da093fd104785d88b2a3b">
               <span>Analyzed revision</span>
-              <code>0d27e5ef…</code>
+              <code>f9bf2d6a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -267,12 +267,28 @@ governance function and the dedup verdict.</p>
 <code>verify</code> command that checks whether a specific plan is
 vectorised — a small operational nicety that answers "is this actually
 indexed" without a query.</p>
-<p><strong>Scope is the branch and it is applied consistently</strong>:
-memory files are per-branch, entry limits have per-branch overrides,
-lint takes a branch argument, search takes a <code>--branch</code>
-filter, and templates push per branch. That earns
-<code>scope_enforced</code> — the key is stored, applied on the read
-path, and the same key governs configuration.</p>
+<p><strong>Scope is the branch, and the two tiers apply it
+differently.</strong> The hot tier is scoped by construction: memory
+files live under the branch directory, are read by path, and
+<code>_check_entry_counts</code> recovers the branch from
+<code>file_path.parent.parent.name</code> to pick that branch's limits.
+There is no way to read another branch's JSON without naming its path.
+The archive tier is scoped <em>on request</em>:
+<code>search_vectors_subprocess(query_embedding, branch=None, …)</code>
+takes the branch as an optional filter, <code>show_search_results</code>
+forwards whatever the CLI parsed, and
+<code>drone @memory search "query"</code> with no <code>--branch</code>
+passes <code>None</code> — the suite's own baseline case asserts exactly
+that,
+<code>assert_called_once_with("hello world", branch=None, memory_type=None, n_results=5)</code>.
+So the default vector search is cross-branch and <code>--branch</code>
+narrows it.</p>
+<p>That still earns <code>scope_enforced</code>, because the key is
+stored, is applied on the path that holds current memory, and governs
+configuration, lint and template push besides. But the mark should be
+read as covering the file tier: the archive is one omitted keyword
+argument away from returning another branch's fragments, and nothing in
+the CLI defaults it to the caller's own branch.</p>
 <p>The surfacing gate then applies on top, which means the read path has
 two stages: what matches, and what is allowed to be said.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
@@ -314,6 +330,19 @@ that the state is per-session and in-memory: <code>new_state()</code>
 starts every counter at zero, so the cooldown and the session cap reset
 whenever the state does, and nothing found persists
 <code>surfaced_ids</code> across a restart.</p>
+<p><strong>The engine records what it let through and nothing about what
+it refused.</strong> Every one of the five refusal branches in
+<code>should_surface</code> returns <code>(False, reason, state)</code>
+and returns <em>only that</em> — the reason string is handed to the
+caller and never persisted. The success path is the one that logs,
+twice:
+<code>logger.info("[governance] Surfacing {item_id} (score=…, surfaces=…)")</code>
+and <code>json_handler.log_operation("governance_surface", …)</code>. So
+the operational record of a mechanism whose entire purpose is refusal
+contains no refusals. A reader of the logs can count how often memory
+spoke and cannot recover a single instance of it being told not to,
+which means the five constants cannot be tuned from the data the engine
+itself produces.</p>
 <p><strong>The dedup verdict is the risk.</strong> An LLM with
 <code>Delete</code> in its action space, operating on fragments
 extracted by another LLM, with no record of what was removed.</p>
@@ -327,11 +356,58 @@ badge and an OpenSSF Best Practices badge.</p>
 signals rather than quality claims about memory, and this report treats
 them as such; the atlas does not read badges as evidence about
 mechanisms.</p>
-<p>No retrieval benchmark, no committed evaluation of the surfacing
-thresholds, and no derivation for the five governance defaults (0.3, 5,
-10, 300). They are plausible numbers with no measurement behind them in
-the tree.</p>
-<p><strong>I ran nothing.</strong></p>
+<p>No retrieval benchmark. What the tree does carry, and what almost
+nothing else in this corpus carries, is <strong>twenty-eight days of the
+governance engine's own production output, committed as an
+artifact</strong>.
+<code>src/aipass/memory/artifacts/dplan_0297_governance_sample_20260814.json</code>
+holds 278 surfacing records — <code>timestamp</code>,
+<code>item_id</code>, <code>score</code>, <code>surfaces</code>,
+<code>source_file</code> — scraped from <code>logs/engine.log</code> and
+<code>logs/engine.log.1</code> covering 2026-07-16 to 2026-08-14, with
+the stated purpose of a <em>"durable capture… taken before log rotation
+ages <code>logs/engine.log.1</code> out"</em> so that a tuning
+document's derivation table would remain checkable after its evidence
+expired.</p>
+<p>Its metadata block is the part to copy. The capture found 278 records
+where the plan it supports had reported 273, and rather than adjusting
+either number the artifact sets
+<code>"count_matches_dplan": false</code> and diagnoses the gap: the
+plan was saved intraday at 07:37 on the final day, five of that day's
+seven records were logged after that, and <em>"5 == the exact gap (278 -
+273 = 5), confirming this is the sole cause: no lines are missing or
+double-counted."</em> A published figure, a recount that disagrees with
+it, and the arithmetic that reconciles them, all in the artifact rather
+than in a commit message.</p>
+<p>Read against the defaults, the sample says three things. Every
+surfaced item scored between 0.50 and 0.90 with a median of 0.75, so
+nothing that reached the log came near the 0.30 threshold. The
+per-session counter reaches its cap: of 278 records, 203 are the first
+surfacing of a session and 12 are a fifth, which is
+<code>max_surfaces_per_session</code> exactly. And the 300-second
+cooldown does not describe the rate a user experiences — the records
+leave 277 consecutive intervals, and 55 of those are shorter than 300
+seconds, 30 shorter than a minute, the shortest being 8 seconds, because
+the cooldown lives in a per-session state dict and the sample spans
+sessions. Each session obeys a five-minute cooldown; the person does not
+get one.</p>
+<p>What the sample cannot say is which knob did the work, for the reason
+in section 9: only surfacings are logged. 78 distinct items produced 278
+events, and the tail is heavy — one item surfaced 46 times across the
+window and another 37 — which the <code>surfaced_ids</code> list
+prevents within a session and nothing prevents across sessions.</p>
+<p><strong>I ran nothing.</strong> The figures above are computed from
+the committed artifact, not from a run.</p>
+<p><strong>446 test files</strong>, and one convention in the memory
+suite is worth lifting. Tests that are out of service live in
+<code>tests/parked/</code>, because renaming a file to
+<code>…(disabled).py</code> does not stop pytest collecting it — the
+name still matches <code>test_*.py</code>. The barrier is a
+<code>conftest.py</code> carrying <code>collect_ignore_glob</code>
+inside the parked directory, pinned by a real
+<code>--collect-only</code> subprocess and a vacuity guard, on the
+reasoning recorded in the commit log that a naming convention believed
+rather than executed would have shipped a hundred red tests.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -397,6 +473,9 @@ threshold or record was found.</li>
 <li><strong>Are the five governance defaults ever tuned per
 branch?</strong> The entry limits support per-branch overrides; whether
 the surfacing config does was not traced.</li>
+<li><strong>What would the sample look like with refusals in
+it?</strong> The 278-record artifact is one side of a two-sided
+decision, and the other side is the one the constants are for.</li>
 <li><strong>How does rollover interact with the symbolic tier?</strong>
 Entries roll over to ChromaDB; fragments live in ChromaDB already, and
 whether they age was not established.</li>
@@ -433,10 +512,35 @@ whether they age was not established.</li>
 <p><strong>Templates</strong> —
 <code>handlers/templates/pusher.py</code>, <code>differ.py</code>,
 <code>spawn_pusher.py</code>, <code>modules/templates.py</code></p>
+<p><strong>Measurement</strong> —
+<code>src/aipass/memory/artifacts/dplan_0297_governance_sample_20260814.json</code>
+(278 surfacing records over 28 days, with a metadata block reconciling
+its count against the plan it supports)</p>
+<p><strong>Health and watch</strong> —
+<code>apps/modules/health.py</code> (read-only entry-count and
+entry-size reporting, severities documented for the consumer rather than
+applied), <code>apps/modules/watch.py</code>,
+<code>handlers/monitor/watch_runner.py</code></p>
 <p><strong>Documentation</strong> —
 <code>src/aipass/memory/README.md</code> (the command surface and the
 architecture tree)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/AIOSAI/AIPass/commit/f9bf2d6a60710c51b85da093fd104785d88b2a3b"><code class="commit-id" title="f9bf2d6a60710c51b85da093fd104785d88b2a3b">f9bf2d6a…</code></a>
+— second reading, 117 commits on. Screened again before reading: three
+auto-run surfaces under <code>.claude/</code> and multiple
+<code>conftest.py</code> build-time execution points; nothing was
+installed and no test was run. <code>governance/engine.py</code> is
+byte-identical in its decision logic and <code>DEFAULT_CONFIG</code>
+still reads <code>{0.3, 5, 10, 300}</code>, so the report's central
+claim needed no change. The claim that needed changing is section 10's:
+a 28-day sample of the engine's own surfacing log is committed as an
+artifact, and reading it against the defaults produced the cooldown
+finding in that section. The refusal-logging asymmetry in section 9 was
+established by reading every return path in <code>should_surface</code>.
+Scope mark re-checked at this pin and unchanged;
+<code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4"><code class="commit-id" title="0d27e5ef282fca141c08c1d76fa3a8647a3eeea4">0d27e5ef…</code></a>
 — first reading. Screened before reading; the tree was read, never
