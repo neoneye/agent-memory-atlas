@@ -6,10 +6,12 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/Helix-AGI"
 source_url: https://github.com/munch2u-a11y/Helix-AGI
-revision: 54cbbdd86e426c13e48f2fdb20145fb199d54425
-revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425
-analyzed_at: 2026-08-07
+revision: 280bb0447a48cdcef8a557fc08f70551e47d1891
+revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891
+analyzed_at: 2026-08-20
 capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the scratchpad, which is the only store surface with a committed absence assertion | tests/test_scratchpad_postpone.py | `remove_note(note_id)` is called and the test then opens the file and asserts `assertNotIn(note_id, f.read())` — a deletion-durability assertion against that store's only read surface. It is narrow on purpose: nothing asserts that a *removed belief* is absent, and the test that would matter most is the one this design would fail, because a removed belief's content remains in the journal and the journal is a read path | tests/test_scratchpad_postpone.py:130"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -408,5 +410,13 @@ mutation log.
 | `documents/benchmark/` | Committed per-run benchmark JSON and reports |
 
 ## History
+
+**2026-08-20** — [`280bb0447a48cdcef8a557fc08f70551e47d1891`](https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891) — re-pinned 42 commits on: 198 files and +34,459 lines, with a whole retrieval architecture added. Screened again: no auto-run surface, one build-time execution point, two unpinned surfaces; nothing installed and nothing run. The mark holds at `negative_eval` and now carries an evidence record. **The central criticism in this report survives the growth unchanged.**
+
+**Four "offices" turn the journal into a projection architecture, and the authority direction is written into the docstrings.** `core/memory_intake_office.py` is *"a deterministic front desk for memory retrieval work orders"* that reduces a message to the constraints every downstream desk needs — the query without transport wrappers, named subjects, requested facet, and whether exact, chronological, relational or profile evidence is useful — and states its own limit: *"the intake desk does not retrieve or answer."* `core/memory_log_office.py` builds *"simple redundant text-file views over Helix's canonical journal"*, copying the same filename under time, session, subject, topic and relation folders, then unions the obvious folders, deduplicates by filename and **resolves those ids through the canonical corpus before top-K** — *"the journal remains authoritative."* `core/case_memory_office.py` keeps persistent entity case views where *"a case stores references, never ownership of the underlying memory"*. `core/session_memory_maintenance.py` sits beside them.
+
+Denormalise for reachability, resolve through the canonical store before ranking, and never let a view own a record: that is the projection discipline this atlas asks for, stated three times in three files.
+
+**And the deletion gap did not move.** `memory/belief_store.py::remove_belief` still rewrites the category file and clears the physics index, and `memory/cognitive_journal.py` still contains no `delete`, `remove`, `tombstone` or `retract` of any kind — so a removed belief's earlier snapshot remains in the file the system calls its single source of truth, and the new log office resolves ids *through* that corpus. The architecture grew by a third and the one thing this report asks for is where it was.
 
 **2026-08-07** — [`54cbbdd86e426c13e48f2fdb20145fb199d54425`](https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425) — first reading. Screened before reading: 0 auto-run surfaces, 1 build-time execution surface (`setup.py`), 2 unpinned dependency surfaces including 29 `>=` requirements, and one manifest changed the same day — inside the seven-day cooldown. Nothing was installed, built or run; every claim here is from static reading. The pinned commit is the head of a repository whose most recent work is an MCP testing plugin rather than the memory layer.

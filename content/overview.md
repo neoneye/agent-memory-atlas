@@ -6012,7 +6012,7 @@ Privacy/deletion:
 - [kirodotdev/KiroCrew](https://github.com/kirodotdev/KiroCrew) at [`429cbad8cdb7bfbf4c10f6343374565832b176d2`](https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2)
 - [fpytloun/mnemory](https://github.com/fpytloun/mnemory) at [`cd196704bb3dd148c314a81a32d96752204be5c1`](https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1)
 - [techtheist/engram](https://github.com/techtheist/engram) at [`15fbe809ddfd744c161cb49a4b0014d96693cceb`](https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb)
-- [munch2u-a11y/Helix-AGI](https://github.com/munch2u-a11y/Helix-AGI) at [`54cbbdd86e426c13e48f2fdb20145fb199d54425`](https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425)
+- [munch2u-a11y/Helix-AGI](https://github.com/munch2u-a11y/Helix-AGI) at [`280bb0447a48cdcef8a557fc08f70551e47d1891`](https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891)
 - [munch2u-a11y/AIMAOS](https://github.com/munch2u-a11y/AIMAOS) at [`65f68450450c8ba6190197b23993d74a3ab8b020`](https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020)
 - [Cedrick-Coto/Aeris](https://github.com/Cedrick-Coto/Aeris) at [`68a2bd6d11a12beab705ce400e5c3a052d7f71db`](https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db)
 - [MakerViking/mimir](https://github.com/MakerViking/mimir) at [`e005dede938832fd63d5097bbf5145228f693ce3`](https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3)
