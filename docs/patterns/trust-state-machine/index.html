@@ -502,6 +502,32 @@ is not a hypothesis. What the machine does not do is record its own
 transitions anywhere: the counters and <code>retiredReason</code> are
 overwritten in place by a whole-file rewrite, and the runtime's
 hash-chained audit log is never told.</p>
+<p><a href="../../systems/agentdatabase/">AgentDatabase</a> adds the
+state this page's implementations mostly lack: <strong>a claim can be
+taken out of service without anyone deciding it is wrong.</strong>
+<code>dispute</code> moves a record to <code>disputed</code> and sets
+<code>conflict.state</code> to <code>unresolved</code>, and the
+eligibility filter excludes it — so a contested memory stops being
+answerable while the adjudication stays open. Every other state machine
+in this corpus forces a winner at the moment of conflict, which is the
+moment there is least information.</p>
+<p>Two details are worth copying beside it. The transition is written
+<em>before</em> the mutation: <code>append_transition</code> appends
+<code>{transaction_id, operation, recorded_at, recorded_by, from_status, to_status, valid_to_before, valid_to_after, reason}</code>
+into <code>recorded_time.transitions</code>, then sets the new status —
+so the audit trail is a property of the record rather than a side table
+that can drift from it, and <code>project_record_at</code> can replay it
+backwards to answer what the status was at a given record time. And the
+refusals are stable error codes carrying no record content, on the
+reasoning stated in the exception class: a failure message about a
+memory should not become a second copy of the memory.</p>
+<p>The caution is the same one the report states. The status field is
+populated across three values in the live store — 6 active, 108
+candidate, 84 retired — and <code>disputed</code> has never been used,
+no record carries a transition, and nothing has ever superseded
+anything. A state machine whose interesting transitions have not run is
+a design, and the difference between a design and a mechanism is visible
+only in the data.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

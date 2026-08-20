@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A canonical JSONL memory store
+with bitemporal projection, an in-record transition log, a
+machine-readable forgetting policy that makes abstention a first-class
+answer, and a 160-case gold benchmark — whose entire live content was
+written by an import the policy now forbids.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentDatabase — Agent Memory Atlas">
+    <meta property="og:description" content="A canonical JSONL memory
+store with bitemporal projection, an in-record transition log, a
+machine-readable forgetting policy that makes abstention a first-class
+answer, and a 160-case gold benchmark — whose entire live content was
+written by an import the policy now forbids.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentDatabase — Agent Memory Atlas">
+    <meta name="twitter:description" content="A canonical JSONL memory
+store with bitemporal projection, an in-record transition log, a
+machine-readable forgetting policy that makes abstention a first-class
+answer, and a 160-case gold benchmark — whose entire live content was
+written by an import the policy now forbids.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentDatabase — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentDatabase",
+      "description": "A canonical JSONL memory store with bitemporal projection, an in-record transition log, a machine-readable forgetting policy that makes abstention a first-class answer, and a 160-case gold benchmark \u2014 whose entire live content was written by an import the policy now forbids.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A policy the store predates</p>
+          <h1>AgentDatabase</h1>
+          <p class="document-deck">A canonical JSONL memory store with
+bitemporal projection, an in-record transition log, a machine-readable
+forgetting policy that makes abstention a first-class answer, and a
+160-case gold benchmark — whose entire live content was written by an
+import the policy now forbids.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LinzeColin/AgentDatabase">
+              <span>Source</span>
+              <strong>LinzeColin/AgentDatabase</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LinzeColin/AgentDatabase/commit/031939e5af4db5724f8eda129e63d4ef2463fb61" title="031939e5af4db5724f8eda129e63d4ef2463fb61">
+              <span>Analyzed revision</span>
+              <code>031939e5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentDatabase is one person's data warehouse for their own agents,
+and the part that matters here is <code>OpenAIDatabase/</code> — a
+canonical memory store built out of sharded JSONL, a CLI, and an unusual
+number of machine-readable policies. The repository is public and
+<strong>carries no licence file at all</strong>, so the default is all
+rights reserved; the README says so obliquely by declaring what may not
+be committed rather than what may be reused. Documentation is largely in
+Chinese. 236 Python files under <code>OpenAIDatabase/</code>, 198 live
+memory records, and a live <code>data/</code> directory the README
+repeatedly warns is <em>"活运行态"</em> — running state, not a
+fixture.</p>
+<p><strong>The record schema is among the most complete in this
+corpus.</strong> One memory carries <code>statement</code>,
+<code>kind</code>, <code>status</code>, <code>scope {type, key}</code>,
+<code>valid_time {from, to}</code>,
+<code>recorded_time {recorded_at, recorded_by}</code>,
+<code>source {type, ref, observed_at, evidence_hash}</code>,
+<code>sensitivity {classification, credential_present, handling, public_repository_allowed}</code>,
+<code>conflict {state, with, resolution}</code>,
+<code>supersession {supersedes, superseded_by, reason}</code>,
+<code>verification {evidence_refs}</code>, a <code>memory_key</code>,
+<code>negative_triggers</code>, and a content <code>hash</code> with its
+canonicalization named — <code>openai-memory-json-v1</code> — rather
+than assumed.</p>
+<p><strong>Three mechanisms are worth the report.</strong> The first is
+that <strong>abstention is a first-class answer with a machine-readable
+reason.</strong> <code>retrieval_decision</code> returns a knowledge
+state of <code>VERIFIED</code>, <code>VERIFIED_HISTORICAL</code>,
+<code>VERIFIED_NEGATIVE</code>,
+<code>VERIFIED_WITH_NEGATIVE_BOUNDARY</code> or <code>UNKNOWN</code>,
+and when it returns <code>UNKNOWN</code> it also returns <em>why</em>,
+chosen from a priority order the policy file fixes:
+<code>unresolved_conflict</code>, then <code>retired_or_expired</code>,
+then <code>candidate_or_unverified</code>, then
+<code>insufficient_evidence</code> — with the list of
+<code>missing_conditions</code> that would have made an answer possible.
+Most stores in this atlas return fewer results when they should abstain.
+This one returns a refusal with a diagnosis.</p>
+<p>The second is that <strong>a model's inference can never become a
+durable memory.</strong> <code>memory-mutation-policy.json</code> maps
+every operation to an admission decision per source type, and both
+<code>raw_import</code> and <code>model_inference</code> map to
+<code>reject_persistence</code> for <code>add</code>,
+<code>update</code>, <code>retire</code> and <code>dispute</code> alike.
+Only <code>explicit_user</code> — a user speaking through an agent — and
+<code>repository_evidence</code> — automation with a required evidence
+hash — may write. That is the strictest provenance gate read in this
+corpus, and it is a policy file, not a comment.</p>
+<p>The third is the <strong>160-case gold benchmark</strong>, generated
+deterministically and committed with its schema, its cases, and its run
+reports. Eight categories of twenty: extraction, cross-session,
+temporal, update, abstention, forgetting, conflict, cross-agent. Every
+case names <code>expected_ids</code>, <code>forbidden_ids</code>,
+<code>hard_negative_ids</code>, <code>should_abstain</code> and
+<code>stale_or_retired_trap</code>, and the <code>as_of</code> object
+carries <strong>both</strong> a <code>valid_time</code> and a
+<code>recorded_time</code>. Twenty cases whose correct answer is "I
+don't know" and twenty built on retired records are two things this
+atlas has said repeatedly that nobody benchmarks.</p>
+<p><strong>And then two findings that cut the other way, both from the
+repository's own committed data.</strong></p>
+<p>Every one of the 198 live records has
+<code>source.type: "raw_import"</code> and
+<code>recorded_time.recorded_by: "importer"</code> — a source the
+shipped mutation policy refuses to persist. The entire live store
+therefore consists of records the current policy would not admit,
+because it predates the policy. Nothing has superseded anything
+(<code>superseded_by</code> is null on all 198), no conflict has ever
+been raised (<code>conflict.state</code> is <code>none</code> on all
+198), and not one record carries a transition. The lifecycle machinery
+is built, reachable through <code>memory mutate</code>, and has never
+run on this data.</p>
+<p>And the committed evaluation reports show <strong>1.0 accuracy on all
+eight categories</strong>, with every hard gate passing, for an
+algorithm named
+<code>deterministic_eligible_scope_alias_ranker.v1</code> and
+<code>llm_judge: null</code>. A deterministic filter, scoring perfectly
+on a synthetic set generated by the same repository, against distractors
+constructed from the same topic tuples along the dimensions that filter
+checks. The report itself declares
+<code>gold_provenance.human_approval_claimed: false</code>. This is the
+clearest instance in the atlas of a benchmark that measures whether a
+pipeline is connected, presented in the vocabulary of one that measures
+whether recall is good.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A claim becomes a durable memory here only by passing an admission
+matrix, and the matrix is indexed by <em>where the claim came from</em>
+rather than by what it says. <code>explicit_user</code> and
+<code>repository_evidence</code> may add; <code>raw_import</code> and
+<code>model_inference</code> may not, for any operation. An admitted
+record enters at a <code>status</code>, and status is what decides
+whether the agent ever sees it: the forgetting policy's
+<code>eligible_statuses</code> is the single-element list
+<code>["active"]</code>, <code>inactive_default</code> is
+<code>exclude</code>, and the boot file the agent reads carries an index
+of the active records only — six of the hundred and ninety-eight.</p>
+<p>A memory stops being a belief by transition, never by deletion.
+<code>retire</code> sets the status, closes <code>valid_time.to</code>,
+and appends a transition row; the policy names the semantics outright —
+<code>"retirement_semantics": "retrieval_exclusion_not_history_deletion"</code>.
+<code>dispute</code> moves a record to <code>disputed</code> with an
+unresolved conflict, which the eligibility filter also excludes, so a
+contested claim stops being answerable <em>without</em> anyone deciding
+who was right. That is the rarest state in this design and the most
+useful: most systems in this atlas can only mark a winner.</p>
+<p>And when nothing survives eligibility, the system says so. The
+abstention path is not an empty result set — it is <code>UNKNOWN</code>
+plus the reason the candidates failed, in a fixed priority so that
+"there was a conflict" outranks "it had expired" outranks "it was never
+verified" outranks "there was nothing".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — admission is decided by provenance rather than content — a model's inference can never persist — and every read is filtered to active records, with the abstention path returning a reason code instead of an empty result</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: admission is decided by provenance rather than content — a model&#39;s inference can never persist — and every read is filtered to active records, with the abstention path returning a reason code instead of an empty result
+    SRC{&quot;source.type&quot;}
+    SRC --&gt;|&quot;explicit_user&quot;| ADMIT[&quot;admit_active&quot;]
+    SRC --&gt;|&quot;repository_evidence&lt;br/&gt;evidence_hash required&quot;| ADMIT
+    SRC --&gt;|&quot;raw_import&quot;| REJ[&quot;reject_persistence&quot;]
+    SRC --&gt;|&quot;model_inference&quot;| REJ
+    ADMIT --&gt; REC[(&quot;records-NNNN.jsonl&lt;br/&gt;status, valid_time,&lt;br/&gt;recorded_time.transitions&quot;)]
+    REC --&gt;|&quot;status = active only&quot;| IDX[(&quot;agent-memory.json&lt;br/&gt;active_index&quot;)]
+    IDX --&gt; Q[&quot;memory query&lt;br/&gt;--as-of / --recorded-as-of&quot;]
+    REC --&gt;|&quot;update / retire / dispute&quot;| TR[&quot;append_transition&lt;br/&gt;transaction_id, from, to, reason&quot;]
+    TR --&gt; REC
+    Q --&gt; DEC{&quot;eligible records?&quot;}
+    DEC --&gt;|&quot;positive&quot;| ANS[&quot;VERIFIED&quot;]
+    DEC --&gt;|&quot;negative_trigger only&quot;| NEG[&quot;VERIFIED_NEGATIVE&quot;]
+    DEC --&gt;|&quot;none&quot;| UNK[&quot;UNKNOWN + reason_code&lt;br/&gt;unresolved_conflict &amp;gt; retired_or_expired&lt;br/&gt;&amp;gt; candidate_or_unverified &amp;gt; insufficient_evidence&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing runs as a service. The store is files:
+<code>data/memory/records/records-0001.jsonl</code> plus a manifest,
+<code>data/memory/active/</code> as a rendered active view in both JSONL
+and Markdown, <code>data/memory/candidates/</code> as one file per
+extraction run,
+<code>data/memory/curation/core_profile_review.json</code> as the human
+layer, and <code>data/memory/agent-memory.json</code> as the boot index.
+<code>secret_refs/</code> holds references rather than secrets.</p>
+<p>Operating it means running Python scripts: <code>memory.py</code> for
+validate, build, query, import, export, doctor, benchmark, mutate and
+apply; a family of <code>build_memory_atlas_*</code> scripts for the
+derived public view; and an <code>atlasctl build-atlas</code> CI entry
+point the README says reads the live directory on every run. Automation
+C is the write path for machine-authored changes and it is described as
+a settlement protocol rather than a job: a branch prefix, exactly one
+non-draft PR, zero issue mutations, no direct write to the default
+branch, a required CI check, and a terminal state of
+<code>PR=0/Issue=0/non-main=0</code>.</p>
+<p>The operator cost worth naming is that the live data directory is
+simultaneously the runtime state and a mirrored artifact.
+<code>WHERE_IS_THE_DATA.md</code> exists because that ambiguity bit
+somebody: it warns future agents in bold not to re-upload or re-sync the
+mirror, records that 691 files matched by git blob sha on 2026-07-23,
+explains the two-file difference as expected, and points at a
+machine-readable <code>MIRROR_STATUS.json</code> carrying
+<code>status: MIRRORED_DO_NOT_REUPLOAD</code>. A signpost written for
+the next agent, with a machine-readable twin, is a good pattern for any
+repository an agent is expected to act on.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Admission</strong> — <code>scripts/memory_mutation.py</code>
+against <code>config/memory-mutation-policy.json</code>. An envelope
+carries the operation, the source, an authorization block,
+<code>valid_time</code>, a reason and a transaction id. Source type
+selects the admission verdict and the requirements:
+<code>explicit_user</code> needs no evidence hash and may write any
+scope; <code>repository_evidence</code> requires one and is limited to
+<code>project</code> and <code>task</code>.</p>
+<p><strong>Transition</strong> —
+<code>scripts/memory_lifecycle.py:360</code>.
+<code>append_transition</code> records the before and after of both the
+status and the validity bound, with the actor and the reason, then
+mutates the record and revalidates the history. An <code>update</code>
+does three things atomically: retire the target with a transition, point
+its <code>superseded_by</code> at the new id, and write the new record
+with <code>supersedes</code> naming the old — then rehash both.</p>
+<p><strong>Projection</strong> —
+<code>scripts/memory_lifecycle.py</code>, <code>project_record_at</code>
+and <code>projection_is_effective</code>. The first reconstructs a
+record's status and validity bound as of a <em>record</em> time by
+replaying transitions backwards; the second tests the validity interval
+against a <em>valid</em> time. Two functions, two axes, and the CLI
+exposes both.</p>
+<p><strong>Eligibility and abstention</strong> —
+<code>scripts/memory_forgetting.py</code> against
+<code>config/memory-forgetting-policy.json</code>.
+<code>retrieval_decision</code> counts eligible positives, eligible
+negatives and audit-only records, then returns one of five knowledge
+states, with the abstention branch selecting its reason from the
+policy's priority list.</p>
+<p><strong>Measurement</strong> —
+<code>scripts/build_memory_gold_benchmark.py</code> generates the 160
+cases from a fixed seed and a config;
+<code>scripts/evaluate_memory_fault_reliability.py</code> and the
+evaluation runner produce the reports under
+<code>data/derived/evaluation/memory_gold/reports/</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The interesting fields are the ones most stores lack.</p>
+<p><code>sensitivity</code> is a four-field object: a
+<code>classification</code> — 134 live records are
+<code>sensitive</code>, 64 are <code>private</code>, and none are public
+— a <code>credential_present</code> boolean, a <code>handling</code>
+instruction such as <code>redacted_summary</code>, and
+<code>public_repository_allowed</code>. A record therefore carries its
+own publication decision, which is what lets a derived public view be
+built from a private store without a second policy.</p>
+<p><code>negative_triggers</code> is on every live record and holds
+sentences about when <em>not</em> to use it — the first record's reads
+<em>"Do not overgeneralize beyond the cited source and validity
+period."</em> This is not the same thing as a negative memory (below);
+it is a per-record usage boundary carried with the record and rendered
+into the agent's context by <code>memory.py</code>.</p>
+<p><code>source</code> carries <code>type</code>, a <code>ref</code>
+precise enough to locate the original inside a zip inside an export —
+conversation id and all — an <code>observed_at</code>, and an
+<code>evidence_hash</code>. <code>verification.evidence_refs</code>
+holds hashes of the candidate history and the evidence.</p>
+<p><code>hash</code> names its <code>canonicalization</code> alongside
+its <code>algorithm</code> and <code>value</code>. A content hash whose
+canonicalization is unnamed cannot be recomputed by anyone else; this
+one can.</p>
+<p><code>kind</code> is enumerated in policy as
+<code>answering_rule</code>, <code>preference</code>,
+<code>decision</code>, <code>project_context</code>,
+<code>workflow</code>, <code>security_boundary</code>, <code>fact</code>
+and <code>negative_trigger</code>. The live store holds the first seven
+and <strong>zero</strong> of the eighth.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The read path is a scan over the shards with filters, not a search
+engine. There is no embedding, no index beyond the active view, and no
+ranker in the shipped CLI: <code>memory query</code> accepts
+<code>--id</code>, <code>--key</code>, <code>--kind</code>,
+<code>--scope</code>, <code>--tag</code>, <code>--keyword</code>,
+<code>--as-of</code>, <code>--recorded-as-of</code>,
+<code>--include-inactive</code> and <code>--limit</code>, and is
+<em>"active-only by default"</em>. For a store this size that is the
+right amount of machinery.</p>
+<p><strong>Scope is stored, filterable, and not enforced, which is why
+<code>scope_enforced</code> is withheld.</strong>
+<code>scope {type, key}</code> is on every record over four types, the
+mutation policy limits which scopes each source may write, and
+<code>parse_scope</code> accepts <code>TYPE</code> or
+<code>TYPE:KEY</code> — but the filter applies only when the caller
+passes it, and nothing binds a caller to its own scope. Ninety-six
+percent of the live records are <code>conversation</code>-scoped and the
+boot index mixes scopes freely. The rubric's line is that a scope stored
+as a tag and not applied on the read path is not the mark, and this is a
+well-designed tag.</p>
+<p>What <em>is</em> enforced on the read path is status and validity.
+Inactive records are excluded by default and reachable only through
+<code>--include-inactive</code>, which the policy classifies as
+<code>audit_only</code> — a mode name that says what the result may be
+used for. The <code>--as-of</code> and <code>--recorded-as-of</code>
+pair is the atlas's canonical bi-temporal read, and it is one of very
+few in the corpus where the record-time axis is genuinely queryable
+rather than merely stored.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are explicit, transactional and idempotent.</strong>
+Nothing is extracted in the background: a mutation is a CLI invocation
+carrying an envelope with a <code>transaction_id</code>, and replaying
+the same envelope is detected by comparing the last transition's
+transaction id, which returns idempotent rather than double-applying.
+Envelope size, statement size and list length are all capped in
+policy.</p>
+<p><strong>An update must actually change something.</strong>
+<code>normalize_statement(expected) == normalize_statement(target)</code>
+raises <code>mutation_update_has_no_new_fact</code>. An update whose
+target is not <code>active</code> is refused. A retire whose target is
+already retired is refused. A dispute whose target is retired is
+refused. Each refusal is a stable error code with no record content in
+it — the exception class documents that as its purpose.</p>
+<p><strong>Correction is supersession, not overwriting.</strong> The old
+record is retired with a transition, its <code>superseded_by</code>
+points forward, the new record's <code>supersedes</code> points back,
+and both are rehashed. The history stays queryable through
+<code>--recorded-as-of</code>.</p>
+<p><strong>And none of it has run.</strong> Zero of the 198 live records
+carry a transition, a supersession, or a conflict; every one was written
+by <code>importer</code> from <code>raw_import</code>. This is not the
+declared-and-unwired defect — the producers are real and sit on a
+documented CLI subcommand — but a reader should know that the
+lifecycle's correctness is attested by tests and a synthetic benchmark
+rather than by any record in the store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's entry point is a file.
+<code>data/memory/agent-memory.json</code> holds an
+<code>active_index</code> of six records, each with the id, kind,
+confidence, importance, scope, validity window, the shard it lives in,
+and <code>record_sha256</code> — so the index pins the content of the
+record it points at, and a shard edited underneath it is detectable.</p>
+<p><code>build_agent_context_pack.py</code> assembles what an agent is
+handed; <code>memory.py</code> renders records with their
+<code>negative_triggers</code> attached, so the usage boundary travels
+with the claim into the prompt. There is no MCP server and no tool: an
+agent reads files and runs the CLI.</p>
+<p>The Codex skills registry under <code>CodexSkills/</code> is a
+separate concern — a mirror and governance ledger for local skills — and
+is procedural rather than declarative memory. It is also where most of
+the repository's 15,000-odd files live, almost all of them vendored
+reference material for individual skills.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state, bi-temporal, audit log, human review, negative
+eval — awarded</strong>, each on the evidence in the frontmatter
+records.</p>
+<p><strong>Tombstone — withheld, and this is the most interesting
+near-miss in the report.</strong> The design has a first-class
+<em>negative memory</em>: <code>kind: negative_trigger</code>, governed
+by a policy block requiring <code>verification_state: verified</code>,
+at least one trigger, a validity interval, an authority source of
+<code>explicit_user</code> or <code>repository_evidence</code>, and
+carrying two rules that most systems never state —
+<code>"infer_from_absence": false</code> and
+<code>"positive_assertion_allowed": false</code>.
+<code>retrieval_decision</code> gives it its own knowledge state,
+<code>VERIFIED_NEGATIVE</code>, and a mixed result gets
+<code>VERIFIED_WITH_NEGATIVE_BOUNDARY</code> rather than collapsing to
+the positive.</p>
+<p>That is a negative <em>belief</em> — "X is not the case, verified,
+during this interval" — and the rubric asks for something else: a record
+of a <em>rejected value</em>, keyed on the value, that stops later
+extraction re-asserting it. Nothing here is keyed on a refused value,
+and no refusal is recorded when an admission fails. The adjacent guard
+is stronger in one way and unrelated in another:
+<code>model_inference</code> and <code>raw_import</code> are refused
+persistence outright, so extraction cannot re-assert anything at all —
+but that is a blanket ban on a source, not a memory of what was refused.
+And the live store contains zero <code>negative_trigger</code> records,
+so even the negative-belief half is a specification with a reachable
+producer and no instance.</p>
+<p><strong>Scope enforced — withheld</strong>, per section 6.</p>
+<p><strong>The provenance gate is the safety mechanism and it is the
+right shape.</strong> A policy file, validated on load with
+duplicate-key detection, mapping source type to admission verdict, with
+per-source requirements for evidence hashes and allowed scopes. Compare
+it against the corpus's usual arrangement, where extraction writes and a
+reviewer is offered afterwards: here the model's own output is
+inadmissible by construction and no review surface is needed for it.</p>
+<p><strong>What that gate cannot do is retro-apply.</strong> Every live
+record entered as <code>raw_import</code> before the policy existed. A
+store whose entire content would be refused by its own current admission
+rules is in an honest and awkward position, and the repository does not
+currently mark those records as grandfathered — their
+<code>status</code> distribution is the only thing separating them.</p>
+<p><strong>Sensitivity is carried per record and the publication
+boundary is derived from it</strong>, with
+<code>public_repository_allowed</code> deciding what may reach the
+public view. The README reinforces it in prose — distillations of
+external commercial products are <code>private-only</code>,
+<em>"一个字节都不进本仓"</em>, not one byte enters this repository — and
+<code>MIRROR_STATUS.json</code> gives the migration state a
+machine-readable form. The weak point is that the whole arrangement
+depends on a private sibling repository that cannot be inspected, so the
+claims about what lives there are unverifiable from here and are
+reported as claims.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No paper and no citation file. I ran nothing; every figure below is
+read from committed artifacts.</p>
+<p>The <code>OpenAIDatabase/tests/</code> directory holds a test per
+mechanism — <code>test_memory_lifecycle.py</code>,
+<code>test_memory_mutation.py</code>,
+<code>test_memory_forgetting.py</code>,
+<code>test_memory_gold_evaluation.py</code>,
+<code>test_live_snapshot_store_v31.py</code>,
+<code>test_memory_atlas_independent_verifier_v32.py</code>,
+<code>test_memory_atlas_r7_raw_integrity.py</code> and about thirty
+more.</p>
+<p><strong>The gold benchmark is the artifact.</strong> 160 cases, eight
+categories of twenty, generated by
+<code>build_memory_gold_benchmark.py</code> from a fixed seed
+(<code>PAM1-GOLD-20260716-v1</code>) and a config, committed as JSONL
+with a schema alongside. The category list is what makes it unusual:
+<strong>abstention</strong> and <strong>forgetting</strong> are twenty
+cases each, and both are things this atlas's benchmarks page has said
+are absent from the field's public sets. Each case carries
+<code>expected_ids</code>, <code>forbidden_ids</code>,
+<code>hard_negative_ids</code>, <code>should_abstain</code>,
+<code>abstain_conditions</code>, <code>stale_or_retired_trap</code>, an
+<code>as_of</code> naming both time axes, and
+<code>source_definition_refs</code> crediting the public benchmarks each
+category's shape was taken from — LongMemEval, LoCoMo and FAMA.</p>
+<p>The committed reports carry hard gates rather than a single score:
+<code>abstention_precision</code> and <code>abstention_recall</code> at
+0.9, <code>current_state_accuracy</code> at 0.92,
+<code>critical_stale_use_count</code> at exactly 0, a cross-profile pass
+count, and a dataset-size floor. Gating a release on <em>zero</em> uses
+of a stale record is a better contract than any accuracy threshold.</p>
+<p><strong>And the result is 1.0 on all eight categories, with every
+gate passing.</strong> That is the number to think about. The evaluated
+algorithm is <code>deterministic_eligible_scope_alias_ranker.v1</code> —
+a filter on eligibility, scope and alias — with
+<code>llm_judge: null</code> and
+<code>gold_label_dependency_count: 0</code>. The cases are generated by
+the same repository, from a table of twenty topics, where each case's
+target and its hard negative are built from the same tuple and differ
+along scope, validity or status: exactly the three dimensions the ranker
+filters on. A deterministic filter tested against distractors
+constructed to differ only on what it filters is being asked whether it
+is wired up.</p>
+<p>The repository is not hiding this. <code>gold_provenance</code>
+records <code>human_approval_claimed: false</code>, names the curator
+role, the validator role and the tested algorithm role separately, and
+the config's own <code>algorithm_dependency_count: 0</code> is an
+attempt to state that the gold labels do not depend on the algorithm.
+What is missing is the other independence: the <em>cases</em> depend on
+the algorithm's own axes. A second grader, a real retrieval
+implementation, or one category of cases written by someone who had not
+read <code>retrieval_decision</code> would separate "the filter works"
+from "the design is right".</p>
+<p>The honest summary: <strong>the scaffolding is better than almost
+anything in this atlas and the discriminating power is
+unmeasured.</strong> Every structural piece a memory benchmark needs is
+here — forbidden ids, hard negatives, required abstentions, a stale
+trap, two time axes, hard gates, committed reports, a fixed seed. The
+corpus is the part that a single author cannot easily make adversarial
+to themselves.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make abstention an answer with a reason code.</strong>
+<code>UNKNOWN</code> plus one of <code>unresolved_conflict</code>,
+<code>retired_or_expired</code>, <code>candidate_or_unverified</code>,
+<code>insufficient_evidence</code>, plus the
+<code>missing_conditions</code> that would have permitted an answer. An
+empty result set tells a caller nothing; this tells them whether to
+resolve a conflict, refresh a fact, or verify a candidate.</p>
+<p><strong>Fix the abstention reason priority in policy rather than in
+code order.</strong> The list is a config key, so the diagnosis a user
+sees does not depend on which branch a maintainer happened to write
+first.</p>
+<p><strong>Decide admission by source type, in a table.</strong>
+<code>explicit_user</code> and <code>repository_evidence</code> may
+write; <code>raw_import</code> and <code>model_inference</code> may not,
+for any operation. A single table, validated on load, that a reviewer
+can read without following a call graph.</p>
+<p><strong>Give a record its own publication decision.</strong>
+<code>sensitivity.public_repository_allowed</code> alongside a
+classification, a credential flag and a handling instruction means the
+derived public view needs no second policy and cannot drift from the
+first.</p>
+<p><strong>Name the canonicalization beside the hash.</strong>
+<code>openai-memory-json-v1</code> is what makes <code>sha256:…</code>
+reproducible by someone else.</p>
+<p><strong>Have the index pin the content it points at.</strong>
+<code>active_index</code> entries carry <code>record_sha256</code>, so
+an edited shard is detectable from the boot file alone.</p>
+<p><strong>Write the transition before mutating the record.</strong>
+<code>append_transition</code> captures <code>from_status</code>,
+<code>to_status</code>, <code>valid_to_before</code>,
+<code>valid_to_after</code>, the actor and the reason, and only then
+changes the record — with the transaction id doubling as the idempotency
+key.</p>
+<p><strong>Let a claim be disputed without being adjudicated.</strong>
+<code>disputed</code> plus <code>conflict.state: unresolved</code>
+removes a contested record from answers while deciding nothing. Most
+systems here can only pick a winner, which forces a judgement at the
+worst moment.</p>
+<p><strong>Leave a signpost for the next agent, with a machine-readable
+twin.</strong> <code>WHERE_IS_THE_DATA.md</code> and
+<code>MIRROR_STATUS.json</code> say the same thing to a human and to a
+program, and the file exists because an agent nearly did the wrong
+thing.</p>
+<p><strong>Gate a release on zero stale uses.</strong>
+<code>critical_stale_use_count == 0</code> is a better contract than an
+accuracy threshold, because it names the failure rather than averaging
+it away.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not read 1.0 across every category as a result.</strong>
+When the same repository generates the cases, builds the distractors
+along the axes the algorithm filters, and reports perfect scores with no
+LLM judge, the number measures wiring. The categories are the
+contribution; the accuracy is not.</p>
+<p><strong>Do not let the store predate its own admission policy
+silently.</strong> Every live record was written by a source the policy
+now refuses, and nothing marks them as grandfathered.</p>
+<p><strong>Do not ship a schema whose optional halves are never
+populated.</strong> <code>conflict</code>, <code>supersession</code> and
+<code>recorded_time.transitions</code> are present on all 198 records
+and empty on all 198. The machinery is real; a reader cannot tell that
+from the data.</p>
+<p><strong>Do not treat an optional scope filter as scoping.</strong>
+The key is on every record and no read path defaults it to the
+caller.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone building a personal memory substrate they intend
+to reason about formally — who wants provenance, validity intervals, an
+audit trail and a refusal semantics, and is willing to drive it from a
+CLI over two hundred records rather than query a database over millions.
+The policy-as-artifact discipline is the transferable part and it does
+not depend on the scale.</p>
+<p>It fits badly as a component. There is no licence, the documentation
+is largely in Chinese, the store's read path is a file scan, and a
+private sibling repository holds material the public one only points at.
+What a reader should take is not the system but four artifacts — the
+mutation policy, the forgetting policy, the transition function and the
+gold-case schema — each of which is readable in isolation and better
+than the corresponding thing in most projects here.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A perfect benchmark score on a self-generated
+corpus.</strong> 1.0 on all eight categories for a deterministic filter,
+with the hard negatives differing from the targets on precisely the
+dimensions the filter checks.</li>
+<li><strong>The live store has exercised none of the lifecycle.</strong>
+No transitions, no supersessions, no conflicts, no negative-trigger
+records. Correctness rests on tests and synthetic cases.</li>
+<li><strong>The admission policy cannot see its own history.</strong>
+All 198 records came in as <code>raw_import</code>, which the policy now
+rejects for every operation.</li>
+<li><strong>No licence.</strong> A public repository with no
+<code>LICENSE</code> file is all rights reserved by default, whatever
+the README implies about reuse.</li>
+<li><strong>Scope is a tag.</strong> Four scope types, a filter that
+must be asked for, and a boot index that mixes them.</li>
+<li><strong>The public/private split cannot be verified from
+here.</strong> The claims about what lives in the private sibling — and
+about the mirror being byte-identical — are stated in a Markdown file
+and a JSON status blob, and no check in this repository can confirm
+them.</li>
+<li><strong>Two hundred records is not a scale test.</strong> A file
+scan per query is correct today and the benchmark's
+<code>performance_v1.json</code> is measuring a corpus small enough that
+any implementation passes.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the two policy files. <code>memory-mutation-policy.json</code>
+and <code>memory-forgetting-policy.json</code> are each under a hundred
+lines, are validated on load, and encode decisions most projects leave
+implicit: who may write, what happens to an inactive record, when to
+abstain and in what order to explain why.</p>
+<p>Borrow <code>append_transition</code> verbatim if you have a status
+field. It is thirty lines, it makes the audit trail a property of the
+record rather than a side table, and the transaction id gives
+idempotency for free.</p>
+<p>Borrow the gold-case schema — <code>expected_ids</code>,
+<code>forbidden_ids</code>, <code>hard_negative_ids</code>,
+<code>should_abstain</code>, <code>abstain_conditions</code>,
+<code>stale_or_retired_trap</code>, a two-axis <code>as_of</code> — and
+then have someone who has not read your retrieval code write the
+cases.</p>
+<p>Do not borrow the store itself. Sharded JSONL with a CLI scan is
+right for two hundred records and nothing here addresses what happens
+three orders of magnitude up.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What does the gold benchmark score against a retriever that was not
+built from the same eligibility axes? The scaffolding supports the
+experiment and no run in the tree performs it.</li>
+<li>Will the 198 imported records ever be re-admitted under the current
+policy, or are they permanently a grandfathered layer the rules do not
+describe?</li>
+<li>What produces a <code>negative_trigger</code> record in practice?
+The kind is enumerated, the policy is written, the retrieval path
+handles it, and no instance exists.</li>
+<li>The curation overrides are consumed by the analysis pipeline. Does
+the canonical <code>memory query</code> path see them, or can the
+human-corrected statement and the stored statement diverge for a reader
+who uses the CLI?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OpenAIDatabase/data/memory/records/records-0001.jsonl</code></td>
+<td>The 198 live records, one JSON object per line</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/data/memory/agent-memory.json</code></td>
+<td>The boot index of six active records, each pinned by
+<code>record_sha256</code></td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/data/memory/curation/core_profile_review.json</code></td>
+<td>The human review layer, with a stated review policy and per-record
+overrides</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/config/memory-mutation-policy.json</code></td>
+<td>The source-to-operation admission matrix and the per-source
+requirements</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/config/memory-forgetting-policy.json</code></td>
+<td>Eligibility, abstention with its reason priority, negative memory,
+retirement semantics, FAMA</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/scripts/memory_lifecycle.py</code></td>
+<td><code>append_transition</code>, <code>project_record_at</code>,
+<code>projection_is_effective</code></td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/scripts/memory_mutation.py</code></td>
+<td>Add, update, retire, dispute; idempotency by transaction id; the
+no-new-fact check</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/scripts/memory_forgetting.py</code></td>
+<td><code>retrieval_decision</code>, the five knowledge states, FAMA
+scoring</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/scripts/memory.py</code></td>
+<td>The CLI: validate, build, query, import, export, doctor, benchmark,
+mutate, apply</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/scripts/build_memory_gold_benchmark.py</code></td>
+<td>Deterministic generation of the 160 cases from a fixed seed</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/data/derived/evaluation/memory_gold/benchmark_v1.jsonl</code></td>
+<td>The cases, with forbidden ids, hard negatives and abstention
+conditions</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/data/derived/evaluation/memory_gold/reports/</code></td>
+<td>Committed run reports with hard gates and per-category accuracy</td>
+</tr>
+<tr>
+<td><code>OpenAIDatabase/data/WHERE_IS_THE_DATA.md</code>,
+<code>MIRROR_STATUS.json</code></td>
+<td>The signpost for the next agent, and its machine-readable twin</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/LinzeColin/AgentDatabase/commit/031939e5af4db5724f8eda129e63d4ef2463fb61"><code class="commit-id" title="031939e5af4db5724f8eda129e63d4ef2463fb61">031939e5…</code></a>
+— first reading. Screened before anything was read: one auto-run surface
+(<code>.githooks/</code>) and a long tail of build-time execution points
+inside vendored skill reference material under
+<code>CodexSkills/</code>; nothing was installed and no script was run.
+The record schema, both policy files and the full 198-record shard were
+read before any absence claim was written, which is how the empty
+<code>conflict</code> and <code>supersession</code> fields and the
+all-<code>raw_import</code> provenance were established. Marks:
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code>. <code>tombstone</code> withheld — the
+<code>negative_trigger</code> kind is a verified negative belief rather
+than a value-keyed refusal record, and no instance exists in the store.
+<code>scope_enforced</code> withheld — the scope key is stored on every
+record and applied only when a caller passes <code>--scope</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

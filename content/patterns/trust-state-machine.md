@@ -335,6 +335,31 @@ correction is not a hypothesis. What the machine does not do is record its own
 transitions anywhere: the counters and `retiredReason` are overwritten in place
 by a whole-file rewrite, and the runtime's hash-chained audit log is never told.
 
+[AgentDatabase](../../systems/agentdatabase/) adds the state this page's
+implementations mostly lack: **a claim can be taken out of service without
+anyone deciding it is wrong.** `dispute` moves a record to `disputed` and sets
+`conflict.state` to `unresolved`, and the eligibility filter excludes it — so a
+contested memory stops being answerable while the adjudication stays open. Every
+other state machine in this corpus forces a winner at the moment of conflict,
+which is the moment there is least information.
+
+Two details are worth copying beside it. The transition is written *before* the
+mutation: `append_transition` appends `{transaction_id, operation, recorded_at,
+recorded_by, from_status, to_status, valid_to_before, valid_to_after, reason}`
+into `recorded_time.transitions`, then sets the new status — so the audit trail
+is a property of the record rather than a side table that can drift from it, and
+`project_record_at` can replay it backwards to answer what the status was at a
+given record time. And the refusals are stable error codes carrying no record
+content, on the reasoning stated in the exception class: a failure message about
+a memory should not become a second copy of the memory.
+
+The caution is the same one the report states. The status field is populated
+across three values in the live store — 6 active, 108 candidate, 84 retired —
+and `disputed` has never been used, no record carries a transition, and nothing
+has ever superseded anything. A state machine whose interesting transitions have
+not run is a design, and the difference between a design and a mechanism is
+visible only in the data.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

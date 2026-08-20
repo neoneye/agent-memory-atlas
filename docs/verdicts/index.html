@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 319 reports.</strong></p>
+<p><strong>This page covers all 320 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -10069,6 +10069,74 @@ that person. The same repository built a six-state review queue for its
 other tier, so this is not an immaturity gap — the governance was built
 for the write a human was already watching, and the automatic one got
 none of it.</li>
+</ul>
+<h3 id="agentdatabase"><a
+href="../systems/agentdatabase/"><code>agentdatabase</code></a></h3>
+<ul>
+<li>Best idea: <strong>abstention is an answer, with a reason code and
+the conditions that would have permitted one.</strong>
+<code>retrieval_decision</code> returns <code>VERIFIED</code>,
+<code>VERIFIED_HISTORICAL</code>, <code>VERIFIED_NEGATIVE</code>,
+<code>VERIFIED_WITH_NEGATIVE_BOUNDARY</code> or <code>UNKNOWN</code>,
+and the <code>UNKNOWN</code> branch picks its <code>reason_code</code>
+from a priority fixed in policy — <code>unresolved_conflict</code>, then
+<code>retired_or_expired</code>, then
+<code>candidate_or_unverified</code>, then
+<code>insufficient_evidence</code> — alongside the
+<code>missing_conditions</code> list. Most stores here express "I don't
+know" as an empty result set, which tells a caller nothing about whether
+to resolve a conflict, refresh a fact or verify a candidate.</li>
+<li>Second idea: <strong>admission is decided by provenance, in a table,
+and a model's inference can never persist.</strong>
+<code>memory-mutation-policy.json</code> maps every source type to a
+verdict per operation: <code>explicit_user</code> and
+<code>repository_evidence</code> may add, update, retire and dispute;
+<code>raw_import</code> and <code>model_inference</code> map to
+<code>reject_persistence</code> for all four. Beside it,
+<code>append_transition</code> writes
+<code>{transaction_id, operation, recorded_by, from_status, to_status, valid_to_before, valid_to_after, reason}</code>
+into the record before mutating it, so the audit trail is a property of
+the record and the transaction id doubles as the idempotency key. And
+<code>disputed</code> plus <code>conflict.state: unresolved</code> lets
+a contested claim stop being answerable without anyone adjudicating it —
+a state most systems in this corpus cannot express.</li>
+<li>Biggest risk: <strong>a perfect score on a gold set the same
+repository generates.</strong> The 160-case benchmark is the
+best-structured one in this atlas — <code>forbidden_ids</code>,
+<code>hard_negative_ids</code>, <code>should_abstain</code>,
+<code>stale_or_retired_trap</code>, a two-axis <code>as_of</code>, hard
+gates including <code>critical_stale_use_count == 0</code> — and the
+committed reports show 1.0 across all eight categories for
+<code>deterministic_eligible_scope_alias_ranker.v1</code> with
+<code>llm_judge: null</code>. The targets and their hard negatives are
+built from the same topic tuples and differ along scope, validity or
+status: exactly what the ranker filters on. The provenance block's own
+<code>human_approval_claimed: false</code> is the tell. Separately, the
+live store has exercised none of the lifecycle — zero transitions, zero
+supersessions, zero conflicts across 198 records, every one of them
+written by an import the current policy would refuse.</li>
+<li>Maturity impression: no licence file, documentation largely in
+Chinese, 236 Python files under the memory runtime, 198 live records, a
+CLI rather than a service, and a private sibling repository holding
+material this one only points at. Five marks — <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>.
+<code>tombstone</code> withheld and it is the sharpest near-miss in the
+corpus: there is a first-class <code>negative_trigger</code> kind with
+<code>infer_from_absence: false</code> and
+<code>positive_assertion_allowed: false</code>, which is a verified
+negative <em>belief</em> rather than a record of a rejected
+<em>value</em> — and the live store holds none of them.</li>
+<li>Study when: you want the policy files.
+<code>memory-mutation-policy.json</code> and
+<code>memory-forgetting-policy.json</code> are each under a hundred
+lines and encode who may write, what happens to an inactive record, when
+to abstain and in what order to explain why — decisions most projects
+leave in comments.</li>
+<li>Do not copy when: you need scale or a component. A file scan per
+query is right at this size and nothing here addresses three orders of
+magnitude up, and the absence of a licence makes reuse a question rather
+than a decision.</li>
 </ul>
         </article>
       </div>

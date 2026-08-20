@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 164 of 319 screened at the report's current pin.**
+**Progress: 165 of 320 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 138 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 57 |
+| Repositories with an auto-run surface (`RUNS`) | 58 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 52 |
-| Repositories with build-time execution (`EXEC`) | 129 |
+| Repositories with build-time execution (`EXEC`) | 130 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -30,6 +30,7 @@ These execute without a command being typed. Read before opening the tree.
 | System | Surfaces |
 | --- | --- |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
+| [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
