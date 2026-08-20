@@ -318,6 +318,56 @@ and stated preferences), **LifelongAgentBench** and **StreamBench** (continual
 and online learning), **MemoryBank** (user memory updating). What that table does
 *not* contain is the subject of [section 6](#6-does-anything-benchmark-forgetting).
 
+**One 2026 benchmark builds the grading this page keeps asking for, and it is
+not a memory benchmark.** *Long-Horizon-Terminal-Bench: Testing the Limits of
+Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading*, Li et al.,
+[arXiv:2607.08964](https://arxiv.org/abs/2607.08964), v2 13 July 2026, published
+as a dataset at
+[IntelligenceLab/Long-Horizon-Terminal-Bench](https://huggingface.co/datasets/IntelligenceLab/Long-Horizon-Terminal-Bench)
+under Apache-2.0 — 46 tasks across nine categories, one `test` split, each task a
+`task.toml`, an `instruction.md` and a Dockerfile, with `agent_timeout_min` and
+`expert_time_estimate_min` recorded per task. The verifiers and reference
+solutions are deliberately withheld from the card to limit contamination, so the
+grading itself cannot be inspected from the dataset; the description below is the
+card's and the paper's, not a reading of the grader.
+
+Three properties are worth naming here.
+
+**It grades partial progress.** The abstract's complaint is this page's
+complaint: existing terminal benchmarks are *"evaluated only by their final
+outcome"*, which *"overlooks intermediate progress and partial solutions,
+yielding sparse reward signals and an incomplete picture of agent capability."*
+Each task is decomposed into graded subtasks so an agent gets credit for how far
+it got. That is the shape a memory benchmark needs and none of the memory
+benchmarks have — the difference between "did the agent answer" and "did the
+agent still know, at step 180, the thing it was told at step 12".
+
+**The horizon is long enough for memory to matter.** The reported averages are
+9.9M tokens, roughly 231 episodes and 85.3 minutes per task. Every conversational
+memory benchmark this page discusses ingests a history and then asks questions;
+this one runs an agent until it has produced a history, in a stateful container
+it can break. Whatever a memory layer does about compaction, reacquisition and
+its own staleness, this is the regime where it would show up — and it is the
+regime in which the compression result [above](#on-what-compression-costs-which-completion-hides)
+was measured, at a fraction of the length.
+
+**The scores leave room to separate systems.** The strongest of fifteen frontier
+models reaches 15.2% pass@1 at a 0.95 partial-reward threshold and 10.9% at 1.0,
+with means of 4.3% and 1.7%. Set that against
+[the benchmark may not be hard enough to separate systems](#the-benchmark-may-not-be-hard-enough-to-separate-systems):
+the memory benchmarks in use here saturate at the top, and this one has the
+opposite problem, which is the better one to have. A floor that low does mean a
+memory layer's contribution would be hard to see against the noise of everything
+else the agent gets wrong — the ceiling is not what limits the measurement here,
+the number of tasks is.
+
+No system in this atlas runs it, and nothing about it is memory-specific: the
+tasks are chess and Sokoban and chip design and climate modelling, and an agent
+with no memory layer at all is the default subject. It is listed because the
+grading design is the one this page has been asking for, and because it exists
+and is downloadable, which the hypothetical benchmark in
+[section 6](#6-does-anything-benchmark-forgetting) is not.
+
 ### The boundary worth drawing
 
 A long-context benchmark asks: given all of this text in the prompt, can you

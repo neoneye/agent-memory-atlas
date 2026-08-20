@@ -87,6 +87,29 @@ Four interacting knobs plus recursion and a budget is a lot of surface. In
 [SillyTavern](../../systems/sillytavern/) it is seven interacting mechanisms with
 no fixture asserting what fires, which is the predictable end state.
 
+**And there is a result from a neighbouring field arguing that some of the
+flipping this page damps is worth keeping.** *The Phenomenon of Policy Churn*,
+Schaul, Barreto, Quan and Ostrovski,
+[arXiv:2206.00730](https://arxiv.org/abs/2206.00730), v1 1 June 2022, is about
+value-based reinforcement learning and not about memory: it finds that the greedy
+policy — the argmax over a learned value function — changes its chosen action in
+a large fraction of states within *a handful of gradient updates*, and concludes
+that this churn is *"a beneficial but overlooked form of implicit exploration"*,
+with ε-noise playing *"a much smaller role than expected"*.
+
+The mapping to retrieval is an analogy, and worth stating as one: a top-*k* over
+near-tied similarity scores is also an argmax over a learned function, and it
+also flips when that function moves — a re-embedding, a new model version, one
+more stored item. The transferable part is not a mechanism but a question this
+page does not otherwise ask. **How stable is your ranking under changes you did
+not intend?** Nobody in this atlas measures it, and it is cheap to measure:
+re-run the same queries after a re-index and count how many top-*k* sets changed.
+The churn paper's uncomfortable half is that the answer being "a lot" may not be
+a defect where recall feeds exploration — see
+[sample instead of rank](../../compare/#sample-instead-of-rank-when-recall-feeds-exploration) — while it plainly is one where recall
+feeds an answer about a person. Sticky and cooldown damp the flip either way, and
+a system that adopts them should know which of those two it is.
+
 ## In the analyzed systems
 
 **[SillyTavern](../../systems/sillytavern/)** is the complete version.
