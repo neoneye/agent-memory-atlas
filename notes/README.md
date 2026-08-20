@@ -21,6 +21,20 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-two-platforms-and-the-window-that-persists.md](2026-08-20-two-platforms-and-the-window-that-persists.md) —
+  Hybro and Future AGI triaged, both excluded. Hybro is the closest call in a
+  while: a `backend/context_memory/` package the five-word operation probe cannot
+  see by name, holding durable conversation turns with a body stored by reference
+  plus hash and expiry, a token estimate per representation, `was_successful` on
+  the turn, and a room summary carrying key decisions — and it stays out because
+  the only caller of `search_memory` is the orchestrator assembling a supervisor
+  context, and nothing is scoped above a room. Future AGI observes agents rather
+  than remembering for them; its prompt optimiser promotes an instruction, which
+  cannot be false, over no store at all. Sixth vocabulary poison and the most
+  on-the-nose: every `tombstone` in that tree is a ClickHouse CDC deletion
+  marker. Two rules follow — probe directory names as well as operations, and
+  settle the compaction boundary by asking who issues the query *and* what the
+  widest scope is.
 - [2026-08-20-someone-built-the-contract.md](2026-08-20-someone-built-the-contract.md) —
   Perseus Vault shipped `benchmark/scoped_memory/`, a versioned portable
   capability contract with the two properties nine of this project's notes
