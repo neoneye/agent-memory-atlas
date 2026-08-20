@@ -44,6 +44,22 @@ Queues and checkpoints add operational machinery and eventual consistency. Retai
 
 Expose freshness to callers; do not make asynchronous derivation look immediately consistent.
 
+**The failure this pattern does not cover is the job that succeeds and starves
+the write path.** Recoverability protects work that fails; it says nothing about
+a maintenance pass that shares one deadline with capture and runs first.
+[PLUR1BUS](../../systems/plur1bus/) is the worked case: its embedding drain was
+bounded by item count and not by time, ran ahead of capture inside the same
+sixty-second budget, and on a full backlog spent the whole budget — so capture
+was aborted every turn, with the only observable a log line announcing the 276
+texts it was about to drop, followed by the timeout about thirty milliseconds
+later. Nothing was lost irrecoverably and nothing needed a dead-letter path; the
+queue was doing its job. The rule is ordering, not durability: **a maintenance
+pass and the write path it serves must not share one budget, and where they
+must, the write path goes first and maintenance takes the remainder.** The
+repair also needs the loop to honour a deadline and report that it stopped
+early, or the abort surfaces deep inside the embedder instead of at the loop
+boundary.
+
 ## Cost to adopt
 
 **Build:** durable input records, an explicit job state, idempotent processing,

@@ -2,7 +2,11 @@
 
 **Status:** review of a published page. Six defects, three of them joins over
 material this project already holds, one of them a claim the page makes that its
-own rules forbid. No page edited; every fix below is a proposal.
+own rules forbid. All six are fixed: `content/build.md` carries the profile and
+stage routing, the deferrability table, the corrected Stage 1 wording, the
+rarity of the route it recommends and no effort estimate, and
+`.agents/protocol/tests.yaml` carries `stage`, `profiles` and a
+`positive_control` on every entry.
 **Origin:** reading [`content/build.md`](../content/build.md) end to end as a
 builder would — profile, brief, stages, tests, closure — and then checking each
 step against the corpus, the pattern index and

@@ -59,6 +59,14 @@ gateway and a tombstone are the answer for memory that must be defensible under
 a correction. Most products are not that, and the pattern index says so in its
 own words.
 
+**And it is the route with the fewest worked examples.** The
+[pattern index](../patterns/#the-correctable-stack) states the thinning where it
+can be argued with: the tombstone is the rarest of the seven mechanisms, and no
+system in the atlas carries all four of these patterns. Building this stack
+means building it rather than copying it — which is the same fact as *there is
+no reference implementation* below, stated as a property of the advice instead
+of as a gap in the atlas.
+
 **And every one of those choices costs something.**
 [What you buy, and what it costs](../tensions/) collects the six axes where the
 corpus shows these mechanisms trading against each other — recall against
@@ -105,7 +113,7 @@ to fall back to when extraction is wrong.
 
 | Stage | What it adds | What works at the end of it |
 | --- | --- | --- |
-| 1 | Raw evidence stored before any model call, deterministic chunking, scope as a schema key applied on the read path, lexical search | A memory that never loses material, and a scope boundary that holds on the read path |
+| 1 | Raw evidence stored before any model call, deterministic chunking, scope as a schema key applied on the read path, lexical search | A memory that never loses material, and a scope key that reaches the read path |
 | 2 | Derived claims with append-only provenance rows, a discrete status, supersession | Claims you can trace back to what they came from |
 | 3 | Vector search fused with lexical, token-budgeted context assembly, recall fenced as data | Retrieval that finds paraphrases without displacing the evidence floor |
 | 4 | Correction that survives a rebuild, a mutation audit, background jobs behind clear synchronous semantics | A correction you can prove held |
@@ -188,11 +196,26 @@ returns most often, so each names a system that shipped it.
   nothing refreshes. Ask what user action produces the state before building the
   machinery that consumes it.
 
-**What is safe to defer, stated plainly**, from the pattern index: bi-temporal
-validity, hybrid retrieval fusion, decay and reinforcement, and source-diverse
-context are all improvements to memory that already works. None of them prevents
-a silent failure. Stage 5 is where the deferrals stop being safe, and only for
-the products whose profile put them there.
+**What is safe to defer cuts across the stages rather than along them**, so the
+table above is one of two axes and this is the other. From the pattern index:
+bi-temporal validity, hybrid retrieval fusion, decay and reinforcement, and
+source-diverse context are improvements to memory that already works, and none
+of them prevents a silent failure. Laid over the stages, that means:
+
+| Stage | Deferrable inside it | Not deferrable |
+| --- | --- | --- |
+| 1 | nothing | all of it — scope as a key and retained evidence are the two cheapest things here and the two most expensive to retrofit |
+| 2 | nothing | provenance rows, the status enum, supersession |
+| 3 | the lexical/vector fusion itself | recall fenced as data, and the token budget that keeps assembly bounded |
+| 4 | nothing | correction that survives a rebuild, the mutation audit, synchronous semantics before background jobs |
+| 5 | bi-temporal validity | tombstones, human review, negative tests in CI |
+
+Two consequences a reader following the table sequentially would otherwise hit.
+Stage 3 holds both the most deferrable item on this page and one of the four the
+[tensions page](../tensions/#what-is-not-a-tradeoff) calls close to free —
+fencing recall as data costs almost nothing and can ship in Stage 1. And Stage 5
+mixes the deferrable with the whole point of the correctable profile; a product
+that put itself in that row defers bi-temporal validity, not the tombstone.
 
 Operational rules that belong at the stage they apply to, from
 [§10](../compare/#10-practical-checklist-for-your-own-system): keep local state
@@ -209,28 +232,54 @@ each with a stable id, a given/when/then specification against your own API, the
 atlas page it was derived from, and — the field that matters most — **what a
 pass does not prove**.
 
-| Id | Asserts |
+**The profile you picked in §1 selects the subset.** Each test names the pattern
+it came from, and the pattern index's stacks table names the patterns per product
+shape, so the routing is a join over both rather than a separate judgement. The
+`profiles` and `stage` fields in the catalogue carry it:
+
+| If you are building | Run |
 | --- | --- |
-| `scope.cross_tenant_absent` | A memory written under one scope is never returned under another |
-| `scope.caller_cannot_widen` | A caller cannot reach another scope by passing a different argument |
-| `scope.background_respects_boundary` | Consolidation does not summarise across a boundary retrieval enforces |
-| `evidence.claim_resolves_to_source` | Every derived claim resolves to the material it came from |
-| `evidence.source_delete_reaches_derived` | Deleting a source reaches everything derived from it |
-| `evidence.rebuild_from_retained` | The derived layer can be rebuilt from what was kept |
-| `gateway.no_bypass_path` | No write path reaches the store around the gate |
-| `gateway.model_cannot_claim_human_authority` | A model cannot write at the authority reserved for a person |
-| `tombstone.laundering_sequence` | Reject, supersede, restate — the value does not come back |
-| `tombstone.survives_ttl_and_prune` | The rejection outlives the pruning that deletes ordinary rows |
-| `tombstone.key_normalization_attack` | A unicode look-alike does not slip past the check |
-| `tombstone.reextraction_stays_inactive` | Re-extracting the same source does not re-assert a rejected value |
-| `tombstone.no_second_memory_unit` | The rejection is not itself a memory that can be retrieved |
-| `correction.survives_reindex` | A correction holds through a rebuild, across five case shapes |
-| `correction.retraction_without_replacement` | A retraction with no replacement value still takes effect |
-| `deletion.absent_after_reindex_and_restart` | Deleted content stays absent across every path that could restore it |
-| `deletion.absent_from_shared_copies` | Deleting an original reaches copies made before the deletion |
-| `retrieval.k_is_an_upper_bound` | A system reporting `@k` scores exactly the first *k* results |
-| `prompt.recall_is_fenced_as_data` | Recalled text is fenced as data, not as instructions |
-| `prompt.model_ignores_embedded_instructions` | An instruction stored in a memory does not execute on recall |
+| **A single-user tool** | the three `scope.*`, plus `prompt.recall_is_fenced_as_data` |
+| **Anything multi-tenant** | the three `scope.*` first and completely, then the retrieval and prompt tests |
+| **A companion or roleplay agent** | the `prompt.*` pair, and `correction.retraction_without_replacement` for "forget that" |
+| **An autonomous agent that acts** | both `gateway.*`, `retrieval.k_is_an_upper_bound`, both `prompt.*` |
+| **Memory that must be correctable and defensible** | all twenty |
+
+The `stage` column below says when each one should first pass, so a stage is
+finished when its tests are green rather than when its code is written.
+
+**Every entry also carries a `positive_control`, and it is not optional.**
+Sixteen of these twenty assert only absence, refusal or a bound, which means a
+system whose recall path always returns the empty set satisfies them: every leak
+probe comes back empty, every rejected value stays absent, and *k* is trivially
+an upper bound. The control is the paired presence assertion that has to hold in
+the same fixture — the memory comes back under its own scope, the neighbouring
+value is still recalled, the prompt contains *k* records and not zero. Run the
+absence half alone and a green result is evidence of nothing, which is the exact
+charge this atlas levels at published benchmark numbers.
+
+| Id | Stage | Asserts |
+| --- | :-: | --- |
+| `scope.cross_tenant_absent` | 1 | A memory written under one scope is never returned under another |
+| `scope.caller_cannot_widen` | 1 | A caller cannot reach another scope by passing a different argument |
+| `scope.background_respects_boundary` | 4 | Consolidation does not summarise across a boundary retrieval enforces |
+| `evidence.claim_resolves_to_source` | 2 | Every derived claim resolves to the material it came from |
+| `evidence.source_delete_reaches_derived` | 2 | Deleting a source reaches everything derived from it |
+| `evidence.rebuild_from_retained` | 2 | The derived layer can be rebuilt from what was kept |
+| `gateway.no_bypass_path` | 4 | No write path reaches the store around the gate |
+| `gateway.model_cannot_claim_human_authority` | 4 | A model cannot write at the authority reserved for a person |
+| `tombstone.laundering_sequence` | 5 | Reject, supersede, restate — the value does not come back |
+| `tombstone.survives_ttl_and_prune` | 5 | The rejection outlives the pruning that deletes ordinary rows |
+| `tombstone.key_normalization_attack` | 5 | A unicode look-alike does not slip past the check |
+| `tombstone.reextraction_stays_inactive` | 5 | Re-extracting the same source does not re-assert a rejected value |
+| `tombstone.no_second_memory_unit` | 5 | The rejection is not itself a memory that can be retrieved |
+| `correction.survives_reindex` | 4 | A correction holds through a rebuild, across five case shapes |
+| `correction.retraction_without_replacement` | 5 | A retraction with no replacement value still takes effect |
+| `deletion.absent_after_reindex_and_restart` | 4 | Deleted content stays absent across every path that could restore it |
+| `deletion.absent_from_shared_copies` | 4 | Deleting an original reaches copies made before the deletion |
+| `retrieval.k_is_an_upper_bound` | 3 | A system reporting `@k` scores exactly the first *k* results |
+| `prompt.recall_is_fenced_as_data` | 3 | Recalled text is fenced as data, not as instructions |
+| `prompt.model_ignores_embedded_instructions` | 3 | An instruction stored in a memory does not execute on recall |
 
 Two are worth singling out because they are the ones a bundled suite passes
 without noticing. **`correction.retraction_without_replacement`** covers the
@@ -272,7 +321,10 @@ as the content.
 - **Nothing is runnable.** The twenty tests are language-independent
   specifications, not executable fixtures. There is no adapter you can install
   and no suite you can point at your system. Turning each `given/when/then` into
-  a test in your own stack is an afternoon; the atlas has not done it for you.
+  a test in your own stack is work this project has not done and cannot size for
+  you: most are a few assertions against your own API, and a handful need
+  fixtures — a second scope, an export or sync path, a full index rebuild —
+  which is where the cost actually sits.
 - **The atlas has run none of them against anything.** Every specification here
   was derived from reading code, and no system in the corpus has been put
   through the deletion sequence by this project. A test's presence in the

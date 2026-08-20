@@ -161,6 +161,23 @@ storms can amplify provider failures. Idempotency is difficult when one
 job writes several stores that lack a shared transaction.</p>
 <p>Expose freshness to callers; do not make asynchronous derivation look
 immediately consistent.</p>
+<p><strong>The failure this pattern does not cover is the job that
+succeeds and starves the write path.</strong> Recoverability protects
+work that fails; it says nothing about a maintenance pass that shares
+one deadline with capture and runs first. <a
+href="../../systems/plur1bus/">PLUR1BUS</a> is the worked case: its
+embedding drain was bounded by item count and not by time, ran ahead of
+capture inside the same sixty-second budget, and on a full backlog spent
+the whole budget — so capture was aborted every turn, with the only
+observable a log line announcing the 276 texts it was about to drop,
+followed by the timeout about thirty milliseconds later. Nothing was
+lost irrecoverably and nothing needed a dead-letter path; the queue was
+doing its job. The rule is ordering, not durability: <strong>a
+maintenance pass and the write path it serves must not share one budget,
+and where they must, the write path goes first and maintenance takes the
+remainder.</strong> The repair also needs the loop to honour a deadline
+and report that it stopped early, or the abort surfaces deep inside the
+embedder instead of at the loop boundary.</p>
 <h2 id="cost-to-adopt">Cost to adopt</h2>
 <p><strong>Build:</strong> durable input records, an explicit job state,
 idempotent processing, and a dead-letter path with something that
