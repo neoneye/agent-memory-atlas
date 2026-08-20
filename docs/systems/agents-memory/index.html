@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A markdown memory whose folder
+layout is the schema, with a documented ABI, a search that returns
+line-addressable ids the delete accepts, and a mutability contract
+enforced by a sentence returned to the model.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="agents-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A markdown memory whose
+folder layout is the schema, with a documented ABI, a search that
+returns line-addressable ids the delete accepts, and a mutability
+contract enforced by a sentence returned to the model.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="agents-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A markdown memory whose
+folder layout is the schema, with a documented ABI, a search that
+returns line-addressable ids the delete accepts, and a mutability
+contract enforced by a sentence returned to the model.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>agents-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "agents-memory",
+      "description": "A markdown memory whose folder layout is the schema, with a documented ABI, a search that returns line-addressable ids the delete accepts, and a mutability contract enforced by a sentence returned to the model.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Path as taxonomy</p>
+          <h1>agents-memory</h1>
+          <p class="document-deck">A markdown memory whose folder layout
+is the schema, with a documented ABI, a search that returns
+line-addressable ids the delete accepts, and a mutability contract
+enforced by a sentence returned to the model.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Lolaplex/agents-memory">
+              <span>Source</span>
+              <strong>Lolaplex/agents-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202" title="a2c7812a667a46792a26ea719ad7ea83f875b202">
+              <span>Analyzed revision</span>
+              <code>a2c7812a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>agents-memory</code> is a local markdown memory shared across
+Claude Code, Cursor, Antigravity and Zed through one MCP server. MIT,
+Python 3.10+, 6,450 lines, at version 1.0.0 — the repository is one
+commit, <code>.agents/memory v1</code>.</p>
+<p>Its claim is a <strong>storage standard</strong> rather than a store:
+<code>~/.agents/memory/</code> for the person and
+<code>&lt;repo&gt;/.agents/memory/</code> for the repository, described
+in an <code>abi/</code> directory of eight specification files that a
+conforming implementation is meant to follow. The layout spec states the
+design in two sentences: <em>"One home per fact. Path encodes where it
+belongs. No dump files (<code>facts.md</code>,
+<code>MEMORY.md</code>)."</em> That is a direct rejection of the
+single-file memory most of the local coding-agent family ships, and the
+whole system follows from it.</p>
+<p><strong>What is genuinely interesting:</strong> the taxonomy is the
+schema. Sixteen kinds map to sixteen paths — <code>concept</code>,
+<code>entity</code>, <code>workflow</code> and <code>note</code> in the
+user store; <code>research</code>, <code>plans</code>,
+<code>tasks</code>, <code>waves</code>, <code>roadmap</code>,
+<code>decision</code>, and
+<code>proposed</code>/<code>implemented</code>/<code>rejected</code>
+note lifecycles in the project store — and <code>abi/KINDS.md</code>
+publishes a <strong>mutability hint per kind</strong>: inbox (append,
+distill, delete), a new sequential file per tranche, revise in place, or
+frozen. Decisions carry the sharpest rule: <em>"Revise present tense
+when the contract changes; new number when superseding."</em></p>
+<p><strong>Strongest mechanism:</strong> search and delete share an
+address. <code>search_memory</code> returns
+<code>{"id": "user/notes/programming/chat-stores.md:12", …}</code> and
+<code>delete_memory</code> takes exactly that id, refusing anything that
+does not look like it. A recalled line is a thing the agent can then
+remove — a round trip most systems in this corpus cannot make.</p>
+<p><strong>Weakest:</strong> the address is a line number.
+<code>delete_memory</code> pops a line by position, so removing line 5
+silently renumbers every id below it in that file, and any id a previous
+search returned is now off by one. And the mutability contract is not
+enforced: <code>add_memory</code> appends first and then <em>returns a
+sentence</em> telling the model it should have revised in place.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a bullet line in a file whose path says what kind of
+thing it is.</p>
+<pre class="text"><code>kind + name ──► memory_file_for() ──► ~/.agents/memory/concepts/&lt;name&gt;.md
+                                      &lt;repo&gt;/.agents/memory/decisions/001-&lt;name&gt;.md
+                                      &lt;repo&gt;/.agents/memory/staging/captured.md
+                     │
+                     ▼
+              _append_bullet(path, fact)          ← always appends
+                     │
+        kind ∈ REVISE_IN_PLACE_KINDS and file existed?
+                     │
+                     ▼
+   returns &quot;… — revise this file in place when facts change;
+             do not only append bullets&quot;          ← a request, not a refusal
+
+staging/captured.md ──promote_bullet──► typed file  + bullet deleted from staging
+any line             ──delete_memory(&quot;path.md:12&quot;)──► line removed</code></pre>
+<p><strong>There are no epistemic states.</strong>
+<code>proposed</code>, <code>implemented</code> and
+<code>rejected</code> look like a lifecycle and are directories: a note
+is <em>in</em> one of them, and moving it is moving a file. Nothing
+marks a fact doubtful, nothing records that a value was rejected in a
+way a later write would consult, and <code>rejected</code> being
+<em>"frozen after reject"</em> is a documented convention rather than a
+check. What the system models instead is <strong>where a fact belongs
+and how it may change</strong>, which is a different axis from truth and
+is unusually well specified.</p>
+<p>Control is <strong>hybrid and explicitly staged</strong>: an agent
+files facts through MCP tools, session logs are ingested into a staging
+inbox, and distillation promotes bullets out of staging into typed
+files. The person owns the store in the most literal sense — it is
+markdown in their home directory and their repository, and
+<code>abi/WHY.md</code> argues that as the point.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the folder path is the schema — kind and name resolve to a file, every write appends a bullet, and the search returns a path-and-line id that the delete accepts, so a recalled line is a thing the agent can remove</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the folder path is the schema — kind and name resolve to a file, every write appends a bullet, and the search returns a path-and-line id that the delete accepts, so a recalled line is a thing the agent can remove
+    subgraph hosts[&quot;Claude Code · Cursor · Antigravity · Zed&quot;]
+        MCP[&quot;MCP server&lt;br/&gt;search · add · promote&lt;br/&gt;staging · distill · projects&quot;]
+    end
+
+    LOGS[(&quot;session logs&lt;br/&gt;OpenAI · Claude JSONL · Cursor&lt;br/&gt;Antigravity · Copilot · Pi&quot;)]
+    ING[&quot;ingest + extractors&quot;]
+    STAGE[(&quot;staging/captured.md&lt;br/&gt;inbox&quot;)]
+    DIST[&quot;distill_batch&quot;]
+
+    USER[(&quot;~/.agents/memory/&lt;br/&gt;concepts · entities · workflows&lt;br/&gt;notes/&amp;lt;collection&amp;gt; · projects&quot;)]
+    PROJ[(&quot;&amp;lt;repo&amp;gt;/.agents/memory/&lt;br/&gt;research · plans · tasks · waves&lt;br/&gt;roadmap · decisions · notes/lifecycle&quot;)]
+
+    LOGS --&gt; ING --&gt;|&quot;filtered: no questions,&lt;br/&gt;no acknowledgements&quot;| STAGE
+    STAGE --&gt; DIST --&gt;|&quot;promote_bullet:&lt;br/&gt;file it, then delete the bullet&quot;| USER
+    DIST --&gt; PROJ
+    MCP --&gt;|&quot;add_memory(kind, name)&quot;| USER
+    MCP --&gt;|&quot;add_memory(project=)&quot;| PROJ
+    USER --&gt;|&quot;substring scan, path:line ids&quot;| MCP
+    PROJ --&gt;|&quot;project= narrows, user layer always included&quot;| MCP
+    MCP --&gt;|&quot;delete_memory(&#39;path.md:12&#39;)&quot;| USER</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> A Python package with an MCP server
+(<code>mcp_server.py</code>), a CLI (<code>__main__.py</code>,
+<code>cli_help.py</code>), an ingest pipeline over five vendors' session
+logs, and a <code>store.py</code> of roughly two thousand lines that
+owns the layout. No server process beyond MCP, no database, no index, no
+network.</p>
+<p><strong>Persistence.</strong> Markdown files, read and written whole
+(<code>_read</code>, <code>_write</code>), with a line cache
+(<code>_read_cached_lines</code>) keyed by mtime for search.</p>
+<p><strong>Search stack.</strong> A substring scan. There is no
+embedding anywhere in the tree and no lexical index —
+<code>search_memory</code> lowercases the query and walks every line of
+every file in scope until it hits <code>limit</code>.</p>
+<p><strong>Housekeeping.</strong> <code>consolidate_repo_leaks</code>,
+<code>migrate_legacy_store</code>,
+<code>purge_engine_repo_injection</code> and
+<code>ensure_staging_inbox</code> are repair operations for a store that
+a person also edits by hand — an acknowledgement that the layout will
+drift and needs a way back.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install agents-memory</code>, an <code>mcp.json</code>
+entry per host, and the store is two directories of markdown. Fully
+local and offline; no API key is needed to store anything. The store is
+diffable and committable, and <code>abi/LAYOUT.md</code> is explicit
+that the repo store belongs in the repository. Repairable by hand is not
+a caveat here — it is the design.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>mcp_server.add_memory</code> →
+<code>store.add_memory</code> (<code>store.py:1872</code>): strips the
+fact, refuses an empty one, resolves a path through
+<code>memory_file_for(kind, name, project, collection)</code>, and
+appends a bullet. <code>memory_file_for</code> is where the real rules
+live — <code>proposed</code>/<code>implemented</code>/
+<code>rejected</code> raise without a <code>project=</code>, an
+unregistered project slug raises <em>"unknown project '…' — register it
+first"</em>, and <code>SEQUENTIAL_FOLDERS</code> routes
+<code>plans</code>, <code>tasks</code>, <code>roadmap</code>,
+<code>waves</code> and <code>decisions</code> through
+<code>sequential_path</code> so each tranche is a new <code>001-</code>,
+<code>002-</code> file.</p>
+<p><strong>The mutability contract.</strong>
+<code>store.py:1888-1893</code> — when the kind is in
+<code>REVISE_IN_PLACE_KINDS</code> and the file already existed, the
+return value becomes
+<code>"{loc} — revise this file in place when facts change; do not only append bullets"</code>.
+The bullet has already been appended. This is <a
+href="../../compare/#tool-descriptions-as-policy">tool descriptions as
+policy</a> moved one step later: not a description the model reads
+before acting, but a sentence it reads after the write it should not
+have made.</p>
+<p><strong>Ingest.</strong> <code>ingest.py</code>,
+<code>ingest_chats.py</code>, <code>ingest_catalog.py</code>,
+<code>ingest_extractors.py</code> and <code>extract_openai.py</code>
+read exported session logs from five vendors into staging, filtering
+aggressively — the committed tests assert that a user's question, an
+assistant acknowledgement and an example hostname do not survive into
+what gets stored.</p>
+<p><strong>Distillation.</strong>
+<code>get_staging_inbox(project, limit)</code> returns un-distilled
+bullets grouped by source file, each with a <code>source_path</code>;
+<code>distill_batch</code> processes them;
+<code>promote_bullet(bullet, kind, name, …)</code> files one into a
+typed path and deletes it from staging, reporting
+<code>"and removed from staging"</code> or
+<code>"(staging bullet not found to delete)"</code> — a receipt that
+distinguishes a completed move from a partial one.</p>
+<p><strong>Retrieval.</strong>
+<code>search_memory(query, project, limit)</code>
+(<code>store.py:1640</code>) walks
+<code>iter_memory_files(project)</code> and yields
+<code>{"id": f"{file_id(path)}:{i}", "file", "line", "text"}</code> for
+every matching line.</p>
+<p><strong>Scope.</strong> <code>iter_memory_files</code> unions
+<code>iter_user_memory_files()</code> with
+<code>iter_project_memory_files(slug)</code>, where
+<code>if slug and p.slug != slug: continue</code> drops other projects.
+With no slug, <strong>every</strong> registered project's store is in
+scope. The user layer is never excluded, under a literal no-op:</p>
+<pre class="python"><code>if project:
+    # still include user layer so cross-cutting facts remain findable
+    pass</code></pre>
+<p>A branch that does nothing, kept to say that nothing happens, is a
+clearer statement of intent than most comments manage.</p>
+<p><strong>Delete.</strong> <code>delete_memory(memory_id)</code>
+requires an id containing <code>:</code>, resolves the path,
+bounds-checks the line, pops it and rewrites the file.</p>
+<p><strong>Tests.</strong> Fifteen files including
+<code>test_extract_filters.py</code>,
+<code>test_ingest_pipeline.py</code>,
+<code>test_distill_benchmark.py</code>,
+<code>test_cli_comprehensive.py</code> and
+<code>test_auto_triggering.py</code>, with a
+<code>run_all_tests.py</code> runner.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema object. The model is the filesystem, and
+<code>abi/</code> publishes it:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Folders</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/.agents/memory/</code></td>
+<td><code>concepts/</code>, <code>entities/</code>,
+<code>workflows/</code>, <code>projects/&lt;slug&gt;/</code>,
+<code>notes/&lt;collection&gt;/</code></td>
+</tr>
+<tr>
+<td><code>&lt;repo&gt;/.agents/memory/</code></td>
+<td><code>staging/</code>, <code>research/</code>, <code>plans/</code>,
+<code>tasks/</code>, <code>waves/</code>, <code>roadmap/</code>,
+<code>decisions/</code>,
+<code>notes/{proposed,implemented,rejected}/&lt;class&gt;/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Note collections are <em>guides, not a closed set</em> —
+<code>programming/</code>, <code>finance/</code>, <code>family/</code>,
+<code>preferences/</code> and others — with an instruction to add a
+folder when a fact does not fit, which is the right posture for a store
+a person also edits.</p>
+<p><strong>Identity</strong> is <code>path:line</code>, and that is the
+model's weak point. A line number is a position, not an identity:
+<code>delete_memory</code> pops by index, so every id below the removed
+line shifts, and an id returned by an earlier search silently addresses
+a different fact. The atlas's own antipattern — <a
+href="../../compare/#ranking-positions-used-as-identities">ranking
+positions used as identities</a> — is about retrieval order rather than
+file position, and this is the same class one layer down.</p>
+<p><strong>Provenance</strong> exists only for ingested material, as
+<code>source_path</code> on a staging bullet, and it is consumed by the
+promotion that deletes the bullet. <strong>Temporal:</strong> none in
+the record; the filesystem's mtime is all there is.
+<strong>Correction:</strong> revise the file, or delete a line. There is
+no supersession record, no rejected-value registry, and
+<code>rejected</code> freezes a note rather than blocking its content
+from being re-filed elsewhere.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A substring scan, in file order, stopping at <code>limit</code>
+(default 20). No ranking, no scoring, no recency weighting, no fusion —
+the first twenty lines containing the query string, in whatever order
+<code>iter_memory_files</code> produced. Files are line-cached by mtime,
+so repeated searches over an unchanged store are cheap.</p>
+<p><strong>Failure modes.</strong> A query is matched literally, so a
+fact stored as <em>"prefer pnpm"</em> is not found by <em>"package
+manager"</em>, and the taxonomy is doing the work that ranking usually
+does: you find things because you know which folder they are in. That is
+coherent for a store a person browses and thin for an agent issuing one
+query. The <code>limit</code> truncates by scan order rather than
+relevance, so a store with many incidental matches can hide the good one
+behind twenty poor ones.</p>
+<p><strong>No injection path.</strong> Nothing assembles a context
+block; the memory reaches the model only when the model calls
+<code>search_memory</code> or <code>get_project_memories</code>. The
+<code>skills/</code> directory carries prompt guidance that tells it
+to.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a bullet appended to a resolved path, synchronous,
+with no model call inside the primitive. Extraction happens only in the
+ingest pipeline, over exported logs, offline.</p>
+<p><strong>Deduplication:</strong> none. The same fact filed twice is
+two bullets, in the same file if the kind and name match.</p>
+<p><strong>Conflict handling:</strong> none. Two contradictory bullets
+coexist, and the resolution mechanism is a person opening the file —
+which the ABI states plainly for <code>implemented</code> notes:
+<em>"revise in place when code/paths change (facts track
+reality)"</em>.</p>
+<p><strong>Filtering of noisy input</strong> is the strong part, and it
+is on the ingest side: questions, acknowledgements and placeholder
+hostnames are dropped before anything durable is written, with committed
+cases for each.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call, no network, no background pass. A write is a file
+append; a search is a scan over the store, bounded by the line cache.
+The cost that will bite first is the scan: every search reads every
+markdown file in the union of the user store and one or all project
+stores, and nothing bounds the store's size except the person's
+discipline and the ABI's instruction not to dump transcripts into it.
+Write-to-readable lag is zero.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One MCP server, four documented hosts, and a tool surface that
+matches the model's vocabulary: <code>search_memory</code>,
+<code>add_memory</code>, <code>promote_bullet</code>,
+<code>get_staging_inbox</code>, <code>distill_batch</code>,
+<code>get_project_memories</code>, <code>delete_memory</code>,
+<code>register_project</code>. <code>abi/MCP.md</code> specifies the
+surface for a conforming implementation, which is the part that makes
+this a standard proposal rather than a tool.</p>
+<p>Agency is high and unsupervised — the model chooses what to file and
+where, and the only refusals are structural (unknown project, missing
+<code>project=</code> for a lifecycle note, empty fact).
+<code>abi/KINDS.md</code> closes with a policy the code does not
+enforce: <em>"Do not store transcripts, emails, phones, tokens, or
+one-shot how-tos as durable memory."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No trust model.</strong> No status, no confidence, no
+provenance on a filed fact, and no way to record that something is
+doubted. The store cannot distinguish a fact the user stated from one
+the model inferred, which for a store whose distillation runs over
+session logs is the gap that matters most.</p>
+<p><strong>Privacy</strong> is handled where it can be: ingest filters
+drop question text and placeholder hosts, and the ABI tells the agent
+not to store contact details or tokens. Nothing scans a fact for secrets
+at write time.</p>
+<p><strong>Injection.</strong> A memory is markdown filed by a model
+from a session log, and recalled as plain text with no fence. A hostile
+string in an ingested transcript can become a durable bullet in
+<code>notes/</code> and come back on a later search.</p>
+<p><strong>Data loss.</strong> <code>_write</code> replaces a file
+whole. There is no lock, no atomic temp-and-rename visible in
+<code>store.py</code>'s writer, and the repair functions
+(<code>consolidate_repo_leaks</code>, <code>migrate_legacy_store</code>)
+exist because the layout does drift. Two agents filing into the same
+file concurrently is last-write-wins over the whole file rather than the
+line.</p>
+<p><strong>Deletion is real</strong> — a line is removed from a file the
+user owns, with no copies, no index and no export to chase. That is the
+upside of the design and it is a large one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Fifteen test files with a plain runner. The ingest and extraction
+path is the best covered: <code>test_extract_filters.py</code> asserts
+across three fixtures that the user's question, the assistant's
+acknowledgement and an example hostname do not appear in extracted
+output, which is what earns <code>negative_eval</code> — material kept
+out of a <em>write</em> rather than out of a read, the weaker of the two
+strengths the rubric distinguishes, and unambiguous within it.</p>
+<p><code>test_distill_benchmark.py</code> is the nearest thing to an
+eval and measures distillation throughput rather than quality; no result
+artifact is committed.</p>
+<p><strong>What I would want before trusting it:</strong> a case
+asserting that <code>search_memory(project="a")</code> never returns a
+line from project b's store, and a case for the id contract — that an id
+returned by search still addresses the same text after an unrelated line
+is deleted. The second would fail, and that is the point of writing
+it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the path be the schema, and publish it.</strong> Sixteen
+kinds, sixteen destinations, one home per fact, and an explicit <em>"no
+dump files"</em> rule. A reader can tell where a fact lives without
+reading any code, and a second implementation could conform.</li>
+<li><strong>Publish a mutability hint per kind.</strong> Inbox,
+sequential, revise-in-place, frozen — four behaviours attached to the
+type of thing rather than to the store, and the decision rule
+(<em>"revise present tense when the contract changes; new number when
+superseding"</em>) is the clearest statement of supersession semantics
+in this corpus's markdown family.</li>
+<li><strong>Make the search result an address the delete
+accepts.</strong> Returning <code>file.md:12</code> and taking the same
+string back is what turns recall into something an agent can act
+on.</li>
+<li><strong>Give the inbox a drain with a receipt.</strong>
+<code>promote_bullet</code> files the bullet and reports whether it also
+removed it, so a partial move is visible.</li>
+<li><strong>Filter the ingest, and test the filter negatively.</strong>
+Dropping the user's own question and the assistant's <em>"[ok]"</em>
+before anything is stored is the cheapest quality mechanism available,
+and the tests assert the absence.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not address a memory by line number.</strong> Any
+deletion above it renumbers every id below, so an id handed to an agent
+decays as soon as the file changes. A stable id — a hash of the bullet,
+a per-line uuid in a comment — costs little and makes the address
+survivable.</li>
+<li><strong>Do not enforce a contract by returning a sentence after
+doing the wrong thing.</strong> If revise-in-place is the rule for a
+kind, refuse the append and say what to call instead; a string appended
+to a success message is advice attached to the failure it
+describes.</li>
+<li><strong>Do not let an unqualified search span every
+project.</strong> <code>search_memory()</code> with no project reads
+every registered store; a default that widens is the opposite of the one
+you want.</li>
+<li><strong>Do not rely on a folder to freeze a record.</strong>
+<code>rejected</code> is frozen by convention, and nothing stops the
+same content being filed again under another kind.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who works across several editors, keeps
+their own notes, and wants the agent's memory to be files they can read,
+diff and commit. Within that shape it is the most carefully specified
+markdown store this atlas has read — the <code>abi/</code> directory is
+a genuine standards proposal, and the taxonomy is better thought through
+than the systems that ship a database. Walk away if more than one person
+writes to the same store, if you need memory that can be wrong in a way
+the system records, or if you expect recall to find things you cannot
+name — the search is a substring scan and the taxonomy is doing all the
+work.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does anything consume <code>abi/</code>? The specification describes
+a conforming implementation, and whether a second one exists decides
+whether this is a standard or a well-documented tool.</li>
+<li>What does <code>distill_batch</code> actually do with a bullet — is
+there a model in that path, and where does its prompt live?</li>
+<li>How large does a store get before the full scan is felt? Nothing in
+the repository reports a store size or a search latency.</li>
+<li>The repository is one commit at v1.0.0 with a PyPI release; whether
+the history was squashed or the project began here is not visible from
+the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Specification:</strong> <code>abi/LAYOUT.md</code>,
+<code>abi/KINDS.md</code>, <code>abi/MCP.md</code>,
+<code>abi/INGEST.md</code>, <code>abi/INJECTION.md</code>,
+<code>abi/WHY.md</code></li>
+<li><strong>Store and layout:</strong>
+<code>src/agents_memory/store.py</code> (<code>memory_file_for</code>,
+<code>add_memory</code> at <code>:1872</code>,
+<code>search_memory</code> at <code>:1640</code>,
+<code>iter_memory_files</code>, <code>delete_memory</code>)</li>
+<li><strong>Agent surface:</strong>
+<code>src/agents_memory/mcp_server.py</code>, <code>skills/</code></li>
+<li><strong>Ingest and distillation:</strong>
+<code>src/agents_memory/ingest.py</code>, <code>ingest_chats.py</code>,
+<code>ingest_catalog.py</code>, <code>ingest_extractors.py</code>,
+<code>extract_openai.py</code>, <code>consolidate.py</code></li>
+<li><strong>Repair:</strong> <code>store.consolidate_repo_leaks</code>,
+<code>migrate_legacy_store</code>,
+<code>purge_engine_repo_injection</code></li>
+<li><strong>Tests:</strong> <code>tests/test_extract_filters.py</code>,
+<code>test_ingest_pipeline.py</code>,
+<code>test_cli_comprehensive.py</code>,
+<code>test_distill_benchmark.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202"><code class="commit-id" title="a2c7812a667a46792a26ea719ad7ea83f875b202">a2c7812a…</code></a>
+— first reading, at version 1.0.0, on a repository whose history is a
+single commit titled <code>.agents/memory v1</code>. Screened before
+anything was read: no auto-executing surface, no build-time execution,
+<code>pyproject.toml</code> and <code>requirements.txt</code> both
+inside the seven-day cooldown, one unpinned surface, and
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> addressed to a reading
+agent and recorded as data; nothing was installed and no test was run.
+The line-numbered id and the revise-in-place return string were
+established by reading <code>store.py</code> against the ABI it
+implements.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

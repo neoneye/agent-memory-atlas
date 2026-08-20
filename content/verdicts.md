@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 314 reports.**
+**This page covers all 315 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2743,3 +2743,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT (covering the client only), ~27,000 lines of TypeScript across six packages, ten memory test files plus per-client hook-runtime suites, four host integrations. One capability mark, `negative_eval`, earned on the outbound payload rather than on a read path. `stack_storage` is `delegated` and `stack_retrieval` is empty because neither the store nor the ranking is in this repository.
 - Study when: you are shipping session text to a store you do not own and want a worked redaction boundary, or you want the pattern of a required, kind-distinguished scope with a named fallback.
 - Do not copy when: deletion or correction matters, or you need to be able to answer what your memory contains. The local half is careful and the questions this atlas asks are all answered somewhere else.
+
+### [`agents-memory`](../systems/agents-memory/)
+
+- Best idea: **the path is the schema, and it is published as a specification.** Sixteen kinds map to sixteen destinations across a user store and a per-repository store, with `abi/LAYOUT.md` stating the rule outright — *"One home per fact. Path encodes where it belongs. No dump files (`facts.md`, `MEMORY.md`)"* — a direct refusal of the single-file memory most of this family ships. `abi/KINDS.md` then publishes a **mutability hint per kind**: inbox, new sequential file per tranche, revise in place, frozen; and the decision rule is the clearest supersession statement in the markdown family here — *"Revise present tense when the contract changes; new number when superseding."*
+- Second idea: **search returns an address the delete accepts.** `search_memory` yields `{"id": "user/notes/programming/chat-stores.md:12", …}` and `delete_memory` takes exactly that string, refusing anything that does not look like it. Recall becomes something the agent can act on rather than only read. Beside it, `promote_bullet` files a staging bullet into a typed path and reports whether it also removed it, so a partial drain is visible.
+- Biggest risk: **that address is a line number.** `delete_memory` pops by index, so removing one line renumbers every id below it in the file and an id from an earlier search silently addresses different text. And the mutability contract is not enforced anywhere: `add_memory` appends the bullet and *then* returns `"— revise this file in place when facts change; do not only append bullets"`, which is advice attached to the write it is describing as wrong. `search_memory()` with no `project=` also spans every registered project's store, a default that widens.
+- Maturity impression: MIT, Python 3.10+, 6,450 lines, fifteen test files, published to PyPI at 1.0.0 on a single-commit history titled `.agents/memory v1`. Two capability marks. `scope_enforced` is earned narrowly — the slug reaches the query and drops other projects, while the user layer is always unioned in under a literal `if project: pass` carrying the comment *"still include user layer so cross-cutting facts remain findable"*. `negative_eval` is earned on the ingest filters, which assert across three fixtures that a user's question, an assistant acknowledgement and an example hostname never reach a durable file. No trust state: `proposed`/`implemented`/`rejected` are folders, and `rejected` is frozen by convention rather than by a check.
+- Study when: you are designing a markdown memory a person will also edit, and want the worked version of a taxonomy that makes ranking unnecessary — plus the ABI as a model for writing your layout down so a second implementation could conform.
+- Do not copy when: more than one writer shares a store, or you need recall to find what you cannot name. The search is a case-insensitive substring scan in file order, capped at twenty, and the folder structure is doing all the work relevance normally does.
