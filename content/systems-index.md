@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **316 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **317 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -159,6 +159,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/helix-agi/"><span class="az-id">Helix AGI</span><span class="az-what">Belief physics on a journal</span><code class="az-repo">munch2u-a11y/Helix-AGI</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/helm/"><span class="az-id">Helm</span><span class="az-what">Confidence-ratcheted SQLite memory</span><code class="az-repo">GOODMAN-PRO/helm</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hermes-agent/"><span class="az-id">Hermes Agent</span><span class="az-what">Prompt-cache-bounded memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/hestia/"><span class="az-id">Hestia</span><span class="az-what">Determinism over intelligence</span><code class="az-repo">thefullnacho/hestia</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hexis/"><span class="az-id">Hexis</span><span class="az-what">Reconsolidation after a belief changes</span><code class="az-repo">quixiai/hexis</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/hillock/"><span class="az-id">Hillock</span><span class="az-what">A gate that is control flow</span><code class="az-repo">roandejager/Hillock</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hindsight/"><span class="az-id">Hindsight</span><span class="az-what">Retain, recall, and reflect</span><code class="az-repo">vectorize-io/hindsight</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>

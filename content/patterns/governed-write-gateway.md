@@ -172,6 +172,21 @@ no audited judge is configured, warns once per process, and emits a
 reason — "an unaudited heuristic whose number-mismatch score sits exactly at the
 default action threshold must never select deactivation".
 
+[Hestia](../../systems/hestia/) declines the gateway for one adapter on purpose.
+The diagram above routes background extraction into the same governed command as
+every other caller; Hestia routes it somewhere else. `brain/note_taker.py`
+extracts durable facts from conversation and they *"land in a review inbox
+(`memory/inbox/*.md`), NOT straight into the live memory store"* — the queue is
+deduplicated against both live memory and its own pending entries, and
+`review_notes.py` is where a person promotes, edits or drops each one. The
+bypass is present and defaults off (`HESTIA_NOTETAKER_AUTOWRITE` reads `"0"`).
+The direct write path still goes through one governed function with a `type`
+whitelist that raises rather than coercing, and returns the error text to the
+model so it can retry. So this is not a system without a gateway; it is one that
+decided the *least* trustworthy adapter should not have a machine-decided verdict
+at all. Worth weighing against the cost: the queue defers the judgement rather
+than deciding it, and nothing downstream can mark a promoted fact wrong.
+
 ### The gateway that is not yours
 
 Every gateway on this page is inside the memory system it governs. Two projects

@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first home assistant whose
+memory is one markdown file per fact, where the background note-taker
+proposes into a review inbox and nothing reaches the live store until a
+person promotes it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hestia — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first home
+assistant whose memory is one markdown file per fact, where the
+background note-taker proposes into a review inbox and nothing reaches
+the live store until a person promotes it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hestia — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first home
+assistant whose memory is one markdown file per fact, where the
+background note-taker proposes into a review inbox and nothing reaches
+the live store until a person promotes it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hestia — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hestia",
+      "description": "A local-first home assistant whose memory is one markdown file per fact, where the background note-taker proposes into a review inbox and nothing reaches the live store until a person promotes it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Determinism over intelligence</p>
+          <h1>Hestia</h1>
+          <p class="document-deck">A local-first home assistant whose
+memory is one markdown file per fact, where the background note-taker
+proposes into a review inbox and nothing reaches the live store until a
+person promotes it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/thefullnacho/hestia">
+              <span>Source</span>
+              <strong>thefullnacho/hestia</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351" title="e6841239a9644035df88bb49f429385382238351">
+              <span>Analyzed revision</span>
+              <code>e6841239…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hestia is a self-hosted assistant for a house: one stateful "brain"
+wrapping a local model behind an OpenAI-compatible endpoint, with every
+window into it — phone, terminal, kitchen mic, Home Assistant — speaking
+the same dialect. AGPL-3.0.</p>
+<p>Its thesis is stated in the README and is unusually disciplined for
+the category: <em>"Most 'AI for the home' points the model at the things
+it's worst at: remembering a schedule, watching a threshold, firing a
+reminder at the right minute. Hestia does the opposite. Anything
+deterministic … is handed to something dumb and reliable: a timer, a
+record, a row in a database."</em> The memory follows from that:
+markdown files a person can read, a keyword recall, and a model that
+proposes rather than decides.</p>
+<p><strong>The mechanism worth the report is the review inbox.</strong>
+<code>brain/note_taker.py</code> extracts durable facts from
+conversation in the background, and they <em>"land in a review inbox
+(<code>memory/inbox/*.md</code>), NOT straight into the live memory
+store."</em> <code>brain/review_notes.py</code> is the human step, and
+says why: <em>"nothing becomes part of the brain's live memory until you
+promote it here, so the brain learns in the open and you stay in control
+(determinism over intelligence)."</em> The bypass exists —
+<code>HESTIA_NOTETAKER_AUTOWRITE</code> — and it is <strong>off by
+default</strong>, which is the difference between a review gate and a
+decoration.</p>
+<p><strong>Also good:</strong> the store's write whitelist errors loudly
+rather than coercing, and a committed test asserts that the refused fact
+is absent afterwards.</p>
+<p><strong>Weakest:</strong> recall is keyword overlap over every
+record, <code>confidence</code> is written and only ever used as a
+tiebreak, and once a fact is promoted there is no way to mark it wrong —
+the correction surface is a text editor and a <code>rm</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a markdown file. A <em>proposed</em> memory is a markdown
+file somewhere else.</p>
+<pre class="text"><code>conversation ──► note_taker (background)
+                      │ is it novel vs live memory AND vs the queue?
+                      ▼
+             memory/inbox/&lt;id&gt;.md          ← proposal, reviewable
+                      │
+              review_notes.py  ← a person promotes or discards
+                      ▼
+             memory/&lt;id&gt;.md                ← live: type, confidence, source,
+                      ▲                       last_seen, links, pinned + text
+                      │
+        memory tool: write ──┘        recall ──► keyword overlap, top-k
+                             (the model&#39;s own two operations)</code></pre>
+<p>The only lifecycle is <strong>proposed → live</strong>, and it is
+crossed by a person. After that there are no states: nothing marks a
+live fact doubtful, superseded or rejected, and <code>confidence</code>
+is a float set at write time that never moves except by editing the
+file.</p>
+<p>Control is genuinely <strong>split by design</strong> rather than by
+omission. The model may write directly through its tool; the
+<em>passive</em> extraction — the part that would otherwise fill a store
+with unreviewed inferences — is held behind the inbox. The system treats
+a live fact as true and says so by putting the judgement step before the
+store rather than after it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, with the bypass off by default</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, with the bypass off by default
+    subgraph clients[&quot;Windows into the brain&quot;]
+        PHONE[&quot;phone&quot;]
+        TERM[&quot;terminal&quot;]
+        MIC[&quot;kitchen mic&quot;]
+        HA[&quot;Home Assistant&quot;]
+    end
+
+    BRAIN[&quot;brain/hestia.py&lt;br/&gt;POST /v1/chat/completions&lt;br/&gt;agent loop, ten scoped tools&quot;]
+    LLM[&quot;local model&lt;br/&gt;Ollama qwen3:14b&quot;]
+
+    TOOL[&quot;tools/memory_tool.py&lt;br/&gt;op = write | recall&quot;]
+    STORE[(&quot;memory/&amp;lt;id&amp;gt;.md&lt;br/&gt;+ INDEX.md&quot;)]
+    NOTE[&quot;note_taker.py&lt;br/&gt;passive extraction&quot;]
+    INBOX[(&quot;memory/inbox/&amp;lt;id&amp;gt;.md&lt;br/&gt;proposals&quot;)]
+    REVIEW[&quot;review_notes.py&lt;br/&gt;the human dispose step&quot;]
+
+    clients --&gt; BRAIN --&gt; LLM
+    BRAIN --&gt; TOOL
+    TOOL --&gt;|&quot;write&quot;| STORE
+    TOOL --&gt;|&quot;recall: keyword overlap&quot;| STORE
+    BRAIN --&gt; NOTE
+    NOTE --&gt;|&quot;novel vs live AND vs queue&quot;| INBOX
+    INBOX --&gt; REVIEW --&gt;|&quot;promote&quot;| STORE
+    NOTE -.-&gt;|&quot;AUTOWRITE=1 only&quot;| STORE
+    BRAIN --&gt;|&quot;GET /memory/inbox&quot;| INBOX</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> A Python service
+(<code>brain/</code>) exposing an OpenAI-compatible endpoint with an
+agent loop and ten scoped tools — <code>home</code>, <code>media</code>,
+<code>memory</code> and others — plus clients under
+<code>clients/</code> and deployment under <code>deploy/</code>.
+Everything is local; the README's claim is that nothing leaves the
+house.</p>
+<p><strong>Persistence.</strong> Markdown files under
+<code>HESTIA_MEMORY_DIR</code> (default <code>memory/</code>), one per
+fact, with <code>INDEX.md</code> regenerated on write — one line per
+record carrying id, type and confidence. The records are
+<strong>gitignored on purpose</strong>, with the reasoning in
+<code>memory/README.md</code>: they are runtime data, and a reader who
+wants the design's <em>"every learned fact is an auditable diff"</em> is
+told to point the env var at a dedicated git repository.</p>
+<p><strong>Search.</strong> Keyword overlap in
+<code>memory_store.recall</code>, with <code>pinned</code> worth
+<code>0.5</code> and <code>confidence</code> folded in as <em>"gentle
+tiebreakers"</em>. <code>memory/README.md</code> is explicit that this
+is v1: <em>"vector recall is a planned upgrade (markdown stays the
+source of truth, the index is derived)."</em></p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A local model on hardware you own, a service, and a directory of
+markdown. No cloud, no key needed to store anything, and the store is
+the most repairable kind there is. <code>MEMORY-DESIGN.md</code> records
+the build-versus-reuse decision that produced it, including what was
+taken from another project — <em>"Odysseus's write-it-down reflex + a
+human-readable structured store + passive background extraction"</em> —
+which is a rarer document than the design itself.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The tool.</strong>
+<code>brain/tools/memory_tool.py::execute(op, content, type)</code> has
+exactly two operations. <code>write</code> calls
+<code>memory_store.write</code> and catches <code>ValueError</code> to
+<em>"tell the model instead of silently munging"</em>;
+<code>recall</code> returns rendered hits or the literal <em>"Nothing
+relevant in memory."</em> There is no delete op, so the model cannot
+remove what it wrote.</p>
+<p><strong>The store.</strong> <code>brain/memory_store.py</code> —
+<code>write(content, type, source, confidence, links, pinned)</code>
+stamps <code>source: f"{source}@{today}"</code> and
+<code>last_seen</code>, writes one file, and calls
+<code>_reindex()</code> to regenerate <code>INDEX.md</code>.
+<code>recall(query, k)</code> scores by keyword overlap and adds the
+tiebreakers. <code>context_block(query, k)</code> renders the selected
+records for injection.</p>
+<p><strong>The note-taker.</strong> <code>brain/note_taker.py</code>
+extracts candidate facts, checks novelty against <em>both</em> the live
+store and the existing queue (<code>:131</code> — <em>"True if this fact
+isn't already known (live memory) or already queued (inbox)"</em>), and
+writes one proposal per fact as reviewable markdown (<code>:160</code>).
+<code>AUTOWRITE</code> (<code>:32</code>) defaults to
+<code>"0"</code>.</p>
+<p><strong>The review step.</strong> <code>brain/review_notes.py</code>
+is the promote/discard CLI; <code>brain/hestia.py:346</code> exposes
+<code>GET /memory/inbox</code>.</p>
+<p><strong>Tests.</strong> <code>brain/tests/test_memory_store.py</code>
+and <code>brain/tests/test_memory_inbox.py</code>, plus a wider suite
+for the brain and tools.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Frontmatter plus prose: <code>type</code> (whitelisted),
+<code>confidence</code> (float), <code>source</code>
+(<code>&lt;origin&gt;@&lt;date&gt;</code>), <code>last_seen</code>,
+<code>links</code> (a list of ids), <code>pinned</code> (bool).
+<code>INDEX.md</code> is derived and regenerated on every write.</p>
+<p><strong>Scoping:</strong> none, and none is wanted — this is one
+household's brain, and the absence is a design position rather than a
+gap.</p>
+<p><strong>Temporal:</strong> <code>last_seen</code> and the date inside
+<code>source</code>. There is no validity interval and no notion of when
+a fact stopped being true.</p>
+<p><strong>Correction:</strong> editing or deleting a file. There is no
+supersession chain, no rejected-value record, and nothing that stops a
+promoted-then-deleted fact from being re-proposed by the note-taker on
+the next conversation that mentions it — the novelty check runs against
+live memory and the queue, and a fact that is in neither looks new.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword overlap over every record, top-k, with <code>pinned</code>
+and <code>confidence</code> breaking ties. That is honest about its
+limits in the repository's own words, and it has the property the
+taxonomy-heavy systems in this corpus rely on: a small store where a
+person knows what is in it.</p>
+<p><strong>Failure modes.</strong> A fact phrased differently from the
+query is not found, and there is no fallback channel. The
+<code>INDEX.md</code> is a listing rather than an index — nothing
+queries it. And because <code>confidence</code> only ever breaks a tie,
+a low-confidence fact and a high-confidence one are equally retrievable;
+the field records a judgement the read path almost entirely ignores.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two paths with different rules, which is the design's whole
+point.</p>
+<p><strong>The model's own writes are immediate</strong> but
+constrained: an unknown <code>type</code> raises rather than coercing,
+and the error text goes back to the model so it can correct itself.</p>
+<p><strong>Passive extraction may only propose.</strong> Everything the
+note-taker finds goes to the inbox, deduplicated against live memory
+<em>and</em> the queue so a repeated conversation does not stack
+duplicate proposals, and a person promotes. Set beside the rest of this
+corpus, where background extraction usually writes straight into the
+store and the review surface is a viewer, that ordering is the
+contribution.</p>
+<p><strong>Conflicts</strong> are not modelled. Two contradictory
+promoted facts coexist and both can be recalled.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Recall is a scan over the store per query and the store is small by
+construction. Writes are a file plus an index regeneration —
+<code>_reindex()</code> rewrites <code>INDEX.md</code> on every write,
+which is O(store) per fact and fine at household scale. Extraction runs
+in the background and costs a model call on the local box.
+Write-to-readable lag is zero for a tool write and <em>however long
+until a person reviews</em> for an extracted one, which is the honest
+trade the design makes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The <code>memory</code> tool sits among ten scoped tools behind one
+OpenAI-compatible endpoint, so every client — phone, terminal, mic, Home
+Assistant — reaches the same store through the same agent loop. The
+model's agency is two operations wide: write and recall. It cannot
+delete, cannot promote from the inbox, and cannot set its own
+<code>confidence</code> through the tool surface.</p>
+<p>That last point is worth stating plainly, because most systems in
+this corpus let the writer choose its own trust level. Here the tool's
+<code>execute</code> passes <code>source="agent"</code> and lets the
+store default the confidence.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The review inbox is the trust mechanism</strong>, and it is
+placed before the store rather than after it. What it does not do is
+give a promoted fact any way to be doubted later: after promotion the
+record is a file like any other.</p>
+<p><strong>Provenance</strong> is real but coarse — <code>source</code>
+records origin and date, and <code>links</code> can relate records, so a
+promoted fact can point at what it came from.</p>
+<p><strong>Injection.</strong> Recalled text is rendered into a context
+block with no data fence. For a household assistant reading from a mic,
+the material entering memory is whatever was said in the house, which is
+a smaller threat surface than most and not an empty one.</p>
+<p><strong>Privacy</strong> is the design's headline: local model, local
+files, nothing exposed. The gitignored records are the right default for
+a code repository, and the <code>HESTIA_MEMORY_DIR</code> escape hatch
+for a versioned store is documented in the same paragraph.</p>
+<p><strong>Data loss.</strong> <code>_reindex()</code> rewrites
+<code>INDEX.md</code> on every write with no lock; two concurrent writes
+could interleave the regeneration. The records themselves are separate
+files, so the blast radius is the index rather than the memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test_memory_store.py</code> covers id uniqueness, file
+creation, the pinned tiebreak, and the whitelist refusal — the last of
+which earns <code>negative_eval</code> in its strongest small form: the
+refusal raises <em>and</em> the content is asserted absent, so a
+rejected write cannot leave a partial record. Its comment dates the
+change to an audit nit closed on 2026-07-22 and states the alternative
+it rejected, which is unusually legible for a test.</p>
+<p><code>test_memory_inbox.py</code> covers the proposal path. A
+<code>benchmarks/</code> directory and
+<code>brain/eval_keymatch.py</code> exist beside <code>sft_gen.py</code>
+and <code>sft_gen_v2.py</code>, so keyword-match evaluation and
+fine-tune data generation are both present; no committed result artifact
+reports a score.</p>
+<p><strong>What I would want:</strong> a case asserting that a fact
+deleted from live memory is not re-proposed by the note-taker on the
+next mention. As read, the novelty check would treat it as new, which is
+the rejected-value gap in the shape this design would actually meet
+it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let passive extraction propose, never write, and default the
+bypass off.</strong> One inbox directory, one CLI, and a
+<code>"0"</code> default is the whole mechanism, and it is the
+difference between a store a person trusts and one they audit.</li>
+<li><strong>Deduplicate a proposal against the queue as well as the
+store.</strong> Checking only live memory means the same fact stacks up
+in the inbox every time it is mentioned.</li>
+<li><strong>Error loudly on an out-of-whitelist type and return the
+error to the model.</strong> Coercion hides the mistake; the model can
+fix what it is told about.</li>
+<li><strong>Assert the absence after the refusal.</strong> A test that
+checks the exception and not the store will pass over a half-write.</li>
+<li><strong>Keep the deterministic work away from the model on purpose,
+and say so.</strong> Timers, thresholds and schedules are not memory
+problems, and a system that routes them away from the LLM has a smaller
+memory to get right.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not write a <code>confidence</code> the read path only
+uses as a tiebreak.</strong> Either filter on it, rank on it, or drop
+the field — a recorded judgement nothing acts on reads as a control that
+is not there.</li>
+<li><strong>Do not leave a promoted fact with no way to be marked
+wrong.</strong> The inbox guards entry and nothing guards what happens
+after.</li>
+<li><strong>Do not let deletion be invisible to the extractor.</strong>
+A fact a person removed will look novel the next time it is
+mentioned.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one household running its own hardware, and it is the
+clearest example in this corpus of a review-first memory whose default
+really is review. Take the inbox pattern whether or not you take the
+rest. Walk away if you need recall to find what you cannot name — the
+keyword scan is honest about being v1 — or if memory has to be
+correctable after the fact rather than only before it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What extracts the proposals? <code>note_taker.py</code> takes an
+<code>extract_fn</code>; which model and prompt run in the default
+deployment is not visible from the tree.</li>
+<li>How large does the store get before the keyword scan and the
+per-write <code>_reindex()</code> are felt in a household?</li>
+<li>Does <code>review_notes.py</code> record <em>rejections</em>, or
+does a discarded proposal simply disappear? The second would make the
+same fact re-proposable indefinitely.</li>
+<li><code>benchmarks/</code> and <code>eval_keymatch.py</code> exist
+with no committed results; what do they measure and what did they
+show?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Store:</strong> <code>brain/memory_store.py</code>,
+<code>memory/README.md</code></li>
+<li><strong>Agent surface:</strong>
+<code>brain/tools/memory_tool.py</code>,
+<code>brain/hestia.py</code></li>
+<li><strong>Proposal and review:</strong>
+<code>brain/note_taker.py</code>, <code>brain/review_notes.py</code>,
+<code>brain/hestia.py:346</code></li>
+<li><strong>Configuration:</strong> <code>brain/config.py</code>
+(<code>MEMORY_DIR</code>, <code>INBOX_DIR</code>)</li>
+<li><strong>Design record:</strong> <code>MEMORY-DESIGN.md</code>,
+<code>ARCHITECTURE.md</code>, <code>AUDIT.md</code></li>
+<li><strong>Tests and evals:</strong>
+<code>brain/tests/test_memory_store.py</code>,
+<code>brain/tests/test_memory_inbox.py</code>,
+<code>brain/eval_keymatch.py</code>, <code>benchmarks/</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351"><code class="commit-id" title="e6841239a9644035df88bb49f429385382238351">e6841239…</code></a>
+— first reading. Screened before anything was read: no auto-executing
+surface, one build-time execution point, three unpinned surfaces;
+nothing was installed, no model was pulled and no service was started.
+The review-inbox default and the whitelist refusal were established by
+reading <code>note_taker.py</code> and <code>memory_store.py</code>
+against their committed tests. The memory records themselves are
+gitignored runtime data and were not present in the checkout, so every
+claim here is about the code that writes them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

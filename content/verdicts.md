@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 316 reports.**
+**This page covers all 317 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2761,3 +2761,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: roughly two dozen files of shell, Python and three TypeScript extensions, a launchd job, one test. No capability mark. `trust_state` is withheld deliberately and it is the report's most interesting sentence — the rubric asks for a discrete status *as a field*, and this is a computation, while its effect is stronger than the mark measures because `STALE` does not withhold a memory, it removes it. `scope_enforced` is withheld too: `--scope` is a path substring applied at query time, not a stored key. The store itself is Graft, a separate daemon this repository does not contain.
 - Study when: your memories reference something checkable — files, commits, tickets, URLs — and you want freshness to be an observation rather than a decay heuristic. The four-line rank change is the whole idea and it transfers to any store.
 - Do not copy when: you need the store, the trust history, or a boundary between principals. Heimdall owns none of the three, and its entire epistemics is one `stat`.
+
+### [`hestia`](../systems/hestia/)
+
+- Best idea: **passive extraction may only propose, and the review step is the default.** `note_taker.py` pulls durable facts out of conversation and they *"land in a review inbox (`memory/inbox/*.md`), NOT straight into the live memory store"*, deduplicated against both live memory and the queue so a repeated conversation does not stack proposals; `review_notes.py` is the human dispose step — *"nothing becomes part of the brain's live memory until you promote it here, so the brain learns in the open and you stay in control (determinism over intelligence)"*. The bypass exists and defaults off: `HESTIA_NOTETAKER_AUTOWRITE` reads `"0"`. Across this corpus, background extraction usually writes straight into the store and the review surface is a viewer; this is the ordering reversed.
+- Second idea: **the write whitelist errors loudly and the test asserts the absence.** An out-of-whitelist `type` raises rather than coercing, the error text goes back to the model so it can fix itself, and `test_unknown_type_raises` checks both the exception *and* that the content is absent from the store afterwards — a refusal that cannot half-write, with a comment dating the change to an audit nit and naming the alternative it rejected.
+- Biggest risk: **nothing can mark a promoted fact wrong.** The inbox guards entry and nothing guards what happens after: no supersession, no rejected-value record, and the correction surface is a text editor. Worse in combination — the note-taker's novelty check runs against live memory and the queue, so a fact a person deliberately deleted looks new the next time it is mentioned and can be proposed again. Beside that, `confidence` is written on every record and used only as a gentle tiebreak, so a recorded judgement the read path all but ignores reads as a control that is not there.
+- Maturity impression: AGPL-3.0, a Python brain behind an OpenAI-compatible endpoint with ten scoped tools, memory as one markdown file per fact under a configurable dir with a regenerated `INDEX.md`, records gitignored as runtime data with the reasoning stated. Two capability marks. Recall is keyword overlap and the repository says so — *"v1 recall is keyword overlap; vector recall is a planned upgrade"* — which is the right way to describe an unfinished read path.
+- Study when: you are building any store where a model extracts in the background, and want the worked version of proposing instead of writing, including the queue-side dedupe most implementations forget.
+- Do not copy when: recall has to find what the user cannot name, or a fact has to be correctable after it lands. The design puts all of its judgement before the write and none after.
