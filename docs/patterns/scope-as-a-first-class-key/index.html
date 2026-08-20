@@ -714,6 +714,37 @@ providing; and <code>'run'</code>, the narrowest value, is never written
 by any caller. A scope key that is stored, deduped on, displayed and
 documented as a safeguard, and filtered on by nothing, is what this page
 means by a tag.</p>
+<p><strong><a href="../../systems/nanoclaw/">NanoClaw</a> applies the
+key correctly on one layer and has no key at all on the layer above
+it.</strong> <code>src/cli/dispatch.ts</code> reads
+<code>cli_scope</code> from <code>container_configs</code>, auto-fills
+<code>--id</code> with the caller's own group, and after a generic
+<code>list</code>/<code>get</code> handler returns, drops rows whose
+<code>scopeField</code> does not equal the caller's
+<code>agentGroupId</code> — refusing outright, <em>"fail closed"</em>,
+if a whitelisted resource exposes <code>list</code>/<code>get</code>
+without declaring a <code>scopeField</code>. <code>sessionHistory</code>
+then self-scopes again in its own handler, because custom operations
+bypass that post-handler filter, and returns <em>"session not
+found"</em> rather than <em>"forbidden"</em> so a cross-group caller
+gets no existence oracle. Both are tested, including an attempt to
+escalate <code>cli_scope</code> to <code>global</code> from inside the
+container. This is the call-site enumeration this page asks for,
+done.</p>
+<p>Then the durable memory sits outside all of it.
+<code>groups/&lt;folder&gt;/memory/</code> is a Markdown tree mounted at
+<code>/workspace/agent</code> in <strong>every</strong> session of the
+agent group, while the conversation layer's echo fan is deliberately
+narrower — it targets only sessions of the messaging group a message
+appeared in, on the stated ground that <em>"same messaging group =
+identical audience by definition, so every fan is provably audience-safe
+with no membership knowledge needed"</em>. Nothing carries a scope key
+into the memory tree, so a fact the agent writes after reading a scoped
+echo is loaded into conversations the echo was forbidden to reach.
+Neither half is wrong on its own terms. The lesson is that <strong>a
+scope key has to survive promotion</strong>: enforcing it on the channel
+and dropping it at the point where the agent turns a message into a
+durable fact moves the boundary rather than holding it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 160 of 317 screened at the report's current pin.**
+**Progress: 161 of 318 screened at the report's current pin.**
 
 18 further record(s) describe a revision the report has since moved
 off, and 139 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 54 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 49 |
-| Repositories with build-time execution (`EXEC`) | 127 |
+| Repositories with an auto-run surface (`RUNS`) | 55 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 50 |
+| Repositories with build-time execution (`EXEC`) | 128 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -64,6 +64,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
 | [`mnemosyne`](../../content/systems/mnemosyne.md) | `.githooks/` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
+| [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |

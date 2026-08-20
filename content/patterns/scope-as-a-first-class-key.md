@@ -556,6 +556,31 @@ filesystem is providing; and `'run'`, the narrowest value, is never written by
 any caller. A scope key that is stored, deduped on, displayed and documented as
 a safeguard, and filtered on by nothing, is what this page means by a tag.
 
+**[NanoClaw](../../systems/nanoclaw/) applies the key correctly on one layer and
+has no key at all on the layer above it.** `src/cli/dispatch.ts` reads `cli_scope`
+from `container_configs`, auto-fills `--id` with the caller's own group, and after
+a generic `list`/`get` handler returns, drops rows whose `scopeField` does not
+equal the caller's `agentGroupId` — refusing outright, *"fail closed"*, if a
+whitelisted resource exposes `list`/`get` without declaring a `scopeField`.
+`sessionHistory` then self-scopes again in its own handler, because custom
+operations bypass that post-handler filter, and returns *"session not found"*
+rather than *"forbidden"* so a cross-group caller gets no existence oracle. Both
+are tested, including an attempt to escalate `cli_scope` to `global` from inside
+the container. This is the call-site enumeration this page asks for, done.
+
+Then the durable memory sits outside all of it. `groups/<folder>/memory/` is a
+Markdown tree mounted at `/workspace/agent` in **every** session of the agent
+group, while the conversation layer's echo fan is deliberately narrower — it
+targets only sessions of the messaging group a message appeared in, on the stated
+ground that *"same messaging group = identical audience by definition, so every
+fan is provably audience-safe with no membership knowledge needed"*. Nothing
+carries a scope key into the memory tree, so a fact the agent writes after
+reading a scoped echo is loaded into conversations the echo was forbidden to
+reach. Neither half is wrong on its own terms. The lesson is that **a scope key
+has to survive promotion**: enforcing it on the channel and dropping it at the
+point where the agent turns a message into a durable fact moves the boundary
+rather than holding it.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
