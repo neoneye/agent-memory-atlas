@@ -860,8 +860,8 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | Metric | What it tells you | Measured anywhere in this atlas? |
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
-| Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Ninety-four of three hundred and eighteen. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Ninety-five of three hundred and nineteen. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -923,6 +923,51 @@ memory belongs after it.** A system that injects everything it retrieved at the
 top of the prompt has chosen the worst position for cost without choosing it
 deliberately. Nothing in this atlas measures the cache-hit rate its injection
 strategy produces.
+
+### The one repository that scores its own retrieval
+
+[Muninn](../systems/muninn/) is the exception to the row above, and it is worth
+describing in full because the shape is transferable and the caveats are
+instructive.
+
+`src/benchmarks/retrieval.ts` computes `hitAtK`, `recallAtK = matched/expected`
+and `reciprocalRank = 1/firstRank` per query, aggregates them to hit-rate,
+recall@k and MRR, and runs three targets — a knowledge base, the memory store,
+and research citations. A migration persists each run with started and finished
+timestamps, a status enum, the target filter, the query count, the aggregate
+metrics and the **per-query breakdown**, *"so a regression can be traced back to
+the individual query that moved."* That last field is the difference between a
+benchmark and a dashboard number: an aggregate tells you something changed and
+nothing about what.
+
+Three fixture decisions are the part to copy, and each closes a way a golden set
+starts lying:
+
+- **Fixed ids.** The save path mints random UUIDs, so the fixtures are inserted
+  with hardcoded ones *"so the golden set can name them as `expected_doc_ids`"*.
+- **A refusal to seed a live database.** Seeding declines any database whose name
+  does not end in `_test` unless an explicit `--allow-live-seed` flag is passed.
+- **Skip, do not score zero.** When the fixtures are absent the memory target is
+  *skipped* rather than counted as a miss. Without that guard, an unseeded
+  database reports a setup failure as a retrieval failure — the benchmark
+  measuring its own harness, which is [the error this page documents
+  elsewhere](#3-does-a-bad-score-matter) in several forms.
+
+**And the limits, which are as instructive as the design.** The memory target is
+three synthetic fixtures and three golden queries. The queries are written so
+that every content word stem-matches the fixture text, because the lexical arm
+uses `plainto_tsquery` AND-semantics — the fixture module says so directly, that
+*"EVERY content word in a query must stem-match the fixture's summary/content/
+tags text."* A golden set constructed to be answerable by the retriever it tests
+measures that the pipeline is connected, which is a real and useful thing to
+measure, and is not what "recall@k" implies. The other two targets point at
+documents in the author's own running knowledge base, so they are not
+reproducible elsewhere, and no run output is committed for any target.
+
+The generalisable claim: **the scaffolding here is right and the corpus is the
+hard part.** Any project in this atlas could add the metric functions and the
+persistence in an afternoon. What none of them has is a set of queries written by
+someone who was not looking at the retriever.
 
 ### On what compression costs, which completion hides
 
@@ -2020,7 +2065,7 @@ not publish, is still the right order to do these things in.
   descriptions, not from re-reading their datasets here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 317 repositories,
+  [comparative report](../compare/). It is a statement about 318 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

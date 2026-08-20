@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 318 reports.</strong></p>
+<p><strong>This page covers all 319 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -10013,6 +10013,62 @@ answer to the injection risk in doing so.</li>
 second person has to audit what the agent believes, or two conversations
 under one agent must not share facts. The doctrine file asks the model
 for all three and records none of them.</li>
+</ul>
+<h3 id="muninn"><a
+href="../systems/muninn/"><code>muninn</code></a></h3>
+<ul>
+<li>Best idea: <strong>the scope predicate lives inside both arms of the
+fused query.</strong> <code>searchMemoriesHybrid</code> is one statement
+— an FTS CTE and a vector CTE, each capped at 30, joined
+<code>FULL OUTER</code> and scored <code>1/(60+rank)</code> per arm —
+and
+<code>bot_name = $5 AND ((scope = 'personal' AND user_id = $1) OR scope = 'shared')</code>
+is written into both. A filter applied after the fusion would let each
+arm spend its candidate budget on rows the caller may not see, which
+costs recall to exactly the caller with the narrowest permissions.</li>
+<li>Second idea: <strong>it measures its own retrieval and persists the
+per-query breakdown.</strong> hit@k, recall@k and reciprocal rank per
+query, aggregated to hit-rate, recall@k and MRR across three targets,
+with <code>benchmark_retrieval_runs</code> storing the aggregates
+<em>and</em> the per-query JSONB <em>"so a regression can be traced back
+to the individual query that moved."</em> The fixture discipline is the
+part to copy: fixed UUIDs so the golden set can name them, a refusal to
+seed any database whose name does not end in <code>_test</code>, and a
+target that is <strong>skipped rather than scored as a miss</strong>
+when its fixtures are absent. The limits are real — three synthetic
+memory rows, three queries worded so every content word stem-matches,
+because the lexical arm is <code>plainto_tsquery</code> AND-semantics —
+so the number says the pipeline is wired, not that recall is good.</li>
+<li>Biggest risk: <strong>a model assigns the access-control label,
+once, and nothing can change it.</strong> One background Haiku call
+decides <code>worth_remembering</code> and simultaneously classifies the
+memory <code>personal</code> or <code>shared</code>, where
+<code>shared</code> makes the row retrievable by every user of that bot.
+<code>src/db/memories.ts</code> contains no <code>DELETE</code> and no
+content <code>UPDATE</code>, so a misclassified personal fact is visible
+workspace-wide and no command in the tree moves it back. Extraction also
+runs on every exchange with no dedup, while injection takes five
+rows.</li>
+<li>Maturity impression: MIT, 623 commits since 7 February 2026,
+~241,000 lines of TypeScript, 285 test files, 65 migrations, Postgres
+with pgvector and local 384-dim embeddings, Telegram/Slack/web on one
+pipeline, three model backends, watchers, scheduling, goals and a
+dashboard. Four marks — and they split by tier, which is the finding:
+<code>scope_enforced</code> and <code>negative_eval</code> on the
+extracted memories, <code>trust_state</code> and
+<code>human_review</code> on the drafted wiki pages, where
+<code>draft|approved|applied|rejected|stale|error</code> runs behind an
+approve-time compare-and-swap against <code>sha256</code> of the file
+the draft was written from.</li>
+<li>Study when: you fuse two retrieval arms and need to see where the
+scope filter belongs, or your agent proposes edits to files a human also
+edits and you want the fifteen-line version of not overwriting
+them.</li>
+<li>Do not copy when: a memory about a person has to be correctable by
+that person. The same repository built a six-state review queue for its
+other tier, so this is not an immaturity gap — the governance was built
+for the write a human was already watching, and the automatic one got
+none of it.</li>
 </ul>
         </article>
       </div>

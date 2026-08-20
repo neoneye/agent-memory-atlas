@@ -174,6 +174,29 @@ The argument for hybrid here is not that one arm is better tuned; it is that
 proper nouns and short strings on screen have no useful embedding neighbourhood
 at all.
 
+[Muninn](../../systems/muninn/) contributes the placement question this page has
+not asked: **where does the access filter go?** Its fusion is one Postgres
+statement — an FTS CTE ranked by `ts_rank`, a vector CTE ranked by
+`embedding <=> $3`, each `LIMIT 30`, joined `FULL OUTER` on id and scored
+`1.0/(60 + f.rank) + 1.0/(60 + v.rank)` — and the scope predicate
+`bot_name = $5 AND ((scope = 'personal' AND user_id = $1) OR scope = 'shared')`
+is written into **both** CTEs rather than wrapped around the join.
+
+The difference is not correctness, it is recall, and it falls on the caller with
+the fewest permissions. Filter after the fusion and each arm still spends its 30
+candidate slots on whatever ranks highest globally, including rows the caller may
+not see; the survivors are whatever is left. Filter inside each arm and both
+budgets are spent within the boundary. A reader comparing two systems cannot see
+this in a benchmark — the post-filtered version returns fewer, worse results only
+for the narrowest-scoped users, which is exactly the population least likely to
+be in the golden set.
+
+Muninn also shows the degradation worth having: the vector CTE carries
+`embedding IS NOT NULL`, so a row saved when the embedding model was unavailable
+is excluded from that arm and stays reachable through FTS, with
+`getMemoriesWithoutEmbeddings` available to backfill it. One arm failing costs one
+arm, not the query.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

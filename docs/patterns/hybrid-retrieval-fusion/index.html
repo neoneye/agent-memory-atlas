@@ -354,6 +354,32 @@ captured verbatim into an <code>OnScreenText</code> record. The argument
 for hybrid here is not that one arm is better tuned; it is that proper
 nouns and short strings on screen have no useful embedding neighbourhood
 at all.</p>
+<p><a href="../../systems/muninn/">Muninn</a> contributes the placement
+question this page has not asked: <strong>where does the access filter
+go?</strong> Its fusion is one Postgres statement — an FTS CTE ranked by
+<code>ts_rank</code>, a vector CTE ranked by
+<code>embedding &lt;=&gt; $3</code>, each <code>LIMIT 30</code>, joined
+<code>FULL OUTER</code> on id and scored
+<code>1.0/(60 + f.rank) + 1.0/(60 + v.rank)</code> — and the scope
+predicate
+<code>bot_name = $5 AND ((scope = 'personal' AND user_id = $1) OR scope = 'shared')</code>
+is written into <strong>both</strong> CTEs rather than wrapped around
+the join.</p>
+<p>The difference is not correctness, it is recall, and it falls on the
+caller with the fewest permissions. Filter after the fusion and each arm
+still spends its 30 candidate slots on whatever ranks highest globally,
+including rows the caller may not see; the survivors are whatever is
+left. Filter inside each arm and both budgets are spent within the
+boundary. A reader comparing two systems cannot see this in a benchmark
+— the post-filtered version returns fewer, worse results only for the
+narrowest-scoped users, which is exactly the population least likely to
+be in the golden set.</p>
+<p>Muninn also shows the degradation worth having: the vector CTE
+carries <code>embedding IS NOT NULL</code>, so a row saved when the
+embedding model was unavailable is excluded from that arm and stays
+reachable through FTS, with <code>getMemoriesWithoutEmbeddings</code>
+available to backfill it. One arm failing costs one arm, not the
+query.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo
