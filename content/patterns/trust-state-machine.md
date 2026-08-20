@@ -67,6 +67,19 @@ able to move a memory between them is worse than one honest bucket.
 
 ## Seen in the atlas
 
+[Portable Handoff](../../systems/portable-handoff/) contributes the enforcement
+half without the filtering half, and both are worth taking separately. Its
+`Trust` enum is `verified · observed · claimed · inferred · untrusted` and its
+`Provenance` enum names the eight channels a claim can arrive through, and
+`cap_trust(provenance, trust)` refuses `verified` to any claim whose provenance
+is not one of `git`, `tool`, `test`, `file` or `transcript` — **applied while
+parsing**, so a capsule written by another tool, an older version or a stranger
+cannot declare its own authority. That is the answer to the question this page
+raises and usually leaves open: who is allowed to set the state. What it does
+not do is act on it. Every state is rendered as a label beside the text and no
+read path filters, ranks or omits, so the mark is withheld: the vocabulary is
+right and nothing downstream is bound to it.
+
 [Magic Context](../../systems/magic-context/) contributes the sharpest
 refinement: it keeps **two independent axes** rather than one column. `status` is
 `active | permanent | archived` — where a memory sits in its lifecycle — and

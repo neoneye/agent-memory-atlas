@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 312 reports.</strong></p>
+<p><strong>This page covers all 313 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -9670,6 +9670,63 @@ imposing a template.</li>
 <li>Do not copy when: the decision store has to be the system of record.
 Turn <code>auto_scan</code> off, read what it extracted, and do not let
 a generated spec cite a rationale nobody checked.</li>
+</ul>
+<h3 id="portable-handoff"><a
+href="../systems/portable-handoff/"><code>portable-handoff</code></a></h3>
+<ul>
+<li>Best idea: <strong>the trust a claim may declare is capped by where
+it came from, and the cap runs on read.</strong>
+<code>cap_trust(provenance, trust)</code> refuses <code>verified</code>
+to any claim whose provenance is not in
+<code>{git, tool, test, file, transcript}</code> and rewrites it to
+<code>claimed</code>; <code>_downgrade_model_verification</code>
+separately rewrites a model-authored <code>git</code> provenance to
+<code>test</code>. Because the cap is applied while parsing, it holds
+for a capsule written by an older version, another tool, or a stranger —
+an artifact cannot smuggle in an authority its source cannot support.
+The same instinct runs through <code>command_safety.py</code>, which
+classifies a carried shell command at load time against raw text <em>"so
+a capsule has no field it could populate to declare itself safe"</em>,
+and says in its own docstring that it is not a sandbox and over-flags on
+purpose.</li>
+<li>Second idea, and the one most systems here should copy: <strong>the
+losses are part of the artifact.</strong> The budget records
+<code>dropped[]</code> and <code>truncated[]</code> beside its token
+estimate; the secret scan records
+<code>passed | failed | not_run | unknown</code> so an empty redaction
+list cannot be read as a clean bill of health, with the rendered capsule
+saying so in words; and <code>load</code> re-checks the recorded
+repository facts against the current tree and reports each as
+<code>match</code> or <code>different</code>, then states the capsule's
+age and whether its HEAD ever reached a remote — <em>"may exist only on
+the machine that wrote this capsule."</em></li>
+<li>Biggest risk: <strong>nothing withholds.</strong> Five well-chosen
+trust states, a supersession status on decisions, a
+<code>dangerous</code> classification on commands — and no read path
+filters, ranks or omits on any of them. Every state is rendered as a
+label beside the text, so the enforcement is a model honouring words in
+its context, from a codebase that otherwise refuses to trust anything it
+did not compute itself. Beside that: no query, so a large session spends
+the budget and <code>dropped[]</code> is the only signal; and no capsule
+references the one it replaces, so the format cannot answer <em>what is
+currently decided</em> across a project.</li>
+<li>Maturity impression: Apache-2.0, version 0.1.0, 5,415 lines of
+Python with a committed stdlib-only check, CI, and unit, integration,
+adapter, security and quality suites — including a committed
+<code>quality_report.json</code>. One capability mark,
+<code>negative_eval</code>, and it is earned in the strict form:
+<code>test_secrets_are_redacted_without_disclosing_the_match</code>
+asserts the secret is absent from the rendered Markdown <em>and</em>
+that its <code>[REDACTED:github]</code> marker is present in the same
+fixture, which is an absence assertion carrying its own positive
+control.</li>
+<li>Study when: you are deciding what a model may be trusted to assert
+about its own work. This is the most carefully reasoned artifact in the
+corpus on that question, and the two-phase split — local code supplies
+the facts, the model supplies the meaning — is worth copying whole.</li>
+<li>Do not copy when: you need memory that accumulates. There is no
+store, no query, no supersession across capsules and no way to ask what
+is true now rather than what was true at the end of one session.</li>
 </ul>
         </article>
       </div>
