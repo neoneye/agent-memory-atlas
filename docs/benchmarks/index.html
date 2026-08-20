@@ -1173,6 +1173,13 @@ gates on every turn and does not measure it</td>
 <td><strong>Nowhere</strong> — it is <a
 href="../systems/magic-context/">Magic Context</a>'s central claim</td>
 </tr>
+<tr>
+<td>Reacquisition cost after compression</td>
+<td>How many extra tool calls the agent spends rebuilding state the
+compressor dropped</td>
+<td><strong>Nowhere in this atlas</strong> — measured externally, and
+the finding is below</td>
+</tr>
 </tbody>
 </table></div>
 <h3 id="on-llm-usage">On LLM usage</h3>
@@ -1223,6 +1230,58 @@ prefix, volatile memory belongs after it.</strong> A system that injects
 everything it retrieved at the top of the prompt has chosen the worst
 position for cost without choosing it deliberately. Nothing in this
 atlas measures the cache-hit rate its injection strategy produces.</p>
+<h3 id="on-what-compression-costs-which-completion-hides">On what
+compression costs, which completion hides</h3>
+<p>The argument this page makes about task completion — that it measures
+a pipeline and separates systems badly — has now been made
+quantitatively about context compression, by someone measuring the thing
+instead of asserting it.</p>
+<p><em>What Does Context Compression Cost an Agent? Interaction Costs
+Unrevealed by Task-Completion Metrics</em>, Shuyu Liu, <a
+href="https://arxiv.org/abs/2608.16370">arXiv:2608.16370</a>, submitted
+17 August 2026, cs.AI, opens with the claim in one sentence: <em>"Task
+completion is the standard metric for evaluating context compression,
+yet it is incomplete: compression can increase an agent's interaction
+cost by forcing it to reacquire dropped state while leaving completion
+statistically unchanged."</em> No repository, dataset or harness URL is
+named on the abstract page, so nothing here is a code-grounded claim and
+the protocol cannot be inspected at a pin; what follows is the paper's
+reported result, recorded because the shape of it matters to this
+page.</p>
+<p>The protocol holds a tool-using agent to a 24-turn horizon and varies
+compression. Retrieval calls rose in <strong>all six model-regime
+comparisons</strong>, five of them significant. At 5x compression,
+completion did not move significantly. The clean case is GPT-5.5:
+completion went from 80% to 85% at p = 1.0 while retrieval calls went
+from 21.0 to 63.9 at p = .002. A tripling of the agent's own tool
+traffic, invisible to the metric everyone reports. In ALFWorld the
+effect was different, which the paper reads as reacquisition cost being
+environment-dependent rather than intrinsic to compression.</p>
+<p>Three things follow for anyone building memory here.</p>
+<p><strong>The completion number can improve while the system gets
+worse.</strong> Eighty to eighty-five percent is the direction a release
+note quotes. Twenty-one to sixty-four retrieval calls is the direction
+the bill and the latency budget move. Both are the same experiment. This
+is the sharpest available version of <a
+href="#the-number-measures-a-pipeline-not-a-memory-layer">the number
+measures a pipeline, not a memory layer</a>, and it does not depend on
+judge variance or a weak baseline — the agent's own call count is a hard
+integer.</p>
+<p><strong>Compression relocates cost from the prefix to the
+loop.</strong> The section above argues that recall cost is per-turn and
+forever; this is the same argument one level up. Dropping state from the
+context does not delete the need for it, it converts a prompt-token cost
+into a tool-call cost — serial, latency-bearing, and paid at whatever
+the retrieval path charges. A summarizer that halves context and triples
+retrieval has not obviously won, by exactly the standard this page
+already applies to memory layers.</p>
+<p><strong>The metric is cheap and nobody collects it.</strong>
+Retrieval calls per completed task is a counter on the tool loop. Every
+system in this atlas that compacts, summarizes or windows its context
+could report it against an uncompressed control, in the same harness, on
+the same tasks — and none does. It belongs beside accuracy per thousand
+tokens of injected memory as a number a memory project should publish
+about itself.</p>
 <h3 id="on-latency-and-the-lag-nobody-measures">On latency, and the lag
 nobody measures</h3>
 <p>"Time until memory has been recalled" splits into two very different

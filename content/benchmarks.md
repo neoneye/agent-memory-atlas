@@ -776,6 +776,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | Deletion durability | Whether a deleted memory stays deleted after the next background pass | **Nowhere** |
 | Retrieval-gate accuracy | How often a system that decides *not* to retrieve is wrong | **Nowhere** — [Waku](../systems/waku-agent/) gates on every turn and does not measure it |
 | Verification precision | Whether a staleness check correctly marks stale | **Nowhere** — it is [Magic Context](../systems/magic-context/)'s central claim |
+| Reacquisition cost after compression | How many extra tool calls the agent spends rebuilding state the compressor dropped | **Nowhere in this atlas** — measured externally, and the finding is below |
 
 ### On LLM usage
 
@@ -826,6 +827,57 @@ memory belongs after it.** A system that injects everything it retrieved at the
 top of the prompt has chosen the worst position for cost without choosing it
 deliberately. Nothing in this atlas measures the cache-hit rate its injection
 strategy produces.
+
+### On what compression costs, which completion hides
+
+The argument this page makes about task completion — that it measures a
+pipeline and separates systems badly — has now been made quantitatively about
+context compression, by someone measuring the thing instead of asserting it.
+
+*What Does Context Compression Cost an Agent? Interaction Costs Unrevealed by
+Task-Completion Metrics*, Shuyu Liu, [arXiv:2608.16370](https://arxiv.org/abs/2608.16370),
+submitted 17 August 2026, cs.AI, opens with the claim in one sentence:
+*"Task completion is the standard metric for evaluating context compression, yet
+it is incomplete: compression can increase an agent's interaction cost by forcing
+it to reacquire dropped state while leaving completion statistically
+unchanged."* No repository, dataset or harness URL is named on the abstract
+page, so nothing here is a code-grounded claim and the protocol cannot be
+inspected at a pin; what follows is the paper's reported result, recorded
+because the shape of it matters to this page.
+
+The protocol holds a tool-using agent to a 24-turn horizon and varies
+compression. Retrieval calls rose in **all six model-regime comparisons**, five
+of them significant. At 5x compression, completion did not move significantly.
+The clean case is GPT-5.5: completion went from 80% to 85% at p = 1.0 while
+retrieval calls went from 21.0 to 63.9 at p = .002. A tripling of the agent's
+own tool traffic, invisible to the metric everyone reports. In ALFWorld the
+effect was different, which the paper reads as reacquisition cost being
+environment-dependent rather than intrinsic to compression.
+
+Three things follow for anyone building memory here.
+
+**The completion number can improve while the system gets worse.** Eighty to
+eighty-five percent is the direction a release note quotes. Twenty-one to
+sixty-four retrieval calls is the direction the bill and the latency budget
+move. Both are the same experiment. This is the sharpest available version of
+[the number measures a pipeline, not a memory layer](#the-number-measures-a-pipeline-not-a-memory-layer),
+and it does not depend on judge variance or a weak baseline — the agent's own
+call count is a hard integer.
+
+**Compression relocates cost from the prefix to the loop.** The section above
+argues that recall cost is per-turn and forever; this is the same argument one
+level up. Dropping state from the context does not delete the need for it, it
+converts a prompt-token cost into a tool-call cost — serial, latency-bearing,
+and paid at whatever the retrieval path charges. A summarizer that halves
+context and triples retrieval has not obviously won, by exactly the standard
+this page already applies to memory layers.
+
+**The metric is cheap and nobody collects it.** Retrieval calls per completed
+task is a counter on the tool loop. Every system in this atlas that compacts,
+summarizes or windows its context could report it against an uncompressed
+control, in the same harness, on the same tasks — and none does. It belongs
+beside accuracy per thousand tokens of injected memory as a number a memory
+project should publish about itself.
 
 ### On latency, and the lag nobody measures
 
