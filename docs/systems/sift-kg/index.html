@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A CLI that turns a document
+collection into a knowledge graph an agent queries as structured memory,
+where the human's merge decisions are applied to the artifact the next
+build regenerates.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="sift-kg — Agent Memory Atlas">
+    <meta property="og:description" content="A CLI that turns a document
+collection into a knowledge graph an agent queries as structured memory,
+where the human's merge decisions are applied to the artifact the next
+build regenerates.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="sift-kg — Agent Memory Atlas">
+    <meta name="twitter:description" content="A CLI that turns a
+document collection into a knowledge graph an agent queries as
+structured memory, where the human's merge decisions are applied to the
+artifact the next build regenerates.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>sift-kg — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "sift-kg",
+      "description": "A CLI that turns a document collection into a knowledge graph an agent queries as structured memory, where the human's merge decisions are applied to the artifact the next build regenerates.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Documents to a browsable graph</p>
+          <h1>sift-kg</h1>
+          <p class="document-deck">A CLI that turns a document
+collection into a knowledge graph an agent queries as structured memory,
+where the human's merge decisions are applied to the artifact the next
+build regenerates.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/juanceresa/sift-kg">
+              <span>Source</span>
+              <strong>juanceresa/sift-kg</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf" title="d786991c024f5401f113fc0cb70aee96dd1bd3bf">
+              <span>Analyzed revision</span>
+              <code>d786991c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>sift-kg is a Python CLI that turns a folder of documents into a
+knowledge graph: ingest (75+ formats, optional OCR) → LLM extraction of
+entities and relations per chunk → deterministic graph build with
+community detection → LLM-proposed entity merges → an interactive human
+review → apply → export or browse.</p>
+<p>It is in this atlas because of the last mile rather than the
+pipeline. The repository ships
+<code>.agents/skills/sift-kg/SKILL.md</code>, which tells a coding agent
+that the graph is <em>"your persistent, structured memory of the user's
+world"</em>, that it should orient from <code>sift topology</code> at
+session start, and that it should query the graph before answering
+anything about the user's projects. An extracted relation can be false,
+carries an id, and there is a surface for a person to adjudicate it —
+which is the whole bar.</p>
+<p><strong>Strongest:</strong> the raw layer is kept. Extraction output
+is written per document to <code>extractions/</code>, every entity node
+carries <code>source_documents</code>, every relation carries an
+<code>evidence</code> quote, and the graph is rebuilt from those
+extractions rather than mutated in place. That is <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+implemented without being named, and it makes the derived layer honestly
+disposable.</p>
+<p><strong>Weakest, and the finding worth the report:</strong> the
+corrections live downstream of the artifact that regenerates them. Merge
+decisions and relation rejections are applied to
+<code>graph_data.json</code>; <code>sift build</code> reconstructs
+<code>graph_data.json</code> from <code>extractions/</code> and reads
+neither decision file. The bundled skill instructs the agent to run
+<code>sift extract</code> and <code>sift build</code> whenever the user
+adds documents — so the documented workflow for growing the memory is
+also the documented workflow for reverting every human judgement in it.
+Both persistence semantics are present in one function, twenty lines
+apart: the relation-review branch reads its file, dedupes on the value
+triple and extends it; the merge branch overwrites.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entity</strong> or a <strong>relation</strong>
+the model extracted from a document chunk. Neither is authored by the
+agent; the agent reads.</p>
+<pre class="text"><code>                 sift extract                    sift build
+   document ──────────────────► extraction ──────────────────► entity / relation
+                (LLM, per chunk)   (retained)     (deterministic)      │
+                                                                       │
+                                              sift resolve (LLM)       │
+                                       DRAFT merge proposal ◄──────────┘
+                                                │
+                                    sift review │  a person decides
+                                    ┌───────────┴───────────┐
+                              CONFIRMED                 REJECTED
+                                    │                        │
+                        sift apply-merges          relation removed from graph
+                                    │                        │
+                                    └────────► graph_data.json ◄─────────┐
+                                                              │          │
+                                            next `sift build` regenerates
+                                            this file from extractions ──┘</code></pre>
+<p>The status enum is the near-miss.
+<code>StatusType = Literal["DRAFT", "CONFIRMED", "REJECTED"]</code> in
+<code>src/sift_kg/resolve/models.py</code> is a discrete state rather
+than a float, and the float — <code>confidence</code>, per merge member
+and per entity — lives separately. That is exactly the split this atlas
+asks for. It earns no <code>trust_state</code> mark because the state is
+a property of a <em>proposal about</em> a memory, not of the memory: no
+entity is withheld from a query because of it, and <code>REJECTED</code>
+on a relation is executed as a deletion rather than held as a standing
+refusal.</p>
+<p>Memory is <strong>background-managed</strong> in the sense that a
+model writes it and <strong>user-controlled</strong> at exactly one
+point, the review. The system treats what survives that review as ground
+truth: <code>sift query</code> returns entities with no status attached,
+and the skill tells the agent to <em>"base your answer on actual
+entities and relationships from the graph."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the human decisions live in two YAML files beside the graph, and the graph is rebuilt from the extractions alone — so sift build, the command the bundled agent skill tells you to run when documents arrive, is also what reverts every merge and every rejection</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the human decisions live in two YAML files beside the graph, and the graph is rebuilt from the extractions alone — so sift build, the command the bundled agent skill tells you to run when documents arrive, is also what reverts every merge and every rejection
+    DOCS[(&quot;documents&lt;br/&gt;75+ formats&quot;)]
+    EX[&quot;sift extract&lt;br/&gt;LLM per chunk&quot;]
+    EJ[(&quot;extractions/*.json&lt;br/&gt;the retained layer&quot;)]
+    BUILD[&quot;sift build&lt;br/&gt;deterministic&quot;]
+    GD[(&quot;graph_data.json&lt;br/&gt;the derived layer&quot;)]
+    RES[&quot;sift resolve&lt;br/&gt;LLM proposes merges&quot;]
+    MP[(&quot;merge_proposals.yaml&quot;)]
+    RR[(&quot;relation_review.yaml&quot;)]
+    REV[&quot;sift review&lt;br/&gt;a person decides&quot;]
+    AP[&quot;sift apply-merges&quot;]
+    AGENT[&quot;coding agent&lt;br/&gt;via .agents/skills&quot;]
+
+    DOCS --&gt; EX --&gt; EJ --&gt; BUILD --&gt; GD
+    GD --&gt; RES
+    RES --&gt;|&quot;write_proposals: truncates the file&quot;| MP
+    RES --&gt;|&quot;read, dedupe on the value triple, extend&quot;| RR
+    MP --&gt; REV --&gt; AP --&gt; GD
+    RR --&gt; REV
+    REV --&gt;|&quot;rejected relations removed&quot;| AP
+    GD --&gt;|&quot;info · topology · query · search&quot;| AGENT
+    BUILD -.-&gt;|&quot;reads extractions only —&lt;br/&gt;neither decision file is an input&quot;| GD</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> A single Typer CLI
+(<code>sift</code>), fourteen commands, no server, no daemon, no
+database. <code>pipeline.py</code> holds the stage functions;
+<code>cli.py</code> is the command surface and also where several
+stage-level decisions live.</p>
+<p><strong>Persistence.</strong> Files under one output directory:
+<code>extractions/*.json</code>, <code>graph_data.json</code>,
+<code>merge_proposals.yaml</code>, <code>relation_review.yaml</code>,
+optional <code>discovered_domain.yaml</code>, <code>narrative.md</code>,
+<code>entity_descriptions.json</code>. The graph itself is a NetworkX
+<code>MultiDiGraph</code> serialised with
+<code>json.dumps(..., default=str)</code>
+(<code>graph/knowledge_graph.py:331</code>). Exports to GraphML, GEXF,
+SQLite and CSV are one-way.</p>
+<p><strong>Search stack.</strong> No embeddings on the read path —
+<code>resolve</code> can use embeddings to <em>propose</em> merges
+(<code>--use-embeddings</code>), but <code>query</code> and
+<code>search</code> are name matching plus graph traversal over the
+in-memory NetworkX object. Communities and bridge entities are computed
+at build time by <code>graph/communities.py</code>.</p>
+<p><strong>External dependencies.</strong> An LLM provider for
+<code>extract</code>, <code>resolve</code> and <code>narrate</code>;
+<code>kreuzberg</code> and <code>pdfplumber</code> for ingestion;
+optional OCR.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install</code>, no services, fully local except the LLM
+calls — and those are required to store anything at all, because
+extraction is the only writer. The store is a readable JSON file; a
+corpus under ~500 entities can be loaded whole into an agent's context,
+which the skill says explicitly and then tells the agent not to do above
+that size. There is no lockfile beside <code>pyproject.toml</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest.</strong> <code>ingest/reader.py</code>,
+<code>ingest/chunker.py</code>, with <code>kreuzberg_extractor.py</code>
+/ <code>pdfplumber_extractor.py</code> and <code>ingest/ocr.py</code>
+behind them.</p>
+<p><strong>Extraction (write).</strong>
+<code>extract/extractor.py</code> with prompts in
+<code>extract/prompts.py</code> and the provider wrapper in
+<code>extract/llm_client.py</code>. Output per document is an
+<code>ExtractionResult</code> (<code>extract/models.py</code>) carrying
+<code>source_document</code>, <code>chunk_index</code>, entities with a
+<code>context</code> quote and relations with an <code>evidence</code>
+quote, written to <code>extractions/</code>.</p>
+<p><strong>Build (derive).</strong> <code>cli.py:208</code> →
+<code>graph/builder.py</code> <code>load_extractions</code> then
+<code>build_graph</code>, then community detection
+(<code>graph/communities.py</code>) and <code>postprocessor.py</code> /
+<code>prededup.py</code>. <code>KnowledgeGraph.add_entity</code>
+(<code>graph/knowledge_graph.py:92</code>) is idempotent by id: an
+existing node keeps the higher <code>confidence</code>, unions
+<code>source_documents</code>, merges <code>attributes</code>, and fills
+empty fields only. The result is saved over
+<code>graph_data.json</code>.</p>
+<p><strong>Resolve (propose).</strong> <code>cli.py:328</code> →
+<code>resolve/resolver.py</code> <code>find_merge_candidates</code>,
+which returns a <code>MergeFile</code> of <code>DRAFT</code> proposals
+plus variant relations. Then, in the same function:</p>
+<ul>
+<li><code>cli.py:392</code> —
+<code>write_proposals(merge_file, proposals_path)</code>. No prior read.
+<code>resolve/io.py:13</code> opens with <code>"w"</code>, so every
+<code>CONFIRMED</code> and <code>REJECTED</code> status already in the
+file is replaced by fresh <code>DRAFT</code>s.</li>
+<li><code>cli.py:396-408</code> — the relation branch reads the existing
+<code>relation_review.yaml</code>, builds <code>existing</code> from
+<code>(source_id, target_id, relation_type)</code>, and extends only
+with triples not already present.</li>
+</ul>
+<p><strong>Review (adjudicate).</strong>
+<code>resolve/reviewer.py</code> and <code>cli.py:491</code>, an
+interactive pass setting each proposal and flagged relation to
+<code>CONFIRMED</code> or <code>REJECTED</code>.</p>
+<p><strong>Apply.</strong> <code>cli.py:426</code>
+<code>apply_merges_cmd</code> → <code>resolve/engine.py</code>. Merges
+act on <code>merge_file.confirmed</code> only.
+<code>engine.py:152-179</code> removes rejected relations from the
+graph, handling the symmetric case — <em>"if A→B rejected, B→A should be
+too"</em> — and logs <code>Removed {removed} rejected relations</code>.
+The mutated graph is saved back to <code>graph_data.json</code>.</p>
+<p><strong>Read (retrieval).</strong> <code>cli.py:1343</code>
+<code>query</code> — fuzzy name match or exact <code>type:id</code>
+lookup, returning the matched entity with community membership and
+bridge status plus the n-hop subgraph; <code>cli.py:565</code>
+<code>search</code> — lighter lookup with optional relations and
+descriptions; <code>cli.py:1197</code> <code>topology</code> —
+communities, bridges, community connections and isolated entities;
+<code>cli.py:1078</code> <code>info</code> — counts and pipeline state.
+Every one takes <code>--json</code>.</p>
+<p><strong>Agent integration.</strong>
+<code>.agents/skills/sift-kg/SKILL.md</code>, 202 lines, read-only:
+<code>info</code>, <code>topology</code>, <code>query</code>,
+<code>search</code>. The write commands appear in it only as
+instructions to run <em>with the user's confirmation, because they cost
+money</em>.</p>
+<p><strong>Tests.</strong> <code>tests/</code> — sixteen files covering
+clustering, communities, config, domains, export, extraction, graph,
+ingest, the LLM client, narration, pre-dedup, resolve, review, view
+filters and CLI JSON.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Entity node</strong> (<code>add_entity</code>):
+<code>entity_id</code> (<code>type:slug</code>),
+<code>entity_type</code>, <code>name</code>, <code>confidence</code>
+(float, default 0.5), <code>source_documents</code> (list, unioned
+across chunks), <code>attributes</code> (dict), plus a
+<code>context</code> quote from the source text.</p>
+<p><strong>Relation edge</strong> (<code>add_relation</code>):
+<code>relation_id</code>, <code>source_id</code>,
+<code>target_id</code>, <code>relation_type</code>,
+<code>confidence</code>, <code>evidence</code> (quote), on a
+<code>MultiDiGraph</code> so two entities can carry several typed
+edges.</p>
+<p><strong>Decision records</strong>, in YAML beside the graph:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MergeProposal</code></td>
+<td><code>canonical_id</code>, <code>canonical_name</code>,
+<code>entity_type</code>, <code>status</code>,
+<code>members[{id, name, confidence}]</code>, <code>reason</code></td>
+</tr>
+<tr>
+<td><code>RelationReviewFile</code></td>
+<td>flagged relations keyed by
+<code>(source_id, target_id, relation_type)</code> with a status</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping.</strong> One output directory per corpus, no scope
+key anywhere on a node, no filter on any read. For a single-user
+research tool that is a defensible non-choice rather than a gap, and it
+means the graph cannot express <em>this entity belongs to a project the
+asker may not see</em>.</p>
+<p><strong>Temporal.</strong> <code>KnowledgeGraph.updated_at</code> for
+the graph as a whole. Nothing per-entity: no first-seen, no
+last-confirmed, no validity window. A fact extracted from a 2019
+document and one from last week are indistinguishable inside the
+node.</p>
+<p><strong>Versioning and correction.</strong> A merge is destructive —
+members fold into the canonical node — and there is no supersession
+chain, no tombstone, and no record of a rejection that survives the next
+build.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>query</code> matches on name (fuzzy) or exact id, optionally
+filtered by entity type, and returns the entity plus its n-hop
+neighbourhood, its community and whether it is a bridge.
+<code>topology</code> returns the structural map: communities with
+member counts and top entity ids, bridges sorted by cross-community edge
+count, community-to-community links, and isolated entities.
+<code>search</code> is the lighter path.</p>
+<p>There is <strong>no embedding, no scoring and no ranking</strong> on
+the read path. Where several entities match a name, the top result is
+chosen by connection count and the rest come back in
+<code>other_matches</code> — degree centrality standing in for
+relevance, which is a reasonable default for a graph and a poor one for
+a question about something peripheral.</p>
+<p><strong>Token budgeting is advisory, not enforced.</strong> The skill
+tells the agent that under ~500 entities <code>graph_data.json</code>
+can be loaded whole and that above it the agent must use
+<code>topology</code> and <code>query</code>, <em>"never attempt to load
+the full JSON."</em> Nothing in the code enforces that;
+<code>--depth 2</code> on a hub entity can return a large subgraph.</p>
+<p><strong>Failure modes.</strong> Community labels are
+<code>Community 1</code>, <code>Community 2</code> until
+<code>sift narrate</code> has run, so an agent orienting from topology
+reads entity ids rather than labels — the skill spends two paragraphs
+teaching it to decode <code>person:harry_boyte</code> by convention. And
+the <code>confidence</code> float is stored, merged by maximum, and
+never consulted by any read path.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit command; there is no hot path and no
+background work. Extraction is a per-chunk LLM call and is the only way
+material enters the store, so an API key is required to create any
+memory at all.</p>
+<p><strong>Deduplication</strong> happens twice: deterministically at
+build time (<code>graph/prededup.py</code>, and
+<code>add_entity</code>'s idempotent merge by id) and by LLM proposal in
+<code>resolve</code>.</p>
+<p><strong>Update is regeneration.</strong> <code>sift build</code> does
+not mutate the previous graph; it reconstructs one from all extraction
+files. Merges and rejections are mutations of the <em>output</em>, so
+the next build discards them. The two most consequential lines in the
+repository are therefore <code>cli.py:392</code> — the unconditional
+<code>write_proposals</code> — and <code>cli.py:208</code>'s
+<code>load_extractions</code>, which decides what the rebuild is allowed
+to know.</p>
+<p><strong>The compound case is worth stating explicitly.</strong> A
+user rejects a relation; it is removed from the graph at apply time. New
+documents arrive; <code>sift extract</code> and <code>sift build</code>
+run as the skill instructs; the relation is re-extracted from the same
+source and returns to <code>graph_data.json</code>.
+<code>sift resolve</code> then does <em>not</em> re-flag it, because the
+triple is already present in <code>relation_review.yaml</code> and the
+dedupe skips it. The correction is reverted and the surface that would
+have caught it is suppressed by its own memory of having asked once.</p>
+<p><strong>Conflict handling.</strong> None. Two contradictory relations
+between the same entities coexist as separate edges on the MultiDiGraph;
+the <code>EXTENDS</code> variant flow flags some of these for review,
+but nothing resolves a contradiction.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing is synchronous with an agent turn — the agent only reads. The
+cost is in <code>extract</code> (one LLM call per chunk over the whole
+corpus) and <code>resolve</code> (an LLM pass over merge candidates);
+the CLI prints <code>Cost: $X</code> after each. Write-to- readable lag
+is the length of a pipeline run, and it is entirely operator-driven.
+<code>build</code> is a full pass over every extraction file each time,
+so its cost scales with the corpus rather than with the day's additions
+— acceptable for a document corpus, and the reason the correction
+problem exists at all.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One skill file, four read commands, <code>--json</code> on all of
+them, and no MCP server. The model cannot write; the human runs the
+pipeline. That makes this a <strong>read-only memory</strong> from the
+agent's perspective — closer to Basic Memory's posture than to a store
+the agent maintains.</p>
+<p>The skill is well built for what it does: orient once from
+<code>topology</code> at session start and keep it for the session,
+query before answering, and <em>"if the entity isn't in the graph, say
+so — don't invent connections."</em> Its most interesting instruction is
+a reasoning pattern rather than an API — <em>link knowledge
+islands</em>, which asks the agent to look for weakly connected
+community pairs and propose what would bridge them. That is a use of
+graph structure the retrieval API alone would not suggest.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is real.</strong> <code>source_documents</code> on
+every entity, an <code>evidence</code> quote on every relation, a
+<code>context</code> quote on every extracted entity, and the
+extractions kept per document. If a claim in the graph is wrong you can
+find what produced it — the property most extraction-first systems in
+this corpus lose.</p>
+<p><strong>Trust representation is not.</strong> <code>confidence</code>
+is written and never read. Nothing marks an entity doubtful, and nothing
+distinguishes a fact asserted in one document from one corroborated
+across ten, though the data to compute that is present in
+<code>source_documents</code>.</p>
+<p><strong>Injection.</strong> Extracted text from arbitrary documents —
+including scanned PDFs through OCR — reaches an agent's context through
+<code>query</code> output with no fencing and no data envelope. The
+threat is real for the stated OSINT domain, where the documents are by
+definition untrusted.</p>
+<p><strong>Deletion.</strong> There is no delete command. Removing a
+fact means editing or deleting the extraction that produced it and
+rebuilding, which is coherent given the architecture and is nowhere
+documented.</p>
+<p><strong>Concurrency.</strong> Single-process CLI, no locking; two
+pipelines pointed at one output directory would interleave writes over
+the same JSON files.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Sixteen test files, covering the deterministic half well: clustering,
+communities, graph construction and id generation, export round-trips,
+pre-dedup, config, domains, view filters, and the resolve/review models
+including that an empty or absent YAML file loads as an empty
+<code>MergeFile</code> rather than throwing
+(<code>tests/test_resolve.py</code>).</p>
+<p><code>tests/test_graph.py:281</code> and <code>:287</code> assert
+entity ids never contain <code>.</code> or <code>__</code> — negative
+assertions about an identifier's shape rather than about what a read
+returns, which is why <code>negative_eval</code> is not marked.</p>
+<p><strong>What is not tested is the finding.</strong> There is no test
+that runs <code>resolve</code> twice over a file containing decisions,
+and none that runs <code>build</code> after <code>apply-merges</code>.
+Either would have caught the truncation and the revert. The suite
+validates the parts and never the sequence the documented workflow
+prescribes.</p>
+<p>No benchmark, no eval harness, no published numbers, and no paper.
+The <code>examples/</code> and <code>pages/</code> directories carry a
+demo graph rather than a measurement.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the extraction output as its own layer and rebuild the
+derived store from it.</strong> Per-document JSON, a quote on every
+entity and relation, and a build that is a pure function of that layer.
+It makes a bad extraction debuggable and the graph disposable.</li>
+<li><strong>Split the discrete state from the float.</strong>
+<code>DRAFT</code>/<code>CONFIRMED</code>/<code>REJECTED</code> beside a
+per-member <code>confidence</code> is the right shape, and rarer in this
+corpus than it should be.</li>
+<li><strong>Dedupe a review queue on the value, not the record.</strong>
+The relation branch keys on
+<code>(source_id, target_id, relation_type)</code>, so a person is not
+asked twice about the same claim.</li>
+<li><strong>Teach the agent to read your ids.</strong> The skill
+explains that <code>top_entities</code> are ids and shows how to decode
+them, which is cheaper than generating labels and honest about what the
+data is.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not apply corrections to the artifact you
+regenerate.</strong> If a store is rebuilt from a lower layer, every
+human decision has to be an input to the rebuild or it is a scheduled
+undo. The test that catches this is <em>apply a correction, run the
+regeneration, assert the correction held.</em></li>
+<li><strong>Do not truncate a decision file on the pass that proposes
+new decisions.</strong> Read, merge on the value key, and preserve what
+a person already answered — which the same file does correctly twenty
+lines later.</li>
+<li><strong>Do not let a dedupe guard on a review queue outlive the
+state it guarded.</strong> Once the underlying record can return,
+"already asked" stops meaning "already handled".</li>
+<li><strong>Do not store a confidence you never read.</strong> Either
+rank with it, filter with it, or drop it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research tool for one person building a graph over their
+own document collection, and it is a good one: the pipeline is legible,
+every stage is a command you can inspect the output of, and the agent
+skill is the most thought- through part of the repository. Take it if
+your corpus is largely static and you will run the review once. Walk
+away if documents arrive continuously — that is the workload where the
+rebuild runs often and the corrections are lost each time — or if the
+graph must be trusted by anyone who did not watch it being built, since
+nothing in the store records who approved what, or when.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the merge-file truncation intentional? A comment or an issue
+would settle whether the design assumes review always runs immediately
+after resolve.</li>
+<li>What does <code>apply-merges</code> do to
+<code>source_documents</code> on a merge — the code unions them for
+entities added twice, but the merge path is where provenance would be
+easiest to lose, and no test covers it.</li>
+<li>Does anyone run this incrementally? The skill's <em>"user adds new
+documents and rebuilds"</em> pattern is the case the architecture
+handles worst, and only a real deployment would show how often it
+bites.</li>
+<li>No commit since 2026-05-11 at this pin; whether that is completion
+or abandonment is not visible from the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage / schema:</strong>
+<code>src/sift_kg/graph/knowledge_graph.py</code>,
+<code>src/sift_kg/resolve/models.py</code>,
+<code>src/sift_kg/extract/models.py</code></li>
+<li><strong>Write path:</strong>
+<code>src/sift_kg/extract/extractor.py</code>,
+<code>src/sift_kg/graph/builder.py</code>,
+<code>src/sift_kg/graph/prededup.py</code></li>
+<li><strong>Correction path:</strong> <code>src/sift_kg/cli.py</code>
+(<code>resolve</code>, <code>review</code>, <code>apply-merges</code>),
+<code>src/sift_kg/resolve/resolver.py</code>,
+<code>src/sift_kg/resolve/engine.py</code>,
+<code>src/sift_kg/resolve/io.py</code>,
+<code>src/sift_kg/resolve/reviewer.py</code></li>
+<li><strong>Retrieval:</strong> <code>src/sift_kg/cli.py</code>
+(<code>query</code>, <code>search</code>, <code>topology</code>,
+<code>info</code>), <code>src/sift_kg/graph/communities.py</code></li>
+<li><strong>Agent integration:</strong>
+<code>.agents/skills/sift-kg/SKILL.md</code></li>
+<li><strong>Tests:</strong> <code>tests/test_resolve.py</code>,
+<code>tests/test_review.py</code>, <code>tests/test_graph.py</code>,
+<code>tests/test_export.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf"><code class="commit-id" title="d786991c024f5401f113fc0cb70aee96dd1bd3bf">d786991c…</code></a>
+— first reading. Screened before anything was read: 0 auto-executing
+surfaces, a <code>tests/conftest.py</code> that executes on pytest
+collection, and no lockfile beside <code>pyproject.toml</code>; nothing
+was installed and nothing was run. No commit on the repository since
+2026-05-11.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

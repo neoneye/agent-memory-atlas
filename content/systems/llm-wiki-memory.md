@@ -6,25 +6,28 @@ root: ../..
 page_kind: system
 source_name: ctxr-dev/llm-wiki-memory
 source_url: https://github.com/ctxr-dev/llm-wiki-memory
-revision: b7cc76a493573baac133969b324a874990556146
-revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146
-analyzed_at: 2026-08-06
+revision: 1e315b196212e0130117817512affac2fa95ae1c
+revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/1e315b196212e0130117817512affac2fa95ae1c
+analyzed_at: 2026-08-20
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "every MCP tool, on the read path | mcp-server/, scripts/lib/wiki-store.mjs | every tool requires a `scopes` argument and every write requires an explicit target, so a read resolves against a named private-plus-repository chain rather than a default, and an unscoped read is not expressible through the surface | test/cli-scopes.test.mjs, test/wire-memory-surfaces.test.mjs"
+  human_review: "the webapp, editing the same leaves the model reads | src/webapp/server/edit.mjs, src/webapp/app/ | a Lexical editor writes through the engine rather than over the file, so a person edits, pins and archives the rows retrieval serves; interactive `self_improvement` writes are separately gated on a per-lesson consent assertion the server checks | src/webapp/server/edit.test.mjs — 'PUT edits the body through the engine (re-read reflects it)'"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "Typed Markdown atom, plan/investigation, daily capture, or full document"
   storage: "Filesystem wiki, per-category embedding caches, private git history"
-  retrieval: "Metadata prefilter, local embedding/chunk cosine, priority bands, federated locality boost; lexical vector fallback"
+  retrieval: "Metadata prefilter, on-device EmbeddingGemma cosine over leaf and chunk caches, priority bands, federated locality boost; a lexical backend that serves as a degraded fallback rather than a fused channel"
   write: "MCP/CLI writes, transcript and plan hooks, daily compile, full-document absorb"
   update_delete: "Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in dedup/refresh consolidation"
   scoping: "Private brain plus explicit repository wiki levels; workspace/area/task/subject facets"
-  integration: "MCP, CLI, Claude Code lifecycle hooks, shared instructions"
+  integration: "MCP, CLI, Claude Code lifecycle hooks, shared instructions, and a local web app that edits through the engine"
   background: "Detached flush, daily compile, opt-in consolidation, cron healing, git/cache maintenance"
-  trust: "Body hash, capture audit, git history, user-gated lessons; no candidate/verified/rejected state"
+  trust: "Body hash, capture audit, git history, user-gated lessons, and a fail-closed quality judge whose `memory.quality: unverified` marker no read path consults; no candidate/verified/rejected state"
   strengths: "Recoverable capture, explicit targets, deterministic layout/topology, excellent operational tests"
-  risks: "LLM atoms become active without verification; vector-only primary retrieval; linear scans; git is not erasure"
+  risks: "LLM atoms become active without verification; the one epistemic marker has four writers and no reader; vector-only primary retrieval; linear scans; git is not erasure"
 ---
 
 ## 1. Executive Summary
@@ -35,7 +38,7 @@ The core philosophy is unusually explicit: memory owns content, placement, retri
 
 The weakest part is epistemic rather than operational. Extracted atoms are stored as active memories without candidate/verified/rejected states, source authority, contradiction records, or rejected-value tombstones. Git provides history, but not a truth model. Retrieval is semantic plus structured filtering, not genuinely hybrid lexical/vector search, and there is no checked-in retrieval-quality benchmark. The implementation is a strong reference for local coding-agent memory plumbing, but not for high-stakes belief governance.
 
-Analysis target: checkout `b7cc76a493573baac133969b324a874990556146` (2026-07-18), package version `0.5.0`.
+Analysis target: checkout `1e315b196212e0130117817512affac2fa95ae1c` (2026-08-20), package version `0.5.0`, 450 source files under `scripts/`, `mcp-server/` and `src/`, and 209 test files.
 
 ## 2. Mental Model
 
@@ -226,6 +229,10 @@ Writes arrive through four paths:
 
 Leaf writing itself is deterministic and synchronous: normalize a filename, infer/remap facets, choose a directory, atomically write frontmatter plus body, regenerate ancestor indexes, invalidate the embedding cache, record the mutation, and optionally commit. Writes do not eagerly compute transformer embeddings.
 
+**One LLM sits inside the write path, and it fails closed.** `mcp-server/mcp-judge-gate.mjs` judges an interactive submission once before it is stored: a pass writes, a fail returns `{ok: false, error: "quality-judge-rejected", verdict, recommendation}` and *does not write*, and a judge or provider outage returns `quality-judge-unavailable` and blocks the write rather than dropping it silently. The client is instructed to revise and resubmit up to three times, or to resubmit with `write.acceptQuality: true`, which stores the best attempt stamped `memory.quality: "unverified"`. Only the atomic curated categories are judged; plans, investigations, issues, daily captures and absorbed documents pass through (`isJudgeableCategory`).
+
+The marker is durable and unread. Four sites write it — `mcp-write-dispatch.mjs:145`, `compile-actions.mjs:98`, `consolidate-llm-merge.mjs:136`, `consolidate-llm-refresh.mjs:238` — two preserve it across metadata rebuilds (`wiki-identity.mjs:143`, `recall.mjs:275`), and two clear it when a later rewrite passes the judge. No read path filters, ranks or branches on it; the repository's own rule template calls it *"a reserved affordance for the read side."* That is why this report withholds `trust_state`: the state exists, is discrete, survives consolidation and is cleared correctly, and nothing consults it.
+
 LLMs participate before or around the write, not inside the primitive:
 
 - Flush uses a strict JSON atom extractor with chunked map/reduce and explicit type/quality rules.
@@ -240,6 +247,8 @@ Conflict handling is storage-oriented. Destination collisions are refused and ha
 Noise and malicious input controls include schema-constrained outputs, atom caps, metadata validation, newline stripping in rendered fields, P0 scarcity, self-improvement consent, fenced raw/plan bodies, marker defanging, transcript redaction, and response clamping. These reduce injection and corpus pollution, but LLM-distilled project facts are still activated automatically.
 
 ## 8. Agent Integration
+
+A local web app sits beside the MCP server: a Fastify API and a React client with document and search views, Plans and Issues boards, a command palette, an Ask panel, and a Lexical editor that writes **through the engine** rather than over the file — `src/webapp/server/edit.test.mjs` pins it as *"PUT edits the body through the engine (re-read reflects it)"*. That makes the review surface an editing surface over the same leaves retrieval serves, which is what earns `human_review` rather than a viewer's dash.
 
 The main integration is a local stdio MCP server with configuration, search, recall, write, absorb, document lifecycle, audit, layout, topology, provider, and consolidation tools. Inputs use strict Zod schemas. Every tool requires `scopes`; every write/mutation requires an explicit target. The server hot-reloads selected implementation and settings modules.
 
@@ -275,6 +284,8 @@ Trust controls are narrower:
 There is no authentication boundary because this is local software. Shared wiki safety is based on filesystem/git ownership and explicit target selection, not user identities or ACLs. Concurrent writes use atomic replacement and locks for major pipelines, but separate direct writers can still race; git path-directory staging can fold a concurrent change in the same directory into a private audit commit.
 
 Delete semantics need careful interpretation. `deleteDocument()` removes the live file and vector entry, but a private auto-committed wiki retains prior content in git history and possibly filesystem backups/stashes. This is recoverability, not privacy-grade erasure. There is no built-in history rewrite, encrypted storage, retention policy for leaves, or secure-delete workflow.
+
+**The largest deletion event in this system's history was its own test suite.** `test/real-brain-guard.test.mjs` is a regression guard whose header records the incident: a test that failed to isolate `MEMORY_DATA_DIR` — a static engine import froze it to the default before `setupWorkspace` ran — read *and wrote* the developer's real `~/.llm-wiki-memory` and hard-deleted about 590 real leaves. Two layers close it: `scripts/lib/env.mjs` throws when `LWM_FORBID_REAL_BRAIN` is armed and the data directory resolves to the real brain, and `test/setup-guard.mjs` arms that marker from a `--import` preload and redirects an unset or real data dir. Both derive the real-brain path from the same shared module the guard uses, so the check exercises the production derivation rather than a copy of it.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -446,6 +457,14 @@ The storage/search modules can be reimplemented cleanly, but the full experience
 - `PERFORMANCE.md`
 
 ## History
+
+**2026-08-20** — [`1e315b196212e0130117817512affac2fa95ae1c`](https://github.com/ctxr-dev/llm-wiki-memory/commit/1e315b196212e0130117817512affac2fa95ae1c) — re-pinned after a dormant repository resumed: 29 commits and 510 files since the previous pin, +55,114 / −7,087. Screened again before reading: one auto-run surface (`AGENTS.md`, addressed to a reading agent and recorded as data), fifty floating ranges behind a lockfile, one manifest inside the seven-day cooldown; nothing was installed and nothing was run. Marks hold at `scope_enforced` and `human_review`, both now carrying evidence records, and three things moved.
+
+- **A fail-closed quality judge joins the write path** (`mcp-server/mcp-judge-gate.mjs`), and its `memory.quality: "unverified"` marker has four writers, two preservers, two clearers and no reader. `trust_state` stays withheld on that basis rather than on absence, which is the sharper finding: the design was understood and the read side was left as an affordance.
+- **The web app makes the human surface an editing surface.** A Lexical editor writing through the engine, pinned by `src/webapp/server/edit.test.mjs`, alongside Plans and Issues boards, hash-route URLs, facet editing and archived visibility.
+- **Retrieval did not become hybrid.** `scripts/lib/embed-backend-state.mjs` is a one-owner state machine over `"transformers" | "lexical"` where the lexical path is a *degraded* backend entered when the model fails to load, with a retry window and a latch that stops a degraded process re-stamping real caches as `lexical/256`. The published claim that lexical is a fallback backend rather than a fused exact-search channel holds, and is now easier to cite.
+
+Also at this pin: EmbeddingGemma on `@huggingface/transformers` v4 with worker-thread inference and bounded cold embeds, a migration registry and runner with a ledger, `save-leaf` reading its body from a file with the plan cap raised to 1 MB, and a purge of the last Dify naming from the docs. 209 test files.
 
 **2026-08-06** — [`b7cc76a493573baac133969b324a874990556146`](https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146) — nothing moved, and the pin is not merely unchanged but current: no commit has landed on the repository since 18 July 2026, eight days before the first reading. Every claim stands. Screened again: 1 auto-run surface (`.cursor/rules/`, editor-injected agent context) and an `AGENTS.md` addressed to a reading agent, both read as data. Nothing was installed or run.
 

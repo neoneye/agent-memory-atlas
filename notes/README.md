@@ -21,6 +21,20 @@ when the work happens.
   before the two that close silent failures; "an afternoon" is an invented number
   on a page that refuses to invent numbers; and Stage 1's row promises a scope
   *boundary* where the atlas reserves that word for something stronger.
+- [2026-08-20-four-more-and-the-memory-under-the-product.md](2026-08-20-four-more-and-the-memory-under-the-product.md) —
+  outworked, Corbell, mission-control and the Proteus paper triaged. Two of the
+  three repositories read like memory systems and are not; the third is a
+  pixel-art Electron office with the most complete memory of the four —
+  `memorySet`/`memorySearch`/`memoryDelete` over a scoped key-value table,
+  exposed as MCP tools, so the model is their caller. Corbell learns `Decision`
+  records from design docs and loses the human's confirmations on the next
+  `docs:scan`, which is the sift-kg finding in an unrelated repository, beside a
+  `load()` that answers every parse failure with an empty list. mission-control
+  stores questions awaiting answers, not claims that could be false, and gives
+  the vocabulary probe a new poison: every `memory` hit is credential RAM.
+  Proteus is parametric memory inside a sequence model and is kept only as a
+  boundary marker. The rule: when a repository's memory is not what the
+  repository is for, the tool registry finds it and the README does not.
 - [2026-08-20-three-candidates-and-the-half-that-can-be-false.md](2026-08-20-three-candidates-and-the-half-that-can-be-false.md) —
   OpenWolf, piodide and sift-kg triaged; two in scope with no report yet, one
   excluded. The same shape in all three: the durable state splits into a half

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 308 reports.</strong></p>
+<p><strong>This page covers all 310 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -9471,6 +9471,119 @@ fetched.</li>
 is no correction, no scope you can rely on, no audit, no human surface
 and no deletion on request, and the memory is trained into a policy you
 would have to train yourself.</li>
+</ul>
+<h3 id="openwolf"><a
+href="../systems/openwolf/"><code>openwolf</code></a></h3>
+<ul>
+<li>Best idea: <strong>a read-path hook that can refuse.</strong>
+<code>pre-read.ts</code> returns <code>permissionDecision: "deny"</code>
+for a file already read this session and unchanged on disk, with a
+reason that tells the model to reuse its earlier read or pass
+<code>offset</code>/<code>limit</code>, and a stated pass-through on the
+second attempt so it cannot deadlock a real need. The carve-out is the
+part worth copying: SessionStart clears deny-eligibility on every
+recorded read when the source is <code>compact</code>, because
+compaction evicted the contents and the re-read is legitimate.
+Enforcement placed where the constrained party cannot reach it, with the
+one exception that makes it safe.</li>
+<li>Second idea: <strong>a derived copy that cannot outlive its
+source.</strong> <code>memory-migrate.ts</code> mirrors cerebrum
+sections into Claude Code's own auto-memory with a content hash in the
+frontmatter, drops oldest-first under a byte cap, skips a byte-identical
+write — and <code>unlink</code>s the mirrored file when its source
+section empties, <em>"so stale advice does not outlive its cerebrum
+source."</em> The session digest then detects the sync marker and
+suppresses its own Do-Not-Repeat block, so the same list is not injected
+twice across two memory systems.</li>
+<li>Biggest risk: <strong>the only code path that writes a belief
+replaces the whole file with a model's stdout.</strong>
+<code>cron-engine.ts:403-413</code> — a weekly job pipes
+<code>cerebrum.md</code> through <code>claude -p</code>, strips a fence,
+and if the result is not JSON but contains
+<code>## User Preferences</code>, <code>## Key Learnings</code> or
+<code># Cerebrum</code>, that text becomes the file. No merge, no diff,
+no backup, no floor on how much may vanish, and the sink chosen by
+<code>String.prototype.includes</code> — so the sibling suggestions job
+lands there too whenever its JSON parse fails. The prompt instructs the
+model to drop Do-Not-Repeat entries <em>"if no longer relevant"</em>,
+which makes a user's correction deletable by a model's judgement with
+nothing recording that it happened. Beside it,
+<code>waste-detector.ts:83</code> ships a <code>cerebrum_stale</code>
+flag advising you to <em>"check if cerebrum is being updated by
+hooks"</em>; no hook updates cerebrum.</li>
+<li>Maturity impression: AGPL-3.0-only, v2.1.0, ~12.9k lines of
+TypeScript, twelve test files, CI for docs only. One capability mark —
+<code>negative_eval</code>, in its weaker form: committed cases assert
+that extracted symbols never render into <code>anatomy.md</code> and
+that <code>isSensitiveFile</code> keeps keys and credentials out of the
+generated files, both about what must not appear in a projection rather
+than what must not come back from a read. No trust state, no provenance,
+no per-memory delete; <code>runAiTask</code>, the branch that decides
+whether model output becomes the belief store, has no test.</li>
+<li>Study when: you are wiring memory into a coding agent through hooks
+rather than tools, and want worked answers for the read-path refusal,
+the compaction carve-out, the fixed-cost session digest with a per-agent
+token budget, and the mirror that deletes what its source no longer
+holds.</li>
+<li>Do not copy when: anything downstream has to be defensible, or a
+user's stated correction has to survive a scheduled job. There is no
+tool surface either, so a model can only reach what the 1500-token
+digest injected or what it thinks to grep.</li>
+</ul>
+<h3 id="sift-kg"><a
+href="../systems/sift-kg/"><code>sift-kg</code></a></h3>
+<ul>
+<li>Best idea: <strong>the extraction layer is retained and the graph is
+a pure function of it.</strong> Per-document JSON under
+<code>extractions/</code>, a <code>context</code> quote on every entity,
+an <code>evidence</code> quote on every relation,
+<code>source_documents</code> unioned across chunks, and a
+<code>build</code> that reconstructs <code>graph_data.json</code> rather
+than mutating it. Evidence before belief, implemented without being
+named, and it makes a bad extraction debuggable instead of
+permanent.</li>
+<li>Second idea: <strong>a real adjudication step, and a review queue
+deduped on the value.</strong> <code>sift resolve</code> proposes merges
+as <code>DRAFT</code>, <code>sift review</code> is a person setting
+<code>CONFIRMED</code> or <code>REJECTED</code>, and
+<code>apply-merges</code> acts only on <code>merge_file.confirmed</code>
+— nothing reaches the graph on a model's proposal alone. The relation
+branch keys its queue on
+<code>(source_id, target_id, relation_type)</code>, so nobody is asked
+twice about the same claim.</li>
+<li>Biggest risk: <strong>the corrections are applied to the artifact
+the next build regenerates.</strong> <code>sift build</code> calls
+<code>load_extractions</code> and reads neither
+<code>merge_proposals.yaml</code> nor <code>relation_review.yaml</code>,
+so every applied merge and every removed relation is undone by the
+rebuild the bundled agent skill tells you to run whenever documents are
+added. Worse in one function: <code>cli.py:392</code> writes the merge
+file with no prior read — <code>resolve/io.py</code> opens
+<code>"w"</code> — so every <code>CONFIRMED</code> and
+<code>REJECTED</code> truncates back to <code>DRAFT</code>, while the
+relation branch twenty lines below reads, dedupes and extends. And the
+surviving guard cuts the wrong way: a rejected relation restored by a
+rebuild is not re-flagged, because the triple is already in the
+queue.</li>
+<li>Maturity impression: MIT, 56 Python files, 13,547 lines, sixteen
+test files, no commit since 2026-05-11. One capability mark —
+<code>human_review</code>, earned on the review step. No
+<code>trust_state</code>:
+<code>DRAFT</code>/<code>CONFIRMED</code>/<code>REJECTED</code> is a
+discrete state on a <em>proposal about</em> a memory rather than on the
+memory, and withholds no entity from a query; the per-entity
+<code>confidence</code> float is written, merged by maximum, and read by
+nothing. No test runs <code>resolve</code> twice over a file holding
+decisions, and none runs <code>build</code> after
+<code>apply-merges</code> — either would have caught this.</li>
+<li>Study when: you are building a document-to-graph memory and want the
+retained-extraction shape, the proposal/decision split, and an unusually
+well-made agent skill — its <em>link knowledge islands</em> pattern uses
+community structure in a way the query API alone would not suggest.</li>
+<li>Do not copy when: documents arrive continuously, which is exactly
+the workload where the rebuild runs often and the human's judgements are
+lost each time; or when anyone who did not watch the graph being built
+has to trust it, since nothing records who approved what.</li>
 </ul>
         </article>
       </div>
