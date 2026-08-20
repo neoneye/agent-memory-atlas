@@ -913,6 +913,53 @@ against zero.</li>
 memory benchmark result this atlas has examined. Without it, a reported
 82% could be an 82% model and an inert memory layer, and nothing in the
 artifact distinguishes the two.</p>
+<p><strong>And a 2026 result complicates the fix, in a direction that
+makes the no-memory baseline more necessary rather than less.</strong>
+<em>Empty Shelves or Lost Keys? Recall Is the Bottleneck for Parametric
+Factuality</em>, Nitay Calderon and Gal Yona, Google Research, <a
+href="https://research.google/blog/empty-shelves-or-lost-keys-recall-is-the-bottleneck-for-parametric-factuality/">published
+12 August 2026</a>, paper at <a
+href="https://arxiv.org/abs/2602.14080">arXiv:2602.14080</a>, dataset at
+<a
+href="https://huggingface.co/datasets/google/WikiProfile">google/WikiProfile</a>.
+The method: 2,150 Wikipedia-derived facts, ten tasks per fact separating
+whether a model <em>encoded</em> a fact (proposition completion) from
+whether it can <em>state</em> it (varied phrasings and directions) and
+whether it can merely <em>recognise</em> it (multiple choice), across 13
+models and roughly 4.5 million graded responses.</p>
+<p>The headline is that frontier models encode 95–98% of these facts and
+still fail to recall 26–34% of them under direct questioning —
+<em>"Frontier LLMs encode nearly all facts, yet struggle to recall many
+of them"</em> — with the failure rate falling to 11–12% when thinking is
+enabled, and thinking recovering 40–65% of encoded-but-inaccessible
+facts against only 5–15% of the non-encoded ones. The post's own framing
+is <em>"the bottleneck is shifting from knowledge acquisition to
+knowledge utilization."</em> None of it was verified here beyond reading
+the post and the dataset card.</p>
+<p>Two consequences for the section above.</p>
+<p><strong>A no-memory baseline is not one number; it is a number with a
+decoding setting attached.</strong> If the same model answers a third of
+what it knows on a direct question and most of it after thinking, then
+"run the same questions with retrieval disabled" produces a floor that
+moves by tens of points depending on how the baseline arm was prompted.
+A memory layer measured against the non-thinking floor will look far
+better than the same layer measured against the thinking floor, and no
+published result this page has examined says which it used.</p>
+<p><strong>The fictional-data fix is doing more work than it was given
+credit for.</strong> The trap this section names is that a real-world
+fact can be answered from pre-training. This result says the
+<em>reverse</em> error is also live: a model that encoded the fact and
+failed to recall it makes an inert memory layer look essential — the
+benchmark scores a recall failure that a different prompt would not have
+produced. Both errors are eliminated by high-entropy fictional facts,
+which is a stronger argument for that rule than the one this page
+originally gave.</p>
+<p>The relevance beyond benchmarking is that the same distinction
+applies to the memory layer itself. Everything in this atlas that
+decides <em>whether to retrieve</em> is making a bet about what the
+model already knows, and this is the first measurement of how bad that
+bet is: the material is on the shelf 95–98% of the time, and a third of
+the time the model cannot find its own key.</p>
 <h3 id="the-baseline-is-usually-too-weak">The baseline is usually too
 weak</h3>
 <p>Almost every memory result compares a system against <em>no

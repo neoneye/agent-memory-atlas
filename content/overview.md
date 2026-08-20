@@ -4225,6 +4225,38 @@ The counter-example is worth naming because it is not a coincidence. [daimon](..
 
 `memory-engine` has the most developed access model in the atlas, and it is the only one where an **agent is a principal** rather than a process acting with someone else's authority. Grants are `(space, principal, ltree path, level)` over read/write/owner; `core.build_tree_access` materializes the caller's grants into a jsonb passed *into* the search SQL, so visibility and ranking are one query rather than a post-filter that would make `LIMIT` mean different things for different callers. Delegation is safe because `agent_tree_access` clamps an agent to `least(agent, owner)` at every path — a member may grant their own agents freely, and an over-grant clamps down instead of escalating. Row-level security was tried and rejected for performance, with the reason recorded beside the replacement and a benchmark query retained to keep watching it. `honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Cognee authorizes datasets per user and can isolate supported backend stores per user/dataset. Claude-Mem scopes local reads by project/worktree, session, and platform source, while its newer server model adds teams and API keys. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `agentmemory` supports project/session keys and an opt-in isolated agent mode, but defaults to shared agent scope. TencentDB records session identity but does not turn it into a general tenant boundary; one persona per data directory is especially important operationally. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. `openviking` carries tenant and permission filtering into every retrieval call and physically separates memory about the user from memory about a peer under `peers/<peer_id>`. `redis-agent-memory-server` scopes by namespace, user, and session behind auth. `openclaw` has a single `agentId` axis but defends it unusually well, composing scope and user filter into one predicate "so scope cannot be lost" and scoping deletes the same way. `hermes-agent` isolates by profile but has no project or room boundary within one. `magic-context` has a three-level lattice — `project`, `ecosystem`, `universe` — plus a `shareable` flag governing what may cross a boundary, with project identity resolved to the git root and a rekey map for when a repository moves. `pi` has no scope because it has no memory. `byterover` scopes only by storage directory, and `holographic` has no scope at all — it describes itself as a single-user store, with `category` serving as partitioning rather than access control. A-MEM, Swafra, and Holographic remain the outliers with effectively global local corpora. `daimon` scopes by a slug munged from the project's working directory, and the rule it derives is worth copying: callers that *display* what they read may fall back to another bucket, callers that *persist* what they read may not — carry always reads with `fallback=False`, so a cross-project pointer can never enter durable state. When the display fallback does fire, the foreign body is suppressed and only a header appears, on the stated reasoning that one warning line above a hundred foreign lines does not read as a warning. Its team mode is the atlas's cleanest answer to conflict-free sharing: only immutable per-author files sync through a private git sidecar, no mutable pointer ever lands there, teammates' items stay attributed and are never merged into yours, and a non-fast-forward is surfaced as a warning that repairs nothing.
 
+**Every system above scopes memory so agents cannot see each other's. A 2026
+Anthropic experiment measures what that costs when nothing is shared.**
+[Multi-agent systems](https://www.anthropic.com/research/multiagent-systems),
+Anthropic's Frontier Red Team, ran swarms of 10 to 80 model instances across
+several generations, each on its own virtual machine with a shared forum,
+self-hosted repositories and public listing boards — coordination surfaces, not a
+memory layer. Nothing here was verified against code; there is no repository to
+pin, and this is recorded as a measurement rather than an implementation.
+
+The finding that belongs on this page is the **hidden-profile** result: on tasks
+where the information needed to decide is dispersed across the group, models
+scored 17–36% as a group against roughly 100% individually (n=400), improving
+with newer generations but not saturating. A group of agents each holding one
+piece failed at assembling the pieces, which is the failure mode a shared memory
+exists to prevent, measured for the first time at that scale.
+
+The essay's own diagnosis is about persistence rather than bandwidth: the agents
+*"enter the market with no reputation to lose, no court to appeal to, and no
+colleague who remembers them."* That is the cross-agent case for durable memory
+stated as an absence — not "an agent should recall facts" but "an agent should be
+recallable *by* others", which no scoping model in this atlas expresses. Every
+boundary above answers who may read what; none of them records who was reliable.
+
+Two of the other failures are cheap to guard against and worth naming for anyone
+running more than one agent against a shared store. **Conformity**: identical
+agents make identical decisions, with 18 of 30 independently creating a branch
+called `mvp-game-loop` — a store keyed on a name an agent chooses will collide,
+because the choice is not independent. **Resource collapse**: agents spawned
+30-per-second polling daemons, producing 2.4 million requests against 117
+accepted jobs — a retrieval endpoint with no per-agent rate limit is exposed to
+the same shape, and nothing in this corpus has one.
+
 ## 4. Implementation Hotspots by Repo
 
 ### Memory Schema

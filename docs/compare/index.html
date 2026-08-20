@@ -15300,6 +15300,41 @@ only immutable per-author files sync through a private git sidecar, no
 mutable pointer ever lands there, teammates' items stay attributed and
 are never merged into yours, and a non-fast-forward is surfaced as a
 warning that repairs nothing.</p>
+<p><strong>Every system above scopes memory so agents cannot see each
+other's. A 2026 Anthropic experiment measures what that costs when
+nothing is shared.</strong> <a
+href="https://www.anthropic.com/research/multiagent-systems">Multi-agent
+systems</a>, Anthropic's Frontier Red Team, ran swarms of 10 to 80 model
+instances across several generations, each on its own virtual machine
+with a shared forum, self-hosted repositories and public listing boards
+— coordination surfaces, not a memory layer. Nothing here was verified
+against code; there is no repository to pin, and this is recorded as a
+measurement rather than an implementation.</p>
+<p>The finding that belongs on this page is the
+<strong>hidden-profile</strong> result: on tasks where the information
+needed to decide is dispersed across the group, models scored 17–36% as
+a group against roughly 100% individually (n=400), improving with newer
+generations but not saturating. A group of agents each holding one piece
+failed at assembling the pieces, which is the failure mode a shared
+memory exists to prevent, measured for the first time at that scale.</p>
+<p>The essay's own diagnosis is about persistence rather than bandwidth:
+the agents <em>"enter the market with no reputation to lose, no court to
+appeal to, and no colleague who remembers them."</em> That is the
+cross-agent case for durable memory stated as an absence — not "an agent
+should recall facts" but "an agent should be recallable <em>by</em>
+others", which no scoping model in this atlas expresses. Every boundary
+above answers who may read what; none of them records who was
+reliable.</p>
+<p>Two of the other failures are cheap to guard against and worth naming
+for anyone running more than one agent against a shared store.
+<strong>Conformity</strong>: identical agents make identical decisions,
+with 18 of 30 independently creating a branch called
+<code>mvp-game-loop</code> — a store keyed on a name an agent chooses
+will collide, because the choice is not independent. <strong>Resource
+collapse</strong>: agents spawned 30-per-second polling daemons,
+producing 2.4 million requests against 117 accepted jobs — a retrieval
+endpoint with no per-agent rate limit is exposed to the same shape, and
+nothing in this corpus has one.</p>
 <h2 id="4-implementation-hotspots-by-repo">4. Implementation Hotspots by
 Repo</h2>
 <h3 id="memory-schema">Memory Schema</h3>
