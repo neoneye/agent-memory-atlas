@@ -81,7 +81,7 @@ rather than silently re-asserting it. `reject`/`unreject`/`rejections` exist on
 the CLI, HTTP and MCP surfaces, and a refused write is itself audited
 (`reject_refusal`). The honest limitation is that the match is exact-normalized-value
 only: a paraphrase of a rejected value still evades it (`src/rejection.ts:5-8`).
-That earns `tombstone` and reverses the report's former central finding.
+That earns `tombstone`.
 
 Second weakness, and subtler: **staleness is computed from disuse, not from
 evidence.** See section 2.

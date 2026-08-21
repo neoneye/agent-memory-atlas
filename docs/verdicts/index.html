@@ -1364,10 +1364,11 @@ it.</li>
 audit trail explains its own hole.</li>
 <li>Maturity impression: ~50,000 lines (release v1.31.0) with a
 real-database test convention, a migration ladder past forty steps, and
-incident comments naming what each repair was for — and a tagline about
-forgetting the correction model now backs, since v1.31.0 added the
-digest-keyed rejected-value tombstone that was the report's former
-central gap.</li>
+incident comments naming what each repair was for. The tagline about
+forgetting is backed by the code: v1.31.0 added a digest-keyed
+rejected-value tombstone in <code>src/rejection.ts</code>, keyed on the
+normalized value rather than the row, storing no content, and carrying
+no foreign key so it outlives the memory it came from.</li>
 <li>Study when: you need multi-tenant memory where different transports
 carry different trust models, or you want a worked example of ranking
 that fuses lexical, vector and derived-quantity arms.</li>
@@ -7122,8 +7123,10 @@ Cedar, OPA, LangGraph, MAF) plus an EvolveAI qualification profile. A
 <code>pyproject.toml</code> and an <code>agent-memory</code> CLI now
 ship where there was no manifest at all. The mark-core deletion
 machinery is byte-for-byte unchanged; the quadrupling happened around
-it, and it added the rejected-value tombstone (ADR-027) that was the
-report's former gap.</li>
+it, and it carries a rejected-value tombstone (ADR-027) whose
+<code>RejectedValueRegistry</code> stores a SHA-256 fingerprint of the
+normalized value rather than the value, and fails closed unless an
+externally-approved correction readmits it.</li>
 <li>Study when: you are designing deletion for a system with derived
 state, or you need the vocabulary to argue about what a deletion
 guarantee even means. It is the most developed treatment of residue,

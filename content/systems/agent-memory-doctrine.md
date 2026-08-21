@@ -166,7 +166,7 @@ A `Fact` carries `uuid`, `fact_text`, `group_id`, and the four temporal fields; 
 
 `requires_authority_to_rebuild` is a small, sharp piece of that model: a rebuild is categorically authorizable only when the transform is deterministic *and* reproducible, because *"everything else commits estimator-derived content and must pass through governance, or invalidation becomes a write channel."* Invalidating a cache as a way to smuggle a write is not a threat most designs here have considered.
 
-**A rejected-value tombstone is now present** (ADR-027). Alongside the record-keyed `self._tombstones[fact_uuid]` delete marker, `readmission.py` adds a `RejectedValueRegistry` "keyed by memory and exact value identity": it stores a SHA-256 `value_fingerprint` of the normalized content (never the raw value), and the adapter's `_readmission_blocked` refuses a proposal whose value matches a rejected fingerprint, emitting a `memory.readmission_blocked` event and failing closed — only an externally-approved correction may readmit. That earns `tombstone`, and it complements the residue machinery, which attacks the adjacent problem from the other end (ensuring a deleted value does not survive in derived state). The stated limit, in the adapter's own comment, is that the block is exact-identity — semantic similarity is review-lane evidence, not a hard block — so it "does not claim full closure" of the semantic case. What remains genuinely absent is a **discrete epistemic status on a memory**: the three-valued freshness relation describes derived state's relationship to canonical state, not whether a claim is believed.
+**A rejected-value tombstone is present** (ADR-027). Alongside the record-keyed `self._tombstones[fact_uuid]` delete marker, `readmission.py` adds a `RejectedValueRegistry` "keyed by memory and exact value identity": it stores a SHA-256 `value_fingerprint` of the normalized content (never the raw value), and the adapter's `_readmission_blocked` refuses a proposal whose value matches a rejected fingerprint, emitting a `memory.readmission_blocked` event and failing closed — only an externally-approved correction may readmit. That earns `tombstone`, and it complements the residue machinery, which attacks the adjacent problem from the other end (ensuring a deleted value does not survive in derived state). The stated limit, in the adapter's own comment, is that the block is exact-identity — semantic similarity is review-lane evidence, not a hard block — so it "does not claim full closure" of the semantic case. What remains genuinely absent is a **discrete epistemic status on a memory**: the three-valued freshness relation describes derived state's relationship to canonical state, not whether a claim is believed.
 
 ## 6. Retrieval Mechanics
 
@@ -206,7 +206,7 @@ Strengths:
 
 Gaps:
 
-- **No rejected-value tombstone**; the tombstone here is record-keyed.
+- **The rejected-value block is exact-identity only.** A paraphrase of a rejected value clears the fingerprint check; semantic similarity is review-lane evidence rather than a hard block, which the adapter's own comment states it does not claim to close.
 - **No epistemic status on a memory unit.**
 - **The reference substrate is a dictionary.** Every property above is demonstrated against an in-memory graph plus a Graphiti driver, not against a production store under load.
 - **No committed run output** for the conformance suite, the Mem0 comparator or the deletion-completeness chain.
@@ -259,7 +259,7 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 - What does the Mem0 comparator actually report? The harness is committed, pinned and credential-free; the result is not in the repository.
 - Has the residue sweep been run against a real substrate with derived state at scale, or only against the in-memory graph and the Graphiti driver?
 - Why do the README's fixture and ADR counts understate the tree, and are the badges generated or hand-maintained?
-- The rejected-value tombstone that was absent is now present (ADR-027, exact-identity). Will the semantic-similarity case become a hard block rather than review-lane evidence, which the adapter's own comment says it does not yet claim to close?
+- The rejected-value block is exact-identity (ADR-027). Will the semantic-similarity case become a hard block rather than review-lane evidence, which the adapter's own comment says it does not yet claim to close?
 - What would ADR-020 and ADR-021 need to move from Proposed to Accepted, and is that evidence expected to come from adopters?
 
 ## Appendix: File Index
