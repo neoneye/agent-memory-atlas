@@ -22625,6 +22625,79 @@ for paper dolls satisfies the shorthand without being one — which is the
 useful part, because the same shape describes any interface that
 persists per-agent decoration beside a real memory system and would read
 as memory in a directory listing.</li>
+<li><strong><code>fynnfluegge/agtx</code> was examined and has no
+report: it is the <code>beads</code> boundary in its purest form, and
+its trust gate is worth the entry on its own.</strong> Apache-2.0,
+26,552 lines of Rust, 102 commits since 8 February 2026, 738 tests, at
+<a
+href="https://github.com/fynnfluegge/agtx/commit/6f0d8dec975b4f62ff9a48ec52dbf8cdff92bb04"><code class="commit-id" title="6f0d8dec975b4f62ff9a48ec52dbf8cdff92bb04">6f0d8dec…</code></a>.
+It is a terminal kanban board that runs several coding agents in
+parallel, each in its own git worktree and tmux window, with an
+orchestrator that plans and delegates — the README calls it <em>"the
+blackboard for coding agents"</em>, and a blackboard is exactly the
+thing <a href="#not-in-scope-conversation-window-management">the second
+boundary</a> declines. <strong>The schema settles it in five
+tables</strong>: <code>tasks</code> (title, description, status, agent,
+project, session, worktree, branch, PR number, <code>cycle</code>,
+<code>referenced_tasks</code>, <code>escalation_note</code>),
+<code>transition_requests</code>, <code>notifications</code>,
+<code>projects</code> and <code>running_agents</code>. Every column is
+the state of the work or of the process running it; not one holds a
+claim about the world that a later reading could contradict. A task
+moving from <code>backlog</code> to <code>done</code>, or its branch
+changing, is the work moving on rather than the store having been wrong.
+<strong>The cross-task context path is the interesting
+near-miss</strong>, because it looks like memory transfer and is not: a
+task may reference other tasks, and on worktree creation agtx writes
+<code>git diff main..&lt;branch&gt;</code> into
+<code>.agtx/references/&lt;slug&gt;.diff</code> and recursively copies
+<code>.agtx/skills</code> and <code>.planning</code> from the referenced
+task's worktree — <em>"if it still exists"</em>. Both halves are
+derivable or ephemeral: the diff regenerates from git on demand, and the
+copy silently produces nothing once the worktree is cleaned up. Nothing
+is stored with an identity a correction could name, which is the
+difference between routing work products and remembering. <strong>What
+is worth recording is <code>TrustStore</code></strong>, and it belongs
+beside <code>tobi/qmd</code>'s <code>src/trust.ts</code> above as the
+corpus's second good instance of the same idea. A cloned repository can
+carry <code>.agtx/config.toml</code> with an <code>init_script</code>, a
+<code>cleanup_script</code> and <code>copy_files</code>; agtx keys a
+SHA-256 of that file by canonical project path in
+<code>~/.config/agtx/trusted_projects.toml</code> — <strong>outside the
+project</strong>, so the tree cannot mark itself trusted — and on a
+mismatch <strong>suppresses the three dangerous fields and forces
+<code>no_init_scripts</code> for plugins</strong> rather than refusing
+to open the project, telling the operator which fields were disabled and
+naming <code>agtx trust</code> as the way back. Editing the config
+re-arms the gate because the hash changes, which is the property a
+one-time folder prompt lacks, and <code>(None, None) =&gt; true</code>
+distinguishes <em>no policy</em> from <em>changed policy</em> — a
+project with no config file is not treated as suspicious. <strong>The
+gap is that the gate and the precedence key on different files.</strong>
+<code>WorkflowPlugin::load</code> resolves a plugin name against
+<code>{project}/.agtx/plugins/&lt;name&gt;/plugin.toml</code>
+<strong>before</strong> the global directory, a plugin carries its own
+<code>init_script</code>, and plugin init scripts are suppressed only
+when the <em>config</em> hash mismatches. A repository that ships a
+project-local plugin directory shadowing the name the operator already
+has configured globally, and ships no <code>.agtx/config.toml</code> at
+all, satisfies <code>is_trusted</code> by that same
+<code>(None, None)</code> arm. The fix is one line — hash the plugin
+directory too, or force <code>no_init_scripts</code> whenever a
+project-local plugin shadows a global one — and it is recorded here
+rather than left implicit because the atlas keeps finding trust gates
+whose key is narrower than their blast radius. <strong>One note on its
+benchmark</strong>, which is committed rather than claimed:
+<code>benchmark/RESULTS.md</code> reports per-instance rows against
+SWE-bench Lite with duration, tokens, cost and a three-value outcome —
+✅, 🟡 for <em>"fix correct but incomplete"</em>, ❌ — across roughly
+ten workflow-plugin configurations, with a header explaining that tokens
+and cost move independently because cache reads are ten times cheaper
+than input. Reporting cost beside outcome is the discipline the <a
+href="../benchmarks/#on-llm-usage">benchmarks page</a> asks for and
+rarely gets. It is also two instances of three hundred, mostly one,
+graded by hand, with a single ✅ in the whole table — so it separates
+nothing, and the file's value is the shape rather than the numbers.</li>
 <li><strong><code>NVIDIA/SkillEvaluator</code> was examined and has no
 report: it grades procedural memory rather than holding any, and two of
 its mechanisms are worth more than that boundary suggests.</strong>
