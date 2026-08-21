@@ -126,13 +126,12 @@ href="#what-the-licences-actually-say">appendix</a>.</p>
 <p><strong>What counts as one.</strong> A system is in scope when it
 keeps something across sessions that could later turn out to be
 <em>false</em> — a claim about a person, a project, a codebase, a world
-— and gives that thing an identity a correction can name. Durable
-storage an agent reads and writes is the entry condition rather than the
-boundary: a conversation window, a KV cache, a document index and a task
-queue all persist, and none of them holds anything a later reading could
-contradict. The cases that sit closest to the line are worked through in
-<a href="#not-in-scope-the-kv-cache">what is not in scope</a> and the
-sections after it.</p>
+— and gives that thing an identity a correction can name. Persistence
+alone decides nothing: a conversation window, a KV cache, a document
+index and a task queue all survive the session, and none of them holds
+anything a later reading could contradict. The cases that sit closest to
+the line are worked through in <a href="#not-in-scope-the-kv-cache">what
+is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 22
@@ -15432,7 +15431,7 @@ days</strong> unless <code>delete_unverified</code> is set — an option
 whose own comment warns it can corrupt the dataset. Qdrant holds the
 bytes until a segment optimizer rebuilds.</p>
 <p>pgvector is the exception, and it is the reason to treat the other
-three as a choice rather than a law. <code>VACUUM</code> does not merely
+four as a choice rather than a law. <code>VACUUM</code> does not merely
 flag the element; it zeroes it — <code>etup-&gt;deleted = 1;</code>
 followed by <code>memset(&amp;etup-&gt;data, 0, …)</code> — invalidates
 the neighbour pointers and offers the page for reuse. Still not

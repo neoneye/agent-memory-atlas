@@ -611,8 +611,8 @@ benchmark result this atlas has examined. Without it, a reported 82% could be an
 82% model and an inert memory layer, and nothing in the artifact distinguishes
 the two.
 
-**And a 2026 result complicates the fix, in a direction that makes the no-memory
-baseline more necessary rather than less.** *Empty Shelves or Lost Keys? Recall
+**A 2026 result measures how much of that trap is real, and makes the no-memory
+baseline harder to specify.** *Empty Shelves or Lost Keys? Recall
 Is the Bottleneck for Parametric Factuality*, Nitay Calderon and Gal Yona, Google
 Research, [published 12 August 2026](https://research.google/blog/empty-shelves-or-lost-keys-recall-is-the-bottleneck-for-parametric-factuality/),
 paper at [arXiv:2602.14080](https://arxiv.org/abs/2602.14080), dataset at
@@ -642,14 +642,13 @@ non-thinking floor will look far better than the same layer measured against the
 thinking floor, and no published result this page has examined says which it
 used.
 
-**The fictional-data fix is doing more work than it was given credit for.** The
-trap this section names is that a real-world fact can be answered from
-pre-training. This result says the *reverse* error is also live: a model that
-encoded the fact and failed to recall it makes an inert memory layer look
-essential — the benchmark scores a recall failure that a different prompt would
-not have produced. Both errors are eliminated by high-entropy fictional facts,
-which is a stronger argument for that rule than the one this page originally
-gave.
+**The trap runs in both directions.** One is the familiar one above: a real-world
+fact answerable from pre-training scores the model, not the memory layer. The
+other is its mirror — a model that encoded a fact and failed to recall it makes
+an inert memory layer look essential, because the benchmark is scoring a recall
+failure that a different prompt would not have produced. High-entropy fictional
+facts are the fix for both, which is why that rule is worth more than the
+convenience of avoiding pre-training overlap.
 
 The relevance beyond benchmarking is that the same distinction applies to the
 memory layer itself. Everything in this atlas that decides *whether to retrieve*
@@ -869,7 +868,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | Write-to-readable lag | How long after something is said before it can be recalled | **Nowhere** |
 | Storage footprint | Bytes per memory; index growth over a year | **Nowhere** |
 | Correction precision | How often an automated supersession pass is wrong | **Nowhere** — though [Memora](../systems/memora/)'s dry-run mode makes it directly measurable |
-| Deletion durability | Whether a deleted memory stays deleted after the next background pass | **Nowhere** |
+| Deletion durability | Whether a deleted memory stays deleted after the next background pass | **Nowhere.** The closest is [AgentDatabase](../systems/agentdatabase/)'s `forgetting` category, which checks that a retired record is not used at answer time — a different question from whether it survives a compaction |
 | Retrieval-gate accuracy | How often a system that decides *not* to retrieve is wrong | **Nowhere** — [Waku](../systems/waku-agent/) gates on every turn and does not measure it |
 | Verification precision | Whether a staleness check correctly marks stale | **Nowhere** — it is [Magic Context](../systems/magic-context/)'s central claim |
 | Reacquisition cost after compression | How many extra tool calls the agent spends rebuilding state the compressor dropped | **Nowhere in this atlas** — measured externally, and the finding is below |
@@ -1060,16 +1059,17 @@ collect and none of them appears anywhere.
 
 ## 6. Does Anything Benchmark Forgetting?
 
-**No.** Not in this atlas, not in the public benchmarks these repositories use,
-and not in the field's own consolidated list — the 40 benchmarks in Table 8 of
-[arXiv:2512.13564](https://arxiv.org/abs/2512.13564) contain nothing that tests
-whether a deleted memory stays deleted. The nearest entries are MemoryBank
-("user memory updating") and HaluMem (memory hallucinations), and neither asks
-the question. This is the clearest gap in the field's measurement practice, and
-it is worth being precise about what exists and what does not.
+**Nothing independent does.** No public benchmark tests whether a deleted memory
+stays deleted: the field's own consolidated list — the 40 benchmarks in Table 8
+of [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) — contains nothing that
+asks the question, with MemoryBank ("user memory updating") and HaluMem (memory
+hallucinations) the nearest entries and neither one of them it. One repository in
+this corpus grades a forgetting category, and it wrote the cases it is graded
+against. That is the state of the practice, and the rest of this section is
+precise about which part of it is a gap in measurement and which part is a gap in
+independence.
 
-**One repository in this atlas ships a forgetting category, and it is worth
-saying exactly what that does and does not settle.**
+**The one forgetting category, and what it does not settle.**
 [AgentDatabase](../systems/agentdatabase/) commits a 160-case gold set generated
 deterministically from a fixed seed — eight categories of twenty, including
 `forgetting` and `abstention` — where every case names `expected_ids`,

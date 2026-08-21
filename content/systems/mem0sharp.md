@@ -33,9 +33,9 @@ matrix:
 
 ## 1. Executive Summary
 
-Mem0Sharp is a **reimplementation** rather than a client. Apache-2.0, 2,982
-lines of C# across `Application`, `Infrastructure`, `Intelligence`, `Transports`
-and `Telemetry`, with 1,123 lines of tests beside them. It builds the
+Mem0Sharp is a **reimplementation** rather than a client. Apache-2.0, 4,587 lines of C# across
+`Application`, `Infrastructure`, `Intelligence`, `Transports` and `Telemetry`,
+with 1,968 lines of tests beside them and eleven committed evaluation runs. It builds the
 [Mem0](../mem0/) architecture — LLM extraction, LLM conflict resolution, vector
 storage, graph relationships — on .NET, with Postgres/pgvector and Qdrant stores,
 an in-memory store, four rerankers, an MCP server, and a decorator that wraps the

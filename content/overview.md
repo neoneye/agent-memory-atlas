@@ -16,11 +16,11 @@ and judged against seven mechanisms with strict definitions. "Readable" is not
 **What counts as one.** A system is in scope when it keeps something across
 sessions that could later turn out to be *false* — a claim about a person, a
 project, a codebase, a world — and gives that thing an identity a correction can
-name. Durable storage an agent reads and writes is the entry condition rather
-than the boundary: a conversation window, a KV cache, a document index and a task
-queue all persist, and none of them holds anything a later reading could
-contradict. The cases that sit closest to the line are worked through in
-[what is not in scope](#not-in-scope-the-kv-cache) and the sections after it.
+name. Persistence alone decides nothing: a conversation window, a KV cache, a
+document index and a task queue all survive the session, and none of them holds
+anything a later reading could contradict. The cases that sit closest to the line
+are worked through in [what is not in scope](#not-in-scope-the-kv-cache) and the
+sections after it.
 
 Five findings, with the counts they rest on:
 
@@ -4299,7 +4299,7 @@ files newer than **seven days** unless `delete_unverified` is set — an option
 whose own comment warns it can corrupt the dataset. Qdrant holds the bytes until
 a segment optimizer rebuilds.
 
-pgvector is the exception, and it is the reason to treat the other three as a
+pgvector is the exception, and it is the reason to treat the other four as a
 choice rather than a law. `VACUUM` does not merely flag the element; it zeroes
 it — `etup->deleted = 1;` followed by `memset(&etup->data, 0, …)` — invalidates
 the neighbour pointers and offers the page for reuse. Still not synchronous with
