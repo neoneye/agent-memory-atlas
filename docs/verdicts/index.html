@@ -2248,14 +2248,32 @@ facts</em>. The behaviour reaches the extractor, the resolver and the
 telemetry span, and is written to neither the memory nor its metadata,
 so a speculative association is a row of exactly the same shape as a
 stated fact.</li>
+<li>Second idea: <strong>an admission gate consulted before the dedupe
+hash</strong>, with four shipped implementations — a prompt-injection
+screen matching thirteen default signatures such as <em>"reveal your
+system prompt"</em> and <em>"exfiltrate"</em>, a novelty gate refusing
+excessive overlap, an authority gate refusing an untrusted role writing
+to a user scope, and a composite that chains them. Screening a candidate
+memory for injection strings at the write boundary is a defence a
+minority of this corpus has. It is null by default, and
+<code>MemoryAdmissionDecision.Reason</code> is read only as
+<code>IsAdmitted</code> — a refused candidate becomes
+<code>MemoryAction.None</code> and the reason is discarded, so the
+history table records every mutation that happened and nothing about the
+write that was turned away.</li>
 <li>Most reusable component: the owner column as <code>NOT NULL</code>
 rather than a convention, and delete-by-scope beside delete-by-id.</li>
-<li>Maturity impression: 2,982 lines of source against 1,123 of tests
-across nine classes, with Testcontainers integration suites for Postgres
-and Qdrant — including <code>PostgresHistoryIntegrationTests</code>,
-which creates a legacy history table, migrates it, and asserts the
-add-update-delete sequence survives. Very few audit logs in this atlas
-are tested at all.</li>
+<li>Maturity impression: 1,968 lines of tests beside eleven committed
+evaluation runs scoring twelve ablation scenarios — with Wilson 95%
+intervals, retrieval hit rate reported apart from answer accuracy, and
+the honest caveat that the intervals <em>"do not measure provider or
+model variance"</em>. At 22 questions every arm overlaps every other, so
+the ablations are wired and cannot separate. Testcontainers integration
+suites for Postgres and Qdrant, with Testcontainers integration suites
+for Postgres and Qdrant — including
+<code>PostgresHistoryIntegrationTests</code>, which creates a legacy
+history table, migrates it, and asserts the add-update-delete sequence
+survives. Very few audit logs in this atlas are tested at all.</li>
 <li>Study when: you are building .NET agents and want Mem0's shape
 natively rather than through a REST client.</li>
 <li>Do not copy when: you expect epistemics the original also lacks. It

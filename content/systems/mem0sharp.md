@@ -6,13 +6,17 @@ root: ../..
 page_kind: system
 source_name: "jihadkhawaja/mem0sharp"
 source_url: https://github.com/jihadkhawaja/mem0sharp
-revision: 4f995e08349ebb0e0453786d5aad999737ddd239
-revision_url: https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239
-analyzed_at: 2026-08-03
-capabilities: "scope_enforced, audit_log"
+revision: 6b59ae1fa7d3d053aea61546d4e63f88516edcf3
+revision_url: https://github.com/jihadkhawaja/mem0sharp/commit/6b59ae1fa7d3d053aea61546d4e63f88516edcf3
+analyzed_at: 2026-08-20
+capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "every store read, composed from a required user key | src/Mem0Sharp/Domain/Memory.cs, the store implementations and MemoryFilter | `user_id` is `NOT NULL` in the schema and `agent_id`, `run_id` and `scope` are optional narrowing keys; `MemoryFilter` composes them into the `WHERE` clause of the cosine search and of `GetAllAsync`, and the same filter drives `DeleteAllAsync` so a scoped delete and a scoped read agree | tests/Mem0Sharp.Tests/Persistence/SqliteMemoryStoreTests.cs `BulkDeleteRemovesOnlyMatchingMemoriesAndEmbeddings`"
+  audit_log: "every mutation, in the system's own history table | the `_history` table and the store implementations | an append-only row per mutation carrying the previous text, the new text, `is_deleted`, `actor_id` and `role`, so a correction records what it replaced rather than only that it happened; the schema converged on the upstream Mem0 layout and an integration test migrates a legacy table and asserts the add-update-delete sequence | tests/Mem0Sharp.Tests/Persistence/SqliteMemoryStoreTests.cs, PostgresHistoryIntegrationTests"
+  negative_eval: "the retrieval path, with the row proven present before it is proven absent | tests/Mem0Sharp.Tests/Unit/MemoryServiceTests.cs:182, tests/Mem0Sharp.Tests/Persistence/SqliteMemoryStoreTests.cs:178 | `ExpiredMemoriesAreHiddenUnlessRequested` writes an expired row and an active row for one user, asserts `GetAllAsync` returns only the active one, asserts `IncludeExpired: true` returns both — the positive control proving the row exists and the filter is what hides it — then asserts `SearchAsync(\"expired\", …)` returns empty. `BulkDeleteRemovesOnlyMatchingMemoriesAndEmbeddings` deletes one user's rows by filter and asserts the vector search for that user is empty while the other user's search still returns exactly one | both tests are the mechanism"
 stack_storage: "postgres, qdrant, memory"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A row with text, `user_id`, `agent_id`, `run_id`, a `scope`, metadata, an embedding, timestamps, an expiry and a content hash"
   storage: "Postgres with pgvector or Qdrant as the real backends, plus an in-memory store; a separate relationship store for the graph"
@@ -174,6 +178,31 @@ skip.
 - `src/Mem0Sharp/Intelligence/MemoryBehaviorPrompts.cs` — the four behaviours, 27 lines.
 - `src/Mem0Sharp/Infrastructure/Qdrant/QdrantMemoryStore.cs` — the second real backend.
 
+### An admission gate that refuses and forgets why
+
+`MemoryService.AddAsync` consults an optional `IAdmissionGate` before the
+dedupe hash, handing it the candidate text, the scope keys, the actor and role
+pulled from metadata, the behaviour and the memory type, plus the existing
+memories it would join. Four implementations ship:
+`PromptInjectionAdmissionGate` matches a candidate against thirteen default
+signatures — *"ignore previous instructions"*, *"reveal your system prompt"*,
+*"exfiltrate"*, *"admin access granted"* and the rest, overridable;
+`NoveltyAdmissionGate` refuses excessive overlap with what is already stored;
+`AuthorityAdmissionGate` refuses an untrusted role writing to a user scope; and
+`CompositeAdmissionGate` chains them. All four are covered by
+`AdmissionGateTests`, including one case asserting the service itself enforces
+the gate during `AddAsync` rather than only the gate enforcing itself.
+
+Screening a candidate memory for injection strings at the write boundary is a
+defence a minority of this corpus has at all. Two things bound it. The gate is
+**null by default**, so an adopter who does not construct one gets no screening;
+and `MemoryAdmissionDecision` carries a `Reason`, which the service reads only
+as `IsAdmitted` — a refused candidate becomes `MemoryAction.None` and the reason
+is dropped on the floor. The `_history` table records every mutation that
+happened and nothing about the write that was refused, so the operator can see
+what the store accepted and cannot recover what it turned away, or why. The
+record type already carries the string; persisting it would be a row.
+
 ## 5. Memory Data Model
 
 `id`, `text_value`, `user_id` (NOT NULL), `agent_id`, `run_id`, `scope`,
@@ -236,7 +265,30 @@ human reading `_history` and re-inserting by hand.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The test tree is 1,123 lines and is where most of this round's growth went:
+**There is a committed evaluation now, and it is better instrumented than most
+in this atlas.** `evaluation/` holds eleven dated result files, each a Markdown
+report beside its JSON. The 16 August run scores **twelve scenarios** against a
+fictional LOCOMO-style fixture on live PostgreSQL: `baseline`, `no-hybrid`,
+`no-dedup`, `infer-off`, `strict-threshold`, `llm-rerank`,
+`conflict-resolution`, `stale-forget`, `realistic-long-haul` and three behaviour
+arms including `behavior-dreaming`. Each row carries accuracy, mean F1, mean
+BLEU-1, **retrieval hit rate reported separately from answer accuracy**, the
+memory count, mean search latency and ingest time — and every proportion carries
+a **Wilson 95% interval**, with the caveat committed beside it: *"they do not
+measure provider or model variance."*
+
+Reporting hit rate apart from accuracy, and an interval apart from a point, are
+both things this atlas asks for and rarely finds. What the intervals then show is
+the honest result: the dataset is 2 conversations and 22 questions, so the
+scenarios land between 91% and 100% with intervals of 72–99%, and **every arm
+overlaps every other**. The ablations are wired correctly and cannot separate
+anything at this sample size, which the file lets a reader work out rather than
+obscuring. One gap worth naming: `behavior-dreaming` scores 100%, and the
+behaviour's risk in section 1 is that it writes speculative rows indistinguishable
+from observed facts — an answer-accuracy harness over a fixture cannot see that
+failure, so the score is not evidence about it either way.
+
+The test tree is 1,968 lines and is where most of this round's growth went:
 `MemoryServiceTests`, `LlmMemoryConflictResolverTests`, `MemoryMcpServerTests`,
 `MemoryBehaviorTests`, `ModelProviderTests`, `RerankerProviderTests`,
 `OpenAiIntegrationTests`, `QdrantMemoryStoreIntegrationTests` and
@@ -313,6 +365,8 @@ trust model.
 | `src/Mem0Sharp/Telemetry/TelemetryMemoryService.cs` | 74 | Decorator |
 
 ## History
+
+**2026-08-20** — [`6b59ae1fa7d3d053aea61546d4e63f88516edcf3`](https://github.com/jihadkhawaja/mem0sharp/commit/6b59ae1fa7d3d053aea61546d4e63f88516edcf3) — re-pinned 13 commits and +12,119 lines on. Screened again: one auto-run surface (`.gitattributes`), no build-time execution, no unpinned surface; nothing was installed and no test was run. **`negative_eval` is awarded**, on two read-path exclusion cases whose positive controls are in the same test — `ExpiredMemoriesAreHiddenUnlessRequested` proves the row is present under `IncludeExpired: true` before proving `SearchAsync` returns empty, and the bulk-delete case asserts one user's search is empty while the other user's still returns a row. Taking the report to three marks. New at this pin and described in section 5: a four-implementation admission gate consulted before the dedupe hash, whose refusal reason the service discards. New in section 10: eleven committed evaluation runs scoring twelve ablation scenarios with Wilson intervals, retrieval hit rate reported apart from answer accuracy, and a sample size at which every arm overlaps every other. Also arriving in this range: a trajectory store, a state-rollback path, heuristic and LLM consolidation verifiers, and a graph visualizer.
 
 **2026-08-03** — [`4f995e08349ebb0e0453786d5aad999737ddd239`](https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239) — Six commits on and roughly doubled in size. Nothing published went stale: the history table is still INSERT-only, and it has converged on Mem0's exact column list — `updated_at`, `is_deleted`, `actor_id` and `role` added by migration — so the two implementations now carry the same audit schema. The single `UPDATE` against history in the repository is a one-time backfill inside that migration. Added since: a Qdrant store and four rerankers.
 

@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 58 |
+| Repositories with an auto-run surface (`RUNS`) | 59 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 53 |
 | Repositories with build-time execution (`EXEC`) | 132 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
@@ -60,6 +60,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
+| [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.devcontainer/devcontainer.json`, `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |

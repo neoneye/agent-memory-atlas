@@ -114,17 +114,17 @@ marks them nowhere on the row.</p>
               <strong>jihadkhawaja/mem0sharp</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239" title="4f995e08349ebb0e0453786d5aad999737ddd239">
+            <a class="meta-pill revision-pill" href="https://github.com/jihadkhawaja/mem0sharp/commit/6b59ae1fa7d3d053aea61546d4e63f88516edcf3" title="6b59ae1fa7d3d053aea61546d4e63f88516edcf3">
               <span>Analyzed revision</span>
-              <code>4f995e08…</code>
+              <code>6b59ae1f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-03</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -302,6 +302,35 @@ the four behaviours, 27 lines.</li>
 <li><code>src/Mem0Sharp/Infrastructure/Qdrant/QdrantMemoryStore.cs</code>
 — the second real backend.</li>
 </ul>
+<h3 id="an-admission-gate-that-refuses-and-forgets-why">An admission
+gate that refuses and forgets why</h3>
+<p><code>MemoryService.AddAsync</code> consults an optional
+<code>IAdmissionGate</code> before the dedupe hash, handing it the
+candidate text, the scope keys, the actor and role pulled from metadata,
+the behaviour and the memory type, plus the existing memories it would
+join. Four implementations ship:
+<code>PromptInjectionAdmissionGate</code> matches a candidate against
+thirteen default signatures — <em>"ignore previous instructions"</em>,
+<em>"reveal your system prompt"</em>, <em>"exfiltrate"</em>, <em>"admin
+access granted"</em> and the rest, overridable;
+<code>NoveltyAdmissionGate</code> refuses excessive overlap with what is
+already stored; <code>AuthorityAdmissionGate</code> refuses an untrusted
+role writing to a user scope; and <code>CompositeAdmissionGate</code>
+chains them. All four are covered by <code>AdmissionGateTests</code>,
+including one case asserting the service itself enforces the gate during
+<code>AddAsync</code> rather than only the gate enforcing itself.</p>
+<p>Screening a candidate memory for injection strings at the write
+boundary is a defence a minority of this corpus has at all. Two things
+bound it. The gate is <strong>null by default</strong>, so an adopter
+who does not construct one gets no screening; and
+<code>MemoryAdmissionDecision</code> carries a <code>Reason</code>,
+which the service reads only as <code>IsAdmitted</code> — a refused
+candidate becomes <code>MemoryAction.None</code> and the reason is
+dropped on the floor. The <code>_history</code> table records every
+mutation that happened and nothing about the write that was refused, so
+the operator can see what the store accepted and cannot recover what it
+turned away, or why. The record type already carries the string;
+persisting it would be a row.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>id</code>, <code>text_value</code>, <code>user_id</code> (NOT
 NULL), <code>agent_id</code>, <code>run_id</code>, <code>scope</code>,
@@ -359,7 +388,34 @@ re-inserting by hand.</p>
 <p><strong>No bi-temporality and no human review surface.</strong></p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>The test tree is 1,123 lines and is where most of this round's growth
+<p><strong>There is a committed evaluation now, and it is better
+instrumented than most in this atlas.</strong> <code>evaluation/</code>
+holds eleven dated result files, each a Markdown report beside its JSON.
+The 16 August run scores <strong>twelve scenarios</strong> against a
+fictional LOCOMO-style fixture on live PostgreSQL:
+<code>baseline</code>, <code>no-hybrid</code>, <code>no-dedup</code>,
+<code>infer-off</code>, <code>strict-threshold</code>,
+<code>llm-rerank</code>, <code>conflict-resolution</code>,
+<code>stale-forget</code>, <code>realistic-long-haul</code> and three
+behaviour arms including <code>behavior-dreaming</code>. Each row
+carries accuracy, mean F1, mean BLEU-1, <strong>retrieval hit rate
+reported separately from answer accuracy</strong>, the memory count,
+mean search latency and ingest time — and every proportion carries a
+<strong>Wilson 95% interval</strong>, with the caveat committed beside
+it: <em>"they do not measure provider or model variance."</em></p>
+<p>Reporting hit rate apart from accuracy, and an interval apart from a
+point, are both things this atlas asks for and rarely finds. What the
+intervals then show is the honest result: the dataset is 2 conversations
+and 22 questions, so the scenarios land between 91% and 100% with
+intervals of 72–99%, and <strong>every arm overlaps every
+other</strong>. The ablations are wired correctly and cannot separate
+anything at this sample size, which the file lets a reader work out
+rather than obscuring. One gap worth naming:
+<code>behavior-dreaming</code> scores 100%, and the behaviour's risk in
+section 1 is that it writes speculative rows indistinguishable from
+observed facts — an answer-accuracy harness over a fixture cannot see
+that failure, so the score is not evidence about it either way.</p>
+<p>The test tree is 1,968 lines and is where most of this round's growth
 went: <code>MemoryServiceTests</code>,
 <code>LlmMemoryConflictResolverTests</code>,
 <code>MemoryMcpServerTests</code>, <code>MemoryBehaviorTests</code>,
@@ -479,6 +535,25 @@ imply containment that the schema does not express.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/jihadkhawaja/mem0sharp/commit/6b59ae1fa7d3d053aea61546d4e63f88516edcf3"><code class="commit-id" title="6b59ae1fa7d3d053aea61546d4e63f88516edcf3">6b59ae1f…</code></a>
+— re-pinned 13 commits and +12,119 lines on. Screened again: one
+auto-run surface (<code>.gitattributes</code>), no build-time execution,
+no unpinned surface; nothing was installed and no test was run.
+<strong><code>negative_eval</code> is awarded</strong>, on two read-path
+exclusion cases whose positive controls are in the same test —
+<code>ExpiredMemoriesAreHiddenUnlessRequested</code> proves the row is
+present under <code>IncludeExpired: true</code> before proving
+<code>SearchAsync</code> returns empty, and the bulk-delete case asserts
+one user's search is empty while the other user's still returns a row.
+Taking the report to three marks. New at this pin and described in
+section 5: a four-implementation admission gate consulted before the
+dedupe hash, whose refusal reason the service discards. New in section
+10: eleven committed evaluation runs scoring twelve ablation scenarios
+with Wilson intervals, retrieval hit rate reported apart from answer
+accuracy, and a sample size at which every arm overlaps every other.
+Also arriving in this range: a trajectory store, a state-rollback path,
+heuristic and LLM consolidation verifiers, and a graph visualizer.</p>
 <p><strong>2026-08-03</strong> — <a
 href="https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239"><code class="commit-id" title="4f995e08349ebb0e0453786d5aad999737ddd239">4f995e08…</code></a>
 — Six commits on and roughly doubled in size. Nothing published went
