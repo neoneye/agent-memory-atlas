@@ -8,7 +8,7 @@ source_name: "AdultSwimmer/AuraOS"
 source_url: https://github.com/AdultSwimmer/AuraOS
 revision: c7d6651a98b8581e372864a4976c5a8a4c8290e4
 revision_url: https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4
-analyzed_at: 2026-08-20
+analyzed_at: 2026-08-21
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -490,4 +490,4 @@ atlas has it either.
 
 ## History
 
-**2026-08-20** — [`c7d6651a98b8581e372864a4976c5a8a4c8290e4`](https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4) — first reading, at the fourth commit of a repository two days old. Screened before anything was read: no auto-executing surface, two build-time execution points in documentation Makefiles, three unpinned requirement files and three dependency files inside the seven-day cooldown; nothing was installed, no model was pulled and no server was started. Every Python file outside the vendored documentation was read in full, which is how the absent consumer for `knowledge/processed/` and the unvalidated `user_id` path were established. `capabilities: ""` — assessed against all seven and none is present.
+**2026-08-21** — [`c7d6651a98b8581e372864a4976c5a8a4c8290e4`](https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4) — first reading, at the fourth commit of a repository two days old. Screened before anything was read: no auto-executing surface, two build-time execution points in documentation Makefiles, three unpinned requirement files and three dependency files inside the seven-day cooldown; nothing was installed, no model was pulled and no server was started. Every Python file outside the vendored documentation was read in full, which is how the absent consumer for `knowledge/processed/` and the unvalidated `user_id` path were established. `capabilities: ""` — assessed against all seven and none is present.

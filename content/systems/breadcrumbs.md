@@ -8,7 +8,7 @@ source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
 revision: 8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
 revision_url: https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
-analyzed_at: 2026-08-20
+analyzed_at: 2026-08-21
 capabilities: "tombstone, trust_state, bitemporal, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -1111,7 +1111,7 @@ teams have never asked about the memory they already have.
 
 ## History
 
-**2026-08-20** — [`8f034fc952cb9d10c32f53f4caa20a161f7c1a9f`](https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f) — re-pinned 14 commits on, and unlike the previous re-read these are code. Screened again: nothing scanned beyond a single manifest, no auto-run surface, nothing installed. **`bitemporal` is awarded**, which the previous entry explicitly withheld on the ground that the `as_of` cutoff *"filters the learned-at axis only"*. `store_fact` now takes `valid_from`/`valid_until` beside the unconditional `recorded_at`, and `compose_context` filters the two independently, with the composed postmortem query named in its docstring and a golden case pinning it. Taking the report to six of seven marks; `scope_enforced` remains the only substantive gap and section 5 records why the reason is unusual — the audience filter exists and nothing in the repository calls it, because the engine ships as a library.
+**2026-08-21** — [`8f034fc952cb9d10c32f53f4caa20a161f7c1a9f`](https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f) — re-pinned 14 commits on, and unlike the previous re-read these are code. Screened again: nothing scanned beyond a single manifest, no auto-run surface, nothing installed. **`bitemporal` is awarded**, which the previous entry explicitly withheld on the ground that the `as_of` cutoff *"filters the learned-at axis only"*. `store_fact` now takes `valid_from`/`valid_until` beside the unconditional `recorded_at`, and `compose_context` filters the two independently, with the composed postmortem query named in its docstring and a golden case pinning it. Taking the report to six of seven marks; `scope_enforced` remains the only substantive gap and section 5 records why the reason is unusual — the audience filter exists and nothing in the repository calls it, because the engine ships as a library.
 
 Also new: a golden retrieval corpus with a `forbid` list on every case (section 10), an offline replay path that produces proposals carrying `mutates: false` and is not permitted to conclude anything (section 5), a scoped scoring template, and consolidation persisted as review proposals rather than writes.
 

@@ -8,7 +8,7 @@ source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
 revision: 21bada219501a05958c6585e703eb36ceaf8d244
 revision_url: https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244
-analyzed_at: 2026-08-20
+analyzed_at: 2026-08-21
 capabilities: "trust_state, human_review"
 capability_evidence:
   trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/test_vocab_artifact_integrity.py — `test_a_truncated_vocabulary_does_not_pass_the_same_page` is the discriminating case: a page the real vocabulary flags must not pass against a truncated one, so a degraded artifact cannot read as a clean run; `test_empty_bytes_are_refused`, `test_an_empty_field_set_is_refused` and `test_unparseable_bytes_are_refused` pin the other three ways an artifact can be vacuous"
@@ -557,7 +557,7 @@ which have neither.
 
 ## History
 
-**2026-08-20** — [`21bada219501a05958c6585e703eb36ceaf8d244`](https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244) — re-pinned 22 commits on. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. Marks unchanged.
+**2026-08-21** — [`21bada219501a05958c6585e703eb36ceaf8d244`](https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244) — re-pinned 22 commits on. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. Marks unchanged.
 
 **A correction first.** This report said `Tools/tests/` held *"one file of 73 lines covering `check_links.py`"* and listed the ratio of tooling to tests among the project's risks. At the pin it described, the directory held 62 test modules and 44,734 lines; at this pin, 66 and 45,822. The claim was wrong when written and survived a re-pin that rewrote the executive summary without revisiting section 10 — the same shape recorded for [Agent Mesh](../agent-mesh/) in the overview's history, where the sections nobody edited kept the old position. Both capability-evidence records also carried "no case was located at this pin"; `test_vocab_artifact_integrity.py` and `test_metadata_gate_runtime.py:121` are those cases, and the records now name them. The architecture figures were recounted at the same time: 58 tools and 67,280 lines of Python, 164 kernel modules and 10,121 lines of normative text.
 
