@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A two-day-old local-first harness
+that splices an identity folder and a user's entire append-only
+transcript into every prompt — with the caller naming which transcript,
+and a distillation pass whose output nothing reads.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AuraOS — Agent Memory Atlas">
+    <meta property="og:description" content="A two-day-old local-first
+harness that splices an identity folder and a user's entire append-only
+transcript into every prompt — with the caller naming which transcript,
+and a distillation pass whose output nothing reads.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AuraOS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A two-day-old local-first
+harness that splices an identity folder and a user's entire append-only
+transcript into every prompt — with the caller naming which transcript,
+and a distillation pass whose output nothing reads.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AuraOS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AuraOS",
+      "description": "A two-day-old local-first harness that splices an identity folder and a user's entire append-only transcript into every prompt \u2014 with the caller naming which transcript, and a distillation pass whose output nothing reads.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The whole transcript, every turn</p>
+          <h1>AuraOS</h1>
+          <p class="document-deck">A two-day-old local-first harness
+that splices an identity folder and a user's entire append-only
+transcript into every prompt — with the caller naming which transcript,
+and a distillation pass whose output nothing reads.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AdultSwimmer/AuraOS">
+              <span>Source</span>
+              <strong>AdultSwimmer/AuraOS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4" title="c7d6651a98b8581e372864a4976c5a8a4c8290e4">
+              <span>Analyzed revision</span>
+              <code>c7d6651a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AuraOS is two days old at this commit — four commits, first pushed on
+19 August 2026 — and it is a prototype in the honest sense: about 590
+lines of Python that do one thing end to end, surrounded by several
+things that do not connect to it. There is no licence file, so the
+default is all rights reserved. There are no tests.</p>
+<p><strong>The working system is one file.</strong>
+<code>server/main.py</code> puts a Flask endpoint in front of a local
+Ollama model and assembles every prompt the same way: the
+<code>core/</code> folder read whole as permanent identity, then the
+caller's entire transcript, then the current message. Both sides of the
+exchange are appended to that transcript afterwards. The README states
+the ambition in a sentence worth quoting because the code does exactly
+it — <em>"it tries to make an AI remember the relationship, not just the
+last message."</em></p>
+<p>This is the simplest possible memory design and the report should say
+plainly that it is a legitimate one at this scale. No database, no
+embeddings, no extraction, no ranking, nothing that can silently drop a
+fact. For a single user talking to a local model, splicing the whole
+transcript is not a shortcut around retrieval — it is the configuration
+where retrieval has nothing to do. The corpus contains larger systems
+whose recall is worse than this.</p>
+<p><strong>What the design cannot survive is its own success</strong>,
+and the shape of that is worth naming precisely.
+<code>load_history</code> reads the file with no cutoff and no budget;
+<code>append_history</code> adds two entries per turn; and
+<code>CORE_MEMORY</code> is loaded once at import into a module global.
+So the prompt grows monotonically with the conversation, every turn
+re-reads and re-sends everything that came before, and the identity that
+governs the whole thing cannot be changed without restarting the
+process. There is no forgetting, no correction, no deduplication, and no
+<code>DELETE</code> anywhere in the tree — a wrong fact is fixed by
+opening a text file.</p>
+<p><strong>The best idea in the repository is in a file nothing
+calls.</strong> <code>processor.py</code> distils raw conversation logs
+through the same local model with a prompt that argues directly against
+how most systems in this atlas consolidate:</p>
+<blockquote>
+<p><em>"IMPORTANT: Preserve chronology. Preserve evolution of ideas.
+Preserve contradictions. Preserve uncertainty. Preserve emotional
+context. Preserve philosophical development. Preserve identity
+continuity. Do NOT flatten the conversation into sterile
+summaries."</em></p>
+</blockquote>
+<p>It writes its results to <code>knowledge/processed/</code>. A grep
+across every Python file in the tree finds no reader of that directory:
+<code>server/main.py</code> loads <code>core/</code> and
+<code>histories/</code> and nothing else. The distiller also hard-codes
+<code>C:\Aura\knowledge\raw</code> as its input, so it runs on one
+machine. The most interesting position in the repository is taken by a
+subsystem that reaches no prompt.</p>
+<p><strong>Three things a reader should know before running it.</strong>
+<code>user_id</code> arrives in the request body, defaults to
+<code>"default"</code>, is never validated, and is interpolated directly
+into <code>os.path.join(HISTORY_DIR, f"{user_id}.txt")</code> — so a
+caller chooses which transcript is read into the prompt and appended to,
+and a <code>user_id</code> containing <code>../</code> escapes the
+directory in both directions. <code>HOST</code> defaults to
+<code>0.0.0.0</code>, so the server listens on every interface unless
+told otherwise. And the README's claim that <em>"the history file is not
+stored server-side"</em> and that <em>"the server or host machine does
+not own the memory"</em> is contradicted by <code>append_history</code>,
+which writes it to the server's own <code>histories/</code> directory at
+this commit.</p>
+<p><code>capabilities: ""</code>. None of the seven mechanisms is
+present, and for most of them there is nothing in the design they would
+attach to.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a memory here by being said. There is no candidate
+state, no extraction decision, no threshold and no gate: the user's
+message and the model's reply are both appended verbatim, and from the
+next turn onward they are part of the permanent context. Nothing ever
+judges whether a turn was worth keeping.</p>
+<p>A memory stops being a memory only if a human edits the file. The
+transcript is append-only in code — the sole write is
+<code>open(path, "a")</code> — so within the running system nothing
+shrinks, nothing is superseded and nothing is refused. The model is told
+to behave as though it might be wrong: <code>core/identity.txt</code>
+instructs it to <em>"treat the provided HISTORY as living chronology,
+not isolated facts"</em>, to <em>"not fabricate events, memories, or
+knowledge that do not appear in the core files or HISTORY"</em>, and to
+say so <em>"when uncertain"</em>, closing with the claim that <em>"the
+core files and HISTORY are the only authoritative sources of long-term
+context."</em> That is a doctrine rather than a mechanism, and it is the
+only thing standing between a contradicted transcript and a confident
+answer.</p>
+<p>The mental model is therefore: <strong>the transcript is the memory,
+the identity is a constant, and the model is asked to do all the
+epistemics in-context.</strong> Every question this atlas usually asks —
+what was retrieved and why, what was refused, what changed since — has
+the same answer here, which is "everything, always, unchanged".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every turn re-sends the whole transcript with the identity folder in front of it, the caller names which transcript by an unvalidated id, and the distillation branch writes artifacts no read path loads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: every turn re-sends the whole transcript with the identity folder in front of it, the caller names which transcript by an unvalidated id, and the distillation branch writes artifacts no read path loads
+    REQ[&quot;POST /chat&lt;br/&gt;{message, user_id}&quot;]
+    REQ --&gt;|&quot;user_id defaults to &#39;default&#39;,&lt;br/&gt;never validated&quot;| PATH[&quot;histories/&amp;lt;user_id&amp;gt;.txt&quot;]
+    CORE[(&quot;core/*.txt&lt;br/&gt;read once at import&lt;br/&gt;into CORE_MEMORY&quot;)]
+    PATH --&gt; READ[&quot;load_history: whole file,&lt;br/&gt;no cutoff, no budget&quot;]
+    CORE --&gt; PROMPT[&quot;prompt = CORE + HISTORY + message&quot;]
+    READ --&gt; PROMPT
+    PROMPT --&gt; OLLAMA[&quot;Ollama /api/generate&lt;br/&gt;stream=false&quot;]
+    OLLAMA --&gt; REPLY[&quot;reply&quot;]
+    REPLY --&gt; APP[&quot;append_history x2&lt;br/&gt;&amp;lsqb;ISO&amp;rsqb; USER / AURA&quot;]
+    APP --&gt; PATH
+
+    RAW[(&quot;knowledge/raw/*.txt&quot;)] --&gt; PROC[&quot;processor.py&lt;br/&gt;preserve contradictions,&lt;br/&gt;uncertainty, emotional context&quot;]
+    PROC --&gt; OUT[(&quot;knowledge/processed/*.json&quot;)]
+    OUT -. &quot;no reader anywhere in the tree&quot; .-&gt; PROMPT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Standing it up needs Python 3.10 or later, Ollama running locally,
+and a model pulled — the README suggests <code>dolphin3:8b</code> or
+<code>llama3</code>. <code>requirements.txt</code> also pulls Flask,
+flask-cors, requests, the Ollama client, PyQt6 and PyQt6-WebEngine, all
+with <code>&gt;=</code> ranges rather than pins. State is two
+directories: <code>core/</code>, which the operator writes, and
+<code>histories/</code>, which the server creates.</p>
+<p>The confusing part of the layout is that <strong>there are two
+servers with incompatible memory models and neither imports the
+other.</strong> <code>server/main.py</code> is the one the README
+describes: identity plus transcript plus Ollama. <code>app.py</code> at
+the repository root is a different Flask app on the same port 8000 that
+derives a user id as <code>sha256(first:last:username)</code>, keeps
+<code>users/&lt;uid&gt;/memory.json</code>, and answers
+<code>/chat</code> by echoing — <code>reply = f"Aura: {message}"</code>
+— with no model call at all. It also exposes <code>/restore</code>,
+which takes a <code>memory</code> object from the request body and
+writes it to that user's file wholesale, with no validation and no
+authentication.</p>
+<p>Beside them, <code>auraos.py</code> is a Tkinter window with username
+and password fields whose <code>start()</code> handler prints both to
+standard output and does nothing else, and <code>core.py</code> is a
+nine-line keyword matcher (<em>"Hello. I'm here."</em>) that no server
+imports. A reader should treat <code>server/main.py</code> as the system
+and the rest as scaffolding from earlier attempts.</p>
+<p>Two things in the tree are worth flagging as repository hygiene
+rather than design. <code>.tmp.driveupload/</code> holds 2,214 files and
+368 MB of Google Drive upload temporaries, which is 98% of the
+repository's file count. And <code>recovery_ngrok.txt</code> at the root
+contains ten account recovery codes for an ngrok account; they are
+already public by virtue of being pushed, and anyone reading this should
+treat them as compromised and rotate them.
+<code>memory/logs/2026-05-20.json</code> likewise contains real captured
+conversation turns with a username.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Identity load</strong> — <code>server/main.py</code>,
+<code>load_core()</code>. Every <code>.txt</code> and <code>.md</code>
+in <code>core/</code> is read in <code>sorted()</code> order and
+concatenated with a <code>[CORE: &lt;name&gt;]</code> header per file.
+The call is at module scope: <code>CORE_MEMORY = load_core()</code>, so
+the identity is frozen for the process lifetime and an edit needs a
+restart. The tagged headers are a small good decision — the model can
+tell which file a rule came from.</p>
+<p><strong>History load</strong> — <code>load_history(user_id)</code>
+returns the full file contents or an empty string. No slicing, no tail,
+no token count.</p>
+<p><strong>Prompt assembly</strong> — a single f-string with three
+fenced sections: <code>=== CORE IDENTITY (permanent) ===</code>,
+<code>=== HISTORY ===</code> with <code>"(no prior history)"</code> as
+the empty case, and <code>=== CURRENT MESSAGE ===</code> ending in
+<code>Aura:</code> as a completion cue. Delimiters are plain text and
+nothing escapes them, so a user message containing the same fence line
+is indistinguishable from a real section boundary.</p>
+<p><strong>Write</strong> —
+<code>append_history(user_id, role, text)</code> opens in append mode
+and writes
+<code>[&lt;ISO-8601 UTC&gt;] &lt;ROLE&gt;\n&lt;text&gt;\n\n</code>.
+Called twice per successful turn, after the model returns. A failed
+model call returns 500 and writes nothing, so a turn is either fully
+recorded or not recorded at all — which is the correct behaviour and
+appears to be incidental rather than designed.</p>
+<p><strong>Distillation</strong> — <code>processor.py</code>,
+standalone. Reads <code>.txt</code> files from a hard-coded raw
+directory, sorts them by <code>os.path.getctime</code> so oldest is
+processed first, sends each through Ollama with the preservation prompt,
+and writes <code>{index}({basename}).json</code> containing
+<code>source_file</code> and <code>processed_memory</code>. Nothing
+consumes the output.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no record. The unit of memory is a line-oriented block in a
+text file:</p>
+<pre class="text"><code>[2026-08-19T04:33:31.000000+00:00] USER
+what did we decide about the schema?
+
+[2026-08-19T04:33:44.000000+00:00] AURA
+...</code></pre>
+<p>Each block carries a timestamp and a role and nothing else — no id,
+no source, no confidence, no scope, no validity, no supersession pointer
+and no deletion marker. The timestamp is record time and event time
+simultaneously, which is why <code>bitemporal</code> is withheld: there
+is one clock and no read path that accepts an as-of.</p>
+<p>The <code>core/</code> folder is the second unit and it is three
+files at this commit: <code>identity.txt</code> (474 bytes of
+behavioural rules), <code>ontology.txt</code> (2.8 KB) and
+<code>core.txt</code> (7.5 KB). Together they are about 10 KB of text
+prepended to every prompt forever, which is a fixed and knowable cost —
+unlike the history, which is not.</p>
+<p>The second, unused server has a different model again:
+<code>users/&lt;sha256&gt;/memory.json</code> holding
+<code>{"messages": [...], "last_reply": "..."}</code>. Two persistence
+formats in one repository with no migration between them is worth noting
+because a reader looking for "the memory format" will find whichever one
+they open first.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is no retrieval.</strong> No search, no embeddings, no
+keyword match, no ranking, no top-<em>k</em>, no cutoff.
+<code>stack_retrieval</code> is empty for that reason rather than
+because the arms were not identified.</p>
+<p>That is a defensible choice for a first prototype and it has one real
+advantage the corpus rarely gets: <strong>nothing can be missed by the
+retriever, because there is no retriever.</strong> Every recall failure
+in this system is the model's failure to attend, not the store's failure
+to return — which makes debugging much simpler than in a hybrid
+pipeline, and is why "send everything" is the right first version.</p>
+<p>The cost arrives on a schedule. Each turn's prompt is roughly 10 KB
+of identity plus the entire prior transcript, and the transcript grows
+by both sides of every exchange. A few hundred turns of ordinary
+conversation will exceed a local model's context window, and the failure
+mode when it does is not an error — it is the runtime silently
+truncating the oldest part of the history, which is exactly the material
+the design exists to preserve. Nothing in the code measures the prompt
+size, warns about it, or decides what to drop first. The first thing
+this system needs is not a vector store; it is a length check with a
+stated policy for what happens when it trips.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are synchronous, unconditional, and after the
+fact.</strong> The user's message is not persisted until the model has
+replied, and both are then appended in one pass. There is no queue, no
+debounce, no batching, and the lag before a memory is readable is the
+duration of one file append — the next turn sees it.</p>
+<p><strong>Nothing is extracted and nothing is consolidated.</strong>
+The store is the transcript, so the write path has no judgement in it at
+all. That is the source of the design's honesty and of its ceiling: a
+system that never decides what matters also never gets smaller.</p>
+<p><strong>There is no correction path.</strong> No update, no
+supersession, no tombstone, no expiry, no deletion. When the user tells
+the model that something it recorded was wrong, the correction is
+appended <em>after</em> the original, and both remain in every future
+prompt with equal weight and no marking. <code>identity.txt</code>'s
+instruction to treat the history as <em>"living chronology"</em> is the
+design's answer to that, and it asks the model to resolve at read time
+what the store will not resolve at write time. In a long transcript with
+several revisions of the same fact, that is the hardest possible version
+of the job.</p>
+<p><strong>A concurrency note.</strong> Two requests for the same
+<code>user_id</code> append to the same file with no lock. Python's
+buffered append will usually interleave at block boundaries rather than
+mid-line, but nothing guarantees it, and a corrupted transcript is the
+one failure this design cannot recover from because the transcript is
+the only copy.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no tool surface, no MCP server and no function calling. The
+model cannot query memory, cannot decline a memory, cannot record that
+something was wrong, and cannot write anything except by producing text
+that the harness then appends. Memory reaches the model as prompt text
+and only as prompt text.</p>
+<p>The Ollama call sets <code>"stream": False</code> with a 120-second
+timeout and reads <code>response.json().get("response", "")</code>. The
+model is selected by the <code>AURA_MODEL</code> environment variable,
+which is the design's one genuinely portable claim: because memory is
+files and the model is a string, <em>"the model can change without
+losing the relationship"</em> is literally true here.</p>
+<p><code>/health</code> reports the model name and
+<code>core_loaded</code> as a boolean. Reporting whether identity
+loaded, rather than assuming it, is a small good habit —
+<code>load_core()</code> returns the string
+<code>"No core identity loaded."</code> when the folder is missing,
+which would otherwise be spliced into every prompt unnoticed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>All seven capability marks are withheld and most have nothing
+to attach to.</strong> There is no status field, no rejected-value
+record, no second time axis, no audit of mutations, no review surface
+and no test of any kind.</p>
+<p><strong>Scope is the significant one, because it is not merely absent
+— it is inverted.</strong> <code>user_id</code> is whatever the request
+body says, defaulting to <code>"default"</code>. There is no session, no
+token, no cookie and no check that the caller has any relationship to
+that id. Two consequences follow directly:</p>
+<ul>
+<li><strong>Any caller can read any transcript.</strong> Naming another
+user's id loads their entire history into the prompt and returns a model
+response conditioned on it.</li>
+<li><strong>The id reaches the filesystem unsanitized.</strong>
+<code>os.path.join(HISTORY_DIR, f"{user_id}.txt")</code> with a
+<code>user_id</code> containing <code>../</code> resolves outside
+<code>histories/</code> — for reading a file into the prompt, and for
+appending to one.</li>
+</ul>
+<p><code>HOST</code> defaults to <code>"0.0.0.0"</code>, so unless the
+operator sets <code>AURA_HOST</code> the server accepts connections from
+the network rather than from localhost. The prototype is described as
+local-first and its default binding is not local. Both fixes are small —
+bind <code>127.0.0.1</code> by default, and reject any
+<code>user_id</code> that is not a plain alphanumeric token — and they
+belong before the first person other than the author runs it.</p>
+<p><strong>The README and the code disagree about where memory
+lives.</strong> The document says <em>"the history file is not stored
+server-side"</em>, that <em>"the server or host machine does not own the
+memory"</em>, and that if the file <em>"is shared, lost, or stolen, it
+cannot be recovered from the host."</em> At this commit
+<code>append_history</code> writes into the server's
+<code>histories/</code> directory and <code>load_history</code> reads
+from it, so the host does hold the memory and could recover it. The
+described architecture — the user carries a <code>HISTORY.txt</code>
+that travels with them — is a coherent and interesting design, and it is
+not the one implemented here. A reader relying on the privacy claim
+would be relying on something the code does not do.</p>
+<p><strong>Prompt-injection surface.</strong> The transcript is replayed
+verbatim into every subsequent prompt, which means anything the user
+types — or anything the model was induced to say once — becomes
+permanent instruction-adjacent context. The section fences are unescaped
+plain text, so a message containing
+<code>=== CORE IDENTITY (permanent) ===</code> is indistinguishable from
+the real header. In a system where a single bad turn is repeated in
+every future prompt forever, with no way to delete it, that is the risk
+that compounds fastest.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>None.</strong> No test file, no fixture, no evaluation
+script, no benchmark, no paper and no citation file. Nothing measures
+recall, prompt size, latency or cost, and there is no committed output
+of any kind from running the system apart from the captured logs in
+<code>memory/logs/</code>.</p>
+<p>For a four-commit prototype that is not a criticism so much as a
+description. The single test most worth writing first is also the
+cheapest: assert that a <code>user_id</code> of
+<code>../../etc/passwd</code> is rejected before it reaches
+<code>os.path.join</code>.</p>
+<p>I ran nothing. The screen found no auto-executing surface, two
+build-time execution points in the documentation Makefiles, three
+unpinned requirement files, and three dependency files changed within
+the seven-day cooldown, so nothing was installed.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Send everything, until you can measure that you
+cannot.</strong> For a single user and a local model, the
+whole-transcript prompt has no retrieval bugs because it has no
+retriever. Several systems in this atlas would answer better if they had
+started here and moved only when a measurement forced them to.</p>
+<p><strong>Tag each identity chunk with the file it came from.</strong>
+<code>[CORE: identity.txt]</code> costs one f-string and lets both the
+model and a reader attribute a rule to its source.</p>
+<p><strong>Report whether identity loaded, in the health check.</strong>
+<code>core_loaded</code> as a boolean beside the model name turns a
+silent misconfiguration — an empty or missing <code>core/</code> — into
+something a reader can see without inspecting a prompt.</p>
+<p><strong>Persist a turn only after the model has answered.</strong>
+Both appends happen after a successful response, so a failed call leaves
+no half-turn in the transcript.</p>
+<p><strong>And the distillation prompt, which is the one idea here worth
+more than its implementation.</strong> <em>"Preserve contradictions.
+Preserve uncertainty. Preserve emotional context… Do NOT flatten the
+conversation into sterile summaries."</em> Almost every consolidation
+pass in this corpus optimises for exactly what this forbids — a clean,
+deduplicated, present-tense statement of what is true now — and in doing
+so destroys the record of how a belief was arrived at and what it
+displaced. Anyone writing a summarizer should read that prompt before
+they write theirs, whether or not they agree with it.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let the caller name the memory.</strong> An
+unauthenticated, unvalidated <code>user_id</code> is both the
+access-control boundary and a filesystem path here.</p>
+<p><strong>Do not grow a prompt without a length policy.</strong> The
+failure mode is not an error, it is the runtime dropping the oldest
+history — silently, and starting with the material the system exists to
+keep.</p>
+<p><strong>Do not describe an architecture the code does not
+implement.</strong> The user-carries-the-file design in the README is
+genuinely better than the one in <code>server/main.py</code>, which is
+exactly why the gap matters: a reader will assume the privacy property
+that the better design would have given them.</p>
+<p><strong>Do not ship two servers with two memory formats.</strong>
+Whichever one a contributor opens first becomes what they believe the
+system is.</p>
+<p><strong>Do not commit the upload temp directory, the recovery codes,
+or the captured conversations.</strong> 368 MB of
+<code>.tmp.driveupload</code>, ten ngrok recovery codes and a day of
+real chat logs are all in this tree; the codes should be rotated and the
+rest belongs in <code>.gitignore</code>.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this as a starting point if you are one person, on one machine,
+with a local model, and you want to understand every line of what your
+assistant remembers. The design is small enough to read in an afternoon
+and the whole-transcript approach is the right first answer.</p>
+<p>Do not take it as a component, and do not run it where anyone else
+can reach it until the <code>user_id</code> handling and the default
+bind are fixed. Its ceiling is the context window, and the work between
+here and something that scales is not retrieval — it is deciding, for
+the first time, what the system is allowed to forget.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Caller-supplied <code>user_id</code> is the only access
+control, and it is also a file path.</strong> Any transcript can be read
+or appended to by naming it, and <code>../</code> escapes the directory
+in both directions.</li>
+<li><strong><code>HOST</code> defaults to <code>0.0.0.0</code>.</strong>
+A local-first prototype that listens on every interface out of the
+box.</li>
+<li><strong>The prompt grows without bound and nothing measures
+it.</strong> When the context window fills, the runtime truncates the
+oldest history — the opposite of what the design wants — with no
+warning.</li>
+<li><strong>No deletion or correction of any kind.</strong> A wrong or
+malicious turn is permanent and is re-sent in every future prompt.</li>
+<li><strong>Unescaped section fences.</strong> A user message can
+impersonate the <code>=== CORE IDENTITY (permanent) ===</code> header,
+and the transcript replays it forever.</li>
+<li><strong><code>CORE_MEMORY</code> is frozen at import.</strong>
+Editing the identity has no effect until the process restarts, and
+nothing says so.</li>
+<li><strong>The distiller has no consumer and hard-codes
+<code>C:\Aura\knowledge\raw</code>.</strong> The best-argued component
+in the repository cannot run off one machine and reaches no prompt when
+it does.</li>
+<li><strong>Two servers, two memory formats, one port.</strong>
+<code>app.py</code> and <code>server/main.py</code> both bind 8000 and
+disagree about what memory is.</li>
+<li><strong>Committed secrets and user data.</strong> Ten ngrok recovery
+codes at the repository root, real conversation logs under
+<code>memory/logs/</code>, and 368 MB of Drive upload temporaries.</li>
+<li><strong>No licence.</strong> Public and all rights reserved by
+default, which makes reuse a question rather than a decision.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>There is nothing here to borrow as code — 590 lines, no tests, no
+licence. What is worth taking is one prompt and one decision.</p>
+<p>The prompt is <code>processor.py</code>'s. If you are building
+consolidation, read it and decide deliberately whether your summarizer
+should preserve contradictions and uncertainty or resolve them, because
+most implementations make that choice by accident.</p>
+<p>The decision is the whole-transcript baseline. Before adding a
+retriever, run the version that sends everything and record where it
+breaks — the prompt size at which quality falls off, and what the model
+stops attending to first. That measurement is the thing this project
+would need next, and almost nobody in this atlas has it either.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What happens at the context limit? Nothing in the code detects it,
+so the behaviour is whatever Ollama and the chosen model do, and the
+project has not said which.</li>
+<li>Is <code>app.py</code> intended to replace
+<code>server/main.py</code> or is it abandoned? They share a port and
+share nothing else.</li>
+<li>Was the README's user-carried <code>HISTORY.txt</code> implemented
+anywhere and reverted, or is it a description of the intended next
+version? The commit that touched it is titled <em>"Clarify user
+responsibility for HISTORY.txt"</em>, which reads as the latter.</li>
+<li>What was the distiller's output meant to feed? A
+<code>[CORE: processed.md]</code> chunk would connect it in about four
+lines, and the fact that it does not suggests the pipeline was built
+before the harness.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server/main.py</code></td>
+<td>The working harness: <code>load_core</code>,
+<code>load_history</code>, <code>append_history</code>, prompt assembly,
+the Ollama call, <code>/health</code></td>
+</tr>
+<tr>
+<td><code>core/identity.txt</code></td>
+<td>The behavioural doctrine — living chronology, do not fabricate, say
+when uncertain</td>
+</tr>
+<tr>
+<td><code>core/core.txt</code>, <code>core/ontology.txt</code></td>
+<td>The rest of the permanent identity, about 10 KB in total with
+<code>identity.txt</code></td>
+</tr>
+<tr>
+<td><code>processor.py</code></td>
+<td>The distiller: the preservation prompt, oldest-first ordering,
+hard-coded Windows paths, no consumer</td>
+</tr>
+<tr>
+<td><code>app.py</code></td>
+<td>A second Flask server with a <code>sha256</code> user id,
+<code>users/&lt;uid&gt;/memory.json</code>, an echo <code>/chat</code>
+and an unauthenticated <code>/restore</code></td>
+</tr>
+<tr>
+<td><code>auraos.py</code></td>
+<td>A Tkinter shell whose login handler prints the credentials</td>
+</tr>
+<tr>
+<td><code>core.py</code></td>
+<td>A nine-line keyword reply function nothing imports</td>
+</tr>
+<tr>
+<td><code>memory/logs/2026-05-20.json</code></td>
+<td>Captured real conversation turns, committed</td>
+</tr>
+<tr>
+<td><code>recovery_ngrok.txt</code></td>
+<td>Ten ngrok account recovery codes, committed</td>
+</tr>
+<tr>
+<td><code>.tmp.driveupload/</code></td>
+<td>2,214 files and 368 MB of Google Drive upload temporaries</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4"><code class="commit-id" title="c7d6651a98b8581e372864a4976c5a8a4c8290e4">c7d6651a…</code></a>
+— first reading, at the fourth commit of a repository two days old.
+Screened before anything was read: no auto-executing surface, two
+build-time execution points in documentation Makefiles, three unpinned
+requirement files and three dependency files inside the seven-day
+cooldown; nothing was installed, no model was pulled and no server was
+started. Every Python file outside the vendored documentation was read
+in full, which is how the absent consumer for
+<code>knowledge/processed/</code> and the unvalidated
+<code>user_id</code> path were established.
+<code>capabilities: ""</code> — assessed against all seven and none is
+present.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
