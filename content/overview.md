@@ -30,9 +30,11 @@ Five findings, with the counts they rest on:
    everything else corrects by hiding a row, which stops a reader seeing it and
    does not stop a writer recreating it.
 2. **Deletion claims stop at the storage engine.** Every `update/delete` entry
-   below describes what a system's own code does. On three of the four vector
-   engines this corpus depends on, the embedding survives the delete until an
-   unscheduled compaction — see
+   below describes what a system's own code does. On four of the five vector
+   engines this corpus depends on, the embedding survives the delete until a
+   background pass no memory system here controls — and on the one that compacts
+   on a ten-second timer, that pass moves delete markers without removing a
+   single vector. See
    [the layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
 3. **Scope is the most implemented mechanism and the shallowest.**
    171 of 321 apply a scope key as a filter on the read path. It is also
@@ -2962,10 +2964,10 @@ homepage, because this table is where that question gets asked.
 
 One column needs a caveat before the table is read. **Update/delete model
 describes what a system's own code does**, and stops at the storage engine's
-boundary. On three of the four vector engines this corpus most depends on, the
-embedding survives a delete until an unscheduled background pass — so a row
-reading "exact delete" is accurate about what the next query returns and silent
-about what is still on disk. The evidence is under
+boundary. On four of the five vector engines this corpus most depends on, the
+embedding survives a delete until a background pass triggered by a threshold
+rather than a clock — so a row reading "exact delete" is accurate about what the
+next query returns and silent about what is still on disk. The evidence is under
 [the layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
 
 <div class="filter-row" role="group" aria-label="Filter the matrix by system">
@@ -4234,16 +4236,18 @@ two are not the same claim. This section is the exception to the atlas's rule
 that a finding is about one repository: it is about a dependency most of this
 corpus shares.
 
-Four engines were read for it — pgvector at
+Five engines were read for it — pgvector at
 `4f3d17f6f74fe98adf54df4d016de241eeaae9af`, Chroma at
 `19e1bf8a8610ab2b660a75e90a2f9e487ffe638c` with its hnswlib fork at
 `6868102bde454dc761136e1994490133a6a026bb`, Qdrant at
 `db8fa43fcb6aedec1e739487e17a99731b74590a`, LanceDB at
-`9e26bf3fba7b77bb32434c0f6af9dcb43248f90a`. Between them they back most of the
-retrieval in this atlas. Counted as the engine named in a report's
-`matrix.storage` — the reproducible definition, since a passing mention in prose
-is not a dependency — pgvector backs 15 systems, Chroma 12, Qdrant 11 and
-LanceDB 5; counting any mention anywhere in a report gives 19, 13, 12 and 6.
+`9e26bf3fba7b77bb32434c0f6af9dcb43248f90a`, and Milvus at
+[`c2ae9e8b08bf2dc8311126e1a2cad960f19d6d67`](https://github.com/milvus-io/milvus/commit/c2ae9e8b08bf2dc8311126e1a2cad960f19d6d67).
+Between them they back most of the retrieval in this atlas. Counted as the engine
+named in a report's `matrix.storage` — the reproducible definition, since a
+passing mention in prose is not a dependency — pgvector backs 27 systems, Chroma
+19, Qdrant 15, LanceDB 9 and Milvus 6; counting any mention anywhere in a report
+gives 33, 21, 19, 10 and 8.
 
 ```mermaid
 flowchart TD
@@ -4252,20 +4256,21 @@ flowchart TD
     C --> D["Query filter<br/>MVCC, deleted mark, bitslice, new version"]
     C --> E["Graph structure<br/>node still linked, never returnable"]
     C --> F["Bytes on disk<br/>embedding intact"]
-    D --> G["Not returned<br/>true in all four"]
+    D --> G["Not returned<br/>true in all five"]
     E --> H["Recall of surviving<br/>memories degrades"]
     F --> I["Erased only by vacuum,<br/>optimize or prune"]
 ```
 
 **The vector is not returned by search.** This is worth stating first because it
-is the failure most often assumed. It does not happen in any of the four.
+is the failure most often assumed. It does not happen in any of the five.
 pgvector hands a heap TID to the executor and lets ordinary MVCC visibility
 apply, refusing to run at all without an MVCC snapshot (`src/hnswscan.c`).
 Chroma's fork guards candidate acceptance on `isMarkedDeleted` in both search
 paths (`hnswlib/hnswalg.h`). Qdrant carries a deleted bitslice per vector storage
 and excludes it when building. LanceDB never mutates — a delete produces a new
-dataset version without the row. **No mark in the matrix below is wrong about
-what a subsequent query returns.**
+dataset version without the row. Milvus writes the delete as a record in a
+*deltalog* and excludes the primary key at query time. **No mark in the matrix
+below is wrong about what a subsequent query returns.**
 
 **The index degrades, and the surviving memories are what suffers.** A
 soft-deleted node stays in the graph and keeps being traversed while never being
@@ -4299,6 +4304,42 @@ choice rather than a law. `VACUUM` does not merely flag the element; it zeroes
 it — `etup->deleted = 1;` followed by `memset(&etup->data, 0, …)` — invalidates
 the neighbour pointers and offers the page for reuse. Still not synchronous with
 the `DELETE`, but it terminates.
+
+**Milvus is the one whose schedule looks like an answer and is not.** It is the
+only engine here that compacts on a short, fixed timer — `levelzero.triggerInterval`
+is **10 seconds** by default, with `enableAutoCompaction: true` — and a reader
+who finds that number will reasonably conclude the deleted vector is gone within
+seconds. It is not, because the frequent compaction is the one that does not
+remove anything. Milvus separates the two jobs:
+
+- **L0 compaction**, every 10 seconds, or forced at 10 deltalog files or 8 MB.
+  Its own code describes the work as *"spilt all delete data to segments"* —
+  collect the delete records and write them into each target segment's deltalog.
+  Delete markers move; not one vector is removed.
+- **Mix, single or clustering compaction**, which rewrites a segment's binlogs
+  and drops rows through `compaction.EntityFilter.Filtered()` — the function that
+  decides an entity is deleted or TTL-expired and leaves it out of the new files.
+  This is where the embedding actually disappears, and it fires when a segment
+  crosses `single.ratio.threshold: 0.2` — **one row in five deleted** — or
+  accumulates 16 MB or 200 deltalog files, or when an operator calls
+  `ManualCompaction`.
+
+A segment holding one deleted memory among a thousand live ones therefore keeps
+that embedding on disk indefinitely under default settings, while a delete-heavy
+segment is rewritten quickly. That is the opposite of the intuition, and it is
+the same shape as the LanceDB and Qdrant cases with a more convincing decoy in
+front of it.
+
+There is a second stage, and Milvus is the only one of the five that states its
+duration in the shipped config. Compaction writes new files; the old segment's
+binlogs — still containing the deleted vector — are cleared by the data
+coordinator's garbage collector, which runs on `gc.interval: 3600` and holds a
+dropped segment's files for `gc.dropTolerance: 10800`, three hours. So the
+default-path answer to *when is the embedding gone* is: after the segment crosses
+a 20% deletion threshold, plus up to three hours, plus a GC pass. Every one of
+those numbers is an operator's to change, which is the point — they are policy,
+and none of the memory systems in this atlas that name Milvus as their store
+mentions any of them.
 
 **What this means for a reader using the matrix.** "Exact delete" in the
 Update/delete column is a true statement about the system and an incomplete
@@ -6535,7 +6576,7 @@ No internet sources were used for this report. The analysis is based on the chec
 - **`Aider-AI/aider` was examined and has no report, and it is the cleanest test of the boundary because it does persist something.** Apache-2.0, at [`5dc9490bb35f9729ef2c95d00a19ccd30c26339c`](https://github.com/Aider-AI/aider/commit/5dc9490bb35f9729ef2c95d00a19ccd30c26339c). `.aider.chat.history.md` is written continuously and `--restore-chat-history` reads it back: `base_coder.py:519` splits the markdown into messages and calls `summarize_start()`, and `ChatSummary` recursively summarizes from the oldest end until the tail fits a token budget — so a previous session's conversation genuinely reaches a later session's context. It is still a transcript and a summary of one. There is no unit, no identity and no status; two sessions that contradict each other yield a summary containing both, and no operation means *"this was wrong"*. The other durable artifact is `repomap.py`'s `.aider.tags.cache.v<N>` — tree-sitter tags per file, mtime-invalidated, ranked by a personalized PageRank over the identifier graph — a derived index of the user's source. `CONVENTIONS.md` is a file the user passes with `--read`, which is a prompt input. This is the exclusion where *a conversation cannot be wrong either, and a summary of one inherits the property* has to carry real weight, because the artifact does outlive the session.
 - **`MoonshotAI/kimi-code` and `MoonshotAI/kimi-cli` were examined together and neither earns a report, and the interesting one is the one being retired.** They are one lineage: `kimi-cli`'s README states that it *"is evolving into Kimi Code CLI"* and *"will be gradually wound down"*. The successor is far larger — 107,465 lines in `packages/agent-core-v2/src` and its own embedded storage engine in `packages/minidb` — and what both persist is the run: config, workspace state, a session index, cron tasks, the wire log, plans and blobs. `contextMemory` is the conversation. But `kimi-cli` (Apache-2.0, at [`cbc15c076d17f70fec9f89c90c0502e68657f505`](https://github.com/MoonshotAI/kimi-cli/commit/cbc15c076d17f70fec9f89c90c0502e68657f505)) ships **`SendDMail`** — a tool, backed by a class called `DenwaRenji`, that raises `BackToTheFuture` — with which the agent picks a prior checkpoint in its own append-only context file, folds everything after it away, and leaves a message for its past self. **The cut point is chosen by the agent rather than by a token threshold**, which is what separates it from every compaction in this corpus; the reverted trajectory is *rotated* to `context_1.jsonl` rather than deleted, so the abandoned branch is retained (unboundedly — nothing prunes it); and the prompt names the seam that context-level undo always has, warning the past self that *"your future self has already done something in the current working directory"*. Two caveats belong beside it: the mechanism instructs the model twice never to mention the rewind to the user, and it is commented out in the default agent, enabled only in a built-in agent named `okabe`. The successor dropped it — no `SendDMail`, `DenwaRenji` or `BackToTheFuture` anywhere in `kimi-code` — and replaced agent-initiated time travel with **user**-initiated `undo(turns)`, which is not in the tool registry. What it built instead is a full-compaction prompt that asks the model to carry the epistemic status of its own prior claims through the summary: *"If an earlier step claimed something was done but was never verified (tests 'passing', a fix 'working', a file 'created'), say so plainly and treat it as unverified rather than fact"* — the self-reinforcement failure named under [OWASP Agent Memory Guard](#not-in-scope-conversation-window-management) above, addressed at the boundary where a party with an interest in the outcome rewrites the record. Unenforced by any code, and still the only instance in this round that treats summarisation as an epistemic hazard rather than a compression problem. **Its cron subsystem is the nearest thing to a durable agent-authored record in either repository and still is not memory** — `CronCreate`/`CronList`/`CronDelete` are agent tools writing `{id, cron, prompt, createdAt, recurring, lastFiredAt}` to a workspace-scoped document store, but the tool's own documentation says tasks *"survive a resume of the same session but do not bleed into new sessions"*, and a schedule is an intent that cannot be false. Two moves in it transfer anyway: the model is told to **re-enumerate from the store after a compaction rather than trust what survived in the summary** — the right relationship between a lossy context and a durable record, and the opposite of how most extraction pipelines treat a compacted transcript — and a stale recurring task gets one final delivery flagged `stale: true` before deletion, so expiry arrives as a renewal offer to the party holding enough context to judge it, rather than firing silently while nobody is looking. Recorded with the compaction details in [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md).
 - **`rezabyt.github.io/blogposts/sigreg-tutorial.html` was examined and has no report, and it is not a repository.** It is a tutorial on **SIGReg**, the anti-collapse regularizer introduced in LeJEPA, developed from characteristic functions through the Cramér–Wold theorem to a training loop, with LeWorldModel as a temporal-prediction application. This is representation-learning methodology: it constrains an encoder's embedding distribution so it does not collapse during training. There is no store, no retrieval, no correction and no code at a pinned commit — two independent exclusions. Recorded rather than dropped because the collision is instructive: a *world model* that predicts the next embedding is memory-adjacent in the way a KV cache is memory-adjacent, and the atlas's line holds in the same place. What SIGReg governs is whether an encoder's representations stay spread out during training; what this atlas asks is whether a thing an agent stored last week can be found, scoped and corrected today. The first is a property of a loss function and the second is a property of a store.
-- **`xataio/xata` was examined and has no report: it is a Postgres platform.** The repository is a Go microservices system — 340 files under `services/`, Helm charts, kustomize overlays, protobuf definitions — whose README states the two use cases plainly: *"create your own internal Postgres-as-a-Service for your company"* and *"create preview, testing, and dev environments"* using copy-on-write storage and scale-to-zero. Nothing in the tree matches `memory` or `agent` as a concept, and there is no store an agent writes beliefs into. It is infrastructure a memory system could be built on, which is the same relationship this atlas records for graph databases: **a backend the corpus reads as a shared dependency rather than reviews**, alongside the [layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector) reading of four vector engines. Recorded by name because a reader meeting a database company's open-source platform in a list of memory candidates deserves to find that out here.
+- **`xataio/xata` was examined and has no report: it is a Postgres platform.** The repository is a Go microservices system — 340 files under `services/`, Helm charts, kustomize overlays, protobuf definitions — whose README states the two use cases plainly: *"create your own internal Postgres-as-a-Service for your company"* and *"create preview, testing, and dev environments"* using copy-on-write storage and scale-to-zero. Nothing in the tree matches `memory` or `agent` as a concept, and there is no store an agent writes beliefs into. It is infrastructure a memory system could be built on, which is the same relationship this atlas records for graph databases: **a backend the corpus reads as a shared dependency rather than reviews**, alongside the [layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector) reading of five vector engines. Recorded by name because a reader meeting a database company's open-source platform in a list of memory candidates deserves to find that out here.
 - **`metauto-ai/HGM` was examined and has no report: what persists is an optimizer's state.** The [Huxley-Gödel Machine](https://arxiv.org/abs/2510.21614) is a practical approximation of Schmidhuber's [Gödel machine](https://people.idsia.ch/~juergen/goedelmachine.html), with coding agents that rewrite themselves and a search guided by the aggregated benchmark performance of an agent's *descendants* rather than its own. Its durable state, in `tree.py`, is a tree whose nodes are git commit ids of self-modified agents plus their utility measures, pickled — read by the outer search loop to decide which modification to expand, and by nothing at task time. `self_improve_step.py` calls the model with `msg_history=None`, and `best_agent/self_evo.md` is a transcript of the improvement instruction rather than a record the next generation reads, so no generation inherits what its ancestors learned about themselves except as code. That is the guard-is-not-a-store shape at its strongest: the state is far richer than a workflow phase and still holds no claim that could be wrong, so there is nothing for a correction to attach to. Two things are worth taking from it anyway, and both are recorded in [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-goedel-machine-lineage.md): judging a node by what its descendants achieve is the credit-assignment discipline this report argues for on the memory side and finds nowhere, and versioning every self-modification as a git commit gets for free the undo [Prime Agent](../systems/prime-agent/) builds by hand. It would enter this atlas the day a generation reads a durable record of what its ancestors tried.
 - **`agentplugins/agent-plugins-site` was examined and has no report: it is a documentation website.** 120 files of Next.js and MDX serving *"the official website for the Agent Plugins specification"*, with the spec itself pulled in through `specification-source.json`. Grepping its markdown for *memory* returns nothing, so neither the site nor the specification it renders defines a memory mechanism — there is no store, no retrieval and no correction to review. **That negative claim has since been re-scoped, because the site is not where the specification lives.** `specification-source.json` names a second repository — `agentplugins/agent-plugins-spec`, at a pinned commit — as authoritative, and the site vendors its material into `content/docs/` for rendering; so the original grep covered the derived text rather than the artifact it derives from — the atlas's own "none found is a claim about a search" hazard, one level up from a directory and at a repository boundary instead. Read directly, the specification has no memory concept either: what a plugin declares is skills and MCP servers, and `FUTURE_CONSIDERATIONS.md` defers a trust model, provenance signatures, secret scoping and *"a standard event schema for plugin install, enable, disable, update, and uninstall actions"* with retention and access policies — this atlas's vocabulary applied to the plugin lifecycle rather than to anything a plugin remembers. The exclusion holds, and now rests on both repositories rather than on the one whose name matched. The adjacency worth noting for later: a plugin packages Agent Skills, so if this standard is adopted it becomes a **distribution format for [skills as procedural memory](../patterns/skills-as-procedural-memory/)** — and nothing in it says whether a skill acquired from a plugin may be rewritten by the agent that runs it, which is the question that would put a future version in scope. Recorded rather than dropped for the same reason the atlas records other near misses by name: a reader who sees an agent-plugin standard in a list of memory candidates deserves to find out here that it is a spec site, not to re-derive it. **A name collision worth flagging beside it:** `techtheist/engram`, reviewed this round, is a different project from [Engram](../systems/engram/) (`Gentleman-Programming/engram`) already in the corpus, and is filed under the slug [`engram-alpha`](../systems/engram-alpha/). Anyone reconciling lists by project name rather than by URL will merge them, exactly as the `agentmemory` collision recorded above invites.
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.

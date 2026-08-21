@@ -143,9 +143,11 @@ hiding a row, which stops a reader seeing it and does not stop a writer
 recreating it.</li>
 <li><strong>Deletion claims stop at the storage engine.</strong> Every
 <code>update/delete</code> entry below describes what a system's own
-code does. On three of the four vector engines this corpus depends on,
-the embedding survives the delete until an unscheduled compaction — see
-<a
+code does. On four of the five vector engines this corpus depends on,
+the embedding survives the delete until a background pass no memory
+system here controls — and on the one that compacts on a ten-second
+timer, that pass moves delete markers without removing a single vector.
+See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
@@ -3938,11 +3940,12 @@ well as from the homepage, because this table is where that question
 gets asked.</p>
 <p>One column needs a caveat before the table is read.
 <strong>Update/delete model describes what a system's own code
-does</strong>, and stops at the storage engine's boundary. On three of
-the four vector engines this corpus most depends on, the embedding
-survives a delete until an unscheduled background pass — so a row
-reading "exact delete" is accurate about what the next query returns and
-silent about what is still on disk. The evidence is under <a
+does</strong>, and stops at the storage engine's boundary. On four of
+the five vector engines this corpus most depends on, the embedding
+survives a delete until a background pass triggered by a threshold
+rather than a clock — so a row reading "exact delete" is accurate about
+what the next query returns and silent about what is still on disk. The
+evidence is under <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</p>
 <div class="filter-row" role="group" aria-label="Filter the matrix by system">
@@ -15362,37 +15365,40 @@ code</strong> does when asked to forget. None of them describes what the
 vector index underneath does, and the two are not the same claim. This
 section is the exception to the atlas's rule that a finding is about one
 repository: it is about a dependency most of this corpus shares.</p>
-<p>Four engines were read for it — pgvector at
+<p>Five engines were read for it — pgvector at
 <code class="commit-id" title="4f3d17f6f74fe98adf54df4d016de241eeaae9af">4f3d17f6…</code>, Chroma at
 <code class="commit-id" title="19e1bf8a8610ab2b660a75e90a2f9e487ffe638c">19e1bf8a…</code> with its hnswlib
 fork at <code class="commit-id" title="6868102bde454dc761136e1994490133a6a026bb">6868102b…</code>, Qdrant at
 <code class="commit-id" title="db8fa43fcb6aedec1e739487e17a99731b74590a">db8fa43f…</code>, LanceDB at
-<code class="commit-id" title="9e26bf3fba7b77bb32434c0f6af9dcb43248f90a">9e26bf3f…</code>. Between them they
-back most of the retrieval in this atlas. Counted as the engine named in
-a report's <code>matrix.storage</code> — the reproducible definition,
-since a passing mention in prose is not a dependency — pgvector backs 15
-systems, Chroma 12, Qdrant 11 and LanceDB 5; counting any mention
-anywhere in a report gives 19, 13, 12 and 6.</p>
+<code class="commit-id" title="9e26bf3fba7b77bb32434c0f6af9dcb43248f90a">9e26bf3f…</code>, and Milvus at <a
+href="https://github.com/milvus-io/milvus/commit/c2ae9e8b08bf2dc8311126e1a2cad960f19d6d67"><code class="commit-id" title="c2ae9e8b08bf2dc8311126e1a2cad960f19d6d67">c2ae9e8b…</code></a>.
+Between them they back most of the retrieval in this atlas. Counted as
+the engine named in a report's <code>matrix.storage</code> — the
+reproducible definition, since a passing mention in prose is not a
+dependency — pgvector backs 27 systems, Chroma 19, Qdrant 15, LanceDB 9
+and Milvus 6; counting any mention anywhere in a report gives 33, 21,
+19, 10 and 8.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
     A[&quot;User: forget that&quot;] --&gt; B[&quot;Memory system delete&lt;br/&gt;row, edge, chunk&quot;]
     B --&gt; C{&quot;Storage engine&quot;}
     C --&gt; D[&quot;Query filter&lt;br/&gt;MVCC, deleted mark, bitslice, new version&quot;]
     C --&gt; E[&quot;Graph structure&lt;br/&gt;node still linked, never returnable&quot;]
     C --&gt; F[&quot;Bytes on disk&lt;br/&gt;embedding intact&quot;]
-    D --&gt; G[&quot;Not returned&lt;br/&gt;true in all four&quot;]
+    D --&gt; G[&quot;Not returned&lt;br/&gt;true in all five&quot;]
     E --&gt; H[&quot;Recall of surviving&lt;br/&gt;memories degrades&quot;]
     F --&gt; I[&quot;Erased only by vacuum,&lt;br/&gt;optimize or prune&quot;]</code></pre></details></figure>
 <p><strong>The vector is not returned by search.</strong> This is worth
 stating first because it is the failure most often assumed. It does not
-happen in any of the four. pgvector hands a heap TID to the executor and
+happen in any of the five. pgvector hands a heap TID to the executor and
 lets ordinary MVCC visibility apply, refusing to run at all without an
 MVCC snapshot (<code>src/hnswscan.c</code>). Chroma's fork guards
 candidate acceptance on <code>isMarkedDeleted</code> in both search
 paths (<code>hnswlib/hnswalg.h</code>). Qdrant carries a deleted
 bitslice per vector storage and excludes it when building. LanceDB never
 mutates — a delete produces a new dataset version without the row.
-<strong>No mark in the matrix below is wrong about what a subsequent
-query returns.</strong></p>
+Milvus writes the delete as a record in a <em>deltalog</em> and excludes
+the primary key at query time. <strong>No mark in the matrix below is
+wrong about what a subsequent query returns.</strong></p>
 <p><strong>The index degrades, and the surviving memories are what
 suffers.</strong> A soft-deleted node stays in the graph and keeps being
 traversed while never being returnable, so recall drops for everything
@@ -15429,6 +15435,46 @@ flag the element; it zeroes it — <code>etup-&gt;deleted = 1;</code>
 followed by <code>memset(&amp;etup-&gt;data, 0, …)</code> — invalidates
 the neighbour pointers and offers the page for reuse. Still not
 synchronous with the <code>DELETE</code>, but it terminates.</p>
+<p><strong>Milvus is the one whose schedule looks like an answer and is
+not.</strong> It is the only engine here that compacts on a short, fixed
+timer — <code>levelzero.triggerInterval</code> is <strong>10
+seconds</strong> by default, with
+<code>enableAutoCompaction: true</code> — and a reader who finds that
+number will reasonably conclude the deleted vector is gone within
+seconds. It is not, because the frequent compaction is the one that does
+not remove anything. Milvus separates the two jobs:</p>
+<ul>
+<li><strong>L0 compaction</strong>, every 10 seconds, or forced at 10
+deltalog files or 8 MB. Its own code describes the work as <em>"spilt
+all delete data to segments"</em> — collect the delete records and write
+them into each target segment's deltalog. Delete markers move; not one
+vector is removed.</li>
+<li><strong>Mix, single or clustering compaction</strong>, which
+rewrites a segment's binlogs and drops rows through
+<code>compaction.EntityFilter.Filtered()</code> — the function that
+decides an entity is deleted or TTL-expired and leaves it out of the new
+files. This is where the embedding actually disappears, and it fires
+when a segment crosses <code>single.ratio.threshold: 0.2</code> —
+<strong>one row in five deleted</strong> — or accumulates 16 MB or 200
+deltalog files, or when an operator calls
+<code>ManualCompaction</code>.</li>
+</ul>
+<p>A segment holding one deleted memory among a thousand live ones
+therefore keeps that embedding on disk indefinitely under default
+settings, while a delete-heavy segment is rewritten quickly. That is the
+opposite of the intuition, and it is the same shape as the LanceDB and
+Qdrant cases with a more convincing decoy in front of it.</p>
+<p>There is a second stage, and Milvus is the only one of the five that
+states its duration in the shipped config. Compaction writes new files;
+the old segment's binlogs — still containing the deleted vector — are
+cleared by the data coordinator's garbage collector, which runs on
+<code>gc.interval: 3600</code> and holds a dropped segment's files for
+<code>gc.dropTolerance: 10800</code>, three hours. So the default-path
+answer to <em>when is the embedding gone</em> is: after the segment
+crosses a 20% deletion threshold, plus up to three hours, plus a GC
+pass. Every one of those numbers is an operator's to change, which is
+the point — they are policy, and none of the memory systems in this
+atlas that name Milvus as their store mentions any of them.</p>
 <p><strong>What this means for a reader using the matrix.</strong>
 "Exact delete" in the Update/delete column is a true statement about the
 system and an incomplete answer to <em>is it gone</em>. Two reports
@@ -21636,7 +21682,7 @@ relationship this atlas records for graph databases: <strong>a backend
 the corpus reads as a shared dependency rather than reviews</strong>,
 alongside the <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">layer
-below delete</a> reading of four vector engines. Recorded by name
+below delete</a> reading of five vector engines. Recorded by name
 because a reader meeting a database company's open-source platform in a
 list of memory candidates deserves to find that out here.</li>
 <li><strong><code>metauto-ai/HGM</code> was examined and has no report:
