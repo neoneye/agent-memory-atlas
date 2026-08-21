@@ -6254,6 +6254,17 @@ still wins an injection slot — <em>"correction that stops at the ledger
 row and never reaches the retrieval lane is not correction"</em>. Two
 systems here fail exactly that way on their main retrieval path, and
 neither has a test that would have caught it.</li>
+<li>Second idea: <strong>two clocks that compose, and a replay that
+stays honest about trust.</strong>
+<code>compose_context(as_of=…, valid_at=…)</code> filters the learned-at
+and valid-at axes independently — <em>"as_of + valid_at asks 'what did
+we believe at T about what was true at T2', the stale-belief postmortem
+query"</em> — and a fact whose <code>verified_at</code> is absent or
+later than the cutoff renders as <code>asserted</code> rather than
+<code>verified</code> in the replayed view, a read-time mask that leaves
+storage untouched. Most as-of replays in this corpus rewind the value
+and leave today's confidence attached, which is the anachronism that
+makes a postmortem flattering.</li>
 <li>Biggest risk: the fleet architecture the docs describe — an orphan
 memory branch, per-session fold files, a read-time projection, a reaper
 that checks a fold's claim against merged history — is not in the tree.

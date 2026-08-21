@@ -6,18 +6,19 @@ root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
-revision: e398e3521b8eaaecc726d4f4587f69ebb35de58e
-revision_url: https://github.com/The-825/breadcrumbs/commit/e398e3521b8eaaecc726d4f4587f69ebb35de58e
+revision: 8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
+revision_url: https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
 analyzed_at: 2026-08-20
-capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
+capabilities: "tombstone, trust_state, bitemporal, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 capability_evidence:
   tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
   trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"
   audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION, SUPERSEDED, REJECTED and TOMBSTONE_LIFTED rows, the second with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
   human_review: "the git-resident ledgers | .github/workflows/automerge.yml | considerPR refuses to merge an agent branch without the greenlight label unless greenlight_tiers.classify returns AUTO on every changed file | greenlight_tiers.py --selftest, ten tier cases"
+  bitemporal: "the semantic tier, two clocks that compose on the read path | templates/ledger-tools/memory_engine.py:253 (`store_fact`), :548 (`compose_context`) | `store_fact` records `recorded_at` unconditionally and takes optional `valid_from`/`valid_until`, documented as *\"the VALID-AT axis: when the fact was true in the world, distinct from recorded_at (when the memory learned it)\"*. `compose_context(as_of=…, valid_at=…)` filters them independently — `as_of` drops facts learned after the cutoff, `valid_at` drops facts windowed away from the moment — and the docstring names the composed query: *\"as_of + valid_at asks what did we believe at T about what was true at T2, the stale-belief postmortem query\"*. Unstamped facts are always included and the assembled header says so. A third detail makes the replay honest rather than merely temporal: a `verified` fact whose `verified_at` is absent or later than `as_of` renders as `asserted` in the replayed view, a read-time mask that leaves storage untouched | templates/ledger-tools/memory_engine_golden.json case `learned-time-replay-excludes-the-future`, run by `memory_engine_exam.py`"
   negative_eval: "conclusions ledger injection lane | templates/ledger-tools/retrieval_exam.py | run_forbidden_check replays the boot matcher and names a superseded entry that still wins a slot | retrieval_exam.py --selftest, four forbidden-hit cases"
 matrix:
   memory_unit: "A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row and a tab-separated index row"
@@ -342,6 +343,56 @@ pitch, and it is accurate.
   line, a kernel past its cap. Exit 2 on any of them.
 - **Tests** — six `--selftest` entry points and one unittest suite, 115 checks
   total, all offline against `tempfile` fixtures or the shipped kit itself.
+
+### Two clocks, and a scope filter with no caller
+
+`compose_context` takes `as_of`, `valid_at` and `audience`, and the three are
+independent read-time masks over storage that is never modified.
+
+`as_of` replays the **learned-at** axis and `valid_at` the **valid-at** axis;
+the docstring states the composed question — *"as_of + valid_at asks 'what did
+we believe at T about what was true at T2', the stale-belief postmortem
+query"* — which is the query this atlas asks of every store and almost never
+gets. Facts with no stamp are always included rather than silently dropped, and
+the assembled header announces which filters ran, so a reader of the context can
+tell it is a partial view.
+
+The detail that makes the replay honest is on the trust axis. A fact whose
+status is `verified` but whose `verified_at` is absent or later than `as_of`
+renders as `asserted`, with the reasoning in the comment: the memory knew the
+*value* by then, verification either has no timestamp *"(unknown, so never
+assume it)"* or happened afterwards, so *"replay the honest state."* Most
+as-of replays in this corpus rewind the value and leave the confidence at
+today's level, which is the anachronism that makes a postmortem flattering.
+
+`audience` filters a three-level scope lattice — `public < internal <
+regulated` — at assembly. Two decisions in it are worth taking. A fact carrying
+no scope field **counts as internal**, so pre-scope data fails closed against a
+public audience rather than defaulting to the most permissive value. And when
+any audience is set, the episodic tier is omitted **entirely**, because
+supersession episodes embed prior values and would leak a regulated fact through
+the audit trail — a side door the module's own selftest found, with the date in
+the comment.
+
+**`scope_enforced` is still withheld, and the reason here is not the usual
+one.** In most systems the mark fails because a caller omits the filter; here
+there is no caller at all. `compose_context` has no invocation anywhere in the
+tree outside its selftest and the golden exam, because the engine ships as a
+library for a loop the adopter writes. The scope key is stored, the filter is
+real, and whether it is applied is a decision this repository does not make.
+
+### Replay that is not allowed to conclude anything
+
+`governed_replay.py` selects episodes for offline review and turns an external
+evaluator's output into a typed proposal — and spends its docstring refusing the
+implications of its own metaphor: *"The 'dreaming' analogy means replay during
+an offline maintenance window. It does not imply feeling, consciousness, or
+permission to trust the replay's own conclusions."* Every proposal preserves its
+source episodes, carries `mutates: false`, and must pass a later authority gate
+before anything durable changes; a missing or failed evaluation stays `unknown`
+rather than becoming an absence. Several systems in this atlas run a nightly
+"dream" pass that writes straight into the store; this is the same idea with the
+write end removed and the reason written down.
 
 ## 5. Memory Data Model
 
@@ -744,6 +795,23 @@ than in a footnote.
 unrelated. `docs/breadcrumbs-whitepaper.md` is a 403-line self-published essay,
 not an indexed preprint, and it carries no evaluation.
 
+**A golden retrieval corpus, which the corpus above mostly lacks.**
+`memory_engine_golden.json` holds five synthetic cases and
+`memory_engine_exam.py` replays them through the real engine in a temporary
+directory. The shape is the part worth copying: **every case names an `expect`
+list and a `forbid` list** — strings that must appear in the composed context and
+strings that must not — so each case is a positive and a negative assertion over
+the same assembly. `repeat: 2` on a case demands identical rendering both times,
+which turns determinism into a checked property rather than an assumption. The
+five cases cover fusion preferring a relevant older event over an irrelevant
+newer one, a public audience failing closed against a regulated fact *and*
+against the episodic tier, and learned-time replay excluding a fact recorded
+after the cutoff. The header of the file states the limit itself: *"The corpus is
+synthetic and public-safe."* Five hand-written cases measure that the pipeline
+does what its author intended, not that recall is good — but a `forbid` list on
+every case is a discipline this atlas asks for repeatedly and finds in a handful
+of repositories.
+
 **What is tested.** Six offline selftests and one unittest suite, which I ran
 against the pinned commit on 2026-08-09, no dependencies installed:
 
@@ -1042,6 +1110,10 @@ teams have never asked about the memory they already have.
 - `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-08-20** — [`8f034fc952cb9d10c32f53f4caa20a161f7c1a9f`](https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f) — re-pinned 14 commits on, and unlike the previous re-read these are code. Screened again: nothing scanned beyond a single manifest, no auto-run surface, nothing installed. **`bitemporal` is awarded**, which the previous entry explicitly withheld on the ground that the `as_of` cutoff *"filters the learned-at axis only"*. `store_fact` now takes `valid_from`/`valid_until` beside the unconditional `recorded_at`, and `compose_context` filters the two independently, with the composed postmortem query named in its docstring and a golden case pinning it. Taking the report to six of seven marks; `scope_enforced` remains the only substantive gap and section 5 records why the reason is unusual — the audience filter exists and nothing in the repository calls it, because the engine ships as a library.
+
+Also new: a golden retrieval corpus with a `forbid` list on every case (section 10), an offline replay path that produces proposals carrying `mutates: false` and is not permitted to conclude anything (section 5), a scoped scoring template, and consolidation persisted as review proposals rather than writes.
 
 **2026-08-20** — [`e398e3521b8eaaecc726d4f4587f69ebb35de58e`](https://github.com/The-825/breadcrumbs/commit/e398e3521b8eaaecc726d4f4587f69ebb35de58e) — six commits on, and **not one line of code among them**: README, `SESSION_STATE.md`, the whitepaper, four new essays, `planning/DECISIONS.md`, `llms.txt` and a CI-kit note. Every mechanism claim in this report was made against a tree that is byte-identical here, so the marks stand at five without a re-derivation. Screened again: one `CLAUDE.md` addressed to a reading agent, recorded as data; no auto-run surface, no dependency manifest, nothing installed.
 
