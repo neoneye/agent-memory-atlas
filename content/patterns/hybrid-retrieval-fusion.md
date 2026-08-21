@@ -197,6 +197,29 @@ is excluded from that arm and stays reachable through FTS, with
 `getMemoriesWithoutEmbeddings` available to backfill it. One arm failing costs one
 arm, not the query.
 
+[repowise](../../systems/repowise/) supplies the failure this page's degradation
+advice exists to prevent, measured. Its vector leg was bounded at a hardcoded
+8-second timeout **inside `contextlib.suppress`**, while a cold index costs
+*"6.3s + 13.4s ... where a warm query takes 0.19s"* — so, in the fix's own words,
+*"the first query of every process expired, the leg returned `[]`, and search
+silently degraded to full-text with nothing logged and `embedder_degraded` still
+false."*
+
+Three things compose into an unobservable outage, and each is worth checking
+separately in any fused retriever. The budget was set from warm-path timings, so
+it could never clear a cold start. The suppression made the expiry
+indistinguishable from an empty result set — a fused query cannot tell "the
+vector arm found nothing" from "the vector arm never ran". And the health flag
+that exists to report exactly this stayed `false` throughout, so the one field an
+operator would query to detect the degradation reported health. The remedy is the
+shape to copy as much as the number: one shared budget rather than a constant at
+each call site, an override for slow disks, and an unusable override that warns
+and keeps the default *"rather than disabling the leg"*.
+
+**Test that an arm's failure is distinguishable from an arm's empty result.** No
+fused implementation in this atlas has that fixture, and it is the difference
+between a retriever that degrades and one that degrades silently.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

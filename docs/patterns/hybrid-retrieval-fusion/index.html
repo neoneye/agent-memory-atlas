@@ -380,6 +380,30 @@ embedding model was unavailable is excluded from that arm and stays
 reachable through FTS, with <code>getMemoriesWithoutEmbeddings</code>
 available to backfill it. One arm failing costs one arm, not the
 query.</p>
+<p><a href="../../systems/repowise/">repowise</a> supplies the failure
+this page's degradation advice exists to prevent, measured. Its vector
+leg was bounded at a hardcoded 8-second timeout <strong>inside
+<code>contextlib.suppress</code></strong>, while a cold index costs
+<em>"6.3s + 13.4s ... where a warm query takes 0.19s"</em> — so, in the
+fix's own words, <em>"the first query of every process expired, the leg
+returned <code>[]</code>, and search silently degraded to full-text with
+nothing logged and <code>embedder_degraded</code> still false."</em></p>
+<p>Three things compose into an unobservable outage, and each is worth
+checking separately in any fused retriever. The budget was set from
+warm-path timings, so it could never clear a cold start. The suppression
+made the expiry indistinguishable from an empty result set — a fused
+query cannot tell "the vector arm found nothing" from "the vector arm
+never ran". And the health flag that exists to report exactly this
+stayed <code>false</code> throughout, so the one field an operator would
+query to detect the degradation reported health. The remedy is the shape
+to copy as much as the number: one shared budget rather than a constant
+at each call site, an override for slow disks, and an unusable override
+that warns and keeps the default <em>"rather than disabling the
+leg"</em>.</p>
+<p><strong>Test that an arm's failure is distinguishable from an arm's
+empty result.</strong> No fused implementation in this atlas has that
+fixture, and it is the difference between a retriever that degrades and
+one that degrades silently.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

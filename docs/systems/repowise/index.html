@@ -115,14 +115,14 @@ the query.</p>
               <strong>repowise-dev/repowise</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/repowise-dev/repowise/commit/370793f9b4e3357f6bf605f0bb86ef421a567548" title="370793f9b4e3357f6bf605f0bb86ef421a567548">
+            <a class="meta-pill revision-pill" href="https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3" title="e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3">
               <span>Analyzed revision</span>
-              <code>370793f9…</code>
+              <code>e2bb8a2e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-19</strong>
+              <strong>2026-08-21</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -354,6 +354,45 @@ through as high confidence. The fix normalizes two Unicode apostrophes
 to ASCII before matching. It is a one-line repair to a mechanism whose
 entire job is to be skeptical, and it is a good argument for testing an
 abstention path with the characters a model actually emits.</p>
+<h3
+id="two-failures-the-project-diagnosed-in-its-own-commit-messages">Two
+failures the project diagnosed in its own commit messages</h3>
+<p>Both are shapes this atlas looks for and rarely gets a worked
+instance of, and both are described in the fix rather than in a release
+note.</p>
+<p><strong>A hybrid retriever whose vector leg failed on every cold
+start, invisibly.</strong> The first vector query in a process pays for
+opening the store, the first embed and the first ANN probe — measured at
+<em>"6.3s + 13.4s on a cold Windows index where a warm query takes
+0.19s"</em>. Every call site bounded that at a hardcoded 8-second
+timeout <strong>inside <code>contextlib.suppress</code></strong>, so, in
+the commit's own words, <em>"the first query of every process expired,
+the leg returned <code>[]</code>, and search silently degraded to
+full-text with nothing logged and <code>embedder_degraded</code> still
+false."</em> Three failures compose there: a budget set from warm-path
+intuition, a suppression that makes the expiry unobservable, and a
+degradation flag that stays false while the system is degraded — so the
+one field an operator would check to detect this reported health. The
+fix moves the budget to a single <code>vector_search_timeout_s()</code>
+at 30 seconds, capped at 120 and overridable, with an unusable override
+warning and keeping the default <em>"rather than disabling the
+leg"</em>.</p>
+<p><strong>An incremental pass that eroded stored data, concentrated on
+the records someone was working on.</strong> The incremental pipeline
+constructed its <code>HealthAnalyzer</code> without a coverage map, so
+every changed file was scored as though no coverage had ever been
+ingested, and the partial-health writer then upserted those metrics —
+<em>"overwriting the stored <code>line_coverage_pct</code> with NULL for
+exactly the files that just changed — eroding coverage one file per
+update, starting with files under active development."</em> The bias is
+the part to generalise: an incremental writer that rebuilds a record
+from partial inputs and upserts the whole row nulls whatever its inputs
+did not cover, and because incremental passes run on what changed, the
+loss lands on the most-touched records — the ones a reader is most
+likely to consult. The fix loads the persisted coverage rows before
+re-scoring and returns an empty map when the store is unreadable, so the
+analyzer scores without coverage rather than scoring against a false
+zero.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are batch, through the pipeline, in a full or an incremental
 mode.</p>
@@ -554,6 +593,30 @@ overwrite</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3"><code class="commit-id" title="e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3">e2bb8a2e…</code></a>
+— re-pinned 34 commits and +15,873 lines on, at release v0.45.0.
+Screened again: two auto-run surfaces (<code>.claude-plugin/</code>,
+<code>server.json</code>), build-time execution in the
+<code>Makefile</code> and <code>conftest.py</code>; nothing was
+installed and nothing was run. Marks unchanged at
+<code>trust_state</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</p>
+<p><strong>The scope finding is unchanged and was re-checked rather than
+carried forward.</strong> <code>FullTextSearch.search</code> still takes
+<code>(self, query, limit)</code> and no repository argument, so the
+boundary is still which engine the router opened rather than a predicate
+in the statement.</p>
+<p>New in section 7: two failures the project diagnosed in its own
+commit messages — a vector leg that expired on every process's first
+query inside a <code>contextlib.suppress</code>, degrading search to
+full-text with <code>embedder_degraded</code> still false; and an
+incremental health re-score that overwrote stored coverage with NULL for
+exactly the files that had just changed. Also arriving in this range:
+Eden AI as a first-class provider and embedder, unified refactoring
+recommendation contracts, and ingestion fixes for Go field-call capture,
+TypeScript <code>#private</code> members and Java and C# return
+types.</p>
 <p><strong>2026-08-19</strong> — <a
 href="https://github.com/repowise-dev/repowise/commit/370793f9b4e3357f6bf605f0bb86ef421a567548"><code class="commit-id" title="370793f9b4e3357f6bf605f0bb86ef421a567548">370793f9…</code></a>
 — first reading, at v0.44.0. Screened before reading: 2 auto-run

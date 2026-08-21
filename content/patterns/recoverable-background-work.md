@@ -144,6 +144,29 @@ pick the *most informative* failures from whatever survived. The cheapest fix on
 this page applies exactly: advance the cursor after the work lands, not before it
 starts.
 
+[repowise](../../systems/repowise/) shows the loss this page is about happening
+without a crash, which is the case a resumable-worker design does not cover. Its
+incremental pipeline built the health analyzer without a coverage map, so every
+changed file was scored as though coverage had never been ingested — and the
+partial writer then upserted the whole row, *"overwriting the stored
+`line_coverage_pct` with NULL for exactly the files that just changed — eroding
+coverage one file per update, starting with files under active development."*
+
+Nothing failed. Every pass completed, and each one destroyed a field it had no
+input for. Two properties make it worth naming as a shape rather than a bug.
+**An incremental writer that reconstructs a record from partial inputs and
+upserts it will null whatever those inputs did not cover** — the write path
+cannot tell "no coverage exists" from "coverage was not loaded this time". And
+**the loss is biased toward the records that matter most**, because an
+incremental pass by definition runs on what changed, so the fields that vanish
+are the ones attached to the files someone is actively working on.
+
+The fix is the general one: load the persisted values before re-scoring, and when
+the store is unreadable return an empty map so the analyzer scores *without*
+coverage rather than against a false zero. Any background pass that upserts a
+full row from a partial computation needs the same question asked of it — which
+columns does this pass have no input for, and what happens to them.
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.

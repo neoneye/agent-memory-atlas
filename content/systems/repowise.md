@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "repowise-dev/repowise"
 source_url: https://github.com/repowise-dev/repowise
-revision: 370793f9b4e3357f6bf605f0bb86ef421a567548
-revision_url: https://github.com/repowise-dev/repowise/commit/370793f9b4e3357f6bf605f0bb86ef421a567548
-analyzed_at: 2026-08-19
+revision: e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
+revision_url: https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
+analyzed_at: 2026-08-21
 capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the decision record — a grounding verdict distinct from both status and confidence | packages/core/src/repowise/core/analysis/decisions/gate.py | `apply_substring_gate` clears any `decision`/`rationale`/`source_quote` that does not substring- or token-match the verbatim `source_text` its producer recorded, rejects a candidate whose every produced field is ungrounded, and stamps `verification` with the strongest surviving verdict of exact, fuzzy or unverified; `crud/decisions.py:490` aggregates it across evidence rows and the MCP answer path reads it | tests/unit/analysis/test_decision_provenance.py"
@@ -240,6 +240,41 @@ matching. It is a one-line repair to a mechanism whose entire job is to be
 skeptical, and it is a good argument for testing an abstention path with the
 characters a model actually emits.
 
+### Two failures the project diagnosed in its own commit messages
+
+Both are shapes this atlas looks for and rarely gets a worked instance of, and
+both are described in the fix rather than in a release note.
+
+**A hybrid retriever whose vector leg failed on every cold start, invisibly.**
+The first vector query in a process pays for opening the store, the first embed
+and the first ANN probe — measured at *"6.3s + 13.4s on a cold Windows index
+where a warm query takes 0.19s"*. Every call site bounded that at a hardcoded
+8-second timeout **inside `contextlib.suppress`**, so, in the commit's own words,
+*"the first query of every process expired, the leg returned `[]`, and search
+silently degraded to full-text with nothing logged and `embedder_degraded` still
+false."* Three failures compose there: a budget set from warm-path intuition, a
+suppression that makes the expiry unobservable, and a degradation flag that stays
+false while the system is degraded — so the one field an operator would check to
+detect this reported health. The fix moves the budget to a single
+`vector_search_timeout_s()` at 30 seconds, capped at 120 and overridable, with an
+unusable override warning and keeping the default *"rather than disabling the
+leg"*.
+
+**An incremental pass that eroded stored data, concentrated on the records
+someone was working on.** The incremental pipeline constructed its
+`HealthAnalyzer` without a coverage map, so every changed file was scored as
+though no coverage had ever been ingested, and the partial-health writer then
+upserted those metrics — *"overwriting the stored `line_coverage_pct` with NULL
+for exactly the files that just changed — eroding coverage one file per update,
+starting with files under active development."* The bias is the part to
+generalise: an incremental writer that rebuilds a record from partial inputs and
+upserts the whole row nulls whatever its inputs did not cover, and because
+incremental passes run on what changed, the loss lands on the most-touched
+records — the ones a reader is most likely to consult. The fix loads the
+persisted coverage rows before re-scoring and returns an empty map when the store
+is unreadable, so the analyzer scores without coverage rather than scoring
+against a false zero.
+
 ## 7. Write Mechanics
 
 Writes are batch, through the pipeline, in a full or an incremental mode.
@@ -399,6 +434,12 @@ was true anyway.
 | `docs/BENCHMARKS.md` | Ten rows, one of them a loss, two of them "not measured" |
 
 ## History
+
+**2026-08-21** — [`e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3`](https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3) — re-pinned 34 commits and +15,873 lines on, at release v0.45.0. Screened again: two auto-run surfaces (`.claude-plugin/`, `server.json`), build-time execution in the `Makefile` and `conftest.py`; nothing was installed and nothing was run. Marks unchanged at `trust_state`, `audit_log` and `negative_eval`.
+
+**The scope finding is unchanged and was re-checked rather than carried forward.** `FullTextSearch.search` still takes `(self, query, limit)` and no repository argument, so the boundary is still which engine the router opened rather than a predicate in the statement.
+
+New in section 7: two failures the project diagnosed in its own commit messages — a vector leg that expired on every process's first query inside a `contextlib.suppress`, degrading search to full-text with `embedder_degraded` still false; and an incremental health re-score that overwrote stored coverage with NULL for exactly the files that had just changed. Also arriving in this range: Eden AI as a first-class provider and embedder, unified refactoring recommendation contracts, and ingestion fixes for Go field-call capture, TypeScript `#private` members and Java and C# return types.
 
 **2026-08-19** — [`370793f9b4e3357f6bf605f0bb86ef421a567548`](https://github.com/repowise-dev/repowise/commit/370793f9b4e3357f6bf605f0bb86ef421a567548)
 — first reading, at v0.44.0. Screened before reading: 2 auto-run surfaces (a

@@ -7887,6 +7887,21 @@ fluent-but-invented rationale from being stored as institutional
 memory". It is typed on a five-attribute Protocol rather than on either
 producer's class, so the extractor and the generator cannot drift into
 separate definitions of grounded.</li>
+<li>Second idea: <strong>two failures the project diagnosed in its own
+commit messages, both of the kind this atlas looks for and rarely finds
+worked through.</strong> A vector leg bounded at a hardcoded 8-second
+timeout inside <code>contextlib.suppress</code>, against a cold index
+costing <em>"6.3s + 13.4s ... where a warm query takes 0.19s"</em> — so
+<em>"the first query of every process expired, the leg returned
+<code>[]</code>, and search silently degraded to full-text with nothing
+logged and <code>embedder_degraded</code> still false"</em>: an outage
+invisible to the flag that exists to report it. And an incremental
+health re-score built without a coverage map, whose partial writer
+upserted the whole row and <em>"overwrit[ed] the stored
+<code>line_coverage_pct</code> with NULL for exactly the files that just
+changed — eroding coverage one file per update, starting with files
+under active development"</em>, which is data loss biased toward the
+records a reader most needs.</li>
 <li>Biggest risk: the gate cannot check what its producer did not
 record. A candidate arriving with no <code>source_text</code> is kept
 and merely labelled <code>unverified</code>, on the stated and
