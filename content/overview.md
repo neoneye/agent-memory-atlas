@@ -12,6 +12,16 @@ page_kind: comparison
 and judged against seven mechanisms with strict definitions. "Readable" is not
 "open source" — sixteen carry a non-open-source licence, listed in the
 [appendix](#what-the-licences-actually-say).
+
+**What counts as one.** A system is in scope when it keeps something across
+sessions that could later turn out to be *false* — a claim about a person, a
+project, a codebase, a world — and gives that thing an identity a correction can
+name. Durable storage an agent reads and writes is the entry condition rather
+than the boundary: a conversation window, a KV cache, a document index and a task
+queue all persist, and none of them holds anything a later reading could
+contradict. The cases that sit closest to the line are worked through in
+[what is not in scope](#not-in-scope-the-kv-cache) and the sections after it.
+
 Five findings, with the counts they rest on:
 
 1. **Correction is the phase that goes unbuilt.** 22 systems of 321 carry a
@@ -2781,17 +2791,27 @@ each worker was asked and what it cost, *"never the worker's prose: the text was
 printed, and a session that wants it in memory ingests it as a turn instead."*
 
 A second boundary is worth naming because it is where this atlas most often
-declines something interesting: **a durable store an agent operates is not
-memory.** [beads](https://github.com/gastownhall/beads) (MIT, at
+declines something interesting: **a store of the agent's work is not a store of
+the agent's beliefs.** Being a durable store an agent reads and writes is the
+*entry* condition here, not the disqualifier — every system in this report is
+one. What separates them is what the rows are about.
+
+[beads](https://github.com/gastownhall/beads) (MIT, at
 [`dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba`](https://github.com/gastownhall/beads/commit/dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba)) is a
 distributed graph issue tracker for AI agents, Dolt-backed, and it passes the
 literal test — issues persist across sessions, carry identity, and can be
-corrected. So would Jira. The distinction that keeps the atlas from swallowing
-every agent-adjacent database is whether the store exists to hold what the agent
-*believes* or what the agent *operates on*: a task database is the second. It is
-noted here rather than dropped because [Core Memory](../systems/core-memory/)
-borrows the "bead" vocabulary, and a reader meeting both could reasonably assume
-a relationship.
+corrected. So would Jira. Apply the sharper test from
+[the section above](#not-in-scope-conversation-window-management) instead: could
+a row turn out to have been *false*? An issue can be closed, reopened,
+reassigned, or wrong about its own status, and none of that is the store having
+been mistaken about the world — it is the work moving on. A task database records
+what is to be done; a memory records what is the case, and only the second can be
+contradicted by evidence. That is the line, and it is about the contents rather
+than about who drives the database.
+
+beads is noted here rather than dropped because
+[Core Memory](../systems/core-memory/) borrows the "bead" vocabulary, and a
+reader meeting both could reasonably assume a relationship.
 
 The nearby case is a corpus index. `VectorSpaceLab/general-agentic-memory` (GAM)
 builds an LLM-generated directory tree over long documents, video, or agent
@@ -2910,7 +2930,8 @@ scope, not the fact of learning.
 Eight more candidates were read on 2026-07-29 and declined. They are recorded
 because each looks like a memory system from its description, and because two
 recurring shapes account for most of them — resource accounting that uses the
-word *memory*, and durable state an agent operates rather than believes:
+word *memory*, and durable state that records an agent's *work* rather than its
+*beliefs*:
 
 | Candidate | Why not |
 | --- | --- |
