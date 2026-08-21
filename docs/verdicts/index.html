@@ -1407,9 +1407,30 @@ href="../systems/cognicore/"><code>cognicore</code></a></h3>
 arrives unassessed rather than believed, which a confidence float cannot
 express, plus a utility ledger separating retrieved from used from
 <em>ignored</em>.</li>
-<li>Biggest risk: scope is filtered in Python after the backend returns,
-so any limit the backend applied was applied to the unscoped set and a
-scoped read can silently come back short.</li>
+<li>Second idea: <strong>an imported memory resets to
+<code>candidate</code> and keeps <code>source_agent</code> and
+<code>creation_reason="shared"</code>.</strong>
+<code>MemoryTransfer.share</code> rebuilds each entry in the target and
+omits <code>state</code>, so the dataclass default applies and a claim
+another agent had verified arrives unverified and identifiable as
+imported. That is the shape <a
+href="../systems/portable-handoff/">Portable Handoff</a> argues for, in
+two lines.</li>
+<li>Biggest risk: <strong>the committed ablation's headline is one
+environment of six, and the metric its hypothesis names moved the wrong
+way.</strong> <code>benchmark_output/benchmark_report.md</code> is a
+genuine single-variable run — same agent, same tasks, same seed, memory
+the only difference — reporting solve rate 1.1% → 12.2%. The breakdown
+shows <code>SafetyClassification</code> at 7% → 73% and four of six
+environments at 0% on both arms. And repeated failures, which the report
+defines as reusing a strategy that already failed on the same root
+cause, rose from 76 to 91 under memory; the file explains that as
+broader exploration, offers no evidence, and redirects to accuracy.
+Beside that, <code>MemoryTransfer.share</code> reads with
+<code>scope=None</code>, copies the sender's <code>scope</code> and
+<code>scope_id</code> into the receiver's store, and carries
+<code>confidence</code> across verbatim while the state resets — so the
+half of the trust surface that survives the trip is the float.</li>
 <li>Most reusable component: the four column groups on
 <code>memory_entries</code> — content, epistemic, scope, and
 provenance-plus-utility — which put <code>creation_reason</code> and
@@ -1422,8 +1443,11 @@ loose <code>test_*.py</code> provider smoke files and two committed
 <li>Study when: you want an epistemic state in the schema rather than in
 a prompt, or a retrieval feedback signal that records what the agent
 declined.</li>
-<li>Do not copy when: the scope boundary has to hold under a limit, or
-you want a dependency rather than an environment.</li>
+<li>Do not copy when: you want a dependency rather than an environment,
+or you need <code>get_by_category</code> to be exhaustive — it
+over-fetches five times the limit and scopes in Python, so a caller
+sparse in a category under-returns with no error. <code>search</code>
+does push the predicate into the backend.</li>
 </ul>
 <h3 id="alma-memory"><a
 href="../systems/alma-memory/"><code>alma-memory</code></a></h3>

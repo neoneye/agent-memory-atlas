@@ -109,14 +109,14 @@ backends.</p>
               <strong>cognicore-dev/cognicore-my-openenv</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247" title="760cdde49328a6cca8c430256b072cc1c4f48247">
+            <a class="meta-pill revision-pill" href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46" title="4f6bd9d0c8e4c6050504a47eb027791875043d46">
               <span>Analyzed revision</span>
-              <code>760cdde4…</code>
+              <code>4f6bd9d0…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-04</strong>
+              <strong>2026-08-21</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -159,15 +159,24 @@ distinction between <em>retrieved</em>, <em>used</em> and
 <em>ignored</em> is the interesting one — it records that a memory
 surfaced and the agent declined it, which is the signal almost every
 retrieval-scoring design in this atlas lacks.</p>
-<p><strong>The scope mark is earned with a caveat that matters.</strong>
-<code>scope</code> and <code>scope_id</code> are stored on every entry
-and <code>ScopedMemory</code> applies them on the read path — but by
-filtering in Python after the backend returns, under a comment saying it
-does this "if backend doesn't support scope filtering". A scope applied
-after the query means a <code>limit</code> is applied before the scope
-is, so a scoped read can return fewer rows than it should while
-reporting no error. It is a real boundary and a weaker one than a
-predicate.</p>
+<p><strong>The scope mark is earned, and the two read paths do not carry
+it equally.</strong> <code>ScopedMemory.search</code> discards whatever
+scope a caller passes and forwards the wrapper's own into the backend —
+<code>self.backend.search(query, top_k, category, self.scope, self.scope_id)</code>
+— so the primary read applies the key as a backend predicate, and a
+caller cannot widen it by passing a different argument.</p>
+<p><code>get_by_category</code> is the weaker half, and the code says
+why: the backends do not accept a scope there, so it over-fetches
+<code>top_k * 5</code>, filters
+<code>e.scope == self.scope and e.scope_id == self.scope_id</code> in
+Python, and slices to <code>top_k</code>. The boundary holds — nothing
+out of scope is returned — and the cost is silent under-return: a caller
+whose scope holds fewer than <code>top_k</code> of the category's top
+<code>top_k * 5</code> gets a short list with no error. The 5× margin is
+a deliberate bound on that, and it is a guess rather than a measurement.
+<code>count()</code> is the same shape without the bound, fetching
+<code>top_k=999999</code> and filtering, under a comment calling itself
+a heuristic.</p>
 <p><strong>Correction is record-keyed.</strong> <code>supersedes</code>
 holds the id of the entry being replaced, and the Chroma backend can
 query <code>where={"supersedes": entry_id}</code> to find what replaced
@@ -327,6 +336,44 @@ outcome counters, and a <code>tasks</code> table in
 and <code>utility_score</code> therefore change without a caller doing
 anything, which is the intended design and means the store is not stable
 between reads.</p>
+<h3
+id="memories-cross-agents-and-half-the-trust-surface-crosses-with-them">Memories
+cross agents, and half the trust surface crosses with them</h3>
+<p><code>cognicore/commerce/transfer.py</code> copies memories between
+two backends, either directly (<code>share</code>, <code>clone</code>)
+or through a marketplace with pricing and reputation in
+<code>marketplace.py</code>. What travels is worth reading field by
+field, because the split is not the obvious one.</p>
+<p>The read is unscoped by construction:
+<code>source_backend.search(query='', top_k=top_k, scope=None)</code>
+goes to the raw backend rather than through <code>ScopedMemory</code>,
+so a transfer draws from every scope in the source store at once. Each
+entry is then rebuilt in the target with <code>text</code>,
+<code>category</code>, <code>memory_type</code>,
+<code>confidence</code>, <code>action</code>, a copied
+<code>metadata</code> dict — and
+<code>scope=entry.scope, scope_id=entry.scope_id</code>, the
+<strong>sender's</strong> keys, written into the receiver's store where
+they name a project the receiver does not have.</p>
+<p><strong><code>state</code> is the field that does not travel, and
+that is the right call.</strong> The new <code>MemoryEntry</code> omits
+it, so the dataclass default applies and an imported memory lands as
+<code>candidate</code> rather than inheriting whatever the sender had
+verified. Provenance is stamped alongside — <code>source_agent</code>
+and <code>creation_reason="shared"</code> — so an imported claim is
+identifiable as imported and arrives unverified. That is the shape <a
+href="../portable-handoff/">Portable Handoff</a> argues for, implemented
+in two lines.</p>
+<p><strong><code>confidence</code> does travel, verbatim.</strong> So
+the epistemic state resets and the number attached to it does not: a
+memory the sender scored 0.95 arrives as a <code>candidate</code>
+carrying 0.95, and the utility counters that would have justified the
+score stay behind. Whichever ranker reads confidence sees the sender's
+judgement with none of the sender's evidence, and
+<code>source_agent</code> is a caller-supplied string defaulting to
+<code>"source"</code>. The half of the trust surface that resets is the
+half with a defined vocabulary; the half that carries over is the
+float.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>An MCP launch path (<code>mcp_launch_demo.py</code>), a
 <code>claude-plugin/</code> directory, an HTTP and UI server
@@ -377,8 +424,46 @@ sit beside <code>tests/</code>, several of them provider smoke tests
 (<code>test_groq.py</code>, <code>test_gemini_sdk.py</code>,
 <code>test_quota_15.py</code>), which is scratch work committed rather
 than a suite. Two <code>.db</code> files and a
-<code>validation.log</code> are committed alongside them. I did not run
-anything.</p>
+<code>validation.log</code> are committed alongside them. I ran nothing;
+every figure below is read from a committed run.</p>
+<p><strong>A committed ablation, and it is designed better than most in
+this atlas.</strong> <code>benchmark_output/benchmark_report.md</code>
+records a run at version 0.9.3 with seed 42: six environments, three
+difficulties, five episodes per configuration, 90 task runs per
+condition. The conditions differ in exactly one thing, stated in the
+file — <em>"the <strong>only</strong> variable is whether execution
+history persists between episodes"</em> — with the same agent
+architecture, the same tasks and the same seed on both arms.
+Single-variable ablations of memory against no-memory are what this
+atlas asks for and almost never finds.</p>
+<p><strong>Its own table then undercuts its headline, in two
+places.</strong> The aggregate reads solve rate 1.1% → 12.2% and
+accuracy 12.6% → 19.9%. The per-environment breakdown shows where all of
+it came from: <code>SafetyClassification</code> moves 7% → 73% solve and
+42% → 82% accuracy, <code>RealWorldSafety</code> moves accuracy 33% →
+37%, and the remaining four environments — CodeDebugging,
+RealWorldCodeBugs, Planning, WorkflowAgent — are 0% on both arms, before
+and after. So the headline is one environment of six, and a reader who
+stops at the aggregate learns the opposite of what the breakdown
+says.</p>
+<p>The second is sharper because it is the metric the hypothesis names.
+The stated hypothesis is that <em>"AI agents perform better when they
+can access relevant execution history from previous failures"</em>, and
+the report defines a repeated failure as reusing a strategy that already
+failed on the same root cause. Memory made that <strong>worse</strong>:
+76 repeated failures on the baseline against 91 with memory, 0.84
+against 1.01 per task. The file offers an explanation — memory-enabled
+agents <em>"explore more strategy combinations across episodes"</em> —
+and no evidence for it, then redirects: <em>"The key metric is accuracy,
+which improved significantly."</em> Choosing the metric that moved after
+seeing which moved is the thing an ablation exists to prevent, and this
+one is honest enough to print the number that disagrees with it, which
+is more than most.</p>
+<p>The learning curves are the part to keep. In the one environment that
+moved, <code>SafetyClassification</code> goes 40% → 90% → 100% → 100% →
+100% across five episodes, which is a real accumulation curve;
+<code>RealWorldSafety</code> goes 40% → 60% → 50% → 60% → 40%, which is
+noise. Both are printed.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -475,6 +560,35 @@ strategies, reflections</li>
 <code>analyze_verdicts.py</code>, <code>results/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46"><code class="commit-id" title="4f6bd9d0c8e4c6050504a47eb027791875043d46">4f6bd9d0…</code></a>
+— re-pinned 24 commits and roughly +8,900 lines on. Screened again: two
+auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.cursorrules</code>), one build-time <code>Makefile</code>, two
+unpinned surfaces and two files inside the cooldown; nothing was
+installed and nothing was run. Marks unchanged at
+<code>trust_state</code> and <code>scope_enforced</code>.</p>
+<p><strong>One correction, from an artifact that was committed at the
+previous pin and not opened.</strong> Section 10 listed the repository's
+benchmark <em>files</em> and did not read
+<code>benchmark_output/benchmark_report.md</code>, which holds a
+completed run: version 0.9.3, seed 42, six environments, 90 task runs
+per condition, one variable. Its numbers are now in section 10,
+including the two that cut against its own headline — the aggregate gain
+comes from one environment of six, and repeated failures rose from 76 to
+91 under the condition whose hypothesis is about not repeating
+failures.</p>
+<p>The scope description is also sharpened rather than corrected:
+<code>ScopedMemory.search</code> forwards the wrapper's scope into the
+backend as a predicate, and it is <code>get_by_category</code> that
+over-fetches <code>top_k * 5</code> and filters in Python. The published
+risk read as though both paths were the weak one.</p>
+<p>New at this pin: a commerce layer (<code>cognicore/commerce/</code>)
+that shares and clones memories between backends and prices them in a
+marketplace, described in section 8 — an imported memory resets to
+<code>candidate</code> and keeps the sender's <code>confidence</code>;
+structured experience extraction; Figma and ElevenLabs integrations; and
+a five-layer architecture refactor.</p>
 <p><strong>2026-08-04</strong> — <a
 href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247"><code class="commit-id" title="760cdde49328a6cca8c430256b072cc1c4f48247">760cdde4…</code></a>
 — first reading.</p>

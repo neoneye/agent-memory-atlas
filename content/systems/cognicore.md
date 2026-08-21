@@ -6,13 +6,16 @@ root: ../..
 page_kind: system
 source_name: "cognicore-dev/cognicore-my-openenv"
 source_url: https://github.com/cognicore-dev/cognicore-my-openenv
-revision: 760cdde49328a6cca8c430256b072cc1c4f48247
-revision_url: https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247
-analyzed_at: 2026-08-04
+revision: 4f6bd9d0c8e4c6050504a47eb027791875043d46
+revision_url: https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46
+analyzed_at: 2026-08-21
 capabilities: "trust_state, scope_enforced"
+capability_evidence:
+  trust_state: "the memory entry, defaulted at the schema rather than assigned by a writer | cognicore/memory/base.py:145, cognicore/memory/sqlite_backend.py:48 | `state TEXT DEFAULT 'candidate'` in the DDL and `state: str = \"candidate\"` on the dataclass, moving through `verified`, `active` and `archived`. It is consulted rather than displayed: `sqlite_backend.py:588` counts only entries `WHERE state NOT IN ('archived', 'deleted')` and `:643` applies the same predicate to the category read before its `LIMIT`, so an archived entry is withheld from retrieval rather than merely marked. A separate `correct` flag and eight outcome counters sit on a different axis | tests/test_memory.py, tests/test_advanced_memory.py"
+  scope_enforced: "the read path, pushed into the backend on search and filtered in Python on the category read | cognicore/memory/scoped.py:25-39 | `ScopedMemory.search` discards any scope the caller passes and forwards the wrapper's own — `self.backend.search(query, top_k, category, self.scope, self.scope_id)` — so the primary read carries the key as a backend predicate. `get_by_category` is the weaker half and says so in its comment: the backends do not accept a scope there, so it over-fetches `top_k * 5`, filters `e.scope == self.scope and e.scope_id == self.scope_id` in Python, and slices to `top_k` | tests/test_hybrid_backend.py"
 stack_storage: "sqlite, chroma"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `memory_entry` with a state, a category, a scope pair, provenance columns and eight outcome counters"
   storage: "Swappable backends behind one contract — SQLite, Chroma, TF-IDF, graph, multihop and hybrid; a separate research store for episodes, strategies and reflections"
@@ -24,7 +27,7 @@ matrix:
   background: "A `sleep` module, lifecycle and decay passes, a utility scorer and a task queue table"
   trust: "`state` defaults to `candidate` and moves through `verified`, `active` and `archived`; a separate `correct` flag and positive/negative outcome counters"
   strengths: "A state that begins at `candidate` rather than at true, and a utility ledger that distinguishes a retrieved memory from a used one and from an ignored one"
-  risks: "Scope is filtered in Python after the backend returns, so a limit is applied before the scope is; supersession is record-keyed with no rejected-value record"
+  risks: "The category read over-fetches five times the limit and scopes in Python, so a caller whose scope is sparse in a category under-returns silently; supersession is record-keyed with no rejected-value record; the committed benchmark's headline gain comes from one of six environments"
 ---
 
 ## 1. Executive Summary
@@ -49,13 +52,21 @@ distinction between *retrieved*, *used* and *ignored* is the interesting one —
 it records that a memory surfaced and the agent declined it, which is the signal
 almost every retrieval-scoring design in this atlas lacks.
 
-**The scope mark is earned with a caveat that matters.** `scope` and `scope_id`
-are stored on every entry and `ScopedMemory` applies them on the read path — but
-by filtering in Python after the backend returns, under a comment saying it does
-this "if backend doesn't support scope filtering". A scope applied after the
-query means a `limit` is applied before the scope is, so a scoped read can return
-fewer rows than it should while reporting no error. It is a real boundary and a
-weaker one than a predicate.
+**The scope mark is earned, and the two read paths do not carry it equally.**
+`ScopedMemory.search` discards whatever scope a caller passes and forwards the
+wrapper's own into the backend — `self.backend.search(query, top_k, category,
+self.scope, self.scope_id)` — so the primary read applies the key as a backend
+predicate, and a caller cannot widen it by passing a different argument.
+
+`get_by_category` is the weaker half, and the code says why: the backends do not
+accept a scope there, so it over-fetches `top_k * 5`, filters
+`e.scope == self.scope and e.scope_id == self.scope_id` in Python, and slices to
+`top_k`. The boundary holds — nothing out of scope is returned — and the cost is
+silent under-return: a caller whose scope holds fewer than `top_k` of the
+category's top `top_k * 5` gets a short list with no error. The 5× margin is a
+deliberate bound on that, and it is a guess rather than a measurement. `count()`
+is the same shape without the bound, fetching `top_k=999999` and filtering, under
+a comment calling itself a heuristic.
 
 **Correction is record-keyed.** `supersedes` holds the id of the entry being
 replaced, and the Chroma backend can query `where={"supersedes": entry_id}` to
@@ -185,6 +196,37 @@ maintaining the outcome counters, and a `tasks` table in
 change without a caller doing anything, which is the intended design and means
 the store is not stable between reads.
 
+### Memories cross agents, and half the trust surface crosses with them
+
+`cognicore/commerce/transfer.py` copies memories between two backends, either
+directly (`share`, `clone`) or through a marketplace with pricing and reputation
+in `marketplace.py`. What travels is worth reading field by field, because the
+split is not the obvious one.
+
+The read is unscoped by construction:
+`source_backend.search(query='', top_k=top_k, scope=None)` goes to the raw
+backend rather than through `ScopedMemory`, so a transfer draws from every scope
+in the source store at once. Each entry is then rebuilt in the target with `text`,
+`category`, `memory_type`, `confidence`, `action`, a copied `metadata` dict —
+and `scope=entry.scope, scope_id=entry.scope_id`, the **sender's** keys, written
+into the receiver's store where they name a project the receiver does not have.
+
+**`state` is the field that does not travel, and that is the right call.** The
+new `MemoryEntry` omits it, so the dataclass default applies and an imported
+memory lands as `candidate` rather than inheriting whatever the sender had
+verified. Provenance is stamped alongside — `source_agent` and
+`creation_reason="shared"` — so an imported claim is identifiable as imported and
+arrives unverified. That is the shape [Portable Handoff](../portable-handoff/)
+argues for, implemented in two lines.
+
+**`confidence` does travel, verbatim.** So the epistemic state resets and the
+number attached to it does not: a memory the sender scored 0.95 arrives as a
+`candidate` carrying 0.95, and the utility counters that would have justified the
+score stay behind. Whichever ranker reads confidence sees the sender's judgement
+with none of the sender's evidence, and `source_agent` is a caller-supplied
+string defaulting to `"source"`. The half of the trust surface that resets is the
+half with a defined vocabulary; the half that carries over is the float.
+
 ## 8. Agent Integration
 
 An MCP launch path (`mcp_launch_demo.py`), a `claude-plugin/` directory, an HTTP
@@ -230,8 +272,43 @@ The repository is unusually eval-heavy: `benchmark.py`, `cognicore_bench/`,
 It is also loose at the root: fourteen `test_*.py` files sit beside `tests/`,
 several of them provider smoke tests (`test_groq.py`, `test_gemini_sdk.py`,
 `test_quota_15.py`), which is scratch work committed rather than a suite. Two
-`.db` files and a `validation.log` are committed alongside them. I did not run
-anything.
+`.db` files and a `validation.log` are committed alongside them. I ran nothing;
+every figure below is read from a committed run.
+
+**A committed ablation, and it is designed better than most in this atlas.**
+`benchmark_output/benchmark_report.md` records a run at version 0.9.3 with seed
+42: six environments, three difficulties, five episodes per configuration, 90
+task runs per condition. The conditions differ in exactly one thing, stated in
+the file — *"the **only** variable is whether execution history persists between
+episodes"* — with the same agent architecture, the same tasks and the same seed
+on both arms. Single-variable ablations of memory against no-memory are what this
+atlas asks for and almost never finds.
+
+**Its own table then undercuts its headline, in two places.** The aggregate reads
+solve rate 1.1% → 12.2% and accuracy 12.6% → 19.9%. The per-environment
+breakdown shows where all of it came from: `SafetyClassification` moves 7% → 73%
+solve and 42% → 82% accuracy, `RealWorldSafety` moves accuracy 33% → 37%, and
+the remaining four environments — CodeDebugging, RealWorldCodeBugs, Planning,
+WorkflowAgent — are 0% on both arms, before and after. So the headline is one
+environment of six, and a reader who stops at the aggregate learns the opposite
+of what the breakdown says.
+
+The second is sharper because it is the metric the hypothesis names. The stated
+hypothesis is that *"AI agents perform better when they can access relevant
+execution history from previous failures"*, and the report defines a repeated
+failure as reusing a strategy that already failed on the same root cause. Memory
+made that **worse**: 76 repeated failures on the baseline against 91 with memory,
+0.84 against 1.01 per task. The file offers an explanation — memory-enabled
+agents *"explore more strategy combinations across episodes"* — and no evidence
+for it, then redirects: *"The key metric is accuracy, which improved
+significantly."* Choosing the metric that moved after seeing which moved is the
+thing an ablation exists to prevent, and this one is honest enough to print the
+number that disagrees with it, which is more than most.
+
+The learning curves are the part to keep. In the one environment that moved,
+`SafetyClassification` goes 40% → 90% → 100% → 100% → 100% across five episodes,
+which is a real accumulation curve; `RealWorldSafety` goes 40% → 60% → 50% →
+60% → 40%, which is noise. Both are printed.
 
 ## 11. For Your Own Build
 
@@ -306,5 +383,14 @@ environment with a benchmark programme and a paper directory attached.
   `run_reranking_benchmark.py`, `analyze_verdicts.py`, `results/`
 
 ## History
+
+**2026-08-21** — [`4f6bd9d0c8e4c6050504a47eb027791875043d46`](https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46) — re-pinned 24 commits and roughly +8,900 lines on. Screened again: two auto-run surfaces (`.claude-plugin/`, `.cursorrules`), one build-time `Makefile`, two unpinned surfaces and two files inside the cooldown; nothing was installed and nothing was run. Marks unchanged at `trust_state` and `scope_enforced`.
+
+**One correction, from an artifact that was committed at the previous pin and not opened.** Section 10 listed the repository's benchmark *files* and did not read `benchmark_output/benchmark_report.md`, which holds a completed run: version 0.9.3, seed 42, six environments, 90 task runs per condition, one variable. Its numbers are now in section 10, including the two that cut against its own headline — the aggregate gain comes from one environment of six, and repeated failures rose from 76 to 91 under the condition whose hypothesis is about not repeating failures.
+
+The scope description is also sharpened rather than corrected: `ScopedMemory.search` forwards the wrapper's scope into the backend as a predicate, and it is `get_by_category` that over-fetches `top_k * 5` and filters in Python. The published risk read as though both paths were the weak one.
+
+New at this pin: a commerce layer (`cognicore/commerce/`) that shares and clones memories between backends and prices them in a marketplace, described in section 8 — an imported memory resets to `candidate` and keeps the sender's `confidence`; structured experience extraction; Figma and ElevenLabs integrations; and a five-layer architecture refactor.
+
 
 **2026-08-04** — [`760cdde49328a6cca8c430256b072cc1c4f48247`](https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247) — first reading.

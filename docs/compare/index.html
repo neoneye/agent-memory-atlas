@@ -5519,9 +5519,11 @@ positive/negative outcome counters</td>
 <td>A state that begins at <code>candidate</code> rather than at true,
 and a utility ledger that distinguishes a retrieved memory from a used
 one and from an ignored one</td>
-<td>Scope is filtered in Python after the backend returns, so a limit is
-applied before the scope is; supersession is record-keyed with no
-rejected-value record</td>
+<td>The category read over-fetches five times the limit and scopes in
+Python, so a caller whose scope is sparse in a category under-returns
+silently; supersession is record-keyed with no rejected-value record;
+the committed benchmark's headline gain comes from one of six
+environments</td>
 </tr>
 <tr>
 <td><code>cognis</code></td>
@@ -18387,7 +18389,7 @@ href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f
 <li><a
 href="https://github.com/cognicore-dev/cognicore-my-openenv">cognicore-dev/cognicore-my-openenv</a>
 at <a
-href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247"><code class="commit-id" title="760cdde49328a6cca8c430256b072cc1c4f48247">760cdde4…</code></a></li>
+href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46"><code class="commit-id" title="4f6bd9d0c8e4c6050504a47eb027791875043d46">4f6bd9d0…</code></a></li>
 <li><a
 href="https://github.com/RBKunnela/ALMA-memory">RBKunnela/ALMA-memory</a>
 at <a
@@ -22661,6 +22663,59 @@ for paper dolls satisfies the shorthand without being one — which is the
 useful part, because the same shape describes any interface that
 persists per-agent decoration beside a real memory system and would read
 as memory in a directory listing.</li>
+<li><strong><code>ChrisCanadian/nexus-proof-runtime</code> was examined
+and has no report, and it is the corpus's cleanest counter-example to
+this atlas's most-repeated finding — with the gap in the same
+file.</strong> Apache-2.0, 1,753 lines of Python across eleven modules
+and a test suite, 4 commits since 24 July 2026, at <a
+href="https://github.com/ChrisCanadian/nexus-proof-runtime/commit/6223974ca4d8d2de942f097d3e04e3115a8632a0"><code class="commit-id" title="6223974ca4d8d2de942f097d3e04e3115a8632a0">6223974c…</code></a>.
+It is a receipt-backed execution layer for LLM tools, and the README
+rules itself out of scope before anyone else can: it contains <em>"no
+Nexus Synapse production source, memory implementation, SSR selection
+logic, prompts, identity system, live schemas, provider configuration,
+or operational data."</em> That is accurate — <code>ReceiptStore</code>
+describes itself as an <em>"SQLite evidence store. It records facts, not
+model-authored success claims"</em>, and a receipt of an execution is an
+observation, not a claim a later reading could contradict. Same call as
+<code>Corvus-226/RunTrace</code>. <strong>The reason to record it is the
+executor.</strong> Every path through <code>_execute_locked</code> ends
+at <code>self._record(...)</code>: <code>SUCCEEDED</code>,
+<code>FAILED</code>, <code>TIMED_OUT</code>, <code>CANCELLED</code>, and
+<code>CANCELLED_BEFORE_START</code> for a call cancelled before the
+handler ran — each with an <code>error_code</code>, each written to the
+same <code>receipts</code> table with the same columns, each bound to an
+<code>executions</code> row whose
+<code>UNIQUE (idempotency_key, principal_id, scope, tool_name, tool_version, arguments_hash)</code>
+makes a retry a replay rather than a second attempt. There is no early
+return that skips the record. This atlas finds the opposite everywhere —
+<a href="../systems/aipass/">AIPass</a>'s governance engine logs the
+memory it surfaced and never the one it declined, <a
+href="../systems/mem0sharp/">Mem0Sharp</a>'s admission gate carries a
+<code>Reason</code> the service reads as a boolean and drops, <a
+href="../systems/agentdatabase/">AgentDatabase</a> records mutations and
+not refusals — and here refusal and success are the same row shape.
+<strong>The second mechanism is the <code>ClaimGate</code></strong>,
+which is <a href="../patterns/evidence-before-belief/">evidence before
+belief</a> applied at the narration boundary: a model may claim
+<code>tool_succeeded</code> or <code>artifact_exists</code>, and the
+gate resolves the claim against the runtime's own receipt or artifact
+and against the <em>host-owned</em> principal and scope, returning typed
+codes — <code>UNVERIFIED_TOOL_SUCCESS</code>,
+<code>RECEIPT_PRINCIPAL_MISMATCH</code>,
+<code>RECEIPT_SCOPE_MISMATCH</code>,
+<code>MISSING_OR_TAMPERED_ARTIFACT</code> — so an application never
+presents a model's assertion as fact without a runtime-owned record
+behind it. <strong>And the gap is in the same file, one function
+up.</strong> <code>ToolExecutor.execute</code> raises rather than
+records for everything it refuses before starting:
+<code>IDEMPOTENCY_KEY_REQUIRED</code>,
+<code>UNKNOWN_TOOL_VERSION</code>, a policy denial
+(<code>decision.code</code>) and <code>INVALID_ARGUMENTS</code> all
+leave no row. So the runtime whose purpose is durable proof keeps a
+complete record of the calls it ran and none of the calls it declined to
+run — the same asymmetry, in the one repository built to make it
+impossible, and the fix is that the receipt table already has a
+<code>status</code> column and a <code>facts_json</code> blob.</li>
 <li><strong><code>fynnfluegge/agtx</code> was examined and has no
 report: it is the <code>beads</code> boundary in its purest form, and
 its trust gate is worth the entry on its own.</strong> Apache-2.0,

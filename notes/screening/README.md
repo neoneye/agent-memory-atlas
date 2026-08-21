@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 59 |
+| Repositories with an auto-run surface (`RUNS`) | 60 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 53 |
 | Repositories with build-time execution (`EXEC`) | 132 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
@@ -42,6 +42,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`claude-mem`](../../content/systems/claude-mem.md) | `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
+| [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |
