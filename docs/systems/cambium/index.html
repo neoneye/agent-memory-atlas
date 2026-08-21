@@ -110,9 +110,9 @@ passed'.</p>
               <strong>KimGLee/Cambium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e" title="7181c94e9676f32aacc800030c0c83c3579e315e">
+            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244" title="21bada219501a05958c6585e703eb36ceaf8d244">
               <span>Analyzed revision</span>
-              <code>7181c94e…</code>
+              <code>21bada21…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -151,10 +151,10 @@ href="../terse-memory/">TERSE Memory</a> and <a
 href="../memex-zero-rag/">MeMex Zero-RAG</a> are: the durable thing is
 an adopter's Markdown vault, and what this repository contributes is the
 correction, provenance, staleness and evidence machinery around it —
-5,687 lines of Python and 6,453 lines of normative kernel text,
-inspectable at a pinned commit. Read it as a governance layer, not a
-component. The scope caveat is real and is restated wherever a claim
-depends on it.</p>
+67,280 lines of Python across 58 tools, 45,822 lines of tests, and
+10,121 lines of normative kernel text across 164 modules, inspectable at
+a pinned commit. Read it as a governance layer, not a component. The
+scope caveat is real and is restated wherever a claim depends on it.</p>
 <p><strong>Its central idea is one this atlas keeps asking for and
 rarely finds: a check that refuses to return a pass it has not
 earned.</strong> Run against its own repository,
@@ -187,14 +187,14 @@ rather than write a ledger that no longer parses</strong>, writes
 atomically, and rejects a page whose batch does not match the
 delta's.</p>
 <p>Reservations. The repository ships no corpus, so every claim about
-maintaining one over time is unexercised end to end, and there are 73
-lines of tests covering one of twelve scripts. Supersession keeps the
-relationship and the reason and is keyed on a page rather than a value,
-so it is history rather than a <a
+maintaining one over time is unexercised end to end. Supersession keeps
+the relationship and the reason and is keyed on a page rather than a
+value, so it is history rather than a <a
 href="../../patterns/rejected-value-tombstone/">tombstone</a>. And most
-of the 6,453 kernel lines are <code>MUST</code>/<code>MUST NOT</code>
+of the 10,121 kernel lines are <code>MUST</code>/<code>MUST NOT</code>
 prose addressed to an agent — the boundary between that prose and the
-twelve scripts is the main thing to measure before adopting.</p>
+tooling that can refuse is the main thing to measure before
+adopting.</p>
 <p>Licensing is scoped and unusually careful: Apache-2.0 for everything
 under <code>Tools/</code>, CC-BY-4.0 for the standards and profile
 materials, spelled out per path in <code>LICENSE.md</code>.</p>
@@ -246,17 +246,14 @@ deliberately kept independent of <code>Kxx</code>. Read Sets bound which
 sources a route may load. Runtime Cards are compiled shortcuts, and the
 ordering rule is stated plainly: <em>"Normative source text always
 wins."</em></p>
-<p><code>Tools/</code> is the enforceable part:
-<code>check_proof.py</code> (1,173 lines), <code>stamp_cards.py</code>
-(743), <code>compose_vocab.py</code> (702), <code>kblib.py</code> (574),
-<code>check_profile.py</code> (557),
-<code>check_residual_content.py</code> (520),
-<code>check_freshness.py</code> (304), <code>check_links.py</code>
-(268), <code>apply_delta.py</code> (245), <code>check_vocab.py</code>
-(242), <code>duplicate_check.py</code> (216), <code>check_moc.py</code>
-(143). Nine schema templates cover the audit plan, coverage ledger and
-delta, execution defaults, progress ledger, receipts, residual-scan
-config, terminal proof and watermark.</p>
+<p><code>Tools/</code> is the enforceable part — 58 Python modules,
+67,280 lines — led by the shared parser <code>kblib.py</code> (3,900
+lines), the terminal-proof gate <code>check_proof.py</code> (2,867),
+<code>stamp_cards.py</code> (1,617), the governed writer
+<code>apply_delta.py</code> (1,069) and the vocabulary gate
+<code>check_vocab.py</code> (469). Schema templates cover the audit
+plan, coverage ledger and delta, execution defaults, progress ledger,
+receipts, residual-scan config, terminal proof and watermark.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>Python 3 and no dependencies — <code>kblib.py</code> implements a
 restricted YAML subset parser rather than taking a library, and the
@@ -270,6 +267,52 @@ composes a vocabulary, and until then <code>check_vocab.py</code>
 correctly declines to check anything.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
+<h3
+id="the-obligation-to-read-is-not-evidence-that-anything-arrived">The
+obligation to read is not evidence that anything arrived</h3>
+<p><code>kernel/K13 Task Runtime and Execution Control/19 Card Context Activation and Read-back Delivery.md</code>
+draws a distinction almost nothing in this corpus draws. A Task Contract
+names the routes, Cards, Read Sets and modules a worker is required or
+permitted to load — and the module's first paragraph refuses to let that
+stand as delivery: <em>"The Task Contract says which routes, Cards, Read
+Sets, and modules are required or reachable; it is not evidence that a
+later Agent received them."</em></p>
+<p>What supplies the evidence is a content-addressed <strong>Card
+Activation Bundle</strong>: full bytes plus hashes for the bootstrap
+Read Set and every selected Card, each Card's paired Read Set hash with
+<code>source_hash</code> equal to <code>compiled_source_hash</code>
+<em>"so unacknowledged semantic drift blocks activation"</em>, and a
+<code>card_bundle_sha256</code> stored in the admission receipt. The
+five-field reading plan is projected out of the contract and hashed
+separately as <code>reading_plan_sha256</code>, so the reading envelope
+has an identity independent of the contract that produced it.
+<code>queued -&gt; open</code> recompiles the bundle from current bytes
+and requires exact equality; historical replay validates under the
+producer era rather than reinterpreting an opened batch with new Card
+bytes.</p>
+<p>Delivery itself is bound to a session. The MCP server assigns one
+non-reused ID per initialized session, passes it to every child tool as
+<code>CAMBIUM_EXECUTION_CONTEXT_ID</code>, and records
+<code>delivery_mode: host-context-injection</code>,
+<code>delivery_assurance: machine-delivered</code> and
+<code>execution_context_id: mcp:&lt;session-id&gt;</code> on a
+successful admission — and <em>"the same MCP session must consume the
+admission at <code>queued -&gt; open</code>; another session receives a
+different ID and is refused."</em> A direct CLI run still carries the
+whole bundle and records <code>cli-tool-result</code> and
+<code>degraded</code>, with the rule stated in the standard: a runtime
+<em>"MUST NOT claim machine-enforced Card delivery from that degraded
+record."</em></p>
+<p><strong>The sentence that makes this worth copying is the one that
+gives ground.</strong> <em>"This proves that the exact tool-result
+payload entered the named host session. It does not authenticate the
+human/Agent identity or prove cognition."</em> And earlier: <em>"this
+module does not claim that a model understood or obeyed either
+one."</em> Every system in this atlas that injects memory into a prompt
+asserts, by silence, that the injection worked; this one separates
+<em>the material was selected</em>, <em>the material entered this
+context</em>, and <em>the model acted on it</em> into three claims,
+evidences the second, and declines the third in writing.</p>
 <h3 id="a-run-that-checked-nothing-says-so">A run that checked nothing
 says so</h3>
 <p><code>check_freshness.py</code> reads frontmatter, skips retired and
@@ -484,18 +527,39 @@ which prevents silent deletion and does not prevent re-assertion.</li>
 <li><strong>Ledger status is updated in place</strong>, so the
 append-only material is the verification register rather than a mutation
 history.</li>
-<li><strong>73 lines of tests over one of twelve scripts.</strong></li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>Tools/tests/</code> contains one file of 73 lines covering
-<code>check_links.py</code>. It runs in 0.15s and its three tests pass.
-The other eleven scripts — including the 1,173-line terminal-proof gate
-that decides whether a corpus may be called complete, and the delta
-applier that is the only thing permitted to write the canonical ledger —
-have none.</p>
+<p><code>Tools/tests/</code> contains <strong>66 test modules and 45,822
+lines</strong> — roughly seven lines of test for every ten lines of tool
+— covering the gate runtime, the governed writer, the queue lifecycle,
+profile admission, residual scanning, template parity, the CLI-contract
+compiler and the MCP server. I did not run them; the screen found one
+build-time <code>Makefile</code> and no dependency manifest of any kind,
+so nothing was installed.</p>
 <p>There is no benchmark and nothing to benchmark; the outputs are
 conformance verdicts, not rankings.</p>
+<p><strong>Two suites are worth reading for their shape rather than
+their coverage.</strong> <code>test_vocab_artifact_integrity.py</code>
+is built around the project's own thesis that <em>nothing was
+checkable</em> must not read as <em>everything passed</em>, and its
+discriminating case says so directly:
+<code>test_a_truncated_vocabulary_does_not_pass_the_same_page</code> — a
+page that a real vocabulary flags as illegal must still fail when the
+vocabulary is truncated, rather than passing because the rule went
+missing. Three sibling cases pin the other ways an artifact can be
+vacuous: empty bytes, an empty field set, and unparseable bytes, each
+refused rather than skipped.</p>
+<p><code>test_card_activation.py</code> covers the delivery mechanism
+described in section 4 from the negative side in nine of its twelve
+cases:
+<code>test_unregistered_extra_selected_card_path_is_rejected</code>,
+<code>test_embedded_byte_tampering_is_detected</code>,
+<code>test_r01_and_semantic_card_currency_fail_closed</code>,
+<code>test_open_consumes_only_the_same_machine_delivery_context</code>
+and <code>test_resume_refuses_card_bytes_that_drifted_after_open</code>.
+A delivery-evidence mechanism whose tests are mostly about what must be
+refused is the right ratio for the claim it makes.</p>
 <p>What can be measured is self-application, and it was, at this
 commit:</p>
 <div class="table-wrap"><table>
@@ -659,11 +723,50 @@ parser <code>kblib.py</code>.</li>
 <code>receipt.template.jsonl</code>, <code>terminal_proof</code>,
 <code>audit_plan</code>, <code>watermark</code>,
 <code>execution_defaults</code>, <code>residual_scan_config</code>.</li>
-<li>Tests: <code>Tools/tests/test_check_links.py</code>.</li>
+<li>Tests: <code>Tools/tests/</code> — 66 modules, notably
+<code>test_vocab_artifact_integrity.py</code> (vacuous-pass refusals),
+<code>test_card_activation.py</code> (delivery evidence, mostly negative
+cases), <code>test_metadata_gate_runtime.py</code> (the actor-role
+refusal) and <code>test_mcp_server.py</code> (the static import-set
+assertion).</li>
 <li>Licensing: <code>LICENSE.md</code>, <code>LICENSES/</code>,
 <code>NOTICE</code>, <code>ATTRIBUTION.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244"><code class="commit-id" title="21bada219501a05958c6585e703eb36ceaf8d244">21bada21…</code></a>
+— re-pinned 22 commits on. Screened again: no auto-run surface, one
+build-time <code>Makefile</code>, no dependency manifest, nothing
+installed. Marks unchanged.</p>
+<p><strong>A correction first.</strong> This report said
+<code>Tools/tests/</code> held <em>"one file of 73 lines covering
+<code>check_links.py</code>"</em> and listed the ratio of tooling to
+tests among the project's risks. At the pin it described, the directory
+held 62 test modules and 44,734 lines; at this pin, 66 and 45,822. The
+claim was wrong when written and survived a re-pin that rewrote the
+executive summary without revisiting section 10 — the same shape
+recorded for <a href="../agent-mesh/">Agent Mesh</a> in the overview's
+history, where the sections nobody edited kept the old position. Both
+capability-evidence records also carried "no case was located at this
+pin"; <code>test_vocab_artifact_integrity.py</code> and
+<code>test_metadata_gate_runtime.py:121</code> are those cases, and the
+records now name them. The architecture figures were recounted at the
+same time: 58 tools and 67,280 lines of Python, 164 kernel modules and
+10,121 lines of normative text.</p>
+<p><strong>New at this pin: delivery evidence, in section 4.</strong>
+<code>K13/19 Card Context Activation and Read-back Delivery</code>
+separates the reading obligation from proof that the bytes arrived,
+hashes the five-field reading plan independently of the contract, binds
+a machine-delivered admission to one MCP session ID that
+<code>queued -&gt; open</code> must match, degrades a CLI run to
+<code>cli-tool-result</code> and forbids claiming machine-enforced
+delivery from it — and states in the standard that none of this proves
+cognition. <code>test_card_activation.py</code> covers it with nine
+refusal cases out of twelve. Alongside it, Batch Review Requirements
+became an executable per-batch protocol whose expansion is deterministic
+and carried as <code>review_requirement_set_sha256</code>, so an agent
+starts a batch with its judgment obligations in context <em>"rather than
+discovering them at refusal"</em>.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e"><code class="commit-id" title="7181c94e9676f32aacc800030c0c83c3579e315e">7181c94e…</code></a>
 — re-pinned 127 commits on, 272 files and +73,434 lines, across

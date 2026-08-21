@@ -6,16 +6,16 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
-revision: 7181c94e9676f32aacc800030c0c83c3579e315e
-revision_url: https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e
+revision: 21bada219501a05958c6585e703eb36ceaf8d244
+revision_url: https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244
 analyzed_at: 2026-08-20
 capabilities: "trust_state, human_review"
 capability_evidence:
-  trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/ — the check ships with the distribution and runs in `make`; no case named for a status axis was located at this pin"
-  human_review: "the gate runtime and the applier that only an Integrator may run | Tools/apply_metadata_transition.py, Tools/metadata_gate_runtime.py, Tools/record_gate_attestation.py | `apply_metadata_transition --apply` is restricted to the Integrator, validates a typed current-catalog producer receipt before acting, compare-and-swaps Profile, K00, metadata-contract, page and Coverage under a shared runtime writer lock, and restores both Coverage and the exact page before-image on a pre-commit failure; `record_gate_attestation.py` files the human attestation the gate consumes | Tools/tests/ — no case exercising the Integrator restriction was located at this pin"
+  trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/test_vocab_artifact_integrity.py — `test_a_truncated_vocabulary_does_not_pass_the_same_page` is the discriminating case: a page the real vocabulary flags must not pass against a truncated one, so a degraded artifact cannot read as a clean run; `test_empty_bytes_are_refused`, `test_an_empty_field_set_is_refused` and `test_unparseable_bytes_are_refused` pin the other three ways an artifact can be vacuous"
+  human_review: "the gate runtime and the applier that only an Integrator may run | Tools/apply_metadata_transition.py, Tools/metadata_gate_runtime.py, Tools/record_gate_attestation.py | `apply_metadata_transition --apply` is restricted to the Integrator, validates a typed current-catalog producer receipt before acting, compare-and-swaps Profile, K00, metadata-contract, page and Coverage under a shared runtime writer lock, and restores both Coverage and the exact page before-image on a pre-commit failure; `record_gate_attestation.py` files the human attestation the gate consumes | Tools/tests/test_metadata_gate_runtime.py:121 `test_manual_producer_rejects_wrong_role_and_value`, plus the actor-role paths through `Tools/tests/test_adopt_standards.py`"
 stack_storage: "files"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A Markdown page in an adopter's vault, carrying frontmatter with four independent status axes; Cambium ships no pages"
   storage: "None of its own — the corpus is the adopter's vault; Cambium adds a state layer of ledgers, receipts and a watermark, all as templates"
@@ -27,7 +27,7 @@ matrix:
   background: "A maintenance run that produces candidate lists; candidates never change a status axis by themselves"
   trust: "Four independent status axes that must not be merged, an evidence-maturity ladder from signal to validated, and an explicit ban on automated promotion"
   strengths: "Checks that distinguish nothing-checkable from passed, a governed write path an LLM cannot hand-edit, and a filled example profile that binds every interface slot"
-  risks: "The repository selects no profile of its own, so vocabulary and freshness cannot be demonstrated on it; 5,687 lines of checking tooling against 73 lines of tests"
+  risks: "The repository selects no profile of its own, so vocabulary and freshness cannot be demonstrated on it, and it ships no corpus, so maintaining one over time is unexercised end to end"
 ---
 
 ## 1. Executive Summary
@@ -44,8 +44,9 @@ interface looks like answered.
 It is in this atlas for the same reason [TERSE Memory](../terse-memory/) and
 [MeMex Zero-RAG](../memex-zero-rag/) are: the durable thing is an adopter's
 Markdown vault, and what this repository contributes is the correction,
-provenance, staleness and evidence machinery around it — 5,687 lines of Python
-and 6,453 lines of normative kernel text, inspectable at a pinned commit. Read it
+provenance, staleness and evidence machinery around it — 67,280 lines of Python
+across 58 tools, 45,822 lines of tests, and 10,121 lines of normative kernel text
+across 164 modules, inspectable at a pinned commit. Read it
 as a governance layer, not a component. The scope caveat is real and is restated
 wherever a claim depends on it.
 
@@ -79,14 +80,13 @@ writing and **aborts rather than write a ledger that no longer parses**, writes
 atomically, and rejects a page whose batch does not match the delta's.
 
 Reservations. The repository ships no corpus, so every claim about maintaining
-one over time is unexercised end to end, and there are 73 lines of tests covering
-one of twelve scripts. Supersession keeps the
+one over time is unexercised end to end. Supersession keeps the
 relationship and the reason and is keyed on a page rather than a value, so it is
 history rather than a
-[tombstone](../../patterns/rejected-value-tombstone/). And most of the 6,453
+[tombstone](../../patterns/rejected-value-tombstone/). And most of the 10,121
 kernel lines are `MUST`/`MUST NOT` prose addressed to an agent — the boundary
-between that prose and the twelve scripts is the main thing to measure before
-adopting.
+between that prose and the tooling that can refuse is the main thing to measure
+before adopting.
 
 Licensing is scoped and unusually careful: Apache-2.0 for everything under
 `Tools/`, CC-BY-4.0 for the standards and profile materials, spelled out per path
@@ -145,14 +145,12 @@ status, wiki links, writing, expression, quality assurance. Twelve runtime route
 shortcuts, and the ordering rule is stated plainly: *"Normative source text always
 wins."*
 
-`Tools/` is the enforceable part: `check_proof.py` (1,173 lines),
-`stamp_cards.py` (743), `compose_vocab.py` (702), `kblib.py` (574),
-`check_profile.py` (557), `check_residual_content.py` (520),
-`check_freshness.py` (304), `check_links.py` (268), `apply_delta.py` (245),
-`check_vocab.py` (242), `duplicate_check.py` (216), `check_moc.py` (143). Nine
-schema templates cover the audit plan, coverage ledger and delta, execution
-defaults, progress ledger, receipts, residual-scan config, terminal proof and
-watermark.
+`Tools/` is the enforceable part — 58 Python modules, 67,280 lines — led by the
+shared parser `kblib.py` (3,900 lines), the terminal-proof gate `check_proof.py`
+(2,867), `stamp_cards.py` (1,617), the governed writer `apply_delta.py` (1,069)
+and the vocabulary gate `check_vocab.py` (469). Schema templates cover the audit
+plan, coverage ledger and delta, execution defaults, progress ledger, receipts,
+residual-scan config, terminal proof and watermark.
 
 ### Deployment and ergonomics
 
@@ -167,6 +165,47 @@ inert until an adopter answers the profile interface and composes a vocabulary,
 and until then `check_vocab.py` correctly declines to check anything.
 
 ## 4. Essential Implementation Paths
+
+### The obligation to read is not evidence that anything arrived
+
+`kernel/K13 Task Runtime and Execution Control/19 Card Context Activation and
+Read-back Delivery.md` draws a distinction almost nothing in this corpus draws.
+A Task Contract names the routes, Cards, Read Sets and modules a worker is
+required or permitted to load — and the module's first paragraph refuses to let
+that stand as delivery: *"The Task Contract says which routes, Cards, Read Sets,
+and modules are required or reachable; it is not evidence that a later Agent
+received them."*
+
+What supplies the evidence is a content-addressed **Card Activation Bundle**:
+full bytes plus hashes for the bootstrap Read Set and every selected Card, each
+Card's paired Read Set hash with `source_hash` equal to `compiled_source_hash`
+*"so unacknowledged semantic drift blocks activation"*, and a
+`card_bundle_sha256` stored in the admission receipt. The five-field reading plan
+is projected out of the contract and hashed separately as `reading_plan_sha256`,
+so the reading envelope has an identity independent of the contract that produced
+it. `queued -> open` recompiles the bundle from current bytes and requires exact
+equality; historical replay validates under the producer era rather than
+reinterpreting an opened batch with new Card bytes.
+
+Delivery itself is bound to a session. The MCP server assigns one non-reused ID
+per initialized session, passes it to every child tool as
+`CAMBIUM_EXECUTION_CONTEXT_ID`, and records `delivery_mode:
+host-context-injection`, `delivery_assurance: machine-delivered` and
+`execution_context_id: mcp:<session-id>` on a successful admission — and *"the
+same MCP session must consume the admission at `queued -> open`; another session
+receives a different ID and is refused."* A direct CLI run still carries the
+whole bundle and records `cli-tool-result` and `degraded`, with the rule stated
+in the standard: a runtime *"MUST NOT claim machine-enforced Card delivery from
+that degraded record."*
+
+**The sentence that makes this worth copying is the one that gives ground.**
+*"This proves that the exact tool-result payload entered the named host session.
+It does not authenticate the human/Agent identity or prove cognition."* And
+earlier: *"this module does not claim that a model understood or obeyed either
+one."* Every system in this atlas that injects memory into a prompt asserts, by
+silence, that the injection worked; this one separates *the material was
+selected*, *the material entered this context*, and *the model acted on it* into
+three claims, evidences the second, and declines the third in writing.
 
 ### A run that checked nothing says so
 
@@ -366,18 +405,38 @@ Gaps:
   deletion and does not prevent re-assertion.
 - **Ledger status is updated in place**, so the append-only material is the
   verification register rather than a mutation history.
-- **73 lines of tests over one of twelve scripts.**
 
 ## 10. Tests, Evals, and Benchmarks
 
-`Tools/tests/` contains one file of 73 lines covering `check_links.py`. It runs
-in 0.15s and its three tests pass. The other eleven scripts — including the
-1,173-line terminal-proof gate that decides whether a corpus may be called
-complete, and the delta applier that is the only thing permitted to write the
-canonical ledger — have none.
+`Tools/tests/` contains **66 test modules and 45,822 lines** — roughly seven
+lines of test for every ten lines of tool — covering the gate runtime, the
+governed writer, the queue lifecycle, profile admission, residual scanning,
+template parity, the CLI-contract compiler and the MCP server. I did not run
+them; the screen found one build-time `Makefile` and no dependency manifest of
+any kind, so nothing was installed.
 
 There is no benchmark and nothing to benchmark; the outputs are conformance
 verdicts, not rankings.
+
+**Two suites are worth reading for their shape rather than their coverage.**
+`test_vocab_artifact_integrity.py` is built around the project's own thesis that
+*nothing was checkable* must not read as *everything passed*, and its
+discriminating case says so directly:
+`test_a_truncated_vocabulary_does_not_pass_the_same_page` — a page that a real
+vocabulary flags as illegal must still fail when the vocabulary is truncated,
+rather than passing because the rule went missing. Three sibling cases pin the
+other ways an artifact can be vacuous: empty bytes, an empty field set, and
+unparseable bytes, each refused rather than skipped.
+
+`test_card_activation.py` covers the delivery mechanism described in section 4
+from the negative side in nine of its twelve cases:
+`test_unregistered_extra_selected_card_path_is_rejected`,
+`test_embedded_byte_tampering_is_detected`,
+`test_r01_and_semantic_card_currency_fail_closed`,
+`test_open_consumes_only_the_same_machine_delivery_context` and
+`test_resume_refuses_card_bytes_that_drifted_after_open`. A delivery-evidence
+mechanism whose tests are mostly about what must be refused is the right ratio
+for the claim it makes.
 
 What can be measured is self-application, and it was, at this commit:
 
@@ -490,10 +549,19 @@ which have neither.
 - Schemas: `Tools/schemas/` — `coverage_ledger`, `coverage_delta`,
   `progress_ledger`, `receipt.template.jsonl`, `terminal_proof`, `audit_plan`,
   `watermark`, `execution_defaults`, `residual_scan_config`.
-- Tests: `Tools/tests/test_check_links.py`.
+- Tests: `Tools/tests/` — 66 modules, notably `test_vocab_artifact_integrity.py`
+  (vacuous-pass refusals), `test_card_activation.py` (delivery evidence, mostly
+  negative cases), `test_metadata_gate_runtime.py` (the actor-role refusal) and
+  `test_mcp_server.py` (the static import-set assertion).
 - Licensing: `LICENSE.md`, `LICENSES/`, `NOTICE`, `ATTRIBUTION.md`.
 
 ## History
+
+**2026-08-20** — [`21bada219501a05958c6585e703eb36ceaf8d244`](https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244) — re-pinned 22 commits on. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. Marks unchanged.
+
+**A correction first.** This report said `Tools/tests/` held *"one file of 73 lines covering `check_links.py`"* and listed the ratio of tooling to tests among the project's risks. At the pin it described, the directory held 62 test modules and 44,734 lines; at this pin, 66 and 45,822. The claim was wrong when written and survived a re-pin that rewrote the executive summary without revisiting section 10 — the same shape recorded for [Agent Mesh](../agent-mesh/) in the overview's history, where the sections nobody edited kept the old position. Both capability-evidence records also carried "no case was located at this pin"; `test_vocab_artifact_integrity.py` and `test_metadata_gate_runtime.py:121` are those cases, and the records now name them. The architecture figures were recounted at the same time: 58 tools and 67,280 lines of Python, 164 kernel modules and 10,121 lines of normative text.
+
+**New at this pin: delivery evidence, in section 4.** `K13/19 Card Context Activation and Read-back Delivery` separates the reading obligation from proof that the bytes arrived, hashes the five-field reading plan independently of the contract, binds a machine-delivered admission to one MCP session ID that `queued -> open` must match, degrades a CLI run to `cli-tool-result` and forbids claiming machine-enforced delivery from it — and states in the standard that none of this proves cognition. `test_card_activation.py` covers it with nine refusal cases out of twelve. Alongside it, Batch Review Requirements became an executable per-batch protocol whose expansion is deterministic and carried as `review_requirement_set_sha256`, so an agent starts a batch with its judgment obligations in context *"rather than discovering them at refusal"*.
 
 **2026-08-20** — [`7181c94e9676f32aacc800030c0c83c3579e315e`](https://github.com/KimGLee/Cambium/commit/7181c94e9676f32aacc800030c0c83c3579e315e) — re-pinned 127 commits on, 272 files and +73,434 lines, across `Tools/` (137 files), `profiles/` and `kernel/`. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest of any kind, so nothing was installed. Marks unchanged at `trust_state` and `human_review`. **One published claim in this report stopped being true, and two mechanisms are new.**
 
