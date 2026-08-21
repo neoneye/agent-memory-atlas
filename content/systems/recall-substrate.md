@@ -8,18 +8,21 @@ source_name: "H-XX-D/recall-memory-substrate"
 source_url: https://github.com/H-XX-D/recall-memory-substrate
 revision: b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 revision_url: https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89
-analyzed_at: 2026-08-09
-capabilities: "trust_state"
+analyzed_at: 2026-08-20
+capabilities: "trust_state, negative_eval"
+capability_evidence:
+  trust_state: "how a claim was established, on the cell and consulted by the write gate | src/types.ts:112, src/firewall.ts:92, src/adapters.ts, src/programs.ts, src/local-import.ts | `verification` is `unverified | checked | tested | external`, set at build time from the proposal and raised to `checked` by adapters, analysis, import and programs. It is epistemic rather than lifecycle and it does work: `attenuateConfidence` treats `checked`, `tested` or `external` as support, so an unsupported high-confidence claim is capped and a verified one is not. `status` (`active | superseded | annexed`) carries lifecycle on a separate axis and `signatureStatus` (`unsigned | signed | verified`) carries attestation on a third | src/firewall.test.ts:93 asserts a `checked` proposal keeps 0.9 where an unsupported one is capped; src/mcp-server.test.ts:718 pins the four-value enum on the tool schema"
+  negative_eval: "cross-project retrieval, asserted as an exact result set | src/subgraph.test.ts:157, src/pages.test.ts:290, src/local-import.test.ts:195 | `subgraphCells: project filter matches scope.project` seeds one cell in `proj-a` and a second, newer, otherwise-matching cell in `proj-b`, filters on `proj-a`, and asserts `results.length === 1` with `results[0].title === \"in-proj\"` — the out-of-project cell exists, matches, ranks higher by recency, and is asserted absent, with the in-project cell as the positive control in the same assertion. `getRecallPage honors since together with project` repeats it on the page path across both the SQL push-down and the app-side fallback, asserting the two agree. On the write side, a hyperedge with a member outside the selected project is counted partial and `local.listHyperedges(10).length === 0` | the three tests are the mechanism"
 stack_storage: "sqlite"
 stack_retrieval: "graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A cell — a typed claim from a ten-kind vocabulary with a ten-position score legend and signed edges"
   storage: "SQLite per project, registered in a projects table, with a read-only federated union across them"
   retrieval: "Compiled and pushed into every turn rather than queried, ranked by evidence mass and graph structure"
   write: "An admission firewall — validate, screen for secrets, attenuate unsupported confidence, then calibrate by actor"
   update_delete: "Supersede chains kept in a lineage array; contradiction is a signed edge, not a deletion"
-  scoping: "A project and tenant pair on every cell, with isolation actually provided by separate database files"
+  scoping: "A project and tenant pair on every cell, with `project` a generated indexed column and a real SQL predicate — used by the subgraph and page reads, never by the compile path that pushes memory into the turn"
   integration: "Claude Code and Codex hooks that hold the turn open until memory was consulted or updated"
   background: "Standing programs and an operator that decays currency and salience between calls"
   trust: "A four-value verification field, plus a Brier-scored per-actor calibration factor attenuating effective confidence"
@@ -186,13 +189,22 @@ the signed edges, which is what makes contradiction a ranking force rather than
 a flag: a cell with three `contradicts` edges pointing at it loses effective
 score without anything having to mark it wrong.
 
-Scope is a `{ project, tenant }` pair on every cell and a `sensitivity` field
-described as gating scope, but the isolation that actually holds is the
-per-project database file plus the graph-slug prefixing in the federated union.
-No stored scope key is applied as a read-path predicate, so `scope_enforced` is
-withheld — the boundary is structural, as it is in [Kage](../kage/) and
-[Shodh-Memory](../shodh-memory/), and the field that names it is not the thing
-enforcing it.
+Scope is a `{ project, tenant }` pair on every cell, and `project` is not
+decorative: it is a generated, indexed SQL column, `activeWhere` pushes
+`project = ?` into the query, `activeByProject` wraps it, and both
+`subgraphCells` and `getRecallPage` filter on it with committed tests. The MCP
+tools `recall_subgraph` and `recall_page` expose it to the agent as an optional
+argument.
+
+**`scope_enforced` is withheld anyway, and the reason is which caller uses it.**
+`src/compile.ts` — the path that assembles the context block and pushes it into
+every turn — contains no reference to `project` at all. So the read an agent
+performs deliberately can be scoped, and the read it receives whether it asked or
+not cannot be. Isolation in practice is the per-project database file plus the
+graph-slug prefixing in the federated union, which is the structural boundary
+[Kage](../kage/) and [Shodh-Memory](../shodh-memory/) also rely on. A predicate
+that exists, is indexed, is tested, and is absent from the default path is a
+sharper thing than a scope stored as a tag, and it is still not the mark.
 
 ## 7. Write Mechanics
 
@@ -253,9 +265,19 @@ advertises a review state the system cannot enter.
 background executions rather than mutations to memory. The receipt hook writes
 session state files rather than a durable store-level log.
 
-**Tombstone, bitemporal, negative eval — no.** There is no rejected-value
-record, no validity axis distinct from `createdAt`/`updatedAt`, and no committed
-case asserting that particular material must not be retrieved.
+**Negative eval — awarded.** `subgraph.test.ts` seeds a cell in `proj-a` and a
+newer, otherwise-matching cell in `proj-b`, filters on `proj-a`, and asserts the
+result set is exactly one cell and that it is the in-project one — the excluded
+cell exists, matches every other predicate and ranks higher by recency.
+`pages.test.ts` repeats the shape with `project` and `since` together, and
+asserts the SQL push-down and the app-side fallback return the same keys, so the
+exclusion is pinned on both implementations of the same read rather than on
+whichever one the index happens to enable. The assertion idiom is
+`assert.equal(results.length, 1)` plus the survivor's title rather than a
+`not.toContain`, which pins the result set more tightly than the usual form.
+
+**Tombstone, bitemporal — no.** There is no rejected-value record and no validity
+axis distinct from `createdAt`/`updatedAt`.
 
 **A caution about calibration.** The factor floors at 0.5 and needs three
 outcomes before it engages, so a new actor is trusted at face value for its first
@@ -264,10 +286,13 @@ defaults and both are worth knowing before relying on the mechanism.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper.** Brier scoring is standard and the implementation is checkable
-against the definition in twelve lines.
+**No paper.** `CITATION.cff` is present and is software-citation metadata — title,
+authors, repository, abstract, Apache-2.0, version 0.1.0 — with no DOI and no
+publication, so a reader can tell an absent paper from an unread one. Brier
+scoring is standard and the implementation is checkable against the definition in
+twelve lines.
 
-Every source module has a paired `.test.ts` — 40 pairs, including
+Every source module has a paired `.test.ts` — 52 files, including
 `calibration.test.ts`, `admission.test.ts`, `firewall.test.ts` and
 `agent-integration.test.ts`. That one-to-one discipline is rare and it is the
 clearest signal of care in the repository. **I did not run them**; the screen
@@ -372,5 +397,7 @@ dependencies, and are the two files worth reading whatever you are building.
 **Tests** — one `.test.ts` beside every source module
 
 ## History
+
+**2026-08-20** — [`b448f24e85309d3a3adc56bc1ad1aaca5d920d89`](https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89) — second reading, at the same commit: `main` had not moved. Screened again first; the findings were unchanged apart from `package-lock.json` having aged past the cooldown, and nothing was installed or run. Two corrections. `negative_eval` is awarded on cross-project retrieval cases that were present at the first reading and not found, because the search was for `not.toContain` and `toHaveLength(0)` while this suite is `node:test` and writes `assert.equal(results.length, 1)`. And section 6's claim that no stored scope key reaches a read-path predicate was wrong: `project` is a generated indexed column, `activeWhere` pushes `project = ?` into SQL, and two read paths and two MCP tools use it — the accurate statement is that `compile.ts`, the path that pushes memory into every turn, never passes one, which is why the mark is still withheld. `stack_source` promoted from `seeded` to `reviewed`.
 
 **2026-08-09** — [`b448f24e85309d3a3adc56bc1ad1aaca5d920d89`](https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89) — first reading. Screened before reading: no auto-run surface, build-time execution declared in `package.json`, one unpinned dependency surface, `package-lock.json` present. The tree was read, never installed, and no test was run.

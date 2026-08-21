@@ -113,10 +113,10 @@ attenuates every future claim they make.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-08-20</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -294,15 +294,26 @@ cell's neighbours through the signed edges, which is what makes
 contradiction a ranking force rather than a flag: a cell with three
 <code>contradicts</code> edges pointing at it loses effective score
 without anything having to mark it wrong.</p>
-<p>Scope is a <code>{ project, tenant }</code> pair on every cell and a
-<code>sensitivity</code> field described as gating scope, but the
-isolation that actually holds is the per-project database file plus the
-graph-slug prefixing in the federated union. No stored scope key is
-applied as a read-path predicate, so <code>scope_enforced</code> is
-withheld — the boundary is structural, as it is in <a
-href="../kage/">Kage</a> and <a
-href="../shodh-memory/">Shodh-Memory</a>, and the field that names it is
-not the thing enforcing it.</p>
+<p>Scope is a <code>{ project, tenant }</code> pair on every cell, and
+<code>project</code> is not decorative: it is a generated, indexed SQL
+column, <code>activeWhere</code> pushes <code>project = ?</code> into
+the query, <code>activeByProject</code> wraps it, and both
+<code>subgraphCells</code> and <code>getRecallPage</code> filter on it
+with committed tests. The MCP tools <code>recall_subgraph</code> and
+<code>recall_page</code> expose it to the agent as an optional
+argument.</p>
+<p><strong><code>scope_enforced</code> is withheld anyway, and the
+reason is which caller uses it.</strong> <code>src/compile.ts</code> —
+the path that assembles the context block and pushes it into every turn
+— contains no reference to <code>project</code> at all. So the read an
+agent performs deliberately can be scoped, and the read it receives
+whether it asked or not cannot be. Isolation in practice is the
+per-project database file plus the graph-slug prefixing in the federated
+union, which is the structural boundary <a href="../kage/">Kage</a> and
+<a href="../shodh-memory/">Shodh-Memory</a> also rely on. A predicate
+that exists, is indexed, is tested, and is absent from the default path
+is a sharper thing than a scope stored as a tag, and it is still not the
+mark.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are synchronous, local, and pass the admission firewall. The
 two attenuation steps are the interesting half.</p>
@@ -362,10 +373,22 @@ enter.</p>
 <code>eval_runs</code> and <code>operator_runs</code> record background
 executions rather than mutations to memory. The receipt hook writes
 session state files rather than a durable store-level log.</p>
-<p><strong>Tombstone, bitemporal, negative eval — no.</strong> There is
-no rejected-value record, no validity axis distinct from
-<code>createdAt</code>/<code>updatedAt</code>, and no committed case
-asserting that particular material must not be retrieved.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>subgraph.test.ts</code> seeds a cell in <code>proj-a</code> and a
+newer, otherwise-matching cell in <code>proj-b</code>, filters on
+<code>proj-a</code>, and asserts the result set is exactly one cell and
+that it is the in-project one — the excluded cell exists, matches every
+other predicate and ranks higher by recency. <code>pages.test.ts</code>
+repeats the shape with <code>project</code> and <code>since</code>
+together, and asserts the SQL push-down and the app-side fallback return
+the same keys, so the exclusion is pinned on both implementations of the
+same read rather than on whichever one the index happens to enable. The
+assertion idiom is <code>assert.equal(results.length, 1)</code> plus the
+survivor's title rather than a <code>not.toContain</code>, which pins
+the result set more tightly than the usual form.</p>
+<p><strong>Tombstone, bitemporal — no.</strong> There is no
+rejected-value record and no validity axis distinct from
+<code>createdAt</code>/<code>updatedAt</code>.</p>
 <p><strong>A caution about calibration.</strong> The factor floors at
 0.5 and needs three outcomes before it engages, so a new actor is
 trusted at face value for its first three claims and the worst possible
@@ -373,9 +396,13 @@ actor is only halved. Both are defensible defaults and both are worth
 knowing before relying on the mechanism.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>No paper.</strong> Brier scoring is standard and the
-implementation is checkable against the definition in twelve lines.</p>
-<p>Every source module has a paired <code>.test.ts</code> — 40 pairs,
+<p><strong>No paper.</strong> <code>CITATION.cff</code> is present and
+is software-citation metadata — title, authors, repository, abstract,
+Apache-2.0, version 0.1.0 — with no DOI and no publication, so a reader
+can tell an absent paper from an unread one. Brier scoring is standard
+and the implementation is checkable against the definition in twelve
+lines.</p>
+<p>Every source module has a paired <code>.test.ts</code> — 52 files,
 including <code>calibration.test.ts</code>,
 <code>admission.test.ts</code>, <code>firewall.test.ts</code> and
 <code>agent-integration.test.ts</code>. That one-to-one discipline is
@@ -501,6 +528,25 @@ comment <code>:160-164</code>)</p>
 <p><strong>Tests</strong> — one <code>.test.ts</code> beside every
 source module</p>
 <h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89"><code class="commit-id" title="b448f24e85309d3a3adc56bc1ad1aaca5d920d89">b448f24e…</code></a>
+— second reading, at the same commit: <code>main</code> had not moved.
+Screened again first; the findings were unchanged apart from
+<code>package-lock.json</code> having aged past the cooldown, and
+nothing was installed or run. Two corrections.
+<code>negative_eval</code> is awarded on cross-project retrieval cases
+that were present at the first reading and not found, because the search
+was for <code>not.toContain</code> and <code>toHaveLength(0)</code>
+while this suite is <code>node:test</code> and writes
+<code>assert.equal(results.length, 1)</code>. And section 6's claim that
+no stored scope key reaches a read-path predicate was wrong:
+<code>project</code> is a generated indexed column,
+<code>activeWhere</code> pushes <code>project = ?</code> into SQL, and
+two read paths and two MCP tools use it — the accurate statement is that
+<code>compile.ts</code>, the path that pushes memory into every turn,
+never passes one, which is why the mark is still withheld.
+<code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89"><code class="commit-id" title="b448f24e85309d3a3adc56bc1ad1aaca5d920d89">b448f24e…</code></a>
 — first reading. Screened before reading: no auto-run surface,
