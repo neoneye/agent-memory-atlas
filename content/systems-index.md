@@ -70,7 +70,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## C
 
 <ul class="az">
-<li><a class="az-row" href="../systems/cambium/"><span class="az-id">Cambium</span><span class="az-what">A standard, not a store</span><code class="az-repo">KimGLee/Cambium</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/cambium/"><span class="az-id">Cambium</span><span class="az-what">A standard, not a store</span><code class="az-repo">KimGLee/Cambium</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/camel/"><span class="az-id">CAMEL</span><span class="az-what">Message store with vector recall</span><code class="az-repo">camel-ai/camel</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/claude-code-memory-setup/"><span class="az-id">claude-code-memory-setup</span><span class="az-what">A recipe that links notes on the way in</span><code class="az-repo">lucasrosati/claude-code-memory-setup</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/claude-mem/"><span class="az-id">Claude-Mem</span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">thedotmack/claude-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

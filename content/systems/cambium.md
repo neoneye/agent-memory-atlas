@@ -6,12 +6,13 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
-revision: 21bada219501a05958c6585e703eb36ceaf8d244
-revision_url: https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244
+revision: 32ed022ec1f27e52914506d713424085451c4ec5
+revision_url: https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5
 analyzed_at: 2026-08-21
-capabilities: "trust_state, human_review"
+capabilities: "trust_state, audit_log, human_review"
 capability_evidence:
   trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/test_vocab_artifact_integrity.py — `test_a_truncated_vocabulary_does_not_pass_the_same_page` is the discriminating case: a page the real vocabulary flags must not pass against a truncated one, so a degraded artifact cannot read as a clean run; `test_empty_bytes_are_refused`, `test_an_empty_field_set_is_refused` and `test_unparseable_bytes_are_refused` pin the other three ways an artifact can be vacuous"
+  audit_log: "the receipt catalog, one append-only record per check and per state transition | Tools/kblib.py:2291 (`make_receipt`), :2668-2699 (`write_receipts`), Tools/apply_metadata_transition.py:77 | every tool builds a receipt carrying `receipt_id`, tool, tool version, check, target, `result`, details, a sequence number and the Required Queue identity fields, appended under `.cambium/receipts/` with a hot catalog and a cold archive (`cold/manifest.jsonl`, `cold/index.jsonl`). `result` is asserted to be one of `pass`, `fail` or `candidate`, so a refusal is recorded in the same shape as a success rather than vanishing — 146 call sites across the tooling. `apply_metadata_transition` files one for the transition itself and binds it to the post-transaction identity rather than the bytes on disk, which is what makes it a record of the mutation rather than of the run | Tools/tests/test_gate_receipt_identity.py, Tools/tests/test_seal_receipts.py"
   human_review: "the gate runtime and the applier that only an Integrator may run | Tools/apply_metadata_transition.py, Tools/metadata_gate_runtime.py, Tools/record_gate_attestation.py | `apply_metadata_transition --apply` is restricted to the Integrator, validates a typed current-catalog producer receipt before acting, compare-and-swaps Profile, K00, metadata-contract, page and Coverage under a shared runtime writer lock, and restores both Coverage and the exact page before-image on a pre-commit failure; `record_gate_attestation.py` files the human attestation the gate consumes | Tools/tests/test_metadata_gate_runtime.py:121 `test_manual_producer_rejects_wrong_role_and_value`, plus the actor-role paths through `Tools/tests/test_adopt_standards.py`"
 stack_storage: "files"
 stack_retrieval: ""
@@ -165,6 +166,47 @@ inert until an adopter answers the profile interface and composes a vocabulary,
 and until then `check_vocab.py` correctly declines to check anything.
 
 ## 4. Essential Implementation Paths
+
+### A record is judged by the contract that was in force when it was written
+
+`Tools/check_queue.py` carries a family of predicates — one per contract change —
+that decide which shape a historical record was *promised* to have, keyed on the
+semantic version of the tool that produced it:
+`_standards_adoption_profile_contract_required` (1.3),
+`_profile_inputs_required` (1.4), `_upstream_required` (1.5),
+`_owner_projection_required`. Each reads the producer's version off the record
+and selects the legacy contract only for an exact version below its threshold.
+
+**The failure direction is the part worth copying.** *"An absent or malformed
+producer identity fails closed onto the current shape instead of becoming a way
+to erase the new binding."* Schema-version leniency is normally an escape hatch —
+omit the version, get the old rules — and this closes it: a record that cannot
+say which era wrote it is judged by today's stricter contract, so a missing
+producer identity costs the writer rather than buying it an exemption.
+
+The reading rule is stated in the same file: *"Historical plans retain their
+recorded raw Gate closure. They are replayed under their producer era, not
+retroactively rewritten to the current leaf-to-owner projection."* The current
+rules do not reach backwards and rewrite what an older run recorded, and an older
+record does not get to claim today's looser interpretation of a field it never
+carried.
+
+**And current state is separated from adoption history.**
+`.cambium/governance/standards_state.yaml` holds one canonical record —
+`state_revision`, `standards_version`, `status`, `effective_date`, the selected
+profile manifest, the latest adoption receipt and the upstream source and
+revision — while `.cambium/receipts/standards-adoptions.jsonl` is the append-only
+history behind it. The compatibility bridge for adopters whose identity is still
+spread across the three task ledgers says what it will not do:
+`migrate_standards_state.py` *"does not create an adoption, rewrite history, or
+read K00/03 as mutable state."*
+
+`effective_date` is a validity field sitting beside a record-time history, which
+is most of what a bi-temporal design needs. **The mark is withheld because no
+read path queries it.** The field is written, validated as `YYYY-MM-DD` and
+carried through the adoption plan; nothing takes an as-of date and asks what was
+in force then. The producer-era machinery reads the *record* axis and the
+validity axis is stored and inert, which is one half of the pair.
 
 ### The obligation to read is not evidence that anything arrived
 
@@ -386,7 +428,17 @@ Strengths:
 - **A deterministic merge zone** an LLM is not permitted to hand-edit, dry-run by
   default, aborting rather than writing an unparseable ledger.
 - **Receipts bound to ledger entries**, so the evidence for a page's standing
-  travels with the page.
+  travels with the page. The catalog behind them earns `audit_log`: one appended
+  record per check and per state transition, carrying tool, tool version, target,
+  a `result` asserted to be `pass`, `fail` or `candidate`, and the queue identity
+  fields — so a refusal is filed in the same shape as a pass rather than leaving
+  no trace, which is the asymmetry this atlas finds almost everywhere else. The
+  transition applier binds its receipt to the post-transaction identity rather
+  than to the bytes on disk, which is what makes it a record of the mutation and
+  not of the run.
+- **A record is judged by the contract in force when it was written**, and a
+  record that cannot say which era wrote it is judged by the strictest one — see
+  section 4.
 - **A terminal completion gate** requiring enumerated routes, cards and zeroed
   counts, failing on any empty field.
 - **No dependencies**, including a hand-written restricted parser whose accepted
@@ -556,6 +608,10 @@ which have neither.
 - Licensing: `LICENSE.md`, `LICENSES/`, `NOTICE`, `ATTRIBUTION.md`.
 
 ## History
+
+**2026-08-21** — [`32ed022ec1f27e52914506d713424085451c4ec5`](https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5) — re-pinned 13 commits on, later the same day. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. **`audit_log` is awarded**, on a mechanism present at the earlier pin and not credited: `kblib.make_receipt` builds one record per check and per state transition with a `result` asserted to be `pass`, `fail` or `candidate`, appended under `.cambium/receipts/` with a hot catalog and a cold archive, across 146 call sites — a refusal filed in the same shape as a pass. Taking the report to three marks.
+
+New at this pin, in section 4: contract-era replay. A family of predicates in `check_queue.py` decides which shape a historical record was promised to have from the semantic version of the tool that produced it, and *"an absent or malformed producer identity fails closed onto the current shape instead of becoming a way to erase the new binding"* — the escape hatch that schema-version leniency usually opens, closed deliberately. Alongside it, adopter Standards state is separated from adoption history, with a migration bridge that states what it will not do. `bitemporal` is withheld and section 4 says why: `effective_date` is stored and validated and no read path takes an as-of.
 
 **2026-08-21** — [`21bada219501a05958c6585e703eb36ceaf8d244`](https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244) — re-pinned 22 commits on. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. Marks unchanged.
 

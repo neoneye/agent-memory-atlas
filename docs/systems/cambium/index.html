@@ -110,9 +110,9 @@ passed'.</p>
               <strong>KimGLee/Cambium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244" title="21bada219501a05958c6585e703eb36ceaf8d244">
+            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5" title="32ed022ec1f27e52914506d713424085451c4ec5">
               <span>Analyzed revision</span>
-              <code>21bada21…</code>
+              <code>32ed022e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -120,7 +120,7 @@ passed'.</p>
               <strong>2026-08-21</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -267,6 +267,54 @@ composes a vocabulary, and until then <code>check_vocab.py</code>
 correctly declines to check anything.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
+<h3
+id="a-record-is-judged-by-the-contract-that-was-in-force-when-it-was-written">A
+record is judged by the contract that was in force when it was
+written</h3>
+<p><code>Tools/check_queue.py</code> carries a family of predicates —
+one per contract change — that decide which shape a historical record
+was <em>promised</em> to have, keyed on the semantic version of the tool
+that produced it:
+<code>_standards_adoption_profile_contract_required</code> (1.3),
+<code>_profile_inputs_required</code> (1.4),
+<code>_upstream_required</code> (1.5),
+<code>_owner_projection_required</code>. Each reads the producer's
+version off the record and selects the legacy contract only for an exact
+version below its threshold.</p>
+<p><strong>The failure direction is the part worth copying.</strong>
+<em>"An absent or malformed producer identity fails closed onto the
+current shape instead of becoming a way to erase the new binding."</em>
+Schema-version leniency is normally an escape hatch — omit the version,
+get the old rules — and this closes it: a record that cannot say which
+era wrote it is judged by today's stricter contract, so a missing
+producer identity costs the writer rather than buying it an
+exemption.</p>
+<p>The reading rule is stated in the same file: <em>"Historical plans
+retain their recorded raw Gate closure. They are replayed under their
+producer era, not retroactively rewritten to the current leaf-to-owner
+projection."</em> The current rules do not reach backwards and rewrite
+what an older run recorded, and an older record does not get to claim
+today's looser interpretation of a field it never carried.</p>
+<p><strong>And current state is separated from adoption
+history.</strong> <code>.cambium/governance/standards_state.yaml</code>
+holds one canonical record — <code>state_revision</code>,
+<code>standards_version</code>, <code>status</code>,
+<code>effective_date</code>, the selected profile manifest, the latest
+adoption receipt and the upstream source and revision — while
+<code>.cambium/receipts/standards-adoptions.jsonl</code> is the
+append-only history behind it. The compatibility bridge for adopters
+whose identity is still spread across the three task ledgers says what
+it will not do: <code>migrate_standards_state.py</code> <em>"does not
+create an adoption, rewrite history, or read K00/03 as mutable
+state."</em></p>
+<p><code>effective_date</code> is a validity field sitting beside a
+record-time history, which is most of what a bi-temporal design needs.
+<strong>The mark is withheld because no read path queries it.</strong>
+The field is written, validated as <code>YYYY-MM-DD</code> and carried
+through the adoption plan; nothing takes an as-of date and asks what was
+in force then. The producer-era machinery reads the <em>record</em> axis
+and the validity axis is stored and inert, which is one half of the
+pair.</p>
 <h3
 id="the-obligation-to-read-is-not-evidence-that-anything-arrived">The
 obligation to read is not evidence that anything arrived</h3>
@@ -503,7 +551,19 @@ divergence.</li>
 to hand-edit, dry-run by default, aborting rather than writing an
 unparseable ledger.</li>
 <li><strong>Receipts bound to ledger entries</strong>, so the evidence
-for a page's standing travels with the page.</li>
+for a page's standing travels with the page. The catalog behind them
+earns <code>audit_log</code>: one appended record per check and per
+state transition, carrying tool, tool version, target, a
+<code>result</code> asserted to be <code>pass</code>, <code>fail</code>
+or <code>candidate</code>, and the queue identity fields — so a refusal
+is filed in the same shape as a pass rather than leaving no trace, which
+is the asymmetry this atlas finds almost everywhere else. The transition
+applier binds its receipt to the post-transaction identity rather than
+to the bytes on disk, which is what makes it a record of the mutation
+and not of the run.</li>
+<li><strong>A record is judged by the contract in force when it was
+written</strong>, and a record that cannot say which era wrote it is
+judged by the strictest one — see section 4.</li>
 <li><strong>A terminal completion gate</strong> requiring enumerated
 routes, cards and zeroed counts, failing on any empty field.</li>
 <li><strong>No dependencies</strong>, including a hand-written
@@ -733,6 +793,29 @@ assertion).</li>
 <code>NOTICE</code>, <code>ATTRIBUTION.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5"><code class="commit-id" title="32ed022ec1f27e52914506d713424085451c4ec5">32ed022e…</code></a>
+— re-pinned 13 commits on, later the same day. Screened again: no
+auto-run surface, one build-time <code>Makefile</code>, no dependency
+manifest, nothing installed. <strong><code>audit_log</code> is
+awarded</strong>, on a mechanism present at the earlier pin and not
+credited: <code>kblib.make_receipt</code> builds one record per check
+and per state transition with a <code>result</code> asserted to be
+<code>pass</code>, <code>fail</code> or <code>candidate</code>, appended
+under <code>.cambium/receipts/</code> with a hot catalog and a cold
+archive, across 146 call sites — a refusal filed in the same shape as a
+pass. Taking the report to three marks.</p>
+<p>New at this pin, in section 4: contract-era replay. A family of
+predicates in <code>check_queue.py</code> decides which shape a
+historical record was promised to have from the semantic version of the
+tool that produced it, and <em>"an absent or malformed producer identity
+fails closed onto the current shape instead of becoming a way to erase
+the new binding"</em> — the escape hatch that schema-version leniency
+usually opens, closed deliberately. Alongside it, adopter Standards
+state is separated from adoption history, with a migration bridge that
+states what it will not do. <code>bitemporal</code> is withheld and
+section 4 says why: <code>effective_date</code> is stored and validated
+and no read path takes an as-of.</p>
 <p><strong>2026-08-21</strong> — <a
 href="https://github.com/KimGLee/Cambium/commit/21bada219501a05958c6585e703eb36ceaf8d244"><code class="commit-id" title="21bada219501a05958c6585e703eb36ceaf8d244">21bada21…</code></a>
 — re-pinned 22 commits on. Screened again: no auto-run surface, one
