@@ -2570,6 +2570,36 @@ an optimisation whose loss costs latency, and a memory is a claim whose loss
 costs correctness. Deleting a cache entry is free; deleting a memory is the
 hardest problem on this page.
 
+**And the distinction survives the obvious objection, which is that a KV cache
+does not persist.** [warpdrv](https://github.com/mikjee/warpdrv) — AGPL-3.0, 518
+commits since 21 March 2026, examined at
+[`939315a11aae6f9d99be6ac1a55cf73caa5e6a8e`](https://github.com/mikjee/warpdrv/commit/939315a11aae6f9d99be6ac1a55cf73caa5e6a8e)
+— is a desktop manager for local llama.cpp servers whose KV cache checkpoints do
+persist, deliberately and carefully. `processManager.ts` passes `--slot-save-path`
+to every server it launches; `checkpointService.ts` posts
+`/slots/<n>?action=save`, writes the slot's cache and the token sequence behind
+it to a `.bin` file, and stamps it with a deterministic fingerprint of the model
+file plus a fingerprint hash. Restore posts `?action=restore` and validates that
+hash against the target server's model, returning typed `IFingerprintMismatch`
+entries rather than loading blindly, and the documentation states the binding
+plainly: a checkpoint is bound to the model file, context size, flash-attention
+setting, cache quantisation, slot count and backend build, and *"restoring under
+different settings either fails or produces garbage."*
+
+That artifact is versioned, content-fingerprinted and compatibility-checked more
+carefully than several memory stores in this atlas — and it is still not memory,
+which is the point. Restoring it changes how long the next token takes and
+nothing about what the model will say that a longer prefill would not also have
+produced. There is nothing in a `.bin` slot dump that a later reading could
+contradict, no identity a correction could name, and deleting one costs a prefill.
+The rest of warpdrv's twenty-table SQLite schema is the same boundary in other
+forms: threads, messages, message parts and tool calls are the transcript; an
+`embedding_meta` row keyed on `messageId` indexes that transcript; the code-graph
+tables index the user's own files; and the remainder is permissions, guardrail
+definitions, modes and opaque `data TEXT DEFAULT '{}'` UI state. Its
+twenty-four MCP tools read the transcript, the embedding index and the code graph,
+and not one of them writes a fact. **Persistence was never the boundary.**
+
 **The sharpest test of that distinction is a paper, and it comes at the boundary
 from the other side.** *Do Language Models Need Sleep? Offline Recurrence for
 Improved Online Inference* ([arXiv:2605.26099](https://arxiv.org/abs/2605.26099),
