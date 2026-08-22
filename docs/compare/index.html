@@ -22774,6 +22774,54 @@ for paper dolls satisfies the shorthand without being one — which is the
 useful part, because the same shape describes any interface that
 persists per-agent decoration beside a real memory system and would read
 as memory in a directory listing.</li>
+<li><strong><code>calibrae/bucciarati</code> was examined and has no
+report: nothing it stores ever reaches the model unasked, and its
+honesty about one invented number is the reason to record it.</strong>
+MIT, 2,472 lines of Rust, 3 commits since 26 April 2026, at <a
+href="https://github.com/calibrae/bucciarati/commit/9db66bf52927f873335b4d82287c76349ffb78a7"><code class="commit-id" title="9db66bf52927f873335b4d82287c76349ffb78a7">9db66bf5…</code></a>.
+It is an MCP server over an mdBook wiki — ten typed tools for status,
+list, read, write, summary, move, search, delete, image upload and
+publish — and it says what it is not: <em>"No reqwest, no embedding
+model — pure filesystem + subprocess."</em> <strong>The scope test that
+settles it is the read path.</strong> There is no injection, no session
+hook and no boot read: <code>wiki_read</code> takes a slug the model
+must already know and <code>wiki_search</code> takes a query the model
+must already form, which makes the pair indistinguishable in kind from
+<code>file_read</code> and <code>rg</code>. What survives a session is a
+published document set — the terminal operation is
+<code>mdbook build</code> — and the installer creates a
+<code>wiki</code> group <em>"so any wiki-group editor — human or agent —
+can update pages"</em>, which is the right design for documentation and
+the wrong shape for a belief store. Compare <a
+href="../systems/nanoclaw/">NanoClaw</a>, whose memory is also Markdown
+and <em>is</em> memory because two files enter the context window at
+every new session. <strong>What transfers is a design criterion this
+atlas argues for and rarely sees stated as one: bytes returned to the
+agent.</strong> Every response <em>"drop[s] null fields, omit[s] empty
+arrays, and skip[s] mdbook's success boilerplate"</em>, and
+<code>wiki_search</code> ships budgets rather than a limit — 3 matches
+per page, 20 pages, 200-character snippets by default, a hard ceiling of
+1000 and a floor of 40 — with <strong>truncation flags on both
+axes</strong>, so a capped result reports that it was capped instead of
+arriving as a short list. That last property is exactly what <a
+href="../systems/repowise/">repowise</a>'s vector leg lacked when it
+returned <code>[]</code> and looked like an empty result. <strong>And
+<code>src/baselines.rs</code> is the contrast worth drawing with <a
+href="../benchmarks/#the-boundary-worth-drawing">the fabricated baseline
+recorded on the benchmarks page</a>.</strong> It is a hardcoded table of
+what an equivalent SSH-and-bash invocation <em>"would have cost the
+agent"</em>, from which <code>mcp-gain</code> computes savings as
+<code>baseline - bytes/4</code> — the same move MemCP makes when it
+asserts a constant in place of a measurement. The difference is entirely
+in the handling: the file's own comment reads <em>"These are educated
+guesses; recalibrate from real <code>usage.jsonl</code> data after a few
+weeks"</em>, the estimate is version-stamped as
+<code>SOURCE = "estimate@v1"</code>, and that stamp is printed in the
+header of every report the tool emits. A number nobody measured,
+labelled as such, versioned so its replacement is distinguishable, with
+the recalibration plan committed beside it — that is what the honest
+form of an unmeasured constant looks like, and the corpus has more of
+the other kind.</li>
 <li><strong><code>ChrisCanadian/nexus-proof-runtime</code> was examined
 and has no report, and it is the corpus's cleanest counter-example to
 this atlas's most-repeated finding — with the gap in the same
