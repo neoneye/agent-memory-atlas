@@ -117,14 +117,14 @@ co-retrieved lessons and a probation path back.</p>
               <strong>Krilliac/Sonder-runtime</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03" title="53a6ac550488f9fd9d59dea61fb4bcea85a6dc03">
+            <a class="meta-pill revision-pill" href="https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f" title="eb93f60d8380b096a6fefbf34c053fb20dccde4f">
               <span>Analyzed revision</span>
-              <code>53a6ac55…</code>
+              <code>eb93f60d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -528,6 +528,45 @@ quarantined as harmful can be re-distilled from a fresh interaction and
 return. Closing that is now a one-line extension: the tombstone check
 the pruner already triggers, applied when a lesson is quarantined rather
 than only when it is pruned.</p>
+<h3 id="an-outbox-in-the-memory-schema-one-layer-from-the-live-path">An
+outbox in the memory schema, one layer from the live path</h3>
+<p>Migration revision 5 concatenates <code>OUTBOX_DDL</code> into the
+memory schema, so every database now carries an
+<code>outbox_events</code> table — id, event type, aggregate type and
+id, a <code>sequence</code>, a payload, a correlation id,
+<code>created_at</code> and a nullable <code>published_at</code>, under
+<code>UNIQUE(aggregate_type, aggregate_id, sequence)</code>. The module
+states the contract: <em>"State mutations and their events are committed
+atomically. The dispatcher polls unpublished events and projects them
+into <code>operations.db</code>."</em></p>
+<p><strong>The producer exists and the live path does not use
+it.</strong> <code>OutcomeService.record_outcome</code> calls
+<code>self._store.record_outcome(...)</code> and then
+<code>self._store.append_outbox_event(event)</code> with an
+<code>outcome.recorded</code> event — the atomic pairing the docstring
+describes. But nothing outside <code>tests/</code> constructs an
+<code>OutcomeService</code>: the running system records outcomes from
+<code>server.py</code>, directly against the store, at eight call sites.
+So the table is created on every install, the writer and the dispatcher
+are complete and covered by <code>tests/test_spec5_outbox.py</code>, and
+a reader who queries <code>outbox_events</code> on a working deployment
+finds it empty. This is a layered architecture being built beside the
+working one rather than a mechanism that was abandoned, and the
+distinction matters for what the table means today: nothing.</p>
+<p><strong>There is a latent collision in the wiring that would activate
+it.</strong> The event is constructed with <code>sequence=0</code>
+hardcoded, and <code>OutboxWriter.append</code> issues a plain
+<code>INSERT INTO outbox_events</code> with no conflict clause against a
+UNIQUE over <code>(aggregate_type, aggregate_id, sequence)</code>. The
+aggregate is the interaction, and an interaction can receive more than
+one outcome — <code>outcomes</code> has no unique constraint on
+<code>interaction_id</code>, and <code>server.py</code> records
+<code>tests_passed</code> and <code>failed</code> from different
+branches of the same flows. So the second outcome for an interaction
+would raise, and because the append happens inside the transaction that
+recorded the outcome, the outcome write would roll back with it.
+Whichever caller migrates to the service first is the one that finds
+this.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The memory adapter is a stdlib-only importable module, and the
 runtime drives it from a terminal REPL, a headless service, and an MCP
@@ -745,8 +784,8 @@ not include.</li>
 <p><strong>Store and schema</strong></p>
 <ul>
 <li><code>sonder_runtime/adapters/memory_store.py</code> — the SQLite
-adapter: schema, distillation state machine, outcome crediting,
-<code>outcomes.source</code> enforcement, the
+adapter, migration revision 5: schema, distillation state machine,
+outcome crediting, <code>outcomes.source</code> enforcement, the
 <code>lesson_tombstones</code> rejected-value registry
 (<code>tombstone_lesson</code>, <code>lesson_text_tombstoned</code>,
 <code>all_lesson_tombstones</code>), and the project-scoped
@@ -761,7 +800,8 @@ compatibility shims aliasing the adapters.</li>
 <code>_attribution</code>.</li>
 <li><code>lesson_decay.py</code> — age-decay + usage ranking and the
 contradiction detector.</li>
-<li><code>mmr_rerank.py</code> — MMR diversity reranking.</li>
+<li><code>sonder_runtime/adapters/memory_rerank.py</code> — MMR
+diversity reranking.</li>
 </ul>
 <p><strong>Curation</strong></p>
 <ul>
@@ -803,6 +843,34 @@ pruned value by exact hash and by embedding
 lesson text; purged when their source interaction is deleted.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f"><code class="commit-id" title="eb93f60d8380b096a6fefbf34c053fb20dccde4f">eb93f60d…</code></a>
+— re-pinned 474 commits and +146,315 lines on. Screened again: no
+auto-run surface, two build-time execution points, two unpinned
+surfaces; nothing was installed and nothing was run. Marks unchanged at
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code> and
+<code>tombstone</code>.</p>
+<p><strong>The memory layer is the part that did not move.</strong>
+Across the files this report's appendix names, the diff is thirteen
+insertions and sixty-five deletions, and most of that is a package
+reorganisation — the root shims resolve into
+<code>sonder_runtime.adapters</code>, and <code>mmr_rerank.py</code>
+became <code>sonder_runtime/adapters/memory_rerank.py</code>, corrected
+in the appendix. Every quarantine, attribution, base-rate and tombstone
+mechanism this report describes is byte-identical, so the marks stand
+without re-derivation. The growth is in the runtime: HTTP fanout, A2A
+discovery, resumable streams, receipts on artifacts, and CI
+portability.</p>
+<p>Two substantive changes. <code>RECALL_CANDIDATE_TIME_LIMIT_S</code>
+moves from 0.5 to 1.0 with the reasoning committed beside it and the
+honest note that the deadline is a backstop — <em>"the row and byte caps
+remain the primary work bound"</em>. And migration revision 5 adds a
+transactional outbox to the memory schema, described in section 8: the
+table ships on every install, the producer sits on a service the running
+system does not call, and the event it would write hardcodes a sequence
+number that a second outcome for the same interaction would collide
+with.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03"><code class="commit-id" title="53a6ac550488f9fd9d59dea61fb4bcea85a6dc03">53a6ac55…</code></a>
 — re-pinned at HEAD, around fifty commits past the first reading.

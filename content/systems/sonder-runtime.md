@@ -6,10 +6,16 @@ root: ../..
 page_kind: system
 source_name: "Krilliac/Sonder-runtime"
 source_url: https://github.com/Krilliac/Sonder-runtime
-revision: 53a6ac550488f9fd9d59dea61fb4bcea85a6dc03
-revision_url: https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03
-analyzed_at: 2026-08-15
+revision: eb93f60d8380b096a6fefbf34c053fb20dccde4f
+revision_url: https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f
+analyzed_at: 2026-08-22
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval, tombstone"
+capability_evidence:
+  trust_state: "the lesson, moved by outcome statistics rather than by a writer | retriever.py:390 (`lesson_quarantine`), :309 (`band_loss_rate`), :372 (`_attribution`) | a lesson is active, quarantined or on probation, and the transition is computed rather than set: `lesson_quarantine` tests a loss run against the base rate for the lesson`s own retrieval-frequency band, `_attribution` deduplicates blame across lessons that were co-retrieved, and a later positive outcome rehabilitates. Quarantined lessons are dropped before ranking rather than down-weighted | tests/test_retriever.py:343 `test_positive_outcome_rehabilitates_quarantined_lesson`, and :274 for the lexical-fallback interaction"
+  tombstone: "the distillation seam, keyed on the lesson text | sonder_runtime/adapters/memory_store.py:98 (`lesson_tombstones`), :2190 (`lesson_text_tombstoned`), grounded_extraction.py (`is_tombstoned_duplicate`) | the near-duplicate pruner deletes redundant lessons keeping one representative and writes a content-hashed tombstone, and distillation checks it before writing so a pruned value cannot be re-derived from a later interaction, returning `rejected_value`. It is keyed on the value rather than the row, and it does not cover quarantine — a quarantined lesson has no tombstone and can return through a fresh distillation | tests/test_lesson_pruner.py, tests/test_reflection.py"
+  audit_log: "preference refinement, protected by triggers rather than by convention | sonder_runtime/adapters/memory_store.py:228 (`refinement_history`), :246-250 | every apply and rollback is journalled with optimistic version checks, and the table is append-only by construction: `refinement_history_no_update` and `refinement_history_no_delete` are BEFORE triggers that raise, so the log cannot be edited by the code that writes it | tests/test_refinement_transactions.py"
+  scope_enforced: "interactions, tasks, preferences and sessions, filtered by project and an account scope the serving layer supplies | sonder_runtime/adapters/memory_store.py:197 (`account_scope`) | the scope key is stored on the row and applied as a filter on the read path, with the account scope coming from the authenticated serving layer rather than from the caller`s argument. Lessons are deliberately outside it — global procedural knowledge, stated as a design position rather than an omission | tests/test_task_http_scope.py"
+  negative_eval: "retrieval, asserting a quarantined lesson does not reach the ranked set | tests/test_retriever.py | quarantined lessons are excluded before ranking and the suite exercises that boundary from both sides — a lesson driven to quarantine by repeated losses, and the same lesson rehabilitated by a later positive outcome, so the exclusion cannot pass by the retriever returning nothing | tests/test_retriever.py:274, :343"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -359,6 +365,39 @@ fresh interaction and return. Closing that is now a one-line extension: the
 tombstone check the pruner already triggers, applied when a lesson is quarantined
 rather than only when it is pruned.
 
+### An outbox in the memory schema, one layer from the live path
+
+Migration revision 5 concatenates `OUTBOX_DDL` into the memory schema, so every
+database now carries an `outbox_events` table — id, event type, aggregate type
+and id, a `sequence`, a payload, a correlation id, `created_at` and a nullable
+`published_at`, under `UNIQUE(aggregate_type, aggregate_id, sequence)`. The
+module states the contract: *"State mutations and their events are committed
+atomically. The dispatcher polls unpublished events and projects them into
+`operations.db`."*
+
+**The producer exists and the live path does not use it.**
+`OutcomeService.record_outcome` calls `self._store.record_outcome(...)` and then
+`self._store.append_outbox_event(event)` with an `outcome.recorded` event — the
+atomic pairing the docstring describes. But nothing outside `tests/` constructs
+an `OutcomeService`: the running system records outcomes from `server.py`,
+directly against the store, at eight call sites. So the table is created on every
+install, the writer and the dispatcher are complete and covered by
+`tests/test_spec5_outbox.py`, and a reader who queries `outbox_events` on a
+working deployment finds it empty. This is a layered architecture being built
+beside the working one rather than a mechanism that was abandoned, and the
+distinction matters for what the table means today: nothing.
+
+**There is a latent collision in the wiring that would activate it.** The event
+is constructed with `sequence=0` hardcoded, and `OutboxWriter.append` issues a
+plain `INSERT INTO outbox_events` with no conflict clause against a UNIQUE over
+`(aggregate_type, aggregate_id, sequence)`. The aggregate is the interaction, and
+an interaction can receive more than one outcome — `outcomes` has no unique
+constraint on `interaction_id`, and `server.py` records `tests_passed` and
+`failed` from different branches of the same flows. So the second outcome for an
+interaction would raise, and because the append happens inside the transaction
+that recorded the outcome, the outcome write would roll back with it. Whichever
+caller migrates to the service first is the one that finds this.
+
 ## 8. Agent Integration
 
 The memory adapter is a stdlib-only importable module, and the runtime drives it
@@ -567,14 +606,14 @@ self-modifying agent around them.
 
 **Store and schema**
 
-- `sonder_runtime/adapters/memory_store.py` — the SQLite adapter: schema, distillation state machine, outcome crediting, `outcomes.source` enforcement, the `lesson_tombstones` rejected-value registry (`tombstone_lesson`, `lesson_text_tombstoned`, `all_lesson_tombstones`), and the project-scoped `delete_fact`.
+- `sonder_runtime/adapters/memory_store.py` — the SQLite adapter, migration revision 5: schema, distillation state machine, outcome crediting, `outcomes.source` enforcement, the `lesson_tombstones` rejected-value registry (`tombstone_lesson`, `lesson_text_tombstoned`, `all_lesson_tombstones`), and the project-scoped `delete_fact`.
 - `memory_store.py`, `recall.py` — root compatibility shims aliasing the adapters.
 
 **Retrieval and trust**
 
 - `retriever.py` — hybrid retrieval, MMR, `lesson_quarantine`, `band_loss_rate`, `_attribution`.
 - `lesson_decay.py` — age-decay + usage ranking and the contradiction detector.
-- `mmr_rerank.py` — MMR diversity reranking.
+- `sonder_runtime/adapters/memory_rerank.py` — MMR diversity reranking.
 
 **Curation**
 
@@ -601,6 +640,12 @@ self-modifying agent around them.
 - `tests/test_lesson_pruner.py`, `tests/test_memory_store.py` — tombstones written without lesson text; purged when their source interaction is deleted.
 
 ## History
+
+**2026-08-22** — [`eb93f60d8380b096a6fefbf34c053fb20dccde4f`](https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f) — re-pinned 474 commits and +146,315 lines on. Screened again: no auto-run surface, two build-time execution points, two unpinned surfaces; nothing was installed and nothing was run. Marks unchanged at `trust_state`, `scope_enforced`, `audit_log`, `negative_eval` and `tombstone`.
+
+**The memory layer is the part that did not move.** Across the files this report's appendix names, the diff is thirteen insertions and sixty-five deletions, and most of that is a package reorganisation — the root shims resolve into `sonder_runtime.adapters`, and `mmr_rerank.py` became `sonder_runtime/adapters/memory_rerank.py`, corrected in the appendix. Every quarantine, attribution, base-rate and tombstone mechanism this report describes is byte-identical, so the marks stand without re-derivation. The growth is in the runtime: HTTP fanout, A2A discovery, resumable streams, receipts on artifacts, and CI portability.
+
+Two substantive changes. `RECALL_CANDIDATE_TIME_LIMIT_S` moves from 0.5 to 1.0 with the reasoning committed beside it and the honest note that the deadline is a backstop — *"the row and byte caps remain the primary work bound"*. And migration revision 5 adds a transactional outbox to the memory schema, described in section 8: the table ships on every install, the producer sits on a service the running system does not call, and the event it would write hardcodes a sequence number that a second outcome for the same interaction would collide with.
 
 **2026-08-15** — [`53a6ac550488f9fd9d59dea61fb4bcea85a6dc03`](https://github.com/Krilliac/Sonder-runtime/commit/53a6ac550488f9fd9d59dea61fb4bcea85a6dc03) — re-pinned at HEAD, around fifty commits past the first reading. Screened again before reading: no auto-run surface, two build-time `conftest.py` points, two unpinned dev/train ranges, nothing inside the cooldown; nothing was installed or run. [`ec351a477e325b9c66eca17df8f3a5d612d063d7`](https://github.com/Krilliac/Sonder-runtime/commit/ec351a477e325b9c66eca17df8f3a5d612d063d7) added a `lesson_tombstones` table keyed on a pruned lesson's normalized-text SHA-256 plus its embedding — content-free by an explicit comment — and `reflection.py` now refuses a re-distillation matching one by exact hash or by embedding (`result: rejected_value`); the near-duplicate pruner writes a tombstone as it deletes. That earns `tombstone` and closes the re-derivation gap for the pruning path, leaving quarantine as the one suppression that still keeps a row without a rejected-value record. [`e33c604468d0da2561477b29c6f694c9cfd3c4ff`](https://github.com/Krilliac/Sonder-runtime/commit/e33c604468d0da2561477b29c6f694c9cfd3c4ff) added a project-scoped `delete_fact`, and [`03455668e4b4718a833cb78a138020d64b892970`](https://github.com/Krilliac/Sonder-runtime/commit/03455668e4b4718a833cb78a138020d64b892970) surfaces `legacy/unknown` outcome provenance as its own bucket in the improvement report rather than folding it into a blended rate. `memory_store.py` is 3,632 lines; the tree is ~259,800 lines of Python across 743 files, 362 test files.
 
