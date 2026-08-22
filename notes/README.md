@@ -8,6 +8,15 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-23-a-tested-contract-for-losing-the-write.md](2026-08-23-a-tested-contract-for-losing-the-write.md) —
+  llmaker triaged and excluded: a self-hosting platform whose only memory is a
+  20-turn Redis transcript with a 7-day TTL. The keeper is underneath the scope
+  call — every Redis call swallows its exception, and a committed test asserts
+  that `load`, `append` and `clear` all return normally against a raising
+  client, so the silent loss is a contract and anyone who later wants the write
+  to report failure has to delete an assertion first. GENOME has the same
+  surface one report over. Also: an eval harness that marks which of its four
+  metrics a judge produced and which one arithmetic did.
 - [2026-08-22-a-context-engine-that-expires-on-purpose.md](2026-08-22-a-context-engine-that-expires-on-purpose.md) —
   `Perseus-Computing-LLC/perseus` triaged and excluded: it is a separate
   repository from the Vault the atlas reports on, and it is a live-context

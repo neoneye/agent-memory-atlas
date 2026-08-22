@@ -23059,6 +23059,48 @@ href="../benchmarks/#on-llm-usage">benchmarks page</a> asks for and
 rarely gets. It is also two instances of three hundred, mostly one,
 graded by hand, with a single ✅ in the whole table — so it separates
 nothing, and the file's value is the shape rather than the numbers.</li>
+<li><strong><code>raiyanyahya/llmaker</code> was examined and has no
+report: the only thing it calls memory is a capped, expiring transcript,
+and the interesting part is that its silent failure is a committed
+contract.</strong> Apache-2.0, about 11,000 lines of Go across 72 files
+with a 5,000-line Python side, 46 commits since 24 June 2026, at <a
+href="https://github.com/raiyanyahya/llmaker/commit/683f7a283bfd2465f97106be769cf5ebd256a663"><code class="commit-id" title="683f7a283bfd2465f97106be769cf5ebd256a663">683f7a28…</code></a>.
+It is a self-hosting platform — one command provisions Ollama, Qdrant
+and Redis, networked and discoverable — with a FastAPI facade and a
+LangGraph agent on top. <strong><code>agent/app/memory.py</code> is 72
+lines and is the whole of it</strong>: a <code>RedisMemory</code> that
+stores a session's messages as one JSON list under
+<code>llmaker:session:&lt;id&gt;</code>, capped at
+<code>memory_max_turns: int = 20</code> pairs and expiring at
+<code>memory_ttl_seconds: int = 604800</code>. Nothing is extracted,
+nothing carries an identity, and a wrong statement in turn three is not
+corrected but evicted — <a
+href="#not-in-scope-conversation-window-management">conversation-window
+management</a> with a network hop. The vector store beside it is loaded
+by an explicit <code>/ingest</code> endpoint from uploaded documents and
+by <code>/items</code> from a recommendation catalogue; no chat path
+upserts, so nothing the agent learns during a conversation becomes
+durable. A grep of the agent package for <em>forget</em>,
+<em>tombstone</em>, <em>supersede</em> and <em>provenance</em> returns
+zero. <strong>What earns the entry is the degradation contract.</strong>
+Every Redis call is wrapped in a bare <code>except Exception</code> that
+returns <code>[]</code> or passes, described in the module docstring as
+best-effort — <em>"if Redis is unreachable the agent still answers (with
+whatever the client sent), mirroring how the vector store degrades"</em>
+— and
+<code>tests/test_memory.py::test_memory_degrades_when_redis_errors</code>
+<strong>pins that behaviour</strong>, asserting that <code>load</code>,
+<code>append</code> and <code>clear</code> all swallow a raising client.
+Availability over durability is a defensible choice for a chat buffer.
+Writing the test is what makes it a contract rather than an oversight,
+and it is also what makes the loss undetectable: a caller cannot
+distinguish a session whose history was saved from one that was silently
+dropped, and now nobody can fix that without failing a test. The shape
+generalises past this repository — <a
+href="../systems/genome/">GENOME</a>'s automatic fact detector swallows
+both its model call and its write at DEBUG, with the same result — and
+the cheap repair in both cases is to return what happened rather than
+nothing.</li>
 <li><strong><code>NVIDIA/SkillEvaluator</code> was examined and has no
 report: it grades procedural memory rather than holding any, and two of
 its mechanisms are worth more than that boundary suggests.</strong>
