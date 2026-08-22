@@ -104,17 +104,17 @@ that turns message streams into derived peer representations.</p>
               <strong>plastic-labs/honcho</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8" title="d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8">
+            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944" title="ddbb90e36f2d148c7982f6ed85b09d31cabf5944">
               <span>Analyzed revision</span>
-              <code>d191c107…</code>
+              <code>ddbb90e3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -320,6 +320,30 @@ reinforcement/derivation count. <code>source_ids</code> can support
 derivation trees.</p>
 <p>Scoping is strong: most tables include <code>workspace_name</code>,
 and peer/session relationships are composite-key constrained.</p>
+<p><strong>A scope is a peer, which is the design decision worth
+reading.</strong> Rather than add a column, a nullable foreign key and a
+filter to every read, a scope named <code>therapy</code> is a peer named
+<code>scope.therapy</code> that observes its member sessions and never
+speaks — so the entire existing observer/observed machinery carries the
+new boundary and no read path had to learn a new predicate. Developers
+never see the mechanics: <code>/scopes</code> routes and a
+<code>scopes</code> field on session creation are the whole surface.</p>
+<p><code>src/utils/scopes.py</code> is the single source of truth and it
+makes the identity unforgeable from both ends. Being a scope requires
+the reserved <code>scope.</code> name prefix <strong>and</strong>
+<code>{"kind": "scope"}</code> in the peer's
+<code>internal_metadata</code>. The prefix is outside
+<code>RESOURCE_NAME_PATTERN</code> — the charset every API-created peer
+must match — so no peer created through the validated API can occupy the
+namespace, and <code>internal_metadata</code> appears in no API schema,
+so the marker cannot be set by a client. Requiring both means <em>"a
+peer that merely occupies the namespace, or merely carries a look-alike
+<code>configuration</code>, is not a scope."</em> The module also
+records why a backstop remains: peers carried over by an earlier
+users→peers rename predate the charset pattern and were never validated,
+so a legacy collision path stays in <code>crud/scope.py</code>. Naming
+the one population your invariant does not cover is the difference
+between a guard and a claim.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Honcho has several retrieval paths:</p>
 <ul>
@@ -342,6 +366,44 @@ splits the observation budget:</p>
 </ul>
 <p>This is a useful pattern: it avoids pure semantic recall and includes
 low-latency, stable representation context.</p>
+<p><strong>A <code>scope</code> on a read is an observer swap, not a
+filter.</strong> Passing <code>scope</code> to chat, representation,
+context or search resolves the scope peer and reads from the
+<code>(scope_peer, observed)</code> collection, with message recall
+following the scope's session membership. One guardrail is enforced and
+one is deliberately not: a scope may not be the <em>observed</em> peer,
+because a scope is a silent observer with <code>observe_me=false</code>
+and no representation of it is ever formed — while the observer position
+is left unchecked precisely because that is what a scoped read
+<em>is</em>. The comment says so, and gives the reason the raw path peer
+is still refused separately: so the difference between <em>"the caller
+named a scope"</em> and <em>"the <code>scope</code> option resolved to
+one"</em> stays visible in the error.</p>
+<p><strong>The filter DSL fails closed.</strong> A filter body is
+arbitrary client JSON with no schema, so validation was emergent and any
+shape the DSL did not recognise surfaced as an unhandled 500 from inside
+SQLAlchemy or psycopg. Fixing shapes one at a time did not converge — a
+fuzz over the DSL turned up five more families after three were fixed —
+so the answer is two generic guards instead: any operand bound to a
+non-JSONB column must be a scalar, checked element-wise for
+<code>in</code>, and <code>apply_filter</code> re-raises anything it
+does not recognise as a 422 after logging it with the offending shape.
+Two invariant tests over a generated matrix of filter bodies assert that
+every shape either compiles or raises, and that no non-scalar is ever
+bound to a scalar column. That is the right shape for input validation
+on a read path: enumerate the invariant, not the bugs.</p>
+<p>Three defects fixed underneath are worth naming because each was a
+silent wrong answer rather than a crash. A null operand hit
+<code>float(None)</code> and raised <code>TypeError</code> where only
+<code>ValueError</code> was caught; a null operand is a null check
+rather than a value comparison, so <code>{"ne": null}</code> compiles to
+<code>IS NOT NULL</code> and the other operators reject null with a 422.
+Numeric operators cast every column with <code>float()</code>, so a
+string inequality on a text column was rejected as an invalid number —
+coercion is gated on the column actually being numeric, and text columns
+compare as text. And an unrecognised operator dict on a scalar column
+fell through to <code>column == value</code>, binding a dict to a
+VARCHAR, which compiles and fails in the driver.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Honcho writes raw messages synchronously and derived memories
 asynchronously.</p>
@@ -362,6 +424,44 @@ handles persistence.</li>
 <p>This is operationally sound for service latency: message ingestion
 does not wait on derivation. The tradeoff is stale reads immediately
 after writes.</p>
+<p><strong>Membership is retroactive, and reconciling it costs no model
+call.</strong> <code>src/deriver/scope_backfill.py</code> adds two queue
+handlers. <code>scope_backfill</code> runs when a session joins a scope
+that already has messages: it copies the session's <em>explicit</em>
+documents from each sender's global <code>(P, P)</code> collection into
+the scope's <code>(scope_peer, P)</code> collection, then enqueues a
+dream to rebuild the scope's higher-order layer. <strong>Zero LLM
+re-derivation</strong>, and the reason is an invariant the module names
+— explicit-level documents are session-pure and identical across
+observer collections — so retroactive membership is <em>"pure row
+copying"</em>. The only external call is an embedding lookup for source
+rows whose embedding column is null. An idempotency marker
+(<code>copied_from</code> in <code>internal_metadata</code>) links each
+copy to its origin, and the handlers run in phases — plan, embed, write,
+sync — each opening its own short-lived session, so a database session
+is never held across an embedding or vector-store call.</p>
+<p>That invariant is load-bearing and is stated rather than asserted. If
+an explicit observation ever became observer-dependent, the backfill
+would silently copy the wrong text into a scope, and nothing in the tree
+would notice.</p>
+<p><strong><code>scope_removal</code> is the more interesting half,
+because it follows derivation.</strong> Removing a session soft-deletes
+its explicit documents from the scope's collections, and then iterates a
+frontier to a fixpoint:</p>
+<pre class="python"><code>while frontier:
+    derived_stmt = update(models.Document).where(
+        ..., models.Document.level != &quot;explicit&quot;,
+        models.Document.deleted_at.is_(None),
+        models.Document.source_ids.has_any(array(frontier)),
+    ).values(deleted_at=func.now()).returning(models.Document.id)
+    frontier = [row[0] for row in (await db.execute(derived_stmt)).all()]</code></pre>
+<p>The comment states the rule the loop implements: <em>"a deduction
+resting on removed evidence must leave with it, and so must an induction
+resting on that deduction."</em> This is the failure most stores in this
+atlas have — deletion reaches the row it was pointed at and stops,
+leaving every summary and inference built on it in place and
+retrievable. A transitive closure over <code>source_ids</code> is the
+answer, and <code>source_ids</code> was already there.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Surfaces:</p>
 <ul>
@@ -393,6 +493,15 @@ Trust</h2>
 <li>Tests cover migrations, queueing, deriver, routes, SDKs, and
 benchmarks.</li>
 </ul>
+<p><strong>The removal path deletes vectors eagerly and treats the sweep
+as a backstop.</strong> Soft-delete alone would leave the embeddings
+live until the reconciler's sweep ran, so removal calls
+<code>delete_many</code> on the external vector namespace immediately,
+under a comment naming the exposure: <em>"so recall can't surface
+removed memory while waiting for the reconciler sweep."</em> A failure
+there is logged and left to the sweep rather than raised — the right
+ordering, since the durable state is already correct and only the
+projection is behind.</p>
 <p>Risks:</p>
 <ul>
 <li>LLM-derived observations become queryable documents without a
@@ -405,6 +514,12 @@ misconfigure.</li>
 observations.</li>
 <li>Trust is partly implicit in "explicit" vs "deductive" and
 <code>times_derived</code>, not a full epistemic state.</li>
+<li>A scope sees only what was ingested after the session joined it,
+unless a backfill job runs and completes. <code>get_scope_status</code>
+exposes the state, which is the right call — a membership boundary that
+is silently partial is worse than one that reports itself — but a caller
+that does not check it can read a scope mid-backfill and get a boundary
+that is real and incomplete at once.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
@@ -415,12 +530,41 @@ Benchmarks</h2>
 <li>Deriver queue/processing tests.</li>
 <li>Integration tests for enqueue, embeddings, representation.</li>
 <li>Unified JSON test cases for observation topology, LongMem-style
-scenarios, configuration inheritance.</li>
+scenarios, configuration inheritance, and scope confinement.</li>
 <li>Benchmark harnesses under <code>tests/bench</code> for BEAM, LoCoMo,
 LongMem, Oolong, etc.</li>
 </ul>
-<p>I did not run these tests. The code structure suggests a serious test
-culture.</p>
+<p>I did not run these tests. 194 Python test files sit beside a case
+harness with its own runner (<code>python -m tests.unified.run</code>)
+and 40-odd JSON scenarios.</p>
+<p><strong>The unified cases are where the negative assertions live, and
+they are the reason <code>negative_eval</code> is marked.</strong>
+Seventeen case files carry a <code>not_contains</code> assertion. Most
+of them assert <em>emptiness</em> — no <code>## Explicit</code> or
+<code>## Deductive</code> header in a representation that should not
+exist, which proves a pair was never observed rather than that material
+was withheld. Two do the harder thing.</p>
+<p><code>dream_knowledge_updates_and_patterns.json</code> walks Maya
+through a conversation where her job and city are superseded — Austin
+startup to Google in Seattle — and then asks where she currently lives
+and works, asserting <code>contains: Seattle</code> and
+<code>contains: Google</code> alongside
+<code>not_contains: Austin</code> and
+<code>not_contains: startup</code>. A value that was ingested, embedded
+and later replaced must not come back. That is a correction test, and
+correction tests are close to absent from this corpus.</p>
+<p><code>scope_confines_recall.json</code> is the visibility version and
+it is built the way this atlas keeps asking for. Alice says one thing in
+a session inside the <code>work</code> scope and something else in a
+session outside it; a scoped representation asserts
+<code>not_contains: marathon</code> and <code>not_contains: bass</code>,
+a scoped chat asked directly about her hobbies must report not knowing,
+and then <strong>the same question is asked unscoped and must return the
+marathon</strong>. The case says why that last step is there: it
+<em>"proves the scoped result above is the scope working, not the
+deriver simply having failed to record the personal session."</em> A
+negative assertion without that control is satisfied by a pipeline that
+did nothing, and most negative suites in this corpus do not have it.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -432,6 +576,27 @@ context.</li>
 <li>Advisory locks for session sequence assignment.</li>
 <li>Vector reconciliation path for external vector stores.</li>
 <li>Deduplicated message search snippets with context windows.</li>
+<li><strong>Cascade a deletion along <code>source_ids</code> to a
+fixpoint.</strong> A frontier loop over a column most stores already
+populate is the difference between removing a fact and removing what was
+concluded from it. If your documents record what they were derived from,
+this is a <code>while</code> loop and one <code>UPDATE</code>.</li>
+<li><strong>Add a scope dimension by reusing the key you already
+have.</strong> Modelling a visibility boundary as a silent observer peer
+meant no read path needed a new predicate, and the boundary arrived on
+chat, representation, context and search at once.</li>
+<li><strong>Make an internal identity require two halves, one of them
+unreachable from the API.</strong> A reserved prefix outside the public
+charset plus a marker in a field no schema exposes is cheap, and it
+means neither a name squatter nor a crafted payload can manufacture the
+type.</li>
+<li><strong>Validate a schemaless filter body with an invariant, not a
+bug list.</strong> Two generic guards plus a generated matrix of shapes
+caught five families nobody had enumerated; fixing the reported 500s one
+at a time had not converged.</li>
+<li><strong>Write the negative test with its own positive
+control.</strong> A scoped read that omits the marathon proves nothing
+unless the unscoped read returns it.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -442,6 +607,11 @@ visibility.</li>
 <li>Eventual consistency must be surfaced clearly to users.</li>
 <li>A large service footprint may be too heavy for local coding-agent
 memory.</li>
+<li><strong>Do not let a copy-based backfill rest on an unasserted
+invariant.</strong> The scope backfill is correct only because explicit
+observations are observer-independent. That property is written in a
+docstring and nothing tests it, so the day it stops holding, the failure
+is wrong text inside a visibility boundary rather than an error.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Borrow:</p>
@@ -462,6 +632,17 @@ decide duplicates?</li>
 <li>What freshness guarantees are documented to SDK users?</li>
 <li>How much does the dreamer layer alter long-term
 representations?</li>
+<li>Is the session-purity invariant the scope backfill rests on true of
+every explicit observation, and could it be asserted rather than
+documented? A test that derives the same session under two observers and
+compares the explicit layer would settle it.</li>
+<li>The removal cascade walks <code>source_ids</code> inside one scope's
+collections. What happens to a derived document in the <em>global</em>
+collection whose support was a session later purged for other reasons —
+is there a caller of that loop outside scope removal?</li>
+<li><code>get_scope_status</code> reports backfill progress. Do the SDKs
+surface it, or is a partially-backfilled scope indistinguishable from a
+complete one to a normal caller?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -474,9 +655,49 @@ representations?</li>
 <code>honcho/src/deriver/queue_manager.py</code>.</li>
 <li>Dialectic chat: <code>honcho/src/dialectic/</code>.</li>
 <li>Reconciler: <code>honcho/src/reconciler/</code>.</li>
-<li>Tests/evals: <code>honcho/tests/</code>.</li>
+<li>Scopes: <code>honcho/src/utils/scopes.py</code> (the prefix and the
+<code>kind</code> marker), <code>honcho/src/routers/scopes.py</code>
+(CRUD, membership, <code>get_scope_status</code>),
+<code>honcho/src/crud/scope.py</code> (the legacy-collision backstop),
+<code>honcho/src/deriver/scope_backfill.py</code>
+(<code>process_scope_backfill</code>,
+<code>process_scope_removal</code>).</li>
+<li>Filter DSL: <code>honcho/src/utils/filter.py</code>.</li>
+<li>Tests/evals: <code>honcho/tests/</code>; the case harness is
+<code>honcho/tests/unified/</code> (<code>runner.py</code>,
+<code>run.py</code>, <code>test_cases/</code>), with
+<code>scope_confines_recall.json</code> and
+<code>dream_knowledge_updates_and_patterns.json</code> carrying the
+negative retrieval assertions.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944"><code class="commit-id" title="ddbb90e36f2d148c7982f6ed85b09d31cabf5944">ddbb90e3…</code></a>
+— 32 commits on. Screened again first: two auto-run surfaces, eleven
+build-time execution points, five unpinned surfaces, no file inside the
+seven-day cooldown, and a <code>CLAUDE.md</code> addressed to a reading
+agent; nothing was installed and no test was run.
+<strong><code>negative_eval</code> is added, and it was earned at the
+previous pin</strong> —
+<code>dream_knowledge_updates_and_patterns.json</code>, which supersedes
+a peer's job and city and then asserts the old values are absent while
+the new ones are present, was committed before it and was not read.
+Sixteen of the seventeen case files carrying <code>not_contains</code>
+predate this pin. The new work is Scopes, in three phases: scope-kind
+peers with an unforgeable two-part identity and CRUD routes, a
+<code>scope</code> option on chat, representation, context and search
+that resolves to an observer swap, and two queue jobs that reconcile
+membership retroactively — a backfill that copies explicit documents
+with no model call, and a removal that soft-deletes them and then walks
+<code>source_ids</code> to a fixpoint so derived documents resting on
+removed evidence go too. <code>scope_confines_recall.json</code> arrives
+with the scope option and carries its own unscoped control. Beside it,
+the filter DSL was made to fail closed with two generic guards and an
+invariant test over a generated matrix of shapes, after a fuzz found
+five families of body that produced unhandled 500s; and one write path
+was found hardcoding <code>deduplicate=True</code>, so
+<code>DERIVER_DEDUPLICATE=false</code> could not disable deduplication
+for observations created through the agent tool.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8"><code class="commit-id" title="d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8">d191c107…</code></a>
 — 48 commits on, none of them the mechanism. The range is operational: a

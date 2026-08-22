@@ -212,6 +212,37 @@ and a rekey map for repositories that move.
 tenant and peer boundaries into retrieval itself, OpenViking separating memory
 *about* a peer under `peers/<peer_id>`.
 
+**Honcho is also the answer to a question this page has not asked: what happens
+to a scope key added after the data.** Its *scopes* are a boundary one level
+below the peer — a named grouping of sessions — and the implementation adds no
+column at all. A scope named `therapy` is a peer named `scope.therapy` that
+observes its member sessions and never speaks, so the existing observer/observed
+key carries the new boundary and every read path inherits it at once; passing
+`scope` to chat, representation, context or search swaps the observer rather than
+adding a predicate. The identity is unforgeable from both ends: the reserved
+prefix sits outside the charset every API-created peer must match, and the
+authoritative `kind` marker lives in a JSONB column that appears in no API
+schema, so neither a name squatter nor a crafted payload can manufacture one.
+
+Retroactivity is where most scope retrofits quietly fail, and Honcho makes it two
+queue jobs. Joining a scope that already has messages copies the session's
+*explicit* documents into the scope's collection with **no model call** — sound
+only because explicit observations are session-pure and identical across
+observer collections, an invariant the module states and nothing asserts.
+Leaving one soft-deletes those documents and then walks `source_ids` to a
+fixpoint, on the rule that *"a deduction resting on removed evidence must leave
+with it, and so must an induction resting on that deduction"* — so the boundary
+holds for what was concluded inside it, not only for what was said. **A scope key
+that cannot be applied to existing data is a boundary for new users only**, and
+this is the one worked case in the corpus of a scope arriving late and reaching
+backwards.
+
+It ships the test to match: `scope_confines_recall.json` writes one fact inside
+the scope and a different one outside, asserts the scoped read omits the outside
+material, and then asks the same question unscoped and requires the outside
+material back — proof that the boundary held rather than that the pipeline was
+empty.
+
 [Memobase](../../systems/memobase/) takes the enforcement one level lower than
 anything else here — into the schema. Every memory table declares
 `PrimaryKeyConstraint("id", "project_id")` with composite

@@ -169,7 +169,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/hippo-memory/"><span class="az-id">Hippo</span><span class="az-what">Physics-model decay memory</span><code class="az-repo">kitfunso/hippo-memory</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hipporag/"><span class="az-id">HippoRAG</span><span class="az-what">Associative graph memory</span><code class="az-repo">OSU-NLP-Group/HippoRAG</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/holographic/"><span class="az-id">Holographic</span><span class="az-what">Vector-symbolic memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"></span></a></li>
-<li><a class="az-row" href="../systems/honcho/"><span class="az-id">Honcho</span><span class="az-what">Peer and session representation</span><code class="az-repo">plastic-labs/honcho</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/honcho/"><span class="az-id">Honcho</span><span class="az-what">Peer and session representation</span><code class="az-repo">plastic-labs/honcho</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## I
