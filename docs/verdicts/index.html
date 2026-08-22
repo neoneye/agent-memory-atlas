@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 321 reports.</strong></p>
+<p><strong>This page covers all 323 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -10315,6 +10315,101 @@ measurement almost nobody in this atlas has.</li>
 <li>Do not copy when: anyone other than the author can reach the port.
 Fix the <code>user_id</code> validation and the default bind first; both
 are a few lines and they belong before the second user.</li>
+</ul>
+<h3 id="mettaclaw"><a
+href="../systems/mettaclaw/"><code>mettaclaw</code></a></h3>
+<ul>
+<li>Best idea: <strong>the utility signal is a tool call the model
+makes, not a counter the retriever increments.</strong> Beside
+<code>remember</code> and <code>query</code> sit two more skills,
+described to the model as <em>"Promote a memory that you found useful,
+to make it easier to be recalled in the future in similar context"</em>
+and <em>"Demote a memory that you do not find useful or not anymore, to
+remove its promotion advantage."</em> Nearly everything in this atlas
+that carries a use-signal infers it from retrieval telemetry, which is
+the loop where a memory that gets returned becomes a memory that gets
+trusted. Here the judgement is explicit, made after use, and visible in
+the transcript as an action rather than as a counter moving
+invisibly.</li>
+<li>Second idea: <strong>recall returns two rankings side by side
+instead of blending them.</strong> <code>query</code> over-fetches ten
+times the recall budget, then appends the promotion-ranked slice to the
+distance-ranked one, deduplicates and caps — so a query-independent
+prior can lift a memory into the result without ever being able to
+overturn the query, and no weight had to be tuned to make that true.
+Promotion decays as <code>value × (1 + Δdays)^−0.7</code>, computed on
+read, so nothing sweeps the store.</li>
+<li>Biggest risk: <strong>the rater is the model whose recall the rating
+improves, promotion is keyed on a timestamp, and there is not one test
+in the repository.</strong> <code>(promote $time)</code> resolves
+<code>ids_by_time</code> and moves every memory written in that second,
+so the unit of reinforcement is the moment rather than the memory. There
+is no deletion, no supersession and no rejected-value record: demoting
+to zero costs a memory its reinforced slice and leaves it in the
+similarity slice, minus the signal that the agent judged it
+unhelpful.</li>
+<li>Maturity impression: MIT, 19 files, ~1,800 lines, 160 commits since
+21 February 2026, an agent core the README puts at about 200 lines of
+MeTTa on PeTTa and SWI-Prolog. Zero marks, assessed against all seven.
+The screen returned NOTHING SCANNED — no manifest of any kind — and the
+vector store is supplied by the host project rather than this tree.
+Non-Axiomatic Logic is available to the agent as a callable tool with
+<code>(stv frequency confidence)</code> truth values and a revision
+rule, and no memory item carries a truth value for it to combine.</li>
+<li>Study when: you want the smallest legible example of an agent that
+owns every decision about its own memory, or you are about to infer a
+utility signal from retrieval telemetry and want to see the
+alternative.</li>
+<li>Do not copy when: you need a component. No packaging, no tests, an
+ungated shell, and a store with neither deduplication nor deletion.</li>
+</ul>
+<h3 id="omegaclaw-core"><a
+href="../systems/omegaclaw-core/"><code>omegaclaw-core</code></a></h3>
+<ul>
+<li>Best idea: <strong>a negative write test run against a real model,
+with its positive control on the same counter.</strong>
+<code>test_memory_no_autoremember</code> sends a fact-shaped statement
+that asks for nothing and asserts the ChromaDB vector count did not grow
+— the agent <em>"is allowed to acknowledge via <code>(send ...)</code>
+or even <code>(pin ...)</code>, but must not write a ChromaDB vector
+unless it explicitly chose to"</em> — and refuses the shortcut that
+would make it cheap: <em>"This test does NOT mock the LLM — the question
+being asked ... is only meaningful with a real model."</em>
+<code>test_memory_chromadb</code> reads the same counter after an
+explicit remember prompt and requires it to grow, so neither test can
+pass because the store is broken.</li>
+<li>Second idea: <strong>three tiers with different persistence, and a
+warning about choosing wrong.</strong> <code>pin</code> is one working
+slot overwritten each cycle, <code>remember</code>/<code>query</code> is
+the durable store, and the AtomSpace where NAL, PLN and ONA reason over
+truth values is <em>"per-invocation (fresh AtomSpace each
+<code>|-</code> call)"</em>. The documentation calls picking the wrong
+tier <em>"one of the easier performance and reliability foot-guns"</em>,
+and ships a failure-mode reference that names confidence-propagation
+error and confirmation bias in its own stack.</li>
+<li>Biggest risk: <strong>nothing can be said about a memory after it is
+written.</strong> No delete, no supersession, no status, no expiry —
+and, unlike the fork it shares a root commit with, not even a demote. A
+memory the agent later judges wrong competes on similarity with its own
+correction for the life of the deployment. The tier that could express
+uncertainty is discarded after every inference call, so no truth value
+ever reaches the durable store.</li>
+<li>Maturity impression: Apache-2.0, 296 files, 1,145 commits since 21
+February 2026, ~1,580 lines of MeTTa and ~15,700 lines of tests across
+32 files driving a real container over Telegram, Slack and WebSocket.
+One mark. It shares early history with <a
+href="../systems/mettaclaw/">MeTTaClaw</a> — identical root commits —
+and removed that project's reinforcement ledger:
+<code>src/memory.metta</code> is 61 lines against 112,
+<code>query</code> is one line returning the top twenty by distance, and
+the recall budget doubled in the same move. Neither project published a
+comparison.</li>
+<li>Study when: your design's claim is "we only write when asked" and
+you need the test that makes it checkable, or you want the tier table
+that settles where working state goes.</li>
+<li>Do not copy when: memory has to be correctable. This is append-only
+in the strongest sense available — nothing in the tree modifies or
+removes an item.</li>
 </ul>
         </article>
       </div>

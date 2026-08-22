@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A neural-symbolic agent whose
+long-term memory is written only when the model calls remember — with a
+live test that sends a fact-shaped sentence and asserts no vector was
+written, and its explicit-remember twin as the control.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OmegaClaw — Agent Memory Atlas">
+    <meta property="og:description" content="A neural-symbolic agent
+whose long-term memory is written only when the model calls remember —
+with a live test that sends a fact-shaped sentence and asserts no vector
+was written, and its explicit-remember twin as the control.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OmegaClaw — Agent Memory Atlas">
+    <meta name="twitter:description" content="A neural-symbolic agent
+whose long-term memory is written only when the model calls remember —
+with a live test that sends a fact-shaped sentence and asserts no vector
+was written, and its explicit-remember twin as the control.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OmegaClaw — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OmegaClaw",
+      "description": "A neural-symbolic agent whose long-term memory is written only when the model calls remember \u2014 with a live test that sends a fact-shaped sentence and asserts no vector was written, and its explicit-remember twin as the control.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The fork that removed the ledger</p>
+          <h1>OmegaClaw</h1>
+          <p class="document-deck">A neural-symbolic agent whose
+long-term memory is written only when the model calls remember — with a
+live test that sends a fact-shaped sentence and asserts no vector was
+written, and its explicit-remember twin as the control.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/asi-alliance/OmegaClaw-Core">
+              <span>Source</span>
+              <strong>asi-alliance/OmegaClaw-Core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f" title="b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f">
+              <span>Analyzed revision</span>
+              <code>b96afaa3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-21</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OmegaClaw is the ASI Alliance's neural-symbolic agent framework on
+the Hyperon stack, Apache-2.0, 296 files, 1,145 commits since 21
+February 2026 — about 1,580 lines of MeTTa, 4,680 lines of Python
+outside the tests, and 15,680 lines of tests across 32 files. Its README
+describes the same constraint its sibling does: <em>"a minimalist
+MeTTa-based core of approximately 200 lines of code."</em></p>
+<p><strong>It shares early history with <a
+href="../mettaclaw/">MeTTaClaw</a> — the root commits are identical in
+both repositories — and the two have diverged on exactly the question
+this atlas cares about.</strong> MeTTaClaw kept a reinforcement ledger:
+the agent promotes and demotes its own memories, promotion decays as a
+power law, and recall returns a reinforcement-ranked slice beside a
+similarity-ranked one. OmegaClaw removed all of it.
+<code>src/memory.metta</code> is 61 lines where its sibling's is 112,
+there is no <code>promote</code>, no <code>demote</code>, no promotion
+database and no inflation factor, and <code>query</code> is a single
+line: embed the string, return the top twenty by distance. The recall
+budget went from ten to twenty in the same move. Neither project has
+published a comparison, and the pair is the closest thing this corpus
+has to a controlled experiment on whether a use-signal earns its
+complexity.</p>
+<p><strong>What OmegaClaw has instead is the test.</strong>
+<code>test_memory_no_autoremember.py</code> sends the agent a
+fact-shaped statement that asks for nothing, and asserts the ChromaDB
+vector count did not grow — the agent <em>"is allowed to acknowledge via
+<code>(send ...)</code> or even <code>(pin ...)</code>, but must not
+write a ChromaDB vector unless it explicitly chose to."</em> The
+docstring then refuses the shortcut that would have made it cheap:
+<em>"This test does NOT mock the LLM — the question being asked ('does
+the agent voluntarily call remember on a fact-shaped sentence?') is only
+meaningful with a real model."</em> <code>test_memory_chromadb.py</code>
+is its control on the same counter: after an explicit remember prompt,
+the count must grow by at least one. A negative assertion whose positive
+twin uses the same measurement cannot pass because the store is broken,
+and that pairing is rarer in this corpus than either test alone.</p>
+<p><strong>The memory model is documented as three tiers with different
+persistence, and the third is the one to notice.</strong>
+<code>pin</code> is a single working-memory slot, overwritten each
+cycle, session-local. <code>remember</code>/<code>query</code> is the
+durable embedding store. The AtomSpace — where NAL, PLN and ONA
+reasoning happens over truth-valued atoms — is <em>"per-invocation
+(fresh AtomSpace each <code>|-</code> call)"</em>. So the tier that can
+represent uncertainty, revise conflicting evidence and produce what the
+README calls <em>"auditable proof trails"</em> is thrown away after
+every call, and the tier that persists holds strings with no truth value
+at all. The formal layer reasons; the durable layer remembers; nothing
+carries a conclusion from the first into the second.</p>
+<p><strong>And the documentation is unusually willing to name its own
+failure modes.</strong> <code>docs/reference-failure-modes.md</code>
+runs to eight sections including confidence-propagation errors, variance
+and confirmation bias, and self-improvement limitations, with a "defense
+stack" and a practical checklist. A framework that ships a catalogue of
+the ways its reasoning goes wrong is doing something most of this corpus
+does not.</p>
+<p><code>negative_eval</code> is the only mark. There is no discrete
+state on a memory, no rejected-value record, one time axis, no scope
+key, and no mutation log.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes durable when the model calls <code>remember</code>,
+and the project treats that as the property to defend rather than as a
+limitation to work around — which is why the absence of an extractor is
+tested rather than merely documented.</p>
+<p>Once written, a memory never changes and never leaves. There is no
+update, no supersession, no expiry and no delete anywhere in the tree,
+and — unlike its sibling — no way to reduce a memory's standing either.
+The only lever over what comes back is the query string, so a memory
+that turns out to be wrong is retrieved on the same terms as one that is
+right, forever, and the correction has to arrive as another memory that
+the embedding happens to rank above it.</p>
+<p>Working state and durable state are separated deliberately.
+<code>pin</code> holds <em>"what am I doing right now?"</em> in one slot
+that the next cycle overwrites, and the documentation warns that
+choosing the wrong tier is <em>"one of the easier performance and
+reliability foot-guns"</em> — an explicit instruction not to use
+long-term memory as a scratchpad, which several systems in this atlas
+needed and did not have.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the only path into durable memory is an explicit tool call, which a live test asserts by sending a fact-shaped sentence and watching the vector count stay flat — while the reasoning space that could hold a truth value is rebuilt and discarded on every inference call</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the only path into durable memory is an explicit tool call, which a live test asserts by sending a fact-shaped sentence and watching the vector count stay flat — while the reasoning space that could hold a truth value is rebuilt and discarded on every inference call
+    MSG[&quot;incoming message&quot;] --&gt; AGENT[&quot;agent loop, ~200 lines of MeTTa&quot;]
+    MSG -.-&gt;|&quot;asserted NOT to write&lt;br/&gt;test_memory_no_autoremember&quot;| CHROMA
+    AGENT --&gt;|&quot;(remember str) — the only writer&quot;| CHROMA[(&quot;Chroma&lt;br/&gt;timestamp, atom, embedding&quot;)]
+    AGENT --&gt;|&quot;(query str)&quot;| Q[&quot;embed, top 20 by distance&quot;]
+    CHROMA --&gt; Q --&gt; AGENT
+    AGENT --&gt;|&quot;(pin str)&quot;| PIN[&quot;one slot, overwritten each cycle&quot;]
+    AGENT --&gt;|&quot;(metta (|- ...))&quot;| AS[&quot;fresh AtomSpace per call&lt;br/&gt;NAL / PLN / ONA, truth values&quot;]
+    AS -.-&gt;|&quot;discarded — no path to Chroma&quot;| AGENT
+    AGENT --&gt; HIST[(&quot;history.metta&lt;br/&gt;append-only, tailed by chars&quot;)]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The runtime is a container: the tests drive it through
+<code>docker exec</code>, and read ChromaDB by opening its SQLite file
+inside that container. Channels are Telegram — the README points at a
+live agent called Oma — plus Slack and WebSocket, each with its own mock
+harness under <code>Autotests/</code>.</p>
+<p>State is Chroma for memory items, <code>memory/history.metta</code>
+for the transcript, and per-provider prompt files:
+<code>getPrompt</code> takes a provider name and reads
+<code>./memory/prompt_&lt;provider&gt;.txt</code>, falling back to
+<code>prompt.txt</code>, and falling back again to an empty string if
+neither exists. Both file reads in this module are guarded the same way
+— <code>getHistory</code> returns <code>""</code> when the history file
+is absent rather than failing — so a fresh deployment starts empty
+instead of erroring, which is the correct choice and a change from the
+sibling, where the same reads are unguarded.</p>
+<p><code>getHistory</code> uses <code>read_file_tail</code> on the
+character budget. Its sibling reads the whole file and slices the last
+30,000 characters; this reads the tail. The transcript is the
+fastest-growing file in either system and this is the version that does
+not load all of it per turn.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — <code>(remember $str)</code>: embed, then
+<code>lib_chromadb.remember</code> with the string, the embedding and
+the timestamp. Two lines, no validation, no dedupe, no cap.</p>
+<p><strong>Read</strong> — <code>(query $str)</code>:
+<code>lib_chromadb.query (embed $str) (maxRecallItems)</code>. One line,
+top twenty by distance. There is no re-ranking pass, no second signal,
+no scope filter and no minimum score, so a query against a non-empty
+store always returns up to twenty items and can never return
+nothing.</p>
+<p><strong>Embedding</strong> — <code>initMemory</code> sets
+<code>embeddingprovider Local</code> by default, with OpenAI as the
+alternative through <code>rag.openai_embed</code>. The sibling defaults
+to OpenAI; this one defaults to running the embedder locally, which for
+a framework whose selling point is a continuously running agent is the
+cheaper and more private default.</p>
+<p><strong>Episodes</strong> — <code>(episodes $time)</code> calls the
+same <code>helper.around_time</code> as its sibling: open the
+transcript, buffer every line, find the nearest timestamp, return a
+window of lines around it. A full linear scan and a full in-memory copy
+per call.</p>
+<p><strong>History</strong> — each turn appends the timestamp, the human
+message when there is one, the response, and <code>ERROR_FEEDBACK</code>
+when the previous action errored, so a failure is written into the text
+the next prompt reads.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory item is <code>(timestamp, atom, embedding)</code> with the
+atom's representation left to the agent — the same position as its
+sibling, and the same consequence: no schema, no required field, no
+type, so no code can validate, filter or migrate a memory, and every
+mechanism this atlas looks for would have to be a convention the model
+maintains inside the atom.</p>
+<p>There is no field for a status, a scope, a provenance, a validity
+interval or a confidence. The truth values that exist in this system —
+NAL's <code>(stv frequency confidence)</code>, and PLN's — belong to
+atoms in the reasoning space, which is rebuilt on every <code>|-</code>
+call. Nothing writes a truth value into Chroma and nothing reads one
+out.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One arm, twenty results, ranked by embedding distance.
+<code>stack_retrieval</code> is <code>vector</code> because that is the
+whole of it.</p>
+<p><strong>The design question the fork raises is whether that is
+enough</strong>, and the honest answer from the code is that it is a
+different trade rather than a simpler version of the same one. Twenty
+similarity hits with no re-ranking cannot surface a memory the agent
+found useful but that the query does not resemble; ten similarity hits
+plus ten reinforcement hits, the sibling's arrangement, can — at the
+cost of a hundred-row over-fetch per query, a SQLite ledger, and a
+reinforcement signal supplied by the model that benefits from it.
+Neither project measures the difference. What OmegaClaw gets in exchange
+is a read path with one parameter and no state.</p>
+<p><code>episodes</code> is the second read path and it does not use
+embeddings at all: given a timestamp, return the transcript lines around
+it. That is the recovery path when similarity fails and the agent knows
+roughly <em>when</em> something happened, and it is the only retrieval
+in the system that can reach material the embedding would never
+rank.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are synchronous, unconditional and rare by
+construction.</strong> The only writer is a tool call, the only cost is
+the embedding round trip, and there is no queue, no batching and no lag
+beyond it.</p>
+<p><strong>Nothing deduplicates</strong>, so the same fact remembered
+twice is two items, both retrievable — and with no promotion signal to
+separate them and no delete to remove one, duplication is permanent and
+accumulates linearly with how often the agent decides to write.</p>
+<p><strong>There is no correction path at all.</strong> No update, no
+supersession pointer, no expiry, no delete, no rejected-value record,
+and — the difference from its sibling — no demote either. A memory the
+agent later judges wrong cannot be removed, superseded, marked, or even
+ranked down. The only available action is to remember a contradicting
+statement and hope the embedding prefers it.</p>
+<p>That is the sharpest cost of the fork's simplification, and it is
+worth stating plainly: MeTTaClaw's <code>demote</code> is a weak
+mechanism — it reduces a score and leaves the memory retrievable — but
+it is the difference between an agent that can express "stop preferring
+this" and one that cannot express anything about a memory after writing
+it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is four skills — <code>remember</code>, <code>query</code>,
+<code>episodes</code>, <code>pin</code> — documented in
+<code>docs/reference-skills-memory.md</code> with signatures, purposes
+and a stated constraint: <em>"All four skills accept quoted string
+arguments. Variables are not permitted in LLM-generated calls."</em>
+Refusing variables in model-generated skill calls is a small, deliberate
+narrowing of what a generated call can do, and it is written down.</p>
+<p>Beside them the agent has shell and file I/O, communication channels,
+and a reasoning surface with three libraries — NAL, PLN and ONA — each
+with its own reference document and tutorials on grounded and reliable
+reasoning. The documentation set is 26 files and includes an internals
+reference for the loop, the memory store, skill dispatch and extension
+points.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Negative eval — awarded</strong>, on the pair described in
+section 1. Two properties make it stronger than its category usually is:
+it runs against a real model because the property under test is
+behavioural, and its control shares the measurement, so the negative
+cannot pass by the store being broken.</p>
+<p><strong>Everything else is withheld.</strong> There is no discrete
+epistemic state on a memory, nothing keyed on a rejected value, one
+timestamp, no scope key, no append-only record of mutations to the
+store, and no surface where a person adjudicates memory content.</p>
+<p><strong>The failure-mode documentation is the part worth reading
+anyway.</strong> <code>reference-failure-modes.md</code> catalogues
+premise formulation errors, confidence-propagation errors, missing
+inference patterns, orchestration failures, <em>variance and
+confirmation bias</em>, and self-improvement limitations, then gives a
+defense stack and a checklist. Naming confirmation bias as a failure
+mode of your own reasoning stack, in the reference documentation, is a
+discipline this atlas asks for and rarely finds — and it makes the gap
+in section 5 more conspicuous rather than less, because the project
+clearly understands what a truth value is for and does not attach one to
+anything it stores.</p>
+<p><strong>The exposure is the same as its sibling's</strong>: shell
+access and arbitrary MeTTa evaluation are skills, memory is writable
+through the same channel, and there is no approval gate in the tree. The
+difference is that this one is deployed — the README invites the reader
+to chat with a live Telegram agent — so the container boundary is doing
+the work an approval gate is not.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>32 test files, about 15,700 lines</strong>, which is more
+test than source. They are integration tests against a running
+container: <code>dexec</code> shells into it, <code>send_prompt</code>
+drives a channel, <code>find_skill_calls</code> and
+<code>wait_for_skill_call</code> watch the transcript for the skill the
+agent chose, and assertions read ChromaDB's SQLite file directly. Mock
+harnesses under <code>Autotests/mock</code>, <code>mock_slack</code>,
+<code>mock_telegram</code> and <code>mock_websocket</code> provide the
+CI-friendly variants.</p>
+<p>Four cover memory: <code>test_memory_chromadb</code> (an explicit
+remember grows the vector count),
+<code>test_memory_no_autoremember</code> (a fact-shaped statement does
+not), <code>test_memory_episode</code> and
+<code>test_memory_history</code>. Beside them
+<code>test_prompt_grounding</code>, <code>test_skill_query</code>,
+<code>test_skill_episodes</code>, <code>test_skill_pin</code> and
+<code>test_skill_metta</code> exercise the skill surface.</p>
+<p><strong>No benchmark, no committed run output, and no paper in the
+repository.</strong> The tests answer "does the agent choose the right
+skill" and never "is what it recalled the right thing", so retrieval
+quality is unmeasured — which is the corpus's normal state, and more
+noticeable here because the fork's central change was to the retrieval
+path.</p>
+<p>I ran nothing: the suite needs a running container and a real
+model.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Test the absence of an extractor against a real
+model.</strong> If your design's claim is "we only write when asked",
+the assertion has to involve something that could have chosen otherwise.
+Mocking the model turns the test into a restatement of the code.</p>
+<p><strong>Give a negative test a positive control on the same
+measurement.</strong> Vector count before and after, once for a
+statement that should not write and once for a prompt that should.
+Neither can pass for the wrong reason.</p>
+<p><strong>Separate the working slot from the durable store, and say
+which is which in the documentation.</strong> One overwritten
+<code>pin</code> for task state, an embedding store for knowledge, and a
+sentence warning that choosing wrong is <em>"one of the easier
+performance and reliability foot-guns"</em>.</p>
+<p><strong>Guard every read of a state file and return empty rather than
+failing.</strong> A fresh deployment with no history and no prompt file
+starts, instead of crashing on the first turn.</p>
+<p><strong>Tail the transcript, do not read it.</strong>
+<code>read_file_tail</code> against a character budget, where the
+sibling reads the whole file and slices.</p>
+<p><strong>Publish your failure modes as reference
+documentation</strong>, including the ones that are about your own
+reasoning being wrong.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not ship a durable store with no way to say anything about
+a memory after writing it.</strong> No delete, no supersession, no
+status, and — after the fork — not even a demote. Every correction has
+to be a new memory competing on similarity.</p>
+<p><strong>Do not leave the truth calculus and the memory store
+unconnected.</strong> NAL, PLN and ONA are here with tutorials, and the
+AtomSpace they reason in is rebuilt per call, so no conclusion and no
+confidence ever lands in Chroma.</p>
+<p><strong>Do not assume twenty similarity hits replace a
+use-signal.</strong> It may; nothing here measures it, and the sibling
+that kept the signal is one fork away.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you want a deployed neural-symbolic agent with a small
+readable core, a real test suite, and documentation that argues with
+itself about where its reasoning fails. As a framework it is further
+along than its sibling in every operational respect: containerised,
+multi-channel, locally embedded by default, guarded file reads, and
+tests that drive a real model.</p>
+<p>Do not take it if memory has to be correctable. The store is
+append-only in the strongest sense — nothing in the tree can modify or
+remove an item — and the retrieval path has no signal but similarity, so
+a wrong memory is competing on equal terms with its correction for as
+long as the deployment lives.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Nothing can be said about a memory after it is
+written.</strong> No delete, no supersession, no status, no demote.</li>
+<li><strong>The reasoning tier is per-invocation.</strong> Truth values,
+revisions and proof trails are discarded after each <code>|-</code> call
+and cannot reach durable memory.</li>
+<li><strong>Similarity is the only ranking</strong>, so a useful memory
+the query does not resemble is unreachable except through
+<code>episodes</code> and a remembered timestamp.</li>
+<li><strong>No deduplication</strong>, and with no delete, duplicates
+are permanent.</li>
+<li><strong>No scope key.</strong> One collection per deployment.</li>
+<li><strong><code>around_time</code> buffers the whole
+transcript</strong> to locate one timestamp.</li>
+<li><strong>Retrieval quality is untested.</strong> The suite asserts
+which skill the agent chose, never whether what came back was
+right.</li>
+<li><strong>Shell and arbitrary MeTTa are skills</strong>, with memory
+writable through the same surface and no approval gate in the tree.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the test pair. Twenty lines of harness, a real model, and a
+counter read before and after answer a question about a memory system
+that no amount of unit testing can: does it write when nobody asked it
+to.</p>
+<p>Borrow the tier table from
+<code>reference-internals-memory-store.md</code>. Three rows — skill,
+persistence, role — settle an argument that recurs in most memory
+systems and is usually settled by convention.</p>
+<p>Do not borrow the storage layer; it is a thin call into a vector
+store the repository does not contain, with no lifecycle. And read <a
+href="../mettaclaw/">MeTTaClaw</a> before deciding the retrieval path is
+finished: the two share a root commit, and the reinforcement machinery
+this one removed is still running over there.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Why was the promotion ledger removed? No commit message, document or
+issue in the tree gives the reason, and the sibling still has it.</li>
+<li>Did the recall budget doubling to twenty compensate for losing the
+reinforcement slice, and how would anyone know?</li>
+<li>What would it take for a NAL conclusion to become a remembered atom
+with its truth value intact? The atoms are already the same format.</li>
+<li>The failure-mode reference names confirmation bias. Does a
+similarity-only recall over a store the agent chose to write make that
+better or worse?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory.metta</code></td>
+<td>All four memory verbs in 61 lines, and the guarded prompt and
+history reads</td>
+</tr>
+<tr>
+<td><code>Autotests/test_memory_no_autoremember.py</code></td>
+<td>The negative write test, and its docstring on why it refuses to
+mock</td>
+</tr>
+<tr>
+<td><code>Autotests/test_memory_chromadb.py</code></td>
+<td>The positive control on the same vector counter</td>
+</tr>
+<tr>
+<td><code>Autotests/helpers.py</code></td>
+<td><code>dexec</code>, <code>send_prompt</code>,
+<code>find_skill_calls</code>, the Checker harness</td>
+</tr>
+<tr>
+<td><code>docs/reference-internals-memory-store.md</code></td>
+<td>The three-tier table, including the per-invocation AtomSpace</td>
+</tr>
+<tr>
+<td><code>docs/reference-skills-memory.md</code></td>
+<td>Signatures and the no-variables constraint on generated calls</td>
+</tr>
+<tr>
+<td><code>docs/reference-failure-modes.md</code></td>
+<td>Eight sections of self-diagnosis, including confirmation bias</td>
+</tr>
+<tr>
+<td><code>src/loop.metta</code></td>
+<td>The continuous execution loop</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f"><code class="commit-id" title="b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f">b96afaa3…</code></a>
+— first reading. Screened before reading: build-time execution declared
+in six <code>conftest.py</code> files under <code>Autotests/</code>;
+nothing was installed, no container was built and no test was run, so
+every claim about the suite is from reading it.
+<code>negative_eval</code> awarded on the no-autoremember test and its
+control, with the mark's write-side form stated in the evidence record.
+The shared early history with <a href="../mettaclaw/">MeTTaClaw</a> was
+established by comparing root commits, which are identical in both
+repositories, and the divergence in <code>src/memory.metta</code> — 61
+lines against 112, with the promotion ledger absent — by diffing the two
+files directly.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
