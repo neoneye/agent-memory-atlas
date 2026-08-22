@@ -115,14 +115,14 @@ byte-for-byte, and leaves the original untouched on any failure.</p>
               <strong>chaitanyagiri/munder-difflin</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/chaitanyagiri/munder-difflin/commit/6a09318dafbf99f4c28e8af760a2353fce34c771" title="6a09318dafbf99f4c28e8af760a2353fce34c771">
+            <a class="meta-pill revision-pill" href="https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8" title="5f7de6e464fda1345ceb6d41548ec72178e7e6d8">
               <span>Analyzed revision</span>
-              <code>6a09318d…</code>
+              <code>5f7de6e4…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -250,6 +250,39 @@ and the summary heading; everything after is a list of
 <code>Section { heading, body }</code>.</p>
 <p>That is the whole model. No id, no status, no provenance beyond the
 owning agent's directory, no validity time, no supersession pointer.</p>
+<h3
+id="a-third-tier-holding-what-the-organisation-wrote-rather-than-what-the-agent-did">A
+third tier, holding what the organisation wrote rather than what the
+agent did</h3>
+<p><code>src/main/knowledge.ts</code> and the pure-JS
+<code>kg-core.cjs</code> beneath it add an opt-in enterprise store:
+ingest a document, chunk it, index it, and expose <code>search</code>,
+<code>list</code>, <code>get</code>, <code>remove</code> and
+<code>stats</code>. Agents reach it <strong>out of process</strong>
+through a bundled <code>kg.cjs</code> CLI rather than through the
+harness, and the spawn injection bakes the absolute interpreter and
+script paths into the prompt for a reason recorded in the source —
+<code>$KG_CLI</code> is <em>"POSIX-only and expands to nothing under
+cmd.exe/PowerShell"</em>, so a shell reference would silently produce a
+broken command on Windows. The prompt tells the agent when to reach for
+it: <em>"When a task needs that context — company-specific facts, house
+style, internal processes — query it instead of guessing."</em></p>
+<p><strong>The boundary between this and <code>memory.md</code> is the
+useful part.</strong> The per-agent markdown holds what an agent
+observed and wrote; this holds documents somebody handed the
+organisation. Nothing an agent learns is written back — the ingestion
+surface is in-app over IPC, and the agent's CLI is search, list and get.
+So the system now has a belief store it maintains and a corpus index it
+only reads, kept in separate stores with separate access paths, which is
+a cleaner separation than several systems in this atlas manage with one
+collection and a <code>type</code> column.</p>
+<p><strong>It is not a graph.</strong> The name promises structure the
+implementation does not have: <code>search</code> tokenizes the query,
+scans <code>index.jsonl</code>, and scores chunks by term match. The six
+occurrences of "graph" in <code>kg-core.cjs</code> are all in the
+docstring naming the feature. That changes nothing about whether it
+works and it matters for a reader deciding whether the system carries a
+relational memory — it does not.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Two paths, and neither is implemented here. The agent reads its own
 file because the prompt tells it to. Cross-agent semantic recall is
@@ -408,6 +441,32 @@ extraction and the graph</li>
 about agent memory, prose rather than evidence</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8"><code class="commit-id" title="5f7de6e464fda1345ceb6d41548ec72178e7e6d8">5f7de6e4…</code></a>
+— re-pinned 253 commits and +358,785 lines on, at v0.4.5. Screened
+again: no auto-run surface, one build-time execution point, three
+unpinned surfaces and three files inside the cooldown; nothing was
+installed and nothing was run. <code>audit_log</code> unchanged and it
+is still the only mark.</p>
+<p><strong>The condensation gate is byte-identical apart from one
+comment.</strong> Every check this report credits — the pinned lines,
+the byte-for-byte round trip of the newest sections, the backup, the
+atomic swap and the untouched original on failure — is unchanged at this
+pin, so the headline mechanism stands without re-derivation.</p>
+<p>New in section 6: an opt-in enterprise document store, queried by
+agents through a bundled CLI whose absolute path is baked into the
+prompt because a <code>$VAR</code> reference <em>"expands to nothing
+under cmd.exe/PowerShell"</em>. It is a corpus index rather than a
+belief store — agents search, list and get, and ingestion is in-app only
+— and despite its name it holds no graph: <code>search</code> tokenizes
+and scores chunks out of <code>index.jsonl</code>.</p>
+<p>Worth recording as a fact about the project's own practice: two
+commits in this range are titled <em>"the scope-filter comment keeps the
+reasoning, drops the count"</em> and <em>"the ledger comment keeps the
+reasoning, drops the figures"</em>, and a third makes before-and-after
+evidence mandatory in pull requests. A codebase deliberately stripping
+figures out of comments that will outlive them is doing to itself what
+this atlas has to do to its own pages.</p>
 <p><strong>2026-08-17</strong> — <a
 href="https://github.com/chaitanyagiri/munder-difflin/commit/6a09318dafbf99f4c28e8af760a2353fce34c771"><code class="commit-id" title="6a09318dafbf99f4c28e8af760a2353fce34c771">6a09318d…</code></a>
 — First reading, at 666 commits. Screened first: 0 auto-run surfaces, 1

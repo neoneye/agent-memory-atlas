@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "chaitanyagiri/munder-difflin"
 source_url: https://github.com/chaitanyagiri/munder-difflin
-revision: 6a09318dafbf99f4c28e8af760a2353fce34c771
-revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/6a09318dafbf99f4c28e8af760a2353fce34c771
-analyzed_at: 2026-08-17
+revision: 5f7de6e464fda1345ceb6d41548ec72178e7e6d8
+revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8
+analyzed_at: 2026-08-22
 capabilities: "audit_log"
 capability_evidence:
   audit_log: "the hive event log | src/main/hive.ts | log.jsonl is described in the source as an append-only event log and carries memory mutations — condense with oldBytes/newBytes/evicted/kept/hoisted and the backup path, condense-abort with a named reason, plus compact, archive and drop — alongside the messaging events | none"
@@ -18,7 +18,7 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "A dated `## <date> — <title>` section inside one `memory.md` per agent, in a three-region file: pinned durable facts, one rolling recursive summary, and the newest K verbatim sections"
   storage: "Plain markdown under `<harnessHome>/hive/agents/<id>/`, beside an inbox, an outbox, a cursor and a settings file; the hive keeps an append-only `log.jsonl` and a registry"
-  retrieval: "The agent reads its own `memory.md`. Semantic recall across the team is delegated to the MemPalace CLI over a shared palace, and degrades silently to nothing when that binary is absent"
+  retrieval: "The agent reads its own `memory.md`. Semantic recall across the team is delegated to the MemPalace CLI over a shared palace, and degrades silently to nothing when that binary is absent. A third, opt-in tier searches an organisation-supplied document store by keyword"
   write: "The agent writes its own markdown under a prompt — *read your memory.md and drain every message in your inbox*. A miner re-indexes the file into MemPalace when its mtime changes"
   update_delete: "No delete and no correction of a claim. The only rewrite is condensation: a timer finds oversized files and replaces the tail with a model-written summary, behind a backup, a six-check verification and an atomic swap"
   scoping: "Deliberately absent between agents. One palace is shared so the whole team can recall by meaning, and the text fallback searches every agent`s memory.md including archived ones"
@@ -137,6 +137,34 @@ is a list of `Section { heading, body }`.
 
 That is the whole model. No id, no status, no provenance beyond the owning
 agent's directory, no validity time, no supersession pointer.
+
+### A third tier, holding what the organisation wrote rather than what the agent did
+
+`src/main/knowledge.ts` and the pure-JS `kg-core.cjs` beneath it add an opt-in
+enterprise store: ingest a document, chunk it, index it, and expose `search`,
+`list`, `get`, `remove` and `stats`. Agents reach it **out of process** through a
+bundled `kg.cjs` CLI rather than through the harness, and the spawn injection
+bakes the absolute interpreter and script paths into the prompt for a reason
+recorded in the source — `$KG_CLI` is *"POSIX-only and expands to nothing under
+cmd.exe/PowerShell"*, so a shell reference would silently produce a broken
+command on Windows. The prompt tells the agent when to reach for it: *"When a
+task needs that context — company-specific facts, house style, internal
+processes — query it instead of guessing."*
+
+**The boundary between this and `memory.md` is the useful part.** The per-agent
+markdown holds what an agent observed and wrote; this holds documents somebody
+handed the organisation. Nothing an agent learns is written back — the ingestion
+surface is in-app over IPC, and the agent's CLI is search, list and get. So the
+system now has a belief store it maintains and a corpus index it only reads, kept
+in separate stores with separate access paths, which is a cleaner separation than
+several systems in this atlas manage with one collection and a `type` column.
+
+**It is not a graph.** The name promises structure the implementation does not
+have: `search` tokenizes the query, scans `index.jsonl`, and scores chunks by
+term match. The six occurrences of "graph" in `kg-core.cjs` are all in the
+docstring naming the feature. That changes nothing about whether it works and it
+matters for a reader deciding whether the system carries a relational memory —
+it does not.
 
 ## 6. Retrieval Mechanics
 
@@ -282,5 +310,13 @@ machine and nothing where one agent's material must stay away from another's.
   than evidence
 
 ## History
+
+**2026-08-22** — [`5f7de6e464fda1345ceb6d41548ec72178e7e6d8`](https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8) — re-pinned 253 commits and +358,785 lines on, at v0.4.5. Screened again: no auto-run surface, one build-time execution point, three unpinned surfaces and three files inside the cooldown; nothing was installed and nothing was run. `audit_log` unchanged and it is still the only mark.
+
+**The condensation gate is byte-identical apart from one comment.** Every check this report credits — the pinned lines, the byte-for-byte round trip of the newest sections, the backup, the atomic swap and the untouched original on failure — is unchanged at this pin, so the headline mechanism stands without re-derivation.
+
+New in section 6: an opt-in enterprise document store, queried by agents through a bundled CLI whose absolute path is baked into the prompt because a `$VAR` reference *"expands to nothing under cmd.exe/PowerShell"*. It is a corpus index rather than a belief store — agents search, list and get, and ingestion is in-app only — and despite its name it holds no graph: `search` tokenizes and scores chunks out of `index.jsonl`.
+
+Worth recording as a fact about the project's own practice: two commits in this range are titled *"the scope-filter comment keeps the reasoning, drops the count"* and *"the ledger comment keeps the reasoning, drops the figures"*, and a third makes before-and-after evidence mandatory in pull requests. A codebase deliberately stripping figures out of comments that will outlive them is doing to itself what this atlas has to do to its own pages.
 
 **2026-08-17** — [`6a09318dafbf99f4c28e8af760a2353fce34c771`](https://github.com/chaitanyagiri/munder-difflin/commit/6a09318dafbf99f4c28e8af760a2353fce34c771) — First reading, at 666 commits. Screened first: 0 auto-run surfaces, 1 build-time execution path (an npm `postinstall` running `electron-rebuild` and two node-pty patch scripts), 2 manifests inside the seven-day cooldown; nothing was installed, built or run. One mark, `audit_log`. Semantic recall is delegated to the MemPalace CLI, which has [its own report](../mempalace/), so retrieval and scoping belong there. Withheld here: no scope key between agents by design, no rejected-value record, no epistemic state, and no tests of any kind — including for `verify()`, which is exported and pure. No paper.
