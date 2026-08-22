@@ -110,14 +110,14 @@ passed'.</p>
               <strong>KimGLee/Cambium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5" title="32ed022ec1f27e52914506d713424085451c4ec5">
+            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/48dcf34c7e5f2ede1acc7dc7f233efb19d088692" title="48dcf34c7e5f2ede1acc7dc7f233efb19d088692">
               <span>Analyzed revision</span>
-              <code>32ed022e…</code>
+              <code>48dcf34c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-21</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -267,6 +267,54 @@ composes a vocabulary, and until then <code>check_vocab.py</code>
 correctly declines to check anything.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
+<h3 id="the-middle-of-the-guarantee-measured-against-a-live-host">The
+middle of the guarantee, measured against a live host</h3>
+<p>The delivery mechanism above proves two of three things. The registry
+that governs it says which one it cannot: <em>"A server can prove what
+it sent. It cannot prove what the host put in the model context."</em>
+Between the server's send and the model's acknowledgement sits a host
+adapter that may deliver a tool result inline, truncate it, or spill it
+to a file — and no amount of hashing on either side sees that.</p>
+<p><code>Tools/host-conformance.yaml</code> is a registry of adapter
+builds that have <strong>demonstrated by test</strong> that a
+within-budget result arrives inline, and
+<code>Tools/tests/host_conformance_probe.py</code> is what earns an
+entry. Its design is the part to take.</p>
+<p><strong>Both controls are mandatory, and the positive one alone is
+defined as a failure.</strong> The positive control requires a payload
+of exactly <code>minimum_bytes</code> to arrive whole, <em>"proven by
+the model reporting a nonce placed at its very end"</em> — a tail nonce,
+so a truncated prefix cannot pass. The negative control requires a
+larger payload to be <strong>observed</strong> as externalized. The
+registry states the rule in one line: <em>"A positive result alone is
+not a pass: a probe that cannot fail cannot certify."</em> A probe whose
+negative control does not fire reports itself as failed rather than
+reporting success. This atlas asks for a positive control beside an
+absence assertion in every report it writes; this is the same argument
+turned on the instrument, and it is the only implementation of it in the
+corpus.</p>
+<p><strong>The measurement is dated, versioned, and produced a warning
+rather than a celebration.</strong> Against Claude Code 2.1.223 on 22
+August 2026, 49,152 bytes arrived inline with the tail nonce intact,
+while 57,344 and 65,536 were both spilled to a persisted-output file
+with the nonce absent. So the adapter clears the 49,152-byte budget and
+the probe demonstrably detects the failure it rules out — and the commit
+records the consequence in the same breath: <em>"the inline ceiling sits
+between 49152 and 57344 bytes, so the budget has no headroom above
+it."</em></p>
+<p><strong>An unmeasured adapter degrades rather than inherits.</strong>
+Registration binds a <code>clientInfo</code> name and an
+inclusive-exclusive version range, because <em>"hosts update themselves
+underneath a passing registration, so evidence binds the build it ran
+against and an unlisted build degrades instead of inheriting a stale
+pass."</em> Two more sentences bound the claim honestly: an absent
+adapter is <code>degraded</code>, and <em>"that is a statement about
+measurement, not about quality"</em>; and the version labels are
+<em>"declared labels, not authentication."</em> Evidence that expires
+when its subject changes, a default of degrade, and a refusal to confuse
+an unmeasured thing with a bad one — the same fail-closed instinct as
+the producer-era predicates above, pointed at a dependency that upgrades
+itself.</p>
 <h3
 id="a-record-is-judged-by-the-contract-that-was-in-force-when-it-was-written">A
 record is judged by the contract that was in force when it was
@@ -793,6 +841,23 @@ assertion).</li>
 <code>NOTICE</code>, <code>ATTRIBUTION.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/KimGLee/Cambium/commit/48dcf34c7e5f2ede1acc7dc7f233efb19d088692"><code class="commit-id" title="48dcf34c7e5f2ede1acc7dc7f233efb19d088692">48dcf34c…</code></a>
+— re-pinned 9 commits on. Screened again: no auto-run surface, one
+build-time <code>Makefile</code>, no dependency manifest, nothing
+installed or run. Marks unchanged.</p>
+<p>The addition is in section 4: the delivery guarantee's middle third,
+measured. <code>card-first-readback-v3</code> splits activation into
+budgeted pieces, <code>K13/20</code> adds an assignment-state and
+delivery gate, and <code>Tools/host-conformance.yaml</code> records
+which host adapter builds have demonstrated inline delivery by test
+rather than by assumption. The probe requires both a positive and a
+negative control and treats a positive-only result as its own failure,
+on the stated ground that <em>"a probe that cannot fail cannot
+certify"</em>. Measured against Claude Code 2.1.223: 49,152 bytes inline
+with the tail nonce intact, 57,344 and 65,536 spilled to a
+persisted-output file — a pass, recorded together with the warning that
+the ceiling leaves the budget no headroom.</p>
 <p><strong>2026-08-21</strong> — <a
 href="https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5"><code class="commit-id" title="32ed022ec1f27e52914506d713424085451c4ec5">32ed022e…</code></a>
 — re-pinned 13 commits on, later the same day. Screened again: no

@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
-revision: 32ed022ec1f27e52914506d713424085451c4ec5
-revision_url: https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5
-analyzed_at: 2026-08-21
+revision: 48dcf34c7e5f2ede1acc7dc7f233efb19d088692
+revision_url: https://github.com/KimGLee/Cambium/commit/48dcf34c7e5f2ede1acc7dc7f233efb19d088692
+analyzed_at: 2026-08-22
 capabilities: "trust_state, audit_log, human_review"
 capability_evidence:
   trust_state: "the frontmatter contract every page carries, enforced by a check that refuses to guess | Tools/check_vocab.py, kernel/K08 Metadata and Status/03 Status Axes.md, kernel/K08 Metadata and Status/04 Evidence and Relationship Metadata.md | four status axes that may not be collapsed, plus an `evidence_maturity` ladder, as controlled vocabularies rather than scores; `check_vocab.py` validates every page against `Tools/vocab.yaml` composed from the kernel base plus one selected profile, and exits 1 when no profile is selected or the artifact is empty or unparseable rather than treating an absent vocabulary as an unconditional pass | Tools/tests/test_vocab_artifact_integrity.py — `test_a_truncated_vocabulary_does_not_pass_the_same_page` is the discriminating case: a page the real vocabulary flags must not pass against a truncated one, so a degraded artifact cannot read as a clean run; `test_empty_bytes_are_refused`, `test_an_empty_field_set_is_refused` and `test_unparseable_bytes_are_refused` pin the other three ways an artifact can be vacuous"
@@ -166,6 +166,51 @@ inert until an adopter answers the profile interface and composes a vocabulary,
 and until then `check_vocab.py` correctly declines to check anything.
 
 ## 4. Essential Implementation Paths
+
+### The middle of the guarantee, measured against a live host
+
+The delivery mechanism above proves two of three things. The registry that
+governs it says which one it cannot: *"A server can prove what it sent. It
+cannot prove what the host put in the model context."* Between the server's
+send and the model's acknowledgement sits a host adapter that may deliver a tool
+result inline, truncate it, or spill it to a file — and no amount of hashing on
+either side sees that.
+
+`Tools/host-conformance.yaml` is a registry of adapter builds that have
+**demonstrated by test** that a within-budget result arrives inline, and
+`Tools/tests/host_conformance_probe.py` is what earns an entry. Its design is
+the part to take.
+
+**Both controls are mandatory, and the positive one alone is defined as a
+failure.** The positive control requires a payload of exactly `minimum_bytes` to
+arrive whole, *"proven by the model reporting a nonce placed at its very end"* —
+a tail nonce, so a truncated prefix cannot pass. The negative control requires a
+larger payload to be **observed** as externalized. The registry states the rule
+in one line: *"A positive result alone is not a pass: a probe that cannot fail
+cannot certify."* A probe whose negative control does not fire reports itself as
+failed rather than reporting success. This atlas asks for a positive control
+beside an absence assertion in every report it writes; this is the same argument
+turned on the instrument, and it is the only implementation of it in the corpus.
+
+**The measurement is dated, versioned, and produced a warning rather than a
+celebration.** Against Claude Code 2.1.223 on 22 August 2026, 49,152 bytes
+arrived inline with the tail nonce intact, while 57,344 and 65,536 were both
+spilled to a persisted-output file with the nonce absent. So the adapter clears
+the 49,152-byte budget and the probe demonstrably detects the failure it rules
+out — and the commit records the consequence in the same breath: *"the inline
+ceiling sits between 49152 and 57344 bytes, so the budget has no headroom above
+it."*
+
+**An unmeasured adapter degrades rather than inherits.** Registration binds a
+`clientInfo` name and an inclusive-exclusive version range, because *"hosts
+update themselves underneath a passing registration, so evidence binds the build
+it ran against and an unlisted build degrades instead of inheriting a stale
+pass."* Two more sentences bound the claim honestly: an absent adapter is
+`degraded`, and *"that is a statement about measurement, not about quality"*; and
+the version labels are *"declared labels, not authentication."* Evidence that
+expires when its subject changes, a default of degrade, and a refusal to confuse
+an unmeasured thing with a bad one — the same fail-closed instinct as the
+producer-era predicates above, pointed at a dependency that upgrades itself.
 
 ### A record is judged by the contract that was in force when it was written
 
@@ -608,6 +653,10 @@ which have neither.
 - Licensing: `LICENSE.md`, `LICENSES/`, `NOTICE`, `ATTRIBUTION.md`.
 
 ## History
+
+**2026-08-22** — [`48dcf34c7e5f2ede1acc7dc7f233efb19d088692`](https://github.com/KimGLee/Cambium/commit/48dcf34c7e5f2ede1acc7dc7f233efb19d088692) — re-pinned 9 commits on. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed or run. Marks unchanged.
+
+The addition is in section 4: the delivery guarantee's middle third, measured. `card-first-readback-v3` splits activation into budgeted pieces, `K13/20` adds an assignment-state and delivery gate, and `Tools/host-conformance.yaml` records which host adapter builds have demonstrated inline delivery by test rather than by assumption. The probe requires both a positive and a negative control and treats a positive-only result as its own failure, on the stated ground that *"a probe that cannot fail cannot certify"*. Measured against Claude Code 2.1.223: 49,152 bytes inline with the tail nonce intact, 57,344 and 65,536 spilled to a persisted-output file — a pass, recorded together with the warning that the ceiling leaves the budget no headroom.
 
 **2026-08-21** — [`32ed022ec1f27e52914506d713424085451c4ec5`](https://github.com/KimGLee/Cambium/commit/32ed022ec1f27e52914506d713424085451c4ec5) — re-pinned 13 commits on, later the same day. Screened again: no auto-run surface, one build-time `Makefile`, no dependency manifest, nothing installed. **`audit_log` is awarded**, on a mechanism present at the earlier pin and not credited: `kblib.make_receipt` builds one record per check and per state transition with a `result` asserted to be `pass`, `fail` or `candidate`, appended under `.cambium/receipts/` with a hot catalog and a cold archive, across 146 call sites — a refusal filed in the same shape as a pass. Taking the report to three marks.
 
