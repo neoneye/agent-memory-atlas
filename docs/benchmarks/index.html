@@ -292,10 +292,12 @@ not.</p>
 <p><strong>LongMemEval's knowledge-update category</strong> is the
 closest thing the field has to a correction benchmark: the conversation
 contains a fact that is later superseded, and the system is scored on
-whether it answers with the new value. Its abstention category is the
-closest thing to a test for <em>not</em> answering. Both are still
-question-answering — the system is never asked to prove the old value is
-gone, only to prefer the new one at answer time.</p>
+whether it answers with the new value. Its abstention items are the
+closest thing to a test for <em>not</em> answering, and <a
+href="#longmemeval-publishes-three-accuracies-and-pins-none-of-the-data">narrower
+than the name suggests</a>. Both are still question-answering — the
+system is never asked to prove the old value is gone, only to prefer the
+new one at answer time.</p>
 <p><strong>BEAM's <code>contradiction_resolution</code>
 category</strong> goes one step further, and it is the only public
 benchmark in this atlas that scores correction at all. The published
@@ -362,12 +364,13 @@ scoreboard is written to a gitignored directory, so the atlas can verify
 the <em>method</em> but not any <em>number</em>.</p>
 <h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
 commit</h3>
-<p>Four benchmarks were checked out and read rather than described from
+<p>Five benchmarks were checked out and read rather than described from
 their papers, because the literature makes a specific claim about the
 first of them that the code does not support, because the third turns
 out to hold the nearest thing to a forgetting test anyone has written,
-and because the fourth is titled as though it were the benchmark this
-page says does not exist.</p>
+because the fourth is titled as though it were the benchmark this page
+says does not exist, and because the fifth is cited throughout this
+atlas and had never been read at a commit.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -414,6 +417,16 @@ href="https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a1
 16 Feb 2026</td>
 <td>500 committed items asking whether a model <em>applies</em> a memory
 it should not. Not a deletion test — see below</td>
+</tr>
+<tr>
+<td><strong>LongMemEval</strong> (<a
+href="https://github.com/xiaowu0162/longmemeval">xiaowu0162/longmemeval</a>)</td>
+<td><a
+href="https://github.com/xiaowu0162/longmemeval/commit/9e0b455f4ef0e2ab8f2e582289761153549043fc"><code class="commit-id" title="9e0b455f4ef0e2ab8f2e582289761153549043fc">9e0b455f…</code></a>,
+11 May 2026</td>
+<td>500 questions over timestamped chat histories, graded by an LLM
+judge. Six question types, three different accuracies, and a dataset the
+repository does not contain — see below</td>
 </tr>
 </tbody>
 </table></div>
@@ -493,6 +506,80 @@ category, at greater length. The competency is named accurately in the
 code and inaccurately in the literature that cites it, and the
 difference matters exactly here: a reader looking for a forgetting
 benchmark will be sent to this one and will not find one.</p>
+<h4
+id="longmemeval-publishes-three-accuracies-and-pins-none-of-the-data">LongMemEval
+publishes three accuracies and pins none of the data</h4>
+<p>LongMemEval is cited more often on this page than any other
+benchmark, and until now from its paper. The harness is fifteen Python
+files, three of which produce every number anyone quotes. Reading them
+changes four things a reader would otherwise assume.</p>
+<p><strong>The five abilities in the paper are six question types in the
+code, and abstention is not one of them.</strong>
+<code>src/evaluation/evaluate_qa.py</code> branches on
+<code>single-session-user</code>, <code>single-session-assistant</code>,
+<code>single-session-preference</code>, <code>multi-session</code>,
+<code>temporal-reasoning</code> and <code>knowledge-update</code>, and
+raises <code>NotImplementedError</code> on anything else. Abstention is
+not a type — it is
+<code>abstention='_abs' in entry['question_id']</code>, a substring test
+on the identifier that swaps in a different judge prompt. An abstention
+item therefore also carries one of the six types, and
+<code>print_qa_metrics.py</code> counts it twice: once inside its type,
+once in the abstention figure.</p>
+<p><strong>Three different headline numbers come out of one
+run.</strong> <code>evaluate_qa.py</code> prints a flat micro accuracy
+over everything it graded. <code>print_qa_metrics.py</code> prints
+<strong>Task-averaged Accuracy</strong> (the mean of six per-type
+means), <strong>Overall Accuracy</strong> (micro), and
+<strong>Abstention Accuracy</strong> separately. Macro and micro diverge
+whenever the per-type counts are uneven. A citation reading "<em>X</em>%
+on LongMemEval" without saying which of the three is not comparable with
+another that does the same, and the published scores collected on this
+page inherit that ambiguity from their sources.</p>
+<p><strong>The grade is one model call and one substring test.</strong>
+The judge is <code>gpt-4o-2024-08-06</code> at
+<code>temperature: 0</code>, <code>max_tokens: 10</code>, and the
+verdict is <code>label = 'yes' in eval_response.lower()</code>. There is
+no parse-failure path: a refusal, an empty completion or a truncated
+reply scores as <em>wrong</em> rather than as unscored, so judge
+unavailability is indistinguishable from system failure in the total.
+<code>evaluate_qa.py</code> will run against <code>gpt-4o-mini</code> or
+a locally served Llama-3.1-70B, but <code>print_qa_metrics.py</code>
+asserts the stored label came from <code>gpt-4o-2024-08-06</code> — the
+harness permits three judges and the metric printer accepts one. The
+prompts are per-category, and one grants an amnesty worth knowing about:
+temporal reasoning is instructed to "not penalize off-by-one errors for
+the number of days."</p>
+<p><strong>Retrieval is never scored on the abstention items.</strong>
+<code>print_retrieval_metrics.py</code> filters
+<code>'_abs' not in x['question_id']</code> before it computes anything.
+The questions whose correct behaviour is to find nothing are exactly the
+ones dropped from the retrieval metrics. The one public benchmark here
+with a negative control at answer time has none at retrieval time: a
+system can abstain correctly in prose while its retriever returns the
+same confident non-evidence on every unanswerable question, and the
+scoreboard cannot see it. What is reported is <code>recall_all@k</code>
+— all-or-nothing, 1.0 only when <em>every</em> gold document is inside
+the top <em>k</em> — and <code>ndcg_any@k</code>, at session and turn
+level. <code>eval_utils.py</code> also computes <code>recall_any</code>
+and nothing prints it.</p>
+<p><strong>And the dataset is not in the repository.</strong> Setup
+<code>wget</code>s three JSON files from Hugging Face into an empty
+<code>data/</code>, and no checksum, version field or filename guard
+exists anywhere in the harness. That matters because the data changed
+under the name: the September 2025 release "further cleaned up the
+history sessions to prevent interference on answer correctness,"
+shipping <code>longmemeval_s_cleaned.json</code> and
+<code>longmemeval_m_cleaned.json</code> with a change log beside them.
+Scores from before and after that release are not measurements of the
+same benchmark. Nothing in the harness's output records which haystack
+was read, so a result file can be complete in every other respect and
+still not say — <strong>a LongMemEval number is comparable with another
+only if both name their data file, and the harness gives them no field
+in which to do it.</strong> <a
+href="https://github.com/xiaowu0162/LongMemEval-V2">LongMemEval-V2</a>,
+announced May 2026, is a separate repository and a separate
+benchmark.</p>
 <h3 id="the-2026-crop-reproduces-the-monoculture">The 2026 crop
 reproduces the monoculture</h3>
 <p>A search for agent-memory repositories pushed in 2026, sorted by
@@ -2692,9 +2779,12 @@ matters as much as it does.</p></li>
 code. Those in the second are from familiarity with the literature and
 were not verified against their own repositories in this
 review.</p></li>
-<li><p>LoCoMo's and LongMemEval's category structures are described from
-published descriptions, not from re-reading their datasets
-here.</p></li>
+<li><p>LoCoMo's category structure is described from published
+descriptions, not from re-reading its dataset here. LongMemEval's is
+read from its harness at <a
+href="https://github.com/xiaowu0162/longmemeval/commit/9e0b455f4ef0e2ab8f2e582289761153549043fc"><code class="commit-id" title="9e0b455f4ef0e2ab8f2e582289761153549043fc">9e0b455f…</code></a>;
+the dataset itself is not in that repository and was not downloaded, so
+its per-type item counts are not stated here.</p></li>
 <li><p>"Measured nowhere" in §5 means <em>not found in the systems this
 atlas has reviewed</em>, at the pinned commits listed in the <a
 href="../compare/">comparative report</a>. It is a statement about 322
