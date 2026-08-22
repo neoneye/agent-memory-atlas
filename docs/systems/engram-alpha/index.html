@@ -120,14 +120,14 @@ write.</p>
               <strong>techtheist/engram</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">
+            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f" title="2605d84246c44c258b0d0f12a555980eb6a7456f">
               <span>Analyzed revision</span>
-              <code>15fbe809…</code>
+              <code>2605d842…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -146,12 +146,11 @@ write.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Engram Alpha is graph memory for AI coding assistants: ~30,200 lines
-of Rust across <code>engram-core</code>, <code>engram-mcp</code> and
-<code>engram-http</code> (33,500 with the <code>engram-cli</code>
-crate), MIT, release v0.8.7, 98 commits since 3 July 2026, shipping as a
-JetBrains plugin and a VS Code extension on three marketplaces with a
-browser demo of the real pane. <strong>Not to be confused with <a
+<p>Engram Alpha is graph memory for AI coding assistants: ~27,800 lines
+of Rust across the crates (38,700 counting their test modules), MIT,
+release v0.8.9, 112 commits since 3 July 2026, shipping as a JetBrains
+plugin and a VS Code extension on three marketplaces with a browser demo
+of the real pane. <strong>Not to be confused with <a
 href="../engram/">Engram</a> — a different project of the same name,
 already in this atlas.</strong></p>
 <p><em>Alpha</em> is part of the product's name, not a maturity label:
@@ -340,12 +339,34 @@ transfer between graphs, relative mechanisms do."</em></p>
 graph and changes no trust, so a note cannot certify itself by being
 popular.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<p><strong>Runtime.</strong> A Rust core (<code>engram-core</code>) with
-an MCP server (<code>engram-mcp</code>, 3,778 lines) and an HTTP surface
-(<code>engram-http</code>), a Vue frontend for the pane, and editor
-integrations for JetBrains and VS Code published to the JetBrains
-Marketplace, the VS Marketplace and Open VSX. There is a standalone
-browser demo running the real pane over an invented project.</p>
+<p><strong>Runtime.</strong> One binary, and at runtime one heavy
+process per machine with any number of deliberately light ones around
+it. The <strong>machine core</strong> holds every open store and its
+locks, the three local models, the pane's web server and every MCP
+session; it binds <code>127.0.0.1:8787</code>, runs as a hidden
+<code>core</code> subcommand, is spawned detached by whichever command
+first needs it, and ends only on <code>engram-alpha stop</code>.
+<code>serve</code> is a launcher that registers the repository and
+exits. <code>engram-alpha mcp</code> is <em>always a bridge</em> — it
+never opens a store on any backend, proxying the client's stdio session
+to the core over streamable HTTP, and failing with an error in
+<code>.engram/mcp.log</code> rather than <em>"silently opening the store
+in-process"</em>. <code>status</code>, <code>doctor</code>,
+<code>stop</code> and the hooks are one-shot REST clients. Discovery is
+two JSON advertisements plus a <code>GET /health</code> check, so a
+stale file is harmless, and <code>~/.engram/registry.json</code> lists
+which repositories have graphs.</p>
+<p>That consolidation is the change a reader of the previous release has
+to notice, because it moves a guarantee. When each project directory ran
+its own process over its own file, reading the wrong project's graph was
+not expressible. One core holding every store makes it a routing
+decision — see the binding ladder in section 8.</p>
+<p><code>engram-core</code> carries the engine, <code>engram-mcp</code>
+the tool surface, <code>engram-http</code> the REST and SSE API, with a
+Vue frontend for the pane and editor integrations for JetBrains and VS
+Code published to the JetBrains Marketplace, the VS Marketplace and Open
+VSX. There is a standalone browser demo running the real pane over an
+invented project.</p>
 <p><strong>Persistence.</strong> SQLite (<code>store_sqlite.rs</code>)
 with a second backend (<code>store_tepin.rs</code>) behind the same
 <code>store.rs</code> trait. Four tables: <code>nodes</code>,
@@ -381,8 +402,9 @@ transcripts into a separate episodic store — so "deliberately little
 background" now understates a continuous transcript-tailing loop, even
 though it feeds a sibling store and not the curated read.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
-<p>One binary and one SQLite file per project, plus optional local
-models — an embedder (<code>bge-small-en-v1.5</code>), a reranker
+<p>One binary, one store file per project, one core process per machine,
+plus optional local models — an embedder
+(<code>bge-small-en-v1.5</code>), a reranker
 (<code>jina-reranker-v1-turbo-en</code>) and an NLI model
 (<code>deberta-v3-small-tasksource-nli</code>, a 172 MB quantised ONNX
 export the project made itself) — all small enough to run on a developer
@@ -671,6 +693,34 @@ are deciding whether to distrust the model or the person.</p>
 a VS Code extension, and a standalone pane. The screenshots show the
 intended loop: the graph fills in live while Claude Code works in the
 terminal below.</p>
+<p><strong>Which project a session serves is a five-rung ladder, and the
+last rung is the one to read carefully.</strong> An explicit
+<code>--db</code> pins it; otherwise the bridge asks the client for
+<code>roots/list</code> and binds the first <code>file://</code> root,
+re-resolving on <code>roots/list_changed</code> so one db-less config
+entry follows a client across workspaces; otherwise the bridge's working
+directory; otherwise a machine-level <strong>default agent
+project</strong> setting; and otherwise <strong>the home graph</strong>
+— <em>"the session binds the core's <code>/mcp</code> endpoint rather
+than dying."</em> Every rung is logged, so <code>mcp.log</code> always
+names the one that bound.</p>
+<p>Rung five is a deliberate trade and the report's sharpest reservation
+about this release. A session that cannot establish its workspace does
+not fail; it reads and writes somebody else's graph — specifically the
+home one. The mitigation is <code>set_project</code>, a tool the agent
+calls with an absolute path to rebind the running session, which refuses
+unregistered paths and returns that project's brief in the same call;
+sessions stranded on rungs four or five get a one-line hint above their
+brief pointing at it, and the documentation supplies the
+<code>AGENTS.md</code> line that makes it automatic. The clients that
+need it are named in the docs — Windsurf and Devin CLI advertise roots
+and never answer them — which is the kind of specificity that makes a
+workaround checkable.</p>
+<p>The pane's Processes census shows each live session's current
+binding. Bridges hold a 15-second-heartbeat lease that expires after 45
+seconds, so a crashed client leaves the list within three missed beats,
+and a failed registration never blocks bridging: the census is
+observability, not control.</p>
 <p>The assistant's authority is broad on judgment and bounded on trust.
 It writes nodes and edges, and it judges the suspects the write hands
 back — but approval and pinning are human acts, retrieval moves nothing,
@@ -728,7 +778,7 @@ patterns (PEM/AWS/JWT/GitHub/Slack/OpenAI/<code>key=value</code>) plus a
 high-entropy backstop, now judged per separator-delimited segment
 (segments under twelve chars abstain) so a compound identifier is no
 longer masked. The curated graph is redacted but not encrypted (it
-exists to be inspected); the new history store is redacted <em>and</em>
+exists to be inspected); the history store is redacted <em>and</em>
 encrypted.</li>
 <li><strong><code>meta</code> pins the embedding model identity and
 vector width</strong>, so a store read with the wrong embedder is
@@ -746,6 +796,23 @@ is damped, clamped, gated on volume and journalled, and a graph can opt
 out — but a reader comparing two installations should expect their
 delivery and conflict thresholds to differ, because each was fitted to
 its own graph.</li>
+<li><strong>The loop is scored against the people in it.</strong>
+<code>Engine::nli_agreement</code> joins each judged suspect's stored
+<code>nli_label</code> with the verdict a person reached and reports the
+confusion matrix: hits, false alarms, misses, passes, and an agreement
+rate that is absent until a hinted pair has been judged. Surfaced as
+<code>GET /conflicts/agreement</code> and a Checkup panel block. Two
+properties make it worth naming. It counts <strong>misses</strong> — the
+judge confirmed a pair the model called entailment or neutral — so the
+measure is not only about the alarms the model raised. And it is
+<strong>read-only, never a calibration input</strong>: the auto-tune
+dials do not consume it, so the model cannot chase its own agreement
+score. The type's own comment scopes the claim to what the row can
+carry: conflict and replaces both land as confirmed, so agreement reads
+<em>"the hint said contradiction and the judge kept the pair"</em> and
+no finer. Almost nothing in this corpus measures whether its automatic
+nomination agreed with the human who adjudicated it, and the systems
+that do usually feed the answer straight back into a threshold.</li>
 <li><strong>Most numbers are self-generated.</strong> The offline
 suite's graphs, questions and controls are the project's own synthetic
 corpora. LongMemEval is the exception and it is one corpus, graded on
@@ -782,6 +849,16 @@ reports it.</p>
 at every threshold, with <code>controls_declined</code> rising as the
 floor rises — so precision is never claimed without the recall it
 cost.</p>
+<p><strong>The process model arrived with its own test suites</strong>,
+which is the shape the rest of the repository already had and the
+runtime did not. <code>crates/engram-cli/tests/</code> carries
+<code>process_model.rs</code>, <code>roots_binding.rs</code>,
+<code>session_brief_hook.rs</code> and <code>setup_windsurf.rs</code> —
+the binding ladder, the convergence of concurrent launchers on exactly
+one core, and the per-client setup writers, tested as integration rather
+than asserted in a doc. One of them pins a case that is easy to get
+wrong under lazy opening: a resolved store survives its project being
+unregistered.</p>
 <h3 id="the-external-corpus">The external corpus</h3>
 <p><code>eval/LONGMEMEVAL.md</code> and <code>eval/src/longmem.rs</code>
 run <a
@@ -1061,10 +1138,15 @@ layer's contribution on this corpus is named but not yet a number.</li>
 practice?</strong> The transcript-harvest layer is opt-in and physically
 isolated from curated recall; whether teams enable it, and how much it
 grows, is not observable from the tree.</li>
-<li><strong>How often does the local NLI hint disagree with the
-assistant's verdict?</strong> Both are stored — <code>nli_label</code>
-beside the resolved <code>status</code> — so the repository could report
-it and does not.</li>
+<li><strong>What does the agreement rate read on a real graph?</strong>
+The scoreboard is computed and rendered; no committed result file
+carries a value from a graph anyone actually judged, so the measure
+exists and its answer does not.</li>
+<li><strong>How often does a session land on the home graph?</strong>
+Rung five is logged per session in <code>mcp.log</code> and the pane
+census shows the current binding, but nothing counts the fallback, so
+the frequency of the failure mode the ladder was built around is not
+observable from the tree.</li>
 <li><strong>Does the TepinDB backend match the SQLite one?</strong> Two
 stores behind one trait, with no parity comparison found.</li>
 <li><strong>What happens to a pinned node that is genuinely
@@ -1116,6 +1198,23 @@ knobs</li>
 <li><code>crates/engram-mcp/</code>, <code>crates/engram-http/</code>,
 <code>frontend/</code>, <code>engram-vscode/</code></li>
 </ul>
+<p><strong>Runtime and process model</strong></p>
+<ul>
+<li><code>crates/engram-cli/src/lazy.rs</code>, <code>main.rs</code>,
+<code>setup.rs</code>, <code>doctor.rs</code> — the core spawn, the
+bridge, the one-shot REST clients and the per-client setup writers</li>
+<li><code>crates/engram-core/src/settings.rs</code> — the machine-level
+default agent project</li>
+<li><code>crates/engram-core/src/store.rs</code> —
+<code>resolve_db_path</code>, the
+<code>graph.db</code>/<code>.tepin</code> resolution every registry
+consumer has to go through</li>
+<li><code>docs/runtime.md</code>, <code>docs/multi-project.md</code> —
+the process map and the binding ladder</li>
+<li><code>crates/engram-cli/tests/</code> —
+<code>process_model.rs</code>, <code>roots_binding.rs</code>,
+<code>session_brief_hook.rs</code>, <code>setup_windsurf.rs</code></li>
+</ul>
 <p><strong>Evaluation</strong></p>
 <ul>
 <li><code>eval/src/</code> — <code>longmem.rs</code> (LongMemEval
@@ -1135,6 +1234,29 @@ adapter), <code>chains.rs</code> (supersession chains),
 <li><code>scripts/mem-probe.sh</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f"><code class="commit-id" title="2605d84246c44c258b0d0f12a555980eb6a7456f">2605d842…</code></a>
+— re-pinned at release v0.8.9 (112 commits, ~27,800 lines of Rust across
+the crates, 38,700 with their test modules). Screened again first: three
+auto-run surfaces, two files inside the seven-day cooldown, two unpinned
+surfaces, and a <code>CLAUDE.md</code> addressed to a reading agent;
+nothing was installed and no test was run. The trust engine did not move
+— <code>policy.rs</code>, <code>nli.rs</code>, <code>rag.rs</code>,
+<code>cortex.rs</code> and <code>digest.rs</code> are unchanged — and no
+capability mark changes. The release is a process model: one machine
+core holding every store, an MCP server that is always a bridge, a
+five-rung project-binding ladder whose last rung is the home graph, a
+<code>set_project</code> tool for clients that advertise roots and never
+answer them, and four new integration test files under
+<code>engram-cli</code>. <code>Engine::nli_agreement</code> adds a
+read-only confusion matrix of the model's hint against the human's
+verdict, deliberately excluded from the auto-tune inputs.
+<code>resolve_db_path</code> now mediates every registry read, after
+stale <code>graph.db</code> entries made live TepinDB stores report as
+missing. Section 3 gains the runtime topology and section 8 the binding
+ladder, which is where the consolidation costs something: separation
+between projects was a property of the process layout and is now a
+property of routing.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb"><code class="commit-id" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">15fbe809…</code></a>
 — re-pinned at release v0.8.7 (98 commits, ~30,200 lines across the

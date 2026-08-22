@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 1bf7041e428a7302281c67f5d597a06f33d38cce
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce
-analyzed_at: 2026-08-20
+revision: 88c14ed9fc430f8a80094796617b3f95fe3f4a36
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36
+analyzed_at: 2026-08-22
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -26,8 +26,8 @@ matrix:
   storage: "One SQLite file with FTS5, AES-256-GCM bodies encrypted by default on a fresh install, an entity history table, a hash-chained journal, sign-bit embedding signatures, and a rejected-value tombstone table holding digests"
   retrieval: "Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query; every recall carries a `RecallOutcome` naming why it is empty or degraded"
   write: "MCP tool calls into a Rust binary; supersession writes history rows and sets `superseded_by`, with a trust-admission path in front"
-  update_delete: "Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal; a rejected value is refused on every remember-path write by a digest-keyed tombstone, with an audited trusted override"
-  scoping: "`workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in entity read queries, and — as of this pin, not the previous one — in the journal listing too"
+  update_delete: "Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal; a rejected value is refused on every remember-path write by a digest-keyed tombstone that also follows derived provenance, so a summary of a rejected source is suppressed even though its own digest differs, with an audited trusted override"
+  scoping: "`workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in entity read queries and in the journal listing, with a strict binding path beside the compatibility one that refuses an unbound profile rather than treating it as an unscoped legacy session"
   integration: "An MCP stdio server with ninety canonical tools, plus LangGraph, CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no services"
   background: "Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection"
   trust: "A discrete `status`, a separate `epistemic_state` (`candidate`/`verified`/`corroborated`/`rejected`/`defensively_recalled`), a `verified` flag, a `certainty` float and a `source` field — four distinct axes rather than one score"
@@ -294,7 +294,27 @@ The enforcement point is `remember_impl`, with the reach stated in a comment:
 > deliberate trusted override passes `allow_rejected=true` and is journaled
 > below for audit.
 
-Two details separate this from the other holders. The lookup keys on the
+**And the check follows provenance, which is the gap every digest-keyed
+tombstone has.** A digest refuses the value it was written for and nothing else,
+so a consolidation pass that summarises a rejected source produces a body with a
+different digest and walks straight through. `value_suppressed_with_connections`
+is shared by ordinary reads and maintenance scans on exactly that ground — *"a
+derived body is not safe merely because its own digest differs from a rejected
+source body's digest"* — and `lineage_source_ids_from_body` pulls the source
+references out of three JSON fields (`source_ids`, `evidence_for`,
+`promoted_from`) that are *"intentionally hash-free provenance references, not a
+new authority mechanism"*, so propagating suppression never requires storing the
+rejected value anywhere.
+
+The walk is recursive with a `seen` set for cycles and a depth cap of eight, and
+both edges fail closed: hitting the cap suppresses, and a source whose encrypted
+bytes are missing or unauthentic suppresses, because *"serving a derived record
+whose evidence cannot be checked would recreate the same bypass."* A maintenance
+source row selected by a global run takes its workspace from the row rather than
+from the run's optional scope. The committed test is named for the case:
+`rejected_value_does_not_flow_through_maintenance_derived_writes`.
+
+Two further details separate this from the other holders. The lookup keys on the
 **predicate and the digest and not the subject**, so a rejected value is refused
 under any key in scope — broader than the identity index it is written under, and
 named in a test as `rejected_value_tombstone_blocks_same_value_under_any_key_in_scope`.
@@ -561,9 +581,10 @@ background consolidation passes are the leg no committed test walks.
 
 ## 12. Open Questions
 
-- Do the consolidation, cohere and dream passes write through `remember_impl`,
-  and therefore through the tombstone check? That is the one reach the comment
-  claims and no committed test walks.
+- The lineage walk reads three JSON fields by name. What writes them, and what
+  fraction of derived bodies in a real store carry any of the three — a
+  suppression that propagates only along declared provenance is exactly as
+  complete as the declarations are.
 - The tombstone matches on predicate and digest without the subject. What is the
   false-positive surface — the same value legitimately true of two subjects under
   one predicate?
@@ -574,6 +595,9 @@ background consolidation passes are the leg no committed test walks.
 - Does `emb_sig` Hamming prefiltering change recall, and is there an artifact
   measuring the loss rather than the speedup?
 - What would it take to make `federate` a sync rather than an export?
+- `enforce_strict_workspace_binding` sits beside the compatibility method rather
+  than replacing it. Which callers take which, and what would it cost to retire
+  the lenient one?
 
 ## Appendix: File Index
 
@@ -595,6 +619,8 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-22** — [`88c14ed9fc430f8a80094796617b3f95fe3f4a36`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36) — fourth reading, two commits on. Screened again first: two auto-run surfaces, one build-time execution point, eight unpinned surfaces and one file inside the seven-day cooldown; nothing was built or executed. The tombstone gained lineage propagation — `src/db.rs` grows a suppression check shared by ordinary reads and maintenance scans, following `source_ids`, `evidence_for` and `promoted_from` recursively with a cycle set, a depth cap of eight and fail-closed behaviour at both the cap and an unauthentic source body, with `rejected_value_does_not_flow_through_maintenance_derived_writes` committed beside it. `enforce_strict_workspace_binding` adds a scope path that refuses an unbound profile instead of treating it as legacy. The official Python client gains a temp-owned, per-run-key ephemeral admitted fixture exercised against the real binary in CI, and `tests/encryption_bootstrap.rs` grows. All seven marks stand; the tombstone's evidence is stronger than it was, because the mechanism now covers the derivation path that a digest alone cannot.
 
 **2026-08-20** — [`1bf7041e428a7302281c67f5d597a06f33d38cce`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce) — re-pinned nine commits on, 46 files and +6,561 lines, most of it under `benchmark/`. Screened again: two auto-run surfaces, one build-time execution point, one manifest inside the cooldown across eight unpinned surfaces; nothing was installed and no benchmark was run. Marks unchanged at seven of seven. **The addition is the artifact this atlas specified and has not built.**
 

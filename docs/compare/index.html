@@ -6450,11 +6450,14 @@ the assistant's</td>
 <code>merge_nodes</code> that rehomes edges and archives victims behind
 a supersession, a suspects table resolved as conflict, replaces or
 dismiss, and a human pin that disables decay</td>
-<td>None — one graph per project directory, with no scope key inside
-it</td>
-<td>An MCP server, a JetBrains plugin and a VS Code extension published
-to three marketplaces, plus a standalone pane with a live browser
-demo</td>
+<td>None inside a graph. Separation is one store per project, and a
+single machine-wide core process holds them all — so which project a
+session reads is a five-rung binding decision, not a predicate</td>
+<td>An MCP server that is always a bridge to the machine core, a
+JetBrains plugin and a VS Code extension published to three
+marketplaces, plus a standalone pane with a live browser demo; a
+<code>set_project</code> tool lets a session rebind itself when its
+client will not say where it is</td>
 <td>Trust is computed at read time, so no pass has to have run for a
 read to be correct; a session-boundary <code>validate_graph</code>
 archives, retires, re-fits the two auto-tune dials and rescans, and
@@ -6466,9 +6469,11 @@ confirmed or dismissed</td>
 <td>Retrieval stamps <code>last_seen</code> for observability only,
 because exposure would otherwise let a broad recurring query certify its
 own outputs</td>
-<td>No scope key of any kind; the retrieval half of LongMemEval is
-graded at session level, and the one number the external run does not
-price is how often an answerable question gets warned</td>
+<td>No scope key of any kind, and a session whose workspace cannot be
+determined binds the home graph rather than failing; the retrieval half
+of LongMemEval is graded at session level, and the one number the
+external run does not price is how often an answerable question gets
+warned</td>
 </tr>
 <tr>
 <td><code>engram-provable</code></td>
@@ -10196,7 +10201,9 @@ write, with a hash-only tombstone and an audit row per operation;
 and its prior identities, unaudited; <code>sync --rebuild</code> clears
 the project.
 <code>mark-stale &lt;id&gt; --supersedes &lt;newId&gt;</code>
-down-weights without deleting</td>
+down-weights without deleting, prompted by a local model that judges
+whether a newer node contradicts an older one and files a suggestion a
+person has to accept</td>
 <td><code>project_id</code> on every node and a required predicate on
 both read arms; a cross-project query opens each registered repository`s
 own database and tags every hit with its origin</td>
@@ -10208,12 +10215,16 @@ warns and cannot block a commit</td>
 <td>None on a schedule. Every collector runs inside
 <code>nexusmem sync</code>, invoked by hand, by a shell hook or by the
 MCP <code>sync_project</code> tool; the git hook triggers a read rather
-than a write</td>
+than a write. <code>sync</code> also spends at most three local-model
+judgments per run on contradiction checking, on by default</td>
 <td>A <code>signal</code> float for ranking, plus
-<code>provenance</code> as <code>observed</code> or
-<code>inferred</code> — set per collector, consumed by the ranker as a
-faster decay and printed in the packed context. Two values, so not a
-status; nothing withholds a node from being returned</td>
+<code>provenance</code> on a four-tier ordering — <code>observed</code>,
+<code>authored</code>, <code>recorded</code>, <code>derived</code> — set
+per collector, consumed by the ranker as a per-tier decay multiplier and
+printed in the packed context. An ordering, not a status: the ranker's
+floors are a deliberate refusal to let any tier gate a result, and the
+tier's one exclusion is from the staleness queue rather than from
+retrieval</td>
 <td>A value-keyed deny list whose test proves the resurrection case —
 forget, rebuild from the untouched append-only log, and the value stays
 gone while a control survives; shell commands with exit codes, which git
@@ -10226,11 +10237,13 @@ corpus, because bm25 rewards rarity only within the corpus it is run
 against</td>
 <td>The deletion story is complete only through <code>forget</code>:
 <code>--prune-source</code> writes no tombstone and no audit row, so the
-coarse path is the unrecorded one; staleness is entirely manual and
-<code>stale</code> only lists candidates; <code>signal</code> is a prior
-nothing updates from use; the pre-commit signal fires on a basename
-token match, so it warns about a failure that merely shares a word with
-the file and stays silent about one that does not name it</td>
+coarse path is the unrecorded one; a contradiction suggestion can only
+be closed by accepting it, so a person who disagrees with the model has
+nowhere to record that and the memoized judgment re-surfaces it forever;
+<code>signal</code> is a prior nothing updates from use; the pre-commit
+signal fires on a basename token match, so it warns about a failure that
+merely shares a word with the file and stays silent about one that does
+not name it</td>
 </tr>
 <tr>
 <td><code>nocturne-memory</code></td>
@@ -11347,12 +11360,16 @@ and sets <code>superseded_by</code>, with a trust-admission path in
 front</td>
 <td>Supersede, correct, demote, archive with a reason, forget, and purge
 — purge erases history and redacts the journal; a rejected value is
-refused on every remember-path write by a digest-keyed tombstone, with
-an audited trusted override</td>
+refused on every remember-path write by a digest-keyed tombstone that
+also follows derived provenance, so a summary of a rejected source is
+suppressed even though its own digest differs, with an audited trusted
+override</td>
 <td><code>workspace_hash</code> on entities and journal rows, a
 <code>(category, key, workspace_hash)</code> identity index, and a
-<code>visibility</code> column; applied in entity read queries, and — as
-of this pin, not the previous one — in the journal listing too</td>
+<code>visibility</code> column; applied in entity read queries and in
+the journal listing, with a strict binding path beside the compatibility
+one that refuses an unbound profile rather than treating it as an
+unscoped legacy session</td>
 <td>An MCP stdio server with ninety canonical tools, plus LangGraph,
 CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no
 services</td>
@@ -18761,7 +18778,7 @@ href="https://github.com/Morephine/feltstate">Morephine/feltstate</a> at
 href="https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed"><code class="commit-id" title="45b1c9824326669f7e1855097a3bfe01192084ed">45b1c982…</code></a></li>
 <li><a href="https://github.com/yaminbkk/NexusMem">yaminbkk/NexusMem</a>
 at <a
-href="https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03"><code class="commit-id" title="c52dac9ceae08c4ee55df304bef0097d8b985f03">c52dac9c…</code></a></li>
+href="https://github.com/yaminbkk/NexusMem/commit/517d691fd20977f2e5b11b2057629e9300ebb5a5"><code class="commit-id" title="517d691fd20977f2e5b11b2057629e9300ebb5a5">517d691f…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
 href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code class="commit-id" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">7f2f16eb…</code></a></li>
@@ -19039,7 +19056,7 @@ href="https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1
 <li><a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault">Perseus-Computing-LLC/perseus-vault</a>
 at <a
-href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce"><code class="commit-id" title="1bf7041e428a7302281c67f5d597a06f33d38cce">1bf7041e…</code></a></li>
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36"><code class="commit-id" title="88c14ed9fc430f8a80094796617b3f95fe3f4a36">88c14ed9…</code></a></li>
 <li><a
 href="https://github.com/BernhardJackiewicz/provem">BernhardJackiewicz/provem</a>
 at <a
@@ -19081,7 +19098,7 @@ at <a
 href="https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1"><code class="commit-id" title="cd196704bb3dd148c314a81a32d96752204be5c1">cd196704…</code></a></li>
 <li><a href="https://github.com/techtheist/engram">techtheist/engram</a>
 at <a
-href="https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb"><code class="commit-id" title="15fbe809ddfd744c161cb49a4b0014d96693cceb">15fbe809…</code></a></li>
+href="https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f"><code class="commit-id" title="2605d84246c44c258b0d0f12a555980eb6a7456f">2605d842…</code></a></li>
 <li><a
 href="https://github.com/munch2u-a11y/Helix-AGI">munch2u-a11y/Helix-AGI</a>
 at <a

@@ -115,14 +115,14 @@ tombstone stores a digest rather than the value it refuses.</p>
               <strong>Perseus-Computing-LLC/perseus-vault</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce" title="1bf7041e428a7302281c67f5d597a06f33d38cce">
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36" title="88c14ed9fc430f8a80094796617b3f95fe3f4a36">
               <span>Analyzed revision</span>
-              <code>1bf7041e…</code>
+              <code>88c14ed9…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -414,10 +414,34 @@ a corrected/deleted value cannot be laundered back in under a new key. A
 deliberate trusted override passes <code>allow_rejected=true</code> and
 is journaled below for audit.</p>
 </blockquote>
-<p>Two details separate this from the other holders. The lookup keys on
-the <strong>predicate and the digest and not the subject</strong>, so a
-rejected value is refused under any key in scope — broader than the
-identity index it is written under, and named in a test as
+<p><strong>And the check follows provenance, which is the gap every
+digest-keyed tombstone has.</strong> A digest refuses the value it was
+written for and nothing else, so a consolidation pass that summarises a
+rejected source produces a body with a different digest and walks
+straight through. <code>value_suppressed_with_connections</code> is
+shared by ordinary reads and maintenance scans on exactly that ground —
+<em>"a derived body is not safe merely because its own digest differs
+from a rejected source body's digest"</em> — and
+<code>lineage_source_ids_from_body</code> pulls the source references
+out of three JSON fields (<code>source_ids</code>,
+<code>evidence_for</code>, <code>promoted_from</code>) that are
+<em>"intentionally hash-free provenance references, not a new authority
+mechanism"</em>, so propagating suppression never requires storing the
+rejected value anywhere.</p>
+<p>The walk is recursive with a <code>seen</code> set for cycles and a
+depth cap of eight, and both edges fail closed: hitting the cap
+suppresses, and a source whose encrypted bytes are missing or
+unauthentic suppresses, because <em>"serving a derived record whose
+evidence cannot be checked would recreate the same bypass."</em> A
+maintenance source row selected by a global run takes its workspace from
+the row rather than from the run's optional scope. The committed test is
+named for the case:
+<code>rejected_value_does_not_flow_through_maintenance_derived_writes</code>.</p>
+<p>Two further details separate this from the other holders. The lookup
+keys on the <strong>predicate and the digest and not the
+subject</strong>, so a rejected value is refused under any key in scope
+— broader than the identity index it is written under, and named in a
+test as
 <code>rejected_value_tombstone_blocks_same_value_under_any_key_in_scope</code>.
 And the override is not a bypass flag but an audited act, journaled in
 the same hash-chained ledger as everything else, which is the shape the
@@ -693,10 +717,10 @@ rather than existence: the background consolidation passes are the leg
 no committed test walks.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>Do the consolidation, cohere and dream passes write through
-<code>remember_impl</code>, and therefore through the tombstone check?
-That is the one reach the comment claims and no committed test
-walks.</li>
+<li>The lineage walk reads three JSON fields by name. What writes them,
+and what fraction of derived bodies in a real store carry any of the
+three — a suppression that propagates only along declared provenance is
+exactly as complete as the declarations are.</li>
 <li>The tombstone matches on predicate and digest without the subject.
 What is the false-positive surface — the same value legitimately true of
 two subjects under one predicate?</li>
@@ -710,6 +734,9 @@ design does not target?</li>
 there an artifact measuring the loss rather than the speedup?</li>
 <li>What would it take to make <code>federate</code> a sync rather than
 an export?</li>
+<li><code>enforce_strict_workspace_binding</code> sits beside the
+compatibility method rather than replacing it. Which callers take which,
+and what would it cost to retire the lenient one?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -739,6 +766,25 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36"><code class="commit-id" title="88c14ed9fc430f8a80094796617b3f95fe3f4a36">88c14ed9…</code></a>
+— fourth reading, two commits on. Screened again first: two auto-run
+surfaces, one build-time execution point, eight unpinned surfaces and
+one file inside the seven-day cooldown; nothing was built or executed.
+The tombstone gained lineage propagation — <code>src/db.rs</code> grows
+a suppression check shared by ordinary reads and maintenance scans,
+following <code>source_ids</code>, <code>evidence_for</code> and
+<code>promoted_from</code> recursively with a cycle set, a depth cap of
+eight and fail-closed behaviour at both the cap and an unauthentic
+source body, with
+<code>rejected_value_does_not_flow_through_maintenance_derived_writes</code>
+committed beside it. <code>enforce_strict_workspace_binding</code> adds
+a scope path that refuses an unbound profile instead of treating it as
+legacy. The official Python client gains a temp-owned, per-run-key
+ephemeral admitted fixture exercised against the real binary in CI, and
+<code>tests/encryption_bootstrap.rs</code> grows. All seven marks stand;
+the tombstone's evidence is stronger than it was, because the mechanism
+now covers the derivation path that a digest alone cannot.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce"><code class="commit-id" title="1bf7041e428a7302281c67f5d597a06f33d38cce">1bf7041e…</code></a>
 — re-pinned nine commits on, 46 files and +6,561 lines, most of it under

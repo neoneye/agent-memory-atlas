@@ -114,14 +114,14 @@ rebuild it would otherwise be undone by.</p>
               <strong>yaminbkk/NexusMem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03" title="c52dac9ceae08c4ee55df304bef0097d8b985f03">
+            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/517d691fd20977f2e5b11b2057629e9300ebb5a5" title="517d691fd20977f2e5b11b2057629e9300ebb5a5">
               <span>Analyzed revision</span>
-              <code>c52dac9c…</code>
+              <code>517d691f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-08-22</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -369,26 +369,33 @@ ranking; record time is preserved but no read path accepts an as-of
 parameter, so the store cannot answer "what did you hold last Tuesday" —
 only "what happened last Tuesday". The columns are there and one of them
 is inert on the read path.</p>
-<p>Two schema-v6 columns carry the epistemics. <code>provenance</code>
-is <code>observed</code> or <code>inferred</code>, backfilled by kind on
-migration — <em>"since an unchanged node is never rewritten by a later
-sync… and so would never otherwise pick up the right value"</em> — and
-set explicitly by each collector with its reasoning in the source: shell
-commands, commits and diffs are <code>observed</code>; docs are
-<code>inferred</code> with the note <em>"a written claim, and the kind
-of content most likely to go stale"</em>; session summaries are
-<code>inferred</code> because they are <em>"a model's distillation, not
-a directly observed event"</em>; conversation turns because they are
-<em>"discourse about what happened, not the event itself"</em>.
-<code>supersedes</code> is a nullable pointer from the newer node to the
-one it replaces, with a partial index over the non-null rows.</p>
-<p><strong>Two values are not a state machine, which is why
-<code>trust_state</code> is withheld.</strong> <code>observed</code>
-versus <code>inferred</code> distinguishes where a claim came from, not
-whether anyone has checked it; there is no candidate, no verified, no
-rejected, and no value that withholds a node from a result set. What the
-field does earn is a real consumer on the read path, which most
-provenance fields in this atlas do not have — see section 6.</p>
+<p>Two schema columns carry the epistemics. <code>provenance</code> is a
+four-tier ordering — <code>observed</code>, <code>authored</code>,
+<code>recorded</code>, <code>derived</code> — backfilled by kind on
+migration <em>"since an unchanged node is never rewritten by a later
+sync… and so would never otherwise pick up the right value"</em>, and
+set explicitly by each collector. <code>defaultProvenanceForKind</code>
+is the whole taxonomy in one <code>switch</code>: commits, diffs and
+shell commands are <code>observed</code>; docs and notes are
+<code>authored</code>, <em>"a human's own written claim"</em>;
+conversation turns are <code>recorded</code>, <em>"verbatim discourse
+about events"</em>; session summaries are <code>derived</code>, <em>"a
+model's distillation"</em>. <code>supersedes</code> is a nullable
+pointer from the newer node to the one it replaces, with a partial index
+over the non-null rows.</p>
+<p><strong>An ordering is not a state machine, which is why
+<code>trust_state</code> is withheld,</strong> and the code makes the
+distinction better than the rubric does. Four tiers distinguish where a
+claim came from, not whether anyone has checked it: there is no
+candidate, no verified, no rejected. More to the point, the ranker's
+floors are an explicit decision that no tier may gate — <em>"Floors keep
+the combination a reordering within each dimension instead of an on/off
+gate"</em> — so <code>derived</code> decays four times faster than
+<code>observed</code> and is still returned. The tier has exactly one
+exclusion anywhere in the system, and it is not from retrieval: an
+<code>observed</code> node is never offered as a staleness candidate,
+because the store declines to suggest that something that happened has
+gone out of date.</p>
 <p>There is no <code>deleted_at</code>, because a deletion is a row in a
 different table.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
@@ -477,19 +484,21 @@ than falling back unfiltered, because its design <em>"already prefers a
 missed link over a false one."</em></p>
 <p><strong>Two query-independent priors ride on top of the fused score,
 and provenance tunes one of them.</strong> Recency decays on a half-life
-that depends on where the claim came from:
-<code>INFERRED_HALF_LIFE_RATIO = 0.5</code>, so an <code>inferred</code>
-node's relevance halves twice as fast as an <code>observed</code> one's,
-commented as <em>"a judgment call, not a measured optimum"</em>. A
-superseded node is multiplied by <code>SUPERSEDED_PENALTY = 0.5</code>
+multiplied per tier by <code>HALF_LIFE_RATIO</code>, so a
+<code>derived</code> node's relevance halves fastest and an
+<code>observed</code> one's slowest. The comment scopes the claim
+exactly as far as the evidence goes: <em>"The exact ratios are judgment
+calls, not measured optima; only the ordering (observed &gt; authored
+&gt; recorded &gt; derived) is the design claim."</em> That is the right
+way to ship a tuned constant — assert the monotonicity, not the numbers.
+A superseded node is multiplied by <code>SUPERSEDED_PENALTY = 0.5</code>
 rather than dropped, <em>"not near-zero, since it must stay reachable if
 it's still the best match"</em> — a supersession that demotes and
 refuses to hide. And <code>pack.ts</code> prints the provenance into the
-packed context as <code>[observed]</code> or <code>[inferred]</code>,
-one bracket per line, so the model reading the memory is told which kind
-of claim it is looking at. A field that is set by every producer,
-consumed by the ranker and rendered to the reader is a rarer thing than
-its two lines of code suggest.</p>
+packed context, one bracket per line, so the model reading the memory is
+told which kind of claim it is looking at. A field that is set by every
+producer, consumed by the ranker and rendered to the reader is a rarer
+thing than its few lines of code suggest.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are synchronous and happen inside a <code>sync</code>; there
 is no queue and no background pass. Each collector resumes from a cursor
@@ -531,19 +540,56 @@ writes no audit row and no tombstone, so the coarse path is the
 unrecorded one and a store's removal history covers only what was
 removed by value. <code>sync --rebuild</code> is the coarsest and is
 likewise silent.</p>
-<p><strong>Supersession is the non-destructive option and it is entirely
-manual.</strong>
+<p><strong>Supersession is the non-destructive option and the write is
+still manual.</strong>
 <code>mark-stale &lt;nodeId&gt; --supersedes &lt;newNodeId&gt;</code>
-sets one pointer, validates that neither id is the other and that both
-belong to the current project, and says so plainly: <em>"No automatic
-staleness detection — a human or agent has to notice the contradiction
-and run this."</em> <code>nexusmem stale</code> is the prompt for it,
-listing <code>inferred</code> nodes older than 45 days that nothing
-supersedes, oldest first, with the command to run — and its own header
-refuses the stronger claim: <em>"a heuristic surfacing list, not
-contradiction detection. Mutates nothing."</em> A staleness surface that
-declines to call itself a staleness detector is doing the harder, more
-honest thing.</p>
+sets one pointer and validates that neither id is the other and that
+both belong to the current project. <code>nexusmem stale</code> prompts
+it, listing non-<code>observed</code> nodes older than 45 days that
+nothing supersedes, oldest first — and its header refuses the stronger
+claim: <em>"Heuristic surfacing only, not contradiction
+detection."</em></p>
+<p><strong>What sits on top of that list is the most interesting thing
+in the tree, and its cost model is the reason it can be on by
+default.</strong> <code>checkContradictions</code> takes each stale
+candidate, finds the nearest node <em>newer</em> than it by vector
+search, and asks a local Ollama model one question: does the newer one
+make the older one wrong? The instruction is narrow — <em>"Say YES only
+if the NEWER memory states something that makes the OLDER one factually
+wrong or obsolete — a decision reversed, a bug fixed, a plan abandoned…
+When unsure, say NO"</em> — and an unparseable reply is a
+<code>null</code>, never a guessed YES, on the stated grounds that a
+missed contradiction costs nothing while a false accusation prints
+beside a real memory.</p>
+<p>Three decisions make it affordable. Judgments are
+<strong>memoized</strong> in <code>contradiction_checks</code> either
+way, so re-running against the same corpus converges to zero model
+calls. New judgments are <strong>bounded</strong> —
+<code>maxPerSync</code> defaults to three, so <code>sync</code> spends
+at most three completions and an explicit
+<code>stale --check-contradictions</code> run is unbounded. And either
+provider being unreachable degrades a candidate to "no suggestion"
+rather than an error. The neighbour limit is the one number with a
+measurement behind it: five was raised to twenty-five because a chunked
+conversation's own same-timestamp siblings <em>"dominate a candidate's
+own nearest neighbours by construction"</em>, measured at fifteen
+siblings ahead of the first genuinely newer node across ten real
+candidates, so every candidate silently got zero suggestions regardless
+of the model.</p>
+<p><strong>It is suggest-only, and there is nowhere to say no.</strong>
+The only write is the memoized judgment; <code>supersedes</code> is
+never set by the checker. A suggestion is counted as open while
+<code>contradicts = 1</code> and the candidate is not yet superseded, so
+<strong>accepting it closes it and declining it does nothing</strong>.
+There is no dismissed column, no reviewed-by, no expiry. A person who
+reads a suggestion and judges the model wrong has nowhere to record
+that, and the memoization that makes re-runs free is exactly what makes
+the disagreement permanent: the pair is never re-asked, so the same
+rejected suggestion is re-printed on every <code>sync</code> and every
+<code>status</code> forever. The store remembers what the model decided
+and nothing about what the human decided — which is this corpus's most
+repeated shape, arriving here one layer up, at the review surface rather
+than the write path.</p>
 <p><code>nexusmem status</code> closes half of the gap that leaves: it
 calls <code>listOtherProjectIds</code> and
 <code>countProjectNodes</code> and prints how many nodes prior
@@ -587,10 +633,12 @@ Trust</h2>
 only by the ranker. It is set at ingest from the kind and source and
 nothing updates it from use, so a node that is retrieved constantly and
 one that is never retrieved carry the same prior forever. Nothing
-withholds a node from being returned — <code>provenance</code> and
-<code>supersedes</code> both change a node's <em>weight</em> and neither
-changes its <em>admissibility</em> — which with the two-value provenance
-domain is why <code>trust_state</code> is withheld.</p>
+withholds a node from being returned — <code>provenance</code>,
+<code>supersedes</code> and a confirmed contradiction all change a
+node's <em>weight</em> or its <em>visibility in a maintenance list</em>,
+and none of them changes its <em>admissibility</em> — which is why
+<code>trust_state</code> is withheld even with four tiers and a model
+willing to say one memory refutes another.</p>
 <p><strong>The audit is real and its coverage is partial, which is the
 thing to check before relying on it.</strong>
 <code>mutation_audit</code> is append-only, has one producer, and that
@@ -632,16 +680,31 @@ the module that wrote it calls itself <em>"a safety net, not a
 guarantee."</em></p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>619 test cases across 47 files, over roughly 10,850 lines of source.
-Coverage tracks the mechanisms: <code>store.test.ts</code>,
+<p>665 test declarations across 53 files. Coverage tracks the
+mechanisms: <code>store.test.ts</code>,
 <code>query-pipeline.test.ts</code>, <code>retrieval.test.ts</code>,
 <code>vector.test.ts</code>, <code>reconcile.test.ts</code>,
 <code>cross-project.test.ts</code>, <code>conversation.test.ts</code>,
 <code>correlate.test.ts</code>, <code>precheck.test.ts</code>,
 <code>forget.test.ts</code>, <code>stale.test.ts</code>,
-<code>git-hook-install.test.ts</code>, <code>structure.test.ts</code>, a
-per-command CLI file for each <code>scan-*</code> subcommand, and
-per-parser shell tests. I did not run the suite.</p>
+<code>contradiction.test.ts</code>,
+<code>slm-contradiction.test.ts</code>,
+<code>sync-auto-contradictions.test.ts</code>,
+<code>schema.test.ts</code>, <code>git-hook-install.test.ts</code>,
+<code>structure.test.ts</code>, a per-command CLI file for each
+<code>scan-*</code> subcommand, and per-parser shell tests. I did not
+run the suite.</p>
+<p>The contradiction files are worth naming for what they assert rather
+than what they cover. <code>contradiction.test.ts</code> pins the
+memoization contract from both sides — <em>"remembers a judged pair
+either way, so the next run can skip re-asking the model"</em> and
+<em>"lists only YES verdicts"</em> — and pins the lifecycle at both
+ends: a suggestion <em>"drops … once the candidate is superseded"</em>,
+and a check <em>"cascades away with either node, so a check never
+outlives what it judged."</em> <code>schema.test.ts</code> replays a
+real subset of the migrations against hand-seeded old-shaped rows rather
+than re-typing frozen SQL, which is how a backfill claim gets tested
+instead of asserted.</p>
 <p><strong><code>forget.test.ts</code> is the file to read first,
 because it tests the failure the feature exists to prevent rather than
 the feature.</strong> Its central case is titled <em>"the resurrection
@@ -794,17 +857,25 @@ machine, you want an agent to know what you already tried, and you are
 comfortable that the store is append-only in practice. It is small,
 dependency-light, genuinely local, and the ingest side is more carefully
 reasoned than most stores twice its size.</p>
-<p>Walk away if you need staleness handled rather than surfaced. Nothing
-detects a contradiction, <code>stale</code> is an age-and-successor
-heuristic over <code>inferred</code> nodes, and a wrong document stays
-in the corpus at full weight until a person runs <code>mark-stale</code>
-on it — which, for a store whose whole pitch is that documents go stale
-faster than commits, is the gap that will bite first. The deletion
-story, by contrast, is one of the more complete in this atlas for the
-<em>value</em>-keyed case, and thin for the source-keyed one: a prune
-leaves no record that it happened.</p>
+<p>Walk away if you need staleness <em>handled</em> rather than
+surfaced. A local model will tell you which older node a newer one
+refutes, and it will keep telling you: the write is still a person
+typing <code>mark-stale</code>, a wrong document stays in the corpus at
+full weight until they do, and a suggestion you disagree with cannot be
+dismissed. The deletion story, by contrast, is one of the more complete
+in this atlas for the <em>value</em>-keyed case, and thin for the
+source-keyed one: a prune leaves no record that it happened.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
+<li>Where does a rejected suggestion go?
+<code>contradiction_checks</code> has room for the answer — one nullable
+column and the open-suggestion query already has the join it would need
+— and the absence is what turns a helpful prompt into a permanent
+one.</li>
+<li>The four tiers are ordered and the ratios are declared judgment
+calls. What would a committed evaluation over this repository's own
+corpus say about the ordering, which is the part the code actually
+claims?</li>
 <li>Why is <code>pruneSourceNodes</code> outside the audit? The
 transaction shape <code>forget</code> uses would drop onto it with
 little change, and the coarser operation is the one whose blast radius
@@ -858,6 +929,12 @@ between checkouts</li>
 <li><code>src/cli/commands/mark-stale.ts</code>,
 <code>src/cli/commands/stale.ts</code> — manual supersession and the
 heuristic list that prompts it</li>
+<li><code>src/retrieval/contradiction.ts</code>,
+<code>src/slm/contradiction.ts</code>,
+<code>src/store/contradictions.ts</code> — the neighbour search, the
+one-question prompt and its refusal to guess a YES, and the memo table
+with the open-suggestion query that has no way to record a
+rejection</li>
 <li><code>src/store/fts.ts</code> — query construction and
 <code>significantTokens</code>, exported for the corpus-relative filter
 that layers on top of it</li>
@@ -903,13 +980,32 @@ its baselines</li>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>
-<li><code>tests/</code> — 451 cases across 29 files;
-<code>store.test.ts</code>, <code>vector.test.ts</code> and
-<code>precheck.test.ts</code> carry the negative retrieval assertions,
-and <code>prune-source.test.ts</code> and
-<code>cross-project.test.ts</code> pin the scope boundary</li>
+<li><code>tests/</code> — <code>store.test.ts</code>,
+<code>vector.test.ts</code> and <code>precheck.test.ts</code> carry the
+negative retrieval assertions; <code>prune-source.test.ts</code> and
+<code>cross-project.test.ts</code> pin the scope boundary;
+<code>contradiction.test.ts</code>,
+<code>slm-contradiction.test.ts</code> and
+<code>sync-auto-contradictions.test.ts</code> cover the suggestion path
+and its memo</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/yaminbkk/NexusMem/commit/517d691fd20977f2e5b11b2057629e9300ebb5a5"><code class="commit-id" title="517d691fd20977f2e5b11b2057629e9300ebb5a5">517d691f…</code></a>
+— third reading, 21 commits and two releases on. Screened again first:
+one auto-run surface, one build-time execution point, two unpinned
+surfaces and two files inside the seven-day cooldown; nothing was
+installed and no test was run. Provenance widened from two values to a
+four-tier ordering with a per-tier decay multiplier, and
+<code>sync</code> gained automatic contradiction checking — a local
+model asked whether a newer node refutes an older one, memoized either
+way, bounded at three new judgments per run, on by default. No mark
+changes: the tiers reorder and do not gate, the checker writes a
+suggestion and never <code>supersedes</code>, and the suggestion has no
+rejected state. Two published counts were wrong at the previous pin —
+the test total appeared as 619 across 47 files in section 10 and as 451
+across 29 in the appendix, against 618 across 49 in the tree — and the
+count is now stated once.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/yaminbkk/NexusMem/commit/c52dac9ceae08c4ee55df304bef0097d8b985f03"><code class="commit-id" title="c52dac9ceae08c4ee55df304bef0097d8b985f03">c52dac9c…</code></a>
 — second reading, 35 commits on. Screened again first: one auto-run

@@ -6,10 +6,16 @@ root: ../..
 page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
-revision: 15fbe809ddfd744c161cb49a4b0014d96693cceb
-revision_url: https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb
-analyzed_at: 2026-08-15
+revision: 2605d84246c44c258b0d0f12a555980eb6a7456f
+revision_url: https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f
+analyzed_at: 2026-08-22
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "the node record and the suspects queue | crates/engram-core/src/schema.rs, engine.rs | three durable anchors on `nodes` — `confirmed_at` (*\"last deliberate act; the unapproved trust anchor\"*), `approved_at` (*\"last explicit approval; trust anchors here\"*) and `demoted_at` (*\"when contradicting evidence landed\"*) — plus `trust_override`, a pin that holds trust constant and turns decay off, and a `suspects.status` of suspected/confirmed/dismissed carrying an `nli_label` hint of contradiction/entailment/neutral beside it. Trust is computed at read time from the anchors rather than stored as a score | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `decay_archives_only_stale_unapproved_claude_episodic_nodes`"
+  bitemporal: "the node and edge records | crates/engram-core/src/schema.rs, engine.rs:1584-1587 | `valid_from` and `valid_until` on both tables, distinct from `created_at`: the record axis says when the store learned it, the validity axis when it held. Setting `valid_until` is the supersede flow and nothing else — the comment says so at the call — and the audit action becomes `archived`; retrieval retains only rows whose `valid_until` is none, so an archived claim leaves the brief without leaving the store | crates/engram-core/src/tests.rs `resolve_replaces_archives_the_older_node`, `audit_logs_supersede_and_decay_as_archived`, `tag_stats_count_and_skip_archived`"
+  audit_log: "the store | crates/engram-core/src/schema.rs, store_sqlite.rs:1158 | an insert-only `audit` table — *\"Rows are only ever inserted; `seq` is the pagination cursor\"* — one row per node or edge mutation over an eleven-value action vocabulary (created, updated, approved, unapproved, pinned, unpinned, demoted, undemoted, archived, deleted, imported), with full `before_json` and `after_json` snapshots, a `title` label that survives deletion, and the writing process stamped on the row: `origin` of pane/mcp/daemon/cli/library, `session_id`, `cwd`, `pid`, `version` | crates/engram-core/src/tests.rs `audit_journals_node_lifecycle_with_context`, `audit_journals_edges_with_sentence_labels`, `audit_logs_supersede_and_decay_as_archived`, `audit_page_keyset_pagination`, `audit_origin_stamp_and_session_fallback`, `audit_import_writes_one_summary_row`"
+  human_review: "the suspects queue, the pane and the pin | crates/engram-core/src/engine.rs (`resolve_suspect`, `approve`, `set_trust_override`, `nli_agreement`) | a write returns the look-alike pairs it queued so the assistant judges them in the same turn, and `resolve_suspect` records the verdict as conflict, replaces or dismiss. Approval and pinning are human acts the assistant cannot perform, and a pinned node ignores contradicting evidence until a person unpins it. The pane is the surface: stale nodes queue for a decision, conflicts are judged there, and the browser demo exercises all of it. `nli_agreement` scores the model hint against the human verdict and is deliberately excluded from the auto-tune inputs | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `audit_answered_nominates_but_never_resolves`"
+  negative_eval: "the offline evaluation harness | eval/src/generate.rs, eval/src/arms.rs, eval/results/floor-100.json, floor-500.json, floor-1500.json | the generated corpus carries a control arm of *\"questions about subjects that were never written\"* — one control subject per four tested facts, with chains generated before the controls so a phantom subject can never collide with a real one — and `controls_declined` is reported at every threshold in the committed floor sweeps, so a precision gain is never published without the recall it cost | the harness is the mechanism, and the three committed floor sweeps are its runs"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -19,19 +25,19 @@ matrix:
   retrieval: "Vectors with a reranker that votes rather than decides, a keyword weight of 0.15, and calibrated delivery — a score floor and a knee cut whose whole tradeoff curve is committed, with the abstention line fitted per graph from unanswerable probes built out of the graph's own vocabulary"
   write: "A write returns the look-alike pairs it just queued, so the assistant judges them in the same turn — detection is local, judgment is the assistant's"
   update_delete: "`replaces` and `conflicts-with` edges, `valid_until` for archival, an atomic `merge_nodes` that rehomes edges and archives victims behind a supersession, a suspects table resolved as conflict, replaces or dismiss, and a human pin that disables decay"
-  scoping: "None — one graph per project directory, with no scope key inside it"
-  integration: "An MCP server, a JetBrains plugin and a VS Code extension published to three marketplaces, plus a standalone pane with a live browser demo"
+  scoping: "None inside a graph. Separation is one store per project, and a single machine-wide core process holds them all — so which project a session reads is a five-rung binding decision, not a predicate"
+  integration: "An MCP server that is always a bridge to the machine core, a JetBrains plugin and a VS Code extension published to three marketplaces, plus a standalone pane with a live browser demo; a `set_project` tool lets a session rebind itself when its client will not say where it is"
   background: "Trust is computed at read time, so no pass has to have run for a read to be correct; a session-boundary `validate_graph` archives, retires, re-fits the two auto-tune dials and rescans, and drift scans surface for review while deliberately never demoting"
   trust: "Three distinct durable anchors — `confirmed_at`, `approved_at`, `demoted_at` — plus a `trust_override` pin, and a suspects status of suspected, confirmed or dismissed"
   strengths: "Retrieval stamps `last_seen` for observability only, because exposure would otherwise let a broad recurring query certify its own outputs"
-  risks: "No scope key of any kind; the retrieval half of LongMemEval is graded at session level, and the one number the external run does not price is how often an answerable question gets warned"
+  risks: "No scope key of any kind, and a session whose workspace cannot be determined binds the home graph rather than failing; the retrieval half of LongMemEval is graded at session level, and the one number the external run does not price is how often an answerable question gets warned"
 ---
 
 ## 1. Executive Summary
 
-Engram Alpha is graph memory for AI coding assistants: ~30,200 lines of Rust
-across `engram-core`, `engram-mcp` and `engram-http` (33,500 with the `engram-cli`
-crate), MIT, release v0.8.7, 98 commits since
+Engram Alpha is graph memory for AI coding assistants: ~27,800 lines of Rust
+across the crates (38,700 counting their test modules), MIT, release v0.8.9,
+112 commits since
 3 July 2026, shipping as a JetBrains plugin and a VS Code extension on three
 marketplaces with a browser demo of the real pane. **Not to be confused with
 [Engram](../engram/) — a different project of the same name, already in this
@@ -218,11 +224,31 @@ changes no trust, so a note cannot certify itself by being popular.
 
 ## 3. Architecture
 
-**Runtime.** A Rust core (`engram-core`) with an MCP server (`engram-mcp`, 3,778
-lines) and an HTTP surface (`engram-http`), a Vue frontend for the pane, and
-editor integrations for JetBrains and VS Code published to the JetBrains
-Marketplace, the VS Marketplace and Open VSX. There is a standalone browser demo
-running the real pane over an invented project.
+**Runtime.** One binary, and at runtime one heavy process per machine with any
+number of deliberately light ones around it. The **machine core** holds every
+open store and its locks, the three local models, the pane's web server and every
+MCP session; it binds `127.0.0.1:8787`, runs as a hidden `core` subcommand, is
+spawned detached by whichever command first needs it, and ends only on
+`engram-alpha stop`. `serve` is a launcher that registers the repository and
+exits. `engram-alpha mcp` is *always a bridge* — it never opens a store on any
+backend, proxying the client's stdio session to the core over streamable HTTP,
+and failing with an error in `.engram/mcp.log` rather than *"silently opening the
+store in-process"*. `status`, `doctor`, `stop` and the hooks are one-shot REST
+clients. Discovery is two JSON advertisements plus a `GET /health` check, so a
+stale file is harmless, and `~/.engram/registry.json` lists which repositories
+have graphs.
+
+That consolidation is the change a reader of the previous release has to notice,
+because it moves a guarantee. When each project directory ran its own process
+over its own file, reading the wrong project's graph was not expressible. One
+core holding every store makes it a routing decision — see the binding ladder in
+section 8.
+
+`engram-core` carries the engine, `engram-mcp` the tool surface, `engram-http`
+the REST and SSE API, with a Vue frontend for the pane and editor integrations
+for JetBrains and VS Code published to the JetBrains Marketplace, the VS
+Marketplace and Open VSX. There is a standalone browser demo running the real
+pane over an invented project.
 
 **Persistence.** SQLite (`store_sqlite.rs`) with a second backend
 (`store_tepin.rs`) behind the same `store.rs` trait. Four tables: `nodes`,
@@ -256,7 +282,8 @@ though it feeds a sibling store and not the curated read.
 
 ### Deployment and ergonomics
 
-One binary and one SQLite file per project, plus optional local models — an
+One binary, one store file per project, one core process per machine, plus
+optional local models — an
 embedder (`bge-small-en-v1.5`), a reranker (`jina-reranker-v1-turbo-en`) and an
 NLI model (`deberta-v3-small-tasksource-nli`, a 172 MB quantised ONNX export the
 project made itself) — all small enough to run on a developer machine, which is
@@ -504,6 +531,31 @@ An MCP server for the assistant, an HTTP surface, a JetBrains plugin, a VS Code
 extension, and a standalone pane. The screenshots show the intended loop: the
 graph fills in live while Claude Code works in the terminal below.
 
+**Which project a session serves is a five-rung ladder, and the last rung is the
+one to read carefully.** An explicit `--db` pins it; otherwise the bridge asks
+the client for `roots/list` and binds the first `file://` root, re-resolving on
+`roots/list_changed` so one db-less config entry follows a client across
+workspaces; otherwise the bridge's working directory; otherwise a machine-level
+**default agent project** setting; and otherwise **the home graph** — *"the
+session binds the core's `/mcp` endpoint rather than dying."* Every rung is
+logged, so `mcp.log` always names the one that bound.
+
+Rung five is a deliberate trade and the report's sharpest reservation about this
+release. A session that cannot establish its workspace does not fail; it reads
+and writes somebody else's graph — specifically the home one. The mitigation is
+`set_project`, a tool the agent calls with an absolute path to rebind the running
+session, which refuses unregistered paths and returns that project's brief in the
+same call; sessions stranded on rungs four or five get a one-line hint above
+their brief pointing at it, and the documentation supplies the `AGENTS.md` line
+that makes it automatic. The clients that need it are named in the docs —
+Windsurf and Devin CLI advertise roots and never answer them — which is the kind
+of specificity that makes a workaround checkable.
+
+The pane's Processes census shows each live session's current binding. Bridges
+hold a 15-second-heartbeat lease that expires after 45 seconds, so a crashed
+client leaves the list within three missed beats, and a failed registration never
+blocks bridging: the census is observability, not control.
+
 The assistant's authority is broad on judgment and bounded on trust. It writes
 nodes and edges, and it judges the suspects the write hands back — but approval
 and pinning are human acts, retrieval moves nothing, and a pinned node ignores
@@ -555,7 +607,7 @@ Other observations:
   (PEM/AWS/JWT/GitHub/Slack/OpenAI/`key=value`) plus a high-entropy backstop, now
   judged per separator-delimited segment (segments under twelve chars abstain) so
   a compound identifier is no longer masked. The curated graph is redacted but not
-  encrypted (it exists to be inspected); the new history store is redacted *and*
+  encrypted (it exists to be inspected); the history store is redacted *and*
   encrypted.
 - **`meta` pins the embedding model identity and vector width**, so a store read
   with the wrong embedder is detectable rather than silently wrong.
@@ -570,6 +622,21 @@ Other observations:
   volume and journalled, and a graph can opt out — but a reader comparing two
   installations should expect their delivery and conflict thresholds to differ,
   because each was fitted to its own graph.
+- **The loop is scored against the people in it.** `Engine::nli_agreement`
+  joins each judged suspect's stored `nli_label` with the verdict a person
+  reached and reports the confusion matrix: hits, false alarms, misses, passes,
+  and an agreement rate that is absent until a hinted pair has been judged.
+  Surfaced as `GET /conflicts/agreement` and a Checkup panel block. Two
+  properties make it worth naming. It counts **misses** — the judge confirmed a
+  pair the model called entailment or neutral — so the measure is not only about
+  the alarms the model raised. And it is **read-only, never a calibration
+  input**: the auto-tune dials do not consume it, so the model cannot chase its
+  own agreement score. The type's own comment scopes the claim to what the row
+  can carry: conflict and replaces both land as confirmed, so agreement reads
+  *"the hint said contradiction and the judge kept the pair"* and no finer.
+  Almost nothing in this corpus measures whether its automatic nomination agreed
+  with the human who adjudicated it, and the systems that do usually feed the
+  answer straight back into a threshold.
 - **Most numbers are self-generated.** The offline suite's graphs,
   questions and controls are the project's own synthetic corpora. LongMemEval is
   the exception and it is one corpus, graded on the retrieval half only.
@@ -601,6 +668,15 @@ half to fix, and almost nothing in this corpus reports it.
 **The floor sweep has controls.** Unanswerable questions at every threshold, with
 `controls_declined` rising as the floor rises — so precision is never claimed
 without the recall it cost.
+
+**The process model arrived with its own test suites**, which is the shape the
+rest of the repository already had and the runtime did not.
+`crates/engram-cli/tests/` carries `process_model.rs`, `roots_binding.rs`,
+`session_brief_hook.rs` and `setup_windsurf.rs` — the binding ladder, the
+convergence of concurrent launchers on exactly one core, and the per-client
+setup writers, tested as integration rather than asserted in a doc. One of them
+pins a case that is easy to get wrong under lazy opening: a resolved store
+survives its project being unregistered.
 
 ### The external corpus
 
@@ -851,9 +927,13 @@ which signals are allowed to change what an agent believes.
 - **How much does the encrypted history store get used in practice?** The
   transcript-harvest layer is opt-in and physically isolated from curated recall;
   whether teams enable it, and how much it grows, is not observable from the tree.
-- **How often does the local NLI hint disagree with the assistant's verdict?**
-  Both are stored — `nli_label` beside the resolved `status` — so the repository
-  could report it and does not.
+- **What does the agreement rate read on a real graph?** The scoreboard is
+  computed and rendered; no committed result file carries a value from a graph
+  anyone actually judged, so the measure exists and its answer does not.
+- **How often does a session land on the home graph?** Rung five is logged per
+  session in `mcp.log` and the pane census shows the current binding, but nothing
+  counts the fallback, so the frequency of the failure mode the ladder was built
+  around is not observable from the tree.
 - **Does the TepinDB backend match the SQLite one?** Two stores behind one trait,
   with no parity comparison found.
 - **What happens to a pinned node that is genuinely wrong?** Evidence events skip
@@ -888,6 +968,17 @@ which signals are allowed to change what an agent believes.
 **Surfaces**
 - `crates/engram-mcp/`, `crates/engram-http/`, `frontend/`, `engram-vscode/`
 
+**Runtime and process model**
+- `crates/engram-cli/src/lazy.rs`, `main.rs`, `setup.rs`, `doctor.rs` — the core
+  spawn, the bridge, the one-shot REST clients and the per-client setup writers
+- `crates/engram-core/src/settings.rs` — the machine-level default agent project
+- `crates/engram-core/src/store.rs` — `resolve_db_path`, the `graph.db`/`.tepin`
+  resolution every registry consumer has to go through
+- `docs/runtime.md`, `docs/multi-project.md` — the process map and the binding
+  ladder
+- `crates/engram-cli/tests/` — `process_model.rs`, `roots_binding.rs`,
+  `session_brief_hook.rs`, `setup_windsurf.rs`
+
 **Evaluation**
 - `eval/src/` — `longmem.rs` (LongMemEval adapter), `chains.rs` (supersession
   chains), `generate.rs`, `arms.rs`, `run.rs`, `ollama.rs`
@@ -900,6 +991,8 @@ which signals are allowed to change what an agent believes.
 - `scripts/mem-probe.sh`
 
 ## History
+
+**2026-08-22** — [`2605d84246c44c258b0d0f12a555980eb6a7456f`](https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f) — re-pinned at release v0.8.9 (112 commits, ~27,800 lines of Rust across the crates, 38,700 with their test modules). Screened again first: three auto-run surfaces, two files inside the seven-day cooldown, two unpinned surfaces, and a `CLAUDE.md` addressed to a reading agent; nothing was installed and no test was run. The trust engine did not move — `policy.rs`, `nli.rs`, `rag.rs`, `cortex.rs` and `digest.rs` are unchanged — and no capability mark changes. The release is a process model: one machine core holding every store, an MCP server that is always a bridge, a five-rung project-binding ladder whose last rung is the home graph, a `set_project` tool for clients that advertise roots and never answer them, and four new integration test files under `engram-cli`. `Engine::nli_agreement` adds a read-only confusion matrix of the model's hint against the human's verdict, deliberately excluded from the auto-tune inputs. `resolve_db_path` now mediates every registry read, after stale `graph.db` entries made live TepinDB stores report as missing. Section 3 gains the runtime topology and section 8 the binding ladder, which is where the consolidation costs something: separation between projects was a property of the process layout and is now a property of routing.
 
 **2026-08-15** — [`15fbe809ddfd744c161cb49a4b0014d96693cceb`](https://github.com/techtheist/engram/commit/15fbe809ddfd744c161cb49a4b0014d96693cceb) — re-pinned at release v0.8.7 (98 commits, ~30,200 lines across the three core crates / 33,500 with `engram-cli`; `engram-mcp` 3,046→3,778). Screened again; the `.claude/settings.json` auto-run surface is still present, nothing installed or run. No capability mark changed: all five hold, and time-scoped search — the headline addition ([`719f7b56d03940b959a843131e6455a6ee9894fc`](https://github.com/techtheist/engram/commit/719f7b56d03940b959a843131e6455a6ee9894fc)) — filters the record-time (`created_at`) axis with recency ordering, not a new validity axis, so `bitemporal` is not upgraded. Two additions are new context: a sealed, opt-in, XChaCha20-encrypted **episodic history store** that harvests seven assistants' transcripts ([`40b919bfc20373951337273aff7a2452391c4324`](https://github.com/techtheist/engram/commit/40b919bfc20373951337273aff7a2452391c4324) accelerates its sweep with fs-notify), physically isolated from curated recall; and a **time-scoped search grammar** over both layers. Two prior claims are corrected: `redact.rs` is now traced to the node write paths (with a per-segment-entropy fix), and "deliberately little background" is qualified by the new harvester daemon. The `engram-cli` crate was added. No paper for engram itself; the only external citation remains LongMemEval.
 

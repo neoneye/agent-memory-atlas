@@ -344,6 +344,29 @@ for every other holder: a rejection record for a leaked secret is a copy of the
 secret. A digest refuses the value without retaining it, and the project states
 the property in those terms.
 
+**And it closes the hole a digest leaves, which is the one this page has not had
+an answer for.** A digest refuses the value it was written for. A consolidation
+pass that summarises the rejected source writes a body with a different digest
+and the check never fires — so the strongest tombstone in the corpus was
+defeatable by the system's own maintenance loop. The fix shares one suppression
+check between ordinary reads and maintenance scans, on the ground stated in the
+code: *"a derived body is not safe merely because its own digest differs from a
+rejected source body's digest."* Derived bodies carry source references in three
+JSON fields, described as *"intentionally hash-free provenance references, not a
+new authority mechanism"* — so suppression propagates without the tombstone ever
+holding the rejected value. The walk is recursive with a cycle set and a depth
+cap of eight, and it fails closed at both edges: hitting the cap suppresses, and
+so does a source whose encrypted bytes cannot be authenticated, because *"serving
+a derived record whose evidence cannot be checked would recreate the same
+bypass."*
+
+**This is a further property the strong form needs**, and unlike the others it
+is not optional for any system that derives. If summaries, consolidations or
+promotions write back into the same store, a value-keyed tombstone protects the
+original and nothing downstream of it. The limit is honest and worth stating with
+the mechanism: propagation reaches exactly as far as the provenance is declared,
+so a derived writer that omits its source ids escapes.
+
 Three further details. It **refuses at the write path** rather than filtering at
 read, like Verel and RainBox and unlike Daimon and Provem, enforced in
 `remember_impl` with a comment claiming the reach — agent remember, capture,

@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-22-a-context-engine-that-expires-on-purpose.md](2026-08-22-a-context-engine-that-expires-on-purpose.md) —
+  `Perseus-Computing-LLC/perseus` triaged and excluded: it is a separate
+  repository from the Vault the atlas reports on, and it is a live-context
+  renderer whose README draws this atlas's own boundary before anyone else has
+  to. The one thing that survives a session is a checkpoint carrying a
+  `stale_after` and a `max_keep: 30` — a run record that ships with an expiry,
+  which is the cleanest case yet of *a store of the agent's work is not a store
+  of the agent's beliefs*. Two things worth stealing anyway: a stale-lock
+  reclaim that reads `EPERM` as alive because cross-user is the normal case for
+  agents sharing a store over NFS, and a natural-sort key for `<ts>_<n>.yaml`
+  filenames, without which retention deletes the newest file first.
 - [2026-08-22-the-benchmark-everyone-cites-and-the-hint-with-no-verb.md](2026-08-22-the-benchmark-everyone-cites-and-the-hint-with-no-verb.md) —
   LongMemEval read at a commit for the first time and deliberately given no
   report: it is a dataset and a harness, so the findings went to the benchmarks
