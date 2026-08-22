@@ -3681,10 +3681,31 @@ cross-session <code>refinements.jsonl</code>, so
 <code>rollbackProposal</code> can invert a refinement made in another
 session — the most complete undo for a self-modifying memory in this
 atlas, and tested as such.</li>
-<li>Biggest risk: nothing is keyed on a rejected value. Rollback answers
-"can I undo what it learned" and not "can I stop it learning that
-again", so a memory deleted as wrong can be proposed again by the next
-pass as a fresh create.</li>
+<li>Biggest risk: nothing is keyed on a rejected value, and the scope
+rule is a prompt. Rollback answers "can I undo what it learned" and not
+"can I stop it learning that again", so a memory deleted as wrong can be
+proposed again by the next pass as a fresh create. Beside that,
+<em>"during a local refinement, global entries are read-only
+context"</em> is a line in the built-in planner's prompt string:
+<code>applyRefinementProposal</code> resolves an entry's scope as
+<code>before?.scope ?? options.scope ?? "local"</code> and never
+compares the refinement's scope with the target's, so a local refinement
+that names a global entry edits it — and the extension hook exists to
+replace the prompt that carries the rule. Rollback answers "can I undo
+what it learned" and not "can I stop it learning that again", so a
+memory deleted as wrong can be proposed again by the next pass as a
+fresh create.</li>
+<li>Second idea: <strong>the planner is replaceable and the undo is
+not.</strong> <code>session_before_refine</code> lets an extension see
+everything the built-in planner sees and skip the round or replace the
+planner outright — with edits <em>"still validated at apply time"</em>,
+so the trust boundary sits at apply rather than at propose. And one
+clause of the event's docstring closes the hole that would otherwise
+cost the whole design: <em>"Rollbacks bypass this event."</em> An
+extension may propose a change and may suppress a round; it cannot
+interpose on the undo that would correct its own bad proposal. Any
+system that exposes a hook on the write path should ask what its
+recovery path inherits.</li>
 <li>Most reusable component: the baseline check — an edit whose target
 entry changed while the model was planning is refused with
 <code>entry changed during refinement planning</code>, with the

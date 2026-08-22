@@ -116,14 +116,14 @@ session.</p>
               <strong>PrimeIntellect-ai/prime-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3" title="c98941a2a5cf40faecf9b4648ac3c304abf48fd3">
+            <a class="meta-pill revision-pill" href="https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d" title="8d7deeab5861bf9d77bde3d8511046a5c799818d">
               <span>Analyzed revision</span>
-              <code>c98941a2…</code>
+              <code>8d7deeab…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-05</strong>
+              <strong>2026-08-21</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -392,6 +392,45 @@ second call conditional. State writes are a whole-file rewrite of
 <code>harness_state.json</code> plus one appended JSONL line; the
 history grows monotonically and nothing prunes it, which is the right
 trade given that pruning it would break rollback.</p>
+<h3 id="the-planner-is-replaceable-the-undo-is-not">The planner is
+replaceable, the undo is not</h3>
+<p><code>session_before_refine</code> lets an extension see everything
+the built-in planner would see — the trigger, the instructions, the
+scope, the current harness state, the refinement history and the
+serialized conversation — and do one of three things: return nothing and
+fall through to the built-in planner, return <code>{ skip: true }</code>
+to suppress the round, or return its own <code>RefinementProposal</code>
+and replace the planner outright. The shipped example replaces it with a
+cheaper model.</p>
+<p>Two properties make that safe to expose, and they are the pattern
+worth taking.</p>
+<p><strong>A replaced planner is not a trusted one.</strong> The type's
+own comment says <em>"Edits are still validated at apply time"</em>, and
+the example repeats it: <em>"Returned edits are still validated by the
+core apply path, so a bad proposal degrades to per-edit errors instead
+of corrupting the harness."</em> The trust boundary sits at apply, not
+at propose, so an extension can decide what the agent should become and
+cannot decide what validation means.</p>
+<p><strong>Rollbacks bypass the hook</strong>, stated in one clause of
+the event's docstring: <em>"Fired before refinement planning (can be
+skipped or replaced). Rollbacks bypass this event."</em> An extension
+may propose a change and may suppress a round; it cannot interpose on an
+undo. That is the property that keeps the undo worth having — if the
+extension surface reached rollback, a misbehaving extension could
+prevent the correction of its own bad refinement, and the recovery path
+would inherit the reliability of the least careful thing installed.</p>
+<p><strong>The scope rule those two protect is weaker than they
+are.</strong> The instruction that <em>"during a local refinement,
+global entries are read-only context: never propose update or delete
+edits for them"</em> is a line in the built-in planner's prompt string.
+<code>applyRefinementProposal</code> validates each edit, checks the
+baseline snapshot, and resolves an entry's scope as
+<code>before?.scope ?? options.scope ?? "local"</code> — so an update
+keeps whatever scope the existing entry had, and there is no comparison
+between the refinement's scope and the target's. A local refinement that
+names a global entry updates the global entry and leaves it global. The
+rule is real and its only enforcement is a prompt — which the hook
+exists to let an extension replace.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The <code>refine</code> skill is the kernel-side interface —
 <code>refine.status()</code> reporting <code>pending</code> and
@@ -583,6 +622,40 @@ specifically?</li>
 <code>builtin-skills.test.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d"><code class="commit-id" title="8d7deeab5861bf9d77bde3d8511046a5c799818d">8d7deeab…</code></a>
+— re-pinned 88 commits on, at v0.8.0. Screened again: build-time
+execution declared across the workspace's <code>package.json</code>
+files; nothing was installed and nothing was run. Marks unchanged at
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. <code>sessionHeaderMatchesCwd</code> was
+re-checked rather than carried forward — <code>session-manager.ts</code>
+lost 257 lines to a refactor in this range and the predicate survives
+it.</p>
+<p>New in section 8: the <code>session_before_refine</code> extension
+hook, which can skip a refinement round or replace the planner entirely,
+with two properties that make that safe — edits from a replaced planner
+are still validated at apply time, and rollbacks bypass the hook, so an
+extension cannot interpose on the undo that would correct its own bad
+proposal. Reading it also produced the scope finding in the same
+section: the "global entries are read-only during a local refinement"
+rule is a line in the built-in planner's prompt,
+<code>applyRefinementProposal</code> resolves scope as
+<code>before?.scope ?? options.scope ?? "local"</code> with no
+comparison between the refinement's scope and the target's, and the hook
+exists to replace the prompt that carries the rule.</p>
+<p>The <code>audit_log</code> evidence record is sharpened at the same
+pin: the mechanism is not only that refinements are appended, but that a
+refused edit is appended too, carrying <code>applied: false</code> and
+an <code>error</code> naming why — a validation failure,
+<code>entry not found</code>, <code>entry already exists</code>, or
+<code>entry changed during refinement planning</code>.
+<code>normalizeRefinementProposal</code> was extracted in this range
+with a docstring stating the reason it does not clean up: it
+<em>"normalizes an untrusted refinement proposal while preserving
+invalid edit fields for apply-time validation"</em>, so a malformed
+field survives parsing in order to be refused with a reason rather than
+disappearing quietly.</p>
 <p><strong>2026-08-05</strong> — <a
 href="https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3"><code class="commit-id" title="c98941a2a5cf40faecf9b4648ac3c304abf48fd3">c98941a2…</code></a>
 — first reading. Screened before reading: 0 auto-run surfaces, 7

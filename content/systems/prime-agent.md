@@ -6,16 +6,16 @@ root: ../..
 page_kind: system
 source_name: "PrimeIntellect-ai/prime-agent"
 source_url: https://github.com/PrimeIntellect-ai/prime-agent
-revision: c98941a2a5cf40faecf9b4648ac3c304abf48fd3
-revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3
-analyzed_at: 2026-08-05
+revision: 8d7deeab5861bf9d77bde3d8511046a5c799818d
+revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d
+analyzed_at: 2026-08-21
 capabilities: "scope_enforced, audit_log, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "session listing for resume and branch, not the refinement store | packages/coding-agent/src/core/session-manager.ts | sessionHeaderMatchesCwd | unknown"
-  audit_log: "continual-refinement harness | packages/coding-agent/src/core/refinement/refinement.ts | appendGlobalRefinement writing harness/refinements.jsonl | unknown"
+  scope_enforced: "session listing for resume and branch, not the harness store | packages/coding-agent/src/core/session-manager.ts:739 | `sessionHeaderMatchesCwd` filters stored sessions against the caller's working directory before listing them for resume or branch, so a session recorded under another directory is not offered. The harness store is scoped differently and more weakly — see section 7 on what `applyRefinementProposal` does and does not check | unknown"
+  audit_log: "the refinement history, which records refused edits as well as applied ones | packages/coding-agent/src/core/refinement/refinement.ts:716 (`applyRefinementProposal`), `appendGlobalRefinement` writing `harness/refinements.jsonl` | every edit in a proposal lands in `appliedEdits` whether or not it took: an applied edit carries its `before` snapshot, and a refused one carries `applied: false` and an `error` naming the reason — a validation failure, `entry not found`, `entry already exists`, or `entry changed during refinement planning`, which is a compare-and-swap against the baseline snapshot. The whole record is appended, so the history holds what the harness declined to become as well as what it became | unknown"
   negative_eval: "conversation compaction, not memory retrieval | packages/coding-agent/test/compaction.test.ts | assertion that messagesToSummarize excludes the earlier summary | packages/coding-agent/test/compaction.test.ts"
 matrix:
   memory_unit: "A `HarnessEntry` — id, kind of `prompt` / `memory` / `skill` / `subagent`, title, content, path, scope, reference and argument contracts, source and a monotonic `version`"
@@ -289,6 +289,44 @@ writes are a whole-file rewrite of `harness_state.json` plus one appended JSONL
 line; the history grows monotonically and nothing prunes it, which is the right
 trade given that pruning it would break rollback.
 
+### The planner is replaceable, the undo is not
+
+`session_before_refine` lets an extension see everything the built-in planner
+would see — the trigger, the instructions, the scope, the current harness state,
+the refinement history and the serialized conversation — and do one of three
+things: return nothing and fall through to the built-in planner, return
+`{ skip: true }` to suppress the round, or return its own `RefinementProposal`
+and replace the planner outright. The shipped example replaces it with a cheaper
+model.
+
+Two properties make that safe to expose, and they are the pattern worth taking.
+
+**A replaced planner is not a trusted one.** The type's own comment says
+*"Edits are still validated at apply time"*, and the example repeats it:
+*"Returned edits are still validated by the core apply path, so a bad proposal
+degrades to per-edit errors instead of corrupting the harness."* The trust
+boundary sits at apply, not at propose, so an extension can decide what the agent
+should become and cannot decide what validation means.
+
+**Rollbacks bypass the hook**, stated in one clause of the event's docstring:
+*"Fired before refinement planning (can be skipped or replaced). Rollbacks bypass
+this event."* An extension may propose a change and may suppress a round; it
+cannot interpose on an undo. That is the property that keeps the undo worth
+having — if the extension surface reached rollback, a misbehaving extension could
+prevent the correction of its own bad refinement, and the recovery path would
+inherit the reliability of the least careful thing installed.
+
+**The scope rule those two protect is weaker than they are.** The instruction
+that *"during a local refinement, global entries are read-only context: never
+propose update or delete edits for them"* is a line in the built-in planner's
+prompt string. `applyRefinementProposal` validates each edit, checks the baseline
+snapshot, and resolves an entry's scope as
+`before?.scope ?? options.scope ?? "local"` — so an update keeps whatever scope
+the existing entry had, and there is no comparison between the refinement's scope
+and the target's. A local refinement that names a global entry updates the global
+entry and leaves it global. The rule is real and its only enforcement is a prompt
+— which the hook exists to let an extension replace.
+
 ## 8. Agent Integration
 
 The `refine` skill is the kernel-side interface — `refine.status()` reporting
@@ -457,5 +495,11 @@ asking.
   `compaction.test.ts`, `builtin-skills.test.ts`.
 
 ## History
+
+**2026-08-21** — [`8d7deeab5861bf9d77bde3d8511046a5c799818d`](https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d) — re-pinned 88 commits on, at v0.8.0. Screened again: build-time execution declared across the workspace's `package.json` files; nothing was installed and nothing was run. Marks unchanged at `scope_enforced`, `audit_log` and `negative_eval`. `sessionHeaderMatchesCwd` was re-checked rather than carried forward — `session-manager.ts` lost 257 lines to a refactor in this range and the predicate survives it.
+
+New in section 8: the `session_before_refine` extension hook, which can skip a refinement round or replace the planner entirely, with two properties that make that safe — edits from a replaced planner are still validated at apply time, and rollbacks bypass the hook, so an extension cannot interpose on the undo that would correct its own bad proposal. Reading it also produced the scope finding in the same section: the "global entries are read-only during a local refinement" rule is a line in the built-in planner's prompt, `applyRefinementProposal` resolves scope as `before?.scope ?? options.scope ?? "local"` with no comparison between the refinement's scope and the target's, and the hook exists to replace the prompt that carries the rule.
+
+The `audit_log` evidence record is sharpened at the same pin: the mechanism is not only that refinements are appended, but that a refused edit is appended too, carrying `applied: false` and an `error` naming why — a validation failure, `entry not found`, `entry already exists`, or `entry changed during refinement planning`. `normalizeRefinementProposal` was extracted in this range with a docstring stating the reason it does not clean up: it *"normalizes an untrusted refinement proposal while preserving invalid edit fields for apply-time validation"*, so a malformed field survives parsing in order to be refused with a reason rather than disappearing quietly.
 
 **2026-08-05** — [`c98941a2a5cf40faecf9b4648ac3c304abf48fd3`](https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3) — first reading. Screened before reading: 0 auto-run surfaces, 7 build-time exec paths, 22 unpinned dependency surfaces, and 6 manifests changed inside the seven-day cooldown — the repository landed commits on the day it was pinned. The first screen returned `NOTHING SCANNED` against a `--no-checkout` clone, which is the tool reporting an empty working tree rather than a clean one; it was re-run after checkout and is the result recorded here. The one `postinstall` in the tree, `packages/coding-agent/postinstall.cjs`, was read before anything else: it defers to a built `dist/postinstall.js` whose source exits immediately unless `PRIME_AGENT_BOOTSTRAP_KERNEL_ON_INSTALL` or `PRIME_AGENT_BOOTSTRAP_TOOLS_ON_INSTALL` is set to `1`, so the tool- and kernel-fetching path is opt-in rather than default. `AGENTS.md` is present and was read as data. **Nothing was executed.** The continual harness was traced end to end: the two-stage auto-refine gate, the per-kind edit contracts, the baseline comparison that refuses an edit whose target moved during planning, the `before`/`after` snapshots on every applied edit, `appendGlobalRefinement` writing the whole result to `harness/refinements.jsonl`, and `rollbackProposal` inverting a refinement into an ordinary proposal — the mechanism its own comment says exists so a refinement "can be rolled back from any session". Marks: `audit_log` for that append-only history, which carries evidence, outcome, and both snapshots per edit including for refused edits; `scope_enforced` for `sessionHeaderMatchesCwd` filtering the session listing by stored working directory; and `negative_eval` for `compaction.test.ts` asserting an earlier summary is not fed back into the next summarization. `tombstone` is withheld and the near-miss is specific: a deleted entry's content survives in the history and is reachable by rollback, but nothing is keyed on that content, so the next refinement pass can propose it again as a fresh `create`.
