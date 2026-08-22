@@ -132,6 +132,31 @@ JSONL/store update path is not atomic.
 [Basic Memory](../../systems/basic-memory/) rebuilds projections through startup
 reconciliation.
 
+[Heimdall](../../systems/heimdall/) contributes the strongest form of the
+idempotency this pattern asks for, by removing the payload from the job. Its
+queue rows hold a path and nothing else: *"A queued path is a hint that SOMETHING
+changed, never a description of what."* The worker reads that file from disk and
+makes the graph match it, so a duplicated hint costs one hash comparison, a
+missing hint is caught by a periodic audit that compares the journal against the
+filesystem, and a *wrong* hint is harmless — there is no verb in it to be wrong
+about. The design it replaced is the one this page is usually written against: an
+agent hook that regex-parsed `mv` and `rm` out of tool output and issued deletes
+directly, which the repository's own post-mortem says could not see a `git
+checkout`, raced when two hooks ran at once, and *"wrote WRONG data, because the
+command text was treated as the description of what changed."*
+
+Two of its orderings are worth copying verbatim. The projection is written
+**before** the journal row is committed, argued as: a crash between them leaves
+the path dirty and it is redone, whereas the reverse order *"could mark a path
+clean that was never projected, which is the one failure we cannot detect
+later."* And errors dequeue rather than retry — an unreadable file and a
+downed backend each drop out of the queue with the prior journal row left
+untouched, so a poison row cannot starve the drain; the tests fail the run if the
+loop spins more than five rounds. The gap it leaves is on this page's other axis:
+the journal is declared authoritative over the graph, and nothing ever compares
+the two, so a projection deleted by the system's own read path leaves an id in
+the journal that no audit will ever question.
+
 [SESA](../../systems/sesa/) is the compact counterexample, and the mistake is
 three lines long. `maybe_apply_updates` snapshots the pending-failure queue,
 **clears it**, releases the lock, and only then calls a remote judge model to

@@ -3001,7 +3001,7 @@ read path in it filters, ranks or omits on any of the five states, which
 is why the mark is withheld and the near-miss is the report's subject.
 See <a href="../systems/portable-handoff/">Portable Handoff</a>.</p>
 <p><strong>Heimdall is the family's outlier: it verifies at read time
-and stores nothing.</strong> Every other member here keeps a status a
+and stores no trust.</strong> Every other member here keeps a status a
 writer set; this one computes a verdict per search hit by checking
 whether the filesystem path its note anchors to still exists —
 <code>STRONG</code> for lexical coverage plus a live path,
@@ -3015,9 +3015,13 @@ ranking code. The cost is that nothing accumulates: a verdict is used to
 order one result set and discarded, so a node that was stale last week
 and rebuilt today leaves no trace of either, which is why the mark is
 withheld even though <code>STALE</code> does more than withhold — it
-deletes the node, after one bounded basename search. The store
-underneath is a separate Graft daemon this repository does not contain.
-See <a href="../systems/heimdall/">Heimdall</a>.</p>
+deletes the node, after one bounded basename search. Since the first
+reading it has grown a second, opposite mechanism — a SQLite journal
+that a level-triggered reconciler converges against the disk — and the
+two never consult each other, which is its own lesson. The store
+underneath is a separate Graft daemon whose C source the repository now
+vendors and whose binary it does not. See <a
+href="../systems/heimdall/">Heimdall</a>.</p>
 <p><strong>AgentDatabase is the family's clearest case of the policy
 being an artifact rather than a habit, and of what that costs when the
 store predates it.</strong> Two JSON files carry decisions the rest of
@@ -7077,31 +7081,39 @@ judged</td>
 </tr>
 <tr>
 <td><code>heimdall</code></td>
-<td>A Graft node with a title, a body and a filesystem path used as its
-anchor; Heimdall stores none of them itself</td>
-<td>Delegated to a Graft daemon, seeded from
-<code>~/knowledge-base/.inventory.tsv</code></td>
+<td>A Graft node — either a seeded knowledge-base note anchored to a
+filesystem path, or a file/symbol node projected from a row in
+Heimdall's own journal</td>
+<td>Graft, whose C source is now vendored but whose binary is not, plus
+Heimdall's own authoritative SQLite journal at
+<code>~/.heimdall/journal.db</code></td>
 <td><code>graft retrieve</code> for candidates plus a graph walk, then a
-per-hit verdict computed by checking the anchor path, with the verdict
-as the primary sort key and the score only breaking ties</td>
-<td>None of its own — the graph is kept current by parsing the agent's
-own edits, moves and deletions out of <code>tool_result</code></td>
-<td>A missing anchor is rehomed by a bounded basename search or the node
-is deleted through <code>graft delete</code>; there is no correction of
-content</td>
+per-hit verdict computed by checking the anchor path and its content,
+with the verdict as the primary sort key and the score only breaking
+ties</td>
+<td>A level-triggered reconciler: a hook appends a path hint, a single
+writer reads that file from disk and makes the graph match it. The hint
+is never believed and never replayed</td>
+<td>A vanished file retracts exactly the nodes its path owns and leaves
+an <code>absent</code> row behind; separately, at read time, a missing
+anchor is rehomed by a bounded basename search or the node is deleted
+through <code>graft delete</code></td>
 <td>A <code>--scope</code> substring match against the result's path at
 query time; no stored scope key</td>
-<td>Three agent extensions — session orientation, a warn-only search
-guard, and a live autosync hook — plus shell tools and a launchd
+<td>An npm CLI, adapters that write hook config for pi, Claude Code,
+Codex, Cursor and Windsurf, three agent extensions, and a launchd
 job</td>
-<td>A stale scan, a rehome pass, health and telemetry scripts, run on a
-schedule</td>
+<td>A single-writer daemon draining the queue, an audit that compares
+the journal against the filesystem, and a read-only
+<code>heimdall verify</code> that reports drift without repairing
+it</td>
 <td>Four computed verdicts — STRONG, REBUILT, WEAK, STALE, plus REMOVED
 and NOPATH — assigned per hit at read time and never persisted</td>
-<td>The verdict outranks the score, so a verified hit cannot be buried
-by a better-scoring unverified one</td>
-<td>Nothing is stored about trust between searches, and the graph's
-freshness depends on a parser for the agent's shell commands</td>
+<td>A queued path is a hint that something changed, never a description
+of what — so a missed, duplicated or wrong hint cannot corrupt the
+graph</td>
+<td>The journal is declared authoritative over a projection that nothing
+ever reads back, and the node-deleting read path still has no test</td>
 </tr>
 <tr>
 <td><code>helix-agi</code></td>
@@ -19854,13 +19866,18 @@ against the ABI it implements</li>
 <li><a
 href="https://github.com/ArihantDeva/heimdall">ArihantDeva/heimdall</a>
 at <a
-href="https://github.com/ArihantDeva/heimdall/commit/f9bc25abd27351d1af04ebe24b7deb555ba42102"><code class="commit-id" title="f9bc25abd27351d1af04ebe24b7deb555ba42102">f9bc25ab…</code></a>
-— read only; no auto-run surface, no build-time execution, both
-manifests inside the seven-day cooldown and one unpinned range. Nothing
-was installed, no Graft daemon was started and no search was run, so the
-verdict ordering and the stale-handling path were read from
-<code>kb_search_verify.py</code>; the store beneath is a separate
-program this reading did not inspect</li>
+href="https://github.com/ArihantDeva/heimdall/commit/70ad71d06328d94331041da6aa10ab9c54b96be5"><code class="commit-id" title="70ad71d06328d94331041da6aa10ab9c54b96be5">70ad71d0…</code></a>
+— read only, re-screened at the re-pin; no auto-run surface, no
+build-time execution, three files inside the seven-day cooldown and two
+unpinned dependency surfaces (three floating ranges in
+<code>package.json</code> against a present lockfile, sixteen
+<code>&gt;=</code> requirements in
+<code>vendor/graphify/requirements.txt</code>). Nothing was installed,
+no Graft daemon was started, no reconciler was run and no search was
+issued, so the verdict ordering, the journal schema and the convergence
+loop were read from <code>bin/kb_search_verify.py</code> and
+<code>bin/lib/</code>; Graft's vendored C source was read only for its
+licence and vendoring note</li>
 <li><a
 href="https://github.com/thefullnacho/hestia">thefullnacho/hestia</a> at
 <a

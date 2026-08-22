@@ -253,6 +253,33 @@ href="../../systems/tencentdb-agent-memory/">TencentDB</a> checkpoints
 capture, but its JSONL/store update path is not atomic. <a
 href="../../systems/basic-memory/">Basic Memory</a> rebuilds projections
 through startup reconciliation.</p>
+<p><a href="../../systems/heimdall/">Heimdall</a> contributes the
+strongest form of the idempotency this pattern asks for, by removing the
+payload from the job. Its queue rows hold a path and nothing else:
+<em>"A queued path is a hint that SOMETHING changed, never a description
+of what."</em> The worker reads that file from disk and makes the graph
+match it, so a duplicated hint costs one hash comparison, a missing hint
+is caught by a periodic audit that compares the journal against the
+filesystem, and a <em>wrong</em> hint is harmless — there is no verb in
+it to be wrong about. The design it replaced is the one this page is
+usually written against: an agent hook that regex-parsed <code>mv</code>
+and <code>rm</code> out of tool output and issued deletes directly,
+which the repository's own post-mortem says could not see a
+<code>git checkout</code>, raced when two hooks ran at once, and
+<em>"wrote WRONG data, because the command text was treated as the
+description of what changed."</em></p>
+<p>Two of its orderings are worth copying verbatim. The projection is
+written <strong>before</strong> the journal row is committed, argued as:
+a crash between them leaves the path dirty and it is redone, whereas the
+reverse order <em>"could mark a path clean that was never projected,
+which is the one failure we cannot detect later."</em> And errors
+dequeue rather than retry — an unreadable file and a downed backend each
+drop out of the queue with the prior journal row left untouched, so a
+poison row cannot starve the drain; the tests fail the run if the loop
+spins more than five rounds. The gap it leaves is on this page's other
+axis: the journal is declared authoritative over the graph, and nothing
+ever compares the two, so a projection deleted by the system's own read
+path leaves an id in the journal that no audit will ever question.</p>
 <p><a href="../../systems/sesa/">SESA</a> is the compact counterexample,
 and the mistake is three lines long. <code>maybe_apply_updates</code>
 snapshots the pending-failure queue, <strong>clears it</strong>,

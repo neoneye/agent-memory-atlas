@@ -8,6 +8,23 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-22-the-benchmark-everyone-cites-and-the-hint-with-no-verb.md](2026-08-22-the-benchmark-everyone-cites-and-the-hint-with-no-verb.md) —
+  LongMemEval read at a commit for the first time and deliberately given no
+  report: it is a dataset and a harness, so the findings went to the benchmarks
+  page instead, which now reads five benchmarks directly rather than four. Three
+  different accuracies come out of one run, abstention is a substring test on the
+  question id rather than a category, the retrieval metrics drop every abstention
+  item, and the dataset is not in the repository — which matters because the
+  September 2025 "cleaned" release changed the haystacks and no result artifact
+  records which one it read. Heimdall re-pinned: the shell-command parser is gone,
+  replaced by a level-triggered reconciler whose queue rows carry no verb, and the
+  new finding is that two subsystems now delete from one store while the audit
+  compares the journal only to the filesystem.
+- [2026-08-21-a-search-that-keeps-what-worked-and-nothing-it-refused.md](2026-08-21-a-search-that-keeps-what-worked-and-nothing-it-refused.md) —
+  AVO (arXiv:2603.24517) triaged: an evolutionary-search paper, not agent memory
+  and with no repository to pin, carrying one observation this atlas keeps
+  finding in genres it was not looking at — the lineage store keeps what worked
+  and nothing about what it refused.
 - [2026-08-20-the-build-page-judged-as-a-recommendation.md](2026-08-20-the-build-page-judged-as-a-recommendation.md) —
   the paved path read end to end as a builder would, and six defects, almost all
   in packaging rather than argument. The sharpest: of the twenty acceptance
