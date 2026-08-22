@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 323 reports.</strong></p>
+<p><strong>This page covers all 324 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -914,6 +914,70 @@ since August 2023 and never engineered for production.</li>
 from, or need a consolidation schedule that tracks salience.</li>
 <li>Do not copy when: you need any operational property at all — there
 is no scope, correction, deletion, or index.</li>
+</ul>
+<h3 id="genome"><a
+href="../systems/genome/"><code>genome</code></a></h3>
+<ul>
+<li>Best idea: <strong>take the model out of the write path and collect
+determinism as the payoff.</strong> Ingest embeds locally and stores —
+no LLM, no network — so what gets written is a function of the input,
+and <code>genome/journal.py</code> cashes that in: an append-only JSONL
+of every mutation, each line chained to its predecessor from a fixed
+genesis hash, from which <code>replay_journal</code> rebuilds the store
+exactly. The module places itself deliberately at the store boundary
+<em>after</em> extraction, so <em>"replay is deterministic for every
+configuration, not just the default zero-LLM path"</em>. The README puts
+the same point above the cost argument: <em>"A record that cannot be
+re-derived is difficult to audit. That property, not accuracy, is the
+actual argument for this design."</em></li>
+<li>Second idea: <strong>quarantine, not reweighting, and applied on
+three arms.</strong> Provenance is a discrete tier — <code>system</code>
+4, <code>user</code> 3, <code>agent</code> 2, <code>tool</code> 1,
+<code>web</code> 0 — and a <code>TrustPolicy</code> holds everything
+below a threshold out of <code>search()</code>, out of
+<code>get()</code> because <em>"knowing an id must not be a way around
+quarantine"</em>, and out of synthesized-parent selection which applies
+<em>"the SAME quarantine test"</em>. <code>search_quarantined()</code>
+shows what was withheld. Beside it, origin-bound authority: a
+lower-trust fact cannot supersede a higher-trust memory <em>"even when
+the resolver LLM is fooled into asking for exactly that"</em>.</li>
+<li>Third idea: <strong>the feature audit reports the product's own
+losses.</strong> <code>benchmarks/AUDIT-RESULTS.md</code> grades five
+optional features with <em>"wins and failures equal billing"</em>: graph
+retrieval is an <em>"honest null: +0.016 hit rate for ~1000x ingest
+cost"</em>, and auto-consolidation is <strong>harmful</strong> — 0.454
+accuracy off against 0.092 on, McNemar p&lt;0.0001. The loop closed: the
+trigger is off by default and the constructor carries the warning,
+citing the result file by path.</li>
+<li>Biggest risk: <strong>the journal that makes the record auditable
+makes deletion reversible.</strong> <code>forget</code> removes the row;
+the <code>add</code> line carrying its text stays in the log, and
+<code>replay_journal(path, until_seq=N)</code> before the delete
+rebuilds the store with the memory in it — offered as rollback and
+branching. Nothing redacts, compacts or encrypts the log. Beside it,
+<code>user_id</code> and <code>agent_id</code> default to
+<code>None</code> on every call and a <code>None</code> contributes no
+predicate, so the unscoped read is the easiest one to write; and the
+automatic fact detector catches both its LLM failure and its write
+failure at DEBUG, so an empty temporal layer and a working one look the
+same from outside.</li>
+<li>Maturity impression: Apache-2.0, ~13,900 lines of Python at version
+1.1.0, 252 tests in public CI, two papers with DOIs and PDFs in-tree, a
+self-verification module that monkeypatches <code>socket.connect</code>
+to prove the write path is offline, and boundary validation at the
+record type — NaN embeddings, unpaired surrogates, NUL bytes,
+whitespace-only content — each rule carrying its reason. Five capability
+marks; <code>trust_state</code> is the one that took deciding, awarded
+because the tiers withhold rather than reorder.</li>
+<li>Study when: you want per-user memory that runs where it serves, you
+need <em>what was true in March</em> rather than <em>what do we know
+now</em>, or you are building anything whose audit story is a log — the
+reproducibility argument here is the most carefully stated in the
+corpus, exceptions enumerated.</li>
+<li>Do not copy when: the scope boundary has to be enforced rather than
+remembered, durable deletion has to survive your own audit log, or a
+single scope will grow past what an exact cosine scan per query can
+carry.</li>
 </ul>
 <h3 id="a-mem"><a href="../systems/a-mem/"><code>a-mem</code></a></h3>
 <ul>

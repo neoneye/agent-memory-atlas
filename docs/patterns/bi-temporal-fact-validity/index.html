@@ -210,6 +210,25 @@ relative range and matches units whose occurred window overlaps it — and
 only participates when the query actually contains a temporal
 expression, so it does not dilute fusion elsewhere. A memory recorded on
 Friday about Tuesday's deploy answers a question about Tuesday.</p>
+<p><a href="../../systems/genome/">GENOME</a> is the instance that
+writes the interval arithmetic down, which is the part everyone else
+leaves implicit and gets wrong once.
+<code>facts_valid_at(entity, T)</code> returns facts where
+<code>valid_from &lt;= T &lt; valid_until</code>, and the docstring
+names the convention — SQL:2011 application-time periods,
+<code>valid_from</code> inclusive, <code>valid_until</code> exclusive —
+then states the consequence a caller would otherwise have to discover:
+<em>"Querying at exactly valid_until returns the SUCCESSOR fact, not
+this one."</em> Supersession closes the predecessor's interval rather
+than overwriting the row, so the period during which the wrong value was
+in force stays answerable. It also stores facts as ordinary memory
+records tagged by operator rather than in a dedicated table, and says
+what that buys: scope isolation, cascade delete, embedding and search,
+and parent-filtered retrieval, all inherited rather than re-implemented
+beside a second schema. A <code>believed_by</code> field on each fact
+makes two agents' contradictory beliefs about one entity representable
+instead of a last-writer-wins collision — the axis this page does not
+otherwise cover.</p>
 <p><a href="../../systems/atomic-agent/">Atomic Agent</a> applies the
 same split to profile facts — <code>valid_from</code> for when a row
 started being authoritative, <code>created_at</code> as the audit

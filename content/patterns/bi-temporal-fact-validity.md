@@ -106,6 +106,22 @@ query actually contains a temporal expression, so it does not dilute fusion
 elsewhere. A memory recorded on Friday about Tuesday's deploy answers a question
 about Tuesday.
 
+[GENOME](../../systems/genome/) is the instance that writes the interval
+arithmetic down, which is the part everyone else leaves implicit and gets wrong
+once. `facts_valid_at(entity, T)` returns facts where
+`valid_from <= T < valid_until`, and the docstring names the convention — SQL:2011
+application-time periods, `valid_from` inclusive, `valid_until` exclusive — then
+states the consequence a caller would otherwise have to discover: *"Querying at
+exactly valid_until returns the SUCCESSOR fact, not this one."* Supersession
+closes the predecessor's interval rather than overwriting the row, so the period
+during which the wrong value was in force stays answerable. It also stores facts
+as ordinary memory records tagged by operator rather than in a dedicated table,
+and says what that buys: scope isolation, cascade delete, embedding and search,
+and parent-filtered retrieval, all inherited rather than re-implemented beside a
+second schema. A `believed_by` field on each fact makes two agents'
+contradictory beliefs about one entity representable instead of a
+last-writer-wins collision — the axis this page does not otherwise cover.
+
 [Atomic Agent](../../systems/atomic-agent/) applies the same split to profile
 facts — `valid_from` for when a row started being authoritative, `created_at` as
 the audit timestamp, with `supersedes`/`superseded_by` chaining — and documents

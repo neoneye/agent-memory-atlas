@@ -1,6 +1,6 @@
 # Working in this repository
 
-A code-grounded field guide to agent memory systems: 323 reports, each read at a
+A code-grounded field guide to agent memory systems: 324 reports, each read at a
 pinned commit, plus 21 design patterns extracted from them.
 
 There are two jobs here, and they use different parts of the repo.

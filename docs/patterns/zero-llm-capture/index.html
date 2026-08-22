@@ -377,6 +377,32 @@ the assistant's text joined with the user's, so the model's own
 suggestion can mint a durable decision. A zero-LLM extractor is cheap
 enough to run on everything, which is exactly why it needs to record
 <em>whose sentence</em> each memory came from.</p>
+<p><a href="../../systems/genome/">GENOME</a> is the pattern taken to
+its limit and then cashed in for something the other instances do not
+claim. Its write path embeds the message with a local model and stores
+it — no extraction, no LLM, no network, and a <code>verify</code> module
+that monkeypatches <code>socket.connect</code> to raise before writing
+two hundred memories, so the offline claim fails loudly rather than
+being asserted. The payoff it names is not cost. <strong>A deterministic
+write path can be replayed</strong>: because storage is a pure function
+of the input, an append-only hash-chained journal of mutations is enough
+to rebuild the store exactly, which is what makes the record auditable.
+Its journal sits at the store boundary <em>after</em> extraction on
+purpose, so replay stays deterministic even for the configurations where
+an LLM did produce the content — the model's nondeterminism happened
+upstream of the line.</p>
+<p>Two cautions come with it, and both generalise. <strong>The
+reproducibility claim is only worth what its exceptions say</strong>,
+and this one enumerates them: embeddings are re-derived rather than
+journaled, a synthesized record replays with its content vector rather
+than the original recombined one, access statistics are excluded — all
+stated in the module docstring <em>"rather than discovered."</em> And
+<strong>a replayable log is an undelete</strong>. A deleted memory's
+text stays in the journal and <code>replay_journal(until_seq=N)</code>
+before the delete rebuilds it, offered as a rollback feature; nothing in
+that repository redacts or compacts the log. Cheap deterministic capture
+makes an audit trail affordable, and an audit trail is the thing a
+deletion request has to survive.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 323 reports.**
+**This page covers all 324 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -415,6 +415,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: the field's reference architecture, frozen since August 2023 and never engineered for production.
 - Study when: you want to understand where most of this atlas came from, or need a consolidation schedule that tracks salience.
 - Do not copy when: you need any operational property at all — there is no scope, correction, deletion, or index.
+
+### [`genome`](../systems/genome/)
+
+- Best idea: **take the model out of the write path and collect determinism as the payoff.** Ingest embeds locally and stores — no LLM, no network — so what gets written is a function of the input, and `genome/journal.py` cashes that in: an append-only JSONL of every mutation, each line chained to its predecessor from a fixed genesis hash, from which `replay_journal` rebuilds the store exactly. The module places itself deliberately at the store boundary *after* extraction, so *"replay is deterministic for every configuration, not just the default zero-LLM path"*. The README puts the same point above the cost argument: *"A record that cannot be re-derived is difficult to audit. That property, not accuracy, is the actual argument for this design."*
+- Second idea: **quarantine, not reweighting, and applied on three arms.** Provenance is a discrete tier — `system` 4, `user` 3, `agent` 2, `tool` 1, `web` 0 — and a `TrustPolicy` holds everything below a threshold out of `search()`, out of `get()` because *"knowing an id must not be a way around quarantine"*, and out of synthesized-parent selection which applies *"the SAME quarantine test"*. `search_quarantined()` shows what was withheld. Beside it, origin-bound authority: a lower-trust fact cannot supersede a higher-trust memory *"even when the resolver LLM is fooled into asking for exactly that"*.
+- Third idea: **the feature audit reports the product's own losses.** `benchmarks/AUDIT-RESULTS.md` grades five optional features with *"wins and failures equal billing"*: graph retrieval is an *"honest null: +0.016 hit rate for ~1000x ingest cost"*, and auto-consolidation is **harmful** — 0.454 accuracy off against 0.092 on, McNemar p<0.0001. The loop closed: the trigger is off by default and the constructor carries the warning, citing the result file by path.
+- Biggest risk: **the journal that makes the record auditable makes deletion reversible.** `forget` removes the row; the `add` line carrying its text stays in the log, and `replay_journal(path, until_seq=N)` before the delete rebuilds the store with the memory in it — offered as rollback and branching. Nothing redacts, compacts or encrypts the log. Beside it, `user_id` and `agent_id` default to `None` on every call and a `None` contributes no predicate, so the unscoped read is the easiest one to write; and the automatic fact detector catches both its LLM failure and its write failure at DEBUG, so an empty temporal layer and a working one look the same from outside.
+- Maturity impression: Apache-2.0, ~13,900 lines of Python at version 1.1.0, 252 tests in public CI, two papers with DOIs and PDFs in-tree, a self-verification module that monkeypatches `socket.connect` to prove the write path is offline, and boundary validation at the record type — NaN embeddings, unpaired surrogates, NUL bytes, whitespace-only content — each rule carrying its reason. Five capability marks; `trust_state` is the one that took deciding, awarded because the tiers withhold rather than reorder.
+- Study when: you want per-user memory that runs where it serves, you need *what was true in March* rather than *what do we know now*, or you are building anything whose audit story is a log — the reproducibility argument here is the most carefully stated in the corpus, exceptions enumerated.
+- Do not copy when: the scope boundary has to be enforced rather than remembered, durable deletion has to survive your own audit log, or a single scope will grow past what an exact cosine scan per query can carry.
 
 ### [`a-mem`](../systems/a-mem/)
 - Best idea: small linked notes whose organization can be reconsidered when new memory arrives.

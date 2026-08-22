@@ -118,7 +118,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>323 memory systems with publicly readable source, each read at a
+<p>324 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. "Readable" is not "open source" — sixteen carry a
 non-open-source licence, listed in the <a
@@ -135,7 +135,7 @@ is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 22
-systems of 323 carry a rejected-value tombstone — a record keyed on the
+systems of 324 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -278,7 +278,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>323 reports across 322 repositories</strong>:
+<strong>324 reports across 323 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -324,18 +324,18 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-two tombstones, one hundred negative-eval suites — are counts
-<em>over inspectable code</em>, and a closed system could hold any of
-these mechanisms without this method ever knowing. And a mechanism's
-absence here is weaker evidence about the field than its presence:
-finding a tombstone proves someone built one, while not finding one
-proves only that nobody built one <em>in public</em>.</p>
+twenty-two tombstones, one hundred and one negative-eval suites — are
+counts <em>over inspectable code</em>, and a closed system could hold
+any of these mechanisms without this method ever knowing. And a
+mechanism's absence here is weaker evidence about the field than its
+presence: finding a tombstone proves someone built one, while not
+finding one proves only that nobody built one <em>in public</em>.</p>
 <p><strong>The divergences that actually separate these
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
 everything can overwrite or supersede. Twenty-two of three hundred and
-twenty-three systems carry a rejected-value tombstone — a record that
+twenty-four systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
 gap found</em>, not widest gap in the field: the corpus is
@@ -352,8 +352,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 171 of
-323 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 172 of
+324 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -372,7 +372,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Three hundred and twenty-three systems do not fall into one hundred
+<p>Three hundred and twenty-four systems do not fall into one hundred
 and seventy categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -4003,7 +4003,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 323 systems by the seven mechanisms judged against strict
+filters all 324 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -6702,6 +6702,51 @@ temporal decay</td>
 <td>"No Execution, No Memory" plus an ROI test for permanent
 context</td>
 <td>Every axiom is prose with no enforcement or audit</td>
+</tr>
+<tr>
+<td><code>genome</code></td>
+<td>A <code>MemoryRecord</code> — content, a float32 embedding,
+<code>user_id</code>/<code>agent_id</code>,
+<code>created_at</code>/<code>accessed_at</code>/<code>access_count</code>,
+<code>parents</code> and an <code>operator</code> tag, plus a metadata
+bag. Entities and entity facts are memory records too, tagged by
+operator, so they inherit scope, cascade delete and search</td>
+<td>SQLite by default, Postgres behind the same interface; embeddings
+stored as blobs and compared by exact cosine over the scope's rows, with
+no ANN index to build or maintain</td>
+<td>Exact cosine over the tenant's rows, an optional BM25 hybrid arm and
+an optional local cross-encoder rerank; separately
+<code>facts_valid_at(entity, T)</code> resolves the fact log as of a
+point in time</td>
+<td>Embed locally and store — no model call, no network. Fact
+extraction, conflict resolution and automatic fact detection are each
+opt-in and each add an LLM call</td>
+<td><code>delete</code> by id, <code>reset</code> by scope, and an
+opt-in conflict resolver returning ADD, UPDATE, DELETE or NONE. No
+tombstone: a deleted value can be added again, and the journal retains
+its text</td>
+<td><code>user_id</code> and <code>agent_id</code> columns applied as
+predicates on every read arm — and both optional, so an unscoped call
+sees every tenant</td>
+<td>A Python API, a CLI, a FastAPI server, a fully local MCP server
+exposing
+<code>remember</code>/<code>recall</code>/<code>forget</code>/<code>reset_memories</code>,
+LangChain and LlamaIndex adapters, and a TypeScript SDK</td>
+<td>None required. Auto-consolidation is opt-in and its constructor
+carries a measured warning against enabling it; automatic fact detection
+runs inline on <code>add</code> when an LLM is configured</td>
+<td>Discrete provenance tiers — system, user, agent, tool, web — that
+quarantine below a threshold rather than reweight, plus a per-fact
+<code>confidence</code> float used for a detection cutoff</td>
+<td>The write path is deterministic, so the journal can replay the store
+exactly and the record is auditable in a way an LLM-extraction store
+cannot be; and the project publishes a feature audit that reports one of
+its own features as harmful</td>
+<td>The journal that makes the store reproducible also makes deletion
+reversible — a purged memory's text stays in the log and
+<code>replay_journal(until_seq=N)</code> rebuilds it; scope is optional
+on every call; and the automatic fact path swallows its own failures at
+DEBUG</td>
 </tr>
 <tr>
 <td><code>gh-aw</code></td>
@@ -13564,7 +13609,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>22 of 323:</em> <a
+<p><em>22 of 324:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -13590,7 +13635,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>68 of 323:</em> <a
+<p><em>69 of 324:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -13609,6 +13654,7 @@ href="../systems/empirica/"><code>empirica</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/gmr/"><code>gmr</code></a>, <a
 href="../systems/gortex/"><code>gortex</code></a>, <a
@@ -13664,7 +13710,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>37 of 323:</em> <a
+<p><em>38 of 324:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -13679,6 +13725,7 @@ href="../systems/daem0n-mcp/"><code>daem0n-mcp</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
@@ -13708,7 +13755,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>171 of 323:</em> <a
+<p><em>172 of 324:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -13765,6 +13812,7 @@ href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/gbrain/"><code>gbrain</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/gitmem/"><code>gitmem</code></a>, <a
@@ -13887,7 +13935,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>93 of 323:</em> <a
+<p><em>94 of 324:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -13914,6 +13962,7 @@ href="../systems/empirica/"><code>empirica</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gmr/"><code>gmr</code></a>, <a
 href="../systems/hexis/"><code>hexis</code></a>, <a
 href="../systems/hindsight/"><code>hindsight</code></a>, <a
@@ -13986,7 +14035,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>83 of 323:</em> <a
+<p><em>83 of 324:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -14075,7 +14124,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>100 of 323:</em> <a
+<p><em>101 of 324:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14102,6 +14151,7 @@ href="../systems/deepseek-harness/"><code>deepseek-harness</code></a>,
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
 href="../systems/gbrain/"><code>gbrain</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gmr/"><code>gmr</code></a>, <a
 href="../systems/gortex/"><code>gortex</code></a>, <a
 href="../systems/graphify/"><code>graphify</code></a>, <a
@@ -14196,11 +14246,11 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred repositories of three hundred and twenty-three assert that
-particular material must <em>not</em> be retrieved — the assertion every
-scope, deletion and correction claim in this document ultimately rests
-on. Read together rather than one at a time, they split cleanly in two,
-and the split says more than the count.</p>
+hundred and one repositories of three hundred and twenty-four assert
+that particular material must <em>not</em> be retrieved — the assertion
+every scope, deletion and correction claim in this document ultimately
+rests on. Read together rather than one at a time, they split cleanly in
+two, and the split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -18046,8 +18096,8 @@ href="../systems/gini-agent/">Gini Agent</a> keeps ADRs recording the
 decision, its context, and the failure that motivated it — its per-agent
 isolation ADR states plainly that a coding agent's pinned memories were
 polluting a research agent's recall. Across three hundred and
-twenty-three systems, almost none can explain why they are shaped the
-way they are.</p>
+twenty-four systems, almost none can explain why they are shaped the way
+they are.</p>
 <h2 id="8-what-i-would-build">8. What I Would Build</h2>
 <h3 id="ship-first">Ship First</h3>
 <p>Build a local-first core even if a hosted version is planned
@@ -19960,6 +20010,19 @@ href="https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c
 — read only; build-time execution declared in six
 <code>conftest.py</code> files under <code>Autotests/</code>. Nothing
 was installed, no container was built and no test was run</li>
+<li><a
+href="https://github.com/NORTHTEKDevs/genome">NORTHTEKDevs/genome</a> at
+<a
+href="https://github.com/NORTHTEKDevs/genome/commit/9358910aaf7ec8336e12a63a7b17a7269554e330"><code class="commit-id" title="9358910aaf7ec8336e12a63a7b17a7269554e330">9358910a…</code></a>
+— read only; two auto-run surfaces (<code>mcp.json</code> and
+<code>server.json</code>, both MCP publication manifests declaring a
+start command), two build-time execution points
+(<code>prepublishOnly</code> in the TypeScript SDK and
+<code>tests/conftest.py</code> on pytest collection), two unpinned
+surfaces, and three files changed three days before the pin, inside the
+seven-day cooldown. Nothing was installed, no test or benchmark was run,
+and <code>python -m genome.verify</code> — the repository's own air-gap
+receipt — was not invoked</li>
 <li><a
 href="https://github.com/buiilding/WindieOS">buiilding/WindieOS</a> at
 <a
