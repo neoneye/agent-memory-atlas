@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 324 reports.</strong></p>
+<p><strong>This page covers all 325 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -369,6 +369,57 @@ strong operational coverage.</li>
 <li>Study when: building a hosted retain/recall/reflect service.</li>
 <li>Do not copy when: a small local store can meet the evaluated
 retrieval need.</li>
+</ul>
+<h3 id="graphnosis"><a
+href="../systems/graphnosis/"><code>graphnosis</code></a></h3>
+<ul>
+<li>Best idea: <strong>the consent gate blocks on a human and cannot
+leak its own answer.</strong> When an MCP client asks for a tier policy
+does not auto-allow, the server registers a pending prompt, pushes it to
+the desktop app and <em>awaits the click</em> —
+<code>{allow, durationMs}</code>, <code>{deny}</code> or
+<code>{timeout}</code>. The headless fallback is a phrase HMAC-derived
+per tier over a rolling window, compared in constant time, and
+<em>"never logged or returned via MCP"</em>, so the client asking for
+permission cannot read the secret out of the system it is asking. Most
+consent mechanisms in this corpus gate the action and then hand the
+caller everything needed to satisfy the gate.</li>
+<li>Second idea: <strong>a correction is a preview.</strong> Two paths —
+deterministic (recall the closest match, <code>supersede</code> it) and
+LLM-parsed (a multi-part diff) — and both stop before writing:
+<em>"nothing is written until the user reviews and approves it."</em>
+The deterministic path exists so the feature works with no model, and
+the Zod schema absorbs small-model sloppiness at the parser, coercing
+<code>null</code> to <code>undefined</code> because rejecting a whole
+diff over a missing key <em>"throws away an otherwise-valid
+proposal."</em></li>
+<li>Third idea: <strong>the contradiction verdict has three
+values</strong>, not two — <code>genuine_contradiction</code>,
+<code>temporal_supersession</code>, <code>negation_artifact</code> —
+computed deterministically, with regexes that record which of their own
+matches were false positives.</li>
+<li>Biggest risk: <strong>deletion is a number.</strong>
+<code>deleteNode(id, reason)</code> sets <code>confidence = 0.1</code>
+and <code>validUntil = now</code>; daily decay lowers the same field and
+reinforce-on-recall raises it, so <em>deleted</em>, <em>stale</em> and
+<em>doubted</em> are one scalar. Whether a reinforced node can climb
+back out of a soft delete depends on a filter ordering this reading did
+not establish, which is the first thing to check before relying on
+<code>forget</code>. Nothing keys on the removed <em>value</em> either,
+so a connector sweep can re-ingest it as a fresh node.</li>
+<li>Maturity impression: FSL-1.1-Apache-2.0 (source-available now,
+Apache later), ~111,000 lines in the sidecar, 984 commits, a Tauri app,
+MCP over three transports, a VS Code extension, two papers with DOIs,
+338 tests across two assertion idioms. Three marks. The graph store, its
+encryption and the op-log codec are a GitHub-pinned dependency not in
+this repository, which bounds what the reading can certify.</li>
+<li>Study when: you are putting a memory store behind MCP and want the
+connection itself gated rather than the store trusted to whoever
+connects; or you want the shape of a correction flow that works offline
+and asks before it writes.</li>
+<li>Do not copy when: deletion has to be a state rather than a value, or
+you need to reason about the store — it is somebody else's package
+here.</li>
 </ul>
 <h3 id="graphiti"><a
 href="../systems/graphiti/"><code>graphiti</code></a></h3>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **324 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **325 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -150,6 +150,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/gortex/"><span class="az-id">Gortex</span><span class="az-what">Five tiers of how-we-know, and the best one is discounted</span><code class="az-repo">zzet/gortex</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/graphify/"><span class="az-id">Graphify</span><span class="az-what">Work memory beside a code graph</span><code class="az-repo">Graphify-Labs/graphify</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/graphiti/"><span class="az-id">Graphiti</span><span class="az-what">Bi-temporal context graph</span><code class="az-repo">getzep/graphiti</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/graphnosis/"><span class="az-id">Graphnosis</span><span class="az-what">A blocking consent gate</span><code class="az-repo">nehloo-interactive/graphnosis-app</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/grok-build/"><span class="az-id">Grok Build</span><span class="az-what">A dream that deletes what it read</span><code class="az-repo">xai-org/grok-build</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/growmos/"><span class="az-id">growmos</span><span class="az-what">A stop hook that will not let the session end</span><code class="az-repo">codician-team/growmos</code><span class="az-caps"></span></a></li>
 </ul>

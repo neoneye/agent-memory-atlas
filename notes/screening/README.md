@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 175 of 324 screened at the report's current pin.**
+**Progress: 176 of 325 screened at the report's current pin.**
 
 16 further record(s) describe a revision the report has since moved
 off, and 133 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 63 |
+| Repositories with an auto-run surface (`RUNS`) | 64 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 58 |
-| Repositories with build-time execution (`EXEC`) | 137 |
+| Repositories with build-time execution (`EXEC`) | 138 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -53,6 +53,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
+| [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |

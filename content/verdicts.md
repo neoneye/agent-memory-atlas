@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 324 reports.**
+**This page covers all 325 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -167,6 +167,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: service-grade implementation with unusually strong operational coverage.
 - Study when: building a hosted retain/recall/reflect service.
 - Do not copy when: a small local store can meet the evaluated retrieval need.
+
+### [`graphnosis`](../systems/graphnosis/)
+
+- Best idea: **the consent gate blocks on a human and cannot leak its own answer.** When an MCP client asks for a tier policy does not auto-allow, the server registers a pending prompt, pushes it to the desktop app and *awaits the click* — `{allow, durationMs}`, `{deny}` or `{timeout}`. The headless fallback is a phrase HMAC-derived per tier over a rolling window, compared in constant time, and *"never logged or returned via MCP"*, so the client asking for permission cannot read the secret out of the system it is asking. Most consent mechanisms in this corpus gate the action and then hand the caller everything needed to satisfy the gate.
+- Second idea: **a correction is a preview.** Two paths — deterministic (recall the closest match, `supersede` it) and LLM-parsed (a multi-part diff) — and both stop before writing: *"nothing is written until the user reviews and approves it."* The deterministic path exists so the feature works with no model, and the Zod schema absorbs small-model sloppiness at the parser, coercing `null` to `undefined` because rejecting a whole diff over a missing key *"throws away an otherwise-valid proposal."*
+- Third idea: **the contradiction verdict has three values**, not two — `genuine_contradiction`, `temporal_supersession`, `negation_artifact` — computed deterministically, with regexes that record which of their own matches were false positives.
+- Biggest risk: **deletion is a number.** `deleteNode(id, reason)` sets `confidence = 0.1` and `validUntil = now`; daily decay lowers the same field and reinforce-on-recall raises it, so *deleted*, *stale* and *doubted* are one scalar. Whether a reinforced node can climb back out of a soft delete depends on a filter ordering this reading did not establish, which is the first thing to check before relying on `forget`. Nothing keys on the removed *value* either, so a connector sweep can re-ingest it as a fresh node.
+- Maturity impression: FSL-1.1-Apache-2.0 (source-available now, Apache later), ~111,000 lines in the sidecar, 984 commits, a Tauri app, MCP over three transports, a VS Code extension, two papers with DOIs, 338 tests across two assertion idioms. Three marks. The graph store, its encryption and the op-log codec are a GitHub-pinned dependency not in this repository, which bounds what the reading can certify.
+- Study when: you are putting a memory store behind MCP and want the connection itself gated rather than the store trusted to whoever connects; or you want the shape of a correction flow that works offline and asks before it writes.
+- Do not copy when: deletion has to be a state rather than a value, or you need to reason about the store — it is somebody else's package here.
 
 ### [`graphiti`](../systems/graphiti/)
 - Best idea: bi-temporal relationship edges that close validity intervals without erasing history.

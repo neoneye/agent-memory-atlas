@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first encrypted cortex
+whose MCP surface stops and asks a human before a client reads a
+sensitive tier, whose corrections are previews until someone approves
+them, and whose deletion is a confidence value.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Graphnosis — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first encrypted
+cortex whose MCP surface stops and asks a human before a client reads a
+sensitive tier, whose corrections are previews until someone approves
+them, and whose deletion is a confidence value.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Graphnosis — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first encrypted
+cortex whose MCP surface stops and asks a human before a client reads a
+sensitive tier, whose corrections are previews until someone approves
+them, and whose deletion is a confidence value.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Graphnosis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Graphnosis",
+      "description": "A local-first encrypted cortex whose MCP surface stops and asks a human before a client reads a sensitive tier, whose corrections are previews until someone approves them, and whose deletion is a confidence value.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A blocking consent gate</p>
+          <h1>Graphnosis</h1>
+          <p class="document-deck">A local-first encrypted cortex whose
+MCP surface stops and asks a human before a client reads a sensitive
+tier, whose corrections are previews until someone approves them, and
+whose deletion is a confidence value.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/nehloo-interactive/graphnosis-app">
+              <span>Source</span>
+              <strong>nehloo-interactive/graphnosis-app</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85" title="b79be25df98d1dd47eb9a01d0da37f9881ab7b85">
+              <span>Analyzed revision</span>
+              <code>b79be25d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-23</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Graphnosis is a local-first encrypted memory product — a Tauri
+desktop app, a sidecar, an MCP server on three transports, a VS Code
+extension and a docs site, about 111,000 lines of TypeScript in the
+sidecar alone, 984 commits since 11 May 2026. It is licensed
+<strong>FSL-1.1-Apache-2.0</strong>: source-available now, Apache 2.0
+later, which is a caveat a reader should hold rather than a reason to
+skip it. Two papers ship with DOIs.</p>
+<p>The product framing is a "dual-graph cortex" with typed edges, skills
+as walkable SOPs, and personas that join a room when mentioned. The
+mechanisms this atlas cares about sit underneath that, and three of them
+are worth the visit.</p>
+<p><strong>The consent gate blocks on a human, and cannot leak its own
+answer.</strong> When an MCP client asks for a tier that policy does not
+auto-allow, the server registers a pending prompt, pushes it to the
+frontend, and <em>waits</em> for a click — allow-for-a-duration, deny,
+or timeout. The headless fallback is a phrase the user types, and the
+phrase is HMAC-derived per tier over a rolling window, compared in
+constant time, and <strong>never returned over MCP or written to a
+log</strong>. A client that wanted to grant itself access cannot read
+the secret out of the system it is asking.</p>
+<p><strong>A correction is a preview.</strong> Two paths — a
+deterministic one that recalls the closest match and supersedes it, and
+an LLM-assisted one that proposes a multi-part diff — and both stop
+before writing: <em>"the diff is only a PREVIEW — nothing is written
+until the user reviews and approves it."</em> The deterministic path
+exists so the feature works with no model at all, and the file says why
+that matters: recall is deterministic, "pick the top hit" is
+deterministic, and <code>supersede</code> preserves lineage.</p>
+<p><strong>Contradiction detection returns a three-value verdict, not a
+boolean.</strong> <code>genuine_contradiction</code>,
+<code>temporal_supersession</code>, <code>negation_artifact</code> — a
+distinction most detectors in this corpus cannot draw, and the module is
+deterministic with no model call.</p>
+<p><strong>Weakest, and it is structural:</strong> deletion is a number.
+<code>deleteNode(id, reason)</code> drops <code>confidence</code> to
+<code>0.1</code> and sets <code>validUntil</code>. That is the same
+field daily decay lowers and reinforce-on-recall raises, so
+<em>deleted</em>, <em>doubted</em> and <em>unused</em> are one scalar.
+The adapter is honest about it — <em>"the node stays for audit. We
+surface that semantics rather than hiding it"</em> — and the honesty
+does not make the field able to carry three meanings at once.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>MCP client ──► consent gate ──► [ human clicks allow / deny ]  ◄── blocking
+                   │
+                   ▼
+             federated recall ──► results byGraph ──► prompt
+                   ▲
+   graphs ─────────┘        every mutation ──► op-log (encrypted, per device)
+     │                                              op + before + after + reason
+     ▼
+  correction ──► diff PREVIEW ──► [ human approves ] ──► supersede (lineage kept)
+
+  daily: decay ↓ confidence     recall: reinforce ↑ confidence
+  delete: confidence := 0.1     ← the same field as both of the above</code></pre>
+<p>The design's centre of gravity is <strong>the human in the loop,
+twice</strong>: once before a client may read, once before a correction
+may write. Almost everything else — decay, reinforcement, contradiction
+scanning, duplicate detection, skill training — is designed to
+<em>produce a queue for that human</em> rather than to act. Temporal
+decay states the intent directly: memories drift <em>"into the review
+deck's low-confidence queue where the user can confirm or dismiss them
+deliberately"</em>, and decay is deliberately slow <em>"so users don't
+see memories vanishing."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two human gates bracket the store — a blocking consent prompt before an MCP client may read, and an approval step before a correction may write — while decay, reinforcement and deletion all write the same confidence field</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: two human gates bracket the store — a blocking consent prompt before an MCP client may read, and an approval step before a correction may write — while decay, reinforcement and deletion all write the same confidence field
+    CLIENT[&quot;MCP client&lt;br/&gt;Claude · Cursor · Zed&quot;] --&gt; GATE{&quot;consent gate&lt;br/&gt;(client, tier)&quot;}
+    GATE --&gt;|&quot;not auto-allowed&quot;| PROMPT[&quot;pending prompt&lt;br/&gt;awaits a click&quot;]
+    PROMPT --&gt; HUMAN([&quot;human&quot;])
+    HUMAN --&gt;|&quot;allow / deny / timeout&quot;| GATE
+    GATE --&gt;|&quot;allowed&quot;| RECALL[&quot;federated recall&lt;br/&gt;results byGraph&quot;]
+
+    GRAPHS[(&quot;named graphs&lt;br/&gt;secure-sync SDK&quot;)] --&gt; RECALL
+    RECALL --&gt; PROMPTOUT[&quot;prompt for the agent&quot;]
+
+    USER([&quot;user correction text&quot;]) --&gt; CORR[&quot;correction.ts&lt;br/&gt;deterministic or LLM diff&quot;]
+    CORR --&gt; PREVIEW[&quot;PREVIEW only&quot;]
+    PREVIEW --&gt; HUMAN2([&quot;human approves&quot;])
+    HUMAN2 --&gt; SUPER[&quot;supersede&lt;br/&gt;lineage preserved&quot;]
+    SUPER --&gt; GRAPHS
+
+    DECAY[&quot;daily decay&lt;br/&gt;−0.5%/day&quot;] --&gt;|&quot;confidence ↓&quot;| CONF((&quot;confidence&lt;br/&gt;float&quot;))
+    RECALL --&gt;|&quot;reinforce, confidence ↑&quot;| CONF
+    DEL[&quot;deleteNode(id, reason)&quot;] --&gt;|&quot;confidence := 0.1&lt;br/&gt;validUntil := now&quot;| CONF
+    CONF --&gt; GRAPHS
+
+    GRAPHS --&gt; OPLOG[(&quot;op-log per device&lt;br/&gt;append-only, encrypted&quot;)]
+    SUPER --&gt; OPLOG
+    DECAY --&gt; OPLOG
+    DEL --&gt; OPLOG</code></pre></details></figure>
+<p><strong>Runtime.</strong> A Tauri desktop shell over a Node sidecar
+that owns everything: the graphs, the MCP servers (stdio, HTTP, socket),
+a relay, connectors, embedding and PDF workers, and the schedulers.
+<code>host.ts</code> and <code>ipc.ts</code> are about 11,000 lines
+each, <code>mcp-server.ts</code> 7,700, <code>skill-trainer.ts</code>
+5,700, <code>brain-engine.ts</code> 3,600.</p>
+<p><strong>Persistence is delegated, and this is the boundary to state
+plainly.</strong> The graph store, its encryption and the op-log codec
+are <code>@nehloo-interactive/graphnosis-secure-sync</code>, pinned from
+GitHub at <code>v0.4.1</code> — a non-registry dependency, flagged as
+such by the screen, and not present in this tree. So the node model, the
+crypto and the sync protocol were not read here. What this repository
+contains is the layer above: policy, correction, contradiction, consent,
+scheduling, and the MCP surface.</p>
+<p><strong>One thing in that layer is a direct answer to a limit of the
+dependency.</strong> <code>oplog-safe-read.ts</code> exists because both
+the SDK's reader and this app's earlier one called
+<code>fs.readFile()</code> on a whole <code>.oplog</code> file, which
+fails with ENOMEM once a long-lived device file reaches multi-gigabyte
+size. The replacement indexes chunk headers with small positional reads
+and decrypts one chunk at a time, bounding memory to the largest single
+flush batch. The module is explicit that it mirrors the SDK's wire
+format deliberately because <em>"we can't change the SDK's own reader
+(it's a pinned external dependency)"</em>. Writing a memory-safe
+substitute beside a dependency you cannot patch, and saying so, is the
+right handling.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The consent gate.</strong> <code>consent-prompts.ts</code> is
+an in-process registry of pending prompts shared between the MCP server
+(registers and awaits) and IPC (resolves). A choice is
+<code>{action: 'allow', durationMs}</code>,
+<code>{action: 'deny'}</code> or <code>{action: 'timeout'}</code> — the
+duration on the allow is what makes "Allow for an hour" expressible
+rather than a permanent grant. Two canonical tiers,
+<code>deidentified</code> and <code>sensitive</code>, with a legacy
+<code>personal</code> normalising into the first.</p>
+<p><strong>The consent phrase.</strong>
+<code>generateConsentPhrase(hmacKey, tier)</code> derives a phrase from
+an HMAC over <code>tier:slot</code> where the slot is a time window —
+shorter for <code>sensitive</code> — and
+<code>validateConsentPhrase</code> compares in constant time and accepts
+the previous window as well, which is the standard tolerance for a human
+typing across a boundary. The comment carries the property that matters:
+<em>"Never logged or returned via MCP."</em></p>
+<p><strong>Correction.</strong> <code>correction.ts</code> picks its
+path by whether a local LLM is configured. The deterministic default
+recalls the single closest match and supersedes it, or adds the
+correction when nothing matches. The LLM path parses a multi-part diff
+of edit / supersede / delete / add across candidates, and the Zod schema
+is deliberately lenient on input because <em>"small local LLMs treat 'no
+value' inconsistently"</em> — omitting a key, emitting JSON
+<code>null</code>, or emitting an empty string — and rejecting the whole
+diff over any of those <em>"throws away an otherwise-valid proposal and
+surfaces as a confusing Zod error banner."</em> A preprocess coerces
+<code>null</code> to <code>undefined</code> so the output type stays
+clean. That is the right place to absorb model sloppiness: at the
+parser, with the reason written down, rather than in the consumer.</p>
+<p><strong>Contradiction.</strong> <code>contradiction-utils.ts</code>
+is deterministic and its regexes carry their own precision history.
+<code>IDENTITY_RE</code> matches "always" / "never" / "no longer" only
+when first-person-anchored, because <em>"bare 'always'/'never' anywhere
+in a snippet was a false-positive source, so they no longer match
+standalone"</em>; <code>WEAK_ENTITY_RE</code> drops bare years, money
+and dates; and a <code>COMMON_TERM_ENTITIES</code> set removes words
+that <em>"appear in almost every note"</em> from pairing. A heuristic
+that records which of its own matches were wrong is one somebody has run
+against a real corpus.</p>
+<p><strong>The write-authority rule.</strong>
+<code>ghampus-memory-write-policy.ts</code> states a locked fact:
+specialist personas <em>"may discuss and propose remembers; they do not
+autonomously write cortex memory."</em> Only the orchestrator may write
+without an explicit ask, and an external MCP client writing because the
+user asked in that client counts as explicit user intent rather than
+agent autonomy. Keying write authority on <em>which agent is
+speaking</em> is uncommon in this corpus, where a store usually cannot
+tell one caller from another.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A node carries text, a <code>confidence</code> float, an optional
+<code>validUntil</code>, a source kind, and classification metadata
+whose <code>classificationLabelId</code> resolves through a schema to an
+<code>internalTier</code> that policy reads. The node type itself is the
+SDK's; the adapter surfaces <code>confidence</code> and
+<code>validUntil</code> and states the deletion semantics rather than
+wrapping them.</p>
+<p><strong>Three meanings share one float, and that is the report's main
+reservation.</strong> Daily temporal decay lowers
+<code>confidence</code> by 0.5%. Reinforce-on-recall raises it.
+<code>deleteNode</code> sets it to <code>0.1</code>. So a node the user
+deleted, a node nobody has recalled in a year, and a node the system was
+never sure about are the same value, distinguishable only by whether
+<code>validUntil</code> happens to be set. The rubric's phrasing for the
+withheld mark fits exactly: a confidence number answers <em>how
+sure</em> and a state answers <em>may this be acted on</em>, and a
+system that collapses them cannot say "I have this on record and do not
+believe it."</p>
+<p><strong>A separate axis exists and governs a different
+question.</strong> The sensitivity tier and classification label decide
+<em>disclosure</em> — which client may see the memory, and whether a
+consent prompt fires. That is a real, discrete, enforced field, and it
+is not an epistemic status, which is why it earns the consent gate
+credit in section 9 rather than the trust mark.</p>
+<p><strong>No tombstone.</strong> Deletion is soft and the row remains,
+but nothing keys on the <em>value</em>, so the same text can be
+re-ingested by a connector on the next sweep and lands as a new
+node.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is federated across named graphs and returns results grouped
+<code>byGraph</code>, with the prompt assembled from them. Around it: an
+embedding queue that serializes every embed because <em>"Brain
+recalls/searches embed the query — they MUST go through the global
+embedding queue or they can run concurrently with a connector ingest's
+embed and crash the (non-reentrant) embed worker, deadlocking all
+embedding"</em>; TF-IDF pairing, an association index, edge prediction,
+query enrichment with its own cache, and a recall-coverage and latency
+benchmark module.</p>
+<p><strong>Separation is by graph, not by a key inside one.</strong>
+There are named graphs, an RBAC module, a session access policy and a
+classification schema, and recall crosses graphs by design. This reading
+did not trace a stored principal key reaching the query <em>within</em>
+a graph, so <code>scope_enforced</code> is withheld — the same call the
+atlas makes for partition-shaped isolation elsewhere. The RBAC and
+session-access-policy modules exist in <code>graphnosis-app-core</code>
+and their reach into the recall path is the part a further reading
+should establish.</p>
+<p><strong>Soft-deleted nodes are dropped on the way out</strong>, and
+the recall path notes it is careful to do so <em>"without making the SDK
+call quadratic"</em> — which is the cost shape of filtering deletions in
+a store you reach through an interface rather than a query language.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest arrives through connectors, documents, PDF and vision
+pipelines, and voice transcription, all serialized per graph because
+appends do not return node ids and the adapter recovers them by diffing
+the node set before and after — <em>"brittle if two appends interleave,
+so the host serializes ingest calls per graph."</em> Naming a brittle
+recovery and then removing the concurrency that would break it is the
+honest handling of an interface you do not own.</p>
+<p><strong>Decay is dormant on purpose, and says so.</strong>
+<code>temporal-engine.ts</code> restricts decay to an
+<code>EPHEMERAL_SOURCE_KINDS</code> set containing exactly
+<code>'ephemeral'</code>, and then states: <em>"No current ingest path
+produces an ephemeral kind, so the decay loop is dormant by design; a
+future ambient-capture feature would ingest under such a kind."</em>
+Human-added memories — file, url, conversation, clip — are never in that
+set, under a policy the file names <strong>Autonomous
+Indelibility</strong>: they strengthen, never weaken.</p>
+<p>That is the atlas's most common defect, a mechanism with no producer,
+arriving in its defensible form. The difference between this and the
+fifty-odd unwired mechanisms in the corpus is one comment: the code says
+the loop is dormant, says why, and says what would wake it. A reader
+auditing this tree cannot mistake the silence for a bug, and cannot
+mistake the decay curve for something that is currently running
+either.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call is required for correction, contradiction detection, or
+reinforcement — each has a deterministic path, and the local LLM is
+optional throughout. The recurring costs are embedding (serialized
+through one worker), the daily decay sweep, and the contradiction and
+duplicate scanners, all of which run behind an idle-maintenance lane and
+a background scheduler keyed on client activity.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One cortex behind many clients: MCP over stdio, HTTP and a Unix
+socket, plus a relay, a tool catalog, a registry, and an audit module
+for MCP calls specifically. The desktop app is the review surface —
+consent prompts land there, and so do correction previews.</p>
+<p><strong>The consent gate is the integration story.</strong> Most
+memory MCP servers in this corpus expose a store to whatever client
+connects and rely on the client being trustworthy. Here the connection
+is the thing being gated: a <code>(client, tier)</code> pair is either
+auto-allowed by policy or stops until a person decides, with the grant
+carrying a duration. The timeout path is designed for the headless case
+— <em>"no frontend connected (headless sidecar, dev SSH, CI smoke
+tests)"</em> — and falls back to the typed phrase rather than to
+allowing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The op-log is the audit spine and it has one writer.</strong>
+<code>host.ts</code> constructs a single <code>OpLogWriter</code> and
+comments that all op writes go through it; 35 emit sites cover ten
+operations with <code>before</code>/<code>after</code> payloads and a
+<code>reason</code> string naming the cause, so a decay tick and a user
+edit are distinguishable in the record rather than both reading as
+<code>editNode</code>. Retention, health, stats, reporting and a safe
+reader are separate modules around it.</p>
+<p><strong>The gate cannot be talked into opening itself.</strong>
+Because the consent phrase is HMAC-derived and never returned over MCP,
+a compromised or over-eager client has nothing to replay. This is the
+property most consent mechanisms in this corpus lack: they gate the
+action and then hand the caller everything needed to satisfy the
+gate.</p>
+<p><strong>Deletion is the weak point and it compounds.</strong> A soft
+delete writes <code>confidence = 0.1</code>, and reinforce-on-recall
+raises confidence on nodes that appear in results. Whether a deleted
+node can be reinforced back above the recall floor depends on the filter
+order between the soft-delete drop and the reinforcement pass; this
+reading did not establish that ordering, and it is the first thing to
+check before relying on <code>forget</code> in this system. What is
+certain is that the representation makes the question askable, which a
+discrete <code>deleted</code> state would not.</p>
+<p><strong>Prompt-injection and redaction</strong> get real attention —
+<code>log-redact.ts</code>, <code>ghampus-safe-preview.ts</code>,
+<code>dispatch-safe-readout</code>, a compliance schema guard — and the
+write-authority rule bounds which actor may persist anything without
+being asked.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>338 test cases across 69 files plus a bespoke suite harness under
+<code>tests/</code> with its own <code>runSuite</code>, fixtures and a
+<code>summarizeRecall</code> helper. I did not run them.</p>
+<p>Two idioms sit side by side and a reader grepping for one will miss
+the other: the <code>.test.ts</code> files use <code>node:assert</code>
+— 546 <code>assert.equal</code>, 160 <code>assert.match</code>, 43
+<code>assert.doesNotMatch</code> — while the <code>tests/</code> suites
+use a custom <code>assert(cond, label, detail)</code> that reports into
+a suite result.</p>
+<p><strong><code>tests/mutations.test.ts</code> is the file that carries
+the mark</strong>, because it writes the control. It recalls a person's
+name and asserts it appears, calls <code>forgetSource</code>, asserts
+nodes were soft-deleted, recalls the same query and asserts the name is
+absent, then calls forget a second time and asserts zero nodes were
+affected. The pre-check is what makes the post-check mean something:
+without it the same test passes against a recall that has simply stopped
+returning anything.</p>
+<p><code>tests/edge-cases.test.ts</code> is the other one worth naming —
+empty, whitespace and one-character queries asserted to be both
+non-crashing <em>and deterministic</em>, by running each recall twice
+and comparing prompts. Determinism as a committed property of a
+retrieval path is rare here.</p>
+<p>No memory benchmark and no published retrieval numbers in this
+repository; there is a <code>recall-latency-benchmark</code> module and
+a <code>recall-coverage</code> module, and neither ships committed
+results.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the consent gate blocking, and give the grant a
+duration.</strong> An
+<code>{allow, durationMs} | {deny} | {timeout}</code> choice is the
+difference between a permission model and a checkbox somebody clicks
+once.</li>
+<li><strong>Never hand the caller the secret that satisfies your
+gate.</strong> The consent phrase is HMAC-derived per tier and window,
+constant-time compared, and never returned over the protocol it is
+gating.</li>
+<li><strong>Make the correction a preview.</strong> Two paths, one
+deterministic and one model-assisted, and neither writes until a person
+approves — so the model's non-determinism costs a re-read rather than a
+wrong edit.</li>
+<li><strong>Give the contradiction detector three verdicts.</strong>
+<code>genuine_contradiction</code>, <code>temporal_supersession</code>,
+<code>negation_artifact</code>. The second is the one systems wrongly
+report as a conflict, and the third is the one that floods the
+queue.</li>
+<li><strong>Record which of your heuristic's matches were
+wrong.</strong> Bare "always" and "never" were dropped from an identity
+regex because they produced false positives; that comment is worth more
+to the next maintainer than the regex.</li>
+<li><strong>Key write authority on which agent is speaking.</strong>
+Proposals from specialists, writes from the orchestrator, and an
+external client's write treated as user intent because the user typed it
+there.</li>
+<li><strong>Say when a loop is dormant and what would wake it.</strong>
+The decay pass runs over a source kind nothing currently produces, and
+the file says so — which turns an unwired mechanism from a defect into a
+documented plan.</li>
+<li><strong>Write the memory-bounded reader when you cannot patch the
+dependency.</strong> Indexing chunk headers with positional reads
+instead of slurping a multi-GB file, mirroring the pinned SDK's wire
+format on purpose.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not encode deletion as a low confidence value.</strong>
+<code>confidence = 0.1</code> is the same field decay lowers and recall
+raises, so <em>deleted</em>, <em>stale</em> and <em>doubted</em> stop
+being distinguishable and a reinforcement pass has to be trusted not to
+undo a removal.</li>
+<li><strong>Do not let a soft delete leave the value
+re-ingestable.</strong> Nothing here keys on content, so the next
+connector sweep can bring back what a user removed as a fresh node.</li>
+<li><strong>Do not assume one assertion idiom.</strong> Two test
+conventions in one repository means a coverage grep answers about half
+the suite.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take Graphnosis if the human gate is the point: a personal or
+regulated cortex where a client should not read a sensitive tier without
+somebody clicking, and where a correction should be reviewed before it
+lands. The consent design and the preview-first correction are both
+stronger than what most of this corpus ships, and the deterministic
+paths mean neither needs a model.</p>
+<p>Look elsewhere if you need to reason about the store itself — it is a
+pinned GitHub dependency that is not in this repository — or if deletion
+has to be a state rather than a number. And read the licence:
+FSL-1.1-Apache-2.0 is source-available today with an Apache 2.0
+conversion later, which is a different question from whether you may
+ship it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Can a reinforced node climb back out of a soft
+delete?</strong> <code>deleteNode</code> writes
+<code>confidence = 0.1</code> and reinforce-on-recall writes it upward.
+The answer depends on whether the reinforcement pass filters on
+<code>validUntil</code> before it touches confidence, and that ordering
+was not traced here. It is the one question that decides whether
+<code>forget</code> is durable.</li>
+<li><strong>How far do RBAC and the session access policy
+reach?</strong> Both modules exist in <code>graphnosis-app-core</code>;
+whether either becomes a predicate on the recall path, as opposed to a
+gate on the surface around it, would decide the scope mark.</li>
+<li><strong>Does the sensitivity tier survive consolidation and skill
+training?</strong> A classification governs disclosure of a node; a
+summary derived from several nodes has to inherit the strictest of them,
+and nothing traced here shows that inheritance.</li>
+<li><strong>What does the contradiction triage cost in false positives
+now?</strong> The regexes record two rounds of precision fixes and there
+is a health scheduler, but no committed measurement of the current
+rate.</li>
+<li><strong>Is the decay curve ever exercised?</strong> Its only
+eligible source kind has no producer, so the parameters have never run
+against real data — which means the 0.5%/day figure and the review-deck
+behaviour it feeds are untested in practice as well as in the
+suite.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Consent and review:</strong>
+<code>apps/desktop-sidecar/src/consent-prompts.ts</code>,
+<code>mcp-server.ts</code> (<code>generateConsentPhrase</code>,
+<code>validateConsentPhrase</code>),
+<code>ghampus-edit-proposal.ts</code>,
+<code>unattended-undo.ts</code></li>
+<li><strong>Correction:</strong> <code>correction.ts</code>,
+<code>graphnosis-impl.ts</code> (<code>CorrectionOutcome</code>),
+<code>graphnosis-adapter.ts</code> (the soft-delete semantics)</li>
+<li><strong>Contradiction:</strong> <code>contradiction-utils.ts</code>
+(severity, temporal verdict, precision gates),
+<code>contradiction-scan.ts</code>,
+<code>contradiction-health.ts</code>,
+<code>contradiction-health-scheduler.ts</code>,
+<code>packages/graphnosis-app-core/src/compliance/policy-contradiction.ts</code></li>
+<li><strong>Brain and time:</strong> <code>brain-engine.ts</code>,
+<code>temporal-engine.ts</code>, <code>reinforcement-engine.ts</code>,
+<code>vitality.ts</code>, <code>memory-health.ts</code>,
+<code>memory-hygiene.ts</code>, <code>healing-journal.ts</code></li>
+<li><strong>Audit:</strong> <code>host.ts:1415</code>
+(<code>OpLogWriter</code>), <code>oplog-safe-read.ts</code>,
+<code>oplog-retention.ts</code>, <code>oplog-report.ts</code>,
+<code>oplog-health.ts</code>, <code>oplog-activity-query.ts</code>,
+<code>mcp-audit.ts</code>, <code>agent-audit.ts</code>,
+<code>unattended-audit.ts</code></li>
+<li><strong>Write authority:</strong>
+<code>ghampus-memory-write-policy.ts</code>,
+<code>agent-policy.ts</code>, <code>admin-policy.ts</code>,
+<code>skill-train-admission.ts</code></li>
+<li><strong>Scope and compliance:</strong>
+<code>packages/graphnosis-app-core/src/settings/rbac.ts</code>,
+<code>compliance/classification-schema.ts</code>,
+<code>compliance/session-access-policy.ts</code>,
+<code>compliance/obligation.ts</code></li>
+<li><strong>Retrieval:</strong> <code>host/recall-methods.ts</code>,
+<code>embedding-queue.ts</code>, <code>association-index.ts</code>,
+<code>edge-prediction.ts</code>, <code>query-enrichment-cache.ts</code>,
+<code>recall-coverage.ts</code>,
+<code>recall-latency-benchmark.ts</code></li>
+<li><strong>Tests:</strong> <code>tests/</code>
+(<code>mutations.test.ts</code>, <code>edge-cases.test.ts</code>,
+<code>mcp-audit.test.ts</code>, <code>concurrency.test.ts</code>,
+<code>duplicates.test.ts</code>, <code>_helpers.ts</code>) and 69
+<code>.test.ts</code> files beside the sources</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-23</strong> — <a
+href="https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85"><code class="commit-id" title="b79be25df98d1dd47eb9a01d0da37f9881ab7b85">b79be25d…</code></a>
+— first reading, at app version 1.37.0, 984 commits since 11 May 2026.
+Screened before anything was read: one auto-run surface, two build-time
+execution points, eight unpinned surfaces including a non-registry
+dependency — <code>@nehloo-interactive/graphnosis-secure-sync</code>
+pinned as
+<code>github:nehloo-interactive/graphnosis-secure-sync#v0.4.1</code> —
+and a <code>CLAUDE.md</code> addressed to a reading agent. Nothing was
+installed, nothing was built and no test was run. The graph store, its
+encryption and the op-log codec live in that pinned dependency and were
+not read; this report covers the ~111,000-line sidecar around it, and
+says so where a claim would otherwise reach past the boundary. Three
+marks. <code>scope_enforced</code> is withheld because separation is by
+named graph and this reading did not trace a stored principal key
+reaching a query inside one; <code>trust_state</code> is withheld
+because <code>confidence</code> carries belief, use-recency and deletion
+in a single float; <code>bitemporal</code> is withheld because
+<code>validUntil</code> records when the system expired a node and no
+separate validity start was traced; <code>tombstone</code> is withheld
+because nothing keys on a removed value.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
