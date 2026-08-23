@@ -305,6 +305,51 @@ file, and the harness gives them no field in which to do it.**
 [LongMemEval-V2](https://github.com/xiaowu0162/LongMemEval-V2), announced May
 2026, is a separate repository and a separate benchmark.
 
+#### The control that proves a metric can still fail
+
+Every negative result on this page rests on a metric that could have come out
+the other way, and this atlas has repeatedly caught cases where it could not: a
+suite whose assertion passes because the result set was empty, a threshold no
+code reads, a gate that scored the wrong artifact. Those are found one at a time,
+by reading. [Silica](../systems/silica/) is the one project in the corpus that
+turned the class into a harness.
+
+`evals/negative_controls.py` states the problem in its first line — *"A metric
+that cannot fail reports PASS regardless of the arm, and the gate reads as a
+result"* — and pins every deterministic gate metric against fixtures it must
+score exactly, with the rule that **at least two of them must disagree**:
+*"a metric stuck at 1.0 and a metric stuck at 0.0 are both dead, and only a pair
+of fixtures separates a live metric from either."* `assert_metrics_discriminate`
+takes the names the runner is about to compute and refuses any it does not
+recognise, so **adding a gate metric without a control fails the run** instead of
+passing quietly. It runs before any model work, *"so a dead metric costs zero
+tokens."*
+
+Three properties make it worth copying rather than admiring. It **names its own
+incidents with shas** — a gate that scored the recomposed floor and not the note
+(`a333ce0`), a decompose cap that cut long notes mid-fact and never judged the
+tail (`e8ddf63`), a kill gate vacuous because 3-hop reached 98% of the vault, and
+the pure form: two metrics matching `\d+` against citation IDs guaranteed to
+contain a letter, so both scored 1.0 on every input and *"two rows of its summary
+table were decoration."* It **names the hole it cannot close** — a runner that
+never mentions its new metric in the call at all, which *"stays on whoever adds
+it."* And it **scopes itself out of LLM judges** on the correct ground that
+*"a judge cannot be pinned to an expected value,"* whose failure mode is
+saturation rather than a dead branch.
+
+The same repository applies the discipline one level down.
+`evals/golden/probe_supersede.py` measures resolution inversions over a 796-note
+vault — 0 under the shipped `merge_rank` against 43 under the `len(body)` it
+replaced — and then reports the margin by which its own gate works:
+*"2.09pp against a 2pp tolerance. A partial revert would slip under it. Tighten
+the tolerance for this key."* A probe that publishes how nearly it fails to catch
+the regression it exists for is doing what this page asks of benchmark authors
+and rarely gets.
+
+**The transferable rule is one line**: a gate metric without a fixture pair that
+separates it is not a measurement, and the check is cheap enough to run before
+the model does.
+
 ### The 2026 crop reproduces the monoculture
 
 A search for agent-memory repositories pushed in 2026, sorted by stars, returns
@@ -926,7 +971,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and two of three hundred and twenty-seven. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and three of three hundred and twenty-eight. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -2164,7 +2209,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 326 repositories,
+  [comparative report](../compare/). It is a statement about 327 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

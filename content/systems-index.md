@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **327 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **328 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -398,6 +398,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/sesa/"><span class="az-id">SESA</span><span class="az-what">Failure-distilled skill memory</span><code class="az-repo">Zenghuang-Fu/SESA-Self-Evolving-Search-Agents</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/shodh-memory/"><span class="az-id">Shodh-Memory</span><span class="az-what">A cognitive substrate with no LLM</span><code class="az-repo">varun29ankuS/shodh-memory</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/sift-kg/"><span class="az-id">sift-kg</span><span class="az-what">Documents to a browsable graph</span><code class="az-repo">juanceresa/sift-kg</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/silica/"><span class="az-id">Silica</span><span class="az-what">A control that proves the metric can move</span><code class="az-repo">kiycoh/silica-harness</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/sillytavern/"><span class="az-id">SillyTavern</span><span class="az-what">Memory people write by hand</span><code class="az-repo">SillyTavern/SillyTavern</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/simplemem/"><span class="az-id">SimpleMem</span><span class="az-what">Compression-first research memory</span><code class="az-repo">aiming-lab/SimpleMem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/skales/"><span class="az-id">Skales</span><span class="az-what">Ask it to forget</span><code class="az-repo">skalesapp/skales</code><span class="az-caps"></span></a></li>

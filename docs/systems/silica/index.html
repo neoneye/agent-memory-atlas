@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A transactional write path over a
+markdown vault whose contradictions stay visible until a person resolves
+them, whose per-claim clock is a comment rather than frontmatter, and
+whose eval harness refuses to run a gate whose metric cannot fail.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Silica — Agent Memory Atlas">
+    <meta property="og:description" content="A transactional write path
+over a markdown vault whose contradictions stay visible until a person
+resolves them, whose per-claim clock is a comment rather than
+frontmatter, and whose eval harness refuses to run a gate whose metric
+cannot fail.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Silica — Agent Memory Atlas">
+    <meta name="twitter:description" content="A transactional write path
+over a markdown vault whose contradictions stay visible until a person
+resolves them, whose per-claim clock is a comment rather than
+frontmatter, and whose eval harness refuses to run a gate whose metric
+cannot fail.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Silica — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Silica",
+      "description": "A transactional write path over a markdown vault whose contradictions stay visible until a person resolves them, whose per-claim clock is a comment rather than frontmatter, and whose eval harness refuses to run a gate whose metric cannot fail.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A control that proves the metric can
+move</p>
+          <h1>Silica</h1>
+          <p class="document-deck">A transactional write path over a
+markdown vault whose contradictions stay visible until a person resolves
+them, whose per-claim clock is a comment rather than frontmatter, and
+whose eval harness refuses to run a gate whose metric cannot fail.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kiycoh/silica-harness">
+              <span>Source</span>
+              <strong>kiycoh/silica-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kiycoh/silica-harness/commit/300fab2e1686e6401a059ec62161ba5a46fce356" title="300fab2e1686e6401a059ec62161ba5a46fce356">
+              <span>Analyzed revision</span>
+              <code>300fab2e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-23</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Silica is an AGPL-3.0 harness that governs a folder of markdown — an
+Obsidian vault, a codebase's docs, research material — as agent-writable
+memory. About 72,700 lines of Python across 208 modules, 955 commits
+since 25 May 2026, with a CLI, a Claude Code plugin, an MCP server and a
+web UI over one vault. It targets the Open Knowledge Format v0.2 and
+runs local inference optionally.</p>
+<p>Its thesis is in one sentence of the README: <em>"the harness guides,
+the LLM proposes, a parser and an FSM verify and execute, and every
+write is verified against a source, reverted if corrupted."</em> The
+model never writes; it proposes into a state machine that does.</p>
+<p>Four marks, and three of the mechanisms behind them are among the
+better instances this atlas has read.</p>
+<p><strong>A contradiction is kept, not settled.</strong>
+<code>contested.py</code> records it on the existing note as a
+frontmatter flag and a warning callout and leaves it <em>"until a human
+resolves it"</em>, with an <code>Unresolved.</code> tail, and one
+contradiction can be closed while its siblings stay open. Pure
+functions, no I/O, no model.</p>
+<p><strong>The auto-resolver is asymmetric on purpose, and says
+why.</strong> <code>suppress_contest</code> will let reliability settle
+a contest, but recency can only <em>veto</em> — <em>"recency never
+resolves a contest here, it only refuses to let reliability resolve one
+it would get wrong."</em> An unknown clock on the target vetoes a dated
+incoming claim, because <em>"silence about when a note was last true is
+not evidence that it still is"</em>, and the trade is stated:
+<em>"declining to auto-resolve leaves a visible contest, while resolving
+wrongly buries a live claim under <code>## Superseded</code>."</em></p>
+<p><strong>The per-claim clock is a comment, and the reason is
+good.</strong> <code>valid_from</code> rides in
+<code>&lt;!-- silica: valid_from=2023-05-08 run=b07f1268 --&gt;</code>
+rather than in frontmatter, because frontmatter is per note <em>"while a
+note accumulates claims from many sources on different dates"</em>, and
+a comment is invisible in preview, greppable, and survives every write
+path byte-for-byte with no YAML round-trip.</p>
+<p><strong>And the evaluation harness has something this atlas has been
+asking for without a name.</strong>
+<code>evals/negative_controls.py</code> does not check whether the
+system answers correctly. It checks whether each deterministic gate
+metric <em>can still fail</em> — see section 10, which is the part of
+this report to read if you read one.</p>
+<p><strong>Weakest:</strong> a contested note is still retrieved. The
+flag reaches the reader as a rendered
+<code>| contested: &lt;reason&gt;</code> on the recall block rather than
+as a gate on admissibility, so the disputed claim goes into the prompt
+with its dispute attached. That is a defensible design and a different
+one from what the <code>trust_state</code> mark measures, which is why
+the mark is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>source document ──► harness guides ──► LLM proposes ops
+                                            │
+                              parser + FSM  │  setup → distill → collision
+                                            │  → linking → write → finalize
+                                            ▼
+                                   validate against source
+                                            │
+                        ┌───────────────────┴───────────────────┐
+                     verified                              corrupted
+                        │                                       │
+                 atomic write                              revert from
+                 + inverse row                             undo journal
+                 + ledger row                              (prior_content)
+                        │
+              contradiction found?
+                        │
+        ┌───────────────┴────────────────┐
+   strictly outranked                 otherwise
+   AND no fresher loser                   │
+        │                          flag the note:
+   auto-resolve                    contested: &lt;reason&gt;
+   (`## Superseded`)               + Unresolved.
+                                   + register the path
+                                          │
+                                   run digest ──► a human decides</code></pre>
+<p>The design's premise is that the expensive failure is not a missing
+memory but a <strong>wrong write into a folder the user also edits by
+hand</strong>. Everything follows from that: the FSM, the source
+verification, the inverse per path, the atomic write, and a
+contradiction policy that would rather leave a visible mess than bury a
+live claim.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model proposes and a finite-state machine executes — each write verified against its source, an inverse recorded before it lands, and a contradiction flagged onto the note and registered for a person rather than resolved away</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the model proposes and a finite-state machine executes — each write verified against its source, an inverse recorded before it lands, and a contradiction flagged onto the note and registered for a person rather than resolved away
+    SRC[&quot;source document&quot;] --&gt; HARNESS[&quot;harness prompt&quot;]
+    HARNESS --&gt; LLM[&quot;LLM proposes ops&quot;]
+    LLM --&gt; PARSE[&quot;recipe_parser&quot;]
+    PARSE --&gt; FSM[&quot;router FSM&lt;br/&gt;setup · distill · collision&lt;br/&gt;linking · write · finalize&quot;]
+    FSM --&gt; VAL[&quot;kernel/write/validate.py&lt;br/&gt;checked against the source&quot;]
+
+    VAL --&gt;|&quot;fails&quot;| REV[&quot;revert from undo journal&lt;br/&gt;prior_content&quot;]
+    VAL --&gt;|&quot;passes&quot;| ATOM[&quot;atomic_write&quot;]
+    ATOM --&gt; INV[(&quot;undo_journal.db&lt;br/&gt;runs + inverses&quot;)]
+    ATOM --&gt; LED[(&quot;ledger.db&lt;br/&gt;committed | failed | rolled_back&quot;)]
+    ATOM --&gt; VAULT[(&quot;markdown vault&lt;br/&gt;+ sources/ verbatim&quot;)]
+
+    ATOM --&gt; CONTEST{&quot;contradiction?&quot;}
+    CONTEST --&gt;|&quot;target strictly outranks&lt;br/&gt;AND loser not fresher&quot;| SUP[&quot;auto-resolve&lt;br/&gt;## Superseded&quot;]
+    CONTEST --&gt;|&quot;otherwise&quot;| FLAG[&quot;frontmatter flag&lt;br/&gt;+ warning callout&lt;br/&gt;+ Unresolved.&quot;]
+    FLAG --&gt; REG[(&quot;contested_register.json&lt;br/&gt;rebuildable worklist&quot;)]
+    REG --&gt; DIGEST[&quot;run digest&quot;]
+    DIGEST --&gt; HUMAN([&quot;a person resolves&quot;])
+    HUMAN --&gt; VAULT
+
+    Q[&quot;query&quot;] --&gt; BM25[&quot;hand-rolled BM25&lt;br/&gt;+ optional embeddings + graph&quot;]
+    VAULT --&gt; BM25
+    BM25 --&gt; PERC[&quot;perception blocks&lt;br/&gt;rendered with | contested: reason&quot;]
+    PERC --&gt; OUT[&quot;context for the model&quot;]</code></pre></details></figure>
+<p><strong>Runtime.</strong> <code>silica/</code> holds
+<code>kernel</code> (write, recall, link, organize, report, code,
+calendar), <code>router</code> (the FSM, orchestrator, coordinator),
+<code>driver</code>, <code>tools</code>, <code>sources</code>,
+<code>capabilities</code>, <code>agent</code>, <code>ui</code> (a web
+server and renderer), <code>skills</code>, <code>recipes</code>,
+<code>overlays</code> and <code>onboarding</code>. Four interfaces: a
+CLI, an MCP server, a Claude Code plugin registering SessionStart /
+PreCompact / Stop hooks, and a web UI.</p>
+<p><strong>Persistence.</strong> The memory is the vault — markdown the
+user owns and can edit outside the tool. SQLite sits beside it for
+machinery: <code>~/.silica/ledger.db</code> for per-op outcomes and
+<code>~/.silica/undo_journal.db</code> for inverses, plus per-vault
+index directories. <code>sources/</code> keeps the verbatim original of
+every ingested document and is <strong>retrieval-invisible by
+construction</strong> — <code>is_source_leaf</code> excludes it from
+search, search context and embeddings — so the source is reachable for
+verification without competing with the notes derived from it. That is
+the cleanest separation of <em>evidence</em> from <em>belief</em> in the
+corpus, and it is what <code>reliability_tier</code> reads.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The FSM.</strong> <code>router/base_fsm.py</code> with states
+in <code>router/states/</code> — <code>setup</code>,
+<code>distill</code>, <code>collision</code>, <code>linking</code>,
+<code>write</code>, <code>finalize</code> — driven by
+<code>orchestrator.py</code> and <code>coordinator.py</code>. A proposal
+that does not parse does not reach a state that writes.</p>
+<p><strong>Verification and atomicity.</strong>
+<code>kernel/write/validate.py</code> is a thousand lines of checks
+against the source; <code>atomic_write.py</code> and
+<code>tools/atomic.py</code> do the write; <code>undo_journal.py</code>
+records an inverse — kind, prior content, post-hash, and a
+<code>to_path</code> for moves — before the change is considered done,
+which is what makes <code>/revert</code> mechanical.</p>
+<p><strong>The contested layer.</strong>
+<code>CONTESTED_KEY = "contested"</code>,
+<code>CONTRADICTIONS_KEY = "contradictions"</code>,
+<code>_UNRESOLVED_TAIL = "Unresolved."</code>, and
+<code>resolve_contested</code> for closing one contradiction at a time.
+<code>mark_superseded_by</code> exists because of a named prior failure:
+<em>"The merge loser used to be left on disk with overlapping content
+and no link to the winner: two notes saying the same thing and no record
+that one replaced the other."</em></p>
+<p><strong><code>suppress_contest</code>, quoted at length in section
+1</strong>, is the atlas's favourite kind of function: a policy, its two
+conditions, the asymmetry, the reason for the asymmetry, and its
+measured precision with and without the guard — all in the docstring,
+over a named fixture directory.</p>
+<p><strong>The claim stamp.</strong> <code>stamp(**fields)</code>
+renders <code>&lt;!-- silica: valid_from=… run=… --&gt;</code> with
+caller-ordered keys so the line is deterministic and empty fields drop
+out. <code>note_clock</code> returns the freshest
+<code>valid_from</code> or an OKF <code>verified.at</code>, and treats
+<em>neither</em> as silence rather than freshness.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is a markdown file with OKF-shaped frontmatter. The
+atlas-relevant fields are the <code>contested</code> flag with its
+reason, the <code>contradictions</code> list, an OKF
+<code>verified.at</code> a person writes when they read the note, and
+the per-claim <code>valid_from</code> stamps in the body.</p>
+<p><strong>Reliability is derived, not declared.</strong>
+<code>reliability_tier</code> reads whether the note's verbatim source
+is retained under <code>sources/</code> — so the tier is a fact about
+what can be checked, not a number a writer chose. Keeping the source
+costs disk and <em>"nothing else"</em> because the folder is
+retrieval-invisible, and <code>--no-keep-sources</code> opts out at the
+cost of the tier.</p>
+<p><strong>Two clocks and they are separate.</strong>
+<code>valid_from</code> is when a claim held, from the source document's
+own date supplied at ingest as <code>--seen</code>; the run id in the
+same stamp, and the ledger and journal rows, say when the system wrote
+it. That is the bi-temporal split, and the CLI guards the parse of
+<code>--seen</code> because a typo would <em>"poison note_clock
+vault-wide."</em></p>
+<p><strong>No principal key inside a vault.</strong> Separation is per
+vault — an index directory, a ledger and a manifest each — which is
+partition-shaped isolation and the reason the scope mark is
+withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A hand-rolled BM25 with optional embeddings, a graph layer
+(<code>kernel/recall/graph_export.py</code>, <code>mindmap.py</code>,
+<code>tools/graph.py</code>), and a context builder that assembles
+blocks for the prompt. The README puts the embedding advantage at about
+six percentage points over the CPU-only fallback, which is an unusually
+modest claim to make for one's own optional component.</p>
+<p><strong>A contested note is retrieved and labelled.</strong>
+<code>kernel/recall/perception.py</code> carries
+<code>contested: str | None</code> as <em>"correction reason when
+flagged, else None"</em>, and renders it into the block head as
+<code>| contested: &lt;reason&gt;</code>. So the model sees the claim
+and the dispute together.</p>
+<p>That is a real choice with a real cost, and it is worth stating both
+ways. Against withholding: a disputed claim is often the best available
+answer, and hiding it produces a confident silence rather than a hedged
+answer. For withholding: nothing prevents the model from using the claim
+anyway, and the atlas's rubric asks for a state that can refuse. Silica
+labels; it does not refuse. <code>trust_state</code> is withheld on
+that, not on absence.</p>
+<p><strong><code>sources/</code> is invisible by construction</strong>,
+so a query never retrieves the raw document over the note distilled from
+it — the failure mode where a vault's search results collapse into whole
+source files.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a proposal validated against its source, executed
+atomically, and recorded twice: an inverse row that can undo it and a
+ledger row that says what happened.</p>
+<p><strong>The ledger records refusals, and then overwrites
+them.</strong> <code>status ∈ {committed, failed, rolled_back}</code> is
+better than most stores here manage — a failure is a row, not a log
+line. But the schema carries a <code>UNIQUE</code> constraint on
+<code>(source_canonical, path)</code> with UPSERT semantics, for a good
+reason (idempotent resume: a re-run skips a source whose ops all
+committed with a matching content hash and whose outputs are still on
+disk). The consequence is that the record of a failed attempt is
+replaced by the success that follows it, so the ledger answers <em>what
+is the state of this path</em> and cannot answer <em>how many times did
+this fail before it worked</em>. The undo journal, which is per run and
+append-only, is where that history actually survives.</p>
+<p><strong>Corruption is handled rather than assumed away.</strong> A
+corrupt undo journal is quarantined and recreated with a warning, on the
+stated ground that it <em>"must not brick startup or the /revert of
+future runs"</em>, and git is named as the durable backstop for older
+history via <code>SILICA_GIT_COMMIT=auto</code>. Naming your own
+mechanism's backstop is rarer than shipping the mechanism.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four surfaces over one vault: a CLI, an MCP server
+(<code>mcp.json</code>, plus a <code>mcp.codex.json</code>), a Claude
+Code plugin whose <code>hooks/hooks.json</code> registers SessionStart,
+PreCompact and Stop, and a web UI. The screen flagged all of these as
+auto-run surfaces, correctly — a plugin manifest and a hook registration
+are exactly the things that execute without a command being typed, and a
+reader installing this should look at <code>hooks/hooks.json</code>
+first.</p>
+<p>The screen also produced one false positive worth recording, because
+it is a useful demonstration of what the tool does and does not know:
+<code>silica/router/states/setup.py</code> was flagged as <em>"executes
+arbitrary Python at install time"</em> on the strength of its filename.
+It is an FSM state named <code>setup</code>, not a packaging script. The
+heuristic is right to be filename-driven and a reader still has to open
+the file.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The write path is the safety story</strong> and it is
+layered: parse, verify against source, atomic write, inverse recorded,
+ledger updated, revert available. The README's <em>"100% write integrity
+across a real 796-note vault"</em> is a claim about that path; it is one
+run over one vault, which the README says.</p>
+<p><strong>The contested layer is the trust story</strong> and it is
+honest about being partial. A contradiction is visible, attributed,
+dated per claim, and left for a person — and while it waits, it is still
+retrievable.</p>
+<p><strong>The evaluation harness is the third layer</strong> and
+section 10 is about it.</p>
+<p><strong>What is missing:</strong> no value-keyed refusal, so a claim
+a person deleted can be re-ingested from the same source on the next
+run; no principal scoping inside a vault; and the reliability tier
+depends on <code>sources/</code> being kept, which
+<code>--no-keep-sources</code> turns off with the consequence stated but
+not enforced.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>387 test files under <code>tests/</code>, plus an <code>evals/</code>
+tree carrying LoCoMo, LongMemEval, MuSiQue, FactScore, a golden 796-note
+vault with its own probes, paired statistics, and a set of
+<code>probe_*</code> modules. The README reports 82.1% answerable
+accuracy and 87.2% correct refusals on LoCoMo, <em>"one run, both
+numbers"</em> — the qualifier is the project's own.</p>
+<p><strong><code>evals/negative_controls.py</code> is the reason to read
+this repository even if you never install it.</strong> It is not a
+negative control on the <em>system</em>; it is a negative control on the
+<em>metrics</em>, and its opening line states the problem exactly:
+<em>"A metric that cannot fail reports PASS regardless of the arm, and
+the gate reads as a result."</em></p>
+<p>Each entry pins a metric against cases it must score exactly, and the
+rule is that <strong>at least two cases must disagree</strong> — <em>"a
+metric stuck at 1.0 and a metric stuck at 0.0 are both dead, and only a
+pair of fixtures separates a live metric from either."</em>
+<code>assert_metrics_discriminate</code> takes the names the runner is
+about to compute and refuses any it does not recognise, so adding a gate
+metric without a control fails the run rather than passing quietly. It
+runs before any model work, <em>"so a dead metric costs zero
+tokens."</em></p>
+<p>The docstring then lists the times this bit them, with commit shas:
+<code>a333ce0</code>, where the L3 gate scored the recomposed floor and
+not the note; <code>e8ddf63</code>, where the decompose cap cut long
+notes mid-fact and never judged the tail; a PPR phase-0 kill gate that
+was vacuous because 3-hop reached 98% of the vault; and the pure form —
+two eval metrics matching <code>\d+</code> against citation IDs
+guaranteed to contain a letter, so both scored 1.0 on every input and
+<em>"two rows of its summary table were decoration."</em> It also names
+the hole it cannot close: a runner that never mentions its new metric in
+the call at all. And it scopes itself out of LLM judges, because <em>"a
+judge cannot be pinned to an expected value."</em></p>
+<p>This atlas has repeatedly found the failure this module exists to
+prevent — most recently one report ago, in a negative retrieval test
+that asserted <code>every</code> over an array a fresh database
+guaranteed to be empty. Silica has generalised that into a registry with
+a rule that fails the build.</p>
+<p><strong><code>evals/golden/probe_supersede.py</code> is the second
+one</strong>, and it reports its own insufficiency. Over the golden
+vault — 796 notes, 1,064 pairs, 54 tier-split — it measures 0 resolution
+inversions under <code>merge_rank = (tier, len)</code> against 43 under
+the bare <code>len(body)</code> it replaced, rates 0.0000 and 0.0209.
+Then: <em>"the gate does catch a revert of §6.2, though only just:
+2.09pp against a 2pp tolerance. A partial revert would slip under it.
+Tighten the tolerance for this key."</em> A probe that publishes the
+margin by which it barely works is doing the thing this atlas asks of
+benchmark authors.</p>
+<p><strong><code>probe_abstention_rubric.py</code></strong> re-judges
+stored responses with the current abstention rubric and asserts three
+known false negatives flip to true while a synthetic confabulation stays
+false — a calibration check on the judge rather than on the system, and
+correctly labelled as such.</p>
+<p>The <code>negative_eval</code> mark itself rests on the ordinary
+tests: <code>test_embed_search_topk.py</code> asserts a named note is
+absent from a top-<em>k</em> result over a seeded vault,
+<code>test_context_builder.py</code> asserts a heading is absent from
+assembled context, and <code>test_cohesion.py</code> asserts specific
+notes are not among a note's related list.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write a negative control for every deterministic gate
+metric, and make the registry refuse an unknown name.</strong> Two
+fixtures that must disagree, checked before any model work. This is the
+cheapest defence against an eval suite that reports PASS because it
+cannot report anything else, and almost nothing in this corpus has
+it.</li>
+<li><strong>Make the auto-resolver asymmetric and say which
+way.</strong> Reliability may settle a contest; recency may only veto.
+An unknown clock on the incumbent vetoes a dated challenger, because
+silence is not evidence of freshness.</li>
+<li><strong>Keep the contradiction visible instead of resolving it
+away.</strong> A flag, a reason, an <code>Unresolved.</code> tail, and a
+rebuildable worklist the digest reads — and the ability to close one
+contradiction while its siblings stay open.</li>
+<li><strong>Put the claim clock on the claim, not the note.</strong> A
+note accumulates claims from many sources on many dates; one frontmatter
+date cannot carry that. An HTML comment is invisible in preview,
+greppable, and survives write paths that a YAML round-trip would
+perturb.</li>
+<li><strong>Keep the verbatim source and make it
+retrieval-invisible.</strong> Evidence you can check without it
+competing with the notes derived from it — and a reliability tier that
+reads whether the evidence is still there rather than what a writer
+claimed.</li>
+<li><strong>Guard the one string that poisons everything.</strong> The
+<code>--seen</code> date becomes <code>valid_from</code> on every claim
+of a run; parsing it at the boundary with the blast radius written in
+the comment is four lines.</li>
+<li><strong>Publish the margin by which your gate works.</strong> 2.09pp
+against a 2pp tolerance, with "a partial revert would slip under it"
+written next to it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a label stand in for a gate if you need
+one.</strong> A contested claim rendered with its reason still reaches
+the model; if the requirement is that a disputed memory not be acted on,
+a rendered reason is not that.</li>
+<li><strong>Do not let an idempotency index double as an audit.</strong>
+The op ledger's UPSERT is right for resume and wrong for history: the
+record of a failure is replaced by the success that follows it.</li>
+<li><strong>Do not report one run as a rate.</strong> The README is
+explicit that its LoCoMo numbers are one run each, which is the right
+disclosure and still one run.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take Silica if your memory is a folder a person also edits, and the
+failure you fear is a wrong write rather than a missing recall. The FSM,
+the source verification and the inverse-per-write are built for exactly
+that, and the contested layer is the most careful treatment of "two
+claims disagree" in this corpus.</p>
+<p>Take <code>negative_controls.py</code> regardless of what you are
+building. It is 146 lines and it is separable from everything else
+here.</p>
+<p>Look elsewhere if you need multi-principal scoping inside one store,
+or a state that can refuse to serve a disputed claim rather than
+annotate it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>contested</code> gate admissibility as well as
+render?</strong> The flag, the reason and the register all exist; the
+recall path chooses to label. An opt-in that withholds contested claims
+from assembled context would cost one predicate and would make the
+mark's question answerable either way.</li>
+<li><strong>What does the ledger's UPSERT hide?</strong> A path that
+failed four times and committed on the fifth is indistinguishable from
+one that committed first time. The undo journal keeps per-run history;
+the two are not joined.</li>
+<li><strong>How often does <code>suppress_contest</code>
+decline?</strong> Its precision with the veto is measured on a fixture
+directory; its <em>rate</em> on a live vault — how many contests a
+person is actually asked to resolve per run — is the number that decides
+whether the design is usable at scale.</li>
+<li><strong>Does <code>--no-keep-sources</code> degrade the tier
+silently?</strong> The comment says <code>reliability_tier</code> reads
+exactly the retained source. Whether a vault built without sources
+reports its tiers as unknown or as low is the difference between a
+caveat and a wrong number.</li>
+<li><strong>Are the LoCoMo numbers stable?</strong> One run each, stated
+as such. The harness has <code>paired_stats.py</code> and the fixtures
+to say more.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Write kernel:</strong> <code>silica/kernel/write/</code> —
+<code>validate.py</code>, <code>atomic_write.py</code>,
+<code>ops.py</code>, <code>ops_io.py</code>, <code>bulk.py</code>,
+<code>merge.py</code>, <code>frontmatter.py</code>,
+<code>checkpoints.py</code>, <code>session_changes.py</code>,
+<code>timeline.py</code>, <code>templates.py</code></li>
+<li><strong>Contested layer:</strong>
+<code>silica/kernel/write/contested.py</code> (<code>stamp</code>,
+<code>note_clock</code>, <code>suppress_contest</code>,
+<code>resolve_contested</code>, <code>mark_superseded_by</code>),
+<code>silica/kernel/contested_register.py</code></li>
+<li><strong>Audit and revert:</strong>
+<code>silica/kernel/write/undo_journal.py</code>,
+<code>silica/kernel/write/ledger.py</code>,
+<code>silica/kernel/write/provenance.py</code>,
+<code>silica/router/warning_ledger.py</code></li>
+<li><strong>FSM:</strong> <code>silica/router/base_fsm.py</code>,
+<code>orchestrator.py</code>, <code>coordinator.py</code>,
+<code>recipe_parser.py</code>, <code>states/</code> (<code>setup</code>,
+<code>distill</code>, <code>collision</code>, <code>linking</code>,
+<code>write</code>, <code>finalize</code>)</li>
+<li><strong>Recall:</strong> <code>silica/kernel/recall/</code> —
+<code>perception.py</code> (the contested rendering),
+<code>curator.py</code>, <code>mindmap.py</code>,
+<code>graph_export.py</code>, <code>episodic.py</code>,
+<code>paths.py</code> (<code>is_source_leaf</code>)</li>
+<li><strong>Evals:</strong> <code>evals/negative_controls.py</code>,
+<code>evals/golden/probe_supersede.py</code>,
+<code>evals/probe_abstention_rubric.py</code>,
+<code>evals/paired_stats.py</code>, <code>evals/locomo/</code>,
+<code>evals/longmemeval/</code>, <code>evals/musique/</code>,
+<code>evals/factscore/</code>,
+<code>evals/golden/fixtures/contests</code></li>
+<li><strong>Tests:</strong> <code>tests/</code> — 387 files;
+<code>test_embed_search_topk.py</code>,
+<code>test_context_builder.py</code>, <code>test_cohesion.py</code>
+carry the negative retrieval assertions,
+<code>test_bitemporal_invariants.py</code> the stamp invariants</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-23</strong> — <a
+href="https://github.com/kiycoh/silica-harness/commit/300fab2e1686e6401a059ec62161ba5a46fce356"><code class="commit-id" title="300fab2e1686e6401a059ec62161ba5a46fce356">300fab2e…</code></a>
+— first reading, AGPL-3.0, ~72,700 lines of Python across 208 modules,
+955 commits since 25 May 2026. Screened before anything was read: four
+auto-run surfaces — a <code>.claude-plugin/</code> marketplace and
+plugin manifest, a <code>hooks/hooks.json</code> registering
+SessionStart, PreCompact and Stop, and an <code>mcp.json</code> — three
+build-time execution points, and both <code>pyproject.toml</code> and
+<code>uv.lock</code> changed the day of the pin, inside the cooldown.
+Nothing was installed, no hook was registered, no eval was run and no
+vault was opened. One screen finding is a false positive worth
+recording: <code>silica/router/states/setup.py</code> was flagged as
+install-time execution on its filename and is an FSM state. Four marks.
+<code>trust_state</code> is withheld deliberately rather than for
+absence — the contested flag is rendered into the recall block as
+<code>| contested: &lt;reason&gt;</code> instead of gating
+admissibility, so a disputed claim reaches the model annotated rather
+than withheld. <code>scope_enforced</code> is withheld because
+separation is per vault; <code>tombstone</code> because nothing keys on
+a removed value.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 327 reports.**
+**This page covers all 328 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1024,6 +1024,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no tests over its own pipeline, no scope model, no correction path at L2, and a September 2025 commit at the analyzed revision.
 - Study when: you want to experiment with parametric personal memory and have a machine that can train — as a demonstration that the whole pipeline runs on a laptop it is convincing.
 - Do not copy when: you cannot tell your users that deleting a memory removes it from search and not from the model. If that sentence is unacceptable for your product, the architecture is wrong for you.
+
+### [`silica`](../systems/silica/)
+
+- Best idea: **a negative control on the metric, not the system.** `evals/negative_controls.py` refuses to run a gate whose deterministic metric cannot fail — *"A metric that cannot fail reports PASS regardless of the arm, and the gate reads as a result"* — pinning each metric against fixtures of which at least two must disagree, because *"a metric stuck at 1.0 and a metric stuck at 0.0 are both dead."* `assert_metrics_discriminate` rejects any metric name it does not know, so adding a gate without a control fails the run, and it all happens before any model work *"so a dead metric costs zero tokens."* The docstring lists the four times this bit them, with commit shas, including two eval metrics matching `\d+` against citation IDs guaranteed to contain a letter — both scored 1.0 on every input and *"two rows of its summary table were decoration."* 146 lines, separable from the rest of the project, and this atlas keeps finding the failure it prevents.
+- Second idea: **an auto-resolver that is asymmetric on purpose and says which way.** `suppress_contest` lets reliability settle a contradiction but lets recency only *veto* — *"recency never resolves a contest here, it only refuses to let reliability resolve one it would get wrong"* — with an unknown clock on the incumbent vetoing a dated challenger because *"silence about when a note was last true is not evidence that it still is."* The trade is written down: *"declining to auto-resolve leaves a visible contest, while resolving wrongly buries a live claim under `## Superseded`."* Its precision is measured in the same docstring: 4 contests acted on and 2 wrong without the veto, 2 acted on and 2 right with it.
+- Third idea: **the claim clock rides on the claim.** `<!-- silica: valid_from=… run=… -->` rather than frontmatter, because a note *"accumulates claims from many sources on different dates"*, and a comment is invisible in preview, greppable, and survives every write path byte-for-byte with no YAML round-trip. The `--seen` date that becomes every claim's `valid_from` is parse-guarded at the CLI with the blast radius in the comment.
+- Biggest risk: **a contested claim is labelled, not withheld.** The flag reaches the reader as `| contested: <reason>` rendered onto the recall block, so a disputed memory goes into the prompt annotated rather than gated — a defensible choice, and not one that can refuse. Beside it, the op ledger's UPSERT on `(source, path)` means a later success overwrites the record of an earlier failure, so the ledger answers *what is the state* and not *how many times did this fail*.
+- Maturity impression: AGPL-3.0, ~72,700 lines of Python, 955 commits, four interfaces over one vault, 387 test files and an evals tree carrying LoCoMo, LongMemEval, MuSiQue, FactScore and a golden 796-note vault. Four marks. The README reports 82.1% answerable accuracy and 87.2% correct refusals on LoCoMo and says "one run, both numbers" itself.
+- Study when: your memory is a folder a person also edits and the failure you fear is a wrong write rather than a missing recall — or when you are building any eval gate at all, in which case take `negative_controls.py` and leave the rest.
+- Do not copy when: you need multi-principal scoping inside one store, or a state that can refuse to serve a disputed claim rather than annotate it.
 
 ### [`sillytavern`](../systems/sillytavern/)
 - Best idea: the activation vocabulary — sticky, cooldown, delay, negative keys, bounded recursion — which are answers to problems extraction-based systems also have and mostly express as tuning constants, if at all.
