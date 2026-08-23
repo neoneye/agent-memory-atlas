@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 325 reports.</strong></p>
+<p><strong>This page covers all 327 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -1029,6 +1029,90 @@ corpus, exceptions enumerated.</li>
 remembered, durable deletion has to survive your own audit log, or a
 single scope will grow past what an exact cosine scan per query can
 carry.</li>
+</ul>
+<h3 id="ai-agent-automation"><a
+href="../systems/ai-agent-automation/"><code>ai-agent-automation</code></a></h3>
+<ul>
+<li>Best idea: <strong>the row records which provider and model produced
+its vector.</strong> <code>embeddingProvider</code> and
+<code>embeddingModel</code> sit beside the embedding, which is the cheap
+defence against a config change re-pointing the embedder and every later
+comparison silently meaning nothing. Most stores in this corpus omit
+it.</li>
+<li>Second idea: <strong>ownership is resolved on every path of the
+management API</strong>, and the no-argument case is a scoped fallback
+rather than a wildcard — <code>listMemories</code> with no agent named
+returns <code>agentId: {$in: ownedAgentIds}</code>. That default is
+where most implementations leak.</li>
+<li>Biggest risk: <strong><code>minScore</code> is a parameter with no
+consumer.</strong>
+<code>retrieveMemory(agent, queryText, topK = 5, minScore = 0.45)</code>
+scores, sorts and slices, and the identifier appears on exactly one line
+of the backend — the signature. A caller passes <code>0.45</code>
+explicitly, so the intent is documented at the call site and defeated in
+the callee, and the fifth-best row under a five-hundred-row cap reaches
+the prompt at whatever cosine it scored. Beside it: a retention pass
+that counts every memory type and deletes only conversations, an
+embedding paid for before the guard that discards the input, and a
+<code>console.log</code> of every retrieved memory's content preview in
+a product whose first claim is that data stays local.</li>
+<li>Maturity impression: Apache 2.0, 517 commits, release v0.11.0, a
+full workflow engine with typed handlers — and a memory layer of one
+model, a 94-line service and a 208-line controller. One mark. Twenty
+test files, none covering memory, which is consistent with how three
+defects survived: each is invisible to anything that does not read the
+function.</li>
+<li>Study when: you want a compact worked example of wiring a per-agent
+vector memory into workflow handlers, with the ownership checks done
+properly.</li>
+<li>Do not copy when: you need the recall to mean anything — apply the
+floor first.</li>
+</ul>
+<h3 id="arcon"><a href="../systems/arcon/"><code>arcon</code></a></h3>
+<ul>
+<li>Best idea: <strong>a four-way write decision computed without a
+model.</strong> <code>memory-review.ts</code> classifies every extracted
+candidate <code>CREATE</code>, <code>UPDATE</code>, <code>IGNORE</code>
+or <code>CONFLICT</code> from stopword-stripped content against a
+preference-root vocabulary, so "user likes tea" and "user dislikes tea"
+are recognised as one subject with opposed values. Most stores decide
+whether to write with a similarity number or not at all; a deterministic
+four-way decision is a better shape and is reusable on its own.</li>
+<li>Second idea: <strong>a conflicting candidate becomes a row, not a
+merge and not a drop.</strong> The <code>CONFLICT</code> branch writes
+the new memory with <code>status: PENDING_CONFIRMATION</code>, keeping
+both values and deferring the judgement, which is the right instinct.
+And the schema puts the whole vocabulary in the database —
+<code>CHECK(status IN (...))</code>, range checks on importance 1–10 and
+confidence 0–1 — so no migration can introduce a state the code has
+never seen.</li>
+<li>Biggest risk: <strong>the epistemic vocabulary is mostly not
+wired.</strong> Of five statuses, <code>ARCHIVED</code> is the only one
+both written and read; <code>PENDING_CONFIRMATION</code> is written and
+never consulted, <code>OBSOLETE</code> is consulted and never written,
+<code>CONTRADICTED</code> is neither, <code>USER_CONFIRMED</code> has no
+writer, and <code>supersedes_id</code> has a column, a foreign key and
+three interface fields with nothing that assigns it. So a memory kept
+<em>because</em> it contradicted another is retrieved beside it at a
+two-point penalty on a scale where importance alone is worth twenty —
+and nothing can ever confirm it, because the source type that would is
+never written.</li>
+<li>Maturity impression: ~15,900 lines of TypeScript, 24 commits, seven
+packages, 204 tests, local Ollama, and a README that says it is not
+production-ready. No capability mark. The single negative retrieval test
+asserts <code>results.every(m =&gt; m.status !== ARCHIVED)</code>
+against a database seeded with one archived row and nothing else, so it
+passes on an empty result — the vacuity this atlas keeps naming, with
+its own positive control sitting two tests above it in the same
+file.</li>
+<li>Study when: you are building an ingest path and want the shape of a
+cheap, testable, model-free admission decision — or you want a worked
+example of how far a schema can describe a system the code has not
+caught up with.</li>
+<li>Do not copy when: you need the read path. Substring matching over a
+full table scan, no score floor, an entity branch that suppresses the
+semantic store entirely when it hits, and a correction that merges in
+place rather than linking to what it replaced.</li>
 </ul>
 <h3 id="a-mem"><a href="../systems/a-mem/"><code>a-mem</code></a></h3>
 <ul>

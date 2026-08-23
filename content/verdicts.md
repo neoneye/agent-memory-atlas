@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 325 reports.**
+**This page covers all 327 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -435,6 +435,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, ~13,900 lines of Python at version 1.1.0, 252 tests in public CI, two papers with DOIs and PDFs in-tree, a self-verification module that monkeypatches `socket.connect` to prove the write path is offline, and boundary validation at the record type — NaN embeddings, unpaired surrogates, NUL bytes, whitespace-only content — each rule carrying its reason. Five capability marks; `trust_state` is the one that took deciding, awarded because the tiers withhold rather than reorder.
 - Study when: you want per-user memory that runs where it serves, you need *what was true in March* rather than *what do we know now*, or you are building anything whose audit story is a log — the reproducibility argument here is the most carefully stated in the corpus, exceptions enumerated.
 - Do not copy when: the scope boundary has to be enforced rather than remembered, durable deletion has to survive your own audit log, or a single scope will grow past what an exact cosine scan per query can carry.
+
+### [`ai-agent-automation`](../systems/ai-agent-automation/)
+
+- Best idea: **the row records which provider and model produced its vector.** `embeddingProvider` and `embeddingModel` sit beside the embedding, which is the cheap defence against a config change re-pointing the embedder and every later comparison silently meaning nothing. Most stores in this corpus omit it.
+- Second idea: **ownership is resolved on every path of the management API**, and the no-argument case is a scoped fallback rather than a wildcard — `listMemories` with no agent named returns `agentId: {$in: ownedAgentIds}`. That default is where most implementations leak.
+- Biggest risk: **`minScore` is a parameter with no consumer.** `retrieveMemory(agent, queryText, topK = 5, minScore = 0.45)` scores, sorts and slices, and the identifier appears on exactly one line of the backend — the signature. A caller passes `0.45` explicitly, so the intent is documented at the call site and defeated in the callee, and the fifth-best row under a five-hundred-row cap reaches the prompt at whatever cosine it scored. Beside it: a retention pass that counts every memory type and deletes only conversations, an embedding paid for before the guard that discards the input, and a `console.log` of every retrieved memory's content preview in a product whose first claim is that data stays local.
+- Maturity impression: Apache 2.0, 517 commits, release v0.11.0, a full workflow engine with typed handlers — and a memory layer of one model, a 94-line service and a 208-line controller. One mark. Twenty test files, none covering memory, which is consistent with how three defects survived: each is invisible to anything that does not read the function.
+- Study when: you want a compact worked example of wiring a per-agent vector memory into workflow handlers, with the ownership checks done properly.
+- Do not copy when: you need the recall to mean anything — apply the floor first.
+
+### [`arcon`](../systems/arcon/)
+
+- Best idea: **a four-way write decision computed without a model.** `memory-review.ts` classifies every extracted candidate `CREATE`, `UPDATE`, `IGNORE` or `CONFLICT` from stopword-stripped content against a preference-root vocabulary, so "user likes tea" and "user dislikes tea" are recognised as one subject with opposed values. Most stores decide whether to write with a similarity number or not at all; a deterministic four-way decision is a better shape and is reusable on its own.
+- Second idea: **a conflicting candidate becomes a row, not a merge and not a drop.** The `CONFLICT` branch writes the new memory with `status: PENDING_CONFIRMATION`, keeping both values and deferring the judgement, which is the right instinct. And the schema puts the whole vocabulary in the database — `CHECK(status IN (...))`, range checks on importance 1–10 and confidence 0–1 — so no migration can introduce a state the code has never seen.
+- Biggest risk: **the epistemic vocabulary is mostly not wired.** Of five statuses, `ARCHIVED` is the only one both written and read; `PENDING_CONFIRMATION` is written and never consulted, `OBSOLETE` is consulted and never written, `CONTRADICTED` is neither, `USER_CONFIRMED` has no writer, and `supersedes_id` has a column, a foreign key and three interface fields with nothing that assigns it. So a memory kept *because* it contradicted another is retrieved beside it at a two-point penalty on a scale where importance alone is worth twenty — and nothing can ever confirm it, because the source type that would is never written.
+- Maturity impression: ~15,900 lines of TypeScript, 24 commits, seven packages, 204 tests, local Ollama, and a README that says it is not production-ready. No capability mark. The single negative retrieval test asserts `results.every(m => m.status !== ARCHIVED)` against a database seeded with one archived row and nothing else, so it passes on an empty result — the vacuity this atlas keeps naming, with its own positive control sitting two tests above it in the same file.
+- Study when: you are building an ingest path and want the shape of a cheap, testable, model-free admission decision — or you want a worked example of how far a schema can describe a system the code has not caught up with.
+- Do not copy when: you need the read path. Substring matching over a full table scan, no score floor, an entity branch that suppresses the semantic store entirely when it hits, and a correction that merges in place rather than linking to what it replaced.
 
 ### [`a-mem`](../systems/a-mem/)
 - Best idea: small linked notes whose organization can be reconsidered when new memory arrives.

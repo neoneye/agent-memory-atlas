@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first workflow platform
+whose agents carry a per-agent vector memory — retrieved by a function
+whose similarity floor is a parameter the body never reads, and capped
+by a retention pass that counts one set of rows and deletes from
+another.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AI Agent
+Automation — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first workflow
+platform whose agents carry a per-agent vector memory — retrieved by a
+function whose similarity floor is a parameter the body never reads, and
+capped by a retention pass that counts one set of rows and deletes from
+another.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Agent
+Automation — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first workflow
+platform whose agents carry a per-agent vector memory — retrieved by a
+function whose similarity floor is a parameter the body never reads, and
+capped by a retention pass that counts one set of rows and deletes from
+another.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AI Agent Automation — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AI Agent Automation",
+      "description": "A local-first workflow platform whose agents carry a per-agent vector memory \u2014 retrieved by a function whose similarity floor is a parameter the body never reads, and capped by a retention pass that counts one set of rows and deletes from another.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A threshold with no consumer</p>
+          <h1>AI Agent Automation</h1>
+          <p class="document-deck">A local-first workflow platform whose
+agents carry a per-agent vector memory — retrieved by a function whose
+similarity floor is a parameter the body never reads, and capped by a
+retention pass that counts one set of rows and deletes from another.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vmDeshpande/ai-agent-automation">
+              <span>Source</span>
+              <strong>vmDeshpande/ai-agent-automation</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vmDeshpande/ai-agent-automation/commit/984893ca0645b885717157eb8815c4caaa648bee" title="984893ca0645b885717157eb8815c4caaa648bee">
+              <span>Analyzed revision</span>
+              <code>984893ca…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-23</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AI Agent Automation is a local-first workflow platform — a
+Node/Express backend with a MongoDB store, a React frontend, Docker
+deployment, and a workflow engine whose handlers cover LLM calls, HTTP,
+browser automation, email, files and MCP. Apache 2.0, 517 commits since
+28 December 2025, at release v0.11.0.</p>
+<p>The memory surface inside it is small and self-contained: one
+Mongoose model, a 94-line service, a 208-line management controller and
+four routes. Two workflow handlers use it — <code>llm.handler.js</code>
+and <code>agentCall.handler.js</code> both retrieve before the model
+call and store after it — so an agent accumulates conversational memory
+across workflow runs and recalls it by embedding similarity. That is
+agent memory on this atlas's terms, and it earns
+<code>scope_enforced</code> on a clean <code>agentId</code>
+predicate.</p>
+<p><strong>Three findings, and the first is the kind this atlas exists
+to catch.</strong></p>
+<p><code>retrieveMemory(agent, queryText, topK = 5, minScore = 0.45)</code>
+declares a similarity floor. The body scores, sorts and slices, and
+<strong>never reads <code>minScore</code></strong>. A grep of the whole
+backend finds the identifier on exactly one line — the signature.
+Meanwhile <code>agent.controller.js:134</code> calls
+<code>retrieveMemory(agent, prompt, 5, 0.45)</code>, passing the floor
+explicitly. So a caller believes it is filtering by relevance, and the
+fifth-best match in a five-hundred-row cap reaches the prompt at
+whatever cosine it happened to score.</p>
+<p><strong>The retention pass counts one set and deletes from
+another.</strong> It calls <code>countDocuments({agentId})</code> across
+every memory type, computes <code>excess = count - 500</code>, and then
+deletes <code>excess</code> of the oldest rows <em>restricted to</em>
+<code>metadata.type: "conversation"</code>. Both directions are wrong:
+if non-conversation memories exist the cap deletes more conversation
+history than the overflow justifies, and if fewer conversation rows
+exist than the excess it silently under-deletes and the cap never
+holds.</p>
+<p><strong>Every retrieval prints its results.</strong>
+<code>retrieveMemory</code> ends with a <code>console.log</code> of each
+hit's score and a sixty-character content preview — in a platform whose
+README leads with local-first privacy and ships a
+<code>docs/privacy.md</code>.</p>
+<p><strong>Also worth naming, in the other direction:</strong> the row
+stores <code>embeddingProvider</code> and <code>embeddingModel</code>
+beside the vector. That is a small field most stores in this corpus
+omit, and it is the one that stops a store from comparing a vector made
+by <code>ollama</code> against one made by <code>openai</code> as though
+the numbers meant the same thing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>workflow run ──► llm.handler / agentCall.handler
+                        │
+        retrieveMemory(agent, prompt, topK)
+                        │
+        find({agentId, type: &quot;conversation&quot;})   ← every row for this agent
+                        │
+        cosine in JS ──► sort ──► slice(topK)   ← no floor, minScore unread
+                        │
+                   into the prompt
+                        │
+                   model call
+                        │
+        storeMemory(agent, content, metadata)
+             ├── embed FIRST
+             ├── then drop if content.length &lt; 20   ← paid for, discarded
+             ├── insert
+             └── retention: count ALL types, delete oldest &quot;conversation&quot;</code></pre>
+<p>The memory is per agent and per type, and the type is where the
+design goes sideways: it is written with a default of
+<code>conversation</code>, both read paths filter to
+<code>conversation</code>, and the retention counter ignores the filter.
+A memory stored under any other type would be durable, unreachable and
+still counted against the cap.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two workflow handlers bracket their model call with recall and store, and the recall function declares a similarity floor its body never reads — so the caller that passes 0.45 gets every top-k hit regardless of score</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: two workflow handlers bracket their model call with recall and store, and the recall function declares a similarity floor its body never reads — so the caller that passes 0.45 gets every top-k hit regardless of score
+    RUN[&quot;workflow run&quot;] --&gt; H[&quot;llm.handler&lt;br/&gt;agentCall.handler&quot;]
+    H --&gt; RET[&quot;retrieveMemory(agent, prompt, topK, minScore)&quot;]
+    DB[(&quot;AgentMemory&lt;br/&gt;MongoDB&quot;)] --&gt; RET
+    RET --&gt; SCAN[&quot;find all rows for agentId&lt;br/&gt;type = conversation&quot;]
+    SCAN --&gt; COS[&quot;cosineSimilarity in JS&lt;br/&gt;per row&quot;]
+    COS --&gt; SORT[&quot;sort desc, slice(topK)&quot;]
+    SORT -.-&gt;|&quot;minScore never read&quot;| FLOOR{{&quot;no floor applied&quot;}}
+    SORT --&gt; PROMPT[&quot;memories into the prompt&quot;]
+    PROMPT --&gt; LLM[&quot;model call&quot;]
+    LLM --&gt; STORE[&quot;storeMemory&quot;]
+    STORE --&gt; EMB[&quot;runEmbedding FIRST&quot;]
+    EMB --&gt; GUARD{&quot;content.length &lt; 20?&quot;}
+    GUARD --&gt;|&quot;yes&quot;| DROP[&quot;discard&lt;br/&gt;embedding already paid for&quot;]
+    GUARD --&gt;|&quot;no&quot;| INS[&quot;insert row&lt;br/&gt;+ provider + model&quot;]
+    INS --&gt; DB
+    INS --&gt; RETN[&quot;retention: countDocuments(all types)&lt;br/&gt;delete oldest type=conversation&quot;]
+    RETN --&gt; DB
+
+    UI[&quot;management API&quot;] --&gt; OWN[&quot;findOwnedAgent(agentId, userId)&quot;]
+    OWN --&gt; DB</code></pre></details></figure>
+<p><strong>Runtime.</strong> An Express backend under
+<code>backend/src</code> with controllers, routes, models, services and
+an <code>agents/</code> tree holding the workflow runner and its
+handlers; a React frontend; Docker and infra directories; a Postman
+collection; husky hooks that the screen correctly notes are inert until
+installed.</p>
+<p><strong>Persistence.</strong> MongoDB through Mongoose.
+<code>AgentMemorySchema</code> has <code>agentId</code> required and
+indexed, <code>content</code> and <code>embedding</code> required, a
+<code>metadata</code> subdocument with <code>taskId</code>,
+<code>workflowId</code> and <code>type</code>, an
+<code>embeddingProvider</code> enumerated over
+<code>ollama | openai | gemini | huggingface | groq</code>, an
+<code>embeddingModel</code>, and Mongoose timestamps. <strong>There is
+no vector index</strong> — similarity is computed in application code
+over every row the query returns, which the 500-row cap keeps tractable
+and which is a reasonable trade at that size.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong><code>cosineSimilarity(vecA, vecB)</code></strong> returns
+<code>0</code> when the lengths differ rather than throwing. That is a
+defensible guard against a stored vector from a different model — and it
+means such a row scores zero and sorts last rather than surfacing an
+error, so a whole population of mismatched embeddings would degrade
+recall silently. The <code>embeddingProvider</code> and
+<code>embeddingModel</code> columns are what would let something detect
+that; nothing reads them.</p>
+<p><strong><code>storeMemory(agent, content, metadata)</code></strong>
+calls <code>runEmbedding</code> on line one and checks
+<code>content.length &lt; 20</code> on line three. The guard is real and
+the ordering wastes the call it was meant to avoid — a one-line
+move.</p>
+<p><strong><code>retrieveMemory</code></strong> is quoted in full in
+section 1. Beyond the unread floor, note that it loads with
+<code>.lean()</code> and maps every document into a new object with a
+<code>score</code> field, so the working set is the agent's entire
+conversation memory in memory per call.</p>
+<p><strong>The management API is the careful part.</strong>
+<code>memory.controller.js</code> derives the user from
+<code>req.user</code>, and <code>findOwnedAgent(agentId, userId)</code>
+validates the object id and resolves the agent against that owner.
+<code>listMemories</code> uses it when an agent is named and falls back
+to <code>agentId: {$in: ownedAgentIds}</code> when one is not;
+<code>deleteMemory</code> looks the memory up, then re-resolves
+ownership of its agent before deleting; <code>clearAgentMemory</code>
+resolves ownership first. Four routes, all behind <code>auth</code>.
+Every path checks; none of them is the one that forgot.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One document type, no status, no confidence, no supersession, no soft
+delete. <code>createdAt</code> and <code>updatedAt</code> from Mongoose
+timestamps, and nothing that records when a fact held as distinct from
+when it was written.</p>
+<p>The interesting field is the pair <code>embeddingProvider</code> /
+<code>embeddingModel</code>. Storing the identity of the model that
+produced a vector is the cheap defence against the failure where a
+config change re-points the embedder and every subsequent comparison is
+meaningless. This schema records it. Nothing checks it — the guard that
+would use it is the length comparison in <code>cosineSimilarity</code>,
+which catches only a dimension change and not a same-dimension model
+swap.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Full scan of the agent's conversation memories, cosine in JavaScript,
+sort, take <em>k</em>. Callers pass
+<code>config.memoryTopK || 5</code>.</p>
+<p><strong>The floor is the finding.</strong> With no threshold, the
+number of memories injected is exactly <code>min(topK, available)</code>
+regardless of relevance: on an agent with three memories and an
+unrelated prompt, all three go into the prompt. The atlas records the
+same shape elsewhere as a <em>dead threshold</em>; what makes this
+instance sharp is that a caller supplies the value, so the intent is
+documented in the call and defeated in the callee.</p>
+<p><strong>The <code>type</code> filter is the second.</strong> Both
+<code>retrieveMemory</code> and the retention delete filter to
+<code>metadata.type: "conversation"</code>, while the schema's default
+is the only thing that puts that value there. Any caller that sets
+another type writes a row that is stored, counted, never retrieved and
+never pruned.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two handlers write after their model call, and the controller writes
+a third time. Retention runs inline on every insert — a
+<code>countDocuments</code> and, on overflow, a <code>find</code> plus a
+<code>deleteMany</code>, on the request path.</p>
+<p><strong>The retention bug in full.</strong> <code>count</code> is
+over <code>{agentId}</code>. <code>excess</code> is
+<code>count - 500</code>. The <code>find</code> that selects victims
+adds <code>"metadata.type": "conversation"</code> and
+<code>.limit(excess)</code>. So the numerator and the denominator
+disagree. With only conversation rows the pass behaves correctly, which
+is why it works today: nothing in the tree writes another type. It is a
+bug waiting on a feature, and the feature is one metadata field
+away.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is an option on two node types rather than a service of its
+own: <code>llm.handler.js</code> retrieves with
+<code>config.memoryTopK || 5</code> before its call and stores after,
+and <code>agentCall.handler.js</code> does the same around a nested
+agent invocation. There is no memory node, no explicit remember tool,
+and no way for a workflow author to inspect what will be injected before
+a run — the management UI shows what was stored afterwards.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Ownership is enforced consistently on the management
+surface</strong> and the agent key is enforced on recall, which together
+are the mark.</p>
+<p><strong>No audit, no provenance, no trust state.</strong> A memory is
+content and a vector; it cannot be marked wrong, superseded, or held
+back, and the only removal is a delete.</p>
+<p><strong>Retrieval logs content to stdout.</strong> The
+<code>console.log</code> in <code>retrieveMemory</code> prints a score
+and a sixty-character preview of every returned memory on every recall.
+In a deployment where the backend's stdout goes to a container log
+shipper, memory content leaves the machine that the product's
+positioning says it stays on. It is three lines to remove and it is the
+first thing to remove.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twenty test files under <code>backend/src/tests</code>, covering
+handlers — browser, condition, delay, document, email, file, HTTP, MCP,
+tool, switch, resume, run partial — plus the workflow API, versioning,
+the strategy selector and a retrieval manager. I did not run them.</p>
+<p><strong>None of them covers memory.</strong> The word appears in one
+test title,
+<code>'should simulate an LLM execution without memory'</code>, which
+asserts the path that skips it. So the unread <code>minScore</code>, the
+retention arithmetic and the type filter are all untested, which is
+consistent with how they got this way — each is invisible to anything
+that does not read the function.</p>
+<p>No benchmark and no retrieval-quality measurement.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store the embedding provider and model beside the
+vector.</strong> Two string columns, and they are the difference between
+detecting a silent embedder swap and comparing numbers from two
+different models forever.</li>
+<li><strong>Resolve ownership before every read and every delete, and
+make the no-argument case a scoped fallback.</strong>
+<code>listMemories</code> without an agent id returns
+<code>{$in: ownedAgentIds}</code> rather than everything — that default
+is where most implementations leak.</li>
+<li><strong>Return zero from your similarity function on a dimension
+mismatch rather than throwing</strong> — but pair it with something that
+notices, or a bad population is invisible.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not declare a threshold you do not apply.</strong>
+<code>minScore = 0.45</code> sits in the signature, a caller passes it,
+and the body never reads it. A parameter is a claim; an unread one is a
+false claim that survives review because the call site looks right.</li>
+<li><strong>Do not count one population and delete from
+another.</strong> The retention pass counts every memory type and prunes
+only conversations; it is correct only because nothing writes another
+type yet.</li>
+<li><strong>Do not pay for the embedding before the guard that discards
+the input.</strong></li>
+<li><strong>Do not log memory content.</strong> Especially not in a
+product whose first claim is that data stays local.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the workflow engine on its own terms; the memory layer is a
+small feature inside it and is best read as a worked example of how a
+per-agent vector store gets wired into a handler. The ownership checks
+are worth copying. The recall is worth copying only after the floor is
+applied.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was <code>minScore</code> ever applied?</strong> The
+parameter, the default and a call site passing <code>0.45</code> all
+exist. Whether it was removed or never written is not visible from this
+commit, and either way one <code>filter</code> restores the intent.</li>
+<li><strong>What other memory types are planned?</strong>
+<code>metadata.type</code> defaults to <code>conversation</code> and
+both read paths and the retention delete assume it. The field is the
+seam the retention arithmetic breaks along.</li>
+<li><strong>Does the 500-row cap have a basis?</strong> It is a constant
+inside the service with no configuration and no measurement behind it,
+and it is also what keeps the full-scan cosine affordable.</li>
+<li><strong>Would a mismatch ever be noticed?</strong>
+<code>embeddingProvider</code> and <code>embeddingModel</code> are
+recorded and unread; a same-dimension model change would score every old
+memory as noise and nothing would report it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Store:</strong>
+<code>backend/src/models/agentMemory.model.js</code></li>
+<li><strong>Service:</strong>
+<code>backend/src/services/memoryService.js</code>
+(<code>cosineSimilarity</code>, <code>storeMemory</code> with the
+retention pass, <code>retrieveMemory</code> with the unread
+<code>minScore</code>)</li>
+<li><strong>Management API:</strong>
+<code>backend/src/controllers/memory.controller.js</code>
+(<code>findOwnedAgent</code>, <code>listMemories</code>,
+<code>listAgents</code>, <code>deleteMemory</code>,
+<code>clearAgentMemory</code>),
+<code>backend/src/routes/memory.routes.js</code></li>
+<li><strong>Callers:</strong>
+<code>backend/src/agents/handlers/llm.handler.js</code>,
+<code>backend/src/agents/handlers/agentCall.handler.js</code>,
+<code>backend/src/controllers/agent.controller.js</code> (the call that
+passes <code>0.45</code>)</li>
+<li><strong>Embedding:</strong>
+<code>backend/src/agents/embeddingAdapter.js</code></li>
+<li><strong>Tests:</strong> <code>backend/src/tests/</code> — twenty
+files, none covering memory</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-23</strong> — <a
+href="https://github.com/vmDeshpande/ai-agent-automation/commit/984893ca0645b885717157eb8815c4caaa648bee"><code class="commit-id" title="984893ca0645b885717157eb8815c4caaa648bee">984893ca…</code></a>
+— first reading, at release v0.11.0, 517 commits since 28 December 2025,
+Apache 2.0. Screened before anything was read: no auto-run surface, one
+build-time execution point, three unpinned surfaces, two husky hook
+payloads that are inert until something installs them, and an
+<code>AGENTS.md</code> addressed to a reading agent; nothing was
+installed and no test was run. One mark. <code>scope_enforced</code> is
+earned on <code>agentId</code> as a predicate on the recall query and on
+<code>findOwnedAgent</code> guarding every path of the management API.
+The three defects recorded here — a <code>minScore</code> parameter no
+code reads while a caller passes <code>0.45</code> to it, a retention
+pass that counts every memory type and deletes only conversations, and a
+<code>console.log</code> of retrieved content — are each invisible to
+the test suite, which has no memory coverage at all.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

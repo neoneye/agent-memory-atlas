@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first companion
+architecture whose memory pipeline classifies every candidate CREATE,
+UPDATE, IGNORE or CONFLICT with no model call — and whose five-value
+status vocabulary has exactly one value that is both written and read.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Arcon — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first companion
+architecture whose memory pipeline classifies every candidate CREATE,
+UPDATE, IGNORE or CONFLICT with no model call — and whose five-value
+status vocabulary has exactly one value that is both written and read.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Arcon — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first companion
+architecture whose memory pipeline classifies every candidate CREATE,
+UPDATE, IGNORE or CONFLICT with no model call — and whose five-value
+status vocabulary has exactly one value that is both written and read.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Arcon — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Arcon",
+      "description": "A local-first companion architecture whose memory pipeline classifies every candidate CREATE, UPDATE, IGNORE or CONFLICT with no model call \u2014 and whose five-value status vocabulary has exactly one value that is both written and read.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Five states, one wired</p>
+          <h1>Arcon</h1>
+          <p class="document-deck">A local-first companion architecture
+whose memory pipeline classifies every candidate CREATE, UPDATE, IGNORE
+or CONFLICT with no model call — and whose five-value status vocabulary
+has exactly one value that is both written and read.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vmDeshpande/Arcon">
+              <span>Source</span>
+              <strong>vmDeshpande/Arcon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vmDeshpande/Arcon/commit/7bbbbc54728fe6a6a733f0feee47591104136023" title="7bbbbc54728fe6a6a733f0feee47591104136023">
+              <span>Analyzed revision</span>
+              <code>7bbbbc54…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-23</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Arcon is a local-first "cognitive architecture for a persistent
+digital companion" — about 15,900 lines of TypeScript across seven
+packages, 24 commits since 29 May 2026, running against local Ollama
+with a SQLite store. Its pitch is that memory alone is not enough:
+identity, mood, emotion, relationships and interests should shape what
+the companion says before it says it, and each has its own package.</p>
+<p>The README states its own status — <em>"not production-ready and
+breaking changes should be expected"</em> — and this report reads it on
+those terms. <strong>The licence badge in the README points at a
+<code>LICENSE</code> file that is not in the tree</strong>, which is
+worth stating because a reader cannot tell from this repository what
+they may do with it.</p>
+<p><strong>The write path is the good part.</strong> Extraction produces
+candidates, and <code>memory-review.ts</code> classifies each one as
+<code>CREATE</code>, <code>UPDATE</code>, <code>IGNORE</code> or
+<code>CONFLICT</code> before anything is stored — deterministically,
+with no model call, on stopword-stripped content and a preference-root
+vocabulary. Most stores in this corpus decide <em>whether to write</em>
+with a similarity number or not at all; a four-way decision computed
+without a model is a better shape, and the <code>CONFLICT</code> branch
+is better still: it keeps the conflicting candidate as a row with
+<code>status: PENDING_CONFIRMATION</code> rather than dropping it or
+overwriting what it contradicts.</p>
+<p><strong>No capability marks, and the reason is one finding that
+recurs in four places.</strong> The schema declares a rich epistemic
+vocabulary and the code operates almost none of it:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Declared</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACTIVE</code></td>
+<td>pipeline, default</td>
+<td>ranking (a <code>+2</code> bonus)</td>
+</tr>
+<tr>
+<td><code>ARCHIVED</code></td>
+<td><code>archiveMemory</code></td>
+<td>retrieval filter</td>
+</tr>
+<tr>
+<td><code>PENDING_CONFIRMATION</code></td>
+<td>pipeline, on <code>CONFLICT</code></td>
+<td><strong>nothing</strong></td>
+</tr>
+<tr>
+<td><code>OBSOLETE</code></td>
+<td><strong>nothing</strong></td>
+<td>retrieval filter</td>
+</tr>
+<tr>
+<td><code>CONTRADICTED</code></td>
+<td><strong>nothing</strong></td>
+<td><strong>nothing</strong></td>
+</tr>
+<tr>
+<td><code>USER_CONFIRMED</code> (source type)</td>
+<td><strong>nothing</strong></td>
+<td><strong>nothing</strong></td>
+</tr>
+<tr>
+<td><code>supersedes_id</code></td>
+<td><strong>nothing</strong></td>
+<td><strong>nothing</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So a memory stored <em>because it contradicted another one</em> is
+retrievable immediately, alongside the one it contradicts; the state
+that would withhold it is never written; and the source type that would
+resolve it has no writer, which means a
+<code>PENDING_CONFIRMATION</code> row has no path out of that state.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>turn ──► extractor (rules or LLM) ──► candidates
+                                          │
+                              memory-review.ts  (no model)
+                                          │
+        ┌─────────────┬───────────────────┼──────────────┐
+     CREATE        UPDATE               IGNORE        CONFLICT
+        │             │                    │              │
+     new row     merge into            counter++      new row,
+     ACTIVE      target row            (nothing        PENDING_
+                                        durable)      CONFIRMATION
+                                                           │
+                                                    still retrievable,
+                                                     −2 on the score
+
+query ──► entity lookup ──► if any hit, return ONLY those
+                └── else ──► every non-ARCHIVED, non-OBSOLETE row
+                             scored: keywords×5 + importance×2
+                                   + confidence×10 + evidence + recency
+                             sorted, sliced, no floor</code></pre>
+<p>Two things follow from that shape. <strong>The pipeline's most
+careful decision has the least consequence</strong> —
+<code>CONFLICT</code> produces a row that is two points worse than an
+ordinary one on a scale where importance alone contributes up to twenty.
+And <strong>a refusal leaves no trace</strong>: <code>IGNORE</code>
+increments a counter in the run's result object and nothing durable
+records that a candidate was seen and declined, so the same input on the
+next turn is judged from scratch.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write path classifies every candidate four ways without a model, and the read path consults two of the five statuses that classification can produce — so a memory kept because it conflicted is retrieved beside the one it contradicts</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the write path classifies every candidate four ways without a model, and the read path consults two of the five statuses that classification can produce — so a memory kept because it conflicted is retrieved beside the one it contradicts
+    TURN[&quot;conversation turn&quot;] --&gt; EXT[&quot;extractor&lt;br/&gt;rules.ts or LLM&quot;]
+    EXT --&gt; CAND[&quot;MemoryCandidate&quot;]
+    CAND --&gt; REVIEW{&quot;memory-review.ts&lt;br/&gt;no model call&quot;}
+
+    REVIEW --&gt;|CREATE| NEW[&quot;row, status ACTIVE&quot;]
+    REVIEW --&gt;|UPDATE| UPD[&quot;merge into target row&quot;]
+    REVIEW --&gt;|IGNORE| CNT[&quot;result.ignored += 1&lt;br/&gt;nothing persisted&quot;]
+    REVIEW --&gt;|CONFLICT| PEND[&quot;row, status&lt;br/&gt;PENDING_CONFIRMATION&quot;]
+
+    NEW --&gt; DB[(&quot;personal_memories&lt;br/&gt;SQLite, WAL&quot;)]
+    UPD --&gt; DB
+    PEND --&gt; DB
+
+    Q[&quot;query&quot;] --&gt; ENT{&quot;entity match?&quot;}
+    ENT --&gt;|yes| ONLY[&quot;return entity memories&lt;br/&gt;ONLY&quot;]
+    ENT --&gt;|no| FILT[&quot;exclude ARCHIVED&lt;br/&gt;exclude OBSOLETE&quot;]
+    DB --&gt; FILT
+    FILT --&gt; SCORE[&quot;keywords×5 + importance×2&lt;br/&gt;+ confidence×10 + evidence&lt;br/&gt;+ recency band + ACTIVE bonus 2&quot;]
+    SCORE --&gt; TOPN[&quot;sort, slice(limit)&lt;br/&gt;no score floor&quot;]
+    TOPN --&gt; OUT[&quot;context for the prompt&quot;]
+
+    PEND -.-&gt;|&quot;not filtered&quot;| FILT</code></pre></details></figure>
+<p><strong>Runtime.</strong> A pnpm-style workspace:
+<code>packages/memory</code>, <code>cognition</code>,
+<code>personality</code>, <code>ai</code>, <code>voice</code>,
+<code>shared</code>, <code>logger</code>, with <code>apps/chat</code>,
+<code>apps/desktop</code> and <code>apps/server</code>, plus a
+Python-side <code>services/arcon-inference</code> and a
+<code>training/</code> directory for the V1 LoRA. Models are local
+Ollama.</p>
+<p><strong>Persistence.</strong> One SQLite database opened with
+<code>better-sqlite3</code> in WAL mode. The schema is stricter than
+most in this corpus: <code>CHECK</code> constraints on the type, status
+and source-type enumerations, a range check on
+<code>importance_score</code> (1–10), another on
+<code>confidence_score</code> (0–1), a non-negative
+<code>evidence_count</code>, and a self-referencing foreign key for
+<code>supersedes_id</code>. Putting the vocabulary in the database
+rather than only in TypeScript means a migration or a hand-edit cannot
+introduce a status the code has never heard of — which is the right
+instinct, and makes the unwired half of that vocabulary visible from the
+schema alone.</p>
+<p><strong>Companion state is separate.</strong>
+<code>packages/personality</code> carries mood, emotion (with a
+bidirectional user-emotion detector), interests, experiences,
+relationship profiles and an identity builder, each with its own
+repository and tests. That is a second store of durable state about the
+relationship, and it is outside the memory schema above.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Review.</strong> <code>pipeline/memory-review.ts</code>
+returns
+<code>{decision: "CREATE" | "UPDATE" | "IGNORE" | "CONFLICT", targetMemory?}</code>.
+It works on stopword-stripped content against a
+<code>PREFERENCE_ROOT_WORDS</code> set — <code>prefer</code>,
+<code>prefers</code>, <code>like</code>, <code>likes</code>,
+<code>dislike</code>, <code>dislikes</code>, <code>favorite</code> — so
+"user likes tea" and "user dislikes tea" are recognised as the same
+subject with opposed values rather than as two unrelated facts. That
+recognition is what produces <code>CONFLICT</code>, and it is done in
+plain code.</p>
+<p><strong>The pipeline.</strong> <code>memory-pipeline.ts</code>
+switches on the decision. <code>CREATE</code> writes a row;
+<code>UPDATE</code> merges into the target and falls back to
+<code>ignored</code> when the merge returns nothing;
+<code>CONFLICT</code> writes a new row with
+<code>status: MemoryStatus.PENDING_CONFIRMATION</code>;
+<code>IGNORE</code> increments a counter.</p>
+<p><strong>Retrieval.</strong> <code>memory-retriever.ts</code> tries
+entity memories first and <strong>returns them exclusively if there are
+any</strong> —
+<code>if (entityMemories.length &gt; 0) return entityMemories;</code> —
+so a query that resolves to a known entity never sees the semantic
+store. Otherwise it lists every memory, filters two statuses, scores,
+sorts and slices.</p>
+<p><strong>Ranking.</strong> <code>memory-ranking.ts</code> is a
+weighted sum:
+<code>keywordMatches × 5 + importance × 2 + confidence × 10 + min(evidenceCount, 10)</code>
+plus a recency band (10 within a week, 7 within a month, 4 within a
+quarter, 1 otherwise) plus <code>+2</code> when the status is
+<code>ACTIVE</code>. Matching is <code>content.includes(word)</code>
+over lowercased text — substring, not token — so "art" matches
+"started".</p>
+<p>The coefficients are worth reading against each other. Importance
+contributes up to 20 and confidence up to 10, while a keyword match is
+5. <strong>A maximally important memory with no keyword overlap outranks
+a memory that matches two words of the query</strong>, and since there
+is no score floor, the top <em>N</em> are returned whatever they scored.
+Query-independent priors dominating relevance is a pattern this atlas
+records elsewhere; here it is visible in four constants.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Six types — <code>FACT</code>, <code>PREFERENCE</code>,
+<code>PROJECT</code>, <code>GOAL</code>, <code>RELATIONSHIP</code>,
+<code>CONSTRAINT</code> — five statuses, four source types, and per-row
+<code>importance_score</code>, <code>confidence_score</code>,
+<code>tags</code>, <code>evidence_count</code>,
+<code>last_used_at</code>, <code>subject</code>, and
+<code>supersedes_id</code>.</p>
+<p><strong>The table in section 1 is the finding.</strong> Restated as a
+rule: this schema describes a system that can hold a belief, doubt it,
+mark it superseded, and have a person confirm it — and the code
+implements one archive operation and one filter. That is not a criticism
+of the design; it is a statement about which parts of it currently run,
+and the distance between the two is the thing a reader evaluating this
+repository needs.</p>
+<p><strong><code>supersedes_id</code> deserves its own line</strong>
+because it is the most valuable of the unwired fields. The column
+exists, the foreign key exists, and three TypeScript interfaces carry
+<code>supersedesId</code>. Nothing assigns it. A correction therefore
+either merges into the old row through <code>UPDATE</code>, losing the
+prior value, or lands as a second row with no link to the first.</p>
+<p><strong>No scope key of any kind.</strong> One database, one
+companion, no user, agent or tenant column — coherent for a
+single-person companion, and the reason the scope mark is withheld
+rather than a defect.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Substring keyword matching over the whole memory list, in JavaScript,
+per query. No embeddings in the memory package: <code>packages/ai</code>
+has an embedding path for other purposes, and
+<code>calculateMemoryScore</code> does not use it.</p>
+<p><strong>The entity short-circuit is the mechanic most likely to
+surprise.</strong> If <code>resolveTargetEntity</code> finds an entity
+in the query and that entity has memories, those are the entire result.
+A question that names a person and also asks about a project returns
+only what is filed under the person. The two stores never merge, and
+nothing reports that a fallback did not run.</p>
+<p><strong>Two statuses are filtered and three are not.</strong>
+<code>PENDING_CONFIRMATION</code> — the status the pipeline assigns to a
+candidate it identified as contradicting something already stored — is
+not among them, so the conflicting pair is retrieved together and the
+model sees both. The only consequence of the status is the missing
+<code>+2</code> bonus.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction has a rule path (<code>extractor/rules.ts</code>, 489
+lines) and an LLM path with its own prompt, JSON parser and client; the
+semantic layer adds a normalizer, a validator, a quality scorer and a
+<code>to-memory-candidate</code> adapter. Everything then passes through
+review before the store is touched, which is the right ordering and is
+not universal in this corpus.</p>
+<p><strong>Nothing durable records a refusal.</strong>
+<code>IGNORE</code> is <code>result.ignored += 1</code> on an in-memory
+result object. So the store holds what it admitted and nothing about
+what it declined — the shape this atlas finds most often — and here it
+has a specific cost: the review is deterministic, so the same candidate
+will be re-derived, re-reviewed and re-ignored on every turn that
+produces it, at whatever the extractor cost.</p>
+<p><strong>Nothing can leave <code>PENDING_CONFIRMATION</code>.</strong>
+The resolution would be a person confirming the memory, which the schema
+anticipates with <code>MemorySourceType.USER_CONFIRMED</code>. That
+value appears in the CHECK constraint and in one repository test, and in
+no production code. There is no confirm command, no review surface, and
+no prompt that asks. The pending state is a terminal state.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three apps — a chat CLI, a desktop shell and a server — over local
+Ollama, with a voice package (Whisper STT, Piper/Flite/SAPI TTS) and a
+separate inference service for the project's own LoRA.
+<code>packages/ai</code> assembles the prompt from the memory context,
+the identity, the mood and the relationship profile, which is the
+architecture's actual thesis: memory is one input among several to how
+the companion speaks.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No audit of mutations.</strong> No log table, no event
+record; a memory changes and the previous value is gone unless the
+change was an archive.</p>
+<p><strong>No provenance beyond the source type</strong>, and the one
+source-type value that would mean <em>a person vouched for this</em> is
+never written, so in practice the distinction that operates is
+<code>USER_EXPLICIT</code> versus <code>INFERRED</code>.</p>
+<p><strong>Confidence is a float and status is a state, which is the
+right split</strong> — and the state's effect on retrieval is two
+points. The atlas's usual complaint is that a system collapses "how
+sure" into "may this be used"; Arcon separates them correctly in the
+schema and then makes the second one almost weightless in the
+ranker.</p>
+<p><strong>Single-user, local, no network beyond Ollama.</strong> Prompt
+injection is unaddressed in the memory path: extracted content becomes a
+candidate and, if reviewed <code>CREATE</code>, a memory, with no check
+on what the text asks the reader to do.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>204 cases across 25 files, using <code>node:test</code> and
+<code>node:assert</code> — memory extractor, pipeline, ranking,
+repository, retriever, entity graph, context builder, plus the
+personality engines and the voice package. I did not run them. For a
+24-commit project this is a good ratio, and the pipeline and repository
+suites cover the decision branches.</p>
+<p><strong>The one negative retrieval test does not establish what it
+looks like it establishes, and the reason is worth spelling
+out.</strong> <code>memory-retriever.test.ts</code> opens a fresh
+database in <code>beforeEach</code>, so each case starts empty. The
+archived-memory case creates exactly one memory, archived, then
+asserts:</p>
+<pre class="ts"><code>assert(results.every((m) =&gt; m.status !== MemoryStatus.ARCHIVED));</code></pre>
+<p><code>Array.every</code> on an empty array is <code>true</code>. The
+test passes if retrieval returns the archived memory's exclusion
+<em>or</em> if retrieval returns nothing at all — and a retriever that
+had stopped working entirely would satisfy it. That is why
+<code>negative_eval</code> is withheld: the mark asks for a committed
+case asserting that particular material is absent from a result set, and
+a vacuous pass is not one.</p>
+<p>The fix is one line in the same test: create a second, non-archived
+memory matching the query, and assert it <em>is</em> in the results
+beside the <code>every</code> check. The suite already writes that shape
+elsewhere — <code>"retrieves matching memories"</code> is the positive
+control, sitting in the same file, in a different test.</p>
+<p>No benchmark, no retrieval-quality measurement, and no committed
+numbers behind the ranking coefficients.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Decide four ways at the door, without a model.</strong>
+<code>CREATE</code> / <code>UPDATE</code> / <code>IGNORE</code> /
+<code>CONFLICT</code> computed from stopword-stripped content and a
+preference-root vocabulary is cheap, reproducible and testable, and it
+is a better write path than a similarity threshold.</li>
+<li><strong>Keep the conflicting candidate as a row.</strong> Dropping
+it loses the disagreement and merging it loses one of the two values; a
+row with a status keeps both and defers the decision.</li>
+<li><strong>Put the enumerations in the database.</strong>
+<code>CHECK(status IN (...))</code> alongside range checks on the scores
+means no migration or hand-edit can introduce a value the code has never
+seen — and it makes an unwired vocabulary auditable from the
+schema.</li>
+<li><strong>Separate companion state from memory.</strong> Mood,
+emotion, interests and relationship profiles in their own packages with
+their own repositories keeps "what I know" and "how I am" from
+contaminating one table.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let the status vocabulary outrun the code that reads
+it.</strong> Five statuses, one of them both written and read, is a
+schema that describes a system nobody has built yet — and the two states
+that most need to withhold a memory are the two that do not.</li>
+<li><strong>Do not create a pending state with no way out.</strong>
+<code>PENDING_CONFIRMATION</code> with no confirm path and no review
+surface is a permanent label, and because retrieval ignores it, a
+permanent label with no effect.</li>
+<li><strong>Do not let a query-independent prior outweigh the
+query.</strong> Importance at ×2 over a 1–10 range beats two keyword
+matches at ×5, and with no score floor the top <em>N</em> are returned
+however badly they scored.</li>
+<li><strong>Do not assert <code>every</code> on a result set you did not
+force to be non-empty.</strong> The archived-memory test passes against
+a retriever that returns nothing.</li>
+<li><strong>Do not count a refusal in a variable that dies with the
+run.</strong> A deterministic reviewer that leaves no record re-does the
+same work every turn.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take Arcon's <em>write path</em> if you are building anything that
+ingests candidates from conversation: the four-way deterministic review
+is the reusable idea here and it does not need the rest of the project.
+Take the schema discipline too.</p>
+<p>Look elsewhere for a store to run today. The retrieval is substring
+matching over a full table scan with no floor, the correction path
+cannot link a new value to the one it replaces, and the epistemic states
+the design is built around are mostly not connected yet. The README says
+the project is not production-ready and this reading agrees with it for
+reasons the README does not list.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What was <code>supersedes_id</code> going to do?</strong>
+The column, the foreign key and three interface fields exist. Wiring
+<code>UPDATE</code> to write it instead of merging in place would turn
+the correction path into a lineage, and the schema is already shaped for
+it.</li>
+<li><strong>Who confirms a <code>PENDING_CONFIRMATION</code>
+memory?</strong> No command, no surface, no prompt. The likely answer is
+a review screen in <code>apps/desktop</code> that does not exist yet,
+and until it does the <code>CONFLICT</code> branch produces rows nobody
+can resolve.</li>
+<li><strong>Should the retrieval filter be a denylist or an
+allowlist?</strong> It currently excludes two named statuses, which is
+why adding a third state to the enum did not change retrieval.
+<code>status === ACTIVE</code> would have failed loudly instead.</li>
+<li><strong>Why does an entity hit suppress the semantic store
+entirely?</strong> The short-circuit returns early rather than merging
+two ranked lists, and nothing reports that the second path did not
+run.</li>
+<li><strong>Where did the ranking coefficients come from?</strong> Six
+weights and four recency bands, no measurement in the repository, and no
+harness that would produce one.</li>
+<li><strong>What licence is this?</strong> The README badge points at a
+<code>LICENSE</code> file that the tree does not contain.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Store:</strong>
+<code>packages/memory/src/personal-memory.ts</code> (schema,
+<code>MemoryStatus</code>, <code>MemorySourceType</code>,
+<code>archiveMemory</code>, <code>updateMemory</code>)</li>
+<li><strong>Write path:</strong>
+<code>packages/memory/src/pipeline/memory-review.ts</code> (the four-way
+decision), <code>pipeline/memory-pipeline.ts</code> (the switch),
+<code>extractor/rules.ts</code>, <code>extractor/llm/</code>,
+<code>semantic/</code> (normalizer, validator, quality,
+<code>to-memory-candidate</code>)</li>
+<li><strong>Read path:</strong>
+<code>retrieval/memory-retriever.ts</code> (the entity short-circuit and
+the status filter), <code>retrieval/memory-ranking.ts</code> (the
+weights), <code>retrieval/context-builder.ts</code></li>
+<li><strong>Entities:</strong> <code>entity/entity-repository.ts</code>,
+<code>entity-resolver.ts</code>, <code>entity-fact-repository.ts</code>,
+<code>entity-graph-query.ts</code>,
+<code>entity-relationship-extractor.ts</code>,
+<code>entity-memory-linker.ts</code></li>
+<li><strong>Companion state:</strong>
+<code>packages/personality/src/</code> — <code>mood/</code>,
+<code>emotion/</code>, <code>interest/</code>, <code>experience/</code>,
+<code>relationship/</code>, <code>identity/</code>,
+<code>profile/</code></li>
+<li><strong>Reasoning:</strong> <code>packages/cognition/src/</code> —
+<code>pipeline/reasoning-pipeline.ts</code>,
+<code>plugins/intent/</code>, <code>plugins/strategy/</code>,
+<code>engine/reasoning-engine.ts</code></li>
+<li><strong>Tests:</strong> <code>packages/memory/tests/</code>
+(<code>memory-retriever.test.ts</code> holds the vacuous negative),
+<code>packages/personality/tests/</code>,
+<code>packages/ai/tests/</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-23</strong> — <a
+href="https://github.com/vmDeshpande/Arcon/commit/7bbbbc54728fe6a6a733f0feee47591104136023"><code class="commit-id" title="7bbbbc54728fe6a6a733f0feee47591104136023">7bbbbc54…</code></a>
+— first reading, 24 commits since 29 May 2026, ~15,900 lines of
+TypeScript. Screened before anything was read: no auto-run surface, no
+build-time execution, ten unpinned surfaces and nine files inside the
+seven-day cooldown; nothing was installed and no test was run. No
+capability marks. <code>trust_state</code> is withheld not for absence
+but for wiring — of five CHECK-constrained statuses,
+<code>ARCHIVED</code> is the only one both written and read,
+<code>PENDING_CONFIRMATION</code> is written and never consulted,
+<code>OBSOLETE</code> is consulted and never written, and
+<code>CONTRADICTED</code> is neither; the same holds for
+<code>USER_CONFIRMED</code> and for <code>supersedes_id</code>.
+<code>negative_eval</code> is withheld because the single
+archived-memory assertion is <code>results.every(...)</code> against a
+database seeded with one archived row and nothing else, so it passes on
+an empty result. <code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code> and <code>tombstone</code> are absent rather
+than partial. The README's licence badge points at a
+<code>LICENSE</code> file the tree does not contain.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
