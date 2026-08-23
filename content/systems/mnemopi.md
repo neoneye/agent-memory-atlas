@@ -6,10 +6,14 @@ root: ../..
 page_kind: system
 source_name: "can1357/oh-my-pi"
 source_url: https://github.com/can1357/oh-my-pi
-revision: 4df68d60438423b384b2b47fb3d6835641624757
-revision_url: https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835641624757
-analyzed_at: 2026-07-30
-capabilities: "negative_eval"
+revision: b8e8c213c1ce970f0f008edfe471bf7858fd747a
+revision_url: https://github.com/can1357/oh-my-pi/commit/b8e8c213c1ce970f0f008edfe471bf7858fd747a
+analyzed_at: 2026-08-23
+capabilities: "bitemporal, scope_enforced, negative_eval"
+capability_evidence:
+  bitemporal: "the triple store | packages/mnemopi/src/core/triples.ts, packages/mnemopi/src/mcp-tools.ts:178,:667 | `triples` carries `valid_from` and `valid_until` — when the assertion held — beside a `created_at` for when the row was written, and the read filters the validity axis: `query` appends `valid_from <= ?` and `(valid_until IS NULL OR valid_until > ?)` against an `asOf` that defaults to today, ordering by `valid_from DESC`. `TripleStore.add` supersedes by closing the predecessor's interval — `UPDATE triples SET valid_until = ? WHERE subject = ? AND predicate = ? AND valid_until IS NULL` — rather than overwriting, and the MCP surface exposes `valid_from` as an ISO-date argument so a caller can assert a fact as of a time that is not now. The caveat belongs with the mark: the engine's own extraction path writes triples by raw SQL with `valid_from = isoNow()` and never reaches `TripleStore.add`, so internally-derived facts carry validity equal to record time and no predecessor is ever closed — see section 7 | packages/mnemopi/test/triples-data-dir.test.ts, migrate-triplestore-split.test.ts"
+  scope_enforced: "the beam recall path | packages/mnemopi/src/core/beam/recall.ts `buildWhere` | every beam recall query is built with a visibility clause over stored columns — `(session_id = ? OR scope = 'global' OR channel_id = ?)` when a channel is supplied, `(session_id = ? OR scope = 'global')` otherwise — alongside `superseded_by IS NULL` and a `valid_until` check, and `working_memory` and `episodic_memory` both carry `session_id`, `scope`, `channel_id` and `author_id` columns. Two widenings are in the same function and are worth knowing: `ignoreSessionScope` pushes `1=1`, and so does supplying `authorId` or `authorType` without a `channelId`, so a by-author query silently searches every session | packages/mnemopi/test/beam-recall-unit.test.ts asserts a global row stays recallable under a channel filter while other-channel rows do not"
+  negative_eval: "the recall regression suite | packages/mnemopi/test/ | 456 cases across 75 files, of which 158 carry an assertion that a result set does *not* contain something — `not.toContain`, an empty array, a zero count — including `beam-recall-unit.test.ts` pinning that a non-global row from another channel fails all three visibility disjuncts, and precision regressions asserting that a memory which exists is absent from a query's results | the tests are the mechanism"
 stack_storage: "sqlite"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -19,12 +23,12 @@ matrix:
   retrieval: "Polyphonic — four scored voices (vector, graph, fact, temporal) combined per memory, with MMR and an episodic graph beside them"
   write: "Regex type patterns assign a type, a base confidence and one of nine priority classes with no model call; an LLM path is optional"
   update_delete: "`forget(memoryId)`, `update(...)`, and a `sleep(dryRun)` consolidation pass that can be run without applying anything"
-  scoping: "A bank is a separate database file selected by `setBank`; there is no scope predicate inside a bank"
+  scoping: "Two layers. A bank is a separate database file selected by `setBank`, and inside one, beam recall filters on stored `session_id`, `scope` and `channel_id` columns — with two documented widenings that drop the predicate entirely"
   integration: "The memory engine behind the oh-my-pi coding agent, with retain, reflect, render and edit tools and a `memory://` protocol"
   background: "`sleep` and `sleepAllSessions` consolidation, plus SHMR clustering with similarity and harmony thresholds"
   trust: "Veracity as a provenance class — stated, inferred, tool, imported, unknown — mapped to a fixed weight"
-  strengths: "Per-type Weibull decay with a shape as well as a scale, a dry-run consolidation pass, and a committed recall-precision regression suite"
-  risks: "`unknown` provenance is weighted 0.8, above `tool` at 0.5 and `inferred` at 0.7, so a memory with no known origin outranks one whose origin is known"
+  strengths: "Per-type Weibull decay with a shape as well as a scale, a dry-run consolidation pass, a triple store that supersedes by closing a validity interval, and 456 committed cases of which 158 assert an absence"
+  risks: "`unknown` provenance is weighted 0.8, above `tool` at 0.5 and `inferred` at 0.7, so a memory with no known origin outranks one whose origin is known; the extraction path writes triples with raw SQL and never reaches the only code that closes a predecessor's interval, so self-derived facts never supersede; and `memoria_facts` declares a whole fact-versioning column set that nothing in the repository writes or reads"
 ---
 
 ## 1. Executive Summary
@@ -119,6 +123,15 @@ tests can assert real behaviour.
 The `~/.hermes/` path places this in the Hermes ecosystem, whose own memory the
 atlas reviews as [hermes-agent](../hermes-agent/).
 
+**The larger half of the engine is `src/core/beam/`**, 5,354 lines across seven
+modules — `store`, `recall`, `consolidate`, `schema`, `helpers`, `types`,
+`index` — against roughly 2,800 in the facade files above it. Beam owns
+`working_memory` and `episodic_memory`, their consolidation, and the SQL that
+every recall is built from. The polyphonic voices sit beside it and read the same
+tables. A third store, `triples`, holds subject-predicate-object assertions with
+their own validity interval, and is the only place in the engine where a fact can
+be closed rather than replaced.
+
 ## 4. Essential Implementation Paths
 
 - `src/core/episodic-graph.ts` (708) — the graph tier.
@@ -167,12 +180,35 @@ else here has as a first-class lane.
 `query-intent.ts` and `recall-diagnostics.ts` sit beside it, and MMR is
 available for diversity.
 
-**Scope is a bank, and a bank is a file.** `setBank` switches which SQLite
-database the module-level functions address; there is no scope predicate inside
-one. That is partition-shaped isolation, so the mark is withheld on the same
-basis as [CAMEL](../camel/)'s per-storage-object separation — with the
-difference that Mnemopi's partition is explicit and named rather than a
-convention.
+**Scope has two layers and the inner one does the work.** A bank is a separate
+SQLite file selected by `setBank`, which is partition-shaped isolation of the
+kind [CAMEL](../camel/) has. Inside a bank, `buildWhere` in `beam/recall.ts`
+composes a visibility clause over stored columns on every query:
+`(session_id = ? OR scope = 'global' OR channel_id = ?)` when a channel is
+supplied, `(session_id = ? OR scope = 'global')` otherwise, alongside
+`superseded_by IS NULL` and a `valid_until` freshness check. `working_memory`
+and `episodic_memory` each carry `session_id`, `scope`, `channel_id` and
+`author_id`. That is a stored key reaching the query, which is what the mark
+measures.
+
+**Two widenings live in the same function, and the second is the one to know
+about.** `ignoreSessionScope: true` pushes `1=1`, which is an explicit,
+named escape hatch. But supplying `authorId` or `authorType` *without* a
+`channelId` also pushes `1=1` — so a query that narrows by who said something
+silently drops the session and channel boundary and searches the whole bank.
+A filter that reads as a narrowing and behaves as a widening is the shape most
+likely to be wrong in a caller's head, and nothing in the signature says so.
+
+**The disjunction itself has a subtlety worth recording**, because it was got
+wrong and fixed. `buildWhere` also appended a hard `channel_id = ?` on top of
+the OR-clause, and the AND nullified the `scope = 'global'` branch: any global
+row whose `channel_id` differed from the recall channel — including everything
+imported with `channel_id` NULL — was silently dropped. The repository's own
+analysis is the right one: *"Channel isolation is fully preserved by the
+visibility OR-clause alone (other-channel, non-global, cross-session rows still
+fail all three disjuncts), so removing the hard clause restores global
+visibility without leaking other channels."* A redundant predicate beside a
+disjunction is not redundant.
 
 ## 7. Write Mechanics
 
@@ -192,6 +228,38 @@ by batch size, iteration count and minimum cluster size — all five constants
 readable from the environment (`MNEMOPI_SHMR_*`), which makes the pass tunable
 without a rebuild and, equally, makes any two deployments' consolidation
 behaviour incomparable unless the environment is recorded.
+
+**Supersession works for working and episodic memory and never fires for the
+facts the engine derives itself.** `beam/store.ts` closes a memory with
+`SET valid_until = ?, superseded_by = ?`, and both columns are filtered on every
+recall, so that half holds. The triple store implements the same idea properly:
+`TripleStore.add` runs `UPDATE triples SET valid_until = ? WHERE subject = ? AND
+predicate = ? AND valid_until IS NULL` before inserting, which is supersession by
+closing an interval rather than by deleting a row.
+
+The extraction path does not use it. `insertKg` in `beam/consolidate.ts` writes
+the triple twice over: once with raw SQL —
+`INSERT INTO triples (subject, predicate, object, valid_from, source, confidence)`
+with `isoNow()` — and once through `beam.triples?.add?.(...)`, the call that
+would close the predecessor. **The optional chain never resolves.** `BeamMemory`
+sets `this.triples = options.triples ?? null`, and none of the four
+constructions in the repository — the CLI, two MCP surfaces and the `Mnemopi`
+facade — passes a `triples` store; `new TripleStore` appears only inside
+`triples.ts`'s own helpers and in tests. So a `(subject, predicate)` pair
+extracted twice with different objects leaves two rows with `valid_until` NULL,
+both satisfying the as-of filter, returned together ordered by `valid_from`
+descending. The engine's correction path for derived facts is one unpassed
+constructor argument away from working, and the read side cannot tell.
+
+**And `memoria_facts` declares a fact-versioning subsystem that does not
+exist.** The schema creates and migrates `version_id`, `previous_value`,
+`updated_msg_idx`, `valid_from_msg_idx`, `valid_to_msg_idx` and
+`source_memory_id` — a validity interval measured in conversation position, with
+the prior value retained, which would be the most interesting temporal model in
+this corpus. A grep of the whole repository for any of those names outside
+`schema.ts` returns nothing: no writer, no reader, no test. Six columns, added
+by an `addColumnIfMissing` migration that runs on every open, holding NULL
+forever.
 
 ## 8. Agent Integration
 
@@ -223,12 +291,18 @@ is the report's sharpest single finding: `unknown: 0.8` above `tool: 0.5`.
 
 ## 10. Tests, Evals, and Benchmarks
 
-420 test cases across 71 files, none run here, and their names are unusually
+456 test cases across 75 files, none run here, and their names are unusually
 diagnostic — `consolidate-fact-concurrency`, `recall-precision-regressions`,
 `e5a-vector-voice-dense-rewire`, and an issue-numbered reproduction file on the
 agent side. A suite that names the concurrency hazard and the precision
 regression it is defending is a suite written after production incidents rather
 than before them.
+
+**158 of the assertions are negative** — `not.toContain`, an empty array, a zero
+count — which is what carries the mark. `beam-recall-unit.test.ts` is the file to
+read: it pins that a global row stays recallable under a channel filter while a
+non-global row from another channel fails all three visibility disjuncts, which
+is the boundary test the scope mark asks for and most systems here do not write.
 
 No memory benchmark, no retrieval-quality measurement and no published numbers.
 Given fourteen decay curves with twenty-eight hand-set parameters, four recall
@@ -295,6 +369,18 @@ model grades where a memory came from rather than whether it holds.
   is there; nothing consumes it.
 - **How do the four voices combine?** `combinedScore` is computed and the
   weighting between voices was not traced here.
+- **Was `beam.triples` ever wired?** The call site, the interface
+  (`TripleStoreLike`) and the implementation all exist and only the injection is
+  missing, which reads more like an unfinished refactor than a design. Passing
+  the store at the four construction sites would turn the raw-SQL insert into a
+  duplicate, so the fix is a deletion as well as an injection.
+- **What was `memoria_facts`'s versioning for?** Six columns describing a
+  message-indexed validity interval with a retained previous value, migrated on
+  every open and never touched. Either it is the design that got dropped, or it
+  is the one still coming.
+- **Does anything call recall with an author filter and no channel?** That
+  combination drops the session and channel predicate. Whether any caller in the
+  agent does it decides whether the widening is theoretical.
 
 ## Appendix: File Index
 
@@ -310,8 +396,13 @@ model grades where a memory came from rather than whether it holds.
 | `src/core/weibull.ts` | — | Fourteen types, twenty-eight parameters |
 | `src/core/veracity-consolidation.ts` | — | Provenance weights and fact triples |
 | `src/core/typed-memory.ts` | — | Fourteen types, nine priority classes |
-| `test/` and agent tests | 420 cases | Precision regressions, concurrency, voices |
+| `src/core/beam/` | 5,354 | `store`, `recall` (`buildWhere`), `consolidate` (`insertKg`), `schema`, `helpers` |
+| `src/core/triples.ts` | — | `TripleStore.add`, the as-of `query`, interval-closing supersession |
+| `src/mcp-tools.ts` | — | The tool surface, and the only caller that can supply `valid_from` |
+| `test/` | 456 cases, 75 files | Precision regressions, concurrency, voices, visibility |
 
 ## History
+
+**2026-08-23** — [`b8e8c213c1ce970f0f008edfe471bf7858fd747a`](https://github.com/can1357/oh-my-pi/commit/b8e8c213c1ce970f0f008edfe471bf7858fd747a) — second reading, 81 commits touching `packages/mnemopi` out of 2,951 in the monorepo. Screened again first: one auto-run surface, five build-time execution points, four unpinned surfaces and thirty files inside the seven-day cooldown; nothing was installed and no test was run. **Two marks are added and both were earned at the previous pin.** The first reading covered the `Mnemopi` facade and polyphonic recall and did not reach `src/core/beam/`, which is the larger half of the engine at 5,354 lines and holds the SQL every recall is built from — `buildWhere`'s visibility clause over `session_id`, `scope` and `channel_id` is present verbatim at `4df68d60`. Nor did it reach `src/core/triples.ts`, whose `valid_from`/`valid_until` interval is filtered by an `asOf` query and closed rather than overwritten on supersession. The 81 commits are hardening — SQLite page-size alignment made opt-in, one-shot prepared statements released, embed-worker IPC bounded and reaped on timeout, lifecycle-hook and auto-recall failures contained, episodic participant extraction made Unicode-aware — plus one visibility fix: a redundant hard `channel_id = ?` beside the OR-clause had been nullifying its `scope = 'global'` branch, silently dropping every global row whose channel differed, including everything imported with a NULL channel. Three findings are new and none of them moved in those commits: the extraction path writes triples with raw SQL and never reaches the only code that closes a predecessor's interval, because `beam.triples` is never supplied at any of the four construction sites; `memoria_facts` declares six fact-versioning columns that nothing in the repository writes or reads; and `buildWhere` drops its scope predicate entirely when an author filter is supplied without a channel.
 
 **2026-07-30** — [`4df68d60438423b384b2b47fb3d6835641624757`](https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835641624757) — first reading.
