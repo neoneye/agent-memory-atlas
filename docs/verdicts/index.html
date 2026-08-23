@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 328 reports.</strong></p>
+<p><strong>This page covers all 329 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -607,6 +607,57 @@ and resources unified with memory, or backend choice.</li>
 <li>Do not copy when: you need a small embeddable layer, verified
 memory, or a licence compatible with closed distribution — this is
 AGPL-3.0.</li>
+</ul>
+<h3 id="rck"><a href="../systems/rck/"><code>rck</code></a></h3>
+<ul>
+<li>Best idea: <strong>a denial that blocks the derivation, not just the
+answer.</strong> <code>deny(kb, s, r, o)</code> stores an explicit
+<code>(X, NOT_R, Y)</code> triple in the same substrate — <em>"positive
+certainty about non-membership"</em>, distinguished in the header from
+"we don't know" — and the lookup runs on the read path <em>and</em> on
+both paths that manufacture new facts: chain induction checks it before
+accepting an induced fact, rule instantiation checks it at a score
+floor. Most tombstones in this corpus guard a write and leave the
+system's own inference free to regenerate what was refused.</li>
+<li>Second idea: <strong>"I don't know" is a named state, because the
+cleanup always answers.</strong> <code>idk_detection.py</code> exists on
+the observation that <em>"every retrieval returns SOME top candidate
+from the codebook — the HRR cleanup always picks one"</em>, and returns
+KNOWN, AMBIGUOUS or IDK with a stated bias: <em>"we'd rather say IDK
+than hallucinate a confident wrong answer."</em> Computed per query and
+not stored, which is why the trust mark is withheld — the same reading
+applied to Heimdall's read-time verdicts.</li>
+<li>Third idea: <strong>the project measured the architecture it is
+named after and published that it lost.</strong> Six axes against
+non-VSA baselines and the HRR substrate wins none; §5.0 reports ~300×
+slower to build, ~75× larger and ~1,200× slower per query at 100,000
+facts, at identical recall. Two claims are withdrawn by name, and the
+second judges its own result the worse one: after merging a renamed
+party's KB, cross-name resolution is 0.0% for a dict and 1.0% for RCK,
+and <em>"the 1.0% is bundle crosstalk rather than alignment — a false
+positive, which is worse than the honest zero."</em> The README's
+comparison table shows the rows RCK loses and retracts an earlier
+version of itself as false.</li>
+<li>Biggest risk: <strong>the write-ahead log is truncated at every
+checkpoint</strong>, so a system that can replay a decision
+byte-identically cannot say what changed last month — a recovery
+mechanism with an audit's shape and the opposite retention policy.
+Beside it, nothing records when a fact was true as distinct from when it
+was stored, and no boundary separates principals.</li>
+<li>Maturity impression: Apache-2.0, ~20,000 lines across 131 modules,
+907 tests in public CI, a 34-test backend parity suite, and a paper
+whose every §5 number traces to a script and a committed JSON —
+including one named <code>chain_induction_failures.json</code>. Two
+marks. The WAL docstring carries a measured silent-loss report: four
+handles, 300 fsync'd lines each, 1055 of 1200 arriving, zero
+unparseable, <em>"the torn-line check in <code>replay()</code> cannot
+detect this class of loss."</em></li>
+<li>Study when: you need answers that cannot be fabricated and a
+derivation you can show — or when you want the eighty-line pattern of a
+refusal that also refuses the inference.</li>
+<li>Do not copy when: you need fluent open-domain answers, compact
+storage, a retained mutation history, or a scope boundary between
+principals.</li>
 </ul>
 <h3 id="redis-agent-memory-server"><a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a></h3>

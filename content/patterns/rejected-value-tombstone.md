@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-two systems of three hundred and twenty-eight
+> **This is not an established best practice.** Twenty-three systems of three hundred and twenty-nine
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -129,7 +129,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-two systems of 328 in the atlas have this.** That is still the most
+**Twenty-three systems of 329 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -219,8 +219,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of three hundred and twenty-eight
-would suggest a hard idea that a few teams reach independently. One of three hundred and twenty-eight, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of three hundred and twenty-nine
+would suggest a hard idea that a few teams reach independently. One of three hundred and twenty-nine, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -672,6 +672,40 @@ bounded by the tombstone's ninety-one-day TTL. That is a defensible trade for a
 privacy revocation whose source data expires anyway, and it means the guarantee
 is *not again for ninety-one days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
+
+### The refusal that reaches the inference
+
+[RCK](../../systems/rck/) is the instance that closes the loop this page has
+been leaving open. Its denial is an ordinary row — `deny(kb, s, r, o)` writes
+`(X, NOT_R, Y)` into the same substrate as any assertion, so it survives, merges
+and replays by machinery that already exists, with no second schema and nothing
+to keep in sync. The module draws the distinction the design turns on before it
+writes a line of code: a negative fact is *"positive certainty about
+non-membership"*, which is *"structurally different from 'we don't know'"* and is
+handled by a separate epistemic state.
+
+**What is new is where the lookup runs.** Every tombstone above guards a write
+path or filters a read. RCK does both and then checks the same denials on the two
+paths that *manufacture* facts: `chain_induction.py` calls `denied_pairs_for`
+before an induced fact is accepted, and `rule_instantiation.py` calls it at a
+score floor before a rule fires. So the refusal is not defeated by the system's
+own derivation — the answer you rejected cannot be re-derived from the facts you
+kept.
+
+That is the gap most of this page's instances have and none of them names. A
+store with any inference step — a consolidation pass, a rule engine, a summariser
+— can regenerate a rejected value from material that was never itself rejected,
+and a tombstone consulted only at ingest will not see it. Perseus Vault reaches
+the same problem from the other direction and solves it by *lineage*, suppressing
+a derived record whose source was rejected; RCK solves it by *predicate*,
+refusing the derivation before it produces the record. Lineage catches what was
+already built; the predicate check stops it being built. A store that derives
+wants one of the two.
+
+The committed test is the shape this page asks for — `deny`, then assert the
+denied object is absent while a legitimate one is present, with a separate
+passthrough case establishing the filter returns candidates when nothing is
+denied, so neither half can pass vacuously.
 
 ### The one that answered the question twice, differently, in two stores
 

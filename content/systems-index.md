@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **328 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **329 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -376,6 +376,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/rainbox/"><span class="az-id">RainBox</span><span class="az-what">Operator-governed memory</span><code class="az-repo">neoneye/RainBox</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/rck/"><span class="az-id">RCK</span><span class="az-what">The substrate wins none of six</span><code class="az-repo">NORTHTEKDevs/rck</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/reasonix/"><span class="az-id">Reasonix</span><span class="az-what">Memory inside the prefix cache</span><code class="az-repo">esengine/DeepSeek-Reasonix</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/recall-substrate/"><span class="az-id">Recall</span><span class="az-what">Push memory with an integrity gate</span><code class="az-repo">H-XX-D/recall-memory-substrate</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/redcell/"><span class="az-id">REDCELL</span><span class="az-what">The finding is the memory unit</span><code class="az-repo">martian56/redcell</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>

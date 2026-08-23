@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 328 reports.**
+**This page covers all 329 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -265,6 +265,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a large, seriously engineered platform with real multi-tenancy and the most complete benchmark harness in the atlas.
 - Study when: you need multimodal ingestion, tenant isolation, skills and resources unified with memory, or backend choice.
 - Do not copy when: you need a small embeddable layer, verified memory, or a licence compatible with closed distribution — this is AGPL-3.0.
+
+### [`rck`](../systems/rck/)
+
+- Best idea: **a denial that blocks the derivation, not just the answer.** `deny(kb, s, r, o)` stores an explicit `(X, NOT_R, Y)` triple in the same substrate — *"positive certainty about non-membership"*, distinguished in the header from "we don't know" — and the lookup runs on the read path *and* on both paths that manufacture new facts: chain induction checks it before accepting an induced fact, rule instantiation checks it at a score floor. Most tombstones in this corpus guard a write and leave the system's own inference free to regenerate what was refused.
+- Second idea: **"I don't know" is a named state, because the cleanup always answers.** `idk_detection.py` exists on the observation that *"every retrieval returns SOME top candidate from the codebook — the HRR cleanup always picks one"*, and returns KNOWN, AMBIGUOUS or IDK with a stated bias: *"we'd rather say IDK than hallucinate a confident wrong answer."* Computed per query and not stored, which is why the trust mark is withheld — the same reading applied to Heimdall's read-time verdicts.
+- Third idea: **the project measured the architecture it is named after and published that it lost.** Six axes against non-VSA baselines and the HRR substrate wins none; §5.0 reports ~300× slower to build, ~75× larger and ~1,200× slower per query at 100,000 facts, at identical recall. Two claims are withdrawn by name, and the second judges its own result the worse one: after merging a renamed party's KB, cross-name resolution is 0.0% for a dict and 1.0% for RCK, and *"the 1.0% is bundle crosstalk rather than alignment — a false positive, which is worse than the honest zero."* The README's comparison table shows the rows RCK loses and retracts an earlier version of itself as false.
+- Biggest risk: **the write-ahead log is truncated at every checkpoint**, so a system that can replay a decision byte-identically cannot say what changed last month — a recovery mechanism with an audit's shape and the opposite retention policy. Beside it, nothing records when a fact was true as distinct from when it was stored, and no boundary separates principals.
+- Maturity impression: Apache-2.0, ~20,000 lines across 131 modules, 907 tests in public CI, a 34-test backend parity suite, and a paper whose every §5 number traces to a script and a committed JSON — including one named `chain_induction_failures.json`. Two marks. The WAL docstring carries a measured silent-loss report: four handles, 300 fsync'd lines each, 1055 of 1200 arriving, zero unparseable, *"the torn-line check in `replay()` cannot detect this class of loss."*
+- Study when: you need answers that cannot be fabricated and a derivation you can show — or when you want the eighty-line pattern of a refusal that also refuses the inference.
+- Do not copy when: you need fluent open-domain answers, compact storage, a retained mutation history, or a scope boundary between principals.
 
 ### [`redis-agent-memory-server`](../systems/redis-agent-memory-server/)
 - Best idea: TTL-native working memory promoting into deduplicated long-term memory, with retention expressed as a real policy.
