@@ -6,10 +6,12 @@ root: ../..
 page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
-revision: 976780453be026a32acbd5ee92cf4fe2adaf6c3f
-revision_url: https://github.com/roandejager/Hillock/commit/976780453be026a32acbd5ee92cf4fe2adaf6c3f
-analyzed_at: 2026-08-13
+revision: 803e7a23835194b3b1d63037af4b2be8fe034c78
+revision_url: https://github.com/roandejager/Hillock/commit/803e7a23835194b3b1d63037af4b2be8fe034c78
+analyzed_at: 2026-08-23
 capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the benchmark fixture and the gate metric | evaluate_hillock_PROTO_ish.py `generate_test_assets` (lines 77-86), `run_evaluation` | ten of the thirty generated questions carry `\"answerable\": False` and no expected triple, so the only correct behaviour is a refusal — a question about a person the corpus never mentions (`Where was Thomas Edison born?`), a predicate the subject does not carry (`What did Albert Einstein discover?`), a relation asked in the wrong direction (`Who cracked Enigma?`), and a bare identity probe (`Who is Turing?`). They are asserted against a real read path: `run_evaluation` ingests, queries each one, and counts a `HALLUCINATION_LEAK` whenever the gate admits a fact for a question that has no answer. Since v0.5 the run is unseeded — all three tables are dropped and the in-process HDC state, codebook and vocabulary book cleared — so a negative cannot be satisfied by a store that was never populated, and `verify_hillock.py`'s seventh check pins the seed-overlap arithmetic at four | the harness is the mechanism; no run output is committed, and `verify_hillock.py` check 8 computes how many negatives leak and asserts nothing with the number"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -24,7 +26,7 @@ matrix:
   background: "None; Hebbian decay runs inline on every turn"
   trust: "No status, no confidence, no provenance and no timestamp on a stored fact"
   strengths: "The refusal is a return statement — the model is never asked a question the symbolic layer could not answer"
-  risks: "The gate's threshold is fixed while its similarity falls with query length, and at 0.72 none of the benchmark's own answerable questions clears it"
+  risks: "The gate's threshold is fixed while its similarity falls with query length, and at 0.72 none of the benchmark's own answerable questions clears it — a distribution the verification suite computes and does not assert"
 ---
 
 ## 1. Executive Summary
@@ -232,11 +234,52 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-**There is no test suite.** No `tests/` directory, no test file, no assertion outside the benchmark. For 1,827 lines that is defensible; it also means the inert reservoir had nothing to fail, and that a threshold can be moved three times across four releases with nothing asserting what it should admit.
+**`verify_hillock.py` is a 20-point CPU verification suite** — the repository's
+first assertions outside the benchmark. It covers eight areas without a GPU or
+the TALON models: SQLite seed counts and single-valued predicate overwrite, the
+Hebbian strengthen and decay constants *"vs README math"*, VSA determinism,
+bipolar output and binding orthogonality, the v0.4 span cleaners and
+inverted-pair purge, coreference span replacement with character offsets, the
+ingestion path's loud halt when the TALON stack is absent, a benchmark
+seed-contamination arithmetic check, and a gate score distribution. It exits
+non-zero on any failure. Checking a decay constant against the number the README
+publishes is the right instinct, and so is asserting that the ingestion path
+halts loudly rather than degrading when its extractor is missing.
+
+**Check 8 computes the number this report is about and asserts nothing with
+it.** It builds a seed-only database, runs all thirty benchmark questions through
+`select_answering_facts` with `threshold=-1.0` — the gate disabled, so the raw
+score distribution comes back — and then:
+
+```python
+passes = sum(1 for a, m, _ in rows if a and m is not None and m >= HDC_THRESHOLD)
+leaks  = sum(1 for a, m, _ in rows if not a and m is not None and m >= HDC_THRESHOLD)
+check("gate-distribution-ran", len(rows) == 30, f"verified gate distribution on {len(rows)} queries")
+```
+
+`passes` is how many answerable questions clear 0.72. `leaks` is how many baited
+ones do. Neither identifier appears again in the file. The only assertion is that
+thirty rows were produced — that the distribution *ran*, not what it said. So the
+suite reaches the exact measurement the gate's calibration turns on, computes
+both halves of it, and checks the row count instead. Two live numbers and a
+tautology, and the check's own name says so.
+
+The repair is one line each and needs no new machinery: `check("gate-admits-answerable", passes > 0, ...)` would fail today and is the assertion the threshold has never had.
 
 **I ran nothing from this repository.** The screen found no auto-executing surfaces and no dependency inside the cooldown, but the benchmark requires a local Ollama with a pulled model and its numbers are model-dependent by construction — and a first launch would fetch 822 MB from `nlp.stanford.edu`. The reservoir, encoder and gate findings above are all reproductions: the subword encoder and the bundling arithmetic were reimplemented from `reservoir.py` and `main.py` in a separate file and run against a throwaway virtualenv holding nothing but NumPy.
 
-`evaluate_hillock_PROTO_ish.py` is better than its filename. It writes its own fixtures, wipes the database first so a run cannot inherit state, ingests, queries, and scores four metrics. Twenty questions carry an expected subject, predicate and object; ten are negatives, each with an inline comment giving the reason: *Newton is 1600s, Tesla is 1800s*; *Curie discovered radioactivity, Einstein didn't*; *Enigma is target object, testing link-routing direction*. Those ten are committed cases asserting that particular material must not be returned on a read path, which is the [negative retrieval assertion](../../patterns/rejected-value-tombstone/) this atlas counts, and annotating each with its rationale is rarer than the assertion itself.
+`evaluate_hillock_PROTO_ish.py` is better than its filename, and it runs
+unseeded. Rather than calling `clear_and_reinitialize()`, it deletes
+`relations`, `hebbian_weights` and `entities` outright and then clears the
+in-process HDC state, codebook and vocabulary book — *"to ensure 100% pure,
+unseeded benchmark evaluation"*. Clearing the in-memory codebook as well as the
+tables is the half that is easy to miss: a reservoir that kept its vocabulary
+would carry the seeds' encodings into a run whose database no longer held them.
+Beside it, the verification suite's seventh check asserts the contamination
+arithmetic directly — four initial seeds overlap the evaluation targets — so the
+quantity is pinned rather than argued.
+
+It writes its own fixtures, ingests, queries, and scores four metrics. Twenty questions carry an expected subject, predicate and object; ten are negatives, each with an inline comment giving the reason: *Newton is 1600s, Tesla is 1800s*; *Curie discovered radioactivity, Einstein didn't*; *Enigma is target object, testing link-routing direction*. Those ten are committed cases asserting that particular material must not be returned on a read path, which is the [negative retrieval assertion](../../patterns/rejected-value-tombstone/) this atlas counts, and annotating each with its rationale is rarer than the assertion itself.
 
 Two things are wrong with the scoring, and they are worth separating from the low scores themselves.
 
@@ -286,6 +329,14 @@ The hyperdimensional layer is the part to be most careful about, and not because
 - The README presents `talon_engine.py` as the architecture and instructs a CUDA PyTorch install, while `requirements.txt` names none of the five packages that file imports. Is the omission deliberate, and does the author know the patch disables a `torch.load` guard on the path the README points at?
 - Is the GloVe fetch — 822 MB from `nlp.stanford.edu` on first launch, unmentioned in the setup instructions — intended, or a development convenience that shipped?
 - Do the version table's rows come from one run each, and would committing those runs' outputs be acceptable given they depend on a local model?
+- What does `passes` read on a real run? The verification suite computes it and
+  discards it; the number would settle the calibration question above in one
+  line of output, and asserting it is the difference between a suite that
+  measures the gate and one that checks it.
+- The GloVe fetch survives a corrupt or truncated zip by re-downloading and
+  verifies nothing about what arrives. `hashlib` is already imported in
+  that file — for n-gram seeding — so a digest check is available where it is
+  needed.
 
 ## Appendix: File Index
 
@@ -296,8 +347,12 @@ The hyperdimensional layer is the part to be most careful about, and not because
 - Document chunking and the optional GPU extractor: `ingestor.py`, `talon_engine.py`.
 - Benchmark, fixtures and metrics: `evaluate_hillock_PROTO_ish.py` (`generate_test_assets`, `run_evaluation`).
 - Hyperparameters: `config.py`.
+- Verification suite: `verify_hillock.py` (eight areas, twenty checks; check 8 holds the unasserted gate distribution).
+- Launchers: `run.sh`, `run.bat`.
 
 ## History
+
+**2026-08-23** — [`803e7a23835194b3b1d63037af4b2be8fe034c78`](https://github.com/roandejager/Hillock/commit/803e7a23835194b3b1d63037af4b2be8fe034c78) — second reading, fourteen commits on, at v0.5. Screened again first: no auto-executing surface, no build-time execution, nothing inside the seven-day cooldown, and one unpinned surface — nine `>=` requirements. Nothing was installed and nothing was run. The gate is unchanged: `HDC_THRESHOLD` is still `0.72`, `select_answering_facts` and the reservoir's similarity math are untouched apart from logging moving behind a debug verbosity level, so every finding about the gate stands at this pin. Two things changed that bear on the report. The benchmark harness became genuinely unseeded — it now deletes all three tables and clears the in-process HDC state, codebook and vocabulary book rather than calling `clear_and_reinitialize()` — which removes the seed contamination the previous reading had to reason around. And `verify_hillock.py` arrived, the repository's first assertions outside the benchmark: twenty checks over eight areas, exiting non-zero on failure, including a Hebbian constant checked against the README's published math. Its eighth check computes how many answerable questions clear the threshold and how many baited ones leak, and asserts neither — the only assertion is that thirty rows were produced. The rest of the release is the console: a Rich dashboard, `/inspect` and `/status`, model switching over local Ollama models, token streaming, configurable debug verbosity, and `run.sh` / `run.bat`. The GloVe fetch gained corrupt-zip recovery and still has no checksum.
 
 **2026-08-13** — [`976780453be026a32acbd5ee92cf4fe2adaf6c3f`](https://github.com/roandejager/Hillock/commit/976780453be026a32acbd5ee92cf4fe2adaf6c3f) — twenty commits on, v0.2.3 to v0.4.1, with every one of the eight source files changed. Screened again before reading: 0 auto-run surfaces, 0 build-time exec, nothing inside the cooldown, one unpinned manifest — identical to the previous two screens. Nothing from the repository was executed; the encoder and bundling arithmetic were reimplemented in a separate file and run in a throwaway virtualenv holding only NumPy.
 

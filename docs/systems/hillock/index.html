@@ -110,14 +110,14 @@ answerable questions stopped clearing it.</p>
               <strong>roandejager/Hillock</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/roandejager/Hillock/commit/976780453be026a32acbd5ee92cf4fe2adaf6c3f" title="976780453be026a32acbd5ee92cf4fe2adaf6c3f">
+            <a class="meta-pill revision-pill" href="https://github.com/roandejager/Hillock/commit/803e7a23835194b3b1d63037af4b2be8fe034c78" title="803e7a23835194b3b1d63037af4b2be8fe034c78">
               <span>Analyzed revision</span>
-              <code>97678045…</code>
+              <code>803e7a23…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-13</strong>
+              <strong>2026-08-23</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -679,11 +679,37 @@ reader should check for themselves before adopting anything here.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>There is no test suite.</strong> No <code>tests/</code>
-directory, no test file, no assertion outside the benchmark. For 1,827
-lines that is defensible; it also means the inert reservoir had nothing
-to fail, and that a threshold can be moved three times across four
-releases with nothing asserting what it should admit.</p>
+<p><strong><code>verify_hillock.py</code> is a 20-point CPU verification
+suite</strong> — the repository's first assertions outside the
+benchmark. It covers eight areas without a GPU or the TALON models:
+SQLite seed counts and single-valued predicate overwrite, the Hebbian
+strengthen and decay constants <em>"vs README math"</em>, VSA
+determinism, bipolar output and binding orthogonality, the v0.4 span
+cleaners and inverted-pair purge, coreference span replacement with
+character offsets, the ingestion path's loud halt when the TALON stack
+is absent, a benchmark seed-contamination arithmetic check, and a gate
+score distribution. It exits non-zero on any failure. Checking a decay
+constant against the number the README publishes is the right instinct,
+and so is asserting that the ingestion path halts loudly rather than
+degrading when its extractor is missing.</p>
+<p><strong>Check 8 computes the number this report is about and asserts
+nothing with it.</strong> It builds a seed-only database, runs all
+thirty benchmark questions through <code>select_answering_facts</code>
+with <code>threshold=-1.0</code> — the gate disabled, so the raw score
+distribution comes back — and then:</p>
+<pre class="python"><code>passes = sum(1 for a, m, _ in rows if a and m is not None and m &gt;= HDC_THRESHOLD)
+leaks  = sum(1 for a, m, _ in rows if not a and m is not None and m &gt;= HDC_THRESHOLD)
+check(&quot;gate-distribution-ran&quot;, len(rows) == 30, f&quot;verified gate distribution on {len(rows)} queries&quot;)</code></pre>
+<p><code>passes</code> is how many answerable questions clear 0.72.
+<code>leaks</code> is how many baited ones do. Neither identifier
+appears again in the file. The only assertion is that thirty rows were
+produced — that the distribution <em>ran</em>, not what it said. So the
+suite reaches the exact measurement the gate's calibration turns on,
+computes both halves of it, and checks the row count instead. Two live
+numbers and a tautology, and the check's own name says so.</p>
+<p>The repair is one line each and needs no new machinery:
+<code>check("gate-admits-answerable", passes &gt; 0, ...)</code> would
+fail today and is the assertion the threshold has never had.</p>
 <p><strong>I ran nothing from this repository.</strong> The screen found
 no auto-executing surfaces and no dependency inside the cooldown, but
 the benchmark requires a local Ollama with a pulled model and its
@@ -694,17 +720,28 @@ the bundling arithmetic were reimplemented from
 <code>reservoir.py</code> and <code>main.py</code> in a separate file
 and run against a throwaway virtualenv holding nothing but NumPy.</p>
 <p><code>evaluate_hillock_PROTO_ish.py</code> is better than its
-filename. It writes its own fixtures, wipes the database first so a run
-cannot inherit state, ingests, queries, and scores four metrics. Twenty
-questions carry an expected subject, predicate and object; ten are
-negatives, each with an inline comment giving the reason: <em>Newton is
-1600s, Tesla is 1800s</em>; <em>Curie discovered radioactivity, Einstein
-didn't</em>; <em>Enigma is target object, testing link-routing
-direction</em>. Those ten are committed cases asserting that particular
-material must not be returned on a read path, which is the <a
-href="../../patterns/rejected-value-tombstone/">negative retrieval
-assertion</a> this atlas counts, and annotating each with its rationale
-is rarer than the assertion itself.</p>
+filename, and it runs unseeded. Rather than calling
+<code>clear_and_reinitialize()</code>, it deletes
+<code>relations</code>, <code>hebbian_weights</code> and
+<code>entities</code> outright and then clears the in-process HDC state,
+codebook and vocabulary book — <em>"to ensure 100% pure, unseeded
+benchmark evaluation"</em>. Clearing the in-memory codebook as well as
+the tables is the half that is easy to miss: a reservoir that kept its
+vocabulary would carry the seeds' encodings into a run whose database no
+longer held them. Beside it, the verification suite's seventh check
+asserts the contamination arithmetic directly — four initial seeds
+overlap the evaluation targets — so the quantity is pinned rather than
+argued.</p>
+<p>It writes its own fixtures, ingests, queries, and scores four
+metrics. Twenty questions carry an expected subject, predicate and
+object; ten are negatives, each with an inline comment giving the
+reason: <em>Newton is 1600s, Tesla is 1800s</em>; <em>Curie discovered
+radioactivity, Einstein didn't</em>; <em>Enigma is target object,
+testing link-routing direction</em>. Those ten are committed cases
+asserting that particular material must not be returned on a read path,
+which is the <a href="../../patterns/rejected-value-tombstone/">negative
+retrieval assertion</a> this atlas counts, and annotating each with its
+rationale is rarer than the assertion itself.</p>
 <p>Two things are wrong with the scoring, and they are worth separating
 from the low scores themselves.</p>
 <p><strong><code>gate_acc</code> is not a gate metric.</strong> The
@@ -858,6 +895,15 @@ development convenience that shipped?</li>
 <li>Do the version table's rows come from one run each, and would
 committing those runs' outputs be acceptable given they depend on a
 local model?</li>
+<li>What does <code>passes</code> read on a real run? The verification
+suite computes it and discards it; the number would settle the
+calibration question above in one line of output, and asserting it is
+the difference between a suite that measures the gate and one that
+checks it.</li>
+<li>The GloVe fetch survives a corrupt or truncated zip by
+re-downloading and verifies nothing about what arrives.
+<code>hashlib</code> is already imported in that file — for n-gram
+seeding — so a digest check is available where it is needed.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -879,8 +925,37 @@ local model?</li>
 <code>evaluate_hillock_PROTO_ish.py</code>
 (<code>generate_test_assets</code>, <code>run_evaluation</code>).</li>
 <li>Hyperparameters: <code>config.py</code>.</li>
+<li>Verification suite: <code>verify_hillock.py</code> (eight areas,
+twenty checks; check 8 holds the unasserted gate distribution).</li>
+<li>Launchers: <code>run.sh</code>, <code>run.bat</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-23</strong> — <a
+href="https://github.com/roandejager/Hillock/commit/803e7a23835194b3b1d63037af4b2be8fe034c78"><code class="commit-id" title="803e7a23835194b3b1d63037af4b2be8fe034c78">803e7a23…</code></a>
+— second reading, fourteen commits on, at v0.5. Screened again first: no
+auto-executing surface, no build-time execution, nothing inside the
+seven-day cooldown, and one unpinned surface — nine <code>&gt;=</code>
+requirements. Nothing was installed and nothing was run. The gate is
+unchanged: <code>HDC_THRESHOLD</code> is still <code>0.72</code>,
+<code>select_answering_facts</code> and the reservoir's similarity math
+are untouched apart from logging moving behind a debug verbosity level,
+so every finding about the gate stands at this pin. Two things changed
+that bear on the report. The benchmark harness became genuinely unseeded
+— it now deletes all three tables and clears the in-process HDC state,
+codebook and vocabulary book rather than calling
+<code>clear_and_reinitialize()</code> — which removes the seed
+contamination the previous reading had to reason around. And
+<code>verify_hillock.py</code> arrived, the repository's first
+assertions outside the benchmark: twenty checks over eight areas,
+exiting non-zero on failure, including a Hebbian constant checked
+against the README's published math. Its eighth check computes how many
+answerable questions clear the threshold and how many baited ones leak,
+and asserts neither — the only assertion is that thirty rows were
+produced. The rest of the release is the console: a Rich dashboard,
+<code>/inspect</code> and <code>/status</code>, model switching over
+local Ollama models, token streaming, configurable debug verbosity, and
+<code>run.sh</code> / <code>run.bat</code>. The GloVe fetch gained
+corrupt-zip recovery and still has no checksum.</p>
 <p><strong>2026-08-13</strong> — <a
 href="https://github.com/roandejager/Hillock/commit/976780453be026a32acbd5ee92cf4fe2adaf6c3f"><code class="commit-id" title="976780453be026a32acbd5ee92cf4fe2adaf6c3f">97678045…</code></a>
 — twenty commits on, v0.2.3 to v0.4.1, with every one of the eight
