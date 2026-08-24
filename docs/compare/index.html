@@ -150,10 +150,10 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 174 of 329 apply a scope key as a filter on the
+shallowest.</strong> 175 of 329 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 104 of
+<li><strong>Negative evidence is almost never tested.</strong> 105 of
 329 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -162,7 +162,7 @@ path</strong>, and the rest keep material out of a projection, a
 preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 69 of 329
+<li><strong>Trust is usually a number, not a state.</strong> 70 of 329
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-three tombstones, one hundred and four negative-eval suites — are
+twenty-three tombstones, one hundred and five negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -352,7 +352,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 174 of
+A scope <em>key applied as a filter on the read path</em> is what 175 of
 329 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -4896,30 +4896,39 @@ conversations in tables beside it</td>
 <td>Entity lookup first and, if it returns anything, exclusively;
 otherwise a weighted sum over substring keyword matches, importance,
 confidence, evidence count, recency band and a status bonus, sorted and
-sliced with no score floor</td>
+sliced against a <code>minScore</code> that defaults to zero</td>
 <td>An extractor produces candidates — rules or an LLM — and a
 deterministic review classifies each as CREATE, UPDATE, IGNORE or
 CONFLICT before anything is written</td>
-<td><code>archiveMemory</code> sets status ARCHIVED, which retrieval
-excludes. <code>supersedes_id</code> exists as a column and a type field
-with nothing that writes it</td>
-<td>None. One database, one companion, no user, agent or tenant key in
-the schema</td>
+<td><code>archiveMemory</code> sets <code>ARCHIVED</code>; the supersede
+path writes <code>supersedesId</code> on the successor and sets the
+predecessor to <code>SUPERSEDED</code>; five of six statuses are
+excluded from normal retrieval</td>
+<td>A <code>scope</code> column over five values, filtered before
+scoring — normal retrieval is restricted to <code>USER</code> or
+<code>ARCON</code>, so the human's beliefs and the companion's are
+separable; <code>PROJECT</code> is queryable and never written,
+<code>CONVERSATION</code> is unused</td>
 <td>A chat app, a desktop app and a server over local Ollama, with a
 voice package and a LoRA inference service</td>
 <td>None on a schedule in the memory package; mood, emotion and interest
 engines update on interaction</td>
-<td>A five-value status and a four-value source type, both
-CHECK-constrained in the schema. Of the five statuses, one is written
-and read, one is written and never read, one is read and never written,
-and one is neither</td>
+<td>A six-value status and a four-value source type, CHECK-constrained
+in the schema. Five statuses are excluded from normal retrieval and
+three of those have writers; <code>CONTRADICTED</code> and
+<code>OBSOLETE</code> are filtered and never assigned, and
+<code>USER_CONFIRMED</code> has no writer anywhere</td>
 <td>The write path decides CREATE, UPDATE, IGNORE or CONFLICT
-deterministically before touching the store, and a conflicting candidate
-is kept as a row rather than dropped or merged</td>
-<td>A conflicting memory is retrievable at a two-point penalty on a
-scale where importance alone is worth twenty; nothing can confirm a
-PENDING_CONFIRMATION row because no code writes USER_CONFIRMED; and the
-one negative retrieval test passes on an empty result</td>
+deterministically before touching the store; a supersession writes a
+lineage pointer and retires the predecessor; and every negative
+retrieval test seeds a matching control so it cannot pass on an empty
+result</td>
+<td>A <code>PENDING_CONFIRMATION</code> memory is withheld from
+retrieval and has no way out, because nothing writes
+<code>USER_CONFIRMED</code>, so it is invisible as well as unresolvable;
+the exclusion set is a denylist duplicated in two files; and
+<code>CONTRADICTED</code> is filtered by three lists and assigned by
+none</td>
 </tr>
 <tr>
 <td><code>arcrift</code></td>
@@ -13838,7 +13847,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>69 of 329:</em> <a
+<p><em>70 of 329:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -13846,6 +13855,7 @@ href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
+href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/cambium/"><code>cambium</code></a>, <a
@@ -13960,7 +13970,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>174 of 329:</em> <a
+<p><em>175 of 329:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -13982,6 +13992,7 @@ href="../systems/ai-agent-automation/"><code>ai-agent-automation</code></a>,
 href="../systems/aimaos/"><code>aimaos</code></a>, <a
 href="../systems/aipass/"><code>aipass</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
+href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/arcrift/"><code>arcrift</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -14335,7 +14346,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>104 of 329:</em> <a
+<p><em>105 of 329:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14344,6 +14355,7 @@ href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 <a href="../systems/agentdatabase/"><code>agentdatabase</code></a>, <a
 href="../systems/agents-memory/"><code>agents-memory</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
+href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/arcrift/"><code>arcrift</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -14460,7 +14472,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and four repositories of three hundred and twenty-nine assert
+hundred and five repositories of three hundred and twenty-nine assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -20251,7 +20263,7 @@ not read; the report covers the sidecar around it and says where its
 claims stop</li>
 <li><a href="https://github.com/vmDeshpande/Arcon">vmDeshpande/Arcon</a>
 at <a
-href="https://github.com/vmDeshpande/Arcon/commit/7bbbbc54728fe6a6a733f0feee47591104136023"><code class="commit-id" title="7bbbbc54728fe6a6a733f0feee47591104136023">7bbbbc54…</code></a>
+href="https://github.com/vmDeshpande/Arcon/commit/ef74011fe6d74959d901a593d42696fe4929aa30"><code class="commit-id" title="ef74011fe6d74959d901a593d42696fe4929aa30">ef74011f…</code></a>
 — read only; no auto-run surface, no build-time execution, ten unpinned
 surfaces and nine files inside the seven-day cooldown. Nothing was
 installed and no test was run. The README's licence badge points at a
