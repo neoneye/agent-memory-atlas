@@ -8,6 +8,15 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-24-the-directory-named-memory-is-about-ram.md](2026-08-24-the-directory-named-memory-is-about-ram.md) —
+  Orca triaged and excluded: an Electron orchestrator running four coding agents
+  in parallel worktrees, whose durable state is the workspace session and whose
+  `src/main/memory/` directory is 2,520 lines about RAM — the purest vocabulary
+  collision recorded, and the first at a conventional path a directory-listing
+  probe would flag. The keeper is `zod-salvage.ts`: per-field tolerance so one
+  corrupt tab record costs that tab and not the session, and
+  `collectSalvageDrops` returning `{value, droppedPaths, droppedCount}` — which
+  is exactly the `skipped` count GENOME's row-skipping decoder was missing.
 - [2026-08-23-a-tested-contract-for-losing-the-write.md](2026-08-23-a-tested-contract-for-losing-the-write.md) —
   llmaker triaged and excluded: a self-hosting platform whose only memory is a
   20-turn Redis transcript with a 7-day TTL. The keeper is underneath the scope

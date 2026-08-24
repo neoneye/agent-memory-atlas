@@ -23427,6 +23427,51 @@ href="../systems/genome/">GENOME</a>'s automatic fact detector swallows
 both its model call and its write at DEBUG, with the same result — and
 the cheap repair in both cases is to return what happened rather than
 nothing.</li>
+<li><strong><code>stablyai/orca</code> was examined and has no report:
+it is the <code>beads</code> boundary again, and its
+<code>src/main/memory/</code> directory holds RAM accounting.</strong>
+MIT, 9,116 commits since 16 March 2026, at <a
+href="https://github.com/stablyai/orca/commit/d14923e968f14d46af07d9c2758d1f7d50359985"><code class="commit-id" title="d14923e968f14d46af07d9c2758d1f7d50359985">d14923e9…</code></a>
+— an Electron orchestrator that runs Codex, Claude Code, OpenCode or Pi
+side by side, each in its own git worktree, with a mobile companion app.
+<strong>The durable state is the workspace session</strong>: tabs,
+panes, PTY registrations, terminal and tab-group layouts, browser
+history, sleeping agent sessions, and which worktree an agent is in.
+Every field is the state of the work or of the process running it; none
+is a claim about the world that a later reading could contradict, which
+is the same call recorded for <code>fynnfluegge/agtx</code> above. The
+eight <code>skills/</code> are authored instruction files describing how
+to drive Orca — <code>orchestration</code>, <code>orca-cli</code>,
+<code>computer-use</code> — not procedural memory the agent writes, and
+the <code>notes</code> in the source are review comments a person sends
+<em>to</em> a running agent. <strong>The vocabulary collision is the
+purest this atlas has recorded</strong>, and it is worth naming for
+anyone screening candidates by directory listing:
+<code>src/main/memory/</code> contains <code>host-memory.ts</code>,
+<code>process-memory-metric.ts</code>,
+<code>windows-process-resource-collector.ts</code> and a PTY registry.
+It is 2,520 lines about RAM. <strong>What transfers is
+<code>src/shared/zod-salvage.ts</code>, and it is the finished version
+of something this atlas keeps finding half-built.</strong> The problem
+it solves is stated at the schema that uses it: a session JSON <em>"is
+written to disk by older builds and read back by newer ones,"</em> and a
+field type flip or a truncated write <em>"could poison Zustand state and
+crash the renderer on mount."</em> The policy is tolerance declared
+<strong>on the field</strong> rather than at the parse boundary —
+<code>salvagedField</code>, <code>salvagedOptional</code>,
+<code>salvagingArray</code>, <code>salvagingRecord</code> — so <em>"a
+corrupt entry is dropped and the rest of the session survives, because
+one bad tab record must not cost every worktree its state,"</em> while a
+payload that is not a session at all still falls back to defaults. And
+unlike every ad-hoc version of this the atlas has read, <strong>it tells
+the caller what it dropped</strong>:
+<code>collectSalvageDrops(parse)</code> returns
+<code>{value, droppedPaths, droppedCount}</code> with the example paths
+bounded at a hundred. <a href="../systems/genome/">GENOME</a>'s
+row-skipping decoder makes the same correct trade and reports the loss
+only to an ERROR log, so the caller sees a shorter list and no count;
+this is that gap closed, in 132 lines, in a repository that is not about
+memory at all.</li>
 <li><strong><code>NVIDIA/SkillEvaluator</code> was examined and has no
 report: it grades procedural memory rather than holding any, and two of
 its mechanisms are worth more than that boundary suggests.</strong>
