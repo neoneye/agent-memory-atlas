@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 330 reports.**
+**This page covers all 331 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1549,6 +1549,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: ~39,700 lines of TypeScript with 171 test files often named after the bug they pin, an unusually strict scope filter that denies null-scope rows — and no committed benchmark, no evaluation harness, and no LICENSE file despite an MIT badge.
 - Study when: your memory is facts about subjects rather than documents, and you want updates to replace rather than pile up.
 - Do not copy when: you need to know whether the ranking works; nothing here is measured.
+
+### [`weave`](../systems/weave/)
+
+- Best idea: **recall is default-deny on claim status.** `vector_search_claims` filters `AND c.status = 'active'` and widens to `IN ('active','contradicted')` only when a caller passes `include_contradicted` — so a forgetful caller gets the conservative behaviour, and the exception is labelled: an admitted contradicted claim is rendered `[CONTRADICTED]` in the context block. Five CHECK-constrained statuses (`active`, `contradicted`, `superseded`, `rejected`, `quarantined`) all have writers, held apart from a `confidence` float, which is the split the rubric asks for.
+- Second idea: **the audit log records refusals.** Twelve actions behind one recorder, with `CLAIM_REJECTED` and `CLAIM_QUARANTINED` beside `CLAIM_CREATED`, before-and-after JSONB, indexed on time, actor and target. This atlas keeps finding governance layers that log the memory they surfaced and never the one they declined; here both are the same row shape in the same table.
+- Third idea: **the memory unit is a claim, not a chunk** — subject, predicate and object as resolved entity ids with the LLM's *proposed* labels kept beside them for auditability, an evidence span and character offset into the source note, an extraction version, and a four-value modality that makes `negated` a stored value rather than an absence. Graph edges are described as projections of claims, which is the right ordering. A contradiction marks **both** rows and keeps the pair addressable in a junction table.
+- Biggest risk: **a refusal does not survive a re-assertion, and it is one query away.** `find_opposing` — the only part of ingest that reads existing claims — carries `AND status <> 'rejected'`, correctly for its own purpose and with the effect that the rejected set is invisible to the write path. The same statement can be re-ingested and land `active`. Beside it: no scope key anywhere in the memory service's nine migrations, while the web app twenty lines away has OAuth, roles and per-route authorisation.
+- Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
+- Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
+- Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
 
 ### [`wenlan`](../systems/wenlan/)
 

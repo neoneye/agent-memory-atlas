@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust knowledge-graph app whose
+MCP memory service stores evidence-backed claims with five statuses,
+recalls only the active ones by default, and writes an audit row for the
+claims it rejects as well as the ones it keeps.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Weave — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust knowledge-graph app
+whose MCP memory service stores evidence-backed claims with five
+statuses, recalls only the active ones by default, and writes an audit
+row for the claims it rejects as well as the ones it keeps.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Weave — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust knowledge-graph app
+whose MCP memory service stores evidence-backed claims with five
+statuses, recalls only the active ones by default, and writes an audit
+row for the claims it rejects as well as the ones it keeps.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Weave — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Weave",
+      "description": "A Rust knowledge-graph app whose MCP memory service stores evidence-backed claims with five statuses, recalls only the active ones by default, and writes an audit row for the claims it rejects as well as the ones it keeps.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Default-deny on claim status</p>
+          <h1>Weave</h1>
+          <p class="document-deck">A Rust knowledge-graph app whose MCP
+memory service stores evidence-backed claims with five statuses, recalls
+only the active ones by default, and writes an audit row for the claims
+it rejects as well as the ones it keeps.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Sidharth-Singh10/weave">
+              <span>Source</span>
+              <strong>Sidharth-Singh10/weave</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456" title="ff8a6afa107947dd00f15c67db6a0aa7f90ca456">
+              <span>Analyzed revision</span>
+              <code>ff8a6afa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-24</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Weave is a knowledge-graph application in Rust — 13,800 lines across
+53 files, 47 commits since 11 August 2026 — with two faces. The web side
+turns plain notes into a live graph on a React Flow canvas. The side
+this report is about is <code>mcp/</code>: 5,500 lines described in the
+README as <em>"a server-owned memory service for any MCP agent (Hermes,
+Claude Desktop, Codex)."</em> The two are separate workspaces sharing a
+schema lineage.</p>
+<p><strong>There is no LICENSE file in the tree</strong>, and no licence
+badge claiming one, so what a reader may do with this is not established
+by the repository.</p>
+<p>Two marks, and both rest on the same design decision: memory here is
+a <strong>claim</strong>, not a chunk. Nine migrations build up to
+<code>claims</code> — subject, predicate and object as resolved entity
+ids, with the LLM's <em>proposed</em> labels kept alongside them
+<em>"for auditability"</em>, an evidence span and character offset into
+the source note, an extraction version, a source (<code>user</code>,
+<code>file</code>, <code>agent</code>, <code>import</code>), a
+<code>confidence</code> float, a four-value <code>modality</code>, and a
+five-value <code>status</code>.</p>
+<p><strong>Recall is default-deny on status.</strong>
+<code>vector_search_claims</code> filters
+<code>AND c.status = 'active'</code>, and widens to
+<code>IN ('active','contradicted')</code> only when the caller
+explicitly asks — at which point the assembled context block renders the
+claim with a <code>[CONTRADICTED]</code> marker. Rejected, quarantined
+and superseded claims stay on the row for audit and never reach an agent
+by default. Most systems in this corpus rank a doubted memory lower;
+this one declines to return it and makes the exception opt-in and
+labelled.</p>
+<p><strong>The audit log records refusals.</strong> Twelve actions, and
+<code>CLAIM_REJECTED</code> and <code>CLAIM_QUARANTINED</code> sit
+beside <code>CLAIM_CREATED</code>. This atlas has recorded the opposite
+pattern repeatedly — a governance layer that logs the memory it surfaced
+and never the one it declined — and here both halves are the same row
+shape in the same table.</p>
+<p><strong>Weakest, and it is one query away:</strong> nothing consults
+the rejected set before admitting a new claim.
+<code>find_opposing</code> excludes
+<code>status &lt;&gt; 'rejected'</code> when looking for contradictions,
+which is the <em>opposite</em> of a tombstone check — it means a claim
+the verifier rejected is invisible to the comparison that would notice
+it coming back, so the same statement can be re-ingested and land
+<code>active</code>. The vocabulary contains the word "rejected" and the
+write path does not read it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>note ──► bounded subgraph selection (lexical + semantic anchors,
+         capped at 64 nodes / 256 edges / a token budget)
+             │
+             ▼
+        LLM extraction ──► candidate claims
+             │              (proposed labels kept)
+             ▼
+        validate ──► supported?  ── no ──► status = quarantined ──┐
+             │           yes                                       │
+             ▼                                                     │
+        optional verify (high-risk only) ──► reject / quarantine ──┤
+             │                                                     │
+             ▼                                                     │
+        contradiction check ──► both rows marked contradicted      │
+             │                                                     │
+             ▼                                                     ▼
+        claims table  ◄──────────────────── audit_log (actor, action,
+             │                               before/after — including
+             │                               the rejections)
+             ▼
+   recall: status = &#39;active&#39;          ← default
+           status IN (&#39;active&#39;,&#39;contradicted&#39;) + [CONTRADICTED] marker
+                                       ← only when asked</code></pre>
+<p>The unit is an assertion with its evidence attached, and the status
+is the answer to <em>may this be acted on</em>. Everything else —
+confidence, modality, extraction version — describes the claim rather
+than gating it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — status is written at three points — evidence support at ingest, a verification verdict, and a contradiction pairing — and read by one default-deny recall query, while the audit log records the rejections beside the creations</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: status is written at three points — evidence support at ingest, a verification verdict, and a contradiction pairing — and read by one default-deny recall query, while the audit log records the rejections beside the creations
+    NOTE[&quot;note from an agent or the canvas&quot;] --&gt; ANCH[&quot;bounded subgraph&lt;br/&gt;lexical + semantic anchors&quot;]
+    ANCH --&gt; LLM[&quot;LLM extraction&quot;]
+    LLM --&gt; CAND[&quot;candidate claims&lt;br/&gt;proposed labels retained&quot;]
+
+    CAND --&gt; VAL{&quot;evidence supported?&quot;}
+    VAL --&gt;|&quot;no&quot;| Q[&quot;status = quarantined&quot;]
+    VAL --&gt;|&quot;yes&quot;| VER{&quot;selective verify&lt;br/&gt;high-risk claims&quot;}
+    VER --&gt;|&quot;reject&quot;| R[&quot;status = rejected&quot;]
+    VER --&gt;|&quot;quarantine&quot;| Q
+    VER --&gt;|&quot;pass&quot;| A[&quot;status = active&quot;]
+
+    A --&gt; CONTRA{&quot;opposing claim?&lt;br/&gt;find_opposing&quot;}
+    CONTRA --&gt;|&quot;yes&quot;| BOTH[&quot;both rows → contradicted&lt;br/&gt;claim_contradictions junction&quot;]
+
+    A --&gt; DB[(&quot;claims&lt;br/&gt;Postgres + pgvector&quot;)]
+    Q --&gt; DB
+    R --&gt; DB
+    BOTH --&gt; DB
+
+    CORR[&quot;correct_claim&quot;] --&gt; SUP[&quot;old → superseded&lt;br/&gt;new carries supersedes&quot;]
+    SUP --&gt; DB
+
+    DB --&gt; RECALL[&quot;vector_search_claims&quot;]
+    RECALL --&gt;|&quot;default&quot;| ONLYA[&quot;status = &#39;active&#39;&quot;]
+    RECALL --&gt;|&quot;include_contradicted&quot;| PLUS[&quot;+ contradicted,&lt;br/&gt;rendered [CONTRADICTED]&quot;]
+    ONLYA --&gt; CTX[&quot;context block for the agent&quot;]
+    PLUS --&gt; CTX
+
+    DB -.-&gt; AUD[(&quot;audit_log&lt;br/&gt;12 actions incl.&lt;br/&gt;CLAIM_REJECTED,&lt;br/&gt;CLAIM_QUARANTINED&quot;)]
+    CONTRA -.-&gt; AUD
+    SUP -.-&gt; AUD
+    CORR -.-&gt; AUD
+
+    RJ[&quot;rejected rows&quot;] -.-&gt;|&quot;find_opposing excludes them —&lt;br/&gt;nothing checks them before a new write&quot;| CAND</code></pre></details></figure>
+<p><strong>Runtime.</strong> A Rust workspace: <code>backend/</code>
+(the web API), <code>crates/weave-core</code>, and <code>mcp/</code>
+(the memory service), with a React frontend and Docker compose files for
+the app and its infrastructure. Postgres with pgvector underneath;
+embeddings are local ONNX, computed on the fly.</p>
+<p><strong>Nine migrations, read in order, are the design
+document</strong>: notes, entities, relations, documents, provenance,
+embeddings, claims, embeddings metadata, and a V5 hardening pass. Each
+carries a header explaining what it is for.</p>
+<p><strong>Bounded extraction context is a stated cost
+property.</strong> Only the subgraph relevant to a note reaches the LLM
+— lexical plus optional semantic anchors, expanded two hops and capped
+at 64 nodes, 256 edges and an estimated token budget — <em>"so ingest
+cost doesn't scale with graph size."</em> Naming the scaling property
+the cap exists to protect is better than naming the cap.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Status assignment, at three points.</strong>
+<code>ingest.rs:257</code> sets <code>active</code> or
+<code>quarantined</code> from whether the candidate's evidence was
+supported. <code>ingest.rs:323-324</code> maps a verification verdict
+onto <code>reject</code> or <code>quarantine</code>.
+<code>ingest.rs:481-482</code> marks <strong>both</strong> members of a
+contradicting pair, and the migration explains why: <em>"Both rows are
+preserved and marked <code>contradicted</code>; this junction keeps the
+pair explicitly addressable."</em> Preserving both and recording the
+pair is the right handling — the disagreement is a fact about the store,
+not a tie to break at write time.</p>
+<p><strong>Recall, quoted in section 1</strong>, is the only consumer of
+status and it defaults to the narrowest set.</p>
+<p><strong>Correction.</strong> <code>correct_claim</code> inserts the
+corrected claim with
+<code>metadata: {"corrected": true, "supersedes": old.id}</code>, calls
+<code>supersede_claim</code> on the original, and audits both.
+<code>forget_entity</code> deletes and audits. So a correction leaves a
+lineage in two places — the metadata pointer and the audit row's
+before/after.</p>
+<p><strong>Idempotency, with the compromise written down.</strong> V5
+adds a <code>content_hash</code> over the trimmed note text and an index
+that is <em>deliberately non-unique</em>: <em>"historical data may
+contain exact duplicates, and removing them would be a destructive
+migration. Idempotency is enforced in the application
+(find-then-insert); the index accelerates that lookup."</em> A
+constraint the schema declines to enforce, with the migration hazard
+that caused the decision, is better documentation than a unique index
+with no comment.</p>
+<p><strong>The admin pipeline tracer</strong> shows, per ingest, every
+stage end to end — *"the exact prompt sent to the LLM, the raw response,
+and the subgraph (lexical</p>
+<ul>
+<li>semantic anchors) that was selected."* For a system whose memory is
+produced by a model reading a selected context, showing the selection
+beside the output is the observability that makes a wrong claim
+diagnosable rather than mysterious.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>claims</code> is the durable unit and <code>relations</code> is
+described as <em>"the canonical projection"</em> — graph edges are
+projections of claims, joined through <code>claim_relations</code>. That
+ordering is the interesting choice: the graph the user sees is derived,
+and the evidence-backed statement is what is stored.</p>
+<p><strong>Modality makes a negation a value.</strong>
+<code>asserted | negated | suggested | conditional</code>,
+CHECK-constrained. A negated claim is a row, so "X is not Y" is
+something the store holds rather than something it lacks — the same
+property <a href="../rck/">RCK</a> gets from its <code>NOT_R</code>
+predicate, reached by a different route.</p>
+<p><strong>Provenance is to the span.</strong>
+<code>evidence_span</code> and <code>evidence_offset</code> point into
+the note, <code>note_id</code> links the claim to what created it,
+<code>source</code> records which of four kinds of origin it had, and
+<code>extraction_version</code> records which extractor produced it — so
+a later extractor change is separable from a content change.</p>
+<p><strong>One clock.</strong> <code>created_at</code> and
+<code>updated_at</code> are both record-axis; nothing records when a
+claim was true as distinct from when it was written, so
+<code>bitemporal</code> is absent rather than partial.</p>
+<p><strong>No scope key anywhere.</strong> A grep of all nine migrations
+for <code>user_id</code>, <code>workspace</code>, <code>agent_id</code>
+or <code>tenant</code> returns nothing. The web application has Google
+OAuth, roles, server-side sessions and role-based authorisation on every
+route; the memory service is a separate workspace and every agent that
+connects to it shares one store. For a personal deployment that is
+coherent, and it is why <code>scope_enforced</code> is withheld rather
+than partially awarded.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid lexical and embedding search over notes, entities and claims,
+plus a graph neighbourhood, assembled into a compact context block.
+Embeddings are local ONNX computed for the request graph on the fly, and
+the web search box surfaces <em>"explainable similarity"</em>
+rankings.</p>
+<p><strong>The status filter is the mechanism worth copying</strong>,
+and its shape matters as much as its existence: the narrow set is the
+default and the wide set requires an argument, so a caller gets the
+conservative behaviour by forgetting rather than by remembering. When
+the wide set is requested the claim is still marked
+<code>[CONTRADICTED]</code> in the rendered block, so the model is told
+what it is looking at rather than handed a disputed claim silently — the
+same choice <a href="../silica/">Silica</a> makes, arrived at
+independently, and here it sits on top of a default that withholds.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>An LLM extracts against a bounded subgraph; a deterministic validator
+rejects malformed candidates before any status is assigned; an optional
+verifier runs <em>selectively</em> on high-risk claims rather than on
+everything, which is the right place to spend a second model call.</p>
+<p><strong>And the gap is here.</strong> <code>find_opposing</code> —
+the lookup that finds a claim disagreeing with the incoming one —
+carries <code>AND status &lt;&gt; 'rejected'</code>. That is correct for
+its own purpose: a rejected claim should not be treated as a live
+counterparty. Its consequence is that the rejected set is invisible to
+the only part of ingest that looks at existing claims, and nothing else
+consults it. So a statement the verifier rejected can be re-proposed by
+the next note and land <code>active</code>, with no record connecting
+the two beyond two audit rows nobody joins.</p>
+<p>The material for the check is already there — <code>rejected</code>
+rows keyed on <code>(subject_id, predicate, object_id, modality)</code>,
+the same tuple <code>find_opposing</code> already binds.
+<code>tombstone</code> is withheld on that one missing query.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server exposing the memory service to any agent, with tools
+for ingest, recall, <code>correct_claim</code>,
+<code>forget_entity</code> and <code>memory_stats</code>, plus an HTTP
+API and the web canvas. Writes return a receipt carrying the claim ids,
+which is the detail that lets an agent refer to what it just stored.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The audit log is the strongest thing here.</strong> One
+recorder, a closed twelve-action vocabulary, before-and-after JSONB,
+indexed three ways, and rejections logged beside creations. It is
+best-effort by design — <em>"errors are logged, never returned"</em> —
+so a mutation can succeed unlogged, which is the standard trade and
+worth knowing before relying on the log for completeness.</p>
+<p><strong>Verification is selective, not universal</strong>, and the
+fallback is conservative: with no LLM available the verifier is skipped
+and unsupported claims are still quarantined deterministically. A safety
+property that survives the model being unavailable is the one worth
+having.</p>
+<p><strong>No human review surface in the memory service.</strong> The
+web application has an admin dashboard over users, roles, policies,
+usage, analytics and the audit log; the claim lifecycle is decided by
+the validator, the verifier and the contradiction check, with no place a
+person approves or rejects a claim before it takes effect.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>mcp/tests/memory_test.rs</code> is 739 lines across six
+<code>#[tokio::test]</code> functions, plus a small HTTP test. They are
+integration tests against a real Postgres, serialised behind a lock so
+they <em>"cannot corrupt each other's"</em> state — the right design for
+a store whose behaviour is in its SQL.</p>
+<p><strong>They skip silently when no database is reachable.</strong>
+Each begins:</p>
+<pre class="rust"><code>let Some(pool) = pool().await else {
+    eprintln!(&quot;skipping: no reachable database&quot;);
+    return;
+};</code></pre>
+<p>So a run without Postgres reports success having asserted nothing.
+That is a defensible developer convenience and it means a green result
+is not by itself evidence the memory service works — the distinction
+this atlas draws between a suite that ran and a suite that passed.</p>
+<p><strong>And the quarantine case asserts its own comment
+away.</strong> <code>verifier_falls_back_without_llm_v4</code> asserts
+<code>claims_verified == 0</code> when no LLM is available, then ingests
+a second note under the comment <em>"Unsupported claim is still
+quarantined deterministically"</em> — and checks nothing about it before
+deleting both notes. The behaviour the test is named for is stated and
+not asserted. It is the third instance of this shape the atlas has
+recorded in a week, after a <code>.every()</code> over a
+guaranteed-empty array and a gate distribution computed into two unused
+locals.</p>
+<p><code>memory_test.rs:685</code> does carry the audit assertion the
+mark rests on — the claim audit rows are non-empty after an ingest.</p>
+<p>No benchmark, no retrieval-quality measurement, and no committed run
+output.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the narrow status set the default and the wide one an
+argument.</strong> <code>status = 'active'</code> unless a caller passes
+<code>include_contradicted</code> means a forgetful caller gets the
+conservative behaviour. Most systems here do it the other way and rely
+on the caller to filter.</li>
+<li><strong>Label the exception you admit.</strong> When a contradicted
+claim is included it is rendered <code>[CONTRADICTED]</code> in the
+context block, so the model sees the dispute with the claim.</li>
+<li><strong>Put rejections in the same audit table as
+creations.</strong> <code>CLAIM_REJECTED</code> and
+<code>CLAIM_QUARANTINED</code> beside <code>CLAIM_CREATED</code>, same
+row shape, one recorder. This atlas repeatedly finds stores that log
+what they admitted and nothing about what they refused.</li>
+<li><strong>Keep the model's proposed labels beside the resolved
+ids.</strong> A claim that records both what the extractor said and what
+it resolved to is diagnosable when the resolution was wrong.</li>
+<li><strong>Mark both sides of a contradiction and keep a junction
+row.</strong> Preserving the pair and making it addressable is more
+useful than picking a winner at write time.</li>
+<li><strong>Write the migration comment that explains what you declined
+to enforce.</strong> A deliberately non-unique index, with the
+destructive-migration hazard that caused it and the application-level
+rule that replaces it.</li>
+<li><strong>Show the prompt and the selected subgraph.</strong> For
+memory produced by a model reading a chosen context, the tracer is what
+turns a bad claim into a diagnosable one.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not exclude rejected rows from the only query that reads
+existing claims.</strong> <code>find_opposing</code> is right to skip
+them for contradiction purposes and wrong to be the only reader, because
+the effect is that a refusal cannot survive a re-assertion.</li>
+<li><strong>Do not let an integration suite return early when its
+dependency is absent.</strong> A green run that skipped everything is
+indistinguishable from a green run that passed.</li>
+<li><strong>Do not state a behaviour in a test comment and then delete
+the fixture.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the claim model: an evidence-backed statement with modality,
+status, confidence, span-level provenance and an extraction version is a
+better memory unit than a chunk, and the five-status lifecycle with a
+default-deny read is the cleanest instance of that shape in this corpus.
+Take the audit vocabulary.</p>
+<p>Look elsewhere if you need multi-tenant separation — the memory
+service has no scope key — or if a refusal has to hold against the same
+claim arriving again. And note the missing licence before building on
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What would it cost to check the rejected set on
+write?</strong> The tuple is already bound by
+<code>find_opposing</code>; one query with the opposite status predicate
+would turn <code>rejected</code> from a label into a refusal that
+holds.</li>
+<li><strong>Does anything ever clear <code>quarantined</code>?</strong>
+Claims are quarantined when their evidence is unsupported and when a
+verifier says so; no path traced here promotes one back to
+<code>active</code> after better evidence arrives.</li>
+<li><strong>Should the memory service carry the web side's scope
+model?</strong> OAuth, roles and per-route authorisation exist twenty
+lines away in the same repository, and the memory service every agent
+shares has none of it.</li>
+<li><strong>What is the licence?</strong> No <code>LICENSE</code> file
+and no badge; the two workspaces are otherwise carefully
+documented.</li>
+<li><strong>How often does the selective verifier fire?</strong>
+Verification runs on high-risk claims only, which is the right economy;
+nothing records what fraction that is or what it caught.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>mcp/migrations/</code> —
+<code>007_claims.sql</code> (the claim, its modality and status CHECKs,
+<code>claim_relations</code>, <code>claim_contradictions</code>),
+<code>009_v5_memory_service.sql</code> (content-hash idempotency, the
+audit log, chunking)</li>
+<li><strong>Claims:</strong> <code>mcp/src/claims.rs</code>
+(<code>insert_claim</code>, <code>find_opposing</code> with its
+<code>status &lt;&gt; 'rejected'</code>, <code>supersede_claim</code>,
+<code>set_claim_status</code>)</li>
+<li><strong>Ingest and status:</strong> <code>mcp/src/ingest.rs</code>
+(support check at <code>:257</code>, verdict mapping at
+<code>:323-324</code>, contradiction pairing at <code>:481-482</code>),
+<code>mcp/src/validate.rs</code>, <code>mcp/src/verify.rs</code></li>
+<li><strong>Retrieval:</strong> <code>mcp/src/store.rs</code>
+(<code>vector_search_claims</code> and its status filter at
+<code>:752</code>), <code>mcp/src/recall.rs</code> (the context block
+and the <code>[CONTRADICTED]</code> marker),
+<code>mcp/src/retrieval.rs</code>, <code>mcp/src/embed.rs</code></li>
+<li><strong>Audit:</strong> <code>mcp/src/audit.rs</code>
+(<code>record</code>, the twelve-action vocabulary)</li>
+<li><strong>Surfaces:</strong> <code>mcp/src/server.rs</code>
+(<code>correct_claim</code>, <code>forget_entity</code>,
+<code>memory_stats</code>), <code>backend/src</code>,
+<code>frontend/</code></li>
+<li><strong>Tests:</strong> <code>mcp/tests/memory_test.rs</code>,
+<code>mcp/tests/http_test.rs</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-24</strong> — <a
+href="https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456"><code class="commit-id" title="ff8a6afa107947dd00f15c67db6a0aa7f90ca456">ff8a6afa…</code></a>
+— first reading, 13,800 lines of Rust across 53 files, 47 commits since
+11 August 2026. Screened before anything was read: no auto-run surface,
+no build-time execution, one unpinned surface and three files inside the
+seven-day cooldown; nothing was installed, no container was started and
+no test was run, so every claim here is from reading the tree and its
+migrations. Two marks. <code>tombstone</code> is withheld on one missing
+query — <code>rejected</code> is a real status with a real writer, and
+<code>find_opposing</code> is the only part of ingest that reads
+existing claims and excludes rejected rows by design, so a refusal does
+not survive a re-assertion. <code>scope_enforced</code> is absent: a
+grep of all nine migrations finds no user, agent, workspace or tenant
+column, while the web application beside it has OAuth, roles and
+per-route authorisation. <code>bitemporal</code> is absent —
+<code>created_at</code> and <code>updated_at</code> are both
+record-axis. <code>negative_eval</code> is withheld because no committed
+case asserts particular material is absent from a result set, and the
+test named for the quarantine path states the behaviour in a comment and
+asserts nothing about it. There is no <code>LICENSE</code> file in the
+tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
