@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 329 reports.**
+**This page covers all 330 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -793,6 +793,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: the best negative-assertion suite in the atlas after Verel's, testing authority rather than recall; and a project that says PROVEN-LAB in four places rather than letting you discover it.
 - Study when: the provenance of a write matters more than recall quality — regulated work, audit-facing tooling, anywhere "prove this memory was authorized and unaltered" is a real question.
 - Do not copy when: you need to find the relevant thing among fifty thousand. Chain-ordered retrieval and a whole-file rewrite per write put a low ceiling on corpus size, and the authors say so.
+
+### [`autoresearchclaw`](../systems/autoresearchclaw/)
+
+- Best idea: **the prompt overlay names which of its two halves is durable.** `build_overlay` assembles a stage prompt from time-weighted lessons and then from `# --- Section 2: cross-run MetaClaw arc-* skills ---`, scanning `~/.metaclaw/skills` for `arc-*` directories and inlining their `SKILL.md`. Four words in a comment state exactly which part of the assembled context a later run can see, which most systems leave to be inferred from a path — and here it is the only accurate statement of where the boundary falls.
+- Second idea: **a classified, severity-scored failure becomes an instruction file.** The MetaClaw bridge promotes high-severity lessons into skills after a run, so what the system learned is procedural memory a later run loads as text, with no store, embedding or query involved.
+- Biggest risk: **the memory package is wired into one run at a time.** `MemoryStore`, `update_confidence` and `prune` appear nowhere outside `tests/`; `IdeationMemory` and `WritingMemory` have no production caller; and the single construction of `ExperimentMemory` passes `store_dir=run_dir / "experiment_memory"`. The self-evolution module is worse in a more interesting way: its docstring promises lessons *"injected into future runs"* and its usage example constructs `EvolutionStore(Path("evolution"))`, while both real callers pass `run_dir / "evolution"` and nothing scans a sibling run directory. One argument decides whether a subsystem is memory or scratch space, and neither the type signature nor the 500-line test suite distinguishes them.
+- Maturity impression: MIT, 81,500 lines across 275 modules, an arXiv paper, ARC-Bench on Hugging Face, 101 test files, a CLI, an MCP server, a dashboard, and a 5,064-line human-in-the-loop subsystem that inspects artifacts and never imports the memory package. No capability marks: confidence is a float with no state, both timestamps are record-axis, category separates kinds rather than principals, `save()` rewrites each JSONL whole, and no committed test asserts that particular material is absent from a result set.
+- Study when: you want a clean instance of promoting a repeated failure into a durable instruction file — or a worked example of how a thorough test suite over a complete API can coexist with the subsystem being unreachable from production.
+- Do not copy when: you need a memory layer to run. What is here is well-built and, at this commit, scoped to the run that created it.
 
 ### [`autogen`](../systems/autogen/)
 - Best idea: `update_context` as a first-class injection seam, in a protocol small enough to implement in an afternoon.

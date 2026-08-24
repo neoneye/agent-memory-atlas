@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 329 reports.</strong></p>
+<p><strong>This page covers all 330 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -2166,6 +2166,52 @@ memory was authorized and unaltered" is a real question.</li>
 <li>Do not copy when: you need to find the relevant thing among fifty
 thousand. Chain-ordered retrieval and a whole-file rewrite per write put
 a low ceiling on corpus size, and the authors say so.</li>
+</ul>
+<h3 id="autoresearchclaw"><a
+href="../systems/autoresearchclaw/"><code>autoresearchclaw</code></a></h3>
+<ul>
+<li>Best idea: <strong>the prompt overlay names which of its two halves
+is durable.</strong> <code>build_overlay</code> assembles a stage prompt
+from time-weighted lessons and then from
+<code># --- Section 2: cross-run MetaClaw arc-* skills ---</code>,
+scanning <code>~/.metaclaw/skills</code> for <code>arc-*</code>
+directories and inlining their <code>SKILL.md</code>. Four words in a
+comment state exactly which part of the assembled context a later run
+can see, which most systems leave to be inferred from a path — and here
+it is the only accurate statement of where the boundary falls.</li>
+<li>Second idea: <strong>a classified, severity-scored failure becomes
+an instruction file.</strong> The MetaClaw bridge promotes high-severity
+lessons into skills after a run, so what the system learned is
+procedural memory a later run loads as text, with no store, embedding or
+query involved.</li>
+<li>Biggest risk: <strong>the memory package is wired into one run at a
+time.</strong> <code>MemoryStore</code>, <code>update_confidence</code>
+and <code>prune</code> appear nowhere outside <code>tests/</code>;
+<code>IdeationMemory</code> and <code>WritingMemory</code> have no
+production caller; and the single construction of
+<code>ExperimentMemory</code> passes
+<code>store_dir=run_dir / "experiment_memory"</code>. The self-evolution
+module is worse in a more interesting way: its docstring promises
+lessons <em>"injected into future runs"</em> and its usage example
+constructs <code>EvolutionStore(Path("evolution"))</code>, while both
+real callers pass <code>run_dir / "evolution"</code> and nothing scans a
+sibling run directory. One argument decides whether a subsystem is
+memory or scratch space, and neither the type signature nor the 500-line
+test suite distinguishes them.</li>
+<li>Maturity impression: MIT, 81,500 lines across 275 modules, an arXiv
+paper, ARC-Bench on Hugging Face, 101 test files, a CLI, an MCP server,
+a dashboard, and a 5,064-line human-in-the-loop subsystem that inspects
+artifacts and never imports the memory package. No capability marks:
+confidence is a float with no state, both timestamps are record-axis,
+category separates kinds rather than principals, <code>save()</code>
+rewrites each JSONL whole, and no committed test asserts that particular
+material is absent from a result set.</li>
+<li>Study when: you want a clean instance of promoting a repeated
+failure into a durable instruction file — or a worked example of how a
+thorough test suite over a complete API can coexist with the subsystem
+being unreachable from production.</li>
+<li>Do not copy when: you need a memory layer to run. What is here is
+well-built and, at this commit, scoped to the run that created it.</li>
 </ul>
 <h3 id="autogen"><a
 href="../systems/autogen/"><code>autogen</code></a></h3>

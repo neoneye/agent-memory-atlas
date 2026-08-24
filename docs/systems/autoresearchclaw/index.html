@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An autonomous research pipeline
+whose three memory categories are constructed inside the run directory,
+whose self-evolution store writes lessons where the next run will not
+look, and whose one durable memory is a skill file the code itself
+labels cross-run.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AutoResearchClaw — Agent Memory Atlas">
+    <meta property="og:description" content="An autonomous research
+pipeline whose three memory categories are constructed inside the run
+directory, whose self-evolution store writes lessons where the next run
+will not look, and whose one durable memory is a skill file the code
+itself labels cross-run.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoResearchClaw — Agent Memory Atlas">
+    <meta name="twitter:description" content="An autonomous research
+pipeline whose three memory categories are constructed inside the run
+directory, whose self-evolution store writes lessons where the next run
+will not look, and whose one durable memory is a skill file the code
+itself labels cross-run.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AutoResearchClaw — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AutoResearchClaw",
+      "description": "An autonomous research pipeline whose three memory categories are constructed inside the run directory, whose self-evolution store writes lessons where the next run will not look, and whose one durable memory is a skill file the code itself labels cross-run.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The durable half is not the memory
+package</p>
+          <h1>AutoResearchClaw</h1>
+          <p class="document-deck">An autonomous research pipeline whose
+three memory categories are constructed inside the run directory, whose
+self-evolution store writes lessons where the next run will not look,
+and whose one durable memory is a skill file the code itself labels
+cross-run.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aiming-lab/AutoResearchClaw">
+              <span>Source</span>
+              <strong>aiming-lab/AutoResearchClaw</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070" title="be4ba4755bf1b52220f25e13b2293b5956590070">
+              <span>Analyzed revision</span>
+              <code>be4ba475…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-24</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (49%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AutoResearchClaw is an MIT-licensed autonomous research pipeline —
+81,500 lines of Python across 275 modules, 303 commits since 15 March
+2026, with an <a href="https://arxiv.org/abs/2605.20025">arXiv
+paper</a>, a benchmark released on Hugging Face as ARC-Bench, 101 test
+files, a CLI, an MCP server, an OpenClaw integration, a dashboard and a
+5,000-line human-in-the-loop subsystem. The pitch is <em>"Chat an Idea.
+Get a Paper. Autonomous, Collaborative &amp; Self-Evolving."</em></p>
+<p>It is in this atlas because something does survive a run, and the
+useful part of this report is <em>which</em> thing. <strong>The
+directory named <code>memory/</code> is not it.</strong></p>
+<p><strong>Three memory categories, one production caller, and it writes
+into the run.</strong> <code>researchclaw/memory/</code> holds a
+<code>MemoryStore</code> with <code>ideation</code>,
+<code>experiment</code> and <code>writing</code> categories, embeddings,
+time decay, confidence and pruning — about 900 lines with a dedicated
+500-line test file. <code>MemoryStore</code>,
+<code>update_confidence</code> and <code>prune</code> are referenced
+nowhere outside <code>tests/</code>. <code>IdeationMemory</code> and
+<code>WritingMemory</code> have no production caller at all.
+<code>ExperimentMemory</code> has exactly one, and it reads:</p>
+<pre class="python"><code>_mem_dir = run_dir / &quot;experiment_memory&quot;
+exp_memory = ExperimentMemory(store_dir=str(_mem_dir))</code></pre>
+<p>So the experiment memory is created inside the directory for the run
+that is about to use it, and a later run has a different
+<code>run_dir</code>.</p>
+<p><strong>The self-evolution store makes the same move, against its own
+docstring.</strong> <code>evolution.py</code> opens by saying it
+<em>"records lessons from each pipeline run (failures, slow stages,
+quality issues) and injects them into future runs as prompt
+overlays"</em>, and its usage example constructs
+<code>EvolutionStore(Path("evolution"))</code> — a stable path. Both
+real callers construct
+<code>EvolutionStore(run_dir / "evolution")</code>. Nothing scans a
+sibling run directory. The lessons are appended where the next run will
+not look.</p>
+<p><strong>What does survive is a skill, and the code says so.</strong>
+<code>build_overlay</code> assembles the per-stage prompt in two
+labelled sections: lessons from the evolution store, and then
+<code># --- Section 2: cross-run MetaClaw arc-* skills ---</code>, which
+scans <code>~/.metaclaw/skills</code> for directories named
+<code>arc-*</code> and reads their <code>SKILL.md</code>. The MetaClaw
+bridge promotes high-severity lessons into those skills after a run.
+Section 1 is intra-run; section 2 crosses. The comment naming section 2
+<em>"cross-run"</em> is the clearest statement in the repository of
+where the boundary actually falls, and it is four words in a source file
+rather than anything in the README.</p>
+<p><strong>No capability marks.</strong> Confidence is a float with no
+discrete state; both timestamps are record-axis; the categories separate
+kinds of memory rather than principals; <code>save()</code> rewrites
+each JSONL whole rather than appending; the human-in-the-loop subsystem
+never imports the memory package; and no committed test asserts that
+particular material is absent from a result set.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>run N                                            run N+1
+  ├── run_dir/experiment_memory/  ──┐              ├── run_dir/experiment_memory/   (new, empty)
+  ├── run_dir/evolution/         ──┤ discarded     ├── run_dir/evolution/           (new, empty)
+  └── extract_lessons()          ──┘              │
+          │                                       │
+          └─► MetaClaw bridge                     │
+                promotes high-severity            │
+                lessons to skills                 │
+                      │                           │
+                      ▼                           │
+            ~/.metaclaw/skills/arc-*/SKILL.md ────┘
+                      │
+              build_overlay(stage):
+                Section 1: lessons  ← from run_dir/evolution  (this run only)
+                Section 2: arc-* skills ← &quot;cross-run&quot;          (survives)</code></pre>
+<p>Read the diagram as the answer to one question: what can run N+1 know
+that run N learned? Only what became a skill. Everything the memory
+package holds, and everything the evolution store appends, is written
+under a path that is created for the current run and never read
+again.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three memory subsystems write into the current run directory and one promotion path writes a skill to the home directory — the second section of the prompt overlay is the only part a later run can read, and the code labels it cross-run</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: three memory subsystems write into the current run directory and one promotion path writes a skill to the home directory — the second section of the prompt overlay is the only part a later run can read, and the code labels it cross-run
+    IDEA[&quot;research request&quot;] --&gt; PIPE[&quot;pipeline runner&lt;br/&gt;staged&quot;]
+
+    subgraph run[&quot;run_dir — created per run&quot;]
+        EXPMEM[(&quot;experiment_memory/&lt;br/&gt;JSONL per category&quot;)]
+        EVO[(&quot;evolution/&lt;br/&gt;lessons JSONL&quot;)]
+        STAGES[&quot;stage-NN/ artifacts&quot;]
+    end
+
+    PIPE --&gt; STAGES
+    PIPE --&gt;|&quot;ExperimentMemory(store_dir=run_dir/…)&quot;| EXPMEM
+    PIPE --&gt;|&quot;extract_lessons → append_many&quot;| EVO
+
+    PIPE --&gt; BRIDGE[&quot;MetaClaw bridge&lt;br/&gt;high-severity lessons → skills&quot;]
+    BRIDGE --&gt; SKILLS[(&quot;~/.metaclaw/skills/arc-*/SKILL.md&lt;br/&gt;~/.researchclaw/skills&quot;)]
+
+    OVERLAY[&quot;build_overlay(stage)&quot;] --&gt; S1[&quot;Section 1: lessons&quot;]
+    OVERLAY --&gt; S2[&quot;Section 2: cross-run arc-* skills&quot;]
+    EVO --&gt; S1
+    SKILLS --&gt; S2
+    S1 --&gt; PROMPT[&quot;stage prompt&quot;]
+    S2 --&gt; PROMPT
+
+    UNUSED[&quot;IdeationMemory · WritingMemory&lt;br/&gt;MemoryStore · update_confidence · prune&quot;]
+    UNUSED -.-&gt;|&quot;referenced only from tests/&quot;| TESTS[(&quot;tests/test_memory_system.py&quot;)]
+
+    HITL[&quot;hitl/ — 5,064 lines&lt;br/&gt;intervention · escalation · diff · editor&quot;] --&gt; STAGES</code></pre></details></figure>
+<p><strong>Runtime.</strong> A staged pipeline
+(<code>pipeline/runner.py</code>) over agents, a literature layer, an
+experiment executor with a sandbox, an assessor, writing and Overleaf
+integration, a web dashboard, MCP servers, a voice surface, and domain
+packs. Persistence is files: JSONL and YAML under a run directory, plus
+skills under the home directory.</p>
+<p><strong>The memory package.</strong> <code>store.py</code> (294
+lines) defines <code>MemoryEntry</code> and <code>MemoryStore</code>
+with <code>add</code>, <code>get</code>, <code>get_all</code>,
+<code>update_confidence</code>, <code>mark_accessed</code>,
+<code>prune</code>, <code>save</code>, <code>load</code> and
+<code>count</code>. <code>retriever.py</code> scores by cosine with a
+time-decay weight; <code>decay.py</code> holds
+<code>time_decay_weight</code> and <code>confidence_update</code>;
+<code>embeddings.py</code> wraps the embedder. Three thin category
+wrappers sit on top. It is a competent small memory layer, and section 1
+is about where it is plugged in.</p>
+<p><strong>The human-in-the-loop subsystem is the largest thing here
+after the pipeline</strong> — <code>intervention.py</code>,
+<code>escalation.py</code>, <code>smart_pause.py</code>,
+<code>diff_view.py</code>, <code>editor.py</code>,
+<code>claim_verifier.py</code>, <code>branching.py</code>,
+<code>cost_guard.py</code>, a TUI and a workshops directory, 5,064
+lines. It governs the pipeline: which stage pauses, what a person edits,
+what gets approved. <strong>It does not import the memory
+package.</strong> So <code>human_review</code> is withheld not because
+the surface is thin but because it is pointed at the artifacts rather
+than at what the system remembers — the mirror image of a system whose
+review queue holds memories and whose artifacts nobody sees.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The one production construction of a memory.</strong>
+<code>pipeline/runner.py:472-479</code> creates
+<code>run_dir / "experiment_memory"</code>, wraps it in
+<code>ExperimentMemory</code>, and guards the whole thing in a
+<code>try</code> that logs at debug and continues: <em>"Experiment
+memory initialisation skipped"</em>. A memory layer that fails to
+initialise leaves <code>exp_memory = None</code> and the run proceeds
+without it, silently.</p>
+<p><strong>Lesson extraction.</strong> After the stages complete,
+<code>extract_lessons(results, run_id=run_id, run_dir=run_dir)</code>
+classifies failures, slow stages and quality issues into six
+<code>LessonCategory</code> values with a severity, and
+<code>EvolutionStore(run_dir / "evolution").append_many(lessons)</code>
+persists them. The whole block is wrapped in
+<code>except Exception</code> with <em>"Evolution lesson extraction
+failed (non-blocking)"</em>.</p>
+<p><strong>The overlay.</strong>
+<code>build_overlay(stage_name, max_lessons=5, skills_dir=_METACLAW_SKILLS_DIR)</code>
+returns prompt text in two sections. Section 1 draws time-weighted
+lessons from the store — <code>_time_weight</code> decays them — and
+ends with <em>"Use these lessons to avoid repeating past mistakes."</em>
+Section 2 iterates <code>~/.metaclaw/skills</code>, takes directories
+whose name starts with <code>arc-</code>, and inlines each
+<code>SKILL.md</code>.</p>
+<p><strong>Skill promotion.</strong>
+<code>_metaclaw_post_pipeline(config, results, lessons, run_id, run_dir)</code>
+runs after lesson extraction and converts high-severity lessons into
+skills. <code>_helpers.py</code> resolves two stable directories —
+<code>~/.metaclaw/skills</code> and a cross-project
+<code>~/.researchclaw/skills</code> — and adds them to the skill
+registry when they exist. This is the atlas's <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> pattern: what the system learned becomes an instruction file
+that a later run loads, rather than a row it queries.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryEntry</code> carries <code>id</code>,
+<code>category</code>, <code>content</code>, a free-form
+<code>metadata</code> dict, an <code>embedding</code>, a
+<code>confidence</code> float, <code>created_at</code>,
+<code>last_accessed</code> and <code>access_count</code>.</p>
+<p><strong>One clock in two fields.</strong> <code>created_at</code> is
+when the entry was written and <code>last_accessed</code> is when it was
+last read; neither says when the thing it records was true. There is no
+validity axis, so <code>bitemporal</code> is absent rather than
+partial.</p>
+<p><strong>No status and no supersession.</strong> Confidence moves by a
+clamped delta and nothing marks an entry wrong, replaced or withheld.
+The only removal is <code>prune</code>, which trims a category to
+<code>max_entries_per_category</code> by rank — so a memory leaves
+because the store is full, never because it was found to be false. That
+is why <code>trust_state</code> and <code>tombstone</code> are both
+absent.</p>
+<p><strong>Category is not a scope key.</strong> <code>ideation</code>,
+<code>experiment</code> and <code>writing</code> separate kinds of
+memory, not principals; nothing carries a user, project or agent
+identifier. The separation that actually operates is the run directory,
+which is isolation by construction and not a predicate.</p>
+<p><strong><code>save()</code> rewrites.</strong> Each category's JSONL
+is opened <code>"w"</code> and written whole, so the file is a snapshot
+rather than an append-only record — which is why the JSONL format does
+not carry <code>audit_log</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>MemoryRetriever</code> embeds the query, scores cosine
+similarity across a category, and weights by time decay and confidence.
+It is a reasonable small retriever and its reach is bounded by the store
+it is handed, which in production is the one created for the current
+run.</p>
+<p>Retrieval that a later run can benefit from happens elsewhere and is
+not a query: <code>build_overlay</code> reads whole
+<code>SKILL.md</code> files off disk by directory-name prefix and
+inlines them into the stage prompt. There is no ranking, no budget
+beyond <code>max_lessons</code> on the other section, and no way for a
+skill to be scored, demoted, or excluded once it exists.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Within a run: <code>add</code> with an embedding and an initial
+confidence; <code>mark_accessed</code> on read;
+<code>update_confidence</code> with a clamped delta. Across runs: a
+lesson becomes a skill file, and a skill file is a document rather than
+a record — nothing carries its provenance, its severity, or the run that
+produced it once it has been written.</p>
+<p><strong>Every memory path is wrapped in a broad
+<code>except</code>.</strong> Store initialisation, lesson extraction
+and the MetaClaw hook each catch <code>Exception</code>, log at debug or
+warning, and continue. Non-blocking is the right posture for a research
+pipeline whose product is a paper. It also means a deployment where none
+of the three ever worked looks exactly like one where all three did —
+the same shape this atlas recorded for GENOME's automatic fact detector
+and for llmaker's Redis writes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server under <code>researchclaw/mcp</code>, an OpenClaw
+integration billed as the headline entry point (<em>"Just chat with
+OpenClaw: 'Research X' → done"</em>), a web dashboard, a voice surface,
+and a MetaClaw bridge. The memory layer is not exposed on any of them:
+there is no remember tool, no recall tool, and no way for an operator to
+inspect or edit what a run remembered.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No audit of memory mutations</strong>, no provenance beyond a
+free-form metadata dict, and no status a person or a later stage could
+set.</p>
+<p><strong>The human-in-the-loop subsystem is genuinely
+substantial</strong> and worth reading on its own terms —
+<code>claim_verifier.py</code> checks claims against evidence,
+<code>diff_view.py</code> and <code>editor.py</code> let a person change
+an artifact, <code>escalation.py</code> and <code>smart_pause.py</code>
+decide when to stop, and <code>learning.py</code> tracks which stages
+humans intervene in and <em>"adjust[s] confidence thresholds based on
+rejection rates"</em>. That last one is itself a durable belief about
+the system's own reliability. None of it touches the memory package.</p>
+<p><strong>The tip commit is a good sign about the rest.</strong>
+<em>"strip reasoning traces by default so they stop leaking into
+artifacts"</em> is exactly the class of bug that ships quietly in an LLM
+pipeline, and fixing it by changing the default rather than documenting
+a flag is the right call.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>101 test files; the README claims 2,699 passing.
+<code>tests/test_memory_system.py</code> is about 500 lines covering
+<code>MemoryStore</code>, the retriever, decay, and all three category
+wrappers — a thorough suite for a subsystem the pipeline constructs one
+third of.</p>
+<p><strong>No committed test asserts that particular material is absent
+from a result set.</strong> The nearest is
+<code>assert not store.update_confidence("nope", 0.1)</code>, which
+checks a false return on a missing id. So <code>negative_eval</code> is
+withheld: the question the mark asks — does a stored item stay out of a
+query it should not match — is not asked anywhere in the suite.</p>
+<p>The paper and ARC-Bench are the evaluation story, and they measure
+the research pipeline's output rather than the memory layer. That is a
+reasonable division; it does mean nothing in this repository measures
+whether the memory helps.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Label which section of your prompt is durable.</strong>
+<code># --- Section 2: cross-run MetaClaw arc-* skills ---</code> is
+four words that tell a maintainer exactly which half of the assembled
+context outlives the run. Most systems leave that to be inferred from a
+path.</li>
+<li><strong>Promote a repeated failure into an instruction file rather
+than a row.</strong> A lesson that becomes a <code>SKILL.md</code> is
+read by any later run without a query, an embedding, or a store — and it
+is reviewable as text.</li>
+<li><strong>Decay lessons by time before injecting them.</strong>
+<code>_time_weight</code> keeps an old failure from crowding out a
+recent one in a fixed prompt budget.</li>
+<li><strong>Change the default rather than documenting the
+flag.</strong> Reasoning traces leaking into artifacts was fixed by
+stripping them by default.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not construct a cross-run store inside the run
+directory.</strong> The evolution module's docstring promises lessons
+<em>"injected into future runs"</em> and its own usage example uses a
+stable path; both real callers pass <code>run_dir / "evolution"</code>.
+One argument decides whether a subsystem is memory or scratch space, and
+nothing in the type signature or the tests distinguishes them.</li>
+<li><strong>Do not ship three tiers when one is wired.</strong>
+<code>IdeationMemory</code> and <code>WritingMemory</code> have full
+APIs, full tests and no production caller; a reader auditing "does this
+system have memory" will find 900 lines and a green suite and conclude
+yes.</li>
+<li><strong>Do not let a store's initialisation failure be a debug
+log.</strong> Three memory-related blocks each swallow
+<code>Exception</code> and continue, so a run with no memory at all is
+indistinguishable from a working one.</li>
+<li><strong>Do not point a large review surface at the artifacts and
+none of it at the memory.</strong> Five thousand lines of
+human-in-the-loop machinery can inspect a draft and cannot see a single
+thing the system remembered.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the skill-promotion path: turning a classified, severity-scored
+failure into a durable instruction file that later runs load is a clean
+instance of procedural memory, and it works without any of the vector
+machinery beside it. Take the two-section overlay and its label.</p>
+<p>Look elsewhere for a memory layer to run. What is here is well-built
+and, at this commit, wired into one run at a time.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was <code>run_dir</code> deliberate?</strong> Both
+<code>EvolutionStore</code> call sites and the one
+<code>ExperimentMemory</code> call site pass a per-run path, while the
+evolution module's own example passes a stable one. A single shared root
+would make the subsystem do what its docstring says, and nothing else
+would have to change.</li>
+<li><strong>What was going to construct <code>IdeationMemory</code> and
+<code>WritingMemory</code>?</strong> Both are complete and tested.
+Either the pipeline stages that would use them are the next piece, or
+the categories are aspirational and <code>experiment</code> is the
+design.</li>
+<li><strong>Can a promoted skill be wrong?</strong> A high-severity
+lesson becomes a <code>SKILL.md</code> that every later run inlines.
+Nothing scores it, expires it, or removes it after the condition that
+produced it is fixed, so a skill written from a transient infrastructure
+failure is permanent advice.</li>
+<li><strong>Does the HITL subsystem's <code>learning.py</code> state
+cross runs?</strong> It tracks intervention rates and adjusts
+thresholds, which is durable belief about the system itself; where it is
+persisted decides whether it is a fourth memory or a fourth per-run
+store.</li>
+<li><strong>Does the memory help?</strong> ARC-Bench measures the
+pipeline's output. No ablation in this repository runs the pipeline with
+the memory and without it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Memory package:</strong>
+<code>researchclaw/memory/store.py</code> (<code>MemoryEntry</code>,
+<code>MemoryStore</code>, <code>prune</code>, <code>save</code>),
+<code>retriever.py</code>, <code>decay.py</code>,
+<code>embeddings.py</code>, <code>ideation_memory.py</code>,
+<code>experiment_memory.py</code>, <code>writing_memory.py</code></li>
+<li><strong>Evolution:</strong> <code>researchclaw/evolution.py</code>
+(<code>LessonCategory</code>, <code>LessonEntry</code>,
+<code>EvolutionStore</code>, <code>extract_lessons</code>,
+<code>_time_weight</code>, <code>build_overlay</code> and its two
+sections), <code>evolution_aevolve.py</code></li>
+<li><strong>Wiring:</strong>
+<code>researchclaw/pipeline/runner.py:472-479</code> (the one
+<code>ExperimentMemory</code>), <code>:868-877</code> (lesson extraction
+and the store path),
+<code>researchclaw/pipeline/_helpers.py:55-58</code>
+(<code>_METACLAW_SKILLS_DIR</code>, <code>_USER_SKILLS_DIR</code>),
+<code>:844</code> (the overlay call)</li>
+<li><strong>Human in the loop:</strong> <code>researchclaw/hitl/</code>
+— <code>intervention.py</code>, <code>escalation.py</code>,
+<code>smart_pause.py</code>, <code>diff_view.py</code>,
+<code>editor.py</code>, <code>claim_verifier.py</code>,
+<code>learning.py</code>, <code>branching.py</code>,
+<code>cost_guard.py</code></li>
+<li><strong>Knowledge and skills:</strong>
+<code>researchclaw/knowledge/base.py</code>,
+<code>researchclaw/knowledge/graph/</code>,
+<code>researchclaw/skills/</code>,
+<code>researchclaw/metaclaw_bridge/</code></li>
+<li><strong>Tests:</strong> <code>tests/test_memory_system.py</code>,
+and 100 other files</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-24</strong> — <a
+href="https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070"><code class="commit-id" title="be4ba4755bf1b52220f25e13b2293b5956590070">be4ba475…</code></a>
+— first reading, MIT, 81,500 lines of Python across 275 modules, 303
+commits since 15 March 2026, with an arXiv paper and a released
+benchmark. Screened before anything was read: no auto-run surface, one
+build-time execution point (<code>tests/conftest.py</code> on pytest
+collection), one unpinned surface; nothing was installed and no test was
+run. Admitted on the skill-promotion path — high-severity lessons become
+<code>arc-*</code> skill directories under
+<code>~/.metaclaw/skills</code> that later runs inline — and not on the
+<code>memory/</code> package, whose one production construction is
+<code>ExperimentMemory(store_dir=run_dir / "experiment_memory")</code>;
+<code>MemoryStore</code>, <code>update_confidence</code> and
+<code>prune</code> appear outside <code>tests/</code> nowhere, and
+<code>IdeationMemory</code> and <code>WritingMemory</code> have no
+production caller. <code>EvolutionStore</code>, whose module docstring
+describes injecting lessons into future runs and whose usage example
+uses a stable path, is constructed at <code>run_dir / "evolution"</code>
+at both call sites, and nothing scans a sibling run directory. No
+capability marks: confidence is a float with no discrete state, both
+timestamps are record-axis, category separates kinds rather than
+principals, <code>save()</code> rewrites each JSONL whole, the
+5,064-line human-in-the-loop subsystem never imports the memory package,
+and no committed test asserts that particular material is absent from a
+result set.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

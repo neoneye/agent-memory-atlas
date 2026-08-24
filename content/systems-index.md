@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **329 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **330 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -56,6 +56,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/auraos/"><span class="az-id">AuraOS</span><span class="az-what">The whole transcript, every turn</span><code class="az-repo">AdultSwimmer/AuraOS</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/aurora/"><span class="az-id">AURORA</span><span class="az-what">Adversarial self-verification of a query plan</span><code class="az-repo">hamr0/aurora</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/autogen/"><span class="az-id">AutoGen</span><span class="az-what">Memory without identity</span><code class="az-repo">microsoft/autogen</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/autoresearchclaw/"><span class="az-id">AutoResearchClaw</span><span class="az-what">The durable half is not the memory package</span><code class="az-repo">aiming-lab/AutoResearchClaw</code><span class="az-caps"></span></a></li>
 </ul>
 
 ## B
