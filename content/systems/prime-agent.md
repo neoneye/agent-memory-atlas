@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "PrimeIntellect-ai/prime-agent"
 source_url: https://github.com/PrimeIntellect-ai/prime-agent
-revision: 8d7deeab5861bf9d77bde3d8511046a5c799818d
-revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d
-analyzed_at: 2026-08-21
+revision: 9bc00557489020e4dc981bef3111cb651c5955e7
+revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7
+analyzed_at: 2026-08-25
 capabilities: "scope_enforced, audit_log, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -38,6 +38,17 @@ TypeScript across four packages, MIT-licensed, 4,469 commits, built on the Pi
 agent core. The interesting part for this atlas is not that it stores sessions.
 It is that **the agent's durable memory is the harness it runs on**, and it
 rewrites it.
+
+Two papers stand behind it, and they divide the way the code does. *Prime Agent:
+A Self-Improving RLM Harness* ([arXiv:2608.23552](https://arxiv.org/abs/2608.23552),
+24 August 2026) is the harness paper the repository asks to be cited by. The
+memory mechanism this report is about comes from the earlier one: *Continual
+Harness: Online Adaptation for Self-Improving Foundation Agents*
+([arXiv:2605.09998](https://arxiv.org/abs/2605.09998), 11 May 2026), which the
+README names as the source of the design that *"stores supplemental prompts,
+memories, skill descriptions, and reusable subagent specifications as durable
+state."* Section 10 records what those papers do and do not put behind their
+numbers.
 
 **Four kinds of durable entry, written by the agent about itself.** A
 `RefinementKind` is `prompt`, `memory`, `skill` or `subagent`: a supplemental
@@ -411,7 +422,27 @@ model *should* propose from a given trajectory, which is the same oracle problem
 every system in this family has. The difference is that here a wrong proposal is
 recoverable.
 
-Nothing was executed from this checkout. Six dependency surfaces had changed
+**The published numbers are not checkable from this repository.** *Prime Agent*
+([arXiv:2608.23552](https://arxiv.org/abs/2608.23552)) reports raising *"ARC-AGI-3
+RHAE Best@1 from 30% to 95.5%"* and matching or exceeding other harnesses across
+long-context coding, GPU-kernel generation, emulator construction and autonomous
+nanoGPT speedruns, and *Continual Harness*
+([arXiv:2605.09998](https://arxiv.org/abs/2605.09998)) reports that its automated
+refinement *"substantially reduces button-press cost relative to the minimalist
+baseline and recovers a majority of the gap to a hand-engineered expert
+harness"* on Pokémon Red and Emerald. The tree at this pin carries no evaluation
+directory, no task definitions, no result files and no run traces: a `find` for
+any path containing *eval* returns nothing outside `node_modules`. So the
+harness is published and the measurements of it are not, which is the mirror
+image of VISTA — a harness with no source at any commit whose 320 MB of
+published per-run traces let its headline claim be recomputed by a reader. Both
+publish half the evidence; they publish opposite halves. Two qualifications belong with that. Only the abstracts were read
+here, so a fuller artifact may be described inside either paper; and a research
+paper's artifacts are not obliged to live in the product repository, which is
+why this is recorded as *what a reader of this checkout can verify* rather than
+as a defect.
+
+Nothing was executed from this checkout. Eight dependency surfaces had changed
 inside the seven-day cooldown, and every claim above is established by reading.
 
 ## 11. For Your Own Build
@@ -495,6 +526,12 @@ asking.
   `compaction.test.ts`, `builtin-skills.test.ts`.
 
 ## History
+
+**2026-08-25** — [`9bc00557489020e4dc981bef3111cb651c5955e7`](https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7) — re-pinned six commits on. Screened again before reading: no auto-run surface, seven build-time execution surfaces, twenty-one unpinned surfaces and eight files inside the seven-day cooldown, plus a `.husky/pre-commit` payload that is inert until something points `core.hooksPath` at it; nothing was installed and nothing was run. Marks unchanged at `scope_enforced`, `audit_log` and `negative_eval`. The diff touches model catalogs, ACP quiescence, an IPython cell highlighter and the RLM depth default; `git diff --stat` over `src/core/refinement/` and `session-manager.ts` is empty, so every mechanism this report describes is byte-identical to the previous pin and was not re-derived.
+
+What moved is the citation. *Prime Agent: A Self-Improving RLM Harness* ([arXiv:2608.23552](https://arxiv.org/abs/2608.23552)) was submitted on 24 August 2026 — three days after the previous pin — and the README now carries its badge and BibTeX. Reading it surfaced the paper this report should have named from the start: the harness-memory design comes from *Continual Harness* ([arXiv:2605.09998](https://arxiv.org/abs/2605.09998), 11 May 2026), linked from the README's own description of the mechanism. Both are added to section 1, and section 10 records that neither paper's figures can be checked against anything in this repository.
+
+One divergence is worth keeping. The *Continual Harness* abstract describes an agent that *"alternates between acting and refining its own prompt, sub-agents, skills, and memory, drawing on any past trajectory data,"* and says nothing about versioning, before-and-after snapshots, refused edits or rollback — the four properties that make this implementation worth a report and that give it its `audit_log` mark. The repository does name the last of them, in a README bullet reading *"recorded snapshots support rollback."* So the gap is between the paper's summary of the mechanism and the mechanism, not between the project and its own documentation.
 
 **2026-08-21** — [`8d7deeab5861bf9d77bde3d8511046a5c799818d`](https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d) — re-pinned 88 commits on, at v0.8.0. Screened again: build-time execution declared across the workspace's `package.json` files; nothing was installed and nothing was run. Marks unchanged at `scope_enforced`, `audit_log` and `negative_eval`. `sessionHeaderMatchesCwd` was re-checked rather than carried forward — `session-manager.ts` lost 257 lines to a refactor in this range and the predicate survives it.
 

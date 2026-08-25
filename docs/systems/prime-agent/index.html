@@ -116,14 +116,14 @@ session.</p>
               <strong>PrimeIntellect-ai/prime-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d" title="8d7deeab5861bf9d77bde3d8511046a5c799818d">
+            <a class="meta-pill revision-pill" href="https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7" title="9bc00557489020e4dc981bef3111cb651c5955e7">
               <span>Analyzed revision</span>
-              <code>8d7deeab…</code>
+              <code>9bc00557…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-21</strong>
+              <strong>2026-08-25</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -147,6 +147,18 @@ of TypeScript across four packages, MIT-licensed, 4,469 commits, built
 on the Pi agent core. The interesting part for this atlas is not that it
 stores sessions. It is that <strong>the agent's durable memory is the
 harness it runs on</strong>, and it rewrites it.</p>
+<p>Two papers stand behind it, and they divide the way the code does.
+<em>Prime Agent: A Self-Improving RLM Harness</em> (<a
+href="https://arxiv.org/abs/2608.23552">arXiv:2608.23552</a>, 24 August
+2026) is the harness paper the repository asks to be cited by. The
+memory mechanism this report is about comes from the earlier one:
+<em>Continual Harness: Online Adaptation for Self-Improving Foundation
+Agents</em> (<a
+href="https://arxiv.org/abs/2605.09998">arXiv:2605.09998</a>, 11 May
+2026), which the README names as the source of the design that
+<em>"stores supplemental prompts, memories, skill descriptions, and
+reusable subagent specifications as durable state."</em> Section 10
+records what those papers do and do not put behind their numbers.</p>
 <p><strong>Four kinds of durable entry, written by the agent about
 itself.</strong> A <code>RefinementKind</code> is <code>prompt</code>,
 <code>memory</code>, <code>skill</code> or <code>subagent</code>: a
@@ -521,8 +533,32 @@ not reach the model, and what earns the mark here.</p>
 refinement model <em>should</em> propose from a given trajectory, which
 is the same oracle problem every system in this family has. The
 difference is that here a wrong proposal is recoverable.</p>
-<p>Nothing was executed from this checkout. Six dependency surfaces had
-changed inside the seven-day cooldown, and every claim above is
+<p><strong>The published numbers are not checkable from this
+repository.</strong> <em>Prime Agent</em> (<a
+href="https://arxiv.org/abs/2608.23552">arXiv:2608.23552</a>) reports
+raising <em>"ARC-AGI-3 RHAE Best@1 from 30% to 95.5%"</em> and matching
+or exceeding other harnesses across long-context coding, GPU-kernel
+generation, emulator construction and autonomous nanoGPT speedruns, and
+<em>Continual Harness</em> (<a
+href="https://arxiv.org/abs/2605.09998">arXiv:2605.09998</a>) reports
+that its automated refinement <em>"substantially reduces button-press
+cost relative to the minimalist baseline and recovers a majority of the
+gap to a hand-engineered expert harness"</em> on Pokémon Red and
+Emerald. The tree at this pin carries no evaluation directory, no task
+definitions, no result files and no run traces: a <code>find</code> for
+any path containing <em>eval</em> returns nothing outside
+<code>node_modules</code>. So the harness is published and the
+measurements of it are not, which is the mirror image of VISTA — a
+harness with no source at any commit whose 320 MB of published per-run
+traces let its headline claim be recomputed by a reader. Both publish
+half the evidence; they publish opposite halves. Two qualifications
+belong with that. Only the abstracts were read here, so a fuller
+artifact may be described inside either paper; and a research paper's
+artifacts are not obliged to live in the product repository, which is
+why this is recorded as <em>what a reader of this checkout can
+verify</em> rather than as a defect.</p>
+<p>Nothing was executed from this checkout. Eight dependency surfaces
+had changed inside the seven-day cooldown, and every claim above is
 established by reading.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
@@ -622,6 +658,42 @@ specifically?</li>
 <code>builtin-skills.test.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-25</strong> — <a
+href="https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7"><code class="commit-id" title="9bc00557489020e4dc981bef3111cb651c5955e7">9bc00557…</code></a>
+— re-pinned six commits on. Screened again before reading: no auto-run
+surface, seven build-time execution surfaces, twenty-one unpinned
+surfaces and eight files inside the seven-day cooldown, plus a
+<code>.husky/pre-commit</code> payload that is inert until something
+points <code>core.hooksPath</code> at it; nothing was installed and
+nothing was run. Marks unchanged at <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>. The diff touches
+model catalogs, ACP quiescence, an IPython cell highlighter and the RLM
+depth default; <code>git diff --stat</code> over
+<code>src/core/refinement/</code> and <code>session-manager.ts</code> is
+empty, so every mechanism this report describes is byte-identical to the
+previous pin and was not re-derived.</p>
+<p>What moved is the citation. <em>Prime Agent: A Self-Improving RLM
+Harness</em> (<a
+href="https://arxiv.org/abs/2608.23552">arXiv:2608.23552</a>) was
+submitted on 24 August 2026 — three days after the previous pin — and
+the README now carries its badge and BibTeX. Reading it surfaced the
+paper this report should have named from the start: the harness-memory
+design comes from <em>Continual Harness</em> (<a
+href="https://arxiv.org/abs/2605.09998">arXiv:2605.09998</a>, 11 May
+2026), linked from the README's own description of the mechanism. Both
+are added to section 1, and section 10 records that neither paper's
+figures can be checked against anything in this repository.</p>
+<p>One divergence is worth keeping. The <em>Continual Harness</em>
+abstract describes an agent that <em>"alternates between acting and
+refining its own prompt, sub-agents, skills, and memory, drawing on any
+past trajectory data,"</em> and says nothing about versioning,
+before-and-after snapshots, refused edits or rollback — the four
+properties that make this implementation worth a report and that give it
+its <code>audit_log</code> mark. The repository does name the last of
+them, in a README bullet reading <em>"recorded snapshots support
+rollback."</em> So the gap is between the paper's summary of the
+mechanism and the mechanism, not between the project and its own
+documentation.</p>
 <p><strong>2026-08-21</strong> — <a
 href="https://github.com/PrimeIntellect-ai/prime-agent/commit/8d7deeab5861bf9d77bde3d8511046a5c799818d"><code class="commit-id" title="8d7deeab5861bf9d77bde3d8511046a5c799818d">8d7deeab…</code></a>
 — re-pinned 88 commits on, at v0.8.0. Screened again: build-time

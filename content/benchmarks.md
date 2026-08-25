@@ -1310,6 +1310,42 @@ standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
 A forgetting benchmark could borrow its structure wholesale and change only what
 sits between the memory and the model.
 
+#### A harness paper publishes the harness and not the measurement
+
+*Prime Agent: A Self-Improving RLM Harness*
+([arXiv:2608.23552](https://arxiv.org/abs/2608.23552), 24 August 2026) reports
+raising *"ARC-AGI-3 RHAE Best@1 from 30% to 95.5%"* and matching or exceeding
+other harnesses across long-context coding, GPU-kernel generation, emulator
+construction and autonomous nanoGPT speedruns. The memory design it wraps comes
+from *Continual Harness*
+([arXiv:2605.09998](https://arxiv.org/abs/2605.09998), 11 May 2026), which
+reports that automated refinement *"substantially reduces button-press cost
+relative to the minimalist baseline and recovers a majority of the gap to a
+hand-engineered expert harness"* on Pokémon Red and Emerald.
+
+The code is genuinely published, MIT, and read here as
+[Prime Agent](../systems/prime-agent/) — 184,000 lines with 1,519 lines of tests
+over the refinement mechanism alone. What is absent is the measurement: at
+[`9bc00557489020e4dc981bef3111cb651c5955e7`](https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7)
+there is no evaluation directory, no task definitions, no result files and no run
+traces, and a search for any path containing *eval* returns nothing outside
+`node_modules`.
+
+Set that beside `vista-research.github.io`, recorded in the
+[comparative report](../compare/): a harness with **no source at any commit** whose 320 MB
+of published per-run traces let its headline claim be recomputed by a reader who
+never sees the code. The two publish opposite halves of the same evidence, and
+the pairing is the useful part. **A reader can check an implementation or a
+result, and neither project lets them check both.** The version that would —
+source at a pinned commit plus the traces the number was computed from — is
+still not something this page has found for an agent-memory claim.
+
+Two qualifications, because the distinction here is about verifiability rather
+than conduct. Only the abstracts were read for both papers, so a fuller artifact
+may be described inside either. And a paper's artifacts are under no obligation
+to live in the product repository — this is recorded as what a reader of the
+published code can verify, which is the question this page exists to ask.
+
 ### ForgetEval — the one benchmark that scores the control plane
 
 **Read 2026-07-30 at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495), MIT.**
