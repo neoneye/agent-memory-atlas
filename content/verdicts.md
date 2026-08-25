@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 334 reports.**
+**This page covers all 335 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1560,6 +1560,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
 - Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
 - Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
+
+### [`agentictrading`](../systems/agentictrading/)
+
+- Best idea: **the schema is created before anything writes to it.** `database_initializer.py` declares full-text indexes, property indexes and both uniqueness and existence constraints by name, rather than letting a graph schema emerge from whatever the first write happened to contain — a discipline several Neo4j-backed systems in this corpus skip.
+- Biggest risk: **`agent_id` is on every node and the search does not use it.** The query agents call is three `CONTAINS` clauses over content, summary and keywords with no scope predicate at all; the one place `agent_id` is compared sits behind `if "agent_id" in filters`, and the one-hop `SIMILAR_TO|RELATES_TO` expansion selects it into the projection without comparing it. Four differently-privileged agent pools — alpha, risk, execution, transaction cost — write into one graph behind that.
+- Second risk: **the search mutates the ranking signal.** `SET m.lookup_count = m.lookup_count + 1` fires as a side effect of reading, so retrieval feeds popularity and popularity feeds retrieval, with nothing in the loop asking whether the memory was right. In a trading store where a stale summary of an earlier regime reads identically to a current one, that loop points the wrong way.
+- Third risk: **the directory named for testing the memory does not import it.** `memory_testing/accuracy_testing.py` is 44 lines with zero assertions whose success line is `print("SUCCESS: The model processed the request.")` — success is the API call not raising. `latency_test.py` is a real measurement of `gpt-4o-mini`'s long-context latency and never touches `FinAgents/memory/`. A filename is making a claim that nothing in the file supports.
+- Maturity impression: OpenMDW-1.0 — a model-and-data licence, not a software one — roughly 258,000 lines of Python, 1,419 commits since 20 May 2025, with a 7,784-line memory service behind an MCP server and an A2A server with its own health checker. No marks. `database.py` carries `AUTH = ("neo4j", "FinOrchestration")` as a literal.
+- Study when: you want the initializer as a model for asserting a graph schema up front, or you want the clearest instance in this corpus of a scope key that is stored, filterable and unused.
+- Do not copy when: several agents share one store — the boundary here is a caller convention, not a property of the service that owns the data.
 
 ### [`opencompany`](../systems/opencompany/)
 

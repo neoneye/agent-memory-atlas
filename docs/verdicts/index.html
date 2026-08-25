@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 334 reports.</strong></p>
+<p><strong>This page covers all 335 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4794,6 +4794,51 @@ and checks nothing about it.</li>
 covers what was refused.</li>
 <li>Do not copy when: you need multi-tenant separation, or a rejection
 that holds against the same claim arriving again.</li>
+</ul>
+<h3 id="agentictrading"><a
+href="../systems/agentictrading/"><code>agentictrading</code></a></h3>
+<ul>
+<li>Best idea: <strong>the schema is created before anything writes to
+it.</strong> <code>database_initializer.py</code> declares full-text
+indexes, property indexes and both uniqueness and existence constraints
+by name, rather than letting a graph schema emerge from whatever the
+first write happened to contain — a discipline several Neo4j-backed
+systems in this corpus skip.</li>
+<li>Biggest risk: <strong><code>agent_id</code> is on every node and the
+search does not use it.</strong> The query agents call is three
+<code>CONTAINS</code> clauses over content, summary and keywords with no
+scope predicate at all; the one place <code>agent_id</code> is compared
+sits behind <code>if "agent_id" in filters</code>, and the one-hop
+<code>SIMILAR_TO|RELATES_TO</code> expansion selects it into the
+projection without comparing it. Four differently-privileged agent pools
+— alpha, risk, execution, transaction cost — write into one graph behind
+that.</li>
+<li>Second risk: <strong>the search mutates the ranking signal.</strong>
+<code>SET m.lookup_count = m.lookup_count + 1</code> fires as a side
+effect of reading, so retrieval feeds popularity and popularity feeds
+retrieval, with nothing in the loop asking whether the memory was right.
+In a trading store where a stale summary of an earlier regime reads
+identically to a current one, that loop points the wrong way.</li>
+<li>Third risk: <strong>the directory named for testing the memory does
+not import it.</strong> <code>memory_testing/accuracy_testing.py</code>
+is 44 lines with zero assertions whose success line is
+<code>print("SUCCESS: The model processed the request.")</code> —
+success is the API call not raising. <code>latency_test.py</code> is a
+real measurement of <code>gpt-4o-mini</code>'s long-context latency and
+never touches <code>FinAgents/memory/</code>. A filename is making a
+claim that nothing in the file supports.</li>
+<li>Maturity impression: OpenMDW-1.0 — a model-and-data licence, not a
+software one — roughly 258,000 lines of Python, 1,419 commits since 20
+May 2025, with a 7,784-line memory service behind an MCP server and an
+A2A server with its own health checker. No marks.
+<code>database.py</code> carries
+<code>AUTH = ("neo4j", "FinOrchestration")</code> as a literal.</li>
+<li>Study when: you want the initializer as a model for asserting a
+graph schema up front, or you want the clearest instance in this corpus
+of a scope key that is stored, filterable and unused.</li>
+<li>Do not copy when: several agents share one store — the boundary here
+is a caller convention, not a property of the service that owns the
+data.</li>
 </ul>
 <h3 id="opencompany"><a
 href="../systems/opencompany/"><code>opencompany</code></a></h3>

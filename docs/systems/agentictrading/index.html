@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-agent trading stack whose
+7,800-line Neo4j memory service stamps an agent_id on every node and
+applies it as a filter only when a caller remembers to ask for it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgenticTrading — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-agent trading stack
+whose 7,800-line Neo4j memory service stamps an agent_id on every node
+and applies it as a filter only when a caller remembers to ask for it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgenticTrading — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-agent trading
+stack whose 7,800-line Neo4j memory service stamps an agent_id on every
+node and applies it as a filter only when a caller remembers to ask for
+it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgenticTrading — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgenticTrading",
+      "description": "A multi-agent trading stack whose 7,800-line Neo4j memory service stamps an agent_id on every node and applies it as a filter only when a caller remembers to ask for it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory graph nothing scopes</p>
+          <h1>AgenticTrading</h1>
+          <p class="document-deck">A multi-agent trading stack whose
+7,800-line Neo4j memory service stamps an agent_id on every node and
+applies it as a filter only when a caller remembers to ask for it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Open-Finance-Lab/AgenticTrading">
+              <span>Source</span>
+              <strong>Open-Finance-Lab/AgenticTrading</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601" title="9966c3dfc0f4fd41978f63a36caeb111ac807601">
+              <span>Analyzed revision</span>
+              <code>9966c3df…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-25</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgenticTrading is a multi-agent trading research stack from
+Open-Finance-Lab — roughly 258,000 lines of Python, 1,419 commits since
+20 May 2025, under the <strong>OpenMDW-1.0</strong> licence, a
+model-and-data licence rather than one of the usual software licences,
+which is worth knowing before reusing anything here.</p>
+<p>Inside it is a genuine memory service:
+<code>orchestration/FinAgents/memory/</code> is 7,784 lines across
+sixteen modules, with an MCP server, an A2A server and health checker, a
+unified database manager, a configuration manager, an intelligent
+indexer, a real-time stream processor and an LLM research service, all
+over Neo4j. This is not a memory package bolted to a trading demo; it is
+the largest component in the tree that is about remembering.</p>
+<p><strong>No marks.</strong> The reason is one query. The service
+stores <code>agent_id</code> on every memory node, and the search path
+that agents actually call does not use it:</p>
+<pre class="cypher"><code>MATCH (m:Memory)
+WHERE m.content_text CONTAINS $search_text
+   OR m.summary CONTAINS $search_text
+   OR ANY(keyword IN m.keywords WHERE keyword CONTAINS $search_text)
+SET m.lookup_count = m.lookup_count + 1</code></pre>
+<p>There is an <code>agent_id</code> predicate elsewhere in the same
+file, and it is optional — <code>if "agent_id" in filters</code> — so
+scope holds exactly when a caller thinks to ask for it. In a design
+where separate alpha, risk, execution and cost agents write into one
+graph, that is the boundary doing no work by default.</p>
+<p>Nothing else in the schema carries a mark either: a memory node has
+no status, no confidence, no validity interval and no supersession
+pointer, deletion leaves no record, and the memory package contains no
+audit surface. The two committed files named for testing it do not
+exercise it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The unit is a <code>Memory</code> node, created with a fixed
+shape:</p>
+<pre class="cypher"><code>CREATE (m:Memory {
+    memory_id: $memory_id,
+    query: $query,
+    keywords: $keywords,
+    summary: $summary,
+    agent_id: $agent_id,
+    event_type: $event_type,
+    timestamp: datetime(),
+    lookup_count: 0
+})</code></pre>
+<p>Read the fields for what they assume. A memory is <em>a query someone
+asked and a summary of what came back</em>, attributed to an agent and
+typed by event. There is no field for whether the summary turned out to
+be right, no second timestamp for when the thing described happened, and
+no way to mark one memory as superseding another.
+<code>lookup_count</code> is the only field the system revises, and it
+counts retrievals rather than confirmations — a popularity signal, not
+evidence.</p>
+<p>For a trading system this matters more than it would elsewhere. A
+memory recording <em>what the market did</em> and a memory recording
+<em>what an agent concluded</em> are the same node type with the same
+absence of provenance, and nothing in the schema lets a later read tell
+them apart beyond a free-text <code>event_type</code>.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — agent_id is written on every node and read only through an optional filters key, so the search path four agent pools share returns across all of them by default</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: agent_id is written on every node and read only through an optional filters key, so the search path four agent pools share returns across all of them by default
+    A1[&quot;alpha agent pool&quot;] --&gt; W
+    A2[&quot;risk agent pool&quot;] --&gt; W
+    A3[&quot;execution agent pool&quot;] --&gt; W
+    A4[&quot;transaction-cost pool&quot;] --&gt; W
+
+    W[&quot;store_memory&lt;br/&gt;agent_id stamped on the node&quot;] --&gt; DB[(&quot;Neo4j&lt;br/&gt;:Memory nodes&lt;br/&gt;SIMILAR_TO · RELATES_TO&quot;)]
+
+    Q[&quot;retrieve&quot;] --&gt; P1[&quot;primary search&lt;br/&gt;CONTAINS over content,&lt;br/&gt;summary, keywords&quot;]
+    P1 --&gt;|&quot;no agent_id predicate&quot;| DB
+    P1 --&gt; LC[&quot;SET lookup_count = lookup_count + 1&quot;]
+
+    Q --&gt; P2[&quot;filtered listing&quot;]
+    P2 --&gt; F{&quot;&#39;agent_id&#39; in filters?&quot;}
+    F --&gt;|&quot;yes&quot;| SC[&quot;WHERE m.agent_id = $agent_id&quot;]
+    F --&gt;|&quot;no&quot;| ALL[&quot;no scope predicate&quot;]
+    SC &amp; ALL --&gt; DB
+
+    Q --&gt; P3[&quot;graph expansion&lt;br/&gt;SIMILAR_TO | RELATES_TO&lt;br/&gt;LIMIT 3&quot;]
+    P3 --&gt;|&quot;no scope predicate&quot;| DB
+
+    DB --&gt; OUT[&quot;memories returned&lt;br/&gt;to the calling agent&quot;]</code></pre></details></figure>
+<p>Three read paths reach the same nodes and one of them can be
+scoped.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Initialization is explicit, and this is the part done
+well.</strong> <code>database_initializer.py</code> creates full-text
+indexes, property indexes and both uniqueness and existence constraints
+by name rather than letting a schema emerge from whatever the first
+write happened to contain. For a graph store that is the difference
+between a database and a pile of nodes, and it is a discipline several
+Neo4j-backed systems in this corpus skip.</p>
+<p><strong>Retrieval is substring matching.</strong> The primary search
+is three <code>CONTAINS</code> clauses over content, summary and
+keywords. There is no vector similarity on this path and no ranking
+beyond what Neo4j returns; the full-text indexes created at
+initialization are not what this query uses. `SET m.lookup_count =
+m.lookup_count</p>
+<ul>
+<li>1` fires as a side effect of reading, so a search mutates every row
+it matches.</li>
+</ul>
+<p><strong>Expansion is one hop, unscoped.</strong> A related-memory
+query walks <code>SIMILAR_TO|RELATES_TO</code> from a given
+<code>memory_id</code> and returns up to three neighbours with their
+<code>agent_id</code> in the projection — the field is selected and
+returned, and not compared against anything.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> nodes as above, joined by <code>SIMILAR_TO</code>
+and <code>RELATES_TO</code> edges, with an <code>Agent</code> label
+present in the statistics query. There is no separate table or label for
+a decision, a correction, an audit event or a deletion.</p>
+<p>The absences decide most of this report's marks and are worth listing
+once:</p>
+<ul>
+<li>No status or lifecycle field, so nothing can be marked disputed,
+superseded or retired. <code>trust_state</code> is absent.</li>
+<li>One <code>timestamp</code>, set to <code>datetime()</code> at write.
+There is no event-time axis, so <em>what did this agent believe on 3
+March</em> is unanswerable. <code>bitemporal</code> is absent.</li>
+<li>No deletion record of any kind, and nothing keyed on the value of a
+removed memory. <code>tombstone</code> is absent.</li>
+<li>No audit or event label in the memory package, and no append-only
+record of mutations. <code>audit_log</code> is absent.</li>
+<li>No review, approval or verdict surface on a stored memory.
+<code>human_review</code> is absent.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Covered in section 4; the mechanism is substring matching with a
+usage counter. What belongs here is the scope question, because it is
+the whole finding.</p>
+<p><code>agent_id</code> is written on every node. It is read in exactly
+two places: an optional key in a <code>filters</code> dictionary, and a
+<code>WHERE m.agent_id IS NOT NULL</code> guard in a statistics query.
+The primary search has no <code>agent_id</code> clause, and neither does
+the graph expansion.</p>
+<p>This is the shape the atlas calls an optional scope: the key exists,
+the predicate exists, and whether the boundary holds is decided by each
+caller independently. It is not awarded <code>scope_enforced</code>,
+which asks for the key to be applied as a filter on <em>the</em> read
+path rather than on a read path. The distinction is not pedantic in a
+system whose own architecture puts four differently-privileged agent
+pools behind one graph.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through the MCP server or the A2A server into the unified
+database manager. A memory is created with the fields above and never
+revised except for <code>lookup_count</code>. There is no update path
+that supersedes, no invalidation stamp and no delete that records what
+it deleted.</p>
+<p>One detail belongs in any reading of this tree.
+<code>database.py</code> opens with:</p>
+<pre class="python"><code>URI = &quot;bolt://localhost:7687&quot;
+AUTH = (&quot;neo4j&quot;, &quot;FinOrchestration&quot;)</code></pre>
+<p>A database password as a literal in source. It addresses
+<code>localhost</code> and is plainly a development default rather than
+a deployment secret, and the atlas records it for the same reason it
+records the equivalent elsewhere: a credential in a public repository is
+one that everyone reading the repository has, and a default that works
+is a default that ships.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The memory service is addressable over two protocols — an MCP server
+for tool calls and an A2A server for agent-to-agent traffic, with a
+dedicated health checker for the latter. Agent pools for alpha, risk,
+execution and transaction cost sit above it, each with its own demo
+package.</p>
+<p>Making memory a separate networked component that several agents
+reach through a declared protocol is a reasonable architecture and the
+right place to enforce a boundary, since a service that owns the store
+can refuse a query the client did not scope. That enforcement is where
+it is missing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The operational engineering around the store is more developed than
+the store's own semantics: a configuration manager, a health checker, a
+database initializer that asserts its schema, a real-time stream
+processor, and a <code>verify_health</code> path.</p>
+<p>What is absent is any notion of a memory being wrong. There is no
+confidence, no provenance beyond <code>agent_id</code>, no contradiction
+detection, no expiry and no correction. In a trading context a stale
+memory is not a neutral cost — a summary of market conditions from an
+earlier regime reads identically to a current one, and
+<code>lookup_count</code> will rank it higher the more often it has been
+retrieved, which is a reinforcement loop pointing the wrong way.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>orchestration/FinAgents/memory_testing/</code> is the directory
+named for measuring this system, and neither of its two scripts touches
+the memory package.</p>
+<p><code>accuracy_testing.py</code> is 44 lines. It reads a 1.5 MB CSV
+of S&amp;P 500 headlines, formats about 120,000 tokens of them into one
+prompt, sends it to <code>gpt-4o-mini</code> with
+<code>max_tokens=100</code>, and prints the reply. It contains
+<strong>zero assertions</strong>, no ground truth, no metric and no
+comparison arm, and its success line is:</p>
+<pre class="python"><code>print(&quot;SUCCESS: The model processed the request.&quot;)</code></pre>
+<p>Success is defined as the API call not raising. A file named for
+accuracy testing that measures whether an HTTP request returned is the
+purest instance this atlas has recorded of an assertion that cannot fail
+— there is no assertion at all, only a filename making a claim about
+one.</p>
+<p><code>latency_test.py</code> is the better of the two and measures
+the wrong subject: it times <code>gpt-4o-mini</code> across increasing
+input sizes with repeated runs per size, computes throughput and plots
+it. That is a real measurement of a model's long-context latency. It
+never imports or calls anything in <code>FinAgents/memory/</code>, so it
+says nothing about the store's latency, which is the number its filename
+implies.</p>
+<p>Elsewhere, <code>orchestration/tests/</code> holds integration tests
+and a committed <code>test_results_20250724_193603.json</code>. A grep
+across those files for a negative assertion —
+<code>assert ... not in</code>, <code>assert not</code>, an
+empty-collection comparison — returns nothing, so no committed case
+asserts that particular material must not be retrieved.
+<code>negative_eval</code> is absent.</p>
+<p>Nothing was executed from this checkout.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>If several agents share one graph, put the scope in the query
+the agents call.</strong> An <code>agent_id</code> column and an
+optional filter key give a reader every impression of isolation and
+provide none. The version that works is either a predicate the search
+path cannot omit or, better, a key the caller cannot construct without
+their identity.</p>
+<p><strong>Do not let a read mutate the ranking signal by
+default.</strong> <code>SET m.lookup_count = m.lookup_count + 1</code>
+inside the search means retrieval feeds popularity and popularity feeds
+retrieval, with nothing in the loop asking whether the memory was any
+good. If you keep a usage counter, keep it out of the ranking or pair it
+with an outcome.</p>
+<p><strong>Name a test file for what it asserts.</strong> A directory
+called <code>memory_testing</code> whose scripts never import the memory
+package, and a script called <code>accuracy_testing.py</code> with no
+assertions, will be read as coverage by everyone who does not open them
+— including the people who wrote them, six months later.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Is there a caller that does pass
+<code>agent_id</code>?</strong> The filter exists and the grep for
+callers across a 258,000-line tree was not exhaustive. If the agent
+pools construct their <code>filters</code> dicts consistently, the
+boundary may hold in practice even though the store does not enforce it
+— which would be worth knowing, and would still be a property of the
+callers rather than of the memory service.</p>
+<p><strong>What does the intelligent indexer index?</strong>
+<code>intelligent_memory_indexer.py</code> is 506 lines and
+<code>realtime_stream_processor.py</code> another 541. Whether either
+maintains a retrieval path other than the <code>CONTAINS</code> search
+read here, and whether that path is scoped, was not traced.</p>
+<p><strong>Are the full-text indexes used?</strong> The initializer
+creates them by name; the primary search uses <code>CONTAINS</code>.
+Something else may call them, or they may be maintained and unread.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>orchestration/FinAgents/memory/database_initializer.py</code></td>
+<td>The <code>Memory</code> node shape, indexes and constraints</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/unified_database_manager.py</code></td>
+<td>The search, the optional <code>agent_id</code> filter, and the graph
+expansion</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/database.py</code></td>
+<td>The Neo4j driver and the credential literals</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/memory_server.py</code></td>
+<td>The MCP server over the store</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/a2a_server.py</code></td>
+<td>The agent-to-agent surface</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/intelligent_memory_indexer.py</code></td>
+<td>Indexing not traced at this pin</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory_testing/accuracy_testing.py</code></td>
+<td>44 lines, no assertions</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory_testing/latency_test.py</code></td>
+<td>A real latency measurement of the model, not the store</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-25</strong> — <a
+href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601"><code class="commit-id" title="9966c3dfc0f4fd41978f63a36caeb111ac807601">9966c3df…</code></a>
+— first reading, roughly 258,000 lines of Python, 1,419 commits since 20
+May 2025, OpenMDW-1.0. Screened before anything was read: one auto-run
+surface, five build-time execution surfaces, seven unpinned surfaces;
+<code>CLAUDE.md</code> at the root is addressed to a reading agent and
+was treated as data. Nothing was installed and nothing was run. No
+marks. <code>scope_enforced</code> is withheld on the producer check:
+<code>agent_id</code> is written on every <code>Memory</code> node and
+the primary search applies no predicate for it, while the one place it
+is compared sits behind <code>if "agent_id" in filters</code>, and the
+graph expansion selects it into the projection without comparing it.
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>tombstone</code>, <code>audit_log</code> and
+<code>human_review</code> are absent from the schema — no status, one
+timestamp, no deletion record, no event label, no review surface.
+<code>negative_eval</code> is withheld because a grep across the
+committed tests for a negative assertion returns nothing, and because
+the directory named <code>memory_testing</code> contains one script with
+zero assertions whose success criterion is that an API call returned,
+and one that measures a model's long-context latency without importing
+the memory package. The reading covers the memory service, its schema
+and its query paths; the indexer, the stream processor and the four
+agent pools were not traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
