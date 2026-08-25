@@ -634,6 +634,33 @@ containment with reuse. For a memory store the same trade reads as: derive the
 row key or the embedding key from the scope, and give up cross-scope
 deduplication to get a boundary nobody can forget to apply.
 
+**[OpenCompany](../../systems/opencompany/) is that same construction inside a
+memory store, which is where this page needed it.** Its `MemoryScope` is a
+frozen dataclass of authenticated owner, workflow and memory-node id, and the
+namespace every row is filed under is a SHA-256 over those three fields joined
+with NUL bytes. The docstring states the rule as a prohibition — *"Trusted scope
+derived from NodeContext, never from LLM arguments"* — and the schema enforces
+it: the tool the model sees has no namespace field to set, and the human panel
+resolves the owner from the authenticated WebSocket *"without consulting request
+data."* The predicate `namespace_id == scope.namespace_id` then appears on all
+nine read and mutation sites with no opt-out parameter anywhere.
+
+Two details separate it from a scope column that happens to be indexed. The
+**NUL separator** matters: joining three caller-adjacent strings with any
+printable delimiter lets one field's value impersonate a boundary between the
+others, and a NUL cannot occur in the strings being joined, so the digest is
+injective over the triple. And because the key is a *digest*, there is no
+readable tenant id in the row to compare wrongly, no partial match, and nothing
+for a query to coerce — the failure mode of a scope predicate written as
+`WHERE tenant LIKE ...` cannot be expressed.
+
+The cost is the same one OnceMesh pays and is worth stating for a memory store
+specifically: nothing can be shared across namespaces, so a fact two workflows
+both know is stored twice, and there is no cross-namespace deduplication or
+promotion path. If your design needs a memory to graduate from one scope to a
+broader one, a derived key makes that a copy rather than an update — see
+[promotion between tiers](../promotion-between-tiers/) for what that costs.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

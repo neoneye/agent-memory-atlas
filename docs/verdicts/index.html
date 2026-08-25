@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 333 reports.</strong></p>
+<p><strong>This page covers all 334 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4794,6 +4794,63 @@ and checks nothing about it.</li>
 covers what was refused.</li>
 <li>Do not copy when: you need multi-tenant separation, or a rejection
 that holds against the same claim arriving again.</li>
+</ul>
+<h3 id="opencompany"><a
+href="../systems/opencompany/"><code>opencompany</code></a></h3>
+<ul>
+<li>Best idea: <strong>the namespace is derived, not supplied.</strong>
+<code>MemoryScope</code> is a frozen dataclass of authenticated owner,
+workflow and memory-node id — <em>"Trusted scope derived from
+NodeContext, never from LLM arguments"</em> — whose
+<code>namespace_id</code> is <code>sha256</code> over those three fields
+joined with NUL bytes, so no field's value can forge a boundary between
+the others. It appears as a predicate on all nine read and mutation
+sites, there is no <code>include_all</code> escape, and the
+model-visible tool schema has no namespace field to set. Where most of
+this corpus makes scope a predicate someone must remember, this makes it
+a value nobody can name.</li>
+<li>Second idea: <strong>lexical retrieval is authoritative and the
+accelerator's failure is labelled.</strong> FTS5 where available,
+parameterized <code>LIKE</code> everywhere else, and the response names
+which ran. A failed embedding writes <code>embedding_failed</code> into
+a projection row described as <em>"Rebuildable semantic projection;
+never the source of truth"</em> and never hides the item. The committed
+test installs an embedder that raises and asserts all three: the label,
+the successful recall, and the retrieval mode.</li>
+<li>Third idea: <strong>a clear that starts from the user's definition
+of memory, not the schema's.</strong> <code>state.py</code> opens with
+the observation that <em>"'Memory' from the user's perspective is not
+just the markdown transcript — it's every piece of state an agent
+reuses"</em>, and clears TodoService keys under both current and legacy
+shapes, optionally the vector store, and the node's transcript fields —
+returning <code>cleared_vector_store</code>,
+<code>cleared_todo_keys</code> and <code>cleared_memory_node</code> so
+the caller sees what actually happened.</li>
+<li>Biggest risk: <strong>a forgotten fact comes straight back.</strong>
+<code>forget</code> deletes the row and nothing is keyed on the value it
+removed, so the next agent to propose it is admitted unremarked. The
+<code>runtime_mutations</code> ledger does retain the forgotten item in
+its <code>result</code> column, which makes the miss narrow and slightly
+worse: the record exists and is keyed on the caller's mutation id, so
+nothing can consult it. That ledger is also why <code>audit_log</code>
+is withheld — its purpose is idempotency, nothing declares it
+append-only, and <code>_operation_id</code> returns <code>None</code>
+when no caller id is present, so an unidentified mutation is applied and
+unrecorded.</li>
+<li>Maturity impression: MIT, roughly 197,000 lines of Python and 49,000
+of TypeScript, 1,202 commits since 31 December 2025, 146 canvas nodes.
+Two marks. <code>RFC-0002</code> carries a banner marking its own
+Context design superseded, naming the file that replaced it and the
+sections that survive — a design document that dates its own
+obsolescence in place. Three stores answer to the word memory and three
+different operations empty them.</li>
+<li>Study when: you are putting a memory tool in front of a model and
+want the scope key somewhere the model cannot reach it, or you want the
+shape of a hybrid store whose vector half can fail without taking recall
+with it.</li>
+<li>Do not copy when: you need correction to survive — nothing here
+records that a value was refused or deleted in a form any write path
+reads.</li>
 </ul>
 <h3 id="fireweed-mcp"><a
 href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a></h3>

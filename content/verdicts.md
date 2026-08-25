@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 333 reports.**
+**This page covers all 334 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1560,6 +1560,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
 - Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
 - Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
+
+### [`opencompany`](../systems/opencompany/)
+
+- Best idea: **the namespace is derived, not supplied.** `MemoryScope` is a frozen dataclass of authenticated owner, workflow and memory-node id — *"Trusted scope derived from NodeContext, never from LLM arguments"* — whose `namespace_id` is `sha256` over those three fields joined with NUL bytes, so no field's value can forge a boundary between the others. It appears as a predicate on all nine read and mutation sites, there is no `include_all` escape, and the model-visible tool schema has no namespace field to set. Where most of this corpus makes scope a predicate someone must remember, this makes it a value nobody can name.
+- Second idea: **lexical retrieval is authoritative and the accelerator's failure is labelled.** FTS5 where available, parameterized `LIKE` everywhere else, and the response names which ran. A failed embedding writes `embedding_failed` into a projection row described as *"Rebuildable semantic projection; never the source of truth"* and never hides the item. The committed test installs an embedder that raises and asserts all three: the label, the successful recall, and the retrieval mode.
+- Third idea: **a clear that starts from the user's definition of memory, not the schema's.** `state.py` opens with the observation that *"'Memory' from the user's perspective is not just the markdown transcript — it's every piece of state an agent reuses"*, and clears TodoService keys under both current and legacy shapes, optionally the vector store, and the node's transcript fields — returning `cleared_vector_store`, `cleared_todo_keys` and `cleared_memory_node` so the caller sees what actually happened.
+- Biggest risk: **a forgotten fact comes straight back.** `forget` deletes the row and nothing is keyed on the value it removed, so the next agent to propose it is admitted unremarked. The `runtime_mutations` ledger does retain the forgotten item in its `result` column, which makes the miss narrow and slightly worse: the record exists and is keyed on the caller's mutation id, so nothing can consult it. That ledger is also why `audit_log` is withheld — its purpose is idempotency, nothing declares it append-only, and `_operation_id` returns `None` when no caller id is present, so an unidentified mutation is applied and unrecorded.
+- Maturity impression: MIT, roughly 197,000 lines of Python and 49,000 of TypeScript, 1,202 commits since 31 December 2025, 146 canvas nodes. Two marks. `RFC-0002` carries a banner marking its own Context design superseded, naming the file that replaced it and the sections that survive — a design document that dates its own obsolescence in place. Three stores answer to the word memory and three different operations empty them.
+- Study when: you are putting a memory tool in front of a model and want the scope key somewhere the model cannot reach it, or you want the shape of a hybrid store whose vector half can fail without taking recall with it.
+- Do not copy when: you need correction to survive — nothing here records that a value was refused or deleted in a form any write path reads.
 
 ### [`fireweed-mcp`](../systems/fireweed-mcp/)
 

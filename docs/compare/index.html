@@ -118,7 +118,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>333 memory systems with publicly readable source, each read at a
+<p>334 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. "Readable" is not "open source" — sixteen carry a
 non-open-source licence, listed in the <a
@@ -135,7 +135,7 @@ is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 24
-systems of 333 carry a rejected-value tombstone — a record keyed on the
+systems of 334 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -278,7 +278,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>333 reports across 332 repositories</strong>:
+<strong>334 reports across 333 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-four tombstones, one hundred and eight negative-eval suites — are
+twenty-four tombstones, one hundred and nine negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -335,7 +335,7 @@ systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
 everything can overwrite or supersede. Twenty-four of three hundred and
-thirty-three systems carry a rejected-value tombstone — a record that
+thirty-four systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
 gap found</em>, not widest gap in the field: the corpus is
@@ -352,8 +352,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 176 of
-333 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 177 of
+334 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -372,7 +372,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Three hundred and thirty-three systems do not fall into one hundred
+<p>Three hundred and thirty-four systems do not fall into one hundred
 and seventy categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -4044,7 +4044,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 333 systems by the seven mechanisms judged against strict
+filters all 334 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -11308,6 +11308,53 @@ memory plugin needs</td>
 reach past the API into SQLite</td>
 </tr>
 <tr>
+<td><code>opencompany</code></td>
+<td>A memory item — content, optional title, category and tags, an
+integer version, an optional <code>expires_at</code>, and a namespace
+id; embeddings live in a separate projection row that is never the
+source of truth</td>
+<td>SQLModel tables owned by the memory plugin —
+<code>agent_memory_items</code>, <code>agent_memory_namespaces</code>,
+<code>agent_memory_embedding_projections</code> — with an FTS5
+projection on SQLite and a parameterized LIKE fallback elsewhere</td>
+<td>Lexical and authoritative: FTS5 where available, SQL
+<code>LIKE</code> otherwise, filtered by namespace, category, tags and
+expiry; a cosine index over optional local embedders sits beside it as a
+rebuildable accelerator</td>
+<td>An explicit <code>memory</code> tool the agent invokes —
+<code>remember</code>, <code>recall</code>, <code>list</code>,
+<code>get</code>, <code>update</code>, <code>forget</code> — plus a
+human CRUD panel over the same store; nothing writes memory
+automatically from a transcript</td>
+<td><code>update</code> and <code>forget</code> take an
+<code>expected_version</code> and raise on conflict, under
+<code>SELECT … FOR UPDATE</code>; <code>forget</code> deletes the item,
+its FTS row and its embedding projection; a separate
+<code>clear_namespace</code> empties a node's items while the namespace
+and mutation receipts survive</td>
+<td>A SHA-256 namespace derived from authenticated owner, workflow and
+memory-node id, applied as a predicate on every read and mutation; the
+field is absent from the tool schema so a model cannot name it</td>
+<td>A drag-and-drop workflow canvas with 146 nodes; memory is one tool
+node wired to an agent's tool input, with a WebSocket panel for the
+human</td>
+<td>None for the durable store. Conversation transcripts are written per
+turn inside a reserved write transaction, and a cross-store clear can be
+invoked from the frontend</td>
+<td>None on the item. Memory rows carry no status, confidence or
+provenance field; the only status in the schema belongs to the embedding
+projection and describes indexing, not belief</td>
+<td>The namespace is derived rather than supplied and reaches every
+query; lexical retrieval is authoritative so an embedding outage
+degrades to a named state rather than an empty result; and the committed
+isolation test pairs its negative with a positive</td>
+<td>A forgotten item leaves no record keyed on its value, so the same
+fact returns on the next extraction; the durable mutation ledger is an
+idempotency table whose coverage depends on a caller-supplied id; and
+three separate stores answer to the word memory with different clear
+semantics</td>
+</tr>
+<tr>
 <td><code>openhuman</code></td>
 <td><code>MemoryEntry</code> — id, key, content, namespace, category,
 timestamp, session, score and a <code>MemoryTaint</code> provenance
@@ -14042,7 +14089,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>24 of 333:</em> <a
+<p><em>24 of 334:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -14070,7 +14117,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>73 of 333:</em> <a
+<p><em>73 of 334:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -14149,7 +14196,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 href="../systems/weave/"><code>weave</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>42 of 333:</em> <a
+<p><em>42 of 334:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -14198,7 +14245,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>176 of 333:</em> <a
+<p><em>177 of 334:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -14330,6 +14377,7 @@ href="../systems/omi/"><code>omi</code></a>, <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
+href="../systems/opencompany/"><code>opencompany</code></a>, <a
 href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
 href="../systems/opensre/"><code>opensre</code></a>, <a
@@ -14382,7 +14430,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>99 of 333:</em> <a
+<p><em>99 of 334:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -14487,7 +14535,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>85 of 333:</em> <a
+<p><em>85 of 334:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -14578,7 +14626,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>108 of 333:</em> <a
+<p><em>109 of 334:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14660,6 +14708,7 @@ href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/openakashic/"><code>openakashic</code></a>, <a
+href="../systems/opencompany/"><code>opencompany</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
 href="../systems/opensre/"><code>opensre</code></a>, <a
 href="../systems/openwolf/"><code>openwolf</code></a>, <a
@@ -14707,7 +14756,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and eight repositories of three hundred and thirty-three assert
+hundred and nine repositories of three hundred and thirty-four assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -18557,8 +18606,8 @@ href="../systems/gini-agent/">Gini Agent</a> keeps ADRs recording the
 decision, its context, and the failure that motivated it — its per-agent
 isolation ADR states plainly that a coding agent's pinned memories were
 polluting a research agent's recall. Across three hundred and
-thirty-three systems, almost none can explain why they are shaped the
-way they are.</p>
+thirty-four systems, almost none can explain why they are shaped the way
+they are.</p>
 <h2 id="8-what-i-would-build">8. What I Would Build</h2>
 <h3 id="ship-first">Ship First</h3>
 <p>Build a local-first core even if a hosted version is planned
@@ -20585,6 +20634,15 @@ tree. FSL-1.1-ALv2, source-available, converting to Apache 2.0 on 1
 January 2028. The README cites recall figures and erasure canaries held
 in a repository not published at this pin; those are recorded as
 pointers and not as citations</li>
+<li><a
+href="https://github.com/zeenie-ai/OpenCompany">zeenie-ai/OpenCompany</a>
+at <a
+href="https://github.com/zeenie-ai/OpenCompany/commit/49d667e2ea705d34cd4676e2f812acad7007e663"><code class="commit-id" title="49d667e2ea705d34cd4676e2f812acad7007e663">49d667e2…</code></a>
+— read only; no auto-run surface, eight build-time execution surfaces,
+four unpinned surfaces and two files inside the seven-day cooldown.
+Nothing was installed and no suite was run, so the findings come from
+the tree. <code>CLAUDE.md</code> at the root is addressed to a reading
+agent and was treated as data. MIT</li>
 <li><a
 href="https://github.com/buiilding/WindieOS">buiilding/WindieOS</a> at
 <a
