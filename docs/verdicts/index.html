@@ -4803,61 +4803,65 @@ boundary.</strong> <code>remember</code> takes a claim <em>and</em> the
 verbatim text being quoted, and four pure functions — subject named,
 relation order preserved, no invented numerals, nothing asserted beyond
 the span — decide before anything is stored. An agent cannot argue with
-<code>numerals_grounded</code>. Refusals are typed
-(<code>unknown_subject</code>, <code>relation_transposed</code>,
-<code>numeral_invented</code>, <code>asserts_more_than_evidence</code>)
-and return the claim, the evidence and a remedy, because <em>"a gate
-that only says 'no' cannot be worked with."</em></li>
-<li>Second idea: <strong>the clearest statement in this corpus of why a
-score cannot abstain.</strong> The read gate's docstring records the
-design it replaced —
-<code>jaccard &gt;= 0.12 OR coverage &gt;= 0.6</code> — and what it did
-live: <em>"that answered 'Priya's salary' with a hire date: the entity
-matched, the predicate did not, and coverage weights every query token
-equally."</em> A threshold always returns a best row. The gate returns
-nothing and names the term it could not ground.</li>
-<li>Third idea: <strong>a negative control on the receipt instrument, in
-the committed tests.</strong>
-<code>test_receipts_are_tamper_evident</code> asserts
-<code>1/1 checkable</code>, edits one word of the source file on disk,
-then asserts <code>0/1 checkable</code> with a <code>FAILED</code> line
-— answering its own docstring, <em>"The point of a receipt is that it
-CAN fail."</em> Two more cases assert material must not come back, each
-paired with a positive over the same store, so an empty result fails
-rather than passes. And <code>verify_bundle.py</code> has no Fireweed
-import at all: <em>"if you needed our code to verify our claims, you
-would just be trusting us with extra steps."</em></li>
-<li>Biggest risk: <strong>the record that would carry the argument is
-not kept.</strong> <code>ledger.py</code> is a gap-free hash-chained
-append-only log with a closed event vocabulary and a
-<code>resolver_version</code> stamped into every payload;
-<code>attach_ledger</code> and <code>seal()</code> have no caller
-anywhere in the tree, so <code>_emit</code> returns early on every
-mutation. The erasure certificate is signed with
-<code>b"fireweed-mcp-key"</code> — a literal in public source, so anyone
-can mint one — and written to a <code>SQLiteLedger(":memory:")</code>
-discarded when the call returns. Worst of the three: <code>erase</code>
-computes a <code>scope</code> string reading <em>"residual plaintext may
-persist in snapshots/history … NOT by this certificate,"</em> and the
-server prints the signature, the closure counts and <em>"This
-certificate is the artifact a compliance reviewer asks for"</em> — and
-not the scope. The engine wrote the sentence that prevents the
-overstatement; the server does not display it.</li>
-<li>Maturity impression: 9,724 lines of Python across 45 files, 7
+<code>numerals_grounded</code>. Refusals are typed and return the claim,
+the evidence and a remedy, because <em>"a gate that only says 'no'
+cannot be worked with."</em></li>
+<li>Second idea: <strong>a Merkle-bound document makes erasure and
+third-party verification compatible.</strong> A receipt binding
+<code>(doc_hash, byte_start, byte_end)</code> against a flat hash forces
+a choice — redact the source and every other party's receipt into it
+fails. <code>merkle.py</code> hashes the document as a tree over parts,
+so a redacted part keeps its leaf hash, the root is unchanged, and a
+bystander's inclusion proof still verifies. The erased text is gone, the
+bystander's claim survives, and their receipt survives; the flat hash
+could hold at most two of the three.</li>
+<li>Third idea: <strong>the tombstone is an override, not a ban, and the
+tests pin both halves.</strong> Erasure writes a durable
+<code>ERASE</code> event carrying a SHA-256 fingerprint of the subject's
+name rather than the name, and the write gate consults it before
+admitting a claim that names them again.
+<code>acknowledge_erasure=true</code> admits it anyway, on the stated
+ground that erasure is not a permanent ban — <em>"someone may lawfully
+re-consent, or the same name may be a different person. The requirement
+is that re-admission be a DECISION SOMEONE MAKES."</em> One committed
+test asserts the refusal, a second asserts the acknowledged re-proposal
+succeeds; a refusal test alone would pass on a store that had stopped
+accepting writes.</li>
+<li>Fourth idea: <strong>the signature says what it is worth.</strong>
+<code>HmacSigner.adversary_checkable = False</code> and
+<code>Ed25519Signer.adversary_checkable = True</code> are fields on the
+signer, and the certificate reports which scheme signed it — because
+under a symmetric MAC <em>"the only party who can check the certificate
+is the party who could equally have forged it."</em> Beside it,
+<code>seal()</code> arms a guard so a graph mutation with no ledger
+attached raises instead of returning silently, which is the check that
+stops an audit log from covering nothing without anyone noticing.</li>
+<li>Biggest risk: <strong>the same release answers the
+hand-rolled-crypto question twice.</strong> <code>signing.py</code>
+declines to hand-roll a pure-Python Ed25519 on the stated ground that
+hand-written cryptography is the wrong trade for a product about
+verifiability, and ships an honestly-labelled weak scheme.
+<code>crypto.py</code> faces the identical question for the same
+zero-dependency install and hand-rolls an unauthenticated HMAC-SHA256
+keystream. The exposure is narrow — the ledger hash covers the payload,
+so tampering breaks the chain — but the reasoning that separates the two
+files is written down in neither. Beside it: no scope key anywhere, so
+this is a single-tenant store, and nothing walks the ledger chain from
+genesis to check it.</li>
+<li>Maturity impression: 10,479 lines of Python across 44 files, 9
 commits since 23 August 2026, FSL-1.1-ALv2 converting to Apache 2.0 on 1
-January 2028. No dependencies, no API key, no model in the server. Three
-marks. One test file of 161 lines that drives real stdio JSON-RPC
-because <em>"the thing that breaks in an MCP server is the protocol
-edge."</em> Two of the five declared <code>memory_state</code> values
-have no writer, and the <code>QUARANTINE</code> verdict documented as
-<em>"log for review"</em> returns a <code>NoopMutation</code> with no
-log and no queue.</li>
-<li>Study when: you want the write gate and the read gate as one idea
-applied twice, or the tamper-evidence test that most receipt systems in
-this corpus do not have.</li>
-<li>Do not copy when: you need the refusal to survive — nothing here
-records that a claim was refused, so re-proposing it with a longer span
-simply admits it.</li>
+January 2028. Five marks. One test file of 311 lines that drives real
+stdio JSON-RPC because <em>"the thing that breaks in an MCP server is
+the protocol edge"</em>, and whose own comment records an assertion that
+named <code>AES</code> and so <em>"passed locally … and failed in
+CI"</em> — an environment-dependent assertion masquerading as a
+property, since fixed. Two of the five declared
+<code>memory_state</code> values still have no writer.</li>
+<li>Study when: you need erasure that survives contact with third-party
+citations, or you want the tombstone shape most of this corpus gets
+wrong in the other direction by having no record at all.</li>
+<li>Do not copy when: you need multi-tenant separation, or you cannot
+accept a hand-rolled cipher on the dependency-free path.</li>
 </ul>
 <h3 id="aimee"><a href="../systems/aimee/"><code>aimee</code></a></h3>
 <ul>

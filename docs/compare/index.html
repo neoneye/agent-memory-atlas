@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 23
+<li><strong>Correction is the phase that goes unbuilt.</strong> 24
 systems of 333 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -324,9 +324,9 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-three tombstones, one hundred and eight negative-eval suites —
-are counts <em>over inspectable code</em>, and a closed system could
-hold any of these mechanisms without this method ever knowing. And a
+twenty-four tombstones, one hundred and eight negative-eval suites — are
+counts <em>over inspectable code</em>, and a closed system could hold
+any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
 presence: finding a tombstone proves someone built one, while not
 finding one proves only that nobody built one <em>in public</em>.</p>
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Twenty-three of three hundred and
+everything can overwrite or supersede. Twenty-four of three hundred and
 thirty-three systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -6826,7 +6826,9 @@ event timestamp pair, and a provenance record carrying the evidence
 span</td>
 <td>A single JSON snapshot at
 <code>~/.fireweed/mcp/substrate.json</code> rewritten after every
-mutation, with source documents as plain text files beside it</td>
+mutation, a SQLite append-only event ledger beside it with node content
+encrypted per subject, source documents as text files, and signing keys
+in a separate directory outside the store</td>
 <td>Deterministic graph traversal over entity and relation indexes with
 lexical predicate matching, an optional pinned sentence-transformer for
 paraphrases, and an admission gate in front that abstains when the
@@ -6836,9 +6838,10 @@ pure functions check subject, relation order, numerals and predicate
 before anything is stored. No model runs in this server</td>
 <td>Revision supersedes rather than overwrites, stamping
 <code>valid_to</code> and <code>superseded_by</code>;
-<code>forget</code> computes an exact transitive closure over the
-subject, removes it, runs a probe battery and issues an HMAC-signed
-certificate</td>
+<code>forget</code> computes an exact transitive closure, destroys the
+subject's content key, redacts the source documents through a Merkle
+binding that leaves bystanders' receipts verifying, runs a probe battery
+and issues a signed certificate that states its own scope</td>
 <td>None. No tenant, user, workspace or project key anywhere on the read
 path; <code>source_id</code> names a document for receipt binding, not
 an audience</td>
@@ -6848,17 +6851,21 @@ a stdlib-only reference reader</td>
 <td>None in the server. The engine carries a consolidator and a
 two-clock scheduler, neither of which the MCP process starts</td>
 <td>A five-state <code>memory_state</code> beside a separate confidence
-float, and a four-verdict write firewall whose refusals are typed and
-returned to the caller</td>
+float, a four-verdict write firewall whose refusals are typed and
+returned to the caller, and a signer that carries an
+<code>adversary_checkable</code> flag so the certificate reports what
+its own signature is worth</td>
 <td>The write gate is deterministic code on the far side of an RPC
-boundary, receipts bind claims to byte ranges that can be re-verified by
-a stdlib-only reader with no engine import, and the tests include a real
-negative control on the receipt instrument</td>
-<td>The append-only hash-chained ledger is fully built and never
-attached, so no mutation is recorded; the erasure certificate is signed
-with a key hardcoded in public source and written to a throwaway
-in-memory ledger; and the certificate's own self-limiting scope text is
-computed and never printed</td>
+boundary; receipts bind claims to byte ranges a stdlib-only reader can
+re-verify with no engine import; a Merkle binding lets a redaction
+remove one subject's text while every other party's inclusion proof
+still verifies; and the tests carry real negative controls on the
+receipt instrument and on the erasure record</td>
+<td>The default zero-dependency install hand-rolls an unauthenticated
+HMAC-keystream cipher in the same release whose signing module refuses
+to hand-roll Ed25519 on principle; there is no scope key anywhere, so
+this is a single-tenant store; and <code>quarantined</code> and
+<code>frozen</code> are declared states with no writer</td>
 </tr>
 <tr>
 <td><code>fx</code></td>
@@ -14035,10 +14042,11 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>23 of 333:</em> <a
+<p><em>24 of 333:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
@@ -14374,7 +14382,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>98 of 333:</em> <a
+<p><em>99 of 333:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -14402,6 +14410,7 @@ href="../systems/empirica/"><code>empirica</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a>, <a
 href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gmr/"><code>gmr</code></a>, <a
 href="../systems/graphnosis/"><code>graphnosis</code></a>, <a
@@ -20568,14 +20577,14 @@ AGPL-3.0</li>
 <li><a
 href="https://github.com/Starksood/fireweed-mcp">Starksood/fireweed-mcp</a>
 at <a
-href="https://github.com/Starksood/fireweed-mcp/commit/33ec45edeea262a753d8fb004689d4bf92bc2328"><code class="commit-id" title="33ec45edeea262a753d8fb004689d4bf92bc2328">33ec45ed…</code></a>
+href="https://github.com/Starksood/fireweed-mcp/commit/a9bca09cd224500dcfff65e29f46354f0c93ef21"><code class="commit-id" title="a9bca09cd224500dcfff65e29f46354f0c93ef21">a9bca09c…</code></a>
 — read only; one auto-run surface, one unpinned surface and one
 dependency file inside the seven-day cooldown, no build-time execution.
 Nothing was installed and no test was run, so the findings come from the
 tree. FSL-1.1-ALv2, source-available, converting to Apache 2.0 on 1
-January 2028. The README cites a retraction and an evaluation held in
-repositories not published at this pin; those are recorded as pointers
-and not as citations</li>
+January 2028. The README cites recall figures and erasure canaries held
+in a repository not published at this pin; those are recorded as
+pointers and not as citations</li>
 <li><a
 href="https://github.com/buiilding/WindieOS">buiilding/WindieOS</a> at
 <a

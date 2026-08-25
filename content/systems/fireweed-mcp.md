@@ -6,11 +6,13 @@ root: ../..
 page_kind: system
 source_name: "Starksood/fireweed-mcp"
 source_url: https://github.com/Starksood/fireweed-mcp
-revision: 33ec45edeea262a753d8fb004689d4bf92bc2328
-revision_url: https://github.com/Starksood/fireweed-mcp/commit/33ec45edeea262a753d8fb004689d4bf92bc2328
+revision: a9bca09cd224500dcfff65e29f46354f0c93ef21
+revision_url: https://github.com/Starksood/fireweed-mcp/commit/a9bca09cd224500dcfff65e29f46354f0c93ef21
 analyzed_at: 2026-08-25
-capabilities: "trust_state, bitemporal, negative_eval"
+capabilities: "tombstone, trust_state, bitemporal, audit_log, negative_eval"
 capability_evidence:
+  tombstone: "the durable ERASE ledger event, consulted by the write gate | src/fireweed/erasure.py:40-44,:313, src/fireweed_mcp/server.py:255-276, src/fireweed/ledger.py | `erase` records an append-only `ERASE` event carrying `subject_name_hash`, a `name_fingerprint` over the whitespace-normalized lowercased name — a hash, so the record that protects a person does not retain the person. `remember` reads `_erased_fingerprints(graph)` before admitting anything and refuses a claim naming an erased subject with `NOT STORED (previously_erased)`, keyed on the value rather than on a row id. It is deliberately an override rather than a block: `acknowledge_erasure=true` admits the claim, on the stated ground that erasure is not a permanent ban — *\"someone may lawfully re-consent, or the same name may be a different person. The requirement is that re-admission be a DECISION SOMEONE MAKES, recorded as such, rather than something that happens quietly because nothing was looking.\"* The strong form of this pattern, and one of the few in the corpus where the consultation exists rather than only the record | tests/test_mcp_server.py:268-291 asserts both halves — the identical claim is refused after an erasure, and the acknowledged re-proposal is admitted"
+  audit_log: "the SQLite event ledger, attached and sealed at server start | src/fireweed_mcp/server.py:163-184, src/fireweed/ledger.py, src/fireweed/ledger_sqlite.py, src/fireweed/graph.py | `attach_ledger(SQLiteLedger(LEDGER_DB), tenant_id=\"mcp\", keyring=...)` puts a durable log behind every graph mutation: gap-free monotonic `seq`, a `prev_hash` chain, canonical byte serialization described as *\"order-insensitive and stable\"*, a closed `EVENT_KINDS` vocabulary spanning writes, `ERASE`, `PRUNE`, `COMPRESS` and `CHECKPOINT`, and a `resolver_version` stamped into every payload so the offline question *\"would today's resolver have decided this differently?\"* is answerable. `seal()` is called immediately after, which arms the `_emit` guard so a mutation with no ledger attached raises `RuntimeError` instead of returning silently. With a keyring attached, node content fields are encrypted in the persisted payload, so destroying a subject's key makes the history unrecoverable rather than merely unreachable — the log keeps its structure and hash chain while the content reconstructs as `[erased]` | tests/test_mcp_server.py:260-266 asserts `ledger.db` exists on disk after a write, which pins persistence but not chain integrity"
   trust_state: "NodeStatus.memory_state, filtered by every retrieval path | src/fireweed/graph.py:81,:265,:516-550, src/fireweed/pipeline.py:250-251,:291, src/fireweed/retrieval.py:119,:146,:240, src/fireweed/consolidation_ops.py:419 | `memory_state` is a `Literal[\\\"active\\\", \\\"quarantined\\\", \\\"disputed\\\", \\\"superseded\\\", \\\"frozen\\\"]` on `NodeStatus`, held separately from the `confidence` float on `Provenance` — the split the rubric asks for. Retrieval admits `(\\\"active\\\", \\\"disputed\\\")` and nothing else at three separate points, and the active-claim index is built only from `active` nodes, so a superseded claim is withheld from recall while its row survives; `memory_stats` reports the superseded count with the line *\\\"retained, never deleted; belief revision is part of the record.\\\"* Three of the five states have writers — `active` at creation, `superseded` at `_mark_superseded` and at consolidation, `disputed` at pipeline.py:291. **`quarantined` and `frozen` have no writer anywhere in the tree**: the firewall's `QUARANTINE` verdict returns a `NoopMutation`, so an unclear claim produces no node at all rather than a quarantined one | tests/test_mcp_server.py exercises admission and refusal but asserts nothing about a state transition"
   bitemporal: "Temporal, with the event axis extracted at ingest and read by an as-of query | src/fireweed/graph.py:44-50,:410-424, src/fireweed/resolver.py:171,:453-460, src/fireweed/pipeline.py:250, src/fireweed/consolidation_ops.py:420, src/fireweed/retrieval.py:153-157, src/fireweed/field_edges.py:147-164 | the `Temporal` dataclass carries `asserted_at` and `stored_at` — *\\\"when the LLM proposed the claim\\\"* and *\\\"when the node was written\\\"* — against `event_time`, `valid_from` and `valid_to` for when the described event happened. Both axes have producers and consumers. `_extract_temporal` derives `event_time` and `valid_from` from the claim text at resolve time; `_mark_superseded` stamps `valid_to=now` alongside `superseded_by` when a claim is revised, and the consolidation merge does the same. On the read side `graph.py:410-424` answers validity as of a timestamp — *\\\"A node is valid if its valid_to field is None or > timestamp\\\"* — `retrieval.py` filters candidates to an event-time window with undated nodes passing through, and `field_edges` derives `before` relations by comparing two nodes' `event_time` | no committed test covers the as-of path"
   negative_eval: "tests/test_mcp_server.py, driving the server over real JSON-RPC | tests/test_mcp_server.py:97-121,:122-131,:133-144 | three committed cases assert that particular material must not come back, each paired with a positive over the same store so an empty result fails rather than passes. `test_recall_abstains_with_the_ungrounded_term_named` stores a claim, asserts the answerable query returns a grounded result, then asserts the unanswerable one yields `ABSTAINED` naming the term it could not ground. `test_receipts_are_tamper_evident` asserts `1/1 checkable` before editing one word of the source file on disk and `0/1 checkable` with a `FAILED` line after — a negative control on the instrument itself. `test_forget_issues_a_signed_certificate_and_spares_bystanders` asserts every probe about the erased subject abstains **and** that the bystander's claim survives, which is the two-sided form. The refusal cases are parameterised over two fabrication shapes and assert the typed reason, not merely that something was refused | this is the test"
@@ -19,25 +21,26 @@ stack_retrieval: "lexical, graph, vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A claim node — normalized claim text, resolved entity refs, a domain set, a five-value memory state, a reinforcement layer, a transaction and event timestamp pair, and a provenance record carrying the evidence span"
-  storage: "A single JSON snapshot at `~/.fireweed/mcp/substrate.json` rewritten after every mutation, with source documents as plain text files beside it"
+  storage: "A single JSON snapshot at `~/.fireweed/mcp/substrate.json` rewritten after every mutation, a SQLite append-only event ledger beside it with node content encrypted per subject, source documents as text files, and signing keys in a separate directory outside the store"
   retrieval: "Deterministic graph traversal over entity and relation indexes with lexical predicate matching, an optional pinned sentence-transformer for paraphrases, and an admission gate in front that abstains when the question's subject or predicate is ungrounded"
   write: "The agent supplies both the claim and the verbatim evidence; four pure functions check subject, relation order, numerals and predicate before anything is stored. No model runs in this server"
-  update_delete: "Revision supersedes rather than overwrites, stamping `valid_to` and `superseded_by`; `forget` computes an exact transitive closure over the subject, removes it, runs a probe battery and issues an HMAC-signed certificate"
+  update_delete: "Revision supersedes rather than overwrites, stamping `valid_to` and `superseded_by`; `forget` computes an exact transitive closure, destroys the subject's content key, redacts the source documents through a Merkle binding that leaves bystanders' receipts verifying, runs a probe battery and issues a signed certificate that states its own scope"
   scoping: "None. No tenant, user, workspace or project key anywhere on the read path; `source_id` names a document for receipt binding, not an audience"
   integration: "A stdlib-only MCP server over JSON-RPC on stdio, seven tools, no SDK and no dependencies; an open substrate format with a published spec and a stdlib-only reference reader"
   background: "None in the server. The engine carries a consolidator and a two-clock scheduler, neither of which the MCP process starts"
-  trust: "A five-state `memory_state` beside a separate confidence float, and a four-verdict write firewall whose refusals are typed and returned to the caller"
-  strengths: "The write gate is deterministic code on the far side of an RPC boundary, receipts bind claims to byte ranges that can be re-verified by a stdlib-only reader with no engine import, and the tests include a real negative control on the receipt instrument"
-  risks: "The append-only hash-chained ledger is fully built and never attached, so no mutation is recorded; the erasure certificate is signed with a key hardcoded in public source and written to a throwaway in-memory ledger; and the certificate's own self-limiting scope text is computed and never printed"
+  trust: "A five-state `memory_state` beside a separate confidence float, a four-verdict write firewall whose refusals are typed and returned to the caller, and a signer that carries an `adversary_checkable` flag so the certificate reports what its own signature is worth"
+  strengths: "The write gate is deterministic code on the far side of an RPC boundary; receipts bind claims to byte ranges a stdlib-only reader can re-verify with no engine import; a Merkle binding lets a redaction remove one subject's text while every other party's inclusion proof still verifies; and the tests carry real negative controls on the receipt instrument and on the erasure record"
+  risks: "The default zero-dependency install hand-rolls an unauthenticated HMAC-keystream cipher in the same release whose signing module refuses to hand-roll Ed25519 on principle; there is no scope key anywhere, so this is a single-tenant store; and `quarantined` and `frozen` are declared states with no writer"
 ---
 
 ## 1. Executive Summary
 
 Fireweed MCP is a memory server for agents in which the interesting decision is
-what gets *refused*. 9,724 lines of Python across 45 files, 7 commits, first
+what gets *refused*. 10,479 lines of Python across 44 files, 9 commits, first
 commit 23 August 2026, licensed FSL-1.1-ALv2 — source-available, converting to
-Apache 2.0 on 1 January 2028. It has no dependencies, no API key, and no model:
-nothing in the server calls an LLM.
+Apache 2.0 on 1 January 2028. The default install has no dependencies, no API
+key, and no model: nothing in the server calls an LLM. An optional `cryptography`
+extra changes two things and the report says where.
 
 The design idea is stated in one sentence in the README and delivered in the
 code: *"the model proposes, deterministic code decides,"* placed across an RPC
@@ -48,17 +51,22 @@ numbers, and asserts nothing the span does not say. What survives binds to a
 `(doc_hash, byte_start, byte_end)` triple that anyone can re-check by re-hashing
 the file and re-slicing the bytes.
 
-Three marks. `memory_state` is a five-value discrete status held apart from the
+Five marks. `memory_state` is a five-value discrete status held apart from the
 confidence float, and retrieval admits two of the five. `Temporal` carries the
 event axis separately from the transaction axis, with writers and readers on
-both. And the test file contains three genuine must-not-return cases, each
-paired with a positive over the same store.
+both. Every graph mutation emits to a gap-free hash-chained SQLite ledger, and
+the graph is sealed so an unlogged write raises rather than passing. Erasure
+leaves a durable record keyed on a hash of the subject's name, which the write
+gate consults before admitting a claim that names them again. And the test file
+carries six must-not cases, each paired with a positive over the same store.
 
-The gap is on the other side of the same idea. This system's whole argument is
-that the record can be checked afterwards by someone who trusts neither party —
-and the two mechanisms that would carry that argument furthest, the append-only
-ledger and the erasure certificate, are respectively unwired and unsigned in any
-sense an adversary would accept. Sections 7 and 9 trace both.
+The design's own argument is that the record can be checked afterwards by
+someone who trusts neither party, and the machinery for that is unusually
+complete: a signer that declares whether its signature is worth anything to a
+third party, and a Merkle binding that lets one subject's text be removed from a
+source document while every other party's receipt into it keeps verifying.
+Section 9 traces both, and names the one place the same release answers an
+identical question two different ways.
 
 ## 2. Mental Model
 
@@ -85,8 +93,11 @@ ground that *"a gate that only says 'no' cannot be worked with."*
 
 ```mermaid
 flowchart TD
-%% caption: the same adjudication runs twice — four pure functions decide what enters the record, and a two-check gate decides whether a question has grounding — while the ledger that would record either decision is built and never attached
-    A["agent proposes<br/>claim + verbatim evidence"] --> G1{"subject_grounded"}
+%% caption: one erasure writes three things — a hash-only tombstone the write gate consults, a destroyed content key that turns ledger history into [erased], and a Merkle redaction that removes one subject's text without breaking anyone else's receipt
+    A["agent proposes<br/>claim + verbatim evidence"] --> TS{"names an<br/>erased subject?<br/>name_fingerprint"}
+    TS -->|"yes, unacknowledged"| RT["NOT STORED<br/>previously_erased"]
+    TS -->|"acknowledge_erasure"| G1
+    TS -->|"no"| G1{"subject_grounded"}
     G1 -->|"no"| R1["REFUSED unknown_subject"]
     G1 --> G2{"order_preserved"}
     G2 -->|"no"| R2["REFUSED relation_transposed"]
@@ -97,8 +108,17 @@ flowchart TD
     G4 --> FW{"firewall<br/>ACCEPT · RESCUE ·<br/>REJECT · QUARANTINE"}
     FW -->|"reject / quarantine"| NOOP["NoopMutation<br/>nothing written, nothing logged"]
     FW --> NODE["node written<br/>memory_state = active"]
-    NODE --> REC["receipt bound<br/>doc_hash + byte range"]
-    NODE -.->|"_emit returns early:<br/>no ledger attached"| LED[("hash-chained ledger<br/>seq · prev_hash · payload<br/>BUILT, NEVER WIRED")]
+    NODE --> REC["receipt bound<br/>Merkle root + leaf + range"]
+    NODE --> LED[("SQLite ledger<br/>seq · prev_hash · payload<br/>content encrypted per subject<br/>graph sealed: unlogged write raises")]
+
+    F["forget(subject)"] --> CL["exact closure<br/>structure, not similarity"]
+    CL --> EV["ERASE event<br/>subject_name_hash"]
+    EV --> LED
+    CL --> KS["content key shredded<br/>history reads [erased]"]
+    CL --> RD["source parts redacted<br/>leaf hash retained,<br/>root unchanged"]
+    RD -.->|"bystander proof<br/>still verifies"| REC
+    EV -.->|"consulted"| TS
+    CL --> CERT["certificate: scope, cipher,<br/>key_destroyed, adversary_checkable"]
 
     Q["recall(query)"] --> RG{"read gate<br/>1 subject grounded?<br/>2 predicate grounded?"}
     RG -->|"no"| AB["ABSTAINED — names the<br/>term it could not ground"]
@@ -108,8 +128,9 @@ flowchart TD
     R1 & R2 & R3 & R4 --> TXT["typed refusal text<br/>returned, not recorded"]
 ```
 
-Every refusal in this diagram is returned to the caller and stored nowhere. That
-is the single fact that shapes the rest of the report.
+The gate's refusals are returned to the caller and stored nowhere; the erasure's
+refusal is a durable ledger event that the gate reads back. Those are two
+different classes of "no", and only the second survives a restart.
 
 ## 4. Essential Implementation Paths
 
@@ -200,25 +221,37 @@ the claim and its provenance and not its correctness.
 
 The gate is the write path, and it is genuinely deterministic — pure functions
 over two strings, no model, no threshold that a caller can move. Refusals are
-typed, returned, and explain what to fix.
+typed, returned, and explain what to fix. A gate refusal is a response and
+nothing else: no row, no counter, no log line, and a re-proposal that passes the
+same functions is admitted with no reference to the earlier refusal.
 
-They are also the only trace. A refused claim leaves nothing behind: no row, no
-counter, no log line. Re-proposing the identical claim runs the same functions
-against the same evidence and, if it passes this time — a longer evidence span, a
-reworded claim — it is admitted with no reference to the earlier refusal. This is
-why `tombstone` is not awarded. The atlas's definition wants a durable record
-keyed on the value so a later assertion cannot silently re-establish it; here the
-refusal is a response, not a record.
+**One refusal is different, and it is the one that has to be.** Before the four
+grounding checks run, `remember` reads the set of erased subject fingerprints
+out of the ledger and compares it against the names the claim mentions. A hit
+returns `NOT STORED (previously_erased)` and names the subject. The record it
+consults is a durable `ERASE` event carrying `subject_name_hash` —
+`name_fingerprint` over the whitespace-normalized lowercased name, a SHA-256, so
+the record protecting a person does not store the person.
 
-The mechanism that would fix it is in the tree. `ledger.py` defines an
-append-only event log with a gap-free monotonic `seq`, a `prev_hash` chain, a
+The design decision worth copying is that this is an **override, not a block**:
+
+> *"erasure is not a permanent ban on a person ever being mentioned again —
+> someone may lawfully re-consent, or the same name may be a different person.
+> The requirement is that re-admission be a DECISION SOMEONE MAKES, recorded as
+> such, rather than something that happens quietly because nothing was looking."*
+
+`acknowledge_erasure=true` admits the claim. That is the correct shape for a
+tombstone over personal data, where a permanent refusal is its own compliance
+problem, and it is the shape most implementations in this corpus get wrong in
+the other direction by having no record at all.
+
+The mechanism underneath is the ledger. `attach_ledger(SQLiteLedger(LEDGER_DB),
+tenant_id="mcp", keyring=...)` runs at server start, so every node, entity and
+relation write emits an event: gap-free monotonic `seq`, a `prev_hash` chain,
 canonical byte serialization *"order-insensitive and stable"*, a closed
-`EVENT_KINDS` vocabulary, and a `resolver_version` stamped into every payload so
-that the offline audit question *"would today's resolver have decided this
-differently?"* is answerable. `ledger_sqlite.py` persists every event
-synchronously. `graph.py` has `attach_ledger`, and `_emit` on every mutation.
-
-None of it runs. `_emit` opens with:
+`EVENT_KINDS` vocabulary, and a `resolver_version` in every payload so the
+offline question *"would today's resolver have decided this differently?"* is
+answerable. `seal()` is called on the next line, which arms this guard:
 
 ```python
 if self._ledger is None:
@@ -228,17 +261,23 @@ if self._ledger is None:
     return
 ```
 
-`attach_ledger` has no caller anywhere in the repository, `seal()` has no caller,
-and `Fireweed.__init__` constructs an `IngestContext` that never sets one. So
-every node, entity and relation written by this server returns from `_emit`
-having recorded nothing. The project built the guard that catches exactly this
-failure and left it off.
+The sealed branch is the interesting half. A store whose audit log is *supposed*
+to cover every mutation has a failure mode where it silently covers none, and
+the difference between the two branches above is whether that failure is a crash
+on the write or an absence somebody notices later. The server's own comment
+makes the point: arming it *"means the failure can never recur silently: it
+becomes a crash on the write, not an absence discovered by an auditor months
+later."* **If you build an append-only log, build the sealed mode with it and
+turn it on** — the guard is worth more than the log, because the log cannot tell
+you it is empty.
 
-That is the ordinary shape of the corpus's most common defect, with one unusual
-feature: `_sealed` means the fix is a single call, and the failure is
-fail-*open* by an explicit choice rather than an oversight.
+A second narrowing runs on the way in. Storing whatever evidence the caller
+passed puts one subject's sentences inside another subject's record whenever
+someone quotes a whole document, and erasing the first then leaves their text
+sitting in the second's span. The gate runs against the full evidence, and only
+the *stored* span is narrowed to the part that supports the claim.
 
-## 8. Agent Integration
+## 8. Agent Integration## 8. Agent Integration
 
 Seven tools over JSON-RPC on stdin and stdout, no SDK — the docstring explains
 that the official one requires Python 3.10 and the engine runs on 3.9, and draws
@@ -256,58 +295,85 @@ is only useful if the model on the other side does not retry until it gets a row
 
 ## 9. Reliability, Safety, and Trust
 
-Erasure is the most carefully built thing here and the most oversold at the
-boundary.
+Erasure is the most carefully built thing here, and it is four mechanisms
+working together rather than one.
 
 `compute_closure` is exact and structural rather than similarity-based: every
 node whose entities include the subject, including superseded and disputed ones,
 then a transitive walk over `derived_from` edges so a reflection summarising the
-subject's facts goes too. The comment records that this was found with a canary —
-*"a summary restating the subject's facts survived their erasure — measured with
-a canary in test_erasure_derived_nodes"* — and that the over-deletion it causes
-is the intended trade, because *"over-deletion is recoverable through normal
-operation, a leak is not."* `ErasureIncomplete` refuses to sign at all when any
-probe still answers, on the ground that a certificate contradicted by the system
-it describes *"is worse than no certificate."*
+subject's facts goes too. The comment records that this was found with a canary,
+and that the over-deletion it causes is the intended trade, because
+*"over-deletion is recoverable through normal operation, a leak is not."*
+`ErasureIncomplete` refuses to sign at all when any probe still answers, on the
+ground that a certificate contradicted by the system it describes *"is worse
+than no certificate."*
 
-Three things then happen at the MCP boundary that the engine did not intend.
+**The signature declares what it is worth.** `signing.py` ships two signers and
+puts a boolean on each: `HmacSigner.adversary_checkable = False`,
+`Ed25519Signer.adversary_checkable = True`. The docstring states the difference
+without softening it — under HMAC *"the only party who can check the certificate
+is the party who could equally have forged it,"* which against accidental
+corruption is a useful checksum and against a reader who does not already trust
+the operator *"establishes NOTHING."* Ed25519 is selected when `cryptography` is
+importable, the private key is written with `O_EXCL` at mode `0600` outside the
+store, and the public half is written in the clear beside the substrate because
+*"it is the artifact a verifier needs."* The HMAC key is 32 bytes from `secrets`,
+generated once per install, also outside the store — and the certificate reports
+which scheme signed it. A signed artifact that carries its own attestation
+strength is rare enough in this corpus to be worth naming.
 
-**The ledger is a throwaway.** `tool_forget` calls
-`erase(g, SQLiteLedger(":memory:"), "mcp", …)`. The `ERASE` event — append-only,
-hash-chained, replayable, the thing that makes a from-zero fold reconstruct and
-then erase — is written to an in-memory database that is discarded when the
-function returns. After a `forget`, the store contains the closure's absence and
-no record that an erasure occurred.
+**The Merkle binding is the best idea in the release.** A receipt binds
+`(doc_hash, byte_start, byte_end)` against a flat SHA-256 of the whole document,
+and that makes erasure and verification mutually exclusive: remove an erased
+subject's sentence and every *other* party's receipt into that document fails.
+`merkle.py` replaces the flat hash with a tree over the document's parts. A
+redacted part keeps its leaf hash, the root is unchanged, and a bystander's
+inclusion proof still verifies — so the erased text is gone, the bystander's
+claim survives, and their receipt survives. Three properties the flat hash could
+not hold at once. Most systems in this corpus that redact a source either break
+every downstream citation or decline to touch the source at all; this is the
+third option.
 
-**The signature is unauthenticated.** The signing key is the literal
-`b"fireweed-mcp-key"`, in public source. `Certificate.signed` is a correct
-HMAC-SHA256 over a canonical encoding, and `verify_signature` is
-constant-time — the construction is sound and the key is not a secret. Anyone can
-mint a certificate for any subject and any closure manifest. Against accidental
-corruption this is a checksum; against the adversary the README's framing invokes
-— *"anyone can check it afterwards — including someone who trusts neither your
-agent nor this server"* — it establishes nothing.
+**The crypto-shred is real on the default install and the cipher under it is
+hand-rolled.** With a keyring attached, node content fields are encrypted in the
+persisted ledger payload, so destroying a subject's key leaves the chain intact
+while the content reconstructs as `[erased]` — a from-zero replay yields
+tombstones rather than plaintext. When `cryptography` is present that is
+AES-256-GCM, authenticated. When it is not, `encrypt` falls back to XOR against
+an HMAC-SHA256 counter keystream with no MAC, tagged `enc1:`.
 
-**The certificate's own caveat is computed and dropped.** `erase` builds a
-`scope` string that states exactly what is certified, and with no keyring it
-reads: *"No content key was destroyed (this substrate is not crypto-shredding),
-so residual plaintext may persist in snapshots/history — governed by the store's
-retention policy, NOT by this certificate."* The MCP server passes no keyring, so
-this is the branch that runs. `tool_forget` prints the signature, the closure
-counts, the probe result, the state hashes and the surviving bystander count —
-and not `cert.scope`. What it prints instead is *"This certificate is the
-artifact a compliance reviewer asks for."*
+That fallback is worth sitting with, because the same release argues against it.
+`signing.py` declines to hand-roll a pure-Python Ed25519 that would have
+preserved the zero-dependency promise, on the stated ground that *"hand-written
+cryptography in a product whose entire pitch is verifiability is the wrong
+trade,"* and ships the honest weak scheme instead. `crypto.py` faces the
+identical question for the same default install and hand-rolls the cipher. The
+practical exposure is narrow — the ledger's own `hash` covers the payload, so
+tampering with ciphertext breaks the chain, and confidentiality-after-shred does
+not depend on authentication — but the two files answer one question two ways,
+and only one of them shows its working. The project's own test caught the
+consequence: an assertion naming `AES` *"passed locally, where `cryptography`
+happens to be installed, and failed in CI, where it is not and the keystream
+fallback runs — an environment-dependent assertion masquerading as a property."*
+Both paths run in the wild.
 
-The field exists because the dataclass docstring argues for it: *"a certificate
-that claims more than the system delivers is a compliance liability, not a
-feature."* The engine wrote the sentence that prevents the overstatement, and the
-server does not display it. It is the same defect the project named three
-occurrences of in section 4 — a decision computed and then ignored — in the one
-place where it changes what a reader believes about a legal artifact.
+Two smaller repairs belong here because each closed a leak the certificate would
+otherwise have overstated. The session anchor — the entity pronouns resolve
+against — held the erased entity's id, which both pointed later resolution at a
+node that no longer exists and leaked the name through the identifier, since
+*"an id derived from a name is still personal data."* And `forget` operated on
+the graph and never touched `SOURCES/*.txt`, so the erased subject's sentences
+survived in plaintext in a file beside the substrate, where *"one grep recovered
+them after a 'provable erasure'."*
+
+What remains absent is scope. There is no tenant, user or workspace key anywhere
+on the read path; `source_id` names a document for receipt binding, not an
+audience. This is a single-tenant store, and the erasure guarantees are stated
+against an operator holding one substrate.
 
 ## 10. Tests, Evals, and Benchmarks
 
-One test file, 161 lines, and it is better than its size suggests. It drives a
+One test file, 311 lines, and it is better than its size suggests. It drives a
 subprocess speaking real stdio JSON-RPC rather than calling the tool functions,
 for a reason worth quoting: *"the thing that breaks in an MCP server is the
 protocol edge (a stray print to stdout, a notification answered with a reply, a
@@ -315,7 +381,7 @@ crash that kills the session), and none of that is visible from inside the
 process."* One test asserts that a notification receives no reply, because
 answering one corrupts the stream.
 
-Three cases assert that material must not come back, and none of them can pass
+Six cases assert that something must not happen, and none of them can pass
 vacuously. `test_recall_abstains_with_the_ungrounded_term_named` asserts the
 answerable query returns a grounded result and the unanswerable one abstains
 naming `salary`, over the same store in the same test. `test_receipts_are_tamper_evident`
@@ -334,11 +400,43 @@ the same discipline to evidence bundles — no Fireweed import at all, because
 extra steps"* — and reports entries it cannot check as `not verifiable here`
 *"rather than silently skipped or, worse, counted as passes."*
 
-What the suite does not cover: no test attaches a ledger, no test exercises the
-as-of validity query, and no test asserts a state transition. The README points
-at a retraction in a sibling repository as the reason its own numbers are stated
-so carefully; that document is outside this pin and is recorded here as a
-pointer, not as a citation.
+`test_erasure_is_remembered_so_a_reproposal_cannot_slip_back_in` is the one that
+earns `tombstone`, and its sibling is what makes it a *tombstone* rather than a
+ban: `test_reproposal_is_possible_but_must_be_deliberate` asserts the identical
+claim is admitted when `acknowledge_erasure=true` is passed. A refusal test
+alone would pass on a system that had simply stopped accepting writes.
+
+Two more pin properties most suites leave to a comment.
+`test_signing_key_is_per_install_not_a_source_literal` asserts the generated key
+is 32 bytes and is not the string that used to be compiled in, and asserts that
+when the Ed25519 path runs the *public* half is written out, since that is the
+artifact a verifier needs. `test_private_keys_do_not_live_in_the_store` asserts
+the keys are outside the directory a user would copy, sync or back up — because
+a backup taken before an erasure would otherwise carry the content keys next to
+the ciphertext they were meant to shred.
+
+`test_erasure_certificate_discloses_its_own_scope` carries the most instructive
+comment in the file. An earlier version asserted the cipher was `AES`, which
+*"passed locally, where `cryptography` happens to be installed, and failed in
+CI, where it is not and the keystream fallback runs — an environment-dependent
+assertion masquerading as a property."* The fixed version parses the cipher line
+and asserts only that something is named and it is not `none`. That is the
+general repair for a test that passes because of the machine it ran on.
+
+`test_export_is_readable_by_the_public_reference_reader` imports the stdlib-only
+reader from `open_format/` and asserts the claim round-trips, so portability is
+checked by something outside the engine. `open_format/verify_bundle.py` extends
+the same discipline to evidence bundles — no Fireweed import at all, because
+*"if you needed our code to verify our claims, you would just be trusting us with
+extra steps"* — and reports entries it cannot check as `not verifiable here`
+*"rather than silently skipped or, worse, counted as passes."*
+
+What the suite does not cover: nothing asserts the ledger's chain actually
+verifies — `test_mutations_are_recorded_in_a_persistent_ledger` asserts the file
+exists, which pins persistence and not integrity — nothing exercises the as-of
+validity query, and no test asserts a `memory_state` transition. The README's
+recall figures and the erasure canaries are cited from a private repository and
+are not checkable at this pin.
 
 ## 11. For Your Own Build
 
@@ -346,33 +444,59 @@ pointer, not as a citation.
 proposes, deterministic code decides" is a slogan inside one process and a
 property across two. An agent cannot argue with `numerals_grounded`.
 
-**Type your refusals and return them.** Four named reasons with the claim, the
-evidence and a remedy is what makes a gate usable by a caller that is itself a
-model. Then go one step further than this system does and *record* them.
+**Make a tombstone an override, not a ban.** A refusal keyed on the value is
+what stops a deletion from being undone by the next extraction. A refusal with
+no way through is a different bug, because re-consent happens and two people
+share a name. The pairing here — refuse by default, admit on an explicit
+acknowledgement — is the shape to copy, and the test that pins it is two
+assertions, not one.
+
+**Arm the guard that catches an empty audit log.** A log that covers no
+mutations looks exactly like a log that covers all of them until someone reads
+it. A sealed mode that raises on an unlogged write converts that from a silent
+condition into a crash on the first write, and it costs one call at startup.
+
+**Put a `adversary_checkable` flag on your signature.** A symmetric MAC and an
+asymmetric signature are both "signed" and only one means anything to a third
+party. Carrying that distinction in the artifact rather than in the
+documentation is what stops the weaker one being quoted as the stronger.
+
+**Hash a document as a tree if you will ever have to redact it.** A flat hash
+makes erasure and third-party verification mutually exclusive. A Merkle tree
+over parts costs a little structure and buys the ability to remove one
+subject's text while every other citation into the same document keeps
+verifying.
 
 **Write the negative control into the test.** Assert the receipt verifies, then
 break the source and assert it stops verifying. Without the second half, an
-instrument that always returns success passes.
-
-**If you compute a caveat, print it.** The scope string here is exactly right and
-never reaches the reader. A limitation known only to the code is not a
-limitation the user has been told about.
+instrument that always returns success passes. And check what your assertion
+depends on: naming a cipher that only exists when an optional dependency is
+installed is a test about the machine, not the code.
 
 ## 12. Open Questions
 
-**Would sealing the graph work today?** `seal()` and `attach_ledger` exist, and
-`ledger_sqlite` persists synchronously. Whether the MCP server's snapshot-based
-persistence and the ledger's fold-based reconstruction can both own the store at
-once was not traced, and it is the question that decides whether the unwired
-ledger is a missing line or a design conflict.
+**Does the chain verify, and does anyone check?** The ledger is persisted and
+hash-chained, and the committed test asserts the database file exists. Nothing
+walks the chain from genesis and recomputes it, which is the check that turns an
+append-only log into a tamper-evident one. `verify_bundle.py` does exactly that
+for evidence bundles; the ledger has no equivalent at this pin.
 
-**What happens to a re-proposed claim after erasure?** The closure is removed and
-the `ERASE` event is discarded with the in-memory ledger. Remembering the same
-claim again with the same evidence appears to admit it as new. No committed test
-covers it.
+**Which of the two records is authoritative?** The server
+writes `substrate.json` after every mutation and also emits every mutation to
+the ledger, so the store has two records of the same state with different
+durability and different erasure semantics — the ledger's content is encrypted
+per subject and shreds on erasure, the snapshot is plaintext JSON. Which one is
+authoritative on a restart, and whether an erased subject can survive in the
+snapshot after shredding in the ledger, was not traced.
 
-**What is in the private evaluation?** The 38% and 24% figures, the trap corpus,
-the read-gate bench and `test_erasure_derived_nodes` are all cited from a
+**Why does one release answer the hand-rolled-crypto question twice?**
+`signing.py` refuses to hand-roll Ed25519 and ships an honestly-labelled weak
+scheme; `crypto.py` hand-rolls an unauthenticated keystream for the same default
+install. Both are defensible in isolation. The reasoning that separates them is
+not written down anywhere in the tree.
+
+**What is in the private evaluation?** The 38% and 24% recall figures, the trap
+corpus, the read-gate bench and the erasure canaries are all cited from a
 repository not published at this pin. The engine source is here; the instruments
 that measured it are not.
 
@@ -385,7 +509,10 @@ that measured it are not.
 | `src/fireweed/read_gate.py` | Subject and predicate grounding, and why a score cannot abstain |
 | `src/fireweed/receipts.py` | Document hashing and byte-range span location |
 | `src/fireweed/erasure.py` | Exact closure, `ErasureIncomplete`, and the certificate with its scope text |
-| `src/fireweed/ledger.py` | The append-only hash-chained event log — built, never attached |
+| `src/fireweed/ledger.py` | The append-only hash-chained event log |
+| `src/fireweed/signing.py` | Two signers, and the `adversary_checkable` flag that distinguishes them |
+| `src/fireweed/merkle.py` | The redactable document tree that keeps bystanders' receipts valid |
+| `src/fireweed/crypto.py` | Per-subject content keys, the shred, and the fallback cipher |
 | `src/fireweed/graph.py` | `NodeStatus.memory_state`, `Temporal`, `_emit`, `seal`, `attach_ledger` |
 | `src/fireweed/pipeline.py` | The firewall branch, supersession, and the `disputed` writer |
 | `src/fireweed/semantic_encoder.py` | The pinned revision and weights fingerprint |
@@ -393,5 +520,13 @@ that measured it are not.
 | `tests/test_mcp_server.py` | The protocol tests and the three must-not-return cases |
 
 ## History
+
+**2026-08-25** — [`a9bca09cd224500dcfff65e29f46354f0c93ef21`](https://github.com/Starksood/fireweed-mcp/commit/a9bca09cd224500dcfff65e29f46354f0c93ef21) — second reading, two commits past the previous pin on the same day, released as 0.2.0. 10,479 lines of Python across 44 files. Screened again before reading: one auto-run surface, one unpinned surface, one dependency file inside the seven-day cooldown, no build-time execution; nothing was installed and no suite was run. Two marks added, to five.
+
+`audit_log` is earned on `attach_ledger(SQLiteLedger(...), tenant_id="mcp", keyring=...)` at server start, with `seal()` on the following line so an unlogged mutation raises. At the previous pin the same log existed with no caller for either function, so `_emit` took its silent early return on every write; the modules were unchanged and the wiring was absent. `tombstone` is earned on the `ERASE` event that this makes durable: it carries `subject_name_hash`, a SHA-256 fingerprint of the name rather than the name, and `remember` consults the erased set before admitting a claim, refusing with `previously_erased` and admitting on an explicit `acknowledge_erasure`. The previous reading recorded the absence of exactly this consultation as the reason `tombstone` was withheld.
+
+Three further repairs are traced in section 9 and none of them was visible from the previous reading. The signing key was a literal in public source and is now 32 bytes from `secrets` per install, written outside the store at mode `0600`, with Ed25519 preferred when `cryptography` is importable and an `adversary_checkable` flag on each signer so the certificate reports what its own signature is worth. The certificate's self-limiting `scope` string, computed and not printed, reaches the caller. And `forget` never touched `SOURCES/*.txt`, so an erased subject's sentences survived in plaintext beside the substrate — a leak the previous reading did not find, closed here by a Merkle binding over document parts that lets a redacted part keep its leaf hash so a bystander's inclusion proof still verifies.
+
+One finding is added rather than closed. The default zero-dependency install falls back to an unauthenticated HMAC-SHA256 keystream cipher, hand-rolled in `crypto.py`, in the same release whose `signing.py` declines to hand-roll Ed25519 on the stated ground that hand-written cryptography is the wrong trade for a product about verifiability. `scope_enforced` and `human_review` remain absent: there is still no tenant, user or workspace key on the read path, and `acknowledge_erasure` is an argument the calling agent supplies rather than a decision recorded from a person. `quarantined` and `frozen` are still declared states with no writer.
 
 **2026-08-25** — [`33ec45edeea262a753d8fb004689d4bf92bc2328`](https://github.com/Starksood/fireweed-mcp/commit/33ec45edeea262a753d8fb004689d4bf92bc2328) — first reading, 9,724 lines of Python across 45 files, 7 commits since 23 August 2026, FSL-1.1-ALv2 converting to Apache 2.0 on 1 January 2028. Screened before anything was read: one auto-run surface, one dependency file inside the seven-day cooldown, one unpinned surface, no build-time execution; nothing was installed and no test was run, so every claim here comes from reading the tree. Three marks. `trust_state` rests on the five-value `memory_state` filtered to `("active", "disputed")` at three retrieval points, with the report stating that two of the five states have no writer. `bitemporal` rests on `event_time`/`valid_from`/`valid_to` extracted at resolve time and stamped on supersession, read by the as-of validity query and the event-time window filter. `negative_eval` rests on three paired must-not-return cases including a real negative control on the receipt instrument. `audit_log` is withheld on a producer check: `ledger.py` and `ledger_sqlite.py` implement a gap-free hash-chained append-only log, and `attach_ledger` and `seal()` have no caller anywhere in the tree, so `_emit` returns early on every mutation; the only ledger ever constructed is a `SQLiteLedger(":memory:")` inside `forget`, discarded when the call returns. `tombstone` is withheld because a refused claim leaves no record of any kind. `scope_enforced` is absent — no tenant, user or workspace key on the read path. `human_review` is absent — the firewall's `QUARANTINE` verdict, documented as *"log for review"*, returns a `NoopMutation` and there is no queue. The erasure certificate is signed with `b"fireweed-mcp-key"`, a literal in public source, and its own self-limiting `scope` field is computed and not printed.

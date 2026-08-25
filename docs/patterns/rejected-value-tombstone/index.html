@@ -124,7 +124,7 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong>
-Twenty-three systems of three hundred and thirty-three carry it, and
+Twenty-four systems of three hundred and thirty-three carry it, and
 almost no two arrived the same way: one invented it under adversarial
 pressure, one adopted it from the first, one arrived at a weaker form
 independently, one was driven to it by a regulation, several built it
@@ -271,7 +271,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Twenty-three systems of 333 in the atlas have this.</strong>
+<p><strong>Twenty-four systems of 333 in the atlas have this.</strong>
 That is still the most striking negative result in the atlas, and it is
 the reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -933,6 +933,42 @@ TTL. That is a defensible trade for a privacy revocation whose source
 data expires anyway, and it means the guarantee is <em>not again for
 ninety-one days</em> rather than <em>never again</em> — a distinction
 worth making explicitly wherever this shape is copied.</p>
+<h3 id="the-tombstone-that-must-not-retain-what-it-protects">The
+tombstone that must not retain what it protects</h3>
+<p>Every implementation above keys the tombstone on the value, and
+stores the value to do it. For a rejected fact that is fine. For an
+erased <em>person</em> it is a contradiction: a record whose purpose is
+to prove someone was removed, holding their name.</p>
+<p><a href="../../systems/fireweed-mcp/">Fireweed MCP</a> keys on a
+digest instead. <code>name_fingerprint</code> is a SHA-256 over the
+whitespace-normalized lowercased name, written into the durable
+<code>ERASE</code> ledger event as <code>subject_name_hash</code>, and
+the write gate hashes the names in an incoming claim to compare. The
+refusal still works — an identical claim naming the erased subject is
+turned away with <code>previously_erased</code> — and the store holds no
+copy of the name to do it. The cost is the ordinary cost of a digest
+key: it matches exactly or not at all, so a spelling variant walks
+straight past, which is the same limitation every value-keyed tombstone
+on this page has and is merely more visible here.</p>
+<p><strong>The second half is what makes it a tombstone rather than a
+ban, and it is the part to copy.</strong>
+<code>acknowledge_erasure=true</code> admits the claim anyway. The
+stated reason is specific to the subject matter and worth quoting,
+because it is the argument against the strongest form of this pattern in
+the one domain where the strongest form is wrong:</p>
+<blockquote>
+<p><em>"erasure is not a permanent ban on a person ever being mentioned
+again — someone may lawfully re-consent, or the same name may be a
+different person. The requirement is that re-admission be a DECISION
+SOMEONE MAKES, recorded as such, rather than something that happens
+quietly because nothing was looking."</em></p>
+</blockquote>
+<p>Two committed tests hold both sides: one asserts the identical claim
+is refused after an erasure, the other asserts it is admitted with the
+acknowledgement. A suite carrying only the first would pass on a store
+that had stopped accepting writes at all — the same trap this atlas
+keeps finding in exclusion tests that never assert anything is still
+returned.</p>
 <h3 id="the-refusal-that-reaches-the-inference">The refusal that reaches
 the inference</h3>
 <p><a href="../../systems/rck/">RCK</a> is the instance that closes the

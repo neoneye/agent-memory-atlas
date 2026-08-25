@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-three systems of three hundred and thirty-three
+> **This is not an established best practice.** Twenty-four systems of three hundred and thirty-three
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -129,7 +129,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-three systems of 333 in the atlas have this.** That is still the most
+**Twenty-four systems of 333 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -672,6 +672,40 @@ bounded by the tombstone's ninety-one-day TTL. That is a defensible trade for a
 privacy revocation whose source data expires anyway, and it means the guarantee
 is *not again for ninety-one days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
+
+### The tombstone that must not retain what it protects
+
+Every implementation above keys the tombstone on the value, and stores the value
+to do it. For a rejected fact that is fine. For an erased *person* it is a
+contradiction: a record whose purpose is to prove someone was removed, holding
+their name.
+
+[Fireweed MCP](../../systems/fireweed-mcp/) keys on a digest instead.
+`name_fingerprint` is a SHA-256 over the whitespace-normalized lowercased name,
+written into the durable `ERASE` ledger event as `subject_name_hash`, and the
+write gate hashes the names in an incoming claim to compare. The refusal still
+works — an identical claim naming the erased subject is turned away with
+`previously_erased` — and the store holds no copy of the name to do it. The cost
+is the ordinary cost of a digest key: it matches exactly or not at all, so a
+spelling variant walks straight past, which is the same limitation every
+value-keyed tombstone on this page has and is merely more visible here.
+
+**The second half is what makes it a tombstone rather than a ban, and it is the
+part to copy.** `acknowledge_erasure=true` admits the claim anyway. The stated
+reason is specific to the subject matter and worth quoting, because it is the
+argument against the strongest form of this pattern in the one domain where the
+strongest form is wrong:
+
+> *"erasure is not a permanent ban on a person ever being mentioned again —
+> someone may lawfully re-consent, or the same name may be a different person.
+> The requirement is that re-admission be a DECISION SOMEONE MAKES, recorded as
+> such, rather than something that happens quietly because nothing was looking."*
+
+Two committed tests hold both sides: one asserts the identical claim is refused
+after an erasure, the other asserts it is admitted with the acknowledgement. A
+suite carrying only the first would pass on a store that had stopped accepting
+writes at all — the same trap this atlas keeps finding in exclusion tests that
+never assert anything is still returned.
 
 ### The refusal that reaches the inference
 
