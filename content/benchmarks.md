@@ -2245,7 +2245,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 334 repositories,
+  [comparative report](../compare/). It is a statement about 335 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 335 reports.**
+**This page covers all 336 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1560,6 +1560,17 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
 - Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
 - Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
+
+### [`openexecutive`](../systems/openexecutive/)
+
+- Best idea: **the scoping test asserts on the rendered prompt, not on the query.** `test_format_for_prompt_scopes_decisions_and_advice_keeps_initiatives` stores decisions under two thread ids plus a company-wide initiative, renders the injection block for thread A, and asserts thread A's decision and advice are present, thread B's decision is absent, and the initiative is present. A test one layer down would still pass if the query were right and the renderer dropped the filter. Its sibling pair pins the filter *and* its default absence: scoped returns one of three, unscoped returns everything.
+- Second idea: **`auto_no_response` is its own terminal status.** The `decision_instances` ledger runs an eight-value state machine *"enforced by compare-and-set"*, carries `proposed_payload_json` beside `final_payload_json` so an approval-with-edit is legible as a diff, and records `approver_person_id` and `resolver_person_id` as identities rather than booleans. A proposal nobody answered is distinguished from one that was rejected — a distinction most approval systems in this corpus collapse into a timeout.
+- Third idea: **the scoping rationale names the deployment that produces the failure.** Session scoping exists *"so each conversation sees its own extracted context rather than a global mix from unrelated conversations"* across Discord, Telegram, Slack and email handlers, while *"Initiatives are always global (company-wide)"* by design. Stating which half is deliberately unscoped is what makes the other half credible.
+- Biggest risk: **the audit log watches the read and not the write.** `openexecutive/audit/` is properly built — a closed fourteen-value `EVENT_TYPES`, a redaction module, a session timeline, a derived causality graph for a flow-chart UI. Two events name memory and both are reads: `memory_snapshot` is *"episodic context + company profile at turn entry"* and `peer_memory` is a prefetch outcome. There is no write event, the episodic module emits nothing, and the `/memories/*` PATCH and DELETE routes emit nothing — so the log answers what the executive knew when it said that, and never where a memory came from or who deleted it. It is the cleanest illustration in this corpus of why the `audit_log` definition excludes retrieval logs, because everything else about the implementation is right.
+- Second risk: **`department` is stored on every decision row, documented as owning it, and used as a filter by nothing.** A memory row also carries no status, no confidence and one timestamp, so nothing can express that a recorded decision turned out wrong — the `outcome` column is free text from the same extractor that wrote the summary.
+- Maturity impression: Apache-2.0, ~129,000 lines of Python and 27,000 of TypeScript, 222 test files, one orchestrator over eight specialists on Claude — and **12 commits between 11 June and 3 July 2026, with nothing since**. Three marks. The scheduler claims due actions with `UPDATE … RETURNING` and the README names the constraint that follows: the API must run as a single instance.
+- Study when: you want the test that asserts scoping on the artifact the model actually receives, or an approval ledger that records the edit and the approver rather than a boolean.
+- Do not copy when: you need to know where a memory came from — the write side of this system leaves no trace at all.
 
 ### [`agentictrading`](../systems/agentictrading/)
 

@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A virtual executive team whose
+episodic memory is extracted by a background pass, scoped to a
+conversation thread on the way into the prompt, and editable by a person
+— behind an audit log that records what memory was shown and never what
+was written.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenExecutive — Agent Memory Atlas">
+    <meta property="og:description" content="A virtual executive team
+whose episodic memory is extracted by a background pass, scoped to a
+conversation thread on the way into the prompt, and editable by a person
+— behind an audit log that records what memory was shown and never what
+was written.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenExecutive — Agent Memory Atlas">
+    <meta name="twitter:description" content="A virtual executive team
+whose episodic memory is extracted by a background pass, scoped to a
+conversation thread on the way into the prompt, and editable by a person
+— behind an audit log that records what memory was shown and never what
+was written.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenExecutive — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenExecutive",
+      "description": "A virtual executive team whose episodic memory is extracted by a background pass, scoped to a conversation thread on the way into the prompt, and editable by a person \u2014 behind an audit log that records what memory was shown and never what was written.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The audit watches the read</p>
+          <h1>OpenExecutive</h1>
+          <p class="document-deck">A virtual executive team whose
+episodic memory is extracted by a background pass, scoped to a
+conversation thread on the way into the prompt, and editable by a person
+— behind an audit log that records what memory was shown and never what
+was written.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/SenteLabsAI/OpenExecutive">
+              <span>Source</span>
+              <strong>SenteLabsAI/OpenExecutive</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/SenteLabsAI/OpenExecutive/commit/4e95559464331fc4a82ef7a0945d59e35af66120" title="4e95559464331fc4a82ef7a0945d59e35af66120">
+              <span>Analyzed revision</span>
+              <code>4e955594…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-26</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenExecutive is a virtual executive team: one orchestrator speaking
+in a single voice over eight specialists — strategy, finance, people,
+counsel, operations, marketing, product, board — from Sente Labs.
+Apache-2.0, roughly 129,000 lines of Python and 27,000 of TypeScript,
+and <strong>12 commits between 11 June and 3 July 2026</strong>, with
+nothing since. It is a large, coherent system that stopped moving seven
+weeks before this reading.</p>
+<p>The memory design has three layers and the middle one is what this
+report is about. ChromaDB holds built-in MBA knowledge and uploaded
+company documents in separate collections, injected into the <em>user
+turn</em> rather than the cached system prompt. SQLite holds
+<strong>episodic memory</strong>: after every response a background
+<code>claude-haiku-4-5</code> pass extracts decisions, initiatives and
+advice, and the next session opens with a
+<code>&lt;past_decisions&gt;</code> block. An optional Honcho deployment
+adds per-person memory.</p>
+<p>Three marks. <code>session_id</code> reaches the query that builds
+the injected block, so one conversation thread's extracted decisions do
+not appear in another's. A person can read back, rewrite and delete
+anything the extractor wrote, through an API and a UI built for it. And
+the tests assert the exclusion on the rendered prompt rather than on the
+store beneath it.</p>
+<p>The finding worth carrying away is about the audit log, and it is not
+that one is missing. There is a good one — a closed fourteen-value event
+vocabulary, a redaction layer, a session timeline, and a derived
+causality graph so the UI can draw the flow of a turn. Every one of
+those fourteen events describes something the system
+<strong>read</strong>. A memory written by the extractor, edited by a
+person, or deleted outright passes through none of them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The system separates <em>what the executive knows</em> from <em>what
+the executive decided</em>, and stores them differently.</p>
+<p>Knowledge is RAG — two Chroma collections, retrieved per specialist
+call, never mutated by the agent. Memory is extraction — a summarizer
+reads the turn that just finished and writes rows the next turn will
+see. The README states the division plainly: <em>"After every response,
+a background <code>claude-haiku-4-5</code> pass extracts key decisions,
+initiatives, and advice into SQLite. The next session opens with a
+<code>&lt;past_decisions&gt;</code> block so the Executive remembers
+what it recommended last month."</em></p>
+<p>Nothing writes memory on the critical path. That is a real design
+choice with a cost the report returns to in section 7: the write is
+asynchronous, best-effort, and unlogged, so a failure to extract is
+indistinguishable from a turn that contained nothing worth
+extracting.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — fourteen audit event types cover the arrows into the prompt and none of the arrows into the store, so an extraction, a human edit and a deletion are all silent</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: fourteen audit event types cover the arrows into the prompt and none of the arrows into the store, so an extraction, a human edit and a deletion are all silent
+    T[&quot;user turn&quot;] --&gt; ORCH[&quot;executive orchestrator&quot;]
+    ORCH --&gt; SPEC[&quot;eight specialists&lt;br/&gt;parallel tool calls&quot;]
+    SPEC --&gt; RAG[(&quot;ChromaDB&lt;br/&gt;builtin MBA knowledge&lt;br/&gt;+ company_docs&quot;)]
+    RAG --&gt;|&quot;injected into the user turn,&lt;br/&gt;never the cached prompt&quot;| ORCH
+
+    CTX[&quot;format_for_prompt&quot;] --&gt; Q1[&quot;decisions WHERE session_id = ?&lt;br/&gt;(when the caller passes one)&quot;]
+    CTX --&gt; Q2[&quot;initiatives WHERE status != &#39;completed&#39;&lt;br/&gt;always global&quot;]
+    CTX --&gt; Q3[&quot;advice WHERE session_id = ?&quot;]
+    Q1 &amp; Q2 &amp; Q3 --&gt; DB[(&quot;SQLite&lt;br/&gt;decisions · initiatives · advice_given&quot;)]
+    CTX --&gt; BLOCK[&quot;&amp;lt;past_decisions&amp;gt; block&lt;br/&gt;bounded; oldest advice dropped first&quot;]
+    BLOCK --&gt; ORCH
+
+    ORCH --&gt; RESP[&quot;response&quot;]
+    RESP --&gt; EX[&quot;background claude-haiku-4-5&lt;br/&gt;extraction pass&quot;]
+    EX --&gt; DB
+    HUM[&quot;person · /memories UI&quot;] --&gt;|&quot;GET · PATCH · DELETE&quot;| DB
+
+    AUD[(&quot;audit_log&lt;br/&gt;14 declared event types&quot;)]
+    RAG -.-&gt;|&quot;knowledge_retrieval&quot;| AUD
+    BLOCK -.-&gt;|&quot;memory_snapshot&quot;| AUD
+    ORCH -.-&gt;|&quot;chat_turn · specialist_consult&lt;br/&gt;tool_invocation · cache_event&quot;| AUD
+    EX -.-&gt;|&quot;nothing&quot;| AUD
+    HUM -.-&gt;|&quot;nothing&quot;| AUD</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Building the block.</strong> <code>format_for_prompt</code>
+pulls the newest five decisions, the active initiatives and two advice
+rows, renders them as dated lines, and enforces a character budget by
+dropping oldest advice first, then oldest decisions, <em>"Initiatives
+are always kept."</em> The scoping rule is in the same docstring:</p>
+<blockquote>
+<p><em>"When <code>session_id</code> is non-empty, decisions and advice
+are scoped to that session only — used by Discord/Telegram/Slack/email
+thread handlers so each conversation sees its own extracted context
+rather than a global mix from unrelated conversations. Initiatives are
+always global (company-wide)."</em></p>
+</blockquote>
+<p>That is the mark, and it is worth noting what makes it credible: the
+rationale names the deployment shape that produces the failure — several
+chat channels feeding one executive — rather than asserting isolation in
+the abstract.</p>
+<p><strong>The query under it</strong> branches rather than
+composes:</p>
+<pre class="python"><code>if session_id:
+    rows = conn.execute(
+        &quot;SELECT * FROM decisions WHERE session_id = ?&quot;
+        &quot; ORDER BY timestamp DESC LIMIT ?&quot;, (session_id, limit)).fetchall()
+else:
+    rows = conn.execute(
+        &quot;SELECT * FROM decisions ORDER BY timestamp DESC LIMIT ?&quot;, (limit,)).fetchall()</code></pre>
+<p><code>session_id</code> defaults to <code>""</code>, so the
+else-branch is the default and two callers outside the injection path —
+a department check-in workflow and the today route — take it.</p>
+<p><strong>The scheduler</strong> claims due actions with
+<code>UPDATE … RETURNING</code> to prevent double-firing, and the README
+states the constraint that follows: <em>"The API must run as a single
+instance; do not horizontally scale it without gating the scheduler
+first."</em> Naming the operational limit of your own concurrency
+control is rarer than implementing it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three tables carry memory:</p>
+<ul>
+<li><code>decisions</code> — <code>timestamp</code>,
+<code>domain</code>, <code>summary</code>, <code>rationale</code>,
+<code>outcome</code>, <code>tags</code>, plus <code>session_id</code>
+and <code>department</code>.</li>
+<li><code>initiatives</code> — <code>title</code>, <code>status</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>summary</code>.</li>
+<li><code>advice_given</code> — <code>timestamp</code>,
+<code>domain</code>, <code>query_summary</code>,
+<code>advice_summary</code>.</li>
+</ul>
+<p>A decision has <strong>no status field</strong>, no confidence, no
+provenance beyond the domain that produced it, and one timestamp. There
+is no way to mark one decision as superseding another, and no way to
+record that one turned out wrong — the <code>outcome</code> column is
+free text written by the same extractor that wrote the summary.</p>
+<p><code>initiatives.status</code> is the only status in the memory
+tables, and <code>get_active_initiatives</code> reads
+<code>WHERE status != 'completed'</code>. That excludes a row from the
+active list, which looks like the withholding the
+<code>trust_state</code> mark asks for, and is not: <em>completed</em>
+is a task lifecycle state. A completed initiative is not a claim the
+system has stopped believing; it is work that finished. Nothing here can
+express <em>this memory may be wrong</em>.</p>
+<p>The richest schema in the tree belongs to
+<code>decision_instances</code>, and it is about actions rather than
+memories — section 9 covers it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Knowledge retrieval is two Chroma collections per specialist call,
+with the result injected into the user turn. The README explains the
+placement as a caching decision — the persona, company profile and
+knowledge index are cached separately, <em>"No dynamic content ever goes
+in a cached block"</em> — which is the same discipline <a
+href="../hermes-agent/">Hermes Agent</a> applies to its frozen memory
+block, reached from the opposite direction.</p>
+<p>Episodic retrieval is not search. It is a fixed-shape assembly: five
+decisions, the active initiatives, two advice rows, newest first,
+trimmed to a character budget. There is no ranking, no relevance scoring
+against the current question, and no way for the model to ask for more —
+the block is what it is.</p>
+<p>For a system whose pitch is remembering <em>"what it recommended last
+month,"</em> the absence of relevance is a real bound: a decision from a
+domain unrelated to the current question occupies one of five slots on
+recency alone.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every memory write is asynchronous. The extraction pass runs after
+the response is sent, with <code>_background_tasks</code> holding strong
+references <em>"so GC cannot cancel them mid-flight"</em> — a detail
+that shows someone hit the failure mode where a fire-and-forget task
+vanishes under load.</p>
+<p>There is an initiatives consolidation pass that merges duplicates,
+and an episodic mirror that best-effort copies a row into a department
+peer's Honcho timeline, skipped when the department is empty or
+<code>"general"</code>, with SQL declared <em>"the system of
+record"</em> and a Honcho failure explicitly unable to affect <em>"the
+episodic INSERT that just committed."</em> That ordering is correct and
+stated.</p>
+<p>What no write path does is leave a record that it happened. Section 9
+is where that matters.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One orchestrator on <code>claude-sonnet-4-6</code>, eight specialists
+with four on <code>claude-opus-4-7</code> with extended thinking, fanned
+out as parallel tool calls, and a synthesized single voice — <em>"The
+internal agent architecture is never exposed to the user."</em> Channel
+handlers for Discord, Telegram, Slack and email feed the same core,
+which is what makes the session scoping load-bearing rather than
+decorative.</p>
+<p>The memories UI is a first-class surface —
+<code>packages/ui/src/app/memories/</code> with a
+<code>MemorySection</code>, a <code>PulseHeader</code> and a
+<code>CadenceSection</code> — not a debug view.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The action ledger is the best-built thing here.</strong>
+<code>decision_instances</code> records every gated action with
+<code>proposed_payload_json</code> beside
+<code>final_payload_json</code>, so an approval-with-edit is legible as
+a diff rather than as a flag; <code>approver_person_id</code> and
+<code>resolver_person_id</code> as identities; a <code>confidence</code>
+float held apart from <code>status</code>; and
+<code>reversal_reason</code> and <code>severity</code> for the circuit
+breaker. The module states the state machine and how it is held:</p>
+<blockquote>
+<p><em>"Status state-machine (valid transitions only; enforced by
+compare-and-set): proposed → approved_unchanged | approved_with_edit |
+rejected | auto_no_response | failed; executed → reversed | failed;
+approved_</em> → reversed"*</p>
+</blockquote>
+<p><code>auto_no_response</code> deserves its own note: a proposal that
+nobody answered is a distinct outcome from one that was rejected, and
+most approval systems in this corpus collapse the two into a
+timeout.</p>
+<p><strong>The audit log is well-built and points the wrong
+way.</strong> <code>openexecutive/audit/</code> has a logger, a
+redaction module, a context module, an <code>AuditEvent</code> row with
+session and turn ids and an actor, a filterable read API, and a
+session-scoped endpoint returning <em>"the full ordered timeline for one
+inbound request plus a derived graph (nodes + edges) so the UI can
+render a flow-chart view."</em> The event vocabulary is closed and
+declared:</p>
+<pre class="python"><code>EVENT_TYPES = (&quot;chat_turn&quot;, &quot;specialist_consult&quot;, &quot;tool_invocation&quot;,
+               &quot;scheduled_action&quot;, &quot;alert&quot;, &quot;integration_inbound&quot;,
+               &quot;auth_login&quot;, &quot;auth_logout&quot;, &quot;knowledge_retrieval&quot;,
+               &quot;cache_event&quot;, &quot;memory_snapshot&quot;, &quot;committee_review&quot;, &quot;peer_memory&quot;)</code></pre>
+<p>Two of those name memory, and both are reads.
+<code>memory_snapshot</code> is <em>"episodic context + company profile
+at turn entry"</em> — what the model was shown. <code>peer_memory</code>
+is <em>"Honcho per-person memory — prefetch + sync_turn outcomes"</em>.
+There is no <code>memory_write</code>, no
+<code>decision_extracted</code>, no <code>memory_edited</code> and no
+<code>memory_deleted</code>, the episodic module emits no audit event,
+and the <code>/memories/*</code> PATCH and DELETE routes emit
+nothing.</p>
+<p>So the log can answer <em>what did the executive know when it said
+that</em> and cannot answer <em>where did this memory come from, who
+changed it, or who deleted it</em>. This atlas's <code>audit_log</code>
+definition excludes exactly this case — <em>"Logs of retrieval or
+feedback are the other half of the pattern and do not count here"</em> —
+and OpenExecutive is the cleanest illustration of why the exclusion
+exists, because everything else about the implementation is right. The
+vocabulary is closed, so adding the write side is a declared-constant
+change plus emit calls in four places.</p>
+<p><strong>A gap on the same axis.</strong> <code>department</code> is
+stored on every decision row, is documented as <em>"Department slug
+owning this decision,"</em> is written through the mirror path, and is
+used as a filter by nothing in retrieval. A second scope key that never
+reaches a query.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>222 test files, 51,923 lines, against a 129,000-line Python tree.
+Nothing was run for this review — the screen found three auto-run
+surfaces, including a VS Code tasks file worth checking for
+<code>runOptions.runOn: folderOpen</code>, and a
+<code>conftest.py</code> that executes on collection.</p>
+<p>The memory tests are the reason for the <code>negative_eval</code>
+mark, and the best of them asserts on the artifact that reaches the
+model rather than on the query:</p>
+<pre class="python"><code>prompt = format_for_prompt(db_path=db, session_id=&quot;discord:thread:A&quot;)
+assert &quot;Thread A decision&quot; in prompt
+assert &quot;Thread A advice body&quot; in prompt
+assert &quot;Thread B decision&quot; not in prompt          # excluded
+assert &quot;Company-wide initiative&quot; in prompt        # always included</code></pre>
+<p>Three positives and a negative over one store. Below it,
+<code>test_get_recent_decisions_scoped_excludes_other_sessions</code>
+asserts a scoped read returns one of three rows, and
+<code>test_get_recent_decisions_global_returns_all</code> asserts the
+unscoped read returns everything — the pair pins the filter <em>and</em>
+its default absence, which a single test would not.</p>
+<p><code>test_sessions_list_unknown_email_returns_empty_not_principal</code>
+is the same discipline on the session list, and names the failure it
+guards: an unrostered email gets <code>[]</code>, <em>"not the
+principal's chats."</em></p>
+<p><code>evals/</code> holds a <code>run_evals.py</code> and a
+<code>judges/</code> directory — an LLM-judge harness over the
+executive's answers. It measures advice quality, not memory: no case
+asserts that a decision was recalled, that a stale one was not, or that
+the extraction pass produced the right row. The empirical question this
+design most needs answered — whether five recency-ranked decisions are
+the right five — has no committed measurement.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Assert your scoping on the rendered prompt, not on the
+query.</strong> The test above would still pass if the query were right
+and the renderer dropped the filter; a test one layer down would not
+catch that. The artifact the model receives is the thing whose contents
+you actually care about.</p>
+<p><strong>Give your audit log a write side, and check that before you
+build the causality graph.</strong> A read-side audit answers what the
+model saw, which is the question you have while debugging, and never
+answers where a memory came from, which is the question you have after
+it turns out to be wrong. The second is the one a user will ask.</p>
+<p><strong>Distinguish "nobody answered" from "rejected."</strong>
+<code>auto_no_response</code> as its own terminal status costs one enum
+value and separates a reviewer who declined from a reviewer who was on
+holiday — a distinction any reliability aggregate computed over the
+ledger needs.</p>
+<p><strong>Do not let a stored key stay unread.</strong>
+<code>department</code> and, in most of the callers,
+<code>session_id</code> are both written and both ignorable. A scope
+column that no query uses reads as isolation to everyone who greps the
+schema.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Is the project still moving?</strong> Twelve commits, the
+last on 3 July 2026, seven weeks before this reading, on a system this
+size. The pin is what it is; whether the design continues is not
+something the tree answers.</p>
+<p><strong>What does the Honcho deployment change?</strong>
+<code>honcho_client.py</code> is 1,438 lines, there is a
+<code>fly.honcho.toml</code> and a <code>docker/honcho/</code> with its
+own embedding server, and per-person memory sits outside the SQLite
+tables this report traced. Whether it carries state, scope or audit the
+local store does not was not established.</p>
+<p><strong>Does the promotion evaluator ship?</strong>
+<code>decision_class_state</code> holds a <code>mode</code>, a
+<code>last_eval_json</code> and a <code>breaker_tripped_at</code>, and
+<code>decision_ledger</code> refers to a promotion evaluator as
+<em>"(Build 3)"</em>. Whether the automatic promotion from propose-mode
+to auto-execute is wired at this pin, and what it reads, was not
+traced.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/openexecutive/memory/episodic.py</code></td>
+<td>The three memory tables, the scoped queries and
+<code>format_for_prompt</code></td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/memory/decision_ledger.py</code></td>
+<td>The eight-state action ledger and its compare-and-set
+transitions</td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/memory/initiatives_consolidation.py</code></td>
+<td>Duplicate-initiative merging</td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/memory/honcho_client.py</code></td>
+<td>The optional per-person memory client, not traced here</td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/audit/logger.py</code></td>
+<td><code>EVENT_TYPES</code>, and the absence of a write-side event</td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/api/routes/episodic.py</code></td>
+<td>GET, PATCH and DELETE over every memory type</td>
+</tr>
+<tr>
+<td><code>packages/core/openexecutive/api/routes/audit.py</code></td>
+<td>The filterable read API and the session causality graph</td>
+</tr>
+<tr>
+<td><code>packages/ui/src/app/memories/page.tsx</code></td>
+<td>The human surface over extracted memory</td>
+</tr>
+<tr>
+<td><code>packages/core/tests/unit/test_episodic.py</code></td>
+<td>The scoping tests, including the one on the rendered prompt</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-26</strong> — <a
+href="https://github.com/SenteLabsAI/OpenExecutive/commit/4e95559464331fc4a82ef7a0945d59e35af66120"><code class="commit-id" title="4e95559464331fc4a82ef7a0945d59e35af66120">4e955594…</code></a>
+— first reading, roughly 129,000 lines of Python and 27,000 of
+TypeScript, 12 commits between 11 June and 3 July 2026, Apache-2.0.
+Screened before anything was read: three auto-run surfaces, two
+build-time execution surfaces, one unpinned surface, and lockfiles
+unchanged for 56 and 75 days; <code>CLAUDE.md</code> at the root is
+addressed to a reading agent and was treated as data. Nothing was
+installed and nothing was run. Three marks. <code>scope_enforced</code>
+rests on <code>session_id</code> reaching the decision and advice
+queries from <code>format_for_prompt</code>, with the channel-handler
+rationale stated in the docstring; the report records that the default
+is unscoped, that two other callers read without it, and that the stored
+<code>department</code> column filters nothing.
+<code>human_review</code> rests on GET, PATCH and DELETE over decisions,
+initiatives and advice with a UI built for them, alongside the
+<code>decision_instances</code> approval record carrying proposed and
+final payloads and both approver and resolver identities.
+<code>negative_eval</code> rests on
+<code>test_format_for_prompt_scopes_decisions_and_advice_keeps_initiatives</code>,
+which asserts the exclusion on the rendered injection block.
+<code>audit_log</code> is withheld although a full audit subsystem
+exists: all fourteen declared event types describe reads,
+<code>memory_snapshot</code> and <code>peer_memory</code> included, the
+episodic module emits nothing, and the memory PATCH and DELETE routes
+emit nothing — the retrieval-only case the mark's definition excludes by
+name. <code>trust_state</code> is absent because a decision row carries
+no status and <code>initiatives.status != 'completed'</code> is task
+lifecycle rather than epistemic. <code>bitemporal</code> and
+<code>tombstone</code> are absent. The reading covers the SQLite
+episodic layer, the audit subsystem, the API routes and the tests; the
+Honcho client, the Chroma retrieval layer and the promotion evaluator
+were not traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

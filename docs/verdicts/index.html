@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 335 reports.</strong></p>
+<p><strong>This page covers all 336 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4794,6 +4794,67 @@ and checks nothing about it.</li>
 covers what was refused.</li>
 <li>Do not copy when: you need multi-tenant separation, or a rejection
 that holds against the same claim arriving again.</li>
+</ul>
+<h3 id="openexecutive"><a
+href="../systems/openexecutive/"><code>openexecutive</code></a></h3>
+<ul>
+<li>Best idea: <strong>the scoping test asserts on the rendered prompt,
+not on the query.</strong>
+<code>test_format_for_prompt_scopes_decisions_and_advice_keeps_initiatives</code>
+stores decisions under two thread ids plus a company-wide initiative,
+renders the injection block for thread A, and asserts thread A's
+decision and advice are present, thread B's decision is absent, and the
+initiative is present. A test one layer down would still pass if the
+query were right and the renderer dropped the filter. Its sibling pair
+pins the filter <em>and</em> its default absence: scoped returns one of
+three, unscoped returns everything.</li>
+<li>Second idea: <strong><code>auto_no_response</code> is its own
+terminal status.</strong> The <code>decision_instances</code> ledger
+runs an eight-value state machine <em>"enforced by
+compare-and-set"</em>, carries <code>proposed_payload_json</code> beside
+<code>final_payload_json</code> so an approval-with-edit is legible as a
+diff, and records <code>approver_person_id</code> and
+<code>resolver_person_id</code> as identities rather than booleans. A
+proposal nobody answered is distinguished from one that was rejected — a
+distinction most approval systems in this corpus collapse into a
+timeout.</li>
+<li>Third idea: <strong>the scoping rationale names the deployment that
+produces the failure.</strong> Session scoping exists <em>"so each
+conversation sees its own extracted context rather than a global mix
+from unrelated conversations"</em> across Discord, Telegram, Slack and
+email handlers, while <em>"Initiatives are always global
+(company-wide)"</em> by design. Stating which half is deliberately
+unscoped is what makes the other half credible.</li>
+<li>Biggest risk: <strong>the audit log watches the read and not the
+write.</strong> <code>openexecutive/audit/</code> is properly built — a
+closed fourteen-value <code>EVENT_TYPES</code>, a redaction module, a
+session timeline, a derived causality graph for a flow-chart UI. Two
+events name memory and both are reads: <code>memory_snapshot</code> is
+<em>"episodic context + company profile at turn entry"</em> and
+<code>peer_memory</code> is a prefetch outcome. There is no write event,
+the episodic module emits nothing, and the <code>/memories/*</code>
+PATCH and DELETE routes emit nothing — so the log answers what the
+executive knew when it said that, and never where a memory came from or
+who deleted it. It is the cleanest illustration in this corpus of why
+the <code>audit_log</code> definition excludes retrieval logs, because
+everything else about the implementation is right.</li>
+<li>Second risk: <strong><code>department</code> is stored on every
+decision row, documented as owning it, and used as a filter by
+nothing.</strong> A memory row also carries no status, no confidence and
+one timestamp, so nothing can express that a recorded decision turned
+out wrong — the <code>outcome</code> column is free text from the same
+extractor that wrote the summary.</li>
+<li>Maturity impression: Apache-2.0, ~129,000 lines of Python and 27,000
+of TypeScript, 222 test files, one orchestrator over eight specialists
+on Claude — and <strong>12 commits between 11 June and 3 July 2026, with
+nothing since</strong>. Three marks. The scheduler claims due actions
+with <code>UPDATE … RETURNING</code> and the README names the constraint
+that follows: the API must run as a single instance.</li>
+<li>Study when: you want the test that asserts scoping on the artifact
+the model actually receives, or an approval ledger that records the edit
+and the approver rather than a boolean.</li>
+<li>Do not copy when: you need to know where a memory came from — the
+write side of this system leaves no trace at all.</li>
 </ul>
 <h3 id="agentictrading"><a
 href="../systems/agentictrading/"><code>agentictrading</code></a></h3>

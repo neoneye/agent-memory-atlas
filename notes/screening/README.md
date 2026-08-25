@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 185 of 335 screened at the report's current pin.**
+**Progress: 186 of 336 screened at the report's current pin.**
 
 18 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 68 |
+| Repositories with an auto-run surface (`RUNS`) | 69 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 66 |
-| Repositories with build-time execution (`EXEC`) | 145 |
+| Repositories with build-time execution (`EXEC`) | 146 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -82,6 +82,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
+| [`openexecutive`](../../content/systems/openexecutive.md) | `.claude/settings.json`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
