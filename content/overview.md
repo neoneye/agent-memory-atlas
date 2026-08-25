@@ -2334,6 +2334,43 @@ coefficient tuning by offline replay. Storing a composite score's parts rather
 than only its total is the cheapest answer in the corpus to the hand-tuned-weights
 problem, and it costs four floats.
 
+**The far end of that axis is a paper with no artifact, and it is worth naming
+because it reframes the problem rather than answering it.** *EvoHarness-RL:
+Learning Self-Evolving Runtime Harness for Long-Horizon LLM Agents*
+([arXiv:2608.05446](https://arxiv.org/abs/2608.05446), Ning et al., 5 August
+2026, accepted to LLA@COLM 2026) does not tune the constants — it trains the
+*policy over the memory*. Supervised fine-tuning teaches the agent a harness
+action space, and cost-aware GRPO then learns *when* to **read, update and
+consolidate** external state during a long-horizon task. Every system in this
+report decides those three things with hand-written thresholds, timers and
+heuristics; this proposes learning them, and its closing sentence is aimed
+squarely at the corpus: long-horizon agents benefit from trainable policies for
+constructing and coordinating with external workspaces *"beyond simply adding
+stronger tools or larger memories."*
+
+Two of its reported dynamics are the interesting part for a builder. **Harness
+annealing** — training *"internalizes recurring harness-use patterns into the
+model policy and shifts the agent from frequent harness calls toward selective
+external-state access"* — is the opposite direction from the corpus, where the
+usual response to a recall failure is to retrieve more. And **harness
+evolution**, where progress updates and experience consolidation *"refine the
+harness into a compact, task-adaptive state substrate"*, is consolidation judged
+by whether it helped the task rather than by a compression ratio. It reports
+96.9% on ALFWorld with a Qwen3-8B model.
+
+Three caveats belong with it, and the third is this atlas's standing one. Its
+state taxonomy — **Belief, Progress, Experience** — cuts across the boundary
+[this report draws](#not-in-scope-conversation-window-management): belief is a
+claim that can turn out false, progress is a run record, and experience is
+procedural. The abstract names the three and does not define what each holds, so
+what is quoted here is the abstract and the listing metadata rather than a
+reading of the method. And **no repository, dataset or benchmark URL appears**,
+so on this atlas's terms it is a research direction rather than a measurement —
+the same standing recorded for MemEvoBench and FiFA on the
+[benchmarks page](../benchmarks/). The idea is the most direct challenge in the
+literature to how every system here decides when to write and when to recall,
+and there is nothing to read.
+
 Its second rule is the second divergence stated as schema policy: *"forgetting
 happens only in Semantic; the original is not erased"*. Semantic points carry a
 `decay_at` computed from importance — one day at zero, thirty at one — and recall

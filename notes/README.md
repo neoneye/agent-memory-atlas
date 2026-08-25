@@ -8,6 +8,16 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md](2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md) —
+  EvoHarness-RL (arXiv:2608.05446) triaged: no repository, so no report, but it
+  names the thing every system in the corpus does by hand — *"prompts,
+  heuristics, or domain-specific conventions, leaving the external workspace and
+  its usage policy manually engineered"* — and proposes learning the read /
+  update / consolidate policy instead of tuning it. Its reported *harness
+  annealing* runs opposite to the corpus, where the answer to a recall failure
+  is to retrieve more. Its BPE taxonomy merges belief, run record and procedural
+  memory, which is fine for a control problem and means the result says nothing
+  about the belief half on its own.
 - [2026-08-24-the-directory-named-memory-is-about-ram.md](2026-08-24-the-directory-named-memory-is-about-ram.md) —
   Orca triaged and excluded: an Electron orchestrator running four coding agents
   in parallel worktrees, whose durable state is the workspace session and whose
