@@ -612,6 +612,28 @@ has to survive promotion**: enforcing it on the channel and dropping it at the
 point where the agent turns a message into a durable fact moves the boundary
 rather than holding it.
 
+**`yassinbahri/OnceMesh` is the worked instance of the cache-key advice at the
+top of this page, generalised past embeddings, and it is not a memory system —
+it caches computations, and has no report for that reason.** Its
+`derive_authorization_partition` builds an HMAC-SHA256 over
+`{profile, tenant, sorted(scopes), subject_partition}` under a domain-separated
+key, and the resulting token goes into the action's `vary` object, which the
+action digest hashes with everything else. The scope is therefore *inside the
+lookup key*: two callers with different tenants or scope sets derive different
+digests and never reach each other's results at all. Set that against the
+failures collected above — an optional argument a caller omits, a predicate on
+one of three read paths, a policy that ships disabled, a filter short-circuited
+by `include_all` — and the difference is categorical. **A filter is a step that
+can be skipped; a key is a thing you cannot construct without.** Two mechanics
+hold it up. `_require_exact_keys` rejects unknown keys as well as missing ones,
+so a new input field refuses the action rather than being silently left out of
+the digest — without that, "the scope is in the key" degrades the first time
+someone adds a field. And the cost is real and stated: a partitioned result is
+unshareable across partitions even when sharing would be safe, so this buys
+containment with reuse. For a memory store the same trade reads as: derive the
+row key or the embedding key from the scope, and give up cross-scope
+deduplication to get a boundary nobody can forget to apply.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

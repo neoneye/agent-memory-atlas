@@ -23752,6 +23752,67 @@ is <em>evaluating the thing this atlas reviews</em> would otherwise look
 like an oversight in a candidate list, and because both mechanisms are
 separable from the framework: neither needs a skill, an agent, or
 NVIDIA's pipeline to be worth copying.</li>
+<li><strong><code>yassinbahri/OnceMesh</code> was examined and has no
+report: it caches computations rather than beliefs, and it puts the
+scope key somewhere this atlas has been asking for it.</strong>
+Apache-2.0, 20 commits, all dated 25 August 2026, at <a
+href="https://github.com/yassinbahri/OnceMesh/commit/ea2911d8be3db7a7548c64f34039f10076350c8d"><code class="commit-id" title="ea2911d8be3db7a7548c64f34039f10076350c8d">ea2911d8…</code></a>
+— 8,643 lines of Python under a 3,685-line specification, described by
+its own README as <em>"an open specification and reference
+implementation for exact reuse across agent and workflow runtimes"</em>
+and, in the same paragraph, as <em>"not a semantic prompt cache."</em>
+<strong>The stored unit is a computation, not a claim.</strong> An
+action is
+<code>{spec_version, operation, inputs, executor, output_schema, vary}</code>;
+a result manifest is
+<code>{spec_version, action_digest, artifacts, produced_at, fresh_until, producer}</code>;
+an artifact is <code>{name, digest, size, media_type}</code>. Beside
+them sit source-validation records and signed receipts. Nothing in that
+schema is a subject, a predicate, a confidence or a fate —
+<code>fresh_until</code> is a TTL on a computation result, which is the
+boundary already drawn for <code>Perseus-Computing-LLC/perseus</code>,
+and revalidation here means re-checking whether an upstream document
+changed, not revising a belief. The adapters are
+<code>http_fetch</code>, <code>html_markdown</code> and
+<code>pdf_text</code>. The nearest kin is a remote build cache with
+attestation. <strong>The vocabulary collision is the third the atlas has
+recorded and the most likely to fool a keyword screen</strong>, after
+<code>stablyai/orca</code> above and the note on a directory named
+memory: <code>src/oncemesh/store.py</code> defines
+<code>class MemoryStore</code>, and it is the in-process backend — the
+user guide's own table lists <em>"Run or memory"</em> as the tier that
+<em>"disappears with the process and provides no cross-process
+durability."</em> <strong>What transfers is where the scope key
+lives.</strong> <code>derive_authorization_partition</code> builds an
+HMAC-SHA256 over
+<code>{profile, tenant, sorted(scopes), subject_partition}</code> under
+a domain-separated key of at least 32 bytes, and
+<code>execution_cache.py</code> puts the resulting token in the action's
+<code>vary</code> object — which <code>action_digest</code> hashes along
+with everything else. The partition is therefore <em>inside the lookup
+key</em>: two callers with different tenants or scope sets derive
+different digests and cannot reach each other's results, rather than
+reaching them and being filtered. Every scope failure this atlas has
+catalogued is a filter somebody forgot, widened or short-circuited — an
+<code>include_all</code> parameter, a predicate on one of three read
+paths, a policy shipped disabled. <strong>A key you cannot construct
+without the scope cannot be constructed without the scope.</strong> The
+cost is stated by the same design: a partitioned result is unshareable
+across partitions even when it would be safe to share, so the trade is
+reuse for structural containment. Two smaller mechanics hold it up and
+are worth copying together. <code>_require_exact_keys</code> compares
+<code>set(value) != expected</code> and so rejects
+<strong>unknown</strong> keys as well as missing ones, which is what
+makes the README's claim to identify a computation <em>"from every input
+that can affect its output"</em> enforceable rather than aspirational —
+a field this version does not know about refuses the action instead of
+being silently excluded from the digest. And the conformance suite
+carries a dedicated <code>canonicalization-negative-v0.json</code>, run
+by a Node harness so the Python reference is not the only thing checking
+it, whose negative vectors assert the specific rejection reason
+(<code>error.message === vector.reason</code>) rather than that
+something threw — the check that separates <em>refused</em> from
+<em>refused for a different reason</em>.</li>
 <li><strong>A count in the headline findings drifted for want of a
 binding, and the hedge beside it is why.</strong> The gaps section read
 <em>"Sixteen, in this entire atlas, can record that a value was rejected
