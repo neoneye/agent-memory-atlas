@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 176 of 333 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 107 of
+<li><strong>Negative evidence is almost never tested.</strong> 108 of
 333 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-three tombstones, one hundred and seven negative-eval suites —
+twenty-three tombstones, one hundred and eight negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -7535,18 +7535,26 @@ predicate, and the 500-row recall window is ordered by recency</td>
 cross-layer fusion</td>
 <td>Explicit <code>memory</code> tool through a staged write-approval
 gate</td>
-<td>Substring-addressed replace/remove; hard char cap forces in-turn
-consolidation</td>
+<td>Substring-addressed replace/remove; a write that would exceed the
+char cap is refused with the current entries returned and an instruction
+to consolidate in-turn, capped at three refusals before the turn is
+released</td>
 <td>Profile-level only; no project or room boundary within a
 profile</td>
 <td>Own tools plus one mounted <code>MemoryProvider</code>; MCP
 serve</td>
 <td>None for curated memory; providers may run their own</td>
-<td>Threat-scanned at write; no provenance on entries</td>
-<td>Frozen prompt snapshot preserves cache; foreign-write detection with
-backup</td>
-<td>Model writes are instantly authoritative; unlogged budget-driven
-eviction</td>
+<td>Threat-scanned at write and re-scanned at every load, with a
+matching entry replaced by a named placeholder in the frozen prompt
+while the original stays in live state; no provenance, status or
+confidence on entries</td>
+<td>Frozen prompt snapshot preserves cache; a poisoned entry on disk is
+fenced out of the prompt at load time and the exclusion is asserted in
+committed tests; foreign-write detection with backup</td>
+<td>Model writes are instantly authoritative with no candidate state and
+no tombstone; removal is model-driven and leaves no record; the
+fail-closed checkpoint contract has no in-tree provider that opts into
+it</td>
 </tr>
 <tr>
 <td><code>hestia</code></td>
@@ -14561,7 +14569,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>107 of 333:</em> <a
+<p><em>108 of 333:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14599,6 +14607,7 @@ href="../systems/graphnosis/"><code>graphnosis</code></a>, <a
 href="../systems/grok-build/"><code>grok-build</code></a>, <a
 href="../systems/helix-agi/"><code>helix-agi</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
+href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
 href="../systems/hestia/"><code>hestia</code></a>, <a
 href="../systems/hillock/"><code>hillock</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
@@ -14689,7 +14698,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and seven repositories of three hundred and thirty-three assert
+hundred and eight repositories of three hundred and thirty-three assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -19103,9 +19112,19 @@ href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df6
 <li><a
 href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a>
 at <a
+href="https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35"><code class="commit-id" title="1bbb6e5bce56e721ab685af4cd87df21bbff4d35">1bbb6e5b…</code></a>
+— Hermes's own built-in memory. Read only; one auto-run surface, twenty
+build-time execution surfaces, five unpinned surfaces and seven files
+inside the seven-day cooldown, a far wider surface than the same
+repository presented a month earlier. Nothing was installed and no suite
+was run</li>
+<li><a
+href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a>
+at <a
 href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476"><code class="commit-id" title="0fa5e41c86f022bba147797849f0b44865721476">0fa5e41c…</code></a>
-— analyzed twice, as the <code>holographic</code> plugin and as Hermes's
-own built-in memory</li>
+— the <code>holographic</code> HRR plugin shipped in the same tree,
+listed separately because it is a second report on one repository and
+the two are pinned apart</li>
 <li><a
 href="https://github.com/volcengine/OpenViking">volcengine/OpenViking</a>
 at <a
@@ -23802,6 +23821,27 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-25</strong> — <strong>A check that keys on the
+repository assumes one pin per repository, and that assumption
+expires.</strong> <code>check_inspected_pins.py</code> built its index
+of the repositories-inspected list as a dict keyed on the repository
+name, so a second entry for the same repository silently replaced the
+first. That held for as long as <code>NousResearch/hermes-agent</code> —
+the one repository this atlas covers with two reports, <a
+href="../systems/hermes-agent/">Hermes Agent</a> and <a
+href="../systems/holographic/">Holographic</a> — was pinned at one
+commit for both. The first time one of the two was re-read on its own,
+the list could satisfy either report and not both, and the check failed
+on whichever report it was not describing.</p>
+<p>The wrong repair was available and tempting: re-pin the second report
+to the same commit so the single entry fits again. That would have
+published a reading date for a report nobody had re-read. <strong>A
+constraint that can only be satisfied by claiming to have done work is a
+bug in the constraint.</strong> The check now collects every entry per
+repository and passes a report that matches any of them, and the list
+carries one line per report rather than one per repository. The general
+form is worth keeping: when a validator's data model is narrower than
+the corpus it validates, the corpus is right.</p>
 <p><strong>2026-08-20</strong> — <strong>The second miss in the same
 report is a fact about the method, not the reader.</strong> The <a
 href="../systems/nexusmem/">NexusMem</a> report was corrected on

@@ -111,17 +111,17 @@ skills as procedural memory, and a pluggable provider interface.</p>
               <strong>NousResearch/hermes-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476" title="0fa5e41c86f022bba147797849f0b44865721476">
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35" title="1bbb6e5bce56e721ab685af4cd87df21bbff4d35">
               <span>Analyzed revision</span>
-              <code>0fa5e41c…</code>
+              <code>1bbb6e5b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-08-25</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -474,10 +474,33 @@ Trust</h2>
 prefix.</li>
 <li>Threat scanning at the write boundary, chosen deliberately because
 frozen snapshots make poisoning persistent.</li>
+<li><strong>The same scan runs again on every entry at load
+time</strong>, and this is the strongest thing in the file layer.
+<code>_sanitize_entries_for_snapshot</code> re-scans each entry at the
+<code>strict</code> scope while building the frozen snapshot; a match is
+replaced <em>in the snapshot</em> by
+<code>[BLOCKED: &lt;file&gt; entry contained threat pattern(s): &lt;ids&gt;. Removed from system prompt; use memory(action=remove) to delete the original.]</code>
+and logged at warning level, while the live entry list keeps the
+original text. The reasoning is in the docstring: a memory file poisoned
+on disk by a supply chain, a compromised tool or a sister-session write
+bypasses the write gate entirely, so the write-time scan is not the last
+line — and silently dropping the entry instead of naming it <em>"would
+hide the attack from the user."</em> Two properties make it work rather
+than merely exist. The placeholder is idempotent, since an entry already
+opening with <code>[BLOCKED:</code> passes through unwrapped. And the
+scan is deterministic from disk bytes, so the snapshot is byte-stable
+for the session and the prefix-cache invariant the whole design is built
+on survives a security control being added to the hot path.</li>
 <li>Human approval available for memory writes via a shared staging
 gate.</li>
 <li>Foreign-write detection with automatic backup and refusal.</li>
-<li>Refusal rather than guessing on failed or ambiguous reads.</li>
+<li>Refusal rather than guessing on failed or ambiguous reads, including
+the case that costs the most: <code>add</code> rewrites the whole file
+from parsed entries, so a file that exists but reads as empty through a
+transient lock, a permission blip or an I/O error <em>"would be
+rewritten down to just the new entry — wiping every prior memory."</em>
+The reload returns a distinct <code>_READ_FAILED</code> sentinel and the
+add refuses.</li>
 <li>Atomic writes, cross-platform locking, cross-session re-read.</li>
 <li>Extensive FTS5 corruption detection and repair in the session
 store.</li>
@@ -490,9 +513,32 @@ authoritative in every subsequent session. There is no candidate state,
 no corroboration, and no rejected-value tombstone, so a wrong entry that
 gets removed can be re-derived and re-added the next session with
 nothing to stop it.</li>
-<li><strong>Forgetting is unrecorded and model-driven.</strong> Budget
-pressure makes the model discard entries; nothing logs what was dropped
-or why.</li>
+<li><strong>Forgetting is unrecorded and model-driven.</strong> A
+<code>remove</code> deletes the entry from the file and returns success;
+no event, counter or log records what left or why. Budget pressure is
+what drives it — a full store refuses the <code>add</code> and hands the
+model the current entries with an instruction to consolidate and retry
+in the same turn — so the deletions are proposed by the model under time
+pressure and land with nothing written down about them. The refusal
+itself is bounded: <code>_MAX_CONSOLIDATION_FAILURES_PER_TURN</code> is
+3, after which the response drops the retry instruction and returns
+<code>done</code> so a failed side effect cannot hold the turn's reply
+hostage, which is the right trade and does mean the fact is silently not
+saved.</li>
+<li><strong>The fail-closed checkpoint path has no in-tree
+taker.</strong>
+<code>MemoryProvider.pre_compress_checkpoint_api_version</code> defaults
+to 1, the historical best-effort contract with the raw message list; a
+provider that durably checkpoints every successful
+<code>on_pre_compress</code> opts into version 2 and receives a
+host-normalized evidence list, with <code>require_checkpoint</code>
+propagating a failure instead of swallowing it. The host half is
+complete and tested. None of the eight shipped adapters declares version
+2 — the only declaration in the tree is a fake provider inside
+<code>tests/agent/test_pre_compress_checkpoint_contract.py</code>, and a
+sibling assertion pins the base class at 1. So every provider a user can
+actually mount is on best-effort semantics, and a pre-compression
+checkpoint that fails is a debug log line.</li>
 <li><strong>Substring identity</strong> is fragile under exactly the
 consolidation the design forces.</li>
 <li><strong>The write gate fails open</strong> if its module cannot be
@@ -506,19 +552,46 @@ curated memory, provider memory, and session history.</li>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>Memory-relevant suites include
-<code>tests/tools/test_memory_tool.py</code>,
+<code>tests/tools/test_memory_tool.py</code> (708 lines),
 <code>tests/tools/test_memory_tool_import_fallback.py</code>,
 <code>tests/tools/test_write_approval.py</code>,
-<code>tests/agent/test_memory_provider.py</code> (1,662 lines),
-<code>tests/agent/test_skip_memory_store_65429.py</code>,
-<code>tests/agent/test_learning_mutations.py</code>,
-<code>tests/hermes_cli/test_backup.py</code>, and the holographic plugin
-suites.</p>
-<p>The suites were not run for this review. Coverage is clearly
+<code>tests/tools/test_threat_patterns.py</code>,
+<code>tests/agent/test_memory_provider.py</code>,
+<code>tests/agent/test_pre_compress_checkpoint_contract.py</code>,
+<code>tests/agent/test_memory_boundary_commit.py</code>,
+<code>tests/agent/test_builtin_memory_disabled_surface.py</code>,
+<code>tests/agent/test_memory_session_switch.py</code>, and the
+holographic plugin suites.</p>
+<p>The suites were not run for this review. Coverage is
 failure-path-oriented and several guards cite the issues that produced
-them (#26045 for drift, #50502 for FTS trigger corruption, #57682/#57690
-for extraction contamination), which is good evidence that the defensive
+them (#26045 for drift, #50502 for FTS trigger corruption, #496 for the
+load-time promptware defence), which is good evidence that the defensive
 code reflects real incidents rather than speculation.</p>
+<p><code>TestLoadTimeSnapshotSanitization</code> is the part worth
+copying, and it is what earns <code>negative_eval</code>. Three cases
+assert that particular material must not reach the system prompt, and
+each pairs its negative with a positive over the same snapshot, so a
+snapshot that came back empty fails the test instead of passing it:</p>
+<pre class="python"><code>assert &quot;Clean fact about the project.&quot; in snapshot
+assert &quot;[BLOCKED:&quot; in snapshot
+assert &quot;ignore previous instructions&quot; not in snapshot
+assert &quot;$API_KEY&quot; not in snapshot
+assert any(&quot;ignore previous instructions&quot; in e for e in s.memory_entries)</code></pre>
+<p>That last line is the one most suites in this corpus omit: it pins
+the difference between <em>withheld from the prompt</em> and <em>deleted
+from the store</em>, which is the entire design of the mechanism. A
+second case runs a payload carrying no classic injection verb — a set of
+imperatives about registering as a node and never writing a script to
+disk — and asserts it is fenced anyway, so the test exercises the
+pattern library's reach rather than one canned string. A third asserts
+an entry already carrying the marker is not double-wrapped, which is the
+idempotence bug a placeholder substitution invites.</p>
+<p><code>test_memory_boundary_commit.py</code> pins an ordering contract
+rather than a value: at a <code>/new</code> session boundary,
+<code>on_session_end</code> must be delivered strictly before
+<code>on_session_switch</code>, both on one serialized background worker
+and without blocking the caller. Ordering contracts are usually left to
+a comment.</p>
 <p>No committed memory-quality benchmark was found. There is no
 evaluation of whether the 2,200/1,375-character budgets are well chosen,
 and no measurement of what in-turn consolidation discards over
@@ -608,6 +681,16 @@ ergonomic substring interface?</li>
 <code>tools/threat_patterns.py</code>.</li>
 <li>Provider contract: <code>agent/memory_provider.py</code>;
 orchestration: <code>agent/memory_manager.py</code>.</li>
+<li>Load-time snapshot sanitization:
+<code>MemoryStore.load_from_disk</code> and
+<code>_sanitize_entries_for_snapshot</code> in
+<code>tools/memory_tool.py</code>.</li>
+<li>Checkpoint API versioning:
+<code>PRE_COMPRESS_CHECKPOINT_API_VERSION</code> in
+<code>agent/memory_provider.py</code>, consumed in
+<code>MemoryManager.on_pre_compress</code>.</li>
+<li>Provider-agnostic retrieval query rewriting:
+<code>plugins/memory/query_rewrite.py</code>.</li>
 <li>Session persistence and FTS5: <code>hermes_state.py</code>.</li>
 <li>Skills as procedural memory:
 <code>tools/skill_manager_tool.py</code>,
@@ -617,9 +700,42 @@ orchestration: <code>agent/memory_manager.py</code>.</li>
 <code>plugins/memory/{holographic,honcho,mem0,hindsight,supermemory,openviking,byterover,retaindb}/</code>.</li>
 <li>Tests: <code>tests/tools/test_memory_tool*.py</code>,
 <code>tests/tools/test_write_approval.py</code>,
-<code>tests/agent/test_memory_provider.py</code>.</li>
+<code>tests/agent/test_memory_provider.py</code>,
+<code>tests/agent/test_pre_compress_checkpoint_contract.py</code>,
+<code>tests/agent/test_memory_boundary_commit.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-25</strong> — <a
+href="https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35"><code class="commit-id" title="1bbb6e5bce56e721ab685af4cd87df21bbff4d35">1bbb6e5b…</code></a>
+— second reading, 7,068 commits past the previous pin in under a month,
+on a tree of 25,222 commits; <code>hermes_state.py</code> alone went
+from roughly 2,250 lines to 14,650. Screened before anything was read:
+one auto-run surface, twenty build-time execution surfaces, five
+unpinned surfaces and seven files inside the seven-day cooldown, against
+a much smaller surface at the previous pin; nothing was installed and no
+suite was run. <code>negative_eval</code> is added on
+<code>TestLoadTimeSnapshotSanitization</code>, three paired
+must-not-inject cases over the frozen system-prompt snapshot, and the
+mechanism they cover — a second threat scan at load time that fences a
+poisoned entry out of the prompt while leaving it visible in live state
+— is new since the previous pin. <code>human_review</code> is unchanged.
+<code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>bitemporal</code> remain absent: a removal still writes no record
+of the value it removed, entries carry no status field, separation is a
+profile directory rather than a scope key filtered on read, and no event
+log covers memory mutations. The <code>[BLOCKED:</code> marker is not
+one of the missing marks either — it is computed per load into a derived
+snapshot and never written back, so nothing on disk records that an
+entry was judged.</p>
+<p>One correction to the previous reading, which described the char
+budget as producing "unlogged budget-driven eviction". It does not and
+did not: <code>add</code> refuses at the cap and returns the current
+entries with a consolidate-and-retry instruction, at the previous pin as
+well as this one. The body of that report said so; the matrix row
+contradicted it. The row is corrected, and the accurate version of the
+risk is that <em>removal</em> is model-driven and unrecorded, which the
+refusal makes more likely rather than less.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476"><code class="commit-id" title="0fa5e41c86f022bba147797849f0b44865721476">0fa5e41c…</code></a>
 — first reading.</p>

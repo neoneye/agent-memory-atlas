@@ -575,16 +575,41 @@ href="../systems/hermes-agent/"><code>hermes-agent</code></a></h3>
 <ul>
 <li>Best idea: bounded curated memory frozen into the prompt at session
 start, with overflow refused and consolidation demanded in-turn.</li>
+<li>Second idea: <strong>the threat scan runs twice, and the second run
+is the one that matters.</strong> Entries are scanned at write, and
+scanned again at load while the frozen snapshot is built — because a
+file poisoned on disk by a supply chain, a compromised tool or a
+sister-session write never passed the write gate at all. A match is
+replaced <em>in the snapshot</em> by a placeholder naming the pattern
+ids, while the live entry keeps its raw text, on the stated ground that
+silently dropping it <em>"would hide the attack from the user."</em> The
+scan is deterministic from disk bytes, so a security control landed on
+the hot path without breaking the prefix-cache invariant the whole
+design exists for.</li>
 <li>Biggest risk: whatever the model writes is authoritative in every
-later session, and budget-driven eviction is unlogged.</li>
+later session, with no candidate state and no tombstone. Removal is the
+unrecorded half: a <code>remove</code> deletes and returns success with
+nothing logging what left, and a full store refuses the <code>add</code>
+and hands the model its own entries to prune under time pressure, so the
+deletions that matter most are the ones with the least written down
+about them.</li>
 <li>Most reusable component: the frozen-snapshot pattern,
-<code>_detect_external_drift</code>, and the staged write-approval
-gate.</li>
+<code>_detect_external_drift</code>, the staged write-approval gate, and
+<code>TestLoadTimeSnapshotSanitization</code> — three must-not-inject
+cases each paired with a positive over the same snapshot, one of which
+asserts the raw text survives in live state and so pins withheld against
+deleted.</li>
 <li>Maturity impression: heavily defended file layer whose guards cite
-the incidents that produced them; the provider contract is less complete
-than the store.</li>
-<li>Study when: prompt-cache cost is material, or you need memory that
-cannot grow without someone deciding what to drop.</li>
+the incidents that produced them; 7,068 commits in the month to this
+pin. The provider contract is less complete than the store, and its
+fail-closed pre-compression checkpoint path is declared, host-side
+complete and opted into by no shipped adapter — the only version-2
+declaration in the tree is a fake provider in the contract's own
+test.</li>
+<li>Study when: prompt-cache cost is material, you need memory that
+cannot grow without someone deciding what to drop, or you want the
+load-time re-scan as a model for defending a store your write path does
+not exclusively own.</li>
 <li>Do not copy when: you need verification, tombstones, substring-free
 identity, or a provider contract that can honour deletion.</li>
 </ul>

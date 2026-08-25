@@ -252,10 +252,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`hermes-agent`](../systems/hermes-agent/)
 - Best idea: bounded curated memory frozen into the prompt at session start, with overflow refused and consolidation demanded in-turn.
-- Biggest risk: whatever the model writes is authoritative in every later session, and budget-driven eviction is unlogged.
-- Most reusable component: the frozen-snapshot pattern, `_detect_external_drift`, and the staged write-approval gate.
-- Maturity impression: heavily defended file layer whose guards cite the incidents that produced them; the provider contract is less complete than the store.
-- Study when: prompt-cache cost is material, or you need memory that cannot grow without someone deciding what to drop.
+- Second idea: **the threat scan runs twice, and the second run is the one that matters.** Entries are scanned at write, and scanned again at load while the frozen snapshot is built — because a file poisoned on disk by a supply chain, a compromised tool or a sister-session write never passed the write gate at all. A match is replaced *in the snapshot* by a placeholder naming the pattern ids, while the live entry keeps its raw text, on the stated ground that silently dropping it *"would hide the attack from the user."* The scan is deterministic from disk bytes, so a security control landed on the hot path without breaking the prefix-cache invariant the whole design exists for.
+- Biggest risk: whatever the model writes is authoritative in every later session, with no candidate state and no tombstone. Removal is the unrecorded half: a `remove` deletes and returns success with nothing logging what left, and a full store refuses the `add` and hands the model its own entries to prune under time pressure, so the deletions that matter most are the ones with the least written down about them.
+- Most reusable component: the frozen-snapshot pattern, `_detect_external_drift`, the staged write-approval gate, and `TestLoadTimeSnapshotSanitization` — three must-not-inject cases each paired with a positive over the same snapshot, one of which asserts the raw text survives in live state and so pins withheld against deleted.
+- Maturity impression: heavily defended file layer whose guards cite the incidents that produced them; 7,068 commits in the month to this pin. The provider contract is less complete than the store, and its fail-closed pre-compression checkpoint path is declared, host-side complete and opted into by no shipped adapter — the only version-2 declaration in the tree is a fake provider in the contract's own test.
+- Study when: prompt-cache cost is material, you need memory that cannot grow without someone deciding what to drop, or you want the load-time re-scan as a model for defending a store your write path does not exclusively own.
 - Do not copy when: you need verification, tombstones, substring-free identity, or a provider contract that can honour deletion.
 
 ### [`openviking`](../systems/openviking/)

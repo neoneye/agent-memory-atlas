@@ -41,10 +41,13 @@ def main(root: str) -> int:
         print(f"Missing {overview}", file=sys.stderr)
         return 1
 
-    listed = {
-        m.group("name"): (m.group("shown"), m.group("href"))
-        for m in ENTRY.finditer(overview.read_text(encoding="utf-8"))
-    }
+    # A repository may carry more than one report — `NousResearch/hermes-agent`
+    # is reviewed as Hermes's own memory and as the Holographic plugin — and the
+    # two are re-read independently, so one name can legitimately list two pins.
+    # Collect every entry per name and let a report match any of them.
+    listed: dict[str, list[tuple[str, str]]] = {}
+    for m in ENTRY.finditer(overview.read_text(encoding="utf-8")):
+        listed.setdefault(m.group("name"), []).append((m.group("shown"), m.group("href")))
     if not listed:
         print(
             "No repositories-inspected entries parsed from content/overview.md. "
@@ -70,17 +73,20 @@ def main(root: str) -> int:
             )
             continue
 
-        shown, href = listed[name]
-        if not revision.startswith(shown):
+        entries = listed[name]
+        match = next((e for e in entries if revision.startswith(e[0])), None)
+        if match is None:
+            shown_all = ", ".join(shown[:12] for shown, _ in entries)
             problems.append(
-                f"{report.name}: list says {shown[:12]}, report pins "
+                f"{report.name}: list says {shown_all}, report pins "
                 f"{revision[:12]} — the list was not updated with the re-review"
             )
-        if not href.rstrip("/").endswith(shown):
-            problems.append(
-                f"{report.name}: `{name}` shows {shown[:12]} but links to "
-                f"{href.rstrip('/').rsplit('/', 1)[-1][:12]}"
-            )
+        for shown, href in entries:
+            if not href.rstrip("/").endswith(shown):
+                problems.append(
+                    f"{report.name}: `{name}` shows {shown[:12]} but links to "
+                    f"{href.rstrip('/').rsplit('/', 1)[-1][:12]}"
+                )
 
     if problems:
         print(
