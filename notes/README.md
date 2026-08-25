@@ -8,6 +8,19 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-24-four-shapes-that-recurred-in-one-week.md](2026-08-24-four-shapes-that-recurred-in-one-week.md) —
+  synthesis over ~fifteen readings. **The assertion that cannot fail**, found
+  four times in unrelated repositories (a vacuous `every` over an
+  empty-by-construction fixture, a gate distribution computed into two unused
+  locals, a comment standing in for an assertion, a suite that skips itself when
+  its database is absent) plus a declared threshold nothing reads — with Silica
+  the only project that generalised the fix; now step 5 of the add skill.
+  **Declared-and-unwired has a direction**, and read-but-never-written is the
+  worse one because an empty query looks like an answer. **Silent degradation**
+  in three systems and Orca's `zod-salvage` as the finished repair. **Label vs
+  gate**, and the ordering — narrow default, widening argument, label the
+  admitted exception — that Weave gets right. Plus the projects that measure
+  against their own architecture.
 - [2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md](2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md) —
   EvoHarness-RL (arXiv:2608.05446) triaged: no repository, so no report, but it
   names the thing every system in the corpus does by hand — *"prompts,
