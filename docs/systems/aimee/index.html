@@ -275,13 +275,26 @@ Then, when both <code>memory_lifecycle_enabled</code> and
 are batch-probed and dropped. Both accessors read a config number into a
 variable initialised to 0 and ignore the read's return code, so an unset
 key is off.</p>
-<p>There is a third expression that is <em>not</em> a filter and should
-not be read as one. <code>DB2_MEMORY_SCOPE_RANK_SQL</code> orders
-results — active project, active workspace, shared or global including
-legacy untagged rows, then explicit-all others — and its own instruction
-to callers is to place it <em>before</em> their relevance ordering and
-<code>LIMIT</code>. It changes which rows survive a cap. It excludes
-nothing.</p>
+<p>Scope reaches the SQL as two macros that are easy to confuse and are
+used together. <code>DB2_MEMORY_SCOPE_RANK_SQL</code> is an ordering
+expression — active project 3, active workspace 2, shared or global
+including legacy untagged rows 1, everything else 0 — placed before the
+caller's own relevance ordering and <code>LIMIT</code>.
+<code>DB2_MEMORY_SCOPE_FILTER_SQL</code> wraps the same expression as a
+<code>WHERE</code> predicate,
+<code>AND (?101 = 0 OR ?102 = 1 OR (rank) &gt; 0)</code>, and it is the
+one doing the excluding. Both the lexical readers in
+<code>memory_briefing.c</code> and <code>memory_relations.c</code> and
+the dense path in <code>pgvec_transport.c</code> apply the filter in the
+<code>WHERE</code> and the rank in the <code>ORDER BY</code>, so a row
+outside the caller's scope is dropped rather than merely sorted
+last.</p>
+<p>The two escapes in that predicate are worth reading.
+<code>?101 = 0</code> is an inactive scope context and
+<code>?102 = 1</code> is <code>include_all</code>; either short-circuits
+the check before the rank is evaluated, so an unset context returns
+everything. That is the opposite default from the RLS block in the same
+schema, whose comment makes a point of fail-closing on an unset GUC.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Retraction is where this system has done its hardest thinking, and it
 did it after being wrong three times. All three corrections are recorded
@@ -438,16 +451,30 @@ the audit store and the scope plumbing. It does not cover the Go control
 plane, the Python tooling, the ingest workers, or the great majority of
 the 243 tables in the schema. Absence of a mechanism from this report is
 not evidence of its absence from the tree.</p>
-<p><strong>Whether memory mutations reach the WORM chain.</strong> The
-RPC dispatch table in <code>kb_service.c</code> carries
-<code>memory.store</code>, <code>memory.delete</code>,
-<code>memory.supersede</code> and <code>memory.update</code>. Confirmed
-WORM producers at this pin are vault rewrap, guardrail actions,
-management operations and the durable observability sink. The path from
-a memory mutation to <code>audit_worm_append</code> was not traced. The
-mark rests on <code>memory_provenance</code> — a named per-memory
-mutation record with a read surface — and on the WORM store's own
-construction, not on a traced join between them.</p>
+<p><strong>Which of the two ledgers a given mutation reaches.</strong>
+There are two, and they are not the same mechanism. The WORM
+<code>audit_event</code> store described in section 9 has confirmed
+producers in vault rewrap, guardrail actions, management operations and
+the durable observability sink; no path from a memory RPC to
+<code>audit_worm_append</code> was traced. Memory mutations reach the
+<em>other</em> one: <code>memory_evidence_events</code>, written by
+<code>AFTER INSERT OR UPDATE OR DELETE</code> triggers on
+<code>memories</code>, <code>docs</code>,
+<code>document_versions</code>, <code>entity_registry</code>,
+<code>entity_aliases</code>, <code>rel_types</code>,
+<code>derived_memory_registry</code>, <code>memory_scopes</code> and
+<code>memory_links</code>, plus
+<code>evidence_change_item_event()</code> on the fact-graph commit path.
+Each row carries <code>authenticated_actor</code>,
+<code>transport_identity</code>, <code>effective_authority</code>, a
+<code>changeset_id</code>, before and after refs and the source span and
+hash, under <code>CHECK</code> constraints over a fourteen-value object
+kind and a twelve-value operation. Putting the producer in a trigger is
+the stronger choice — application code cannot forget to call it — and it
+means the coverage question is which tables carry the trigger, not which
+call sites remember. The open part is whether the two ledgers are meant
+to converge, and what an auditor is supposed to do with a subject whose
+history is split across them.</p>
 <p><strong>Whether a retracted triple can be re-asserted.</strong>
 Retraction stamps <code>invalidated_at</code> and keys on
 <code>(source, relation, target)</code>, which is the right key. But
@@ -526,6 +553,22 @@ resolution</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-25 (same-day correction)</strong> — two errors in the
+reading above were found and fixed while checking a second source
+against the same pin. The report had described
+<code>DB2_MEMORY_SCOPE_RANK_SQL</code> as the SQL-side scope mechanism
+and concluded it "excludes nothing"; that is true of the rank macro and
+wrong about the system, because <code>DB2_MEMORY_SCOPE_FILTER_SQL</code>
+wraps the same expression as a <code>WHERE</code> predicate and both are
+applied together in <code>memory_briefing.c</code>,
+<code>memory_relations.c</code> and <code>pgvec_transport.c</code>.
+Scope on memory rows is a filter, not only an ordering. The report also
+carried an open question asking whether memory mutations are audited at
+all, framed around the WORM <code>audit_event</code> store; they are,
+through a different ledger — <code>memory_evidence_events</code>,
+written by <code>AFTER INSERT OR UPDATE OR DELETE</code> triggers on
+nine tables including <code>memories</code>. Section 6, section 12 and
+the <code>scoping</code> row are corrected. The marks are unchanged.</p>
 <p><strong>2026-08-25</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5"><code class="commit-id" title="958af1c59f2db825d348d19209fb339615ed9ae5">958af1c5…</code></a>
 — first reading, roughly 796,000 lines of C and 87,000 of headers plus

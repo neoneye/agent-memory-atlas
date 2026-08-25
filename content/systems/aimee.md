@@ -25,7 +25,7 @@ matrix:
   retrieval: "Dense vector recall over memory rows, lexical fallback, and relation-token matching over the fact graph; typed facts are assembled into a separate recall block gated on confidence and sensitivity"
   write: "Turn-time retraction is synchronous and LLM-free; fact extraction is offline only, on a `memory_facts` drain running pattern matching and an LLM"
   update_delete: "`facts.retract` keyed on the triple rather than a row id, capped by the caller's authenticated authority; retraction stamps `invalidated_at` and retains the row; entity merges return an id that makes the merge reversible"
-  scoping: "A scope filter on the episodic recall path, a separate scope *rank* expression readers place before their own ordering, and Postgres row-level security forced on the membership and grant tables"
+  scoping: "A scope predicate and a scope rank applied together in the same queries — the filter in the `WHERE`, the rank in the `ORDER BY` — on both the lexical and dense paths, plus a candidate-array filter before rerank and Postgres row-level security forced on the membership and grant tables"
   integration: "An MCP server, a CLI, a Go control plane, and a two-service split — `aimee-server` for one human, `aimee-kb` for a team corpus"
   background: "A pending-TTL sweep into archived, a facts drain, ingest workers, and a contradiction detector that files rows into `memory_conflicts`"
   trust: "A four-class fact ladder — user-stated Class A down to novel Class C — with a confidence floor at 0.4, an authority that caps rather than falls back, and immutable relations only a user authority may retract"
@@ -184,12 +184,22 @@ are set, archived candidates are batch-probed and dropped. Both accessors read
 a config number into a variable initialised to 0 and ignore the read's return
 code, so an unset key is off.
 
-There is a third expression that is *not* a filter and should not be read as
-one. `DB2_MEMORY_SCOPE_RANK_SQL` orders results — active project, active
-workspace, shared or global including legacy untagged rows, then explicit-all
-others — and its own instruction to callers is to place it *before* their
-relevance ordering and `LIMIT`. It changes which rows survive a cap. It excludes
-nothing.
+Scope reaches the SQL as two macros that are easy to confuse and are used
+together. `DB2_MEMORY_SCOPE_RANK_SQL` is an ordering expression — active
+project 3, active workspace 2, shared or global including legacy untagged rows
+1, everything else 0 — placed before the caller's own relevance ordering and
+`LIMIT`. `DB2_MEMORY_SCOPE_FILTER_SQL` wraps the same expression as a `WHERE`
+predicate, `AND (?101 = 0 OR ?102 = 1 OR (rank) > 0)`, and it is the one doing
+the excluding. Both the lexical readers in `memory_briefing.c` and
+`memory_relations.c` and the dense path in `pgvec_transport.c` apply the filter
+in the `WHERE` and the rank in the `ORDER BY`, so a row outside the caller's
+scope is dropped rather than merely sorted last.
+
+The two escapes in that predicate are worth reading. `?101 = 0` is an inactive
+scope context and `?102 = 1` is `include_all`; either short-circuits the check
+before the rank is evaluated, so an unset context returns everything. That is
+the opposite default from the RLS block in the same schema, whose comment makes
+a point of fail-closing on an unset GUC.
 
 ## 7. Write Mechanics
 
@@ -356,14 +366,23 @@ plumbing. It does not cover the Go control plane, the Python tooling, the
 ingest workers, or the great majority of the 243 tables in the schema. Absence
 of a mechanism from this report is not evidence of its absence from the tree.
 
-**Whether memory mutations reach the WORM chain.** The RPC dispatch table in
-`kb_service.c` carries `memory.store`, `memory.delete`, `memory.supersede` and
-`memory.update`. Confirmed WORM producers at this pin are vault rewrap,
-guardrail actions, management operations and the durable observability sink.
-The path from a memory mutation to `audit_worm_append` was not traced. The mark
-rests on `memory_provenance` — a named per-memory mutation record with a read
-surface — and on the WORM store's own construction, not on a traced join
-between them.
+**Which of the two ledgers a given mutation reaches.** There are two, and they
+are not the same mechanism. The WORM `audit_event` store described in section 9
+has confirmed producers in vault rewrap, guardrail actions, management
+operations and the durable observability sink; no path from a memory RPC to
+`audit_worm_append` was traced. Memory mutations reach the *other* one:
+`memory_evidence_events`, written by `AFTER INSERT OR UPDATE OR DELETE`
+triggers on `memories`, `docs`, `document_versions`, `entity_registry`,
+`entity_aliases`, `rel_types`, `derived_memory_registry`, `memory_scopes` and
+`memory_links`, plus `evidence_change_item_event()` on the fact-graph commit
+path. Each row carries `authenticated_actor`, `transport_identity`,
+`effective_authority`, a `changeset_id`, before and after refs and the source
+span and hash, under `CHECK` constraints over a fourteen-value object kind and
+a twelve-value operation. Putting the producer in a trigger is the stronger
+choice — application code cannot forget to call it — and it means the coverage
+question is which tables carry the trigger, not which call sites remember. The
+open part is whether the two ledgers are meant to converge, and what an auditor
+is supposed to do with a subject whose history is split across them.
 
 **Whether a retracted triple can be re-asserted.** Retraction stamps
 `invalidated_at` and keys on `(source, relation, target)`, which is the right
@@ -393,5 +412,7 @@ authority — would close it.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-08-25 (same-day correction)** — two errors in the reading above were found and fixed while checking a second source against the same pin. The report had described `DB2_MEMORY_SCOPE_RANK_SQL` as the SQL-side scope mechanism and concluded it "excludes nothing"; that is true of the rank macro and wrong about the system, because `DB2_MEMORY_SCOPE_FILTER_SQL` wraps the same expression as a `WHERE` predicate and both are applied together in `memory_briefing.c`, `memory_relations.c` and `pgvec_transport.c`. Scope on memory rows is a filter, not only an ordering. The report also carried an open question asking whether memory mutations are audited at all, framed around the WORM `audit_event` store; they are, through a different ledger — `memory_evidence_events`, written by `AFTER INSERT OR UPDATE OR DELETE` triggers on nine tables including `memories`. Section 6, section 12 and the `scoping` row are corrected. The marks are unchanged.
 
 **2026-08-25** — [`958af1c59f2db825d348d19209fb339615ed9ae5`](https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5) — first reading, roughly 796,000 lines of C and 87,000 of headers plus 142,000 of Go and 109,000 of Python, 7,281 commits since 3 June 2026, AGPL-3.0. Screened before anything was read: one auto-run surface, one build-time execution, three unpinned surfaces and two files inside the seven-day cooldown; nothing was installed, nothing was compiled and no service was started, so every claim here comes from reading the tree. Five marks. `trust_state` rests on two discrete vocabularies held apart from the confidence floats beside them, with the typed-fact exclusion applied by every recall query behind no flag. `bitemporal` rests on `valid_from`/`valid_until` held separately from `created_at`/`updated_at` and read by `db2_memory_valid_at`, reachable as `--as-of`. `scope_enforced` rests on `memory_filter_scope` dropping candidates before rerank, with row-level security forced on the membership tables beside it. `audit_log` rests on the hash-chained WORM store and the per-memory `memory_provenance` rows; the path from a memory RPC to `audit_worm_append` was not traced, and section 12 says so. `negative_eval` rests on four exclusion cases in `test_fact_recall.c`, each paired with a positive over the same buffer. `tombstone` is withheld on one missing consultation: retraction retains the row and keys on the triple, which is the right key, but nothing in the offline extraction drain reads the invalidated set before asserting. `human_review` is absent — the `pending` state expires on a TTL sweep rather than a decision, and `memory_conflicts.resolution` is closed by the agent under a directive. This is the largest checkout in the corpus; the reading covers the typed-fact layer, the episodic recall path, the audit store and the scope plumbing, and not the Go control plane, the Python tooling, the ingest workers, or most of the 243 tables in the schema.
