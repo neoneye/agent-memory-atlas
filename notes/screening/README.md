@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 183 of 331 screened at the report's current pin.**
+**Progress: 184 of 332 screened at the report's current pin.**
 
 16 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 65 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 61 |
-| Repositories with build-time execution (`EXEC`) | 142 |
+| Repositories with an auto-run surface (`RUNS`) | 66 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 62 |
+| Repositories with build-time execution (`EXEC`) | 143 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -34,6 +34,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
+| [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |

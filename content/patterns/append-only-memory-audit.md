@@ -73,10 +73,11 @@ audit trails that disagree are worse than one.
 
 ## Seen in the atlas
 
-**[Aura](../../systems/aura/) is the only one that is tamper-evident, and it is
-the upper bound of this pattern.** Every audit on this page is append-only by
-file handle: opened `O_APPEND`, never rewritten by the code that owns it, and
-completely silent about an edit made by anything else. Aura keeps a SHA-256 hash
+**[Aura](../../systems/aura/) and [aimee](../../systems/aimee/) are the two that
+are tamper-evident, and between them they mark the upper bound of this pattern.**
+Every other audit on this page is append-only by file handle: opened `O_APPEND`,
+never rewritten by the code that owns it, and completely silent about an edit
+made by anything else. Aura keeps a SHA-256 hash
 chain beside its receipt store, one JSONL line per receipt:
 
 ```text
@@ -107,6 +108,26 @@ not been edited; it does not prove the log is complete, because a writer that
 never emitted a receipt leaves nothing to break. Aura closes that on its
 strictest path — the memory write gateway rolls the write back when the receipt
 cannot be emitted — and not on the others.
+
+**[aimee](../../systems/aimee/) enforces the same property twice by independent
+means, and says which of the two an attacker can remove.** Its `audit_event`
+table has `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM:
+audit_event is append-only'`, and its Postgres twin adds a writer role granted
+only `INSERT` and `SELECT` at provisioning. Neither is presented as the
+guarantee. The comment in `audit_worm.c` is explicit that the triggers *"are NOT
+the adversarial guarantee (a process with file write access can drop them) —
+that is the hash-chain."* Naming the threat model is the part to copy: a trigger
+stops a bug and a hash chain stops an editor, and a page that lists both without
+distinguishing them has told a reader less than it appears to.
+
+Two construction details go with it, both addressing gaps the Aura entry above
+leaves open. The chain is guarded by a **single-writer mutex**, so `seq` is
+gap-free by construction rather than by convention — which matters because the
+sequence gap is what a deletion is supposed to show up as. And `row_hash` is an
+HMAC-SHA256 over a **length-prefixed injective encoding** of the fields, which
+closes the concatenation ambiguity that lets two different records hash alike;
+`ts` is deliberately excluded from the hashed material, so a clock correction
+does not break the chain.
 
 **[Palazzo](../../systems/palazzo/) is the only implementation here where the
 log entry is a precondition rather than a consequence.** Every other audit on

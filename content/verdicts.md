@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 331 reports.**
+**This page covers all 332 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1559,6 +1559,17 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
 - Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
 - Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
+
+### [`aimee`](../systems/aimee/)
+
+- Best idea: **the declared authority caps the actor; it is not a fallback for it.** The code used to resolve the actor from the request context first and fall back to the passed authority — but the request resolver returns user authority for any authenticated principal, so a model-composed query inside an authenticated human's session inherited that human's rank. The measured result is in the comment: a Class A row at authority rank 30 went from `persistent` to `invalidated` on the agent's own *"please forget my email."* Any system that resolves identity from ambient context with a structural label as fallback has this bug available to it.
+- Second idea: **every typed-fact recall query excludes retracted rows unconditionally.** `AND superseded_at = '' AND invalidated_at = '' AND suppressed = 0 AND lifecycle_state IN ('persistent','promoted')` — four ways to be excluded, read together, behind no flag. Retraction keys on the `(source, relation, target)` triple rather than a row id, and the row survives for audit. Beside it a four-class ladder — user-stated Class A at 1.0 down to novel Class C at 0.4, which is also the floor — where the provenance-to-authority map fails closed on wrong case, empty and null, all six asserted.
+- Third idea: **the audit store names which half of its tamper-resistance an attacker can remove.** An HMAC-SHA256 hash chain over a length-prefixed injective encoding, a single-writer mutex keeping `seq` gap-free, `BEFORE UPDATE`/`BEFORE DELETE` triggers, and a Postgres twin whose writer role is granted only INSERT and SELECT. The comment: the triggers *"are NOT the adversarial guarantee (a process with file write access can drop them) — that is the hash-chain."* Most audit implementations in this corpus assert their own integrity; this one states its threat model.
+- Fourth idea: **the project ran this atlas's producer check on itself and published the negative result.** `docs/validation/flag-rollout-readiness.md` grepped every default-off flag for production readers excluding config and tests, and sorted them into **WIRED** — real behaviour, blocked on measurement not code — and **INERT TOGGLE**, where *"the `*_enabled` field is never read in production."* Five inert toggles, no fully-dead features, both counted in the open. The gate for flipping a flag on requires an A/B isolating that flag on a real labelled corpus with numeric criteria pinned before the run.
+- Biggest risk: **a retracted triple can be re-asserted.** Retraction stamps `invalidated_at` and keys on the value, which is the right key — but nothing in the offline extraction drain consults the invalidated set before asserting, so re-extraction from new text appears able to re-establish the same fact. One predicate in the assert path would close it. Beside it: the episodic archived-hiding sits behind two flags that both default to 0, and no `CREATE POLICY` covers a memory table.
+- Maturity impression: AGPL-3.0, ~796,000 lines of C plus 142,000 of Go and 109,000 of Python, 7,281 commits since 3 June 2026, two services and 243 tables in one schema. Five marks. This is the largest tree in the corpus by an order of magnitude and the report says plainly which four subsystems were traced and that the rest was not.
+- Study when: you want the best-constructed negative retrieval test in this corpus — every exclusion asserted beside a positive over the same buffer, and a confidence case built specifically to fail a whole-block implementation that would satisfy all the earlier assertions.
+- Do not copy when: you need a refusal that survives re-extraction, or scope separation on memory rows themselves rather than on the documents and membership graph beside them.
 
 ### [`wenlan`](../systems/wenlan/)
 

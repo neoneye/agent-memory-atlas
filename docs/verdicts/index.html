@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 331 reports.</strong></p>
+<p><strong>This page covers all 332 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4769,6 +4769,68 @@ and checks nothing about it.</li>
 covers what was refused.</li>
 <li>Do not copy when: you need multi-tenant separation, or a rejection
 that holds against the same claim arriving again.</li>
+</ul>
+<h3 id="aimee"><a href="../systems/aimee/"><code>aimee</code></a></h3>
+<ul>
+<li>Best idea: <strong>the declared authority caps the actor; it is not
+a fallback for it.</strong> The code used to resolve the actor from the
+request context first and fall back to the passed authority — but the
+request resolver returns user authority for any authenticated principal,
+so a model-composed query inside an authenticated human's session
+inherited that human's rank. The measured result is in the comment: a
+Class A row at authority rank 30 went from <code>persistent</code> to
+<code>invalidated</code> on the agent's own <em>"please forget my
+email."</em> Any system that resolves identity from ambient context with
+a structural label as fallback has this bug available to it.</li>
+<li>Second idea: <strong>every typed-fact recall query excludes
+retracted rows unconditionally.</strong>
+<code>AND superseded_at = '' AND invalidated_at = '' AND suppressed = 0 AND lifecycle_state IN ('persistent','promoted')</code>
+— four ways to be excluded, read together, behind no flag. Retraction
+keys on the <code>(source, relation, target)</code> triple rather than a
+row id, and the row survives for audit. Beside it a four-class ladder —
+user-stated Class A at 1.0 down to novel Class C at 0.4, which is also
+the floor — where the provenance-to-authority map fails closed on wrong
+case, empty and null, all six asserted.</li>
+<li>Third idea: <strong>the audit store names which half of its
+tamper-resistance an attacker can remove.</strong> An HMAC-SHA256 hash
+chain over a length-prefixed injective encoding, a single-writer mutex
+keeping <code>seq</code> gap-free,
+<code>BEFORE UPDATE</code>/<code>BEFORE DELETE</code> triggers, and a
+Postgres twin whose writer role is granted only INSERT and SELECT. The
+comment: the triggers <em>"are NOT the adversarial guarantee (a process
+with file write access can drop them) — that is the hash-chain."</em>
+Most audit implementations in this corpus assert their own integrity;
+this one states its threat model.</li>
+<li>Fourth idea: <strong>the project ran this atlas's producer check on
+itself and published the negative result.</strong>
+<code>docs/validation/flag-rollout-readiness.md</code> grepped every
+default-off flag for production readers excluding config and tests, and
+sorted them into <strong>WIRED</strong> — real behaviour, blocked on
+measurement not code — and <strong>INERT TOGGLE</strong>, where <em>"the
+<code>*_enabled</code> field is never read in production."</em> Five
+inert toggles, no fully-dead features, both counted in the open. The
+gate for flipping a flag on requires an A/B isolating that flag on a
+real labelled corpus with numeric criteria pinned before the run.</li>
+<li>Biggest risk: <strong>a retracted triple can be
+re-asserted.</strong> Retraction stamps <code>invalidated_at</code> and
+keys on the value, which is the right key — but nothing in the offline
+extraction drain consults the invalidated set before asserting, so
+re-extraction from new text appears able to re-establish the same fact.
+One predicate in the assert path would close it. Beside it: the episodic
+archived-hiding sits behind two flags that both default to 0, and no
+<code>CREATE POLICY</code> covers a memory table.</li>
+<li>Maturity impression: AGPL-3.0, ~796,000 lines of C plus 142,000 of
+Go and 109,000 of Python, 7,281 commits since 3 June 2026, two services
+and 243 tables in one schema. Five marks. This is the largest tree in
+the corpus by an order of magnitude and the report says plainly which
+four subsystems were traced and that the rest was not.</li>
+<li>Study when: you want the best-constructed negative retrieval test in
+this corpus — every exclusion asserted beside a positive over the same
+buffer, and a confidence case built specifically to fail a whole-block
+implementation that would satisfy all the earlier assertions.</li>
+<li>Do not copy when: you need a refusal that survives re-extraction, or
+scope separation on memory rows themselves rather than on the documents
+and membership graph beside them.</li>
 </ul>
 <h3 id="wenlan"><a
 href="../systems/wenlan/"><code>wenlan</code></a></h3>

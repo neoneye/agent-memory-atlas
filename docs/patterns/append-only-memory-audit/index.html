@@ -185,12 +185,13 @@ path, or a test.</p>
 <p><strong>Skip it if</strong> you already have durable evidence records
 and git history. Two audit trails that disagree are worse than one.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong><a href="../../systems/aura/">Aura</a> is the only one that
-is tamper-evident, and it is the upper bound of this pattern.</strong>
-Every audit on this page is append-only by file handle: opened
-<code>O_APPEND</code>, never rewritten by the code that owns it, and
-completely silent about an edit made by anything else. Aura keeps a
-SHA-256 hash chain beside its receipt store, one JSONL line per
+<p><strong><a href="../../systems/aura/">Aura</a> and <a
+href="../../systems/aimee/">aimee</a> are the two that are
+tamper-evident, and between them they mark the upper bound of this
+pattern.</strong> Every other audit on this page is append-only by file
+handle: opened <code>O_APPEND</code>, never rewritten by the code that
+owns it, and completely silent about an edit made by anything else. Aura
+keeps a SHA-256 hash chain beside its receipt store, one JSONL line per
 receipt:</p>
 <pre class="text"><code>seq:           monotonically increasing per-store
 content_hash:  SHA-256 of the canonical JSON of the receipt body
@@ -219,6 +220,29 @@ because a writer that never emitted a receipt leaves nothing to break.
 Aura closes that on its strictest path — the memory write gateway rolls
 the write back when the receipt cannot be emitted — and not on the
 others.</p>
+<p><strong><a href="../../systems/aimee/">aimee</a> enforces the same
+property twice by independent means, and says which of the two an
+attacker can remove.</strong> Its <code>audit_event</code> table has
+<code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers
+raising <code>'WORM: audit_event is append-only'</code>, and its
+Postgres twin adds a writer role granted only <code>INSERT</code> and
+<code>SELECT</code> at provisioning. Neither is presented as the
+guarantee. The comment in <code>audit_worm.c</code> is explicit that the
+triggers <em>"are NOT the adversarial guarantee (a process with file
+write access can drop them) — that is the hash-chain."</em> Naming the
+threat model is the part to copy: a trigger stops a bug and a hash chain
+stops an editor, and a page that lists both without distinguishing them
+has told a reader less than it appears to.</p>
+<p>Two construction details go with it, both addressing gaps the Aura
+entry above leaves open. The chain is guarded by a <strong>single-writer
+mutex</strong>, so <code>seq</code> is gap-free by construction rather
+than by convention — which matters because the sequence gap is what a
+deletion is supposed to show up as. And <code>row_hash</code> is an
+HMAC-SHA256 over a <strong>length-prefixed injective encoding</strong>
+of the fields, which closes the concatenation ambiguity that lets two
+different records hash alike; <code>ts</code> is deliberately excluded
+from the hashed material, so a clock correction does not break the
+chain.</p>
 <p><strong><a href="../../systems/palazzo/">Palazzo</a> is the only
 implementation here where the log entry is a precondition rather than a
 consequence.</strong> Every other audit on this page is written because

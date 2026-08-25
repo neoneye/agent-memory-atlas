@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A two-service C runtime whose
+memory splits into typed facts and episodic rows, gates recall on
+per-fact confidence and PII sensitivity, and writes mutations to a
+hash-chained append-only store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="aimee — Agent Memory Atlas">
+    <meta property="og:description" content="A two-service C runtime
+whose memory splits into typed facts and episodic rows, gates recall on
+per-fact confidence and PII sensitivity, and writes mutations to a
+hash-chained append-only store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="aimee — Agent Memory Atlas">
+    <meta name="twitter:description" content="A two-service C runtime
+whose memory splits into typed facts and episodic rows, gates recall on
+per-fact confidence and PII sensitivity, and writes mutations to a
+hash-chained append-only store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>aimee — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "aimee",
+      "description": "A two-service C runtime whose memory splits into typed facts and episodic rows, gates recall on per-fact confidence and PII sensitivity, and writes mutations to a hash-chained append-only store.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Authority caps the actor</p>
+          <h1>aimee</h1>
+          <p class="document-deck">A two-service C runtime whose memory
+splits into typed facts and episodic rows, gates recall on per-fact
+confidence and PII sensitivity, and writes mutations to a hash-chained
+append-only store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RakuenSoftware/aimee">
+              <span>Source</span>
+              <strong>RakuenSoftware/aimee</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5" title="958af1c59f2db825d348d19209fb339615ed9ae5">
+              <span>Analyzed revision</span>
+              <code>958af1c5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-25</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>aimee is a personal-assistant runtime written mostly in C — roughly
+796,000 lines of C and 87,000 lines of headers, with 142,000 lines of
+Go, 109,000 of Python and a small TypeScript frontend beside them,
+across 7,281 commits since 3 June 2026. It is AGPL-3.0. The tree ships
+two services: <code>aimee-server</code>, which holds the memory of one
+human, and <code>aimee-kb</code>, which holds a corpus and a team's
+membership graph.</p>
+<p>The memory layer is not one thing. There is an episodic store — a
+<code>memories</code> table with tiers, salience, surprise, validity
+bounds and a lifecycle state — and there is a <strong>typed-fact
+layer</strong>, a graph of <code>(source, relation, target)</code> edges
+carrying a confidence class, an authority rank and its own lifecycle
+columns. They are written by different paths, read by different queries,
+and corrected by different verbs. Most of what this report finds worth
+reading sits in the second one.</p>
+<p>Five marks. The typed-fact layer excludes superseded, invalidated and
+suppressed rows from every recall query it has, unconditionally and
+behind no flag. The episodic row carries event-time validity bounds
+separate from its transaction timestamps, with a function that answers
+<em>was this in force on 12 June</em>. The recall path filters
+candidates by scope and records why it dropped each one. The audit store
+is append-only by two independent mechanisms and says out loud which of
+them an attacker can remove. And the recall tests are built so that an
+empty result fails them.</p>
+<p>What the report cannot claim is coverage. At over a million lines
+this is the largest tree in the corpus by an order of magnitude, and the
+sections below state where the trace stops.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two sentences from <code>docs/KNOWLEDGE.md</code> set the intent:
+<em>"Scope is an authorization boundary. Promotion into a broader scope
+is an explicit audited write,"</em> and <em>"Raw text is not treated as
+a fact merely because a model extracted it."</em></p>
+<p>The second is the one the code delivers most completely. A fact
+arriving from a model is not the same object as a fact the user stated,
+and the difference is carried in the row rather than in a comment.
+<code>fact_class_for(authority, gate)</code> maps an authenticated
+user's accepted assertion to Class A at confidence 1.0, a model's
+accepted assertion to Class B at 0.6, and anything novel to Class C at
+0.4 — which is also the floor. The mapping from provenance to authority
+is deliberately narrow:</p>
+<pre class="c"><code>assert(fact_authority_from_provenance(&quot;user_stated&quot;) == FACT_AUTHORITY_USER);
+assert(fact_authority_from_provenance(&quot;agent_message&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;web&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;User_Stated&quot;) == FACT_AUTHORITY_MODEL); /* exact match */
+assert(fact_authority_from_provenance(&quot;&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(NULL) == FACT_AUTHORITY_MODEL);</code></pre>
+<p>Every failure mode — wrong case, empty, null — lands on model
+authority. That is the fail-closed direction, and the test asserts it in
+all six forms.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction and audit run down the write side</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction and audit run down the write side
+    TURN[&quot;turn text&quot;] --&gt; RET{&quot;retraction turn?&lt;br/&gt;scan provider&quot;}
+    RET --&gt;|&quot;no answer&quot;| SKIP[&quot;log; do NOT retract&quot;]
+    RET --&gt;|&quot;yes + attribute&quot;| CAP[&quot;authority CAPS the actor&lt;br/&gt;model authority cannot&lt;br/&gt;touch Class A or immutable&quot;]
+    CAP --&gt; INV[&quot;invalidated_at stamped&lt;br/&gt;row retained&quot;]
+    INV --&gt; WORM
+
+    TURN --&gt; FR[&quot;typed-fact recall block&quot;]
+    FR --&gt; EX[&quot;AND superseded_at = &#39;&#39;&lt;br/&gt;AND invalidated_at = &#39;&#39;&lt;br/&gt;AND suppressed = 0&quot;]
+    EX --&gt; FLOOR{&quot;per-row confidence&lt;br/&gt;&gt;= 0.4 floor?&quot;}
+    FLOOR --&gt;|&quot;no&quot;| DROP1[&quot;withheld&quot;]
+    FLOOR --&gt;|&quot;yes&quot;| PII{&quot;row is PII and&lt;br/&gt;turn asks for it?&quot;}
+    PII --&gt;|&quot;no&quot;| DROP2[&quot;withheld&quot;]
+    PII --&gt;|&quot;yes&quot;| BLOCK[&quot;fact lines into the envelope&quot;]
+
+    TURN --&gt; VEC[&quot;dense recall over memories&quot;]
+    VEC --&gt; SCOPE[&quot;memory_filter_scope&lt;br/&gt;reject reason: scope_boundary&quot;]
+    SCOPE --&gt; LIFE[&quot;archived drop&lt;br/&gt;reject reason: lifecycle_archived&lt;br/&gt;(two flags, both default 0)&quot;]
+    LIFE --&gt; RERANK[&quot;rerank&quot;]
+    RERANK --&gt; BLOCK
+
+    WORM[(&quot;audit_event&lt;br/&gt;prev_hash / row_hash chain&lt;br/&gt;BEFORE UPDATE/DELETE triggers&lt;br/&gt;+ INSERT-only role grant&quot;)]</code></pre></details></figure>
+<p>The two recall paths converge on the same prompt envelope but share
+no gate. A fact withheld for low confidence and a memory withheld for
+scope are refused by different code, and neither refusal is silent —
+both write a reject reason into the recall trace.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Turn-time retraction.</strong>
+<code>db2_fact_ingest_turn</code> scans the turn for a retraction
+intent, and the surrounding comment is explicit that extraction is
+<em>not</em> on this path: <em>"Fact EXTRACTION is offline-only (the
+memory_facts drain runs pattern + LLM), so we do NOT run
+db2_fact_ingest_text() on the turn hot path."</em> Retraction stays
+synchronous because it is a cheap Postgres write with no model in
+it.</p>
+<p><strong>Retraction storage.</strong>
+<code>db2_fact_retract(source, relation, target, authority)</code>
+normalises the relation, looks up its <code>correction_behavior</code>
+on the seeded relation type, refuses when that behaviour is
+<code>CORR_IMMUTABLE</code> and the caller is not a user authority, and
+otherwise calls <code>db2_fact_mutation_invalidate</code>. The key is
+the triple. There is no row id anywhere in the call.</p>
+<p><strong>Recall exclusion.</strong> Every query in
+<code>fact_recall.c</code> that assembles the fact block carries the
+same predicate. <code>db2_fact_current_count</code> shows the full
+shape:</p>
+<pre class="sql"><code>SELECT COUNT(*) FROM entity_edges
+ WHERE (source = ?1 OR target = ?2) AND edge_class = &#39;semantic&#39;
+   AND superseded_at = &#39;&#39; AND invalidated_at = &#39;&#39; AND suppressed = 0
+   AND lifecycle_state IN (&#39;persistent&#39;,&#39;promoted&#39;)</code></pre>
+<p>Four separate ways for a fact to be excluded, all read together, none
+of them optional.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> row carries thirty columns. The ones that
+matter here are <code>lifecycle_state</code> (defaulting to
+<code>active</code>, with <code>archive_reason</code> and
+<code>ttl_at</code> beside it), <code>valid_from</code> and
+<code>valid_until</code> held apart from <code>created_at</code> and
+<code>updated_at</code>, <code>contradiction_group</code> and
+<code>merged_into</code>, and a <code>negation_tokens</code> column for
+negative-polarity recall. <code>confidence</code>,
+<code>evidence_strength</code>, <code>salience</code> and
+<code>surprise</code> are floats and are not the trust state; the state
+is the enum.</p>
+<p><code>memory_provenance</code> records
+<code>(memory_id, session_id, action, details, created_at)</code>.
+<code>memory_conflicts</code> pairs two memory ids with a detection
+time, a <code>resolved</code> flag and a free-text
+<code>resolution</code>.</p>
+<p>The typed-fact side lives in <code>entity_edges</code> with
+<code>fact_graph_changes</code> recording commits, and
+<code>fact_evidence</code> carrying a <code>stance</code> — a supporting
+or opposing citation is a row, not a score adjustment.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Dense recall routes through pgvector; the direct SQL collector was
+removed and the header says where it went. Around it sit a lexical
+fallback, relation-token matching over the fact graph, and
+session-window expansion in both directions around a hit.</p>
+<p>Two filters run before rerank. <code>memory_filter_scope</code> drops
+candidates whose scope does not match, calling
+<code>memory_scope_matches</code>, which returns 1 when no scope was
+requested — so the boundary holds only when the caller supplies one.
+Then, when both <code>memory_lifecycle_enabled</code> and
+<code>memory_lifecycle_hide_archived</code> are set, archived candidates
+are batch-probed and dropped. Both accessors read a config number into a
+variable initialised to 0 and ignore the read's return code, so an unset
+key is off.</p>
+<p>There is a third expression that is <em>not</em> a filter and should
+not be read as one. <code>DB2_MEMORY_SCOPE_RANK_SQL</code> orders
+results — active project, active workspace, shared or global including
+legacy untagged rows, then explicit-all others — and its own instruction
+to callers is to place it <em>before</em> their relevance ordering and
+<code>LIMIT</code>. It changes which rows survive a cap. It excludes
+nothing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Retraction is where this system has done its hardest thinking, and it
+did it after being wrong three times. All three corrections are recorded
+in comments in <code>fact_ingest.c</code>, and they are worth quoting
+because each is a shape this atlas finds elsewhere without the diagnosis
+attached.</p>
+<p>The first is a master flag:</p>
+<blockquote>
+<p><em>"It used to sit behind config.typed_facts_enabled, a master gate
+that defaulted OFF and turned the whole layer — retraction, recall,
+class keying — into a silent no-op. A gate that silently disables a
+correctness feature is worse than no feature: this one returned 0 here,
+so a turn asking to forget a fact completed normally with the fact still
+standing and nothing logged."</em></p>
+</blockquote>
+<p>The second is authority ordering. The code used to resolve the actor
+from the request first and fall back to the declared authority — but the
+request resolver returns user authority for any authenticated principal,
+so a model-composed query inside an authenticated human's session
+inherited the human's rank. The measured consequence is in the comment:
+a Class A row at authority rank 30 went from <code>persistent</code> to
+<code>invalidated</code> on the agent's own <em>"please forget my
+email."</em> The fix inverts the relation, and the comment states it as
+a rule in capitals: the declared authority <strong>caps</strong> the
+actor; it is not a fallback for it.</p>
+<p>The third is a discarded return code:</p>
+<blockquote>
+<p><em>"A REFUSED RETRACTION IS NOT A SUCCESSFUL ONE, and this used to
+discard the difference … every one of them was thrown away with a (void)
+cast. The turn then completed normally with the fact still standing, so
+'I forgot it' and 'I refused to forget it' looked identical from outside
+and left nothing in the log."</em></p>
+</blockquote>
+<p>And the detail that makes it a testing finding rather than a coding
+one: the failure <em>"presented only as a unit-test count assertion
+three layers away with no indication that the mutation had been declined
+at all"</em> — and it succeeded under the SQLite shim while failing
+under real Postgres. A backend substitution hid a refusal from the only
+assertion watching for it.</p>
+<p>The current code logs <code>-2</code> (annotate-only target) and
+<code>-1</code> (policy needing operator authority, or a failed write)
+distinctly, and treats neither as an error, on the stated ground that
+refusals are legitimate outcomes — <em>"What it must not do is stay
+silent."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP call table exposes memory operations including
+<code>memory_provenance</code>, which returns the mutation history of a
+single memory id to the agent. The CLI mirrors the RPC surface, with
+<code>aimee memory get &lt;id&gt; --as-of &lt;timestamp&gt;</code>
+carrying the event-time query. A Go control plane and several compose
+topologies sit around the two services.</p>
+<p>The <code>facts.retract</code> request accepts an
+<code>authority</code> field, and the boundary that handles it is
+documented as the only place it may be resolved:</p>
+<blockquote>
+<p><em>"<code>authority</code> reaches here ALREADY RESOLVED against the
+caller's authentication by the request boundary that has it … It is not
+a field a client can set on the way in; do not add a path that forwards
+a request body's value here unresolved."</em></p>
+</blockquote>
+<p>At the server edge, a request asking for user authority gets it only
+when <code>server_account_is_person(account)</code> agrees.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The audit store is the strongest implementation of this shape in the
+corpus. <code>audit_worm.c</code> builds a hash chain: each row's
+<code>row_hash</code> is an HMAC-SHA256 over a length-prefixed injective
+encoding of the record and the previous hash, a single-writer mutex
+keeps <code>seq</code> gap-free and totally ordered, and <code>ts</code>
+is deliberately excluded from the hashed material. Triggers block
+<code>UPDATE</code> and <code>DELETE</code>. The Postgres twin adds
+triggers of its own plus a writer role granted only <code>INSERT</code>
+and <code>SELECT</code>.</p>
+<p>What earns the description is the comment distinguishing the layers:
+the triggers <em>"are NOT the adversarial guarantee (a process with file
+write access can drop them) — that is the hash-chain."</em> Most audit
+implementations in this corpus assert their own tamper-resistance. This
+one names which half of it an attacker can remove.</p>
+<p>Row-level security on <code>aimee-kb</code> is enabled and
+<code>FORCE</code>d on <code>kb_team</code>, <code>kb_project</code>,
+<code>kb_team_membership</code>, <code>kb_project_membership</code> and
+<code>kb_admin_grant</code> — the policy data itself. The content
+policies over <code>kb_documents</code> and <code>kb_file_index</code>
+exist, use <code>kb_content_project_visible(project)</code>, and ship
+disabled: enabling them is described as an act rather than a migration,
+to be performed after rows have been attributed to projects. Shipping a
+control off with the enabling step named is a defensible choice and an
+unusual one; the consequence for a reader is that project visibility on
+documents is not on until someone turns it on. No
+<code>CREATE POLICY</code> names a memory table at this pin.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test_fact_recall.c</code> is 210 lines and is the
+best-constructed negative retrieval test this atlas has read. Two user
+facts are committed, one normal and one PII-sensitive. Then:</p>
+<pre class="c"><code>int n = db2_fact_recall_block(&quot;user&quot;, 0, buf, sizeof(buf));
+assert(n == 1);
+assert(strstr(buf, &quot;works_for: acme&quot;) != NULL);
+assert(strstr(buf, &quot;age: 30&quot;) == NULL);</code></pre>
+<p>The positive and the negative are asserted over the same buffer, so a
+recall returning nothing fails the test instead of passing it. The next
+block flips the sensitivity request and asserts the PII fact now appears
+— proving the gate admits as well as withholds. A third case inserts an
+over-long row and asserts it is skipped rather than truncated into the
+prompt.</p>
+<p>The fourth case is the one to copy. A below-floor row is inserted and
+asserted absent while its high-confidence neighbours are asserted
+present, and the comment says why the fixture is shaped that way: <em>"a
+gate that read one row's confidence for all of them would agree with all
+of the above."</em> The test is constructed specifically to fail a
+whole-block implementation that would satisfy every earlier
+assertion.</p>
+<p><code>docs/validation/flag-rollout-readiness.md</code> deserves its
+own paragraph. It tracks every default-off flag against a six-point gate
+for flipping it on, requiring an A/B harness isolating that one flag on
+a real labelled corpus with numeric acceptance criteria <em>pinned
+before the run</em>, shadow mode for anything that blocks, and a
+documented rollback. It records that only two flags have ever been
+flipped, both via a written validation report. And it contains a
+ground-truth wiring audit: every default-off flag grepped for production
+readers excluding config and test files, sorted into
+<strong>WIRED</strong> — gating real behaviour, blocked on measurement
+rather than code — and <strong>INERT TOGGLE</strong>, where <em>"the
+<code>*_enabled</code> field is never read in production."</em> The
+count is published: five inert toggles, no fully-dead features.</p>
+<p>That is this atlas's producer check, run by a project on itself, with
+the negative result written down rather than quietly fixed. The
+archived-hiding flag this report describes appears in that table, marked
+as not yet cleared and awaiting a recall-with-archival A/B.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Four things here transfer.</p>
+<p><strong>Make the declared authority a cap, not a default.</strong>
+The bug aimee measured — a model-composed string inheriting an
+authenticated human's rank because the request context existed — is
+available to any system that resolves identity from ambient context with
+a structural label as fallback. Inverting it costs one branch.</p>
+<p><strong>Give a refusal a distinct return value and log it.</strong> A
+forget that refuses and a forget that succeeds must not look identical
+from outside. aimee's version of this bug survived because the only
+assertion watching it counted rows three layers away, and because a
+SQLite shim accepted what Postgres refused.</p>
+<p><strong>Assert a negative beside a positive on the same
+buffer.</strong> The pattern in <code>test_fact_recall.c</code> costs
+one extra line per case and removes the entire class of exclusion tests
+that pass because nothing was returned.</p>
+<p><strong>Say which layer of your tamper-resistance an attacker can
+remove.</strong> A hash chain and a trigger are not the same guarantee.
+Naming the difference in the file is worth more than either.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Three, and the first is the honest limit of this reading.</p>
+<p><strong>Coverage.</strong> This is a tree of over a million lines.
+The trace here covers the typed-fact layer, the episodic recall path,
+the audit store and the scope plumbing. It does not cover the Go control
+plane, the Python tooling, the ingest workers, or the great majority of
+the 243 tables in the schema. Absence of a mechanism from this report is
+not evidence of its absence from the tree.</p>
+<p><strong>Whether memory mutations reach the WORM chain.</strong> The
+RPC dispatch table in <code>kb_service.c</code> carries
+<code>memory.store</code>, <code>memory.delete</code>,
+<code>memory.supersede</code> and <code>memory.update</code>. Confirmed
+WORM producers at this pin are vault rewrap, guardrail actions,
+management operations and the durable observability sink. The path from
+a memory mutation to <code>audit_worm_append</code> was not traced. The
+mark rests on <code>memory_provenance</code> — a named per-memory
+mutation record with a read surface — and on the WORM store's own
+construction, not on a traced join between them.</p>
+<p><strong>Whether a retracted triple can be re-asserted.</strong>
+Retraction stamps <code>invalidated_at</code> and keys on
+<code>(source, relation, target)</code>, which is the right key. But
+nothing found in the offline extraction path consults the invalidated
+set before asserting, so a later drain that re-extracts the same triple
+from new text appears able to re-establish it. This is why the
+<code>tombstone</code> mark is not awarded: the retention is there, the
+value-keying is there, and the consultation that would make a refusal
+durable was not found. A single predicate in the assert path — refuse a
+triple whose invalidated twin outranks the incoming authority — would
+close it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/modules/db2/c/fact_recall.c</code></td>
+<td>Every typed-fact recall query, each opening with the exclusion
+predicate</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/fact_lifecycle.c</code></td>
+<td><code>db2_fact_retract</code>, the immutable-relation guard, the
+current-count query</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/fact_ingest.c</code></td>
+<td>Turn-time retraction, and the three corrections quoted in section
+7</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/memory_lifecycle.h</code></td>
+<td>The five-state episodic vocabulary and
+<code>db2_memory_valid_at</code></td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/memory_scope_query.h</code></td>
+<td><code>DB2_MEMORY_SCOPE_RANK_SQL</code> — the ordering expression,
+not a filter</td>
+</tr>
+<tr>
+<td><code>src/modules/memory/memory_core_search_b.c</code></td>
+<td><code>memory_filter_scope</code> and
+<code>memory_scope_matches</code></td>
+</tr>
+<tr>
+<td><code>src/modules/memory/memory_core_search_c.c</code></td>
+<td>The recall pipeline: scope filter, lifecycle drop, rerank</td>
+</tr>
+<tr>
+<td><code>src/modules/audit/audit_worm.c</code></td>
+<td>The hash-chained append-only store, 710 lines</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/schema.sql</code></td>
+<td>243 tables, the RLS block, and the Postgres audit twin</td>
+</tr>
+<tr>
+<td><code>src/server/server_facts.c</code></td>
+<td>The <code>facts.retract</code> boundary and its authority
+resolution</td>
+</tr>
+<tr>
+<td><code>src/tests/test_fact_recall.c</code></td>
+<td>The paired positive/negative exclusion cases</td>
+</tr>
+<tr>
+<td><code>docs/validation/flag-rollout-readiness.md</code></td>
+<td>The six-point flip gate and the WIRED / INERT TOGGLE audit</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-25</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5"><code class="commit-id" title="958af1c59f2db825d348d19209fb339615ed9ae5">958af1c5…</code></a>
+— first reading, roughly 796,000 lines of C and 87,000 of headers plus
+142,000 of Go and 109,000 of Python, 7,281 commits since 3 June 2026,
+AGPL-3.0. Screened before anything was read: one auto-run surface, one
+build-time execution, three unpinned surfaces and two files inside the
+seven-day cooldown; nothing was installed, nothing was compiled and no
+service was started, so every claim here comes from reading the tree.
+Five marks. <code>trust_state</code> rests on two discrete vocabularies
+held apart from the confidence floats beside them, with the typed-fact
+exclusion applied by every recall query behind no flag.
+<code>bitemporal</code> rests on
+<code>valid_from</code>/<code>valid_until</code> held separately from
+<code>created_at</code>/<code>updated_at</code> and read by
+<code>db2_memory_valid_at</code>, reachable as <code>--as-of</code>.
+<code>scope_enforced</code> rests on <code>memory_filter_scope</code>
+dropping candidates before rerank, with row-level security forced on the
+membership tables beside it. <code>audit_log</code> rests on the
+hash-chained WORM store and the per-memory
+<code>memory_provenance</code> rows; the path from a memory RPC to
+<code>audit_worm_append</code> was not traced, and section 12 says so.
+<code>negative_eval</code> rests on four exclusion cases in
+<code>test_fact_recall.c</code>, each paired with a positive over the
+same buffer. <code>tombstone</code> is withheld on one missing
+consultation: retraction retains the row and keys on the triple, which
+is the right key, but nothing in the offline extraction drain reads the
+invalidated set before asserting. <code>human_review</code> is absent —
+the <code>pending</code> state expires on a TTL sweep rather than a
+decision, and <code>memory_conflicts.resolution</code> is closed by the
+agent under a directive. This is the largest checkout in the corpus; the
+reading covers the typed-fact layer, the episodic recall path, the audit
+store and the scope plumbing, and not the Go control plane, the Python
+tooling, the ingest workers, or most of the 243 tables in the
+schema.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
