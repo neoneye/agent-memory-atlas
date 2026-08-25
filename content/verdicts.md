@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 332 reports.**
+**This page covers all 333 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1559,6 +1559,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 13,800 lines of Rust, 47 commits, Postgres and pgvector, local ONNX embeddings, an admin tracer that shows the exact prompt and the selected subgraph per ingest, and **no LICENSE file**. Two marks. The integration tests return early when no database is reachable, so a green run may have asserted nothing — and the test named for the quarantine path states the behaviour in a comment and checks nothing about it.
 - Study when: you want the best-shaped claim lifecycle in this corpus — five statuses, a default-deny read, and an audit vocabulary that covers what was refused.
 - Do not copy when: you need multi-tenant separation, or a rejection that holds against the same claim arriving again.
+
+### [`fireweed-mcp`](../systems/fireweed-mcp/)
+
+- Best idea: **the adjudicator is on the other side of an RPC boundary.** `remember` takes a claim *and* the verbatim text being quoted, and four pure functions — subject named, relation order preserved, no invented numerals, nothing asserted beyond the span — decide before anything is stored. An agent cannot argue with `numerals_grounded`. Refusals are typed (`unknown_subject`, `relation_transposed`, `numeral_invented`, `asserts_more_than_evidence`) and return the claim, the evidence and a remedy, because *"a gate that only says 'no' cannot be worked with."*
+- Second idea: **the clearest statement in this corpus of why a score cannot abstain.** The read gate's docstring records the design it replaced — `jaccard >= 0.12 OR coverage >= 0.6` — and what it did live: *"that answered 'Priya's salary' with a hire date: the entity matched, the predicate did not, and coverage weights every query token equally."* A threshold always returns a best row. The gate returns nothing and names the term it could not ground.
+- Third idea: **a negative control on the receipt instrument, in the committed tests.** `test_receipts_are_tamper_evident` asserts `1/1 checkable`, edits one word of the source file on disk, then asserts `0/1 checkable` with a `FAILED` line — answering its own docstring, *"The point of a receipt is that it CAN fail."* Two more cases assert material must not come back, each paired with a positive over the same store, so an empty result fails rather than passes. And `verify_bundle.py` has no Fireweed import at all: *"if you needed our code to verify our claims, you would just be trusting us with extra steps."*
+- Biggest risk: **the record that would carry the argument is not kept.** `ledger.py` is a gap-free hash-chained append-only log with a closed event vocabulary and a `resolver_version` stamped into every payload; `attach_ledger` and `seal()` have no caller anywhere in the tree, so `_emit` returns early on every mutation. The erasure certificate is signed with `b"fireweed-mcp-key"` — a literal in public source, so anyone can mint one — and written to a `SQLiteLedger(":memory:")` discarded when the call returns. Worst of the three: `erase` computes a `scope` string reading *"residual plaintext may persist in snapshots/history … NOT by this certificate,"* and the server prints the signature, the closure counts and *"This certificate is the artifact a compliance reviewer asks for"* — and not the scope. The engine wrote the sentence that prevents the overstatement; the server does not display it.
+- Maturity impression: 9,724 lines of Python across 45 files, 7 commits since 23 August 2026, FSL-1.1-ALv2 converting to Apache 2.0 on 1 January 2028. No dependencies, no API key, no model in the server. Three marks. One test file of 161 lines that drives real stdio JSON-RPC because *"the thing that breaks in an MCP server is the protocol edge."* Two of the five declared `memory_state` values have no writer, and the `QUARANTINE` verdict documented as *"log for review"* returns a `NoopMutation` with no log and no queue.
+- Study when: you want the write gate and the read gate as one idea applied twice, or the tamper-evidence test that most receipt systems in this corpus do not have.
+- Do not copy when: you need the refusal to survive — nothing here records that a claim was refused, so re-proposing it with a longer span simply admits it.
 
 ### [`aimee`](../systems/aimee/)
 

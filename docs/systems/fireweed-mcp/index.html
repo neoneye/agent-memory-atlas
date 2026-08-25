@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP memory server that admits a
+claim only when deterministic functions find its cited evidence supports
+it, binds what survives to a byte range in the source, and abstains by
+name when a query has no grounding.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Fireweed
+MCP — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP memory server that
+admits a claim only when deterministic functions find its cited evidence
+supports it, binds what survives to a byte range in the source, and
+abstains by name when a query has no grounding.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fireweed
+MCP — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP memory server that
+admits a claim only when deterministic functions find its cited evidence
+supports it, binds what survives to a byte range in the source, and
+abstains by name when a query has no grounding.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Fireweed MCP — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Fireweed MCP",
+      "description": "An MCP memory server that admits a claim only when deterministic functions find its cited evidence supports it, binds what survives to a byte range in the source, and abstains by name when a query has no grounding.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The gate is not a prompt</p>
+          <h1>Fireweed MCP</h1>
+          <p class="document-deck">An MCP memory server that admits a
+claim only when deterministic functions find its cited evidence supports
+it, binds what survives to a byte range in the source, and abstains by
+name when a query has no grounding.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Starksood/fireweed-mcp">
+              <span>Source</span>
+              <strong>Starksood/fireweed-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Starksood/fireweed-mcp/commit/33ec45edeea262a753d8fb004689d4bf92bc2328" title="33ec45edeea262a753d8fb004689d4bf92bc2328">
+              <span>Analyzed revision</span>
+              <code>33ec45ed…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-25</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Fireweed MCP is a memory server for agents in which the interesting
+decision is what gets <em>refused</em>. 9,724 lines of Python across 45
+files, 7 commits, first commit 23 August 2026, licensed FSL-1.1-ALv2 —
+source-available, converting to Apache 2.0 on 1 January 2028. It has no
+dependencies, no API key, and no model: nothing in the server calls an
+LLM.</p>
+<p>The design idea is stated in one sentence in the README and delivered
+in the code: <em>"the model proposes, deterministic code decides,"</em>
+placed across an RPC boundary so the proposer is a different process
+from the decider. <code>remember</code> takes a claim
+<strong>and</strong> the verbatim text being quoted, and four pure
+functions ask whether the evidence names the subject, preserves the
+relation, invents no numbers, and asserts nothing the span does not say.
+What survives binds to a <code>(doc_hash, byte_start, byte_end)</code>
+triple that anyone can re-check by re-hashing the file and re-slicing
+the bytes.</p>
+<p>Three marks. <code>memory_state</code> is a five-value discrete
+status held apart from the confidence float, and retrieval admits two of
+the five. <code>Temporal</code> carries the event axis separately from
+the transaction axis, with writers and readers on both. And the test
+file contains three genuine must-not-return cases, each paired with a
+positive over the same store.</p>
+<p>The gap is on the other side of the same idea. This system's whole
+argument is that the record can be checked afterwards by someone who
+trusts neither party — and the two mechanisms that would carry that
+argument furthest, the append-only ledger and the erasure certificate,
+are respectively unwired and unsigned in any sense an adversary would
+accept. Sections 7 and 9 trace both.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A question is treated as a claim with a hole in it, and the read gate
+asks whether the hole has a filler. The module says why the previous
+design failed:</p>
+<blockquote>
+<p><em>"The read side scored instead —
+<code>jaccard &gt;= 0.12 OR coverage &gt;= 0.6</code> — and a score
+cannot say 'the substrate does not know this'. Live, that answered
+'Priya's salary' with a hire date: the entity matched, the predicate did
+not, and coverage weights every query token equally."</em></p>
+</blockquote>
+<p>That is the sharpest statement in the corpus of why a similarity
+threshold cannot express abstention. A score always returns a best row;
+a gate can return nothing and say which term it could not ground.</p>
+<p>The write side is the same shape one step earlier. The firewall has
+four verdicts — <code>ACCEPT</code>, <code>RESCUE</code>,
+<code>REJECT</code>, <code>QUARANTINE</code> — and the grounding checks
+sit in front of it with typed refusals: <code>unknown_subject</code>,
+<code>relation_transposed</code>, <code>numeral_invented</code>,
+<code>asserts_more_than_evidence</code>. Each refusal returns the claim,
+the evidence and what to do about it, on the stated ground that <em>"a
+gate that only says 'no' cannot be worked with."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same adjudication runs twice — four pure functions decide what enters the record, and a two-check gate decides whether a question has grounding — while the ledger that would record either decision is built and never attached</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the same adjudication runs twice — four pure functions decide what enters the record, and a two-check gate decides whether a question has grounding — while the ledger that would record either decision is built and never attached
+    A[&quot;agent proposes&lt;br/&gt;claim + verbatim evidence&quot;] --&gt; G1{&quot;subject_grounded&quot;}
+    G1 --&gt;|&quot;no&quot;| R1[&quot;REFUSED unknown_subject&quot;]
+    G1 --&gt; G2{&quot;order_preserved&quot;}
+    G2 --&gt;|&quot;no&quot;| R2[&quot;REFUSED relation_transposed&quot;]
+    G2 --&gt; G3{&quot;numerals_grounded&quot;}
+    G3 --&gt;|&quot;no&quot;| R3[&quot;REFUSED numeral_invented&quot;]
+    G3 --&gt; G4{&quot;predicate_grounded&quot;}
+    G4 --&gt;|&quot;no&quot;| R4[&quot;REFUSED asserts_more_than_evidence&quot;]
+    G4 --&gt; FW{&quot;firewall&lt;br/&gt;ACCEPT · RESCUE ·&lt;br/&gt;REJECT · QUARANTINE&quot;}
+    FW --&gt;|&quot;reject / quarantine&quot;| NOOP[&quot;NoopMutation&lt;br/&gt;nothing written, nothing logged&quot;]
+    FW --&gt; NODE[&quot;node written&lt;br/&gt;memory_state = active&quot;]
+    NODE --&gt; REC[&quot;receipt bound&lt;br/&gt;doc_hash + byte range&quot;]
+    NODE -.-&gt;|&quot;_emit returns early:&lt;br/&gt;no ledger attached&quot;| LED[(&quot;hash-chained ledger&lt;br/&gt;seq · prev_hash · payload&lt;br/&gt;BUILT, NEVER WIRED&quot;)]
+
+    Q[&quot;recall(query)&quot;] --&gt; RG{&quot;read gate&lt;br/&gt;1 subject grounded?&lt;br/&gt;2 predicate grounded?&quot;}
+    RG --&gt;|&quot;no&quot;| AB[&quot;ABSTAINED — names the&lt;br/&gt;term it could not ground&quot;]
+    RG --&gt; SEL[&quot;nodes where memory_state&lt;br/&gt;in (active, disputed)&quot;]
+    SEL --&gt; OUT[&quot;claims + byte ranges,&lt;br/&gt;each re-verified on the way out&quot;]
+
+    R1 &amp; R2 &amp; R3 &amp; R4 --&gt; TXT[&quot;typed refusal text&lt;br/&gt;returned, not recorded&quot;]</code></pre></details></figure>
+<p>Every refusal in this diagram is returned to the caller and stored
+nowhere. That is the single fact that shapes the rest of the report.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong><code>remember</code>.</strong> <code>tool_remember</code>
+imports <code>classify</code>, <code>predicate_grounded</code>,
+<code>subject_grounded</code>, <code>order_preserved</code>,
+<code>numerals_grounded</code> from <code>fireweed.grounding</code> and
+runs all four before touching the graph. If a <code>source_text</code>
+is supplied it is written to the store first, because — in the comment's
+words — <em>"A first-run developer would see 'turn-bound (no source
+document registered)' and conclude the feature did not exist. The best
+feature you have should not be behind a second tool call."</em></p>
+<p><strong>The decision that used to be discarded.</strong> After the
+gate passes, the engine's own firewall runs, and the comment above the
+check records what happened when its verdict was ignored:</p>
+<blockquote>
+<p><em>"REPORT WHAT ACTUALLY HAPPENED. This returned 'ADMITTED'
+unconditionally while the engine's firewall was rejecting the claim, so
+<code>remember</code> told callers their fact was stored when the
+substrate had recorded nothing — silent data loss, in the one product
+where the record is the entire promise. Computing a decision and then
+ignoring it is the same defect this project has now hit in reader.py,
+run_opsgraph.py and here."</em></p>
+</blockquote>
+<p>Three occurrences of one defect, counted by the project itself. The
+current code reads <code>result.firewall_decision</code>, and a
+rejection returns <code>NOT STORED</code> with the reason.</p>
+<p><strong><code>recall</code>.</strong> <code>query_graph</code> runs
+the read gate, and an abstention returns the reason, the detail, a
+remedy when one exists, and — when the optional encoder is absent — a
+note that paraphrases are being refused. The fallback direction is
+stated where the gate is defined: lexical-only <em>"can only ABSTAIN
+MORE, never answer more."</em></p>
+<p><strong>Receipts.</strong> <code>locate_span</code> finds the UTF-8
+byte offsets of the quote in the document, exact-match first, then a
+whitespace-tolerant regex mapped back to original offsets, and
+<em>"Returns None rather than guessing when the quote isn't
+present."</em> The invariant is written above it: a receipt is minted
+only when the span is a real contiguous slice of the hashed
+document.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Node</code> carries the claim and its normalized form,
+resolved <code>EntityRef</code>s, a domain set, a
+<code>NodeStatus</code> whose <code>memory_state</code> is the
+five-value <code>Literal</code>, a <code>Reinforcement</code> record, a
+<code>Provenance</code> holding <code>source_turn_id</code>, the
+evidence span and a confidence float, and a <code>Temporal</code>
+holding both time axes.</p>
+<p>The state vocabulary is worth reading against its writers.
+<code>active</code>, <code>disputed</code> and <code>superseded</code>
+are all set by real paths. <code>quarantined</code> and
+<code>frozen</code> are declared in the type and written by nothing: the
+firewall's <code>QUARANTINE</code> verdict takes the same branch as
+<code>REJECT</code> and returns a <code>NoopMutation</code>, so a claim
+the firewall finds too unclear produces no node at all. The module
+docstring describes that verdict as <em>"too unclear → log for
+review"</em>, and there is no log and no review surface — the claim is
+dropped and the caller is told why in the response text.</p>
+<p>Storage is one <code>substrate.json</code> rewritten after every
+mutation, with source documents as text files beside it. A corrupt
+snapshot is moved to <code>.corrupt</code> and the server continues from
+empty with a message on stderr, rather than failing every subsequent
+call.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The read gate runs two checks — every named subject resolves to a
+graph entity, and the demand head is grounded lexically or semantically
+— and both are pure functions of <code>(question, graph)</code>. A third
+check on object typing is <em>deliberately absent</em>, with the
+docstring naming the design document that records why and what would
+reopen it.</p>
+<p>Determinism is defended rather than asserted. The optional encoder is
+pinned to a model id <strong>and</strong> a revision
+<strong>and</strong> a SHA-256 fingerprint of the weights file, and
+<code>_verify_weights</code> raises on mismatch rather than proceeding.
+When the encoder is not installed the gate runs lexical-only, which
+refuses more.</p>
+<p>Selection admits <code>("active", "disputed")</code> at three
+separate points, and the active-claim index is built only from
+<code>active</code> nodes. On the way out, every returned claim's
+receipt is re-verified against the held source, so a result carries
+<code>verified</code>, <code>FAILED</code>, or
+<code>source not held</code> rather than an unqualified citation.</p>
+<p>The README publishes what this costs, in a section titled <em>"What
+it does NOT do"</em>: on questions whose answer is genuinely absent the
+gate abstains <strong>38%</strong> of the time, and on paired questions
+the store does answer it returns the right one <strong>24%</strong> of
+the time against <strong>75%</strong> for plain retrieval-and-read.
+Publishing the losing number beside the winning one is rare enough to
+note. It is not checkable here: the evaluation notes are in a private
+repository, so this report records the claim and its provenance and not
+its correctness.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The gate is the write path, and it is genuinely deterministic — pure
+functions over two strings, no model, no threshold that a caller can
+move. Refusals are typed, returned, and explain what to fix.</p>
+<p>They are also the only trace. A refused claim leaves nothing behind:
+no row, no counter, no log line. Re-proposing the identical claim runs
+the same functions against the same evidence and, if it passes this time
+— a longer evidence span, a reworded claim — it is admitted with no
+reference to the earlier refusal. This is why <code>tombstone</code> is
+not awarded. The atlas's definition wants a durable record keyed on the
+value so a later assertion cannot silently re-establish it; here the
+refusal is a response, not a record.</p>
+<p>The mechanism that would fix it is in the tree.
+<code>ledger.py</code> defines an append-only event log with a gap-free
+monotonic <code>seq</code>, a <code>prev_hash</code> chain, a canonical
+byte serialization <em>"order-insensitive and stable"</em>, a closed
+<code>EVENT_KINDS</code> vocabulary, and a <code>resolver_version</code>
+stamped into every payload so that the offline audit question <em>"would
+today's resolver have decided this differently?"</em> is answerable.
+<code>ledger_sqlite.py</code> persists every event synchronously.
+<code>graph.py</code> has <code>attach_ledger</code>, and
+<code>_emit</code> on every mutation.</p>
+<p>None of it runs. <code>_emit</code> opens with:</p>
+<pre class="python"><code>if self._ledger is None:
+    if self._sealed:
+        raise RuntimeError(f&quot;sealed graph: {kind} write without an attached ledger — &quot;
+                           &quot;every mutation must be a captured event&quot;)
+    return</code></pre>
+<p><code>attach_ledger</code> has no caller anywhere in the repository,
+<code>seal()</code> has no caller, and <code>Fireweed.__init__</code>
+constructs an <code>IngestContext</code> that never sets one. So every
+node, entity and relation written by this server returns from
+<code>_emit</code> having recorded nothing. The project built the guard
+that catches exactly this failure and left it off.</p>
+<p>That is the ordinary shape of the corpus's most common defect, with
+one unusual feature: <code>_sealed</code> means the fix is a single
+call, and the failure is fail-<em>open</em> by an explicit choice rather
+than an oversight.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Seven tools over JSON-RPC on stdin and stdout, no SDK — the docstring
+explains that the official one requires Python 3.10 and the engine runs
+on 3.9, and draws the same conclusion as the dependency-free reference
+reader: <em>"a dependency list is a promise, and short promises are
+keepable."</em></p>
+<p><code>safe_source_id</code> reduces the caller-supplied
+<code>source_id</code> to a single path component, added after
+<code>"../../etc/passwd"</code> produced an unhandled traceback — the
+write already failed, but <em>"a stack trace is not an answer."</em></p>
+<p>The tool descriptions are written for the agent rather than the
+developer: <code>recall</code>'s tells the caller to <em>"treat that as
+a real answer, not an empty result"</em>, which is the correct place to
+put that instruction, since the abstention is only useful if the model
+on the other side does not retry until it gets a row.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Erasure is the most carefully built thing here and the most oversold
+at the boundary.</p>
+<p><code>compute_closure</code> is exact and structural rather than
+similarity-based: every node whose entities include the subject,
+including superseded and disputed ones, then a transitive walk over
+<code>derived_from</code> edges so a reflection summarising the
+subject's facts goes too. The comment records that this was found with a
+canary — <em>"a summary restating the subject's facts survived their
+erasure — measured with a canary in test_erasure_derived_nodes"</em> —
+and that the over-deletion it causes is the intended trade, because
+<em>"over-deletion is recoverable through normal operation, a leak is
+not."</em> <code>ErasureIncomplete</code> refuses to sign at all when
+any probe still answers, on the ground that a certificate contradicted
+by the system it describes <em>"is worse than no certificate."</em></p>
+<p>Three things then happen at the MCP boundary that the engine did not
+intend.</p>
+<p><strong>The ledger is a throwaway.</strong> <code>tool_forget</code>
+calls <code>erase(g, SQLiteLedger(":memory:"), "mcp", …)</code>. The
+<code>ERASE</code> event — append-only, hash-chained, replayable, the
+thing that makes a from-zero fold reconstruct and then erase — is
+written to an in-memory database that is discarded when the function
+returns. After a <code>forget</code>, the store contains the closure's
+absence and no record that an erasure occurred.</p>
+<p><strong>The signature is unauthenticated.</strong> The signing key is
+the literal <code>b"fireweed-mcp-key"</code>, in public source.
+<code>Certificate.signed</code> is a correct HMAC-SHA256 over a
+canonical encoding, and <code>verify_signature</code> is constant-time —
+the construction is sound and the key is not a secret. Anyone can mint a
+certificate for any subject and any closure manifest. Against accidental
+corruption this is a checksum; against the adversary the README's
+framing invokes — <em>"anyone can check it afterwards — including
+someone who trusts neither your agent nor this server"</em> — it
+establishes nothing.</p>
+<p><strong>The certificate's own caveat is computed and
+dropped.</strong> <code>erase</code> builds a <code>scope</code> string
+that states exactly what is certified, and with no keyring it reads:
+<em>"No content key was destroyed (this substrate is not
+crypto-shredding), so residual plaintext may persist in
+snapshots/history — governed by the store's retention policy, NOT by
+this certificate."</em> The MCP server passes no keyring, so this is the
+branch that runs. <code>tool_forget</code> prints the signature, the
+closure counts, the probe result, the state hashes and the surviving
+bystander count — and not <code>cert.scope</code>. What it prints
+instead is <em>"This certificate is the artifact a compliance reviewer
+asks for."</em></p>
+<p>The field exists because the dataclass docstring argues for it:
+<em>"a certificate that claims more than the system delivers is a
+compliance liability, not a feature."</em> The engine wrote the sentence
+that prevents the overstatement, and the server does not display it. It
+is the same defect the project named three occurrences of in section 4 —
+a decision computed and then ignored — in the one place where it changes
+what a reader believes about a legal artifact.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>One test file, 161 lines, and it is better than its size suggests. It
+drives a subprocess speaking real stdio JSON-RPC rather than calling the
+tool functions, for a reason worth quoting: <em>"the thing that breaks
+in an MCP server is the protocol edge (a stray print to stdout, a
+notification answered with a reply, a crash that kills the session), and
+none of that is visible from inside the process."</em> One test asserts
+that a notification receives no reply, because answering one corrupts
+the stream.</p>
+<p>Three cases assert that material must not come back, and none of them
+can pass vacuously.
+<code>test_recall_abstains_with_the_ungrounded_term_named</code> asserts
+the answerable query returns a grounded result and the unanswerable one
+abstains naming <code>salary</code>, over the same store in the same
+test. <code>test_receipts_are_tamper_evident</code> asserts
+<code>1/1 checkable</code>, edits one word of the source file on disk,
+and asserts <code>0/1 checkable</code> with a <code>FAILED</code> line —
+a real negative control on the instrument, answering the docstring's
+claim that <em>"The point of a receipt is that it CAN fail."</em>
+<code>test_forget_issues_a_signed_certificate_and_spares_bystanders</code>
+asserts both directions: every probe about the erased subject abstains,
+and the bystander's claim survives.</p>
+<p><code>test_export_is_readable_by_the_public_reference_reader</code>
+imports the stdlib-only reader from <code>open_format/</code> and
+asserts the claim round-trips, so portability is checked by something
+outside the engine. <code>open_format/verify_bundle.py</code> extends
+the same discipline to evidence bundles — no Fireweed import at all,
+because <em>"if you needed our code to verify our claims, you would just
+be trusting us with extra steps"</em> — and reports entries it cannot
+check as <code>not verifiable here</code> <em>"rather than silently
+skipped or, worse, counted as passes."</em></p>
+<p>What the suite does not cover: no test attaches a ledger, no test
+exercises the as-of validity query, and no test asserts a state
+transition. The README points at a retraction in a sibling repository as
+the reason its own numbers are stated so carefully; that document is
+outside this pin and is recorded here as a pointer, not as a
+citation.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Put the adjudicator on the other side of the RPC
+boundary.</strong> "The model proposes, deterministic code decides" is a
+slogan inside one process and a property across two. An agent cannot
+argue with <code>numerals_grounded</code>.</p>
+<p><strong>Type your refusals and return them.</strong> Four named
+reasons with the claim, the evidence and a remedy is what makes a gate
+usable by a caller that is itself a model. Then go one step further than
+this system does and <em>record</em> them.</p>
+<p><strong>Write the negative control into the test.</strong> Assert the
+receipt verifies, then break the source and assert it stops verifying.
+Without the second half, an instrument that always returns success
+passes.</p>
+<p><strong>If you compute a caveat, print it.</strong> The scope string
+here is exactly right and never reaches the reader. A limitation known
+only to the code is not a limitation the user has been told about.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Would sealing the graph work today?</strong>
+<code>seal()</code> and <code>attach_ledger</code> exist, and
+<code>ledger_sqlite</code> persists synchronously. Whether the MCP
+server's snapshot-based persistence and the ledger's fold-based
+reconstruction can both own the store at once was not traced, and it is
+the question that decides whether the unwired ledger is a missing line
+or a design conflict.</p>
+<p><strong>What happens to a re-proposed claim after erasure?</strong>
+The closure is removed and the <code>ERASE</code> event is discarded
+with the in-memory ledger. Remembering the same claim again with the
+same evidence appears to admit it as new. No committed test covers
+it.</p>
+<p><strong>What is in the private evaluation?</strong> The 38% and 24%
+figures, the trap corpus, the read-gate bench and
+<code>test_erasure_derived_nodes</code> are all cited from a repository
+not published at this pin. The engine source is here; the instruments
+that measured it are not.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/fireweed_mcp/server.py</code></td>
+<td>The seven tools, the gate wiring, and the hardcoded signing key</td>
+</tr>
+<tr>
+<td><code>src/fireweed/grounding.py</code></td>
+<td>The four pure admission functions</td>
+</tr>
+<tr>
+<td><code>src/fireweed/read_gate.py</code></td>
+<td>Subject and predicate grounding, and why a score cannot abstain</td>
+</tr>
+<tr>
+<td><code>src/fireweed/receipts.py</code></td>
+<td>Document hashing and byte-range span location</td>
+</tr>
+<tr>
+<td><code>src/fireweed/erasure.py</code></td>
+<td>Exact closure, <code>ErasureIncomplete</code>, and the certificate
+with its scope text</td>
+</tr>
+<tr>
+<td><code>src/fireweed/ledger.py</code></td>
+<td>The append-only hash-chained event log — built, never attached</td>
+</tr>
+<tr>
+<td><code>src/fireweed/graph.py</code></td>
+<td><code>NodeStatus.memory_state</code>, <code>Temporal</code>,
+<code>_emit</code>, <code>seal</code>, <code>attach_ledger</code></td>
+</tr>
+<tr>
+<td><code>src/fireweed/pipeline.py</code></td>
+<td>The firewall branch, supersession, and the <code>disputed</code>
+writer</td>
+</tr>
+<tr>
+<td><code>src/fireweed/semantic_encoder.py</code></td>
+<td>The pinned revision and weights fingerprint</td>
+</tr>
+<tr>
+<td><code>open_format/verify_bundle.py</code></td>
+<td>A verifier with no engine import, and what it declines to claim</td>
+</tr>
+<tr>
+<td><code>tests/test_mcp_server.py</code></td>
+<td>The protocol tests and the three must-not-return cases</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-25</strong> — <a
+href="https://github.com/Starksood/fireweed-mcp/commit/33ec45edeea262a753d8fb004689d4bf92bc2328"><code class="commit-id" title="33ec45edeea262a753d8fb004689d4bf92bc2328">33ec45ed…</code></a>
+— first reading, 9,724 lines of Python across 45 files, 7 commits since
+23 August 2026, FSL-1.1-ALv2 converting to Apache 2.0 on 1 January 2028.
+Screened before anything was read: one auto-run surface, one dependency
+file inside the seven-day cooldown, one unpinned surface, no build-time
+execution; nothing was installed and no test was run, so every claim
+here comes from reading the tree. Three marks. <code>trust_state</code>
+rests on the five-value <code>memory_state</code> filtered to
+<code>("active", "disputed")</code> at three retrieval points, with the
+report stating that two of the five states have no writer.
+<code>bitemporal</code> rests on
+<code>event_time</code>/<code>valid_from</code>/<code>valid_to</code>
+extracted at resolve time and stamped on supersession, read by the as-of
+validity query and the event-time window filter.
+<code>negative_eval</code> rests on three paired must-not-return cases
+including a real negative control on the receipt instrument.
+<code>audit_log</code> is withheld on a producer check:
+<code>ledger.py</code> and <code>ledger_sqlite.py</code> implement a
+gap-free hash-chained append-only log, and <code>attach_ledger</code>
+and <code>seal()</code> have no caller anywhere in the tree, so
+<code>_emit</code> returns early on every mutation; the only ledger ever
+constructed is a <code>SQLiteLedger(":memory:")</code> inside
+<code>forget</code>, discarded when the call returns.
+<code>tombstone</code> is withheld because a refused claim leaves no
+record of any kind. <code>scope_enforced</code> is absent — no tenant,
+user or workspace key on the read path. <code>human_review</code> is
+absent — the firewall's <code>QUARANTINE</code> verdict, documented as
+<em>"log for review"</em>, returns a <code>NoopMutation</code> and there
+is no queue. The erasure certificate is signed with
+<code>b"fireweed-mcp-key"</code>, a literal in public source, and its
+own self-limiting <code>scope</code> field is computed and not
+printed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

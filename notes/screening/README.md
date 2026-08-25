@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 184 of 332 screened at the report's current pin.**
+**Progress: 185 of 333 screened at the report's current pin.**
 
 16 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 66 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 62 |
+| Repositories with an auto-run surface (`RUNS`) | 67 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 63 |
 | Repositories with build-time execution (`EXEC`) | 143 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -53,6 +53,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram`](../../content/systems/engram.md) | `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
+| [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |

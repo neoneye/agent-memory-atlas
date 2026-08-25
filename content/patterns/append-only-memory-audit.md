@@ -163,6 +163,29 @@ And the log path defaults to `$HOME`, so a process without one has no log at all
 deletes then fail loudly, which is correct, while stores go silently unlogged,
 which is not.
 
+**[Fireweed MCP](../../systems/fireweed-mcp/) ships the guard that catches the
+defect this whole section keeps finding, and leaves it off.** Its `ledger.py` is
+a complete append-only log — gap-free `seq`, `prev_hash` chain, canonical byte
+serialization, a closed event vocabulary, and a `resolver_version` stamped into
+every payload so the offline question *"would today's resolver have decided this
+differently?"* is answerable. `attach_ledger` and `seal()` have no caller
+anywhere in the repository, so this runs on every mutation:
+
+```python
+if self._ledger is None:
+    if self._sealed:
+        raise RuntimeError(f"sealed graph: {kind} write without an attached ledger — "
+                           "every mutation must be a captured event")
+    return
+```
+
+The `return` is the corpus's most common defect and the `raise` is its fix, four
+lines apart. **If you build an audit log, build the sealed mode with it**: a
+chokepoint that fails loudly on an unlogged write converts "we forgot to wire it"
+from a silent condition into a startup error. Fireweed's is one call away from
+being on, which is the difference between this and a log that was never
+finished.
+
 **[Helix AGI](../../systems/helix-agi/) is the counterexample that shows why the
 *coverage* question comes before the tamper-evidence question.** Its
 `CognitiveJournal` is append-only JSONL, one SHA-256 per line, and its module

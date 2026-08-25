@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 332 reports.</strong></p>
+<p><strong>This page covers all 333 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4769,6 +4769,70 @@ and checks nothing about it.</li>
 covers what was refused.</li>
 <li>Do not copy when: you need multi-tenant separation, or a rejection
 that holds against the same claim arriving again.</li>
+</ul>
+<h3 id="fireweed-mcp"><a
+href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>the adjudicator is on the other side of an RPC
+boundary.</strong> <code>remember</code> takes a claim <em>and</em> the
+verbatim text being quoted, and four pure functions — subject named,
+relation order preserved, no invented numerals, nothing asserted beyond
+the span — decide before anything is stored. An agent cannot argue with
+<code>numerals_grounded</code>. Refusals are typed
+(<code>unknown_subject</code>, <code>relation_transposed</code>,
+<code>numeral_invented</code>, <code>asserts_more_than_evidence</code>)
+and return the claim, the evidence and a remedy, because <em>"a gate
+that only says 'no' cannot be worked with."</em></li>
+<li>Second idea: <strong>the clearest statement in this corpus of why a
+score cannot abstain.</strong> The read gate's docstring records the
+design it replaced —
+<code>jaccard &gt;= 0.12 OR coverage &gt;= 0.6</code> — and what it did
+live: <em>"that answered 'Priya's salary' with a hire date: the entity
+matched, the predicate did not, and coverage weights every query token
+equally."</em> A threshold always returns a best row. The gate returns
+nothing and names the term it could not ground.</li>
+<li>Third idea: <strong>a negative control on the receipt instrument, in
+the committed tests.</strong>
+<code>test_receipts_are_tamper_evident</code> asserts
+<code>1/1 checkable</code>, edits one word of the source file on disk,
+then asserts <code>0/1 checkable</code> with a <code>FAILED</code> line
+— answering its own docstring, <em>"The point of a receipt is that it
+CAN fail."</em> Two more cases assert material must not come back, each
+paired with a positive over the same store, so an empty result fails
+rather than passes. And <code>verify_bundle.py</code> has no Fireweed
+import at all: <em>"if you needed our code to verify our claims, you
+would just be trusting us with extra steps."</em></li>
+<li>Biggest risk: <strong>the record that would carry the argument is
+not kept.</strong> <code>ledger.py</code> is a gap-free hash-chained
+append-only log with a closed event vocabulary and a
+<code>resolver_version</code> stamped into every payload;
+<code>attach_ledger</code> and <code>seal()</code> have no caller
+anywhere in the tree, so <code>_emit</code> returns early on every
+mutation. The erasure certificate is signed with
+<code>b"fireweed-mcp-key"</code> — a literal in public source, so anyone
+can mint one — and written to a <code>SQLiteLedger(":memory:")</code>
+discarded when the call returns. Worst of the three: <code>erase</code>
+computes a <code>scope</code> string reading <em>"residual plaintext may
+persist in snapshots/history … NOT by this certificate,"</em> and the
+server prints the signature, the closure counts and <em>"This
+certificate is the artifact a compliance reviewer asks for"</em> — and
+not the scope. The engine wrote the sentence that prevents the
+overstatement; the server does not display it.</li>
+<li>Maturity impression: 9,724 lines of Python across 45 files, 7
+commits since 23 August 2026, FSL-1.1-ALv2 converting to Apache 2.0 on 1
+January 2028. No dependencies, no API key, no model in the server. Three
+marks. One test file of 161 lines that drives real stdio JSON-RPC
+because <em>"the thing that breaks in an MCP server is the protocol
+edge."</em> Two of the five declared <code>memory_state</code> values
+have no writer, and the <code>QUARANTINE</code> verdict documented as
+<em>"log for review"</em> returns a <code>NoopMutation</code> with no
+log and no queue.</li>
+<li>Study when: you want the write gate and the read gate as one idea
+applied twice, or the tamper-evidence test that most receipt systems in
+this corpus do not have.</li>
+<li>Do not copy when: you need the refusal to survive — nothing here
+records that a claim was refused, so re-proposing it with a longer span
+simply admits it.</li>
 </ul>
 <h3 id="aimee"><a href="../systems/aimee/"><code>aimee</code></a></h3>
 <ul>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **332 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **333 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -133,6 +133,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/feltstate/"><span class="az-id">feltstate</span><span class="az-what">Memory that can die</span><code class="az-repo">Morephine/feltstate</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/fidelis/"><span class="az-id">Fidelis Memory</span><span class="az-what">The gap is not the issue. The metric is.</span><code class="az-repo">hermes-labs-ai/fidelis</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/fireweed-mcp/"><span class="az-id">Fireweed MCP</span><span class="az-what">The gate is not a prompt</span><code class="az-repo">Starksood/fireweed-mcp</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/fx/"><span class="az-id">fx</span><span class="az-what">A read failure and an empty store are the same value</span><code class="az-repo">vercel-labs/fx</code><span class="az-caps"></span></a></li>
 </ul>
 
