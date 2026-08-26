@@ -948,22 +948,9 @@ Each of these has produced a real finding in one of the systems reviewed here.
   value-level tombstone does not survive re-derivation.
 - **Poisoned content**: write memories containing instructions, fake system
   prompts, and encoded payloads. Check what reaches the model and whether it is
-  fenced — and then keep going, because *"reducing immediate exposure alone is
-  insufficient if malicious memories remain available throughout long-horizon
-  execution."* That sentence is from **Weighted Memory Tree**
-  ([arXiv:2608.20631](https://arxiv.org/abs/2608.20631), 21 August 2026), whose
-  poisoning protocol is the most developed one this page has found: nine
-  metrics, of which four are about what happens *after* the first turn — Poison
-  Retrieval Rate, Infection Persistence, Blast Radius, and Amplification Factor,
-  beside Attack Success Rate and Task Success Rate. Its ablation is the reason to
-  copy the shape rather than the numbers: one arm cut immediate exposure and
-  still recorded *complete* infection persistence, and another kept the hierarchy
-  while dropping retention scoring, on the finding that *"treating all retained
-  memories equally allows lower-value or misleading information to continue
-  affecting reasoning."* A poisoning test that measures only what entered this
-  prompt cannot distinguish those arms. No code or data is released with the
-  paper, so the protocol is a design to borrow and the numbers are not checkable
-  here.
+  fenced — and then keep measuring after the first turn, for the reason
+  [Weighted Memory Tree](#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn)
+  gives below.
 - **Scope crossing**: write to project A, query from project B. This is a single
   assertion and it catches the most consequential class of leak.
 - **Provider failure**: kill the embedding or LLM endpoint mid-write. Does the
@@ -1420,6 +1407,63 @@ drops oldest advice first, [Fireweed MCP](../systems/fireweed-mcp/)'s read gate.
 None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
+
+### The poisoning protocol that measures what happens after the first turn
+
+*Weighted Memory Tree: Remembering What Matters for Long-Horizon LLM Agents*
+([arXiv:2608.20631](https://arxiv.org/abs/2608.20631), 21 August 2026), Dao,
+Kathalkar and Eaton. **No code and no dataset are released**, so everything below
+is a protocol to borrow and a set of numbers this page cannot check. It is here
+because the protocol is the most developed treatment of memory poisoning the
+atlas has found, and because one of its ablation arms answers a question the
+proposed test above was too weak to ask.
+
+**Nine metrics, and four of them are about persistence rather than exposure.**
+Attack Success Rate and Task Success Rate are the familiar pair. The other four
+are the contribution: **Poison Retrieval Rate**, **Infection Persistence**,
+**Blast Radius** and **Amplification Factor**, beside a Context Compression
+Ratio, prompt-token usage and latency. Poison is injected as misleading
+observations written into memory during long-horizon execution, and the question
+is not only whether the agent was fooled this turn but whether the bad record
+stayed reachable, spread, and grew.
+
+**The ablation is the finding.** One arm reduced immediate exposure and still
+recorded *complete infection persistence*, which the paper reads as: *"reducing
+immediate exposure alone is insufficient if malicious memories remain available
+throughout long-horizon execution."* Another kept the hierarchical structure and
+dropped retention scoring, on the observation that *"treating all retained
+memories equally allows lower-value or misleading information to continue
+affecting reasoning."*
+
+**Why that matters to every system on this site.** A poisoning test that measures
+only what entered *this* prompt cannot tell those arms apart from a working one.
+It is the same distinction the [rejected-value
+tombstone](../patterns/rejected-value-tombstone/) pattern turns on, reached from
+the security side instead of the correction side: **suppressing a memory and
+removing it look identical for one turn and diverge over a session.** Several
+systems in this corpus withhold on the read path and retain the row —
+[Fireweed MCP](../systems/fireweed-mcp/)'s read gate, [Hermes
+Agent](../systems/hermes-agent/)'s `[BLOCKED:` placeholder, [OpenCode
+Memory](../systems/opencode-mem/)'s scope predicate — which is correct for
+correction and is exactly the arrangement this protocol would score as
+*persistent*. Neither answer is wrong; the point is that only a
+multi-turn measurement tells you which one you built.
+
+The full-system figures, recorded as unverifiable: attack success rate 0.419,
+poison retrieval rate 0.097, blast radius 0.315, amplification factor 0.965,
+with the lowest infection persistence and the highest task success rate of the
+arms compared. Against a linear-memory baseline the paper reports accuracy up
+9.97 percentage points and prompt tokens down 32.8% on GAIA-Text across
+Qwen3-8B, Gemma 4 E4B and Llama-3.1-8B. Its stated limitation is narrow and
+honest: evaluation is confined to the GAIA family, whose two sets *"share the
+same task construction and answer format."*
+
+The mechanism the protocol was built to test — a four-value lifecycle over
+`{ACTIVE, COMPLETED, FOLDED, OBSOLETE}` gating prompt eligibility, and a
+retention score revised by execution outcome and by
+[selection-based decay](../patterns/decay-and-reinforcement/) — is described in
+the [comparative report](../compare/) and on the decay pattern page. It has no
+report of its own because there is no repository to pin.
 
 ### ForgetEval — the one benchmark that scores the control plane
 

@@ -1289,25 +1289,10 @@ because supersession without a value-level tombstone does not survive
 re-derivation.</li>
 <li><strong>Poisoned content</strong>: write memories containing
 instructions, fake system prompts, and encoded payloads. Check what
-reaches the model and whether it is fenced — and then keep going,
-because <em>"reducing immediate exposure alone is insufficient if
-malicious memories remain available throughout long-horizon
-execution."</em> That sentence is from <strong>Weighted Memory
-Tree</strong> (<a
-href="https://arxiv.org/abs/2608.20631">arXiv:2608.20631</a>, 21 August
-2026), whose poisoning protocol is the most developed one this page has
-found: nine metrics, of which four are about what happens <em>after</em>
-the first turn — Poison Retrieval Rate, Infection Persistence, Blast
-Radius, and Amplification Factor, beside Attack Success Rate and Task
-Success Rate. Its ablation is the reason to copy the shape rather than
-the numbers: one arm cut immediate exposure and still recorded
-<em>complete</em> infection persistence, and another kept the hierarchy
-while dropping retention scoring, on the finding that <em>"treating all
-retained memories equally allows lower-value or misleading information
-to continue affecting reasoning."</em> A poisoning test that measures
-only what entered this prompt cannot distinguish those arms. No code or
-data is released with the paper, so the protocol is a design to borrow
-and the numbers are not checkable here.</li>
+reaches the model and whether it is fenced — and then keep measuring
+after the first turn, for the reason <a
+href="#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">Weighted
+Memory Tree</a> gives below.</li>
 <li><strong>Scope crossing</strong>: write to project A, query from
 project B. This is a single assertion and it catches the most
 consequential class of leak.</li>
@@ -1905,6 +1890,69 @@ them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the
 operators are a typed answer: classify each line, then let type decide
 fidelity.</p>
+<h3
+id="the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">The
+poisoning protocol that measures what happens after the first turn</h3>
+<p><em>Weighted Memory Tree: Remembering What Matters for Long-Horizon
+LLM Agents</em> (<a
+href="https://arxiv.org/abs/2608.20631">arXiv:2608.20631</a>, 21 August
+2026), Dao, Kathalkar and Eaton. <strong>No code and no dataset are
+released</strong>, so everything below is a protocol to borrow and a set
+of numbers this page cannot check. It is here because the protocol is
+the most developed treatment of memory poisoning the atlas has found,
+and because one of its ablation arms answers a question the proposed
+test above was too weak to ask.</p>
+<p><strong>Nine metrics, and four of them are about persistence rather
+than exposure.</strong> Attack Success Rate and Task Success Rate are
+the familiar pair. The other four are the contribution: <strong>Poison
+Retrieval Rate</strong>, <strong>Infection Persistence</strong>,
+<strong>Blast Radius</strong> and <strong>Amplification Factor</strong>,
+beside a Context Compression Ratio, prompt-token usage and latency.
+Poison is injected as misleading observations written into memory during
+long-horizon execution, and the question is not only whether the agent
+was fooled this turn but whether the bad record stayed reachable,
+spread, and grew.</p>
+<p><strong>The ablation is the finding.</strong> One arm reduced
+immediate exposure and still recorded <em>complete infection
+persistence</em>, which the paper reads as: <em>"reducing immediate
+exposure alone is insufficient if malicious memories remain available
+throughout long-horizon execution."</em> Another kept the hierarchical
+structure and dropped retention scoring, on the observation that
+<em>"treating all retained memories equally allows lower-value or
+misleading information to continue affecting reasoning."</em></p>
+<p><strong>Why that matters to every system on this site.</strong> A
+poisoning test that measures only what entered <em>this</em> prompt
+cannot tell those arms apart from a working one. It is the same
+distinction the <a
+href="../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> pattern turns on, reached from the security side instead
+of the correction side: <strong>suppressing a memory and removing it
+look identical for one turn and diverge over a session.</strong> Several
+systems in this corpus withhold on the read path and retain the row — <a
+href="../systems/fireweed-mcp/">Fireweed MCP</a>'s read gate, <a
+href="../systems/hermes-agent/">Hermes Agent</a>'s
+<code>[BLOCKED:</code> placeholder, <a
+href="../systems/opencode-mem/">OpenCode Memory</a>'s scope predicate —
+which is correct for correction and is exactly the arrangement this
+protocol would score as <em>persistent</em>. Neither answer is wrong;
+the point is that only a multi-turn measurement tells you which one you
+built.</p>
+<p>The full-system figures, recorded as unverifiable: attack success
+rate 0.419, poison retrieval rate 0.097, blast radius 0.315,
+amplification factor 0.965, with the lowest infection persistence and
+the highest task success rate of the arms compared. Against a
+linear-memory baseline the paper reports accuracy up 9.97 percentage
+points and prompt tokens down 32.8% on GAIA-Text across Qwen3-8B, Gemma
+4 E4B and Llama-3.1-8B. Its stated limitation is narrow and honest:
+evaluation is confined to the GAIA family, whose two sets <em>"share the
+same task construction and answer format."</em></p>
+<p>The mechanism the protocol was built to test — a four-value lifecycle
+over <code>{ACTIVE, COMPLETED, FOLDED, OBSOLETE}</code> gating prompt
+eligibility, and a retention score revised by execution outcome and by
+<a href="../patterns/decay-and-reinforcement/">selection-based decay</a>
+— is described in the <a href="../compare/">comparative report</a> and
+on the decay pattern page. It has no report of its own because there is
+no repository to pin.</p>
 <h3
 id="forgeteval--the-one-benchmark-that-scores-the-control-plane">ForgetEval
 — the one benchmark that scores the control plane</h3>

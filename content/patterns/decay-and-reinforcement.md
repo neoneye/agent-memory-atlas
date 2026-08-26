@@ -270,12 +270,44 @@ generalisable argument is in the file header: a decay-and-reinforcement blend is
 only safe where its terms are smaller than the margin separating a right answer
 from a wrong one.
 
+**The mirror of that rule is a decay signal, and it comes from a paper rather
+than a repository.** *Weighted Memory Tree*
+([arXiv:2608.20631](https://arxiv.org/abs/2608.20631), 21 August 2026) revises a
+node's retention score from two events. One is the recorded execution outcome of
+an action, `ω ∈ {success, failure}` — outcome, not similarity. The other is
+**selection-based decay**: a memory that was *eligible for the prompt and not
+chosen* decays, while a chosen one has its missed-selection count reset.
+
+Set that beside NOOA's rule above and the selection event becomes two-sided.
+NOOA says do not let the ranker reinforce what the ranker chose to show. This
+says the ranker's *rejections* are the signal you were missing — a memory that
+kept being considered and passed over has been measured against its competition
+on live queries, which is a stronger statement about its worth than any decay
+constant fitted to the clock. Wall-clock decay asks how old a memory is;
+missed-selection decay asks how often it lost.
+
+Two caveats belong with it. The signal is only as good as the candidate set: a
+memory that never becomes eligible never decays by this route, so it needs a
+floor from somewhere else. And it inherits the failure NOOA names in the other
+direction — if the eligibility filter is itself the ranker, the system is again
+grading its own decisions, and *not-selected* has to mean *lost a comparison*
+rather than *was never a candidate*.
+
+**This is a design to borrow, not a result to cite.** The paper releases no code
+and no data, so nothing here was checked against an implementation; its reported
+gains are recorded on the [benchmarks page](../../benchmarks/) as unverifiable.
+Its folding is worth the same note: completed branches fold into summaries while
+the system retains *"access to folded context"*, and resumed branches reopen, so
+the compaction is reversible by construction — the property the corpus usually
+finds missing on the *other* side of a fold.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
 - Assign decay policy by memory kind, scope, and validity, not one global rate.
 - Record the reason and actor for every reinforcement.
 - Do not reinforce a memory the system itself chose to inject.
+- Consider decaying one that was eligible and repeatedly not chosen, and be sure *not chosen* means it lost a comparison rather than never entering one.
 - Bound reinforcement and prevent one retrieval loop from self-amplifying.
 - Protect rejected-value tombstones and correction history from decay.
 - Mark stale before deleting when reversibility matters.

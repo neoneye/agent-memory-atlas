@@ -389,6 +389,39 @@ exact-tie-break on the direct routes. The generalisable argument is in
 the file header: a decay-and-reinforcement blend is only safe where its
 terms are smaller than the margin separating a right answer from a wrong
 one.</p>
+<p><strong>The mirror of that rule is a decay signal, and it comes from
+a paper rather than a repository.</strong> <em>Weighted Memory Tree</em>
+(<a href="https://arxiv.org/abs/2608.20631">arXiv:2608.20631</a>, 21
+August 2026) revises a node's retention score from two events. One is
+the recorded execution outcome of an action,
+<code>ω ∈ {success, failure}</code> — outcome, not similarity. The other
+is <strong>selection-based decay</strong>: a memory that was
+<em>eligible for the prompt and not chosen</em> decays, while a chosen
+one has its missed-selection count reset.</p>
+<p>Set that beside NOOA's rule above and the selection event becomes
+two-sided. NOOA says do not let the ranker reinforce what the ranker
+chose to show. This says the ranker's <em>rejections</em> are the signal
+you were missing — a memory that kept being considered and passed over
+has been measured against its competition on live queries, which is a
+stronger statement about its worth than any decay constant fitted to the
+clock. Wall-clock decay asks how old a memory is; missed-selection decay
+asks how often it lost.</p>
+<p>Two caveats belong with it. The signal is only as good as the
+candidate set: a memory that never becomes eligible never decays by this
+route, so it needs a floor from somewhere else. And it inherits the
+failure NOOA names in the other direction — if the eligibility filter is
+itself the ranker, the system is again grading its own decisions, and
+<em>not-selected</em> has to mean <em>lost a comparison</em> rather than
+<em>was never a candidate</em>.</p>
+<p><strong>This is a design to borrow, not a result to cite.</strong>
+The paper releases no code and no data, so nothing here was checked
+against an implementation; its reported gains are recorded on the <a
+href="../../benchmarks/">benchmarks page</a> as unverifiable. Its
+folding is worth the same note: completed branches fold into summaries
+while the system retains <em>"access to folded context"</em>, and
+resumed branches reopen, so the compaction is reversible by construction
+— the property the corpus usually finds missing on the <em>other</em>
+side of a fold.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>
@@ -396,6 +429,9 @@ one.</p>
 global rate.</li>
 <li>Record the reason and actor for every reinforcement.</li>
 <li>Do not reinforce a memory the system itself chose to inject.</li>
+<li>Consider decaying one that was eligible and repeatedly not chosen,
+and be sure <em>not chosen</em> means it lost a comparison rather than
+never entering one.</li>
 <li>Bound reinforcement and prevent one retrieval loop from
 self-amplifying.</li>
 <li>Protect rejected-value tombstones and correction history from

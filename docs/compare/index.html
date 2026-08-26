@@ -24112,44 +24112,32 @@ there were one.</strong> <em>Weighted Memory Tree: Remembering What
 Matters for Long-Horizon LLM Agents</em> (<a
 href="https://arxiv.org/abs/2608.20631">arXiv:2608.20631</a>, 21 August
 2026), Dao, Kathalkar and Eaton, sixteen pages. No code repository, no
-dataset, and nothing in the text announcing a release — so this is the
-<a
-href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md">EvoHarness-RL</a>
-call: an on-topic paper with no artifact to pin. <strong>The shape is
-worth recording because two of its fields are ones this corpus
-scores.</strong> A node carries content, node type, parent, retention
-score, missed-selection count, execution metadata — and a
-<strong>lifecycle state over
+dataset, and nothing in the text announcing a release — the same call
+recorded for EvoHarness-RL: an on-topic paper with no artifact to pin.
+<strong>Two of its fields are ones this corpus scores.</strong> A node
+carries content, node type, parent, retention score, missed-selection
+count, execution metadata, and a <strong>lifecycle state over
 <code>{ACTIVE, COMPLETED, FOLDED, OBSOLETE}</code></strong>, where
 <em>"Lifecycle states determine eligibility for prompt
-construction."</em> A four-value discrete status held apart from a
-float, deciding what reaches the model, is the <code>trust_state</code>
-shape; the poisoning suite is the <code>negative_eval</code> shape.
-Neither is markable without code. <strong>Its decay rule is the part to
-steal.</strong> Retention is revised by two signals: the recorded
-execution outcome of an action, <code>ω ∈ {success, failure}</code>, and
-<em>selection-based decay</em> — a memory that was eligible for the
-prompt and not chosen decays, while a chosen one has its
-missed-selection count reset. Decaying on <em>not being picked when it
-could have been</em> is a sharper signal than the wall-clock decay most
-systems in this corpus use, because it is measured against the
-competition rather than against the calendar. Folding is reversible:
-completed branches fold into summaries while the system retains
-<em>"access to folded context,"</em> and resumed branches reopen.
-<strong>And the finding that generalises past the paper</strong> is in
-its poisoning ablation, quoted on the <a
-href="../benchmarks/">benchmarks page</a>: one arm reduced immediate
-exposure and still recorded complete infection persistence, because
-<em>"reducing immediate exposure alone is insufficient if malicious
-memories remain available throughout long-horizon execution."</em> That
-is the distinction between suppressing a memory and removing it, arrived
-at from the security side rather than the correction side. Reported
-against linear memory: accuracy up 9.97 percentage points and prompt
-tokens down 32.8% on GAIA-Text across three open models, with a
-full-system attack success rate of 0.419 and poison retrieval rate of
-0.097. None of it is checkable at any commit. The stated limitation is
-narrow and honest — evaluation confined to the GAIA family, whose two
-sets <em>"share the same task construction and answer format."</em></li>
+construction."</em> A four-value discrete status held apart from a float
+and deciding what reaches the model is the <code>trust_state</code>
+shape, and the poisoning suite is the <code>negative_eval</code> shape;
+neither is markable without code, which is the whole reason this is a
+paragraph rather than a report. Folding is reversible — completed
+branches fold into summaries while the system retains <em>"access to
+folded context,"</em> and resumed branches reopen. <strong>Its two
+transferable pieces are recorded where a builder would look for them
+rather than here</strong>: the retention rule, revised by execution
+outcome and by decaying a memory that was eligible and not chosen, is on
+the <a href="../patterns/decay-and-reinforcement/">decay pattern
+page</a>; the nine-metric poisoning protocol and the ablation showing
+that reducing immediate exposure leaves infection persistence complete
+are on the <a
+href="../benchmarks/#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">benchmarks
+page</a>. Its reported gains — 9.97 percentage points of accuracy over
+linear memory and 32.8% fewer prompt tokens on GAIA-Text across three
+open models — are recorded in both places as unverifiable at any
+commit.</li>
 <li><strong>A count in the headline findings drifted for want of a
 binding, and the hedge beside it is why.</strong> The gaps section read
 <em>"Sixteen, in this entire atlas, can record that a value was rejected
