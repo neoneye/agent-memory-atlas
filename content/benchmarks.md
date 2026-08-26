@@ -948,7 +948,22 @@ Each of these has produced a real finding in one of the systems reviewed here.
   value-level tombstone does not survive re-derivation.
 - **Poisoned content**: write memories containing instructions, fake system
   prompts, and encoded payloads. Check what reaches the model and whether it is
-  fenced.
+  fenced — and then keep going, because *"reducing immediate exposure alone is
+  insufficient if malicious memories remain available throughout long-horizon
+  execution."* That sentence is from **Weighted Memory Tree**
+  ([arXiv:2608.20631](https://arxiv.org/abs/2608.20631), 21 August 2026), whose
+  poisoning protocol is the most developed one this page has found: nine
+  metrics, of which four are about what happens *after* the first turn — Poison
+  Retrieval Rate, Infection Persistence, Blast Radius, and Amplification Factor,
+  beside Attack Success Rate and Task Success Rate. Its ablation is the reason to
+  copy the shape rather than the numbers: one arm cut immediate exposure and
+  still recorded *complete* infection persistence, and another kept the hierarchy
+  while dropping retention scoring, on the finding that *"treating all retained
+  memories equally allows lower-value or misleading information to continue
+  affecting reasoning."* A poisoning test that measures only what entered this
+  prompt cannot distinguish those arms. No code or data is released with the
+  paper, so the protocol is a design to borrow and the numbers are not checkable
+  here.
 - **Scope crossing**: write to project A, query from project B. This is a single
   assertion and it catches the most consequential class of leak.
 - **Provider failure**: kill the embedding or LLM endpoint mid-write. Does the
