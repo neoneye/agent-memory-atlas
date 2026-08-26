@@ -8,6 +8,31 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-26-where-the-producer-sits-decides-what-the-log-can-answer.md](2026-08-26-where-the-producer-sits-decides-what-the-log-can-answer.md) —
+  synthesis over six readings in three days. Six audit stories sorted on one
+  variable — **where the code that writes the log lives** — from a database
+  trigger (aimee, nine tables, coverage is a schema question rather than a
+  discipline question), through a chokepoint every write already passes
+  (OpenWorker, where memory is audited *because* memory is a tool), through
+  per-call-site emits gated on an optional argument (OpenCompany), through built
+  and never attached (Fireweed at its first pin), to **attached to the wrong
+  side** — OpenExecutive, whose fourteen declared event types are all reads, so
+  a log that is better built than OpenWorker's answers strictly less about
+  memory. Quality of implementation and coverage are independent axes and only
+  one is visible from the audit module. Ends with the correction that produced
+  it: a system can have two logs, and the one covering memory may not be the one
+  named like an audit trail.
+- [2026-08-26-a-superlative-is-a-claim-about-your-own-search.md](2026-08-26-a-superlative-is-a-claim-about-your-own-search.md) —
+  method, after three corrections in four days. Reading **a macro and not its
+  sibling** (aimee's scope rank, twenty lines above the filter that does the
+  excluding); reading **a directory and not the tree** (OpenWorker, where two
+  marks sat in `tests/` and beside the engine); and writing **a superlative that
+  was a fact about my search** — "still not something this page has found" —
+  falsified within a day by *The Compaction Cliff*, whose three checked claims
+  all recompute from committed files. The first two have mechanical defences and
+  both are now written into the repository. The third does not: an undated
+  superlative is a freshness stamp with the date removed. **If a claim would be
+  falsified by one more repository, write the count instead.**
 - [2026-08-24-four-shapes-that-recurred-in-one-week.md](2026-08-24-four-shapes-that-recurred-in-one-week.md) —
   synthesis over ~fifteen readings. **The assertion that cannot fail**, found
   four times in unrelated repositories (a vacuous `every` over an
