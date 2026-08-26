@@ -6,10 +6,18 @@ root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
-revision: df44e76c6c6a919977806feed9549bc6a892932d
-revision_url: https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d
-analyzed_at: 2026-07-28
+revision: 6cf33f654437f457dc941c46e55bd3cd05b4da36
+revision_url: https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36
+analyzed_at: 2026-08-26
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "REJECTED as a durable, prune-exempt state that every write path routes through | src/verel/memory/local.py:346, src/verel/memory/pg_backend.py:535, src/verel/memory/review.py:14,:61,:77, src/verel/memory/remember.py:96-115 | rejection is keyed on the record and survives every path that would otherwise revive it: `local.py` refuses to let a demote *\\\"un-reject a tombstone back to a recallable candidate\\\"*, `pg_backend.py` keeps `REJECTED` prune-exempt in `rejected_values` alongside verified rows, and corroboration cannot re-promote a rejected fact. The guard reuses it rather than building a parallel deny-list: a fact whose canonical value carries a taint key from the source scan is written and immediately floored with `contradict(rec.id, delta=1.0)` *\\\"so the backend own contradict path seeds the durable rejected-value tombstone — a later restate can not launder it in.\\\"* `review.py` tells a human the same thing from the other side: a value that is genuinely correct now must be *\\\"written as a new fact\\\"* rather than un-rejected | tests/test_guard_memory.py"
+  trust_state: "Trust, a three-value enum held apart from the confidence float | src/verel/memory/view.py:65-68,:79-101 | `class Trust(str, Enum)` is `CANDIDATE` (*\\\"written, not yet promoted\\\"*), `VERIFIED` (*\\\"passed the held-out, attested eval gate\\\"*) and `REJECTED` (*\\\"contradicted / failed promotion\\\"*), stored on the record beside a separate `epistemic_confidence`, so the status is a field rather than a threshold on a score. `REJECTED` withholds: recall filters it out and the tombstone evidence above keeps it out. Promotion to `VERIFIED` requires an attested gate rather than accumulation — corroboration raises confidence and never grants the tier, because *\\\"raw source strings are self-asserted, so without an authenticator corroboration NEVER promotes\\\"* | tests/test_lattice.py:75"
+  bitemporal: "valid_from and valid_to on the record, with an as-of read | src/verel/memory/view.py:97-101,:264,:377, src/verel/memory/__init__.py:41,:76 | the record carries a validity interval separate from `created_ts` and `last_recall_ts`, with the open case written down — *\\\"`valid_to == 0.0` is an OPEN interval (still valid)\\\"*. Superseding a value stamps the prior interval closed and the correction chain preserves it, so an earlier belief keeps its own window rather than being overwritten. `_interval_contains(valid_from, valid_to, t)` is the predicate, and `recall_as_of` and `value_as_of` are exported from the package, so *what did this store hold on that date* is answerable rather than implied | not directly asserted in a committed case at this pin"
+  scope_enforced: "scope applied in the SQL and again on the candidate set | src/verel/memory/local.py:251,:283,:409 | the default FTS5 lexical path does *\\\"SQL-side scope/kind/rejected filtering\\\"* rather than filtering after ranking, and the candidate list is narrowed again with `c.scope == scope or c.scope == \\\"global\\\"` so a global row is visible everywhere and a scoped row is not. A third filter runs on the record path at :409 | tests/test_lance_contract.py:92 asserts a query under a hostile scope returns nothing, commented *\\\"matches nothing; no leak\\\"*"
+  audit_log: "MemoryAudit, hash-chained and wrapped around any backend at the Protocol seam | src/verel/memory/audit.py:1-18 | *\\\"a hash-chained, append-only log of every trust-layer mutation\\\"* recording `{seq, ts, actor, action, record_id, before, after}`, each entry committing to its predecessor by SHA-256. `AuditedMemory` wraps *\\\"ANY MemoryView backend (local/postgres/lancedb/redis/mem0/remote)\\\"* at the Protocol seam, so coverage is a property of the wrapper rather than of each backend remembering to log. The module states its own limit rather than leaving it implied: it is *\\\"NOT a signed log\\\"* and is *\\\"defense-in-depth, not a trust boundary\\\"*, since the process that writes the log can also write the store | tests/test_memory_audit.py"
+  human_review: "review.py — a pending queue, an approve and a reject, each carrying the reviewer | src/verel/memory/review.py:37,:49,:75 | `pending(mem, scope=, kind=)` lists what is awaiting judgement, `approve(mem, record_id, reviewed_by=)` promotes it and `reject(mem, record_id, reviewed_by=, ...)` refuses it — the reviewer identity is a required keyword on both verdicts rather than an optional annotation. The rejection is durable and *\\\"invisible to recall from now on\\\"*, and the module routes it through the store own contradict path so a human verdict and a machine contradiction leave the same kind of record | tests/test_guard_memory.py"
+  negative_eval: "committed cases asserting a query returns nothing, across three backends | tests/test_lance_contract.py:92, tests/test_memory_fts.py:59,:69, tests/test_lattice.py:75, tests/test_antientropy.py:51 | `assert mem.recall(\\\"max-width card width\\\", scope=evil) == []` under a hostile scope, commented *\\\"matches nothing; no leak\\\"*. The FTS pair is the stronger shape: after an edit, `recall(\\\"dark\\\", scope=...) == []` because *\\\"old text no longer matches\\\"*, and after a delete `recall(\\\"transient\\\", ...) == []` because it is *\\\"gone from the FTS index too\\\"* — an assertion about the index rather than only about the row. The lattice case asserts a recall is empty for a scope that is *\\\"nothing relevant + not rejected\\\"*, which separates an empty result from a suppressed one | this is the test"
 stack_storage: "sqlite, delegated"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -467,6 +475,48 @@ Risks:
 - Correctness of attestation/authenticator depends on external integration.
 - The many security-oriented mechanisms require discipline to preserve when extending.
 
+**The ingress guard is the newest subsystem and it cuts poison before the
+extractor sees it.** `verel.guard` grades a source document — HTML, Markdown,
+RTF, ODF, PPTX, XLSX, PDF and image metadata — for hidden content and injection
+payloads, and `remember()` takes the resulting report as a parameter. If it
+failed, extraction stops:
+
+> *"`guard` — a `verel.guard` Report over the SOURCE document(s). If it FAILed,
+> extraction is REFUSED outright and `chat` is never called: the hostile
+> transcript never reaches the extractor LLM (fail closed). This is the
+> anti-worm cut at the ingestion boundary."*
+
+Three properties make it more than a scanner.
+
+**A tainted value is tombstoned, not merely dropped.** A fact whose canonical
+value contains one of the `taint_keys` from the source scan is written and then
+floored: `mem.contradict(rec.id, delta=1.0)`, with the reason stated in the
+comment — *"so the backend's own contradict path seeds the durable
+rejected-value tombstone — a later restate can't launder it in."* Routing the
+refusal through the store's existing rejection machinery rather than a parallel
+deny-list is the right instinct: one durable path, one set of guarantees.
+
+**The replication step is checked separately.** `check_propagation` scans a
+*generated artifact* for tainted keys carried over from the prior report, and
+calls a match CRITICAL — *"the worm's replication step, caught before the file
+propagates."* Most defences in this corpus ask whether poison reached the model
+this turn. This one asks whether it reached the output, which is where a worm
+becomes someone else's ingress.
+
+**And an untrusted transcript cannot touch control state.** A fact colliding
+with a reserved key or a server-managed non-`FACT` record — a skill, an author
+trust, a rule — is refused outright, and corroboration raises confidence
+without granting a trust tier, because *"raw `source` strings are self-asserted,
+so without an authenticator corroboration NEVER promotes — a single caller can't
+forge `VERIFIED` by minting two source labels."*
+
+Set beside the poisoning taxonomy on the [benchmarks
+page](../../benchmarks/#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn),
+this is the implemented answer to the finding recorded there: reducing immediate
+exposure is insufficient if the payload stays reachable. Here the refusal is
+durable by construction, and the propagation check covers the blast-radius axis
+that a single-turn test cannot see.
+
 ## 10. Tests, Evals, and Benchmarks
 
 Verel has strong memory-specific tests:
@@ -580,6 +630,14 @@ Add consolidation/promotion/replication later.
 - Tests: `tests/test_memory*.py`, `tests/test_consolidation.py`, `tests/test_promotion.py`, `tests/test_lattice.py`.
 
 ## History
+
+**2026-08-26** — [`6cf33f654437f457dc941c46e55bd3cd05b4da36`](https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36) — re-pinned 13 commits on, through v1.9.3, v1.9.4 and v1.10.0. The previous pin was checked for reachability before anything else, given the history below: it is an ancestor of `HEAD` on `main`. Screened again: no auto-run surface, one build-time execution surface, one unpinned surface and one file inside the seven-day cooldown; nothing was installed and nothing was run. **All seven marks hold, and each was re-checked against the code rather than carried forward or taken from the project's own rubric** — `local.py` refuses to let demote un-reject a tombstone, `pg_backend.py` keeps `REJECTED` prune-exempt in `rejected_values`, and `review.py` routes a human rejection through the same contradict path with the instruction that a fact which is *"genuinely correct now"* be written as a new fact rather than un-rejected.
+
+The new subsystem is `verel.guard`, covered above: a document-ingress grader across eight formats, a fail-closed cut that refuses extraction before the transcript reaches the extractor, taint keys that tombstone rather than drop, and a propagation check over generated artifacts.
+
+One bug in range is worth recording because of how it was found and what it damaged. A memory store other than the default was appending its mutations to the operator's **global** audit log, *"polluting the real audit history with events for records that store never held."* It surfaced while the project was capturing evidence for this report's section 12 — a temporary-database test run wrote four entries into the real log — and the fix routes a non-default local store to a sidecar beside its own database. An audit log that accepts events from stores it does not describe is a quiet corruption of exactly the property the mark is awarded for.
+
+**A standing caveat belongs with this report rather than in its History.** The project ships `memory/rubric.py`, which grades itself against this atlas's seven capabilities with a live probe per criterion, and its documentation now answers this report's open questions directly. That is a reasonable thing for a project to do and it creates a reading hazard: a system optimising against a published rubric will satisfy the rubric's letter first. Every mark above is stated against a file and a line read here, and none rests on the project's probe or on its answers.
 
 **2026-07-28** — [`df44e76c6c6a919977806feed9549bc6a892932d`](https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d) — Re-pinned. The project ships `memory/rubric.py`, which grades itself against this atlas's capabilities by running a live behavioural probe per criterion.
 

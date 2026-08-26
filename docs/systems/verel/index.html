@@ -106,14 +106,14 @@ and defensive recall.</p>
               <strong>amitpatole/verel</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d" title="df44e76c6c6a919977806feed9549bc6a892932d">
+            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36" title="6cf33f654437f457dc941c46e55bd3cd05b4da36">
               <span>Analyzed revision</span>
-              <code>df44e76c…</code>
+              <code>6cf33f65…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-08-26</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -641,6 +641,51 @@ integration.</li>
 <li>The many security-oriented mechanisms require discipline to preserve
 when extending.</li>
 </ul>
+<p><strong>The ingress guard is the newest subsystem and it cuts poison
+before the extractor sees it.</strong> <code>verel.guard</code> grades a
+source document — HTML, Markdown, RTF, ODF, PPTX, XLSX, PDF and image
+metadata — for hidden content and injection payloads, and
+<code>remember()</code> takes the resulting report as a parameter. If it
+failed, extraction stops:</p>
+<blockquote>
+<p><em>"<code>guard</code> — a <code>verel.guard</code> Report over the
+SOURCE document(s). If it FAILed, extraction is REFUSED outright and
+<code>chat</code> is never called: the hostile transcript never reaches
+the extractor LLM (fail closed). This is the anti-worm cut at the
+ingestion boundary."</em></p>
+</blockquote>
+<p>Three properties make it more than a scanner.</p>
+<p><strong>A tainted value is tombstoned, not merely dropped.</strong> A
+fact whose canonical value contains one of the <code>taint_keys</code>
+from the source scan is written and then floored:
+<code>mem.contradict(rec.id, delta=1.0)</code>, with the reason stated
+in the comment — <em>"so the backend's own contradict path seeds the
+durable rejected-value tombstone — a later restate can't launder it
+in."</em> Routing the refusal through the store's existing rejection
+machinery rather than a parallel deny-list is the right instinct: one
+durable path, one set of guarantees.</p>
+<p><strong>The replication step is checked separately.</strong>
+<code>check_propagation</code> scans a <em>generated artifact</em> for
+tainted keys carried over from the prior report, and calls a match
+CRITICAL — <em>"the worm's replication step, caught before the file
+propagates."</em> Most defences in this corpus ask whether poison
+reached the model this turn. This one asks whether it reached the
+output, which is where a worm becomes someone else's ingress.</p>
+<p><strong>And an untrusted transcript cannot touch control
+state.</strong> A fact colliding with a reserved key or a server-managed
+non-<code>FACT</code> record — a skill, an author trust, a rule — is
+refused outright, and corroboration raises confidence without granting a
+trust tier, because <em>"raw <code>source</code> strings are
+self-asserted, so without an authenticator corroboration NEVER promotes
+— a single caller can't forge <code>VERIFIED</code> by minting two
+source labels."</em></p>
+<p>Set beside the poisoning taxonomy on the <a
+href="../../benchmarks/#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">benchmarks
+page</a>, this is the implemented answer to the finding recorded there:
+reducing immediate exposure is insufficient if the payload stays
+reachable. Here the refusal is durable by construction, and the
+propagation check covers the blast-radius axis that a single-turn test
+cannot see.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>Verel has strong memory-specific tests:</p>
@@ -769,6 +814,46 @@ transcripts?</li>
 <code>tests/test_lattice.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-26</strong> — <a
+href="https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36"><code class="commit-id" title="6cf33f654437f457dc941c46e55bd3cd05b4da36">6cf33f65…</code></a>
+— re-pinned 13 commits on, through v1.9.3, v1.9.4 and v1.10.0. The
+previous pin was checked for reachability before anything else, given
+the history below: it is an ancestor of <code>HEAD</code> on
+<code>main</code>. Screened again: no auto-run surface, one build-time
+execution surface, one unpinned surface and one file inside the
+seven-day cooldown; nothing was installed and nothing was run.
+<strong>All seven marks hold, and each was re-checked against the code
+rather than carried forward or taken from the project's own
+rubric</strong> — <code>local.py</code> refuses to let demote un-reject
+a tombstone, <code>pg_backend.py</code> keeps <code>REJECTED</code>
+prune-exempt in <code>rejected_values</code>, and <code>review.py</code>
+routes a human rejection through the same contradict path with the
+instruction that a fact which is <em>"genuinely correct now"</em> be
+written as a new fact rather than un-rejected.</p>
+<p>The new subsystem is <code>verel.guard</code>, covered above: a
+document-ingress grader across eight formats, a fail-closed cut that
+refuses extraction before the transcript reaches the extractor, taint
+keys that tombstone rather than drop, and a propagation check over
+generated artifacts.</p>
+<p>One bug in range is worth recording because of how it was found and
+what it damaged. A memory store other than the default was appending its
+mutations to the operator's <strong>global</strong> audit log,
+<em>"polluting the real audit history with events for records that store
+never held."</em> It surfaced while the project was capturing evidence
+for this report's section 12 — a temporary-database test run wrote four
+entries into the real log — and the fix routes a non-default local store
+to a sidecar beside its own database. An audit log that accepts events
+from stores it does not describe is a quiet corruption of exactly the
+property the mark is awarded for.</p>
+<p><strong>A standing caveat belongs with this report rather than in its
+History.</strong> The project ships <code>memory/rubric.py</code>, which
+grades itself against this atlas's seven capabilities with a live probe
+per criterion, and its documentation now answers this report's open
+questions directly. That is a reasonable thing for a project to do and
+it creates a reading hazard: a system optimising against a published
+rubric will satisfy the rubric's letter first. Every mark above is
+stated against a file and a line read here, and none rests on the
+project's probe or on its answers.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d"><code class="commit-id" title="df44e76c6c6a919977806feed9549bc6a892932d">df44e76c…</code></a>
 — Re-pinned. The project ships <code>memory/rubric.py</code>, which
