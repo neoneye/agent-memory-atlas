@@ -6,25 +6,28 @@ root: ../..
 page_kind: system
 source_name: "tickernelz/opencode-mem"
 source_url: https://github.com/tickernelz/opencode-mem
-revision: 8cba720736ff8d3f6315ced14362259efc301899
-revision_url: https://github.com/tickernelz/opencode-mem/commit/8cba720736ff8d3f6315ced14362259efc301899
-analyzed_at: 2026-08-09
-capabilities: "scope_enforced"
+revision: d1d0eb01b5efed517da4ae31baa7666768e86cfe
+revision_url: https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe
+analyzed_at: 2026-08-26
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "two layers — a per-scope database file and a predicate on every vector read | src/services/turso/shard-manager.ts:96-120,:295-340, src/services/turso/vector-search.ts:169,:246,:283,:392,:441,:505, src/services/memory-scope.ts:7-11 | memories for a scope live in their own libSQL file: `getShardPath(scope, scopeHash, shardIndex)` resolves `~/.opencode-mem/{user,project}s/…` under a hash `assertSafeScopeHash` requires to be sixteen lowercase hex characters, so a foreign scope is a different file rather than a different row-set. On top of that `container_tag = ?` is a predicate at seven sites in `vector-search.ts`, including the one that matters — the ANN join at :169, where `vector_top_k` returns rowids and the scope test is applied on the hydration, not left to the index. `resolveMemoryScope` has one widening mode, `all-projects`, which drops the predicate and walks both scopes' shards on purpose, with the reason recorded: user-scope memories *\\\"would be silently excluded if only project shards were walked\\\"* | tests/turso-vector-search.test.ts:72-101 asserts the emitted SQL keeps `vector_top_k` ahead of `memories` and that the filtered variant carries `m.container_tag = ?`"
+  negative_eval: "the per-user learning buffer, asserted in both directions | tests/user-profile-cold-buffer-isolation.test.ts:42-80 | before the embedding model warms up, observations about a user are buffered rather than merged, and the buffer was global. The committed case seeds one preference for `profile_A` and one for `profile_B` while cold, then warms and merges each: B's merge is asserted to contain B's preference and **not** to contain A's, then A's merge is asserted to contain A's and not B's. Both directions, both paired with a positive over the same manager, so an empty merge fails the test rather than passing it. The material is learned profile content crossing a user boundary — the failure the shard layer prevents in storage and the buffer did not prevent in memory | this is the test"
 stack_storage: "sqlite"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row with content, two vectors, a container tag, a type and project metadata"
   storage: "Embedded Turso/libSQL with F32_BLOB vectors and a DiskANN index, sharded per scope"
   retrieval: "vector_top_k approximate nearest neighbours, then a container_tag filter on the rows"
   write: "Prompt-based extraction with auto-capture, deduplication, and fail-closed redaction"
-  update_delete: "A cleanup service, a dedup pass, and a version-capped user-profile changelog"
-  scoping: "container_tag is the shard key and a WHERE clause on the vector-search read paths"
+  update_delete: "A cleanup service, a dedup pass, and a user-profile changelog capped at a retention count and cascaded away with its profile; memory deletion is `DELETE FROM memories WHERE id = ?` with no record of what left"
+  scoping: "Two layers — memories for a scope live in their own libSQL file under a validated 16-hex scope hash, and `container_tag = ?` is a predicate on every vector-search read path, pinned in the emitted SQL by a test. An `all-projects` mode drops the predicate deliberately and walks both scopes' shards"
   integration: "An OpenCode plugin with a bundled React web UI behind a generated auth token"
   background: "Migration from legacy SQLite shards with a .legacy.bak per shard, dedup, cleanup"
-  trust: "is_pinned only; nothing epistemic on a memory"
-  strengths: "A published self-audit with graded findings, exploit paths and regression tests"
-  risks: "The audit is pinned to an earlier commit than the one read here"
+  trust: "`is_pinned` only. `MemoryType` is `string`, and the closed vocabulary in the schema is `MemoryMetadata.source` — `manual`, `auto-capture`, `import`, `api` — which is provenance rather than belief"
+  strengths: "A published self-audit with graded findings, exploit paths and regression tests; a suite that asserts the shape of the generated ANN query rather than only its results; and a bidirectional isolation test over the per-user learning buffer"
+  risks: "The audit document is pinned to an earlier commit than the code; a delete is a plain row delete with nothing keyed on the removed value; and the profile changelog trims to a retention count on every write, so it is a version history rather than an audit trail"
 ---
 
 ## 1. Executive Summary
@@ -234,16 +237,47 @@ is the usual reason a fix is incomplete.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper, no retrieval benchmark, no committed results.** 66 test files and a
-CI matrix spanning Linux, Windows, macOS 15 and macOS 26 on both `darwin/x64` and
-`darwin/arm64` — and the README is careful about what that matrix does and does
-not say: "Older macOS releases are not excluded by that matrix; they are simply
-outside the current GitHub-hosted runner set."
+**No paper, no retrieval benchmark, no committed results.** 72 test files
+against 75 source files, and a CI matrix spanning Linux, Windows, macOS 15 and
+macOS 26 on both `darwin/x64` and `darwin/arm64` — and the README is careful
+about what that matrix does and does not say: "Older macOS releases are not
+excluded by that matrix; they are simply outside the current GitHub-hosted
+runner set."
 
-The tests worth naming are the three the audit points at, each pinning a specific
-exploit: `api-handlers-container-tag-traversal`, `web-userprofile-xss`,
-`web-memorytype-xss`. A security fix with a regression test named after the
-vulnerability is the difference between a patch and a guarantee.
+Three tests pin a specific exploit each, named after the vulnerability the audit
+found: `api-handlers-container-tag-traversal`, `web-userprofile-xss`,
+`web-memorytype-xss`. The traversal one is the model of its kind because it has
+a positive: it rejects a hash segment carrying `../`, rejects one carrying a path
+separator, **and accepts a legitimate sha256-style tag** — so a validator that
+had regressed into rejecting everything would fail it.
+
+**Two suites test the mechanism rather than the output, which is rarer.**
+`turso-vector-search.test.ts` asserts on the shape of the emitted SQL: that
+`FROM vector_top_k` is present, that the join is
+`CROSS JOIN memories m ON m.rowid = v.id`, that `indexOf("vector_top_k") <
+indexOf("memories m")` so the ANN index drives the query rather than being
+post-filtered — and that the filtered variant carries `m.container_tag = ?`. A
+scope predicate silently dropped from the generated SQL fails that assertion,
+which is a different guarantee from a search that happens to return the right
+rows. `turso-exact-fallback.test.ts` covers the other side: with the vector
+index missing, the exact scan still returns the right row.
+
+`user-profile-cold-buffer-isolation.test.ts` is what earns `negative_eval` and is
+the one to copy. Before the embedding model warms up, observations are buffered
+rather than merged, and the buffer was global. The test seeds a preference for
+`profile_A` and one for `profile_B` while cold, then warms and merges each in
+turn:
+
+```ts
+expect(descsB).toContain("B prefers spaces over tabs");
+expect(descsB).not.toContain("A prefers tabs over spaces");
+// ...then the same assertion pair with A and B exchanged
+```
+
+Both directions, each negative paired with a positive over the same manager, so
+an empty merge fails rather than passes. It is also the right *level*: the shard
+layer keeps users apart in storage, and this pins the layer above it, where an
+in-memory buffer had been holding everyone's observations in one bucket.
 
 Nothing measures retrieval quality, deduplication precision, or extraction
 accuracy.
@@ -344,5 +378,15 @@ insert `:330`, `cleanupOldChangelogs` `:340-357`)
 `tests/web-userprofile-xss.test.ts`, `tests/web-memorytype-xss.test.ts`
 
 ## History
+
+**2026-08-26** — [`d1d0eb01b5efed517da4ae31baa7666768e86cfe`](https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe) — re-pinned 37 commits on, at 533 commits since 23 December 2025 and roughly 29,500 lines of TypeScript. Screened again before reading: no auto-run surface, one build-time execution surface, two unpinned surfaces, two files inside the seven-day cooldown, and a `.husky/pre-commit` payload inert until something points `core.hooksPath` at it; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and no test was run.
+
+`negative_eval` is added on `user-profile-cold-buffer-isolation.test.ts`, and the bug it covers is the reason it matters: the shard layer separates users by putting their memories in different database files, and the cold-start buffer that holds observations before the embedding model warms up was a single global bucket. Storage was scoped and the layer above it was not. The committed case asserts in both directions, each negative paired with a positive over the same manager.
+
+Two other fixes in range are the same shape. `all-projects` tool queries were walking only project shards, so user-scope memories were silently missing from a search that claimed to span everything — the fix carries the reason in `resolveMemoryScope`. And compacted memory injected into a session is marked synthetic rather than passing as ordinary context.
+
+`scope_enforced` is unchanged and better evidenced: `turso-vector-search.test.ts` asserts the emitted SQL keeps `vector_top_k` ahead of `memories` and that the filtered variant carries `m.container_tag = ?`, so a dropped scope predicate fails a test rather than only changing results. No other mark moved. `tombstone` remains absent — `DELETE FROM memories WHERE id = ?` with nothing keyed on the removed value. `trust_state` is absent: `MemoryType` is `string`, and the closed vocabulary in the schema is `MemoryMetadata.source` over `manual`, `auto-capture`, `import` and `api`, which records where a memory came from rather than whether it is believed. `audit_log` is absent for a reason worth the distinction: `user_profile_changelogs` stores a full `profile_data_snapshot` per version and looks like an audit trail, but `cleanupOldChangelogs` runs on every update and deletes all but the newest N rows, and the table cascades away with its profile. A version history with retention is not an append-only record of mutations, and the memories table has no mutation record at all.
+
+`SECURITY_AUDIT.md` is still pinned to commit `0998c69`, which is older than both this pin and the previous one.
 
 **2026-08-09** — [`8cba720736ff8d3f6315ced14362259efc301899`](https://github.com/tickernelz/opencode-mem/commit/8cba720736ff8d3f6315ced14362259efc301899) — first reading. Screened before reading; the tree was read, never installed, and no test was run. `SECURITY_AUDIT.md` is scoped to an earlier commit than the one pinned here.

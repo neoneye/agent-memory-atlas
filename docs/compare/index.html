@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-four tombstones, one hundred and eleven negative-eval suites —
+twenty-four tombstones, one hundred and twelve negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -11311,18 +11311,32 @@ sharded per scope</td>
 filter on the rows</td>
 <td>Prompt-based extraction with auto-capture, deduplication, and
 fail-closed redaction</td>
-<td>A cleanup service, a dedup pass, and a version-capped user-profile
-changelog</td>
-<td>container_tag is the shard key and a WHERE clause on the
-vector-search read paths</td>
+<td>A cleanup service, a dedup pass, and a user-profile changelog capped
+at a retention count and cascaded away with its profile; memory deletion
+is <code>DELETE FROM memories WHERE id = ?</code> with no record of what
+left</td>
+<td>Two layers — memories for a scope live in their own libSQL file
+under a validated 16-hex scope hash, and <code>container_tag = ?</code>
+is a predicate on every vector-search read path, pinned in the emitted
+SQL by a test. An <code>all-projects</code> mode drops the predicate
+deliberately and walks both scopes' shards</td>
 <td>An OpenCode plugin with a bundled React web UI behind a generated
 auth token</td>
 <td>Migration from legacy SQLite shards with a .legacy.bak per shard,
 dedup, cleanup</td>
-<td>is_pinned only; nothing epistemic on a memory</td>
+<td><code>is_pinned</code> only. <code>MemoryType</code> is
+<code>string</code>, and the closed vocabulary in the schema is
+<code>MemoryMetadata.source</code> — <code>manual</code>,
+<code>auto-capture</code>, <code>import</code>, <code>api</code> — which
+is provenance rather than belief</td>
 <td>A published self-audit with graded findings, exploit paths and
-regression tests</td>
-<td>The audit is pinned to an earlier commit than the one read here</td>
+regression tests; a suite that asserts the shape of the generated ANN
+query rather than only its results; and a bidirectional isolation test
+over the per-user learning buffer</td>
+<td>The audit document is pinned to an earlier commit than the code; a
+delete is a plain row delete with nothing keyed on the removed value;
+and the profile changelog trims to a retention count on every write, so
+it is a version history rather than an audit trail</td>
 </tr>
 <tr>
 <td><code>opencode</code></td>
@@ -14727,7 +14741,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>111 of 336:</em> <a
+<p><em>112 of 336:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14809,6 +14823,7 @@ href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/openakashic/"><code>openakashic</code></a>, <a
+href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
 href="../systems/opencompany/"><code>opencompany</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
@@ -14859,7 +14874,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and eleven repositories of three hundred and thirty-six assert
+hundred and twelve repositories of three hundred and thirty-six assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -20060,9 +20075,13 @@ is implemented and wired in</li>
 <li><a
 href="https://github.com/tickernelz/opencode-mem">tickernelz/opencode-mem</a>
 at <a
-href="https://github.com/tickernelz/opencode-mem/commit/8cba720736ff8d3f6315ced14362259efc301899"><code class="commit-id" title="8cba720736ff8d3f6315ced14362259efc301899">8cba7207…</code></a>
-— its committed <code>SECURITY_AUDIT.md</code> is scoped to an earlier
-commit</li>
+href="https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe"><code class="commit-id" title="d1d0eb01b5efed517da4ae31baa7666768e86cfe">d1d0eb01…</code></a>
+— read only; no auto-run surface, one build-time execution surface, two
+unpinned surfaces and two files inside the seven-day cooldown.
+<code>AGENTS.md</code> is addressed to a reading agent and was treated
+as data. Nothing was installed and no test was run.
+<code>SECURITY_AUDIT.md</code> is scoped to a commit older than this
+pin. MIT</li>
 <li><a
 href="https://github.com/CaviraOSS/OpenMemory">CaviraOSS/OpenMemory</a>
 at <a
