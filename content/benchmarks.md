@@ -1336,15 +1336,75 @@ Set that beside `vista-research.github.io`, recorded in the
 of published per-run traces let its headline claim be recomputed by a reader who
 never sees the code. The two publish opposite halves of the same evidence, and
 the pairing is the useful part. **A reader can check an implementation or a
-result, and neither project lets them check both.** The version that would —
-source at a pinned commit plus the traces the number was computed from — is
-still not something this page has found for an agent-memory claim.
+result, and neither project lets them check both.** The version that does both
+— source at a pinned commit beside the numbers the claims were computed from —
+is [Knowledge Triage](#the-compaction-cliff-and-the-first-claim-on-this-page-that-recomputes),
+below.
 
 Two qualifications, because the distinction here is about verifiability rather
 than conduct. Only the abstracts were read for both papers, so a fuller artifact
 may be described inside either. And a paper's artifacts are under no obligation
 to live in the product repository — this is recorded as what a reader of the
 published code can verify, which is the question this page exists to ask.
+
+### The Compaction Cliff, and the first claim on this page that recomputes
+
+*The Compaction Cliff in Long-Running AI Agent Memory*
+([arXiv:2608.22752](https://arxiv.org/abs/2608.22752),
+[10.1145/3799682.3840567](https://doi.org/10.1145/3799682.3840567), CIKM '26),
+Zerhoudi, Mitrović and Granitzer of the University of Passau, submitted 24
+August 2026. Read at
+[`a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4`](https://github.com/searchsim-org/knowledge-triage/commit/a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4),
+Apache-2.0, 7,229 lines of Python.
+
+**The finding is one sentence and it is about a mechanism most systems on this
+site use.** *"A safety rule and an episodic log compete for the same tokens in
+an AI agent's context. When the budget overflows, both are summarized at the
+same rate; only the rule needs exact wording to remain enforceable."* Measured:
+Claude Code's `/compact` on Sonnet 4.6 retains **53% of safety rules after one
+compaction round and 10% after five**, over 20 production agent configurations.
+
+**Every headline number checked here recomputes from a committed file**, which
+is what earns this its place. `results/multiturn_stability.json` carries
+`n_configs: 20`, `n_rounds: 5`, `ratio: 0.5`, and under
+`vanilla__claude_code:claude-sonnet-4-6` the series `round_1_c_recall: 0.5283`
+falling to `round_5_c_recall: 0.1011` — the 53% and the 10%, at the stated *n*.
+The framework's own arm is in the same file at `0.9579` by round five, which is
+the abstract's *"96% recall over five rounds."*
+`results/typeretrieve_vs_vanilla.json` gives `recall@50` of `1.0` against
+`0.7255` for Sonnet, the best of three baselines — the *"100% recall@50 against
+73%."* Three claims, three files, three matches. Twenty `results/*.json` files
+sit beside twenty-two experiment scripts.
+
+**The artifact this page most wants to see is the one about their own
+instrument.** `results/human_verification.json` reports two annotators, Cohen's
+κ of 0.769 on the four-class label and 0.924 binary, agreement between the human
+consensus and the automated metric of **79.2%** — and then the number nobody has
+to publish:
+`auto_preserved_cases_with_human_weakened_or_lost_pct: 27.6`. Of the cases the
+automated preservation metric scored as *preserved*, humans judged **more than a
+quarter** weakened or lost. That is the authors measuring the failure rate of
+their own measuring instrument and shipping the result next to the wins. Set it
+against the [metric that cannot fail](#the-control-that-proves-a-metric-can-still-fail):
+this is the same discipline, applied by the people with the most to lose from
+the answer.
+
+Two limits belong with it. `AgentArtifactCorpus` — the 396,934 agent
+configurations drawn from 54,628 public GitHub projects — is **gated behind a one-page Data Use
+Agreement**, so the corpus underneath the classifier experiments is a pointer
+rather than something a reader of this page can check; the operator results
+above do not depend on it. And only the abstract and the released artifacts were
+read here, not the full paper, so the method behind each number is taken as
+stated.
+
+**The practical reading for anyone building on this site's systems.** The atlas
+has repeatedly recorded compaction as a place where memory quietly degrades —
+[Hermes Agent](../systems/hermes-agent/)'s in-turn consolidation under a hard
+character cap, [OpenExecutive](../systems/openexecutive/)'s injection block that
+drops oldest advice first, [Fireweed MCP](../systems/fireweed-mcp/)'s read gate.
+None of them distinguishes a constraint from an episode when the budget
+overflows. This paper is the measurement of what that costs, and the operators
+are a typed answer: classify each line, then let type decide fidelity.
 
 ### ForgetEval — the one benchmark that scores the control plane
 
