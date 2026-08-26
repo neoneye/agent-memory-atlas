@@ -6,14 +6,14 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 7f2f16eb74f226a61e726171e11c8274dcd86b04
-revision_url: https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04
-analyzed_at: 2026-08-16
+revision: 90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614
+revision_url: https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614
+analyzed_at: 2026-08-26
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "checkpoint store, forget path | plugin/daimon_briefing/cli/lifecycle.py | _cmd_forget appends a tombstone event carrying a content hash rather than the text, before the rewrite, so the rewrite's _drop_forgotten reads it; the supersede-candidate emitter skips values already in the ledger | plugin/tests/test_forget_refutations.py, plugin/tests/test_log_text_privacy.py"
   trust_state: "checkpoint items, and the refutation ledger separately | plugin/daimon_briefing/serializer.py | a stored trust field of verbatim vs inferred, verified by code against the transcript by verify_quotes; the ledger folds candidate/active/overturned across both polarities | plugin/tests/test_quote_verification.py, plugin/tests/test_refutations.py"
-  scope_enforced: "every store, by project slug | plugin/daimon_briefing/store.py | project_slug resolves the per-project directory under ~/.daimon and every read and write is rooted there; forget is project-scoped by construction | plugin/tests/test_isolation.py"
+  scope_enforced: "every store, by project slug, including the one path that crosses projects | plugin/daimon_briefing/store.py, plugin/daimon_briefing/requests.py | `project_slug` resolves the per-project directory under `~/.daimon` and every read and write is rooted there; forget is project-scoped by construction. The cross-project request ledger is the interesting case rather than an exception to it: a request is a row in the **sender's** bucket, the recipient discovers it by read-through at brief time and answers with verdict rows in its own `requests.jsonl` citing the id, so *\\\"every logical request spans two buckets by construction and the joined record is a read-time join. Nobody writes a foreign ledger, and deletion happens once at the source: read-through has no copies to chase\\\"* | plugin/tests/test_isolation.py, plugin/tests/test_requests.py (1,817 lines)"
   audit_log: "events.jsonl, plus the refutation, relation and amendment ledgers | plugin/daimon_briefing/store.py | append_event writes one row per lifecycle event; refutations, relations and amendments each carry their own append-only stream with an observed channel on every row | plugin/tests/test_store.py, plugin/tests/test_refutation_authority.py"
   human_review: "refutation and relation ledgers, and reverify | plugin/daimon_briefing/refutations.py | CHANNEL_AUTHORITY derives authority from the observed write channel rather than a caller flag, so activation, overturn and ruling ratification require a human channel the CLI cannot reach for ui or signed | plugin/tests/test_refutation_authority.py, test_agent_cannot_self_ratify"
   negative_eval: "refutation guard read path | plugin/tests/test_refutations.py | test_guard_fires_on_exact_issue_anchor_not_broad_topic asserts a broad topical query must not surface an active guard | plugin/tests/test_refutations.py:113"
@@ -802,10 +802,61 @@ carries it forward as `✓ verbatim`. The boundary is what has a referent on dis
 or on one host, which is a narrower gap than a lexicon over outcome words and
 still a gap.
 
+**The one boundary that crosses projects is built so that crossing it costs
+nothing to delete.** `requests.py` is a cross-project ask: project X records a
+request of project Y, with a rationale, in its own ledger. The design decision
+that matters is that the recipient never writes the sender's store — it
+discovers the ask by read-through at brief time and answers with verdict rows in
+its *own* `requests.jsonl` citing the request id, so *"every logical request
+spans two buckets by construction and the joined record is a read-time join.
+Nobody writes a foreign ledger, and deletion happens once at the source:
+read-through has no copies to chase."*
+
+That last clause is the general lesson. Every system in this corpus that
+propagates a memory across a boundary by **copying** it inherits the problem of
+chasing those copies on erasure — the failure the atlas records as deletion
+residue, and the problem [Fireweed MCP](../fireweed-mcp/) had to build a Merkle
+tree over document parts to solve. A read-time join has no residue because it
+never made a second copy.
+
+The authority split on top of it is asymmetric on purpose: any channel may ask,
+revise or report completion, but a **verdict** — accept, reject, needs-info — is
+human-only, *"enforced at the write boundary AND re-checked in the fold."*
+`suppressed` is human-only for a stated reason worth quoting, because it names
+the attack rather than the rule: *"an agent that could mute an addressed ask from
+its own project's attention would have a soft-reject with no record."*
+Suppression affects panel attention only, the row stays visible in `request
+list`, and a later verdict reverses it.
+
+Two bounds complete it. A human rejection is **sticky per id** — *"a human
+verdict may never be buried by a later sender event"* — so asking again means a
+new request citing `supersedes`, which makes re-asking an append-only fact with
+visible lineage. And revision is capped at three per record lifetime, on the
+ground that *"without it, revise is a nag loop the recipient cannot stop."*
+
+**Nine item fields are code-owned and stripped from anything a model authors.**
+`_CODE_OWNED_ITEM_KEYS` is `origin_session`, `origin_author`, `quote_verified`,
+`last_verified`, `quote_provenance`, `pinned`, `id`, `carried_from` and
+`first_seen`, removed by `strip_code_owned_keys` on both capture doors before
+the code stamps its own values. The reasoning behind `id` is the sharpest of
+them: the id stamper treats any present id as authoritative, so a model-supplied
+one is either an identity the code never derived or, on collision, **a silent
+inheritance of another item's entire lifecycle and corroboration history** —
+and item ids key the recall index, the forget tombstones, the supersede
+candidates, the corroboration references and the relation-ledger endpoints.
+
+The function's docstring carries two qualifications that are the reusable part.
+It is *"fail-safe, not fail-fast: a model that names one of these fields is not
+an error worth failing an otherwise-good write over — just a value that must
+never be load-bearing."* And it must **never** be called on a checkpoint read
+back from disk, because that would erase the code's real stamps and let a later
+`setdefault` silently re-date `created` and jump `format_version`. The same
+function is correct on one class of input and destructive on another, and the
+docstring says which.
+
 ## 10. Tests, Evals, and Benchmarks
 
-3,679 tests over ~58,500 lines against ~28,600 lines of source, better than
-twice the source. Coverage tracks the
+3,929 tests across 135 files, better than twice the source in lines. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
 `test_id_bearing_item_never_fuzzy_withheld`), `test_store.py`,
@@ -1164,6 +1215,16 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-08-26** — [`90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614`](https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614) — re-pinned 23 commits on, through releases 0.32.0, 0.32.1 and 0.33.0. Screened again before reading: three auto-run surfaces, three build-time execution paths, one unpinned surface and two files inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven. `bitemporal` remains absent and a grep of the whole package for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` returns nothing, so the absence is structural rather than a missing consumer.
+
+The new surface is the cross-project request family, three PRs against one issue: a request object, an inbox and panel, and a return path. Section 9 covers the design; the property worth carrying is that a request is a row in the sender's bucket which the recipient answers in its own ledger by read-through, so no project ever writes a foreign store and a deletion at the source has no copies to chase. A verdict is human-only at the write boundary and again in the fold, a human rejection is sticky per id, and revision is capped at three per record lifetime.
+
+Two fields the model could previously set became code-owned in this range, taking `_CODE_OWNED_ITEM_KEYS` to nine: `id` (#724) and `carried_from` with `first_seen` (#726). The id case is the one with teeth — the stamper trusts any present id, so a model-emitted one that collided with an existing item's id inherited that item's lifecycle and corroboration history, across the recall index, the tombstones, the supersede candidates and the relation endpoints.
+
+Also in range: `forget` no longer counts a ruling hit as an item hit, the relations contradiction fold catches item-level cycles, and the serializer's retries carry the failure diagnostic back to the model rather than retrying blind. 3,929 tests across 135 files; 58 scars, two more than at the previous pin.
+
+The research record is worth one line because it is a published null. The frozen merge-fidelity instrument was re-run on 2026-08-26 and **joined none of the 241 sessions**, with every exclusion counted against the pre-registration, the stamp formula verified unchanged so the zero is population structure rather than instrument drift, and — the part most projects skip — *"no rate claim, decision rule not evaluated."* The re-run exists because an earlier status had predicted the joinable population would accrue forward, and it did not.
 
 **2026-08-16** — [`7f2f16eb74f226a61e726171e11c8274dcd86b04`](https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04) — 32 commits on. Screened first: 0 auto-run surfaces, 3 build-time execution paths (a third `conftest.py` under `research/experiments/multicycle/`), 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent, and no validity-time field exists anywhere in the package.
 

@@ -661,6 +661,38 @@ promotion path. If your design needs a memory to graduate from one scope to a
 broader one, a derived key makes that a copy rather than an update — see
 [promotion between tiers](../promotion-between-tiers/) for what that costs.
 
+**[Daimon](../../systems/daimon/) answers the promotion problem above by
+refusing to promote.** Its `requests.py` is the one path in a strictly
+per-project store that crosses projects: project X records an ask of project Y.
+A copy would have been the obvious implementation and would have inherited every
+problem this page and the [tombstone page](../rejected-value-tombstone/) record —
+a second row under a second scope key, out of reach of the first project's
+delete. Instead the request stays a row in the **sender's** bucket, the
+recipient discovers it by read-through when its briefing renders, and answers
+with verdict rows in its *own* ledger citing the request id:
+
+> *"every logical request spans two buckets by construction and the joined
+> record is a read-time join. Nobody writes a foreign ledger, and deletion
+> happens once at the source: read-through has no copies to chase."*
+
+**A read-time join has no deletion residue because it never made a second
+copy.** That is worth stating as the general move, because the alternative is
+expensive: [Fireweed MCP](../../systems/fireweed-mcp/) had to build a Merkle
+tree over document parts so that redacting one subject's sentence would not
+break every other party's receipt into the same document — a good solution to a
+problem daimon does not have.
+
+The authority split layered on top is the part to copy if you do build a
+cross-scope surface. Any channel may ask, revise or report completion; a
+verdict is human-only, *"enforced at the write boundary AND re-checked in the
+fold"*; and `suppressed` is human-only too, for a reason stated as an attack
+rather than a rule — *"an agent that could mute an addressed ask from its own
+project's attention would have a soft-reject with no record."* A human
+rejection is sticky per id, so asking again is a new record citing
+`supersedes` rather than a rewrite, and revision is capped at three per record
+lifetime because *"without it, revise is a nag loop the recipient cannot
+stop."*
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

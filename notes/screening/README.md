@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 69 |
+| Repositories with an auto-run surface (`RUNS`) | 70 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 66 |
 | Repositories with build-time execution (`EXEC`) | 146 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -48,6 +48,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
 | [`ecc`](../../content/systems/ecc.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json` |

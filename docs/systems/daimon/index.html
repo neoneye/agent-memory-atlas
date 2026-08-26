@@ -110,14 +110,14 @@ stored.</p>
               <strong>Daily-Nerd/daimon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">
+            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">
               <span>Analyzed revision</span>
-              <code>7f2f16eb…</code>
+              <code>90dc82ea…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-16</strong>
+              <strong>2026-08-26</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -1046,10 +1046,68 @@ confidently and quoted exactly, there is nothing to probe: verification
 passes and the briefing carries it forward as <code>✓ verbatim</code>.
 The boundary is what has a referent on disk or on one host, which is a
 narrower gap than a lexicon over outcome words and still a gap.</p>
+<p><strong>The one boundary that crosses projects is built so that
+crossing it costs nothing to delete.</strong> <code>requests.py</code>
+is a cross-project ask: project X records a request of project Y, with a
+rationale, in its own ledger. The design decision that matters is that
+the recipient never writes the sender's store — it discovers the ask by
+read-through at brief time and answers with verdict rows in its
+<em>own</em> <code>requests.jsonl</code> citing the request id, so
+<em>"every logical request spans two buckets by construction and the
+joined record is a read-time join. Nobody writes a foreign ledger, and
+deletion happens once at the source: read-through has no copies to
+chase."</em></p>
+<p>That last clause is the general lesson. Every system in this corpus
+that propagates a memory across a boundary by <strong>copying</strong>
+it inherits the problem of chasing those copies on erasure — the failure
+the atlas records as deletion residue, and the problem <a
+href="../fireweed-mcp/">Fireweed MCP</a> had to build a Merkle tree over
+document parts to solve. A read-time join has no residue because it
+never made a second copy.</p>
+<p>The authority split on top of it is asymmetric on purpose: any
+channel may ask, revise or report completion, but a
+<strong>verdict</strong> — accept, reject, needs-info — is human-only,
+<em>"enforced at the write boundary AND re-checked in the fold."</em>
+<code>suppressed</code> is human-only for a stated reason worth quoting,
+because it names the attack rather than the rule: <em>"an agent that
+could mute an addressed ask from its own project's attention would have
+a soft-reject with no record."</em> Suppression affects panel attention
+only, the row stays visible in <code>request list</code>, and a later
+verdict reverses it.</p>
+<p>Two bounds complete it. A human rejection is <strong>sticky per
+id</strong> — <em>"a human verdict may never be buried by a later sender
+event"</em> — so asking again means a new request citing
+<code>supersedes</code>, which makes re-asking an append-only fact with
+visible lineage. And revision is capped at three per record lifetime, on
+the ground that <em>"without it, revise is a nag loop the recipient
+cannot stop."</em></p>
+<p><strong>Nine item fields are code-owned and stripped from anything a
+model authors.</strong> <code>_CODE_OWNED_ITEM_KEYS</code> is
+<code>origin_session</code>, <code>origin_author</code>,
+<code>quote_verified</code>, <code>last_verified</code>,
+<code>quote_provenance</code>, <code>pinned</code>, <code>id</code>,
+<code>carried_from</code> and <code>first_seen</code>, removed by
+<code>strip_code_owned_keys</code> on both capture doors before the code
+stamps its own values. The reasoning behind <code>id</code> is the
+sharpest of them: the id stamper treats any present id as authoritative,
+so a model-supplied one is either an identity the code never derived or,
+on collision, <strong>a silent inheritance of another item's entire
+lifecycle and corroboration history</strong> — and item ids key the
+recall index, the forget tombstones, the supersede candidates, the
+corroboration references and the relation-ledger endpoints.</p>
+<p>The function's docstring carries two qualifications that are the
+reusable part. It is <em>"fail-safe, not fail-fast: a model that names
+one of these fields is not an error worth failing an otherwise-good
+write over — just a value that must never be load-bearing."</em> And it
+must <strong>never</strong> be called on a checkpoint read back from
+disk, because that would erase the code's real stamps and let a later
+<code>setdefault</code> silently re-date <code>created</code> and jump
+<code>format_version</code>. The same function is correct on one class
+of input and destructive on another, and the docstring says which.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>3,679 tests over ~58,500 lines against ~28,600 lines of source,
-better than twice the source. Coverage tracks the design claims closely:
+<p>3,929 tests across 135 files, better than twice the source in lines.
+Coverage tracks the design claims closely:
 <code>test_quote_verification.py</code>, <code>test_carry.py</code>,
 <code>test_briefing.py</code> (withhold semantics, including
 <code>test_id_bearing_item_never_fuzzy_withheld</code>),
@@ -1499,6 +1557,48 @@ decision and negative-knowledge trail, including
 shipped feature</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-26</strong> — <a
+href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code class="commit-id" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">90dc82ea…</code></a>
+— re-pinned 23 commits on, through releases 0.32.0, 0.32.1 and 0.33.0.
+Screened again before reading: three auto-run surfaces, three build-time
+execution paths, one unpinned surface and two files inside the seven-day
+cooldown; nothing was built or run. No mark moved — six of seven.
+<code>bitemporal</code> remains absent and a grep of the whole package
+for <code>valid_from</code>, <code>valid_to</code>,
+<code>valid_until</code>, <code>event_time</code>,
+<code>occurred_at</code> and <code>as_of</code> returns nothing, so the
+absence is structural rather than a missing consumer.</p>
+<p>The new surface is the cross-project request family, three PRs
+against one issue: a request object, an inbox and panel, and a return
+path. Section 9 covers the design; the property worth carrying is that a
+request is a row in the sender's bucket which the recipient answers in
+its own ledger by read-through, so no project ever writes a foreign
+store and a deletion at the source has no copies to chase. A verdict is
+human-only at the write boundary and again in the fold, a human
+rejection is sticky per id, and revision is capped at three per record
+lifetime.</p>
+<p>Two fields the model could previously set became code-owned in this
+range, taking <code>_CODE_OWNED_ITEM_KEYS</code> to nine:
+<code>id</code> (#724) and <code>carried_from</code> with
+<code>first_seen</code> (#726). The id case is the one with teeth — the
+stamper trusts any present id, so a model-emitted one that collided with
+an existing item's id inherited that item's lifecycle and corroboration
+history, across the recall index, the tombstones, the supersede
+candidates and the relation endpoints.</p>
+<p>Also in range: <code>forget</code> no longer counts a ruling hit as
+an item hit, the relations contradiction fold catches item-level cycles,
+and the serializer's retries carry the failure diagnostic back to the
+model rather than retrying blind. 3,929 tests across 135 files; 58
+scars, two more than at the previous pin.</p>
+<p>The research record is worth one line because it is a published null.
+The frozen merge-fidelity instrument was re-run on 2026-08-26 and
+<strong>joined none of the 241 sessions</strong>, with every exclusion
+counted against the pre-registration, the stamp formula verified
+unchanged so the zero is population structure rather than instrument
+drift, and — the part most projects skip — <em>"no rate claim, decision
+rule not evaluated."</em> The re-run exists because an earlier status
+had predicted the joinable population would accrue forward, and it did
+not.</p>
 <p><strong>2026-08-16</strong> — <a
 href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code class="commit-id" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">7f2f16eb…</code></a>
 — 32 commits on. Screened first: 0 auto-run surfaces, 3 build-time
