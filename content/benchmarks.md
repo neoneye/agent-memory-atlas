@@ -1408,6 +1408,62 @@ None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
 
+### A vendor head-to-head that ships the runs undercutting its own headline
+
+`memstate-ai/memstate-mcp` publishes a benchmark against [Mem0](../systems/mem0/)
+reporting **69.1 against 15.4** overall and 74.1 against 12.6 on fact recall,
+*"tested under identical conditions using the same agent (Claude Sonnet 4.6,
+temperature 0), the same scenarios, and the same scoring rubric."* Read at
+[`eceac236c7bdca3be8da50c4fa35d3fa0f8b716e`](https://github.com/memstate-ai/memstate-mcp/commit/eceac236c7bdca3be8da50c4fa35d3fa0f8b716e).
+The suite and every raw result are committed, which is why any of what follows
+can be said at all.
+
+**What holds up.** The judge is blinded — *"given ONLY the question, expected
+answer, and actual answer. It does NOT know which memory system produced the
+answer"* — which is the control most vendor comparisons skip. Both arms get
+their own hand-written agent instructions of comparable quality: the Mem0 file
+explains its tools in good faith, tells the agent to search before answering,
+and covers the fact-change path. And the published pair is the **matched
+timestamp**, both arms run together, rather than a best-of against a
+worst-of.
+
+**What the artifacts show that the headline does not.** The results directory
+holds four Memstate runs and two Mem0 runs of the same suite:
+
+| Memstate | 56.78 · 69.14 · 86.47 · 84.42 |
+| --- | --- |
+| **Mem0** | **15.39 · 20.35** |
+
+The published 69.1 is the second-lowest of the four. **The spread across
+Memstate's own runs — nearly thirty points — is larger than its entire
+published margin over Mem0's better run.** The comparison artifact carries
+`timestamp`, `results`, `comparisonTable` and `winner`, and no `n`, no
+variance and no dispersion of any kind. A single sample is reported as the
+score, from a distribution the same directory shows to be wide.
+
+**And the metric is the vendor's thesis.** Memstate sells versioning and
+conflict detection. Four of the five scenarios are `api-versioning-conflicts`,
+`auth-system-migration`, `database-schema-evolution` and
+`team-decision-reversal` — all about a fact changing. The judge rubric's single
+capitalised rule is: *"CRITICAL: If the actual answer reports
+OUTDATED/SUPERSEDED information as current, score it LOW (0.0-0.3) even if the
+outdated info was once correct."*
+
+That is a defensible position — this page has argued repeatedly that
+[correction is the phase that goes unbuilt](../compare/), and grading for it is
+closer to right than the recall-only benchmarks above. It is still the case
+that the party defining the metric is the party that wins it, and a reader
+seeing 4.5× should know the axis was chosen by one of the two systems on it.
+
+**The transferable lesson is about run counts, not about this vendor.** They
+committed four runs and published one, which is how anyone can see the
+variance; a competitor publishing a single JSON would have been unfalsifiable.
+**If your system's run-to-run spread exceeds your margin over the baseline,
+the margin is not a result yet.** Report *n*, report the spread, or report a
+paired test — the discipline
+[Knowledge Triage](#the-compaction-cliff-and-the-first-claim-on-this-page-that-recomputes)
+applies with Holm-corrected McNemar and pinned pre-run criteria.
+
 ### The poisoning protocol that measures what happens after the first turn
 
 *Weighted Memory Tree: Remembering What Matters for Long-Horizon LLM Agents*

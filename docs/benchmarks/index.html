@@ -1891,6 +1891,78 @@ overflows. This paper is the measurement of what that costs, and the
 operators are a typed answer: classify each line, then let type decide
 fidelity.</p>
 <h3
+id="a-vendor-head-to-head-that-ships-the-runs-undercutting-its-own-headline">A
+vendor head-to-head that ships the runs undercutting its own
+headline</h3>
+<p><code>memstate-ai/memstate-mcp</code> publishes a benchmark against
+<a href="../systems/mem0/">Mem0</a> reporting <strong>69.1 against
+15.4</strong> overall and 74.1 against 12.6 on fact recall, <em>"tested
+under identical conditions using the same agent (Claude Sonnet 4.6,
+temperature 0), the same scenarios, and the same scoring rubric."</em>
+Read at <a
+href="https://github.com/memstate-ai/memstate-mcp/commit/eceac236c7bdca3be8da50c4fa35d3fa0f8b716e"><code class="commit-id" title="eceac236c7bdca3be8da50c4fa35d3fa0f8b716e">eceac236…</code></a>.
+The suite and every raw result are committed, which is why any of what
+follows can be said at all.</p>
+<p><strong>What holds up.</strong> The judge is blinded — <em>"given
+ONLY the question, expected answer, and actual answer. It does NOT know
+which memory system produced the answer"</em> — which is the control
+most vendor comparisons skip. Both arms get their own hand-written agent
+instructions of comparable quality: the Mem0 file explains its tools in
+good faith, tells the agent to search before answering, and covers the
+fact-change path. And the published pair is the <strong>matched
+timestamp</strong>, both arms run together, rather than a best-of
+against a worst-of.</p>
+<p><strong>What the artifacts show that the headline does not.</strong>
+The results directory holds four Memstate runs and two Mem0 runs of the
+same suite:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Memstate</th>
+<th>56.78 · 69.14 · 86.47 · 84.42</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mem0</strong></td>
+<td><strong>15.39 · 20.35</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The published 69.1 is the second-lowest of the four. <strong>The
+spread across Memstate's own runs — nearly thirty points — is larger
+than its entire published margin over Mem0's better run.</strong> The
+comparison artifact carries <code>timestamp</code>,
+<code>results</code>, <code>comparisonTable</code> and
+<code>winner</code>, and no <code>n</code>, no variance and no
+dispersion of any kind. A single sample is reported as the score, from a
+distribution the same directory shows to be wide.</p>
+<p><strong>And the metric is the vendor's thesis.</strong> Memstate
+sells versioning and conflict detection. Four of the five scenarios are
+<code>api-versioning-conflicts</code>,
+<code>auth-system-migration</code>,
+<code>database-schema-evolution</code> and
+<code>team-decision-reversal</code> — all about a fact changing. The
+judge rubric's single capitalised rule is: <em>"CRITICAL: If the actual
+answer reports OUTDATED/SUPERSEDED information as current, score it LOW
+(0.0-0.3) even if the outdated info was once correct."</em></p>
+<p>That is a defensible position — this page has argued repeatedly that
+<a href="../compare/">correction is the phase that goes unbuilt</a>, and
+grading for it is closer to right than the recall-only benchmarks above.
+It is still the case that the party defining the metric is the party
+that wins it, and a reader seeing 4.5× should know the axis was chosen
+by one of the two systems on it.</p>
+<p><strong>The transferable lesson is about run counts, not about this
+vendor.</strong> They committed four runs and published one, which is
+how anyone can see the variance; a competitor publishing a single JSON
+would have been unfalsifiable. <strong>If your system's run-to-run
+spread exceeds your margin over the baseline, the margin is not a result
+yet.</strong> Report <em>n</em>, report the spread, or report a paired
+test — the discipline <a
+href="#the-compaction-cliff-and-the-first-claim-on-this-page-that-recomputes">Knowledge
+Triage</a> applies with Holm-corrected McNemar and pinned pre-run
+criteria.</p>
+<h3
 id="the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">The
 poisoning protocol that measures what happens after the first turn</h3>
 <p><em>Weighted Memory Tree: Remembering What Matters for Long-Horizon
