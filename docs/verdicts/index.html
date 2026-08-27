@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 337 reports.</strong></p>
+<p><strong>This page covers all 340 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11241,6 +11241,104 @@ that settles where working state goes.</li>
 <li>Do not copy when: memory has to be correctable. This is append-only
 in the strongest sense available — nothing in the tree modifies or
 removes an item.</li>
+</ul>
+<h3 id="tycho"><a href="../systems/tycho/"><code>tycho</code></a></h3>
+<ul>
+<li>Best idea: <strong>the snapshot knows which files the agent wrote
+and which the harness observed.</strong>
+<code>_is_harness_evidence_path</code> keeps
+<code>attempts/level_N_attempt_NNN/…</code>, <code>animation_*</code>
+and <code>turn_NNN.{txt,json,png}</code> out of the manifest, so
+restoring an earlier world model rolls back the conclusion and leaves
+the record it was drawn from. Most workspace snapshots in this corpus
+capture the directory; this one captures a provenance boundary.</li>
+<li>Second idea: <strong>the boundary is tested from both sides in one
+fixture.</strong> <code>test_workspace_versioning.py</code> asserts
+<code>level_0/turn_000.txt</code> absent from <code>file_versions</code>
+and <code>level_0/agent_helper.json</code> present in
+<code>contents</code> — an agent-authored file in the same directory as
+excluded evidence. An implementation that excluded the whole directory
+passes every other assertion in the file and fails that one.</li>
+<li>Biggest risk: <strong>the world model is Python with no epistemic
+annotation.</strong> A <code>transition</code> the agent checked against
+the log and one it is still guessing at are the same text, nothing marks
+a rule as falsified, and the only <code>status</code> in the snapshot
+model — <code>omitted_symlink</code>, <code>omitted_large</code> —
+describes why a file <em>body</em> was not captured.</li>
+<li>Maturity impression: Apache-2.0, 24,829 lines of Python with 6,549
+in tests, and a single commit dated 29 July 2026 beside a
+<code>PUBLIC_RELEASE_MANIFEST.json</code>, which is a squashed public
+release rather than a history. One mark.</li>
+<li>Study when: you snapshot an agent workspace and want to know where
+to draw the capture line, or you need the shape of an exclusion test
+that cannot pass by excluding too much.</li>
+<li>Do not copy when: memories need to carry belief. Nothing here can
+say a stored conclusion is doubtful, and nothing records that a prior
+one was wrong.</li>
+</ul>
+<h3 id="retrodict"><a
+href="../systems/retrodict/"><code>retrodict</code></a></h3>
+<ul>
+<li>Best idea: <strong>the prompt says why a raw log is not
+memory.</strong> <em>"log.txt survives but is large and raw: it records
+every board and action, not the conclusions you drew from them, so a
+fresh session relying on log.txt alone re-derives and re-tests rules you
+already settled."</em> That paragraph is the argument for a curated
+summary, and most systems here ship the summary without it.</li>
+<li>Second idea: <strong>hypotheses are checked against the record
+before they cost an action.</strong> The agent replays a candidate rule
+over past frames <em>"where being wrong costs nothing"</em>, and a
+committed plan carries the exact cells each move predicts, so a wrong
+model announces itself on the next mismatch rather than after the
+run.</li>
+<li>Biggest risk: <strong>every guarantee is a sentence in a
+prompt.</strong> The two-state marking — a point <em>checked against the
+log</em> versus <em>still assumed</em>, with a rule against building
+multi-step plans on the second — is a better specification of
+<code>trust_state</code> than several implementations here, and nothing
+reads it. <code>playbook.md</code> appears in <code>prompts.py</code>
+and in no other harness file: no code creates, parses, validates or
+backs up the one file the design depends on, and a compaction that drops
+a falsified conclusion leaves no diff.</li>
+<li>Maturity impression: 3,888 lines of Python, 46 commits since 5 July
+2026, 1,435 lines of tests, none touching the playbook. No marks. The
+published result — 99.86% mean RHAE at $654 — names <a
+href="../systems/tycho/">Tycho</a> as scoring higher and links a
+comparison document warning that <em>"cost methods and run-selection
+rules differ."</em></li>
+<li>Study when: you are writing the contract for a
+summarise-for-your-successor file and want the clearest statement of it
+in this corpus.</li>
+<li>Do not copy when: anything other than the model itself has to rely
+on the memory being well-formed.</li>
+</ul>
+<h3 id="polyphony-arc"><a
+href="../systems/polyphony-arc/"><code>polyphony-arc</code></a></h3>
+<ul>
+<li>Best idea: <strong>the word bound is stated with its
+stakes.</strong> <em>"Under 2500 words. This is the next instance's only
+memory of your thinking."</em> A cap alone gets a truncated transcript;
+a cap with the consequence attached changes what the writer chooses to
+keep, at no implementation cost.</li>
+<li>Second idea: <strong>the precedence rule is the heading of the thing
+it governs.</strong> On-disk files are rendered under <em>"On-disk files
+(authoritative; re-read before trusting memory):"</em>, so the successor
+cannot read the listing without reading that the files outrank its
+summary.</li>
+<li>Biggest risk: <strong>there is no tests directory.</strong> The
+entire memory behaviour is emergent from prompt text, published with a
+benchmark claim and without one committed assertion about the compaction
+path. A summary that runs long, or contradicts a file it was told to
+defer to, produces no error and no trace.</li>
+<li>Maturity impression: MIT, 6,542 lines of harness code beside 79,035
+vendored, one commit dated 6 July 2026. No marks. Two source comments
+record the failures the design answers — an approach that <em>"deleted
+the agent's WORKING MEMORY"</em>, and per-turn trimming that
+<em>"destroyed prefix cache + working memory"</em>.</li>
+<li>Study when: you are choosing what to tell a model at a compaction
+boundary, and want the two lines that do the most work.</li>
+<li>Do not copy when: the memory has to be checkable by anything but the
+model that wrote it.</li>
 </ul>
         </article>
       </div>

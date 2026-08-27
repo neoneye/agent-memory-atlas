@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 337 reports.**
+**This page covers all 340 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -2975,3 +2975,30 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 296 files, 1,145 commits since 21 February 2026, ~1,580 lines of MeTTa and ~15,700 lines of tests across 32 files driving a real container over Telegram, Slack and WebSocket. One mark. It shares early history with [MeTTaClaw](../systems/mettaclaw/) — identical root commits — and removed that project's reinforcement ledger: `src/memory.metta` is 61 lines against 112, `query` is one line returning the top twenty by distance, and the recall budget doubled in the same move. Neither project published a comparison.
 - Study when: your design's claim is "we only write when asked" and you need the test that makes it checkable, or you want the tier table that settles where working state goes.
 - Do not copy when: memory has to be correctable. This is append-only in the strongest sense available — nothing in the tree modifies or removes an item.
+
+### [`tycho`](../systems/tycho/)
+
+- Best idea: **the snapshot knows which files the agent wrote and which the harness observed.** `_is_harness_evidence_path` keeps `attempts/level_N_attempt_NNN/…`, `animation_*` and `turn_NNN.{txt,json,png}` out of the manifest, so restoring an earlier world model rolls back the conclusion and leaves the record it was drawn from. Most workspace snapshots in this corpus capture the directory; this one captures a provenance boundary.
+- Second idea: **the boundary is tested from both sides in one fixture.** `test_workspace_versioning.py` asserts `level_0/turn_000.txt` absent from `file_versions` and `level_0/agent_helper.json` present in `contents` — an agent-authored file in the same directory as excluded evidence. An implementation that excluded the whole directory passes every other assertion in the file and fails that one.
+- Biggest risk: **the world model is Python with no epistemic annotation.** A `transition` the agent checked against the log and one it is still guessing at are the same text, nothing marks a rule as falsified, and the only `status` in the snapshot model — `omitted_symlink`, `omitted_large` — describes why a file *body* was not captured.
+- Maturity impression: Apache-2.0, 24,829 lines of Python with 6,549 in tests, and a single commit dated 29 July 2026 beside a `PUBLIC_RELEASE_MANIFEST.json`, which is a squashed public release rather than a history. One mark.
+- Study when: you snapshot an agent workspace and want to know where to draw the capture line, or you need the shape of an exclusion test that cannot pass by excluding too much.
+- Do not copy when: memories need to carry belief. Nothing here can say a stored conclusion is doubtful, and nothing records that a prior one was wrong.
+
+### [`retrodict`](../systems/retrodict/)
+
+- Best idea: **the prompt says why a raw log is not memory.** *"log.txt survives but is large and raw: it records every board and action, not the conclusions you drew from them, so a fresh session relying on log.txt alone re-derives and re-tests rules you already settled."* That paragraph is the argument for a curated summary, and most systems here ship the summary without it.
+- Second idea: **hypotheses are checked against the record before they cost an action.** The agent replays a candidate rule over past frames *"where being wrong costs nothing"*, and a committed plan carries the exact cells each move predicts, so a wrong model announces itself on the next mismatch rather than after the run.
+- Biggest risk: **every guarantee is a sentence in a prompt.** The two-state marking — a point *checked against the log* versus *still assumed*, with a rule against building multi-step plans on the second — is a better specification of `trust_state` than several implementations here, and nothing reads it. `playbook.md` appears in `prompts.py` and in no other harness file: no code creates, parses, validates or backs up the one file the design depends on, and a compaction that drops a falsified conclusion leaves no diff.
+- Maturity impression: 3,888 lines of Python, 46 commits since 5 July 2026, 1,435 lines of tests, none touching the playbook. No marks. The published result — 99.86% mean RHAE at $654 — names [Tycho](../systems/tycho/) as scoring higher and links a comparison document warning that *"cost methods and run-selection rules differ."*
+- Study when: you are writing the contract for a summarise-for-your-successor file and want the clearest statement of it in this corpus.
+- Do not copy when: anything other than the model itself has to rely on the memory being well-formed.
+
+### [`polyphony-arc`](../systems/polyphony-arc/)
+
+- Best idea: **the word bound is stated with its stakes.** *"Under 2500 words. This is the next instance's only memory of your thinking."* A cap alone gets a truncated transcript; a cap with the consequence attached changes what the writer chooses to keep, at no implementation cost.
+- Second idea: **the precedence rule is the heading of the thing it governs.** On-disk files are rendered under *"On-disk files (authoritative; re-read before trusting memory):"*, so the successor cannot read the listing without reading that the files outrank its summary.
+- Biggest risk: **there is no tests directory.** The entire memory behaviour is emergent from prompt text, published with a benchmark claim and without one committed assertion about the compaction path. A summary that runs long, or contradicts a file it was told to defer to, produces no error and no trace.
+- Maturity impression: MIT, 6,542 lines of harness code beside 79,035 vendored, one commit dated 6 July 2026. No marks. Two source comments record the failures the design answers — an approach that *"deleted the agent's WORKING MEMORY"*, and per-turn trimming that *"destroyed prefix cache + working memory"*.
+- Study when: you are choosing what to tell a model at a compaction boundary, and want the two lines that do the most work.
+- Do not copy when: the memory has to be checkable by anything but the model that wrote it.
