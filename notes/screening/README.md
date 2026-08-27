@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 187 of 336 screened at the report's current pin.**
+**Progress: 188 of 337 screened at the report's current pin.**
 
 18 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 70 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 68 |
-| Repositories with build-time execution (`EXEC`) | 147 |
+| Repositories with an auto-run surface (`RUNS`) | 71 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 69 |
+| Repositories with build-time execution (`EXEC`) | 148 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -67,6 +67,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
+| [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
 | [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |

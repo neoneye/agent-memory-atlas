@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 336 reports.**
+**This page covers all 337 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1290,6 +1290,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 25,000 lines of one author's carefully documented Python with an unusually detailed changelog, four capability marks, and 21 test files holding five assertions between them — so the mechanisms that earn the marks are pinned by nobody, and the verification is a person's practice rather than the repository's.
 - Study when: you want to see what correction machinery looks like when there is no model to blame; every epistemic decision here had to be written down because nothing could be delegated to a language model.
 - Do not copy when: literally — the licence is "Viewable, Not Reusable". Also when you need more than one user, since no scope key exists anywhere, or a store that survives an interrupted write, since the whole graph is rewritten non-atomically on every save.
+
+### [`matrix-os`](../systems/matrix-os/)
+
+- Best idea: **capture costs nothing and reads only the user.** Nine regexes over user turns, no model call, no latency, and a committed test pinning that assistant messages are ignored — the boundary several systems here miss. `remember` dedupes on exact content and updates in place, so a pattern seeing the same sentence twice is idempotent, and the FTS5 projection is maintained on the write path *and* torn down before the row on delete, in that order.
+- Biggest risk: **two of the nine patterns match ordinary speech, and nothing in the row can say so.** `/(?:don't|do not|stop|quit)\s+(.+)/i` is unanchored, so *"don't worry about it"* is stored as an `instruction` carrying `worry about it`, with exactly the standing of one the user typed deliberately. The table has six columns — id, content, source, category, created_at, updated_at — so there is no status, no confidence and no provenance beyond a free-text `source`. A false capture is durable, unmarkable, and recreated by the same sentence after a `forget`, because nothing is keyed on the removed value.
+- Second risk: **no scope column at all.** In a system that calls itself an operating system and ships a plugin architecture, every memory is visible to every caller of the store, and no read path filters on anything but category. `recall` also swallows its own failures — a `catch` that warns to console and returns `[]` — so an index fault is indistinguishable from a store with nothing relevant, the shape [aimee](../systems/aimee/) spent sixteen files closing.
+- Maturity impression: AGPL-3.0, ~200,000 lines of TypeScript, 1,707 commits since 11 February 2026, with specs, a paper directory and three compose topologies around a 328-line memory subsystem. One mark. The memory tests run about two lines per line of implementation, which is better than most of this corpus — and `exportToFiles` is implemented, tested, and called by nothing outside the test suite.
+- Study when: you want the zero-LLM capture path done cheaply, or the FTS-projection discipline on both write and delete.
+- Do not copy when: the extractor's precision matters — there is no committed case asserting what the patterns must *not* capture, and no field in which a doubtful capture could be marked.
 
 ### [`memsem`](../systems/memsem/)
 - Best idea: the benchmark is committed, wired into `npm test`, and reproduces exactly — P@3 0.958 with an ablation across four alternative constant weightings, so the defaults have to keep beating the alternatives on every run, and an author-written honest reading names the set's limits.

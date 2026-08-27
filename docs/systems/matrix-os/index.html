@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent operating system whose
+memory is a six-column SQLite table filled by pattern matching, with no
+scope, no status, and an export path that only tests call.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Matrix OS — Agent Memory Atlas">
+    <meta property="og:description" content="An agent operating system
+whose memory is a six-column SQLite table filled by pattern matching,
+with no scope, no status, and an export path that only tests call.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Matrix OS — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent operating system
+whose memory is a six-column SQLite table filled by pattern matching,
+with no scope, no status, and an export path that only tests call.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Matrix OS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Matrix OS",
+      "description": "An agent operating system whose memory is a six-column SQLite table filled by pattern matching, with no scope, no status, and an export path that only tests call.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Nine regexes and no way back</p>
+          <h1>Matrix OS</h1>
+          <p class="document-deck">An agent operating system whose
+memory is a six-column SQLite table filled by pattern matching, with no
+scope, no status, and an export path that only tests call.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/HamedMP/matrix-os">
+              <span>Source</span>
+              <strong>HamedMP/matrix-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860" title="22c488937763543901cad906e253286c54a32860">
+              <span>Analyzed revision</span>
+              <code>22c48893…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-27</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Matrix OS is an agent operating system — roughly 200,000 lines of
+TypeScript across a kernel, a gateway, a desktop app and a plugin
+system, 1,707 commits since 11 February 2026, AGPL-3.0. It has specs, a
+paper directory, three docker-compose topologies and a homebrew tap.</p>
+<p>The memory subsystem is 328 lines.
+<code>packages/kernel/src/memory.ts</code> defines a
+<code>MemoryStore</code> with <code>remember</code>,
+<code>recall</code>, <code>forget</code>, <code>listAll</code>,
+<code>exportToFiles</code> and <code>count</code> over a SQLite table of
+six columns, with an FTS5 projection beside it.
+<code>packages/gateway/src/memory-extractor.ts</code> is 58 lines of
+regular expressions that decide what gets stored.</p>
+<p>One mark. The forget test asserts that the removed memory is gone and
+the bystander survives, over the same store, which is the shape this
+atlas asks for.</p>
+<p>The rest of the report is about the six columns and the nine
+patterns, because between them they decide everything else. There is no
+scope key, so nothing separates one caller's memories from another's.
+There is no status or confidence, so a regex hit and a deliberate
+<code>remember</code> are the same kind of row. And there is no update
+path for content and no record of a deletion, so the only correction
+available is to remove a row and hope the pattern that created it does
+not fire again.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Capture is pattern matching, not extraction. <code>PATTERNS</code> is
+a list of nine regular expressions mapped to four categories:</p>
+<pre class="js"><code>{ pattern: /(?:i prefer|i always want|i like|my preference is)\s+(.+)/i, category: &quot;preference&quot; },
+{ pattern: /(?:my name is|i am called|call me)\s+(.+)/i,                 category: &quot;fact&quot; },
+{ pattern: /(?:remember that|don&#39;t forget|keep in mind)\s+(.+)/i,        category: &quot;instruction&quot; },
+{ pattern: /(?:always|never)\s+(.+)/i,                                   category: &quot;instruction&quot; },
+{ pattern: /(?:don&#39;t|do not|stop|quit)\s+(.+)/i,                          category: &quot;instruction&quot; },</code></pre>
+<p>The first three are the kind of thing this approach is good at: an
+explicit declaration in a recognisable frame, captured with no model
+call and no latency. This atlas has a <a
+href="../../patterns/zero-llm-capture/">pattern page for that</a> and
+the argument for it is real — deterministic, free, and it cannot
+hallucinate a fact the user did not say.</p>
+<p>The last two are the problem. <code>/(?:always|never)\s+(.+)/i</code>
+matches <em>"I'll always forget to do that"</em>.
+<code>/(?:don't|do not|stop|quit)\s+(.+)/i</code> matches <em>"don't
+worry about it"</em> and stores <code>worry about it</code> as an
+<strong>instruction</strong>. Neither pattern is anchored to the start
+of the message, so a match anywhere in any user turn captures the
+remainder of the line.</p>
+<p>That would be a tuning problem in a system that could mark the result
+as uncertain. Here it is permanent: section 5 covers what the row can
+and cannot say about itself.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nine regexes decide what becomes durable, and the row they produce carries no field that could later mark it wrong — the only correction is a delete with no record</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: nine regexes decide what becomes durable, and the row they produce carries no field that could later mark it wrong — the only correction is a delete with no record
+    U[&quot;user message&quot;] --&gt; EX[&quot;memory-extractor&lt;br/&gt;9 regex patterns&lt;br/&gt;user role only&quot;]
+    EX --&gt;|&quot;match&quot;| CAND[&quot;MemoryCandidate&lt;br/&gt;content + category&quot;]
+    EX --&gt;|&quot;no match&quot;| DROP[&quot;dropped, unrecorded&quot;]
+    CAND --&gt; REM[&quot;remember(content, opts)&quot;]
+    API[&quot;direct remember()&lt;br/&gt;kernel IPC · tools&quot;] --&gt; REM
+
+    REM --&gt; DEDUP{&quot;exact content&lt;br/&gt;already stored?&quot;}
+    DEDUP --&gt;|&quot;yes&quot;| UPD[&quot;update updatedAt,&lt;br/&gt;source, category&lt;br/&gt;return existing id&quot;]
+    DEDUP --&gt;|&quot;no&quot;| INS[&quot;insert row +&lt;br/&gt;INSERT INTO memories_fts&quot;]
+
+    INS &amp; UPD --&gt; DB[(&quot;memories&lt;br/&gt;id · content · source ·&lt;br/&gt;category · created_at · updated_at&quot;)]
+    DB -. &quot;no scope column&lt;br/&gt;no status column&lt;br/&gt;no confidence&quot; .- NOTE[&quot; &quot;]
+
+    Q[&quot;recall(query)&quot;] --&gt; FTS[&quot;terms joined by OR&lt;br/&gt;ORDER BY rank LIMIT 10&quot;]
+    FTS --&gt; DB
+    DB --&gt; OUT[&quot;entries returned&quot;]
+
+    F[&quot;forget(id)&quot;] --&gt; DEL[&quot;DELETE FROM memories_fts&lt;br/&gt;then DELETE row&quot;]
+    DEL --&gt; DB
+    F -.-&gt;|&quot;nothing recorded&quot;| GONE[&quot;no tombstone,&lt;br/&gt;no audit event&quot;]
+
+    EXP[&quot;exportToFiles(dir)&quot;] -.-&gt;|&quot;no caller outside tests&quot;| MD[&quot;markdown per memory&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong><code>remember</code> is idempotent on exact
+content.</strong> A repeat looks up
+<code>eq(memories.content, content)</code>, and on a hit it updates
+<code>updatedAt</code>, <code>source</code> and <code>category</code>
+and returns the existing id rather than inserting. That is the right
+default for a pattern extractor that will see the same sentence twice,
+and it is exact-match, so a rephrasing is a new row.</p>
+<p><strong>The FTS projection is maintained by hand on both
+sides.</strong> The insert path runs an explicit
+<code>INSERT INTO memories_fts(rowid, content)</code>, and
+<code>forget</code> deletes the FTS row <em>before</em> the record, in
+that order, so the projection does not outlive its subject. Several
+systems in this corpus get the delete order wrong or skip the projection
+entirely; this one does not.</p>
+<p><strong><code>recall</code> ORs the query terms.</strong> The query
+is split on whitespace and joined as <code>"a" OR "b" OR "c"</code>, so
+a match on any single term qualifies and <code>ORDER BY rank</code> does
+the rest of the work. For a two-word question that is reasonable. For a
+sentence it means one common term admits everything containing it, with
+relevance decided entirely by BM25 over a store that has no other signal
+— no recency weighting, no category preference, no usage count.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The whole schema:</p>
+<pre class="ts"><code>export const memories = sqliteTable(&quot;memories&quot;, {
+  id: text(&quot;id&quot;).primaryKey(),
+  content: text(&quot;content&quot;).notNull(),
+  source: text(&quot;source&quot;),
+  category: text(&quot;category&quot;).default(&quot;fact&quot;),
+  createdAt: text(&quot;created_at&quot;),
+  updatedAt: text(&quot;updated_at&quot;),
+});</code></pre>
+<p>Three absences decide most of this report.</p>
+<p><strong>No scope key.</strong> There is no user, agent, session,
+project or tenant column, and no read path filters on one. In a system
+that calls itself an operating system and runs a plugin architecture,
+every memory is visible to every caller of the store.</p>
+<p><strong>No status and no confidence.</strong> <code>category</code>
+is <code>fact</code> / <code>preference</code> /
+<code>instruction</code> / <code>event</code> — a kind, not an epistemic
+state. A row captured by
+<code>/(?:don't|do not|stop|quit)\s+(.+)/i</code> from <em>"don't worry
+about it"</em> is stored as an <code>instruction</code> with exactly the
+standing of one the user typed deliberately, and nothing in the row can
+later say it was wrong. The atlas's <code>trust_state</code> mark asks
+for a state that withholds a memory from being treated as true; there is
+no field here that could hold one.</p>
+<p><strong>One time axis.</strong> <code>createdAt</code> and
+<code>updatedAt</code> are both record time. Nothing records when the
+remembered thing was true, so a preference that has since changed reads
+identically to a current one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Covered in section 4. Worth adding: <code>recall</code> catches its
+own failure and returns an empty array with a <code>console.warn</code>
+—</p>
+<pre class="js"><code>} catch (err: unknown) {
+  console.warn(&quot;[memory] Search failed:&quot;, ...);
+  return [];
+}</code></pre>
+<p>An FTS syntax error, a missing projection table or a corrupt index
+therefore looks to the caller exactly like a store with nothing relevant
+in it. The warn goes to a console the agent does not read. This is the
+shape <a href="../aimee/">aimee</a> spent sixteen files closing, on the
+stated ground that <em>"a search that finds nothing, an entity with no
+edges, a key with no history all look identical to an outage."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two doors into the store: the gateway extractor on the message path,
+and direct <code>remember</code> calls from the kernel and its tools.
+Only user messages are extracted from — the test
+<code>ignores assistant messages</code> pins that, which is the right
+boundary and one several systems here miss.</p>
+<p>Deletion is a row delete. Nothing is keyed on the removed value, so
+the extractor that produced a memory will produce it again the next time
+the same sentence appears, and <code>remember</code>'s exact-match dedup
+will treat it as new because the original row is gone. <strong>The only
+correction this system has is subject to immediate reversal by the
+mechanism that caused the problem.</strong></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The store is reached over the kernel's IPC server, surfaced as a
+<code>memory_search</code> tool, and consulted by <code>prompt.ts</code>
+when assembling context. <code>memory-search.ts</code> widens search
+across the FTS store and the on-disk summaries under
+<code>home/system/</code>, which is where the <code>scope: "all"</code>
+argument in its tests comes from.</p>
+<p><code>exportToFiles</code> writes one markdown file per memory with
+YAML frontmatter carrying id, category, source and both timestamps.
+<strong>Nothing outside the test suite calls it.</strong> A grep across
+the whole repository finds the interface declaration, the
+implementation, and five references in
+<code>tests/kernel/memory.test.ts</code>. The feature is written, tested
+and unreachable — the corpus's most common defect in its most benign
+form, since the tests mean it would work if wired. It also never removes
+a stale file, so wiring it as-is would leave a forgotten memory's
+markdown on disk after the row is gone.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The honest summary is that trust is not modelled. There is no
+verification step between a regex firing and the content entering every
+future prompt, no provenance beyond a free-text <code>source</code>, no
+confidence, no review surface and no audit of mutations. The top-level
+<code>audit/</code> directory is a dated one-off containing a prompt,
+not a runtime log, and no memory write emits an event.</p>
+<p>Set against the extractor's two broad patterns, that combination is
+the risk worth stating plainly: a system that captures conversational
+filler as durable instructions, cannot mark the result as doubtful, and
+cannot prevent its recreation after a delete. The mitigation available
+today is that a user must notice and call <code>forget</code>, per row,
+forever.</p>
+<p>What is done well belongs here too. The FTS projection is maintained
+on both write and delete. The extractor reads only user turns. Dedup
+makes repeat capture idempotent. And the memory tests run about two
+lines per line of implementation, which is a better ratio than most of
+this corpus.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>663 lines of memory tests against 328 lines of memory implementation.
+Nothing was run for this review; the screen found two auto-run surfaces,
+twenty-seven unpinned dependency surfaces and seven files inside the
+seven-day cooldown.</p>
+<p>The case that earns the mark is
+<code>only removes the specified memory</code>:</p>
+<pre class="js"><code>const id1 = store.remember(&quot;fact 1&quot;);
+store.remember(&quot;fact 2&quot;);
+store.forget(id1);
+expect(store.count()).toBe(1);
+expect(all[0].content).toBe(&quot;fact 2&quot;);</code></pre>
+<p>Both directions over one store — a delete that removed everything
+fails the count, one that removed nothing fails it too, and one that
+removed the wrong row fails the content assertion.</p>
+<p>The recall pair is weaker but not vacuous:
+<code>recall("dark themes")</code> is asserted non-empty with the terms
+present, and <code>recall("quantum physics")</code> is asserted
+<code>[]</code> against the same populated store. That asserts the index
+does not invent matches, which is a different and lesser claim than a
+boundary holding.</p>
+<p>What is untested is the part that most needs it: <strong>no committed
+case asserts what the nine patterns must <em>not</em> capture.</strong>
+The extractor tests cover <code>ignores assistant messages</code> and
+<code>returns empty array for no matches</code> on <em>"What is the
+weather today?"</em>, and no case feeds it <em>"don't worry about
+it"</em> or <em>"I'll always forget"</em> to pin that ordinary speech
+stays out of durable memory. A precision suite over the pattern list is
+perhaps thirty lines and is the highest-value test this repository does
+not have.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>If you capture by pattern, test what must not match.</strong>
+The value of zero-LLM capture is determinism, and determinism is only an
+advantage when you have pinned the boundary. Nine regexes with no
+negative corpus is nine regexes whose precision nobody has measured.</p>
+<p><strong>Anchor patterns you intend as declarations.</strong>
+<code>/(?:always|never)\s+(.+)/i</code> unanchored will match
+mid-sentence in ordinary conversation for as long as the product
+exists.</p>
+<p><strong>Give a low-confidence capture somewhere to live.</strong> A
+single <code>status</code> column would let a pattern hit enter as a
+candidate and a deliberate <code>remember</code> enter as a fact, and
+would let recall prefer the second. Without it, the extractor's
+precision is the system's precision.</p>
+<p><strong>Do not let a failed search return the same value as an empty
+one.</strong> The <code>catch</code> that logs and returns
+<code>[]</code> turns every index fault into a silent absence.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Is <code>exportToFiles</code> intended to run?</strong>
+<code>home/system/memory</code> and <code>home/agents/memory</code>
+exist in the tree, which suggests the export was meant to populate them.
+Whether a caller was removed or never written was not established.</p>
+<p><strong>What does <code>memory-search.ts</code> add over
+<code>recall</code>?</strong> It searches the FTS store and the on-disk
+summaries together under a <code>scope</code> argument whose values
+include <code>"all"</code>. Whether that <code>scope</code> is ever an
+access boundary rather than a source selector was not traced beyond its
+tests.</p>
+<p><strong>Does anything consume <code>source</code>?</strong> The
+column is written by callers that pass it and rendered in the markdown
+export. No read path found here filters or ranks on it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/kernel/src/memory.ts</code></td>
+<td>The store, the six-column model, dedup, FTS maintenance, the unwired
+export</td>
+</tr>
+<tr>
+<td><code>packages/kernel/src/schema.ts</code></td>
+<td>The <code>memories</code> table — and the columns that are not
+there</td>
+</tr>
+<tr>
+<td><code>packages/kernel/src/memory-search.ts</code></td>
+<td>Search across the FTS store and on-disk summaries</td>
+</tr>
+<tr>
+<td><code>packages/gateway/src/memory-extractor.ts</code></td>
+<td>The nine capture patterns</td>
+</tr>
+<tr>
+<td><code>tests/kernel/memory.test.ts</code></td>
+<td>The forget case that earns the mark</td>
+</tr>
+<tr>
+<td><code>tests/gateway/memory-extractor.test.ts</code></td>
+<td>Pattern coverage, positive cases only</td>
+</tr>
+<tr>
+<td><code>specs/016-memory</code>, <code>specs/052-memory</code></td>
+<td>The written design, not read for this report</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-27</strong> — <a
+href="https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860"><code class="commit-id" title="22c488937763543901cad906e253286c54a32860">22c48893…</code></a>
+— first reading, roughly 200,000 lines of TypeScript, 1,707 commits
+since 11 February 2026, AGPL-3.0. Screened before anything was read: two
+auto-run surfaces, two build-time execution surfaces, twenty-seven
+unpinned surfaces and seven files inside the seven-day cooldown;
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> are addressed to a
+reading agent and were treated as data. Nothing was installed and
+nothing was run. One mark. <code>negative_eval</code> rests on
+<code>only removes the specified memory</code>, which asserts the
+forgotten row is gone and names the survivor. <code>tombstone</code> is
+absent — <code>forget</code> is a row delete with nothing keyed on the
+value, and the regex extractor that created a memory will recreate it
+from the same sentence. <code>trust_state</code> is absent:
+<code>category</code> is a kind, not a status, and there is no
+confidence field, so a pattern hit on <em>"don't worry about it"</em> is
+stored as an instruction with the standing of a deliberate one.
+<code>bitemporal</code> is absent — both timestamps are record time.
+<code>scope_enforced</code> is absent — the table has no scope column
+and no read path filters on one. <code>audit_log</code> is absent; the
+top-level <code>audit/</code> directory is a dated one-off holding a
+prompt, and no memory write emits an event. <code>human_review</code> is
+absent. <code>exportToFiles</code> is implemented and tested with no
+caller outside the test suite. The reading covers the kernel memory
+store, the gateway extractor, the search module and their tests; the
+specs under <code>specs/016-memory</code> and
+<code>specs/052-memory</code>, the desktop app and the plugin system
+were not traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

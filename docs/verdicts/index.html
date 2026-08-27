@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 336 reports.</strong></p>
+<p><strong>This page covers all 337 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3779,6 +3779,48 @@ model.</li>
 Reusable". Also when you need more than one user, since no scope key
 exists anywhere, or a store that survives an interrupted write, since
 the whole graph is rewritten non-atomically on every save.</li>
+</ul>
+<h3 id="matrix-os"><a
+href="../systems/matrix-os/"><code>matrix-os</code></a></h3>
+<ul>
+<li>Best idea: <strong>capture costs nothing and reads only the
+user.</strong> Nine regexes over user turns, no model call, no latency,
+and a committed test pinning that assistant messages are ignored — the
+boundary several systems here miss. <code>remember</code> dedupes on
+exact content and updates in place, so a pattern seeing the same
+sentence twice is idempotent, and the FTS5 projection is maintained on
+the write path <em>and</em> torn down before the row on delete, in that
+order.</li>
+<li>Biggest risk: <strong>two of the nine patterns match ordinary
+speech, and nothing in the row can say so.</strong>
+<code>/(?:don't|do not|stop|quit)\s+(.+)/i</code> is unanchored, so
+<em>"don't worry about it"</em> is stored as an <code>instruction</code>
+carrying <code>worry about it</code>, with exactly the standing of one
+the user typed deliberately. The table has six columns — id, content,
+source, category, created_at, updated_at — so there is no status, no
+confidence and no provenance beyond a free-text <code>source</code>. A
+false capture is durable, unmarkable, and recreated by the same sentence
+after a <code>forget</code>, because nothing is keyed on the removed
+value.</li>
+<li>Second risk: <strong>no scope column at all.</strong> In a system
+that calls itself an operating system and ships a plugin architecture,
+every memory is visible to every caller of the store, and no read path
+filters on anything but category. <code>recall</code> also swallows its
+own failures — a <code>catch</code> that warns to console and returns
+<code>[]</code> — so an index fault is indistinguishable from a store
+with nothing relevant, the shape <a href="../systems/aimee/">aimee</a>
+spent sixteen files closing.</li>
+<li>Maturity impression: AGPL-3.0, ~200,000 lines of TypeScript, 1,707
+commits since 11 February 2026, with specs, a paper directory and three
+compose topologies around a 328-line memory subsystem. One mark. The
+memory tests run about two lines per line of implementation, which is
+better than most of this corpus — and <code>exportToFiles</code> is
+implemented, tested, and called by nothing outside the test suite.</li>
+<li>Study when: you want the zero-LLM capture path done cheaply, or the
+FTS-projection discipline on both write and delete.</li>
+<li>Do not copy when: the extractor's precision matters — there is no
+committed case asserting what the patterns must <em>not</em> capture,
+and no field in which a doubtful capture could be marked.</li>
 </ul>
 <h3 id="memsem"><a
 href="../systems/memsem/"><code>memsem</code></a></h3>
