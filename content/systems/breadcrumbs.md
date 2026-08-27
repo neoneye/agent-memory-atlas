@@ -6,14 +6,15 @@ root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
-revision: 8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
-revision_url: https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f
-analyzed_at: 2026-08-21
-capabilities: "tombstone, trust_state, bitemporal, audit_log, human_review, negative_eval"
+revision: ec38f156aac78174901c6aae2e63e0aa7be3878b
+revision_url: https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b
+analyzed_at: 2026-08-27
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
+  scope_enforced: "audience filtering at context assembly, with the audience derived rather than supplied | templates/ledger-tools/memory_engine.py:492,:573-584,:590-594,:617-630, templates/ledger-tools/scoped_context.py:34-58,:60-78 | `SCOPE_ORDER` is `{public: 0, internal: 1, regulated: 2}` and `build_context(audience=...)` filters facts against the caller clearance at assembly, with `e.get(\\\"scope\\\", \\\"internal\\\")` defaulting an unscoped fact to internal so it is withheld from a public audience rather than admitted. Two things raise it above a filter. The **whole episodic tier is dropped whenever an audience is set** — *\\\"the episodic tier carries no scope field, and supersession episodes embed prior VALUES, so under any audience filter episodes are omitted entirely: fail closed rather than leak through the side door\\\"* — which closes the lane a suppressed value would otherwise re-enter through. And `ScopedContextService` puts a derivation in front of the primitive: the request *\\\"never supplies a principal, audience, role, or clearance\\\"*, a host-owned `PrincipalProvider` returns the authenticated principal, and `ScopePolicy.clearance_for` raises `PermissionError` for a principal with no grant rather than defaulting. The engine names its own limit in the same docstring — *\\\"a low-level storage primitive, not an authorization boundary. A caller that may choose audience may also widen it\\\"* — which is the distinction this mark declines to certify, stated in the source | templates/ledger-tools/scoped_context.py selftest asserts a public principal cannot see internal or regulated facts"
   tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
   trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"
   audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION, SUPERSEDED, REJECTED and TOMBSTONE_LIFTED rows, the second with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
@@ -26,7 +27,7 @@ matrix:
   retrieval: "Path-key match against the files a session touched, most specific then most recent, hard-capped; the fact index answers by exact key or alias first"
   write: "A session appends by hand or through a prompt hook; no model extracts anything"
   update_delete: "Append-only supersession through obsoleted_by; the engine logs a prior value before overwriting and refuses a value it has tombstoned"
-  scoping: "The path key is a relevance key, not an access boundary; no user, tenant or agent scope"
+  scoping: "A three-level `public` / `internal` / `regulated` scope on a fact, filtered at context assembly with an unscoped fact defaulting to `internal`; `ScopedContextService` derives the audience from a host-authenticated principal so the caller never supplies one, and the whole episodic tier is dropped whenever an audience filter is active because episodes carry no scope"
   integration: "Claude Code hooks and slash commands, plus three push hooks for the fact index and a stdlib library for a loop you write yourself"
   background: "Nothing in this tree runs on its own; the sweeps are report-only and the weekly gardener trigger ships as a template"
   trust: "asserted vs verified, where verified refuses to be set without a named oracle and a rejected value refuses to be re-asserted"
@@ -1111,7 +1112,15 @@ teams have never asked about the memory they already have.
 
 ## History
 
-**2026-08-21** — [`8f034fc952cb9d10c32f53f4caa20a161f7c1a9f`](https://github.com/The-825/breadcrumbs/commit/8f034fc952cb9d10c32f53f4caa20a161f7c1a9f) — re-pinned 14 commits on, and unlike the previous re-read these are code. Screened again: nothing scanned beyond a single manifest, no auto-run surface, nothing installed. **`bitemporal` is awarded**, which the previous entry explicitly withheld on the ground that the `as_of` cutoff *"filters the learned-at axis only"*. `store_fact` now takes `valid_from`/`valid_until` beside the unconditional `recorded_at`, and `compose_context` filters the two independently, with the composed postmortem query named in its docstring and a golden case pinning it. Taking the report to six of seven marks; `scope_enforced` remains the only substantive gap and section 5 records why the reason is unusual — the audience filter exists and nothing in the repository calls it, because the engine ships as a library.
+**2026-08-27** — [`ec38f156aac78174901c6aae2e63e0aa7be3878b`](https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b) — re-pinned thirteen commits on. Screened again: no auto-run surface, no build-time execution, no unpinned surface; nothing was installed and nothing was run. `scope_enforced` is added, to seven.
+
+Most of the range is documentation — a collaboration research ledger, a cooperative-intelligence evaluation template. One commit carries the mark: `scoped_context.py`, a 165-line authorization seam in front of the existing audience filter. The filter itself already existed and the report already described it as a relevance key rather than a boundary; what changed is that a caller can no longer name its own audience. `ScopedContextService` takes a host-owned `PrincipalProvider`, maps the principal through a frozen `ScopePolicy`, and refuses a principal with no grant instead of falling back to a default.
+
+The engine states the division in its own docstring rather than leaving a reader to infer it: `build_context` is *"a low-level storage primitive, not an authorization boundary. A caller that may choose audience may also widen it. Put untrusted callers behind scoped_context.ScopedContextService."* That is precisely the line this atlas's `scope_enforced` definition draws — the mark certifies that the key reaches the query, not that a caller cannot widen it — written into the source by the project.
+
+The sharper property is older and was found by the module's own selftest: when an audience filter is active the **entire episodic tier is omitted**, because episodes carry no scope field and supersession episodes embed prior values, so filtering them imperfectly would leak a regulated value through its own history. Dropping a whole tier rather than filtering it is the fail-closed answer to the lane problem — a value suppressed on one path re-entering through another.
+
+**2026-08-21** — [`8f034fc952cb9d10c32f53f4caa20a161f7c1a9f`](https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b) — re-pinned 14 commits on, and unlike the previous re-read these are code. Screened again: nothing scanned beyond a single manifest, no auto-run surface, nothing installed. **`bitemporal` is awarded**, which the previous entry explicitly withheld on the ground that the `as_of` cutoff *"filters the learned-at axis only"*. `store_fact` now takes `valid_from`/`valid_until` beside the unconditional `recorded_at`, and `compose_context` filters the two independently, with the composed postmortem query named in its docstring and a golden case pinning it. Taking the report to six of seven marks; `scope_enforced` remains the only substantive gap and section 5 records why the reason is unusual — the audience filter exists and nothing in the repository calls it, because the engine ships as a library.
 
 Also new: a golden retrieval corpus with a `forbid` list on every case (section 10), an offline replay path that produces proposals carrying `mutates: false` and is not permitted to conclude anything (section 5), a scoped scoring template, and consolidation persisted as review proposals rather than writes.
 
