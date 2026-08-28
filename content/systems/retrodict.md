@@ -184,8 +184,30 @@ The public result is unusually well qualified for a self-report. The README
 gives 99.86% mean RHAE at $654 against a linked official scorecard, names
 [Tycho](../tycho/) as scoring higher at 100.00% and an estimated $2,986, and
 sends the reader to a comparison methodology document with the warning that
-*"cost methods and run-selection rules differ."* A vendor comparison that names
-the system beating it, and links the qualifications, is rarer than the number.
+*"cost methods and run-selection rules differ."* A comparison that names the
+system beating it, and links the qualifications, is rarer than the number.
+
+The scorecard is worth reading rather than the headline, because the headline
+undersells what happened.
+[the official scorecard](https://arcprize.org/scorecards/9c403765-db5b-40b1-beab-6fa3f40119b0)
+records **183/183 levels and 25/25 environments, every one `WIN`**, in 7,703
+actions. RHAE is relative human action efficiency, not a completion rate: 23 of
+the 25 games score 100.00 and the mean falls to 99.86 on two —
+`sk48-d8078629` at 98.64 and `sp80-589a99af` at 97.77 — where the agent took
+roughly double Tycho's actions on those same two games. The 25 per-environment
+scores average to 99.8564, so the published figure recomputes from the table.
+
+Stated that way the comparison changes shape. Both harnesses solved every level
+of every public game; the 0.14-point difference is action efficiency on two of
+twenty-five, and this one did it for $654 against $2,986 — 4.6× less for the
+same 183 levels. The README's own framing, that Tycho *"scores higher"*, is
+accurate and reads as a larger gap than the scorecards support.
+
+The listing is publication, not verification: the ARC Prize community
+leaderboard states that only ARC-AGI-1 and ARC-AGI-2 semi-private results are
+run and verified, and that *"everything else is scored on a public set and
+self-reported."* The per-environment table under each entry is what makes a
+self-reported score checkable, and this one checks.
 
 Nothing was run for this review.
 
@@ -227,5 +249,7 @@ repository does not, and no test asserts it.
 | `docs/arc-agi-3-harness-comparison.md` | The cost and run-selection qualifications |
 
 ## History
+
+**2026-08-28** — [`71672e8e5adb008360f52a61ef9e2adf91a62d89`](https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89) — same commit, second reading, covering the published scorecard. It records 183/183 levels and 25/25 environments, every one `WIN`, in 7,703 actions, and the 25 per-environment scores average to the published 99.8564. That reframes the README's own comparison: this harness and [Tycho](../tycho/) solved exactly the same levels, the 0.14-point gap is action efficiency on two games out of twenty-five, and this one cost $654 against $2,986. Section 10 says so. Marks unchanged at none.
 
 **2026-08-27** — [`71672e8e5adb008360f52a61ef9e2adf91a62d89`](https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89) — first reading, 3,888 lines of Python, 46 commits since 5 July 2026. Screened before reading: no auto-run surface, no unpinned surface, and one execution surface — `tests/conftest.py`, which runs on pytest collection before any test does. `AGENTS.md` and `CLAUDE.md` are addressed to a reading agent and were treated as data. Nothing was installed and nothing was run. No marks. The durable memory is one model-authored `playbook.md` written through generic `write` and `edit` tools; grepping the harness finds `playbook` only in `prompts.py`, so no code creates, parses, validates or backs up the file. `trust_state` is withheld although the prompt specifies two epistemic states — a point *checked against the log* versus *still assumed*, with a rule against building multi-step plans on the second — because nothing reads the marking; it is a convention addressed to the model. `tombstone`, `bitemporal`, `scope_enforced`, `audit_log` and `human_review` are absent. `negative_eval` is withheld: the suite's must-not assertions are about module import isolation, not about material staying out of a recall. The reading covers the prompts, the runner, the tools and the tests; the ThinHarness dependency and the linked comparison methodology were not traced.

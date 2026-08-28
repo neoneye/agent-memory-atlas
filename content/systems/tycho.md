@@ -47,6 +47,11 @@ So the durable memory is **code the agent wrote about a world it is still
 learning**, sitting in a per-game workspace beside the harness's own record of
 what happened. One mark, and it is for the line drawn between those two things.
 
+The repository also ships the evidence for its own headline claim, which is
+rarer than the claim: six committed scorecards, four of them an ablation holding
+the model fixed and varying only the world-model policy, each recomputing
+exactly to its published mean. Section 10 works through them.
+
 ## 2. Mental Model
 
 Two kinds of file share one directory and they are not the same kind of thing.
@@ -189,9 +194,65 @@ would pass every other assertion and fail that one.
 other direction: after a restore, `stale.py` is gone because the manifest does
 not name it, and `level_0/turn_000.txt` still reads `"observation"`.
 
-The public claim — 100.00% RHAE on ARC-AGI-3 — is a scorecard on an external
-leaderboard and is not recomputable from this tree; `artifacts/` and
-`PUBLIC_RELEASE_MANIFEST.json` were not traced for this reading.
+### The benchmark artifacts, which are the best part of the repository
+
+`artifacts/` holds six committed scorecard files, one per evaluated policy, and
+each one's published mean recomputes exactly from its own per-environment table.
+Recomputed for this review, all at `operation_mode: competition` over the same
+25 public games:
+
+| Policy | Model | Published | Recomputed | Actions | Games won | Levels |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| No world model | Claude Opus 4.8 | 79.0730 | 79.0730 | 12,997 | 12 / 25 | 157 / 183 |
+| Falsification-triggered builder | Claude Opus 4.8 | 83.0689 | 83.0689 | 9,442 | 13 / 25 | 162 / 183 |
+| Single actor model | Claude Opus 4.8 | 85.3569 | 85.3569 | 11,576 | 14 / 25 | 162 / 183 |
+| Actor-controlled builder | Claude Opus 4.8 | 88.4947 | 88.4947 | 10,354 | 16 / 25 | 166 / 183 |
+| Actor-controlled builder | GPT-5.6 Sol | 100.0000 | 100.0000 | 7,766 | 25 / 25 | 183 / 183 |
+| Actor-controlled builder | Claude Opus 5 | 100.0000 | 100.0000 | 6,641 | 25 / 25 | 183 / 183 |
+
+The metric is RHAE — relative human action efficiency — so it is not a win rate;
+the 183/183 column is. Four arms hold the model fixed at Claude Opus 4.8 and
+vary only the world-model policy, which is what makes the first four rows an
+ablation rather than a leaderboard: the executable world model is worth 9.42
+RHAE over not having one, and it *reduces* the action count while doing it,
+12,997 down to 10,354. Swapping the model at the winning policy is worth the
+remaining 11.51.
+
+Two things in that table are unusual enough to name. The
+falsification-triggered builder — the cleverer variant, which rebuilds the model
+when experience contradicts it — scores **below** the actor-controlled one that
+rebuilds on demand, on the fewest actions of any Opus 4.8 arm. That is a
+negative result about the authors' own more interesting idea, published beside
+the positive one. And every row is one trajectory per game, stated as such in
+`artifacts/evaluation_integrity.json` — *"one stochastic trajectory per game"* —
+so the 9.42-point ablation gap carries no variance estimate and the two 100.00
+rows are one run each.
+
+That integrity file is also where the scorecards' `trace-replay` tag is
+accounted for. Every arm carries `closed_competition_replay: true` with a
+`canonical_trace_sha256` and `scorecard_equal_canonical_trace: true`; the two
+selected runs carry a `submission_trace_sha256` and
+`scorecard_equal_submission_trace`. Publishing the digest binds the hosted
+scorecard to a named local trace, which is more than any other harness in this
+group offers and still not the same as establishing how a trace was produced —
+a distinction the file makes on its own behalf rather than leaving to a reader.
+
+`artifacts/community_scorecard_human_comparison.csv` compares against other
+public harnesses with the columns a comparison needs and usually lacks:
+`source_kind` separating an official scorecard from an author-released table,
+`protocol`, and `complete_public25`. It records a competitor's selection rule in
+that protocol column — *"Opus 4.8 first; games below 80 rerun with Fable 5;
+better per-game trajectory retained"* — rather than printing the number alone,
+which is the qualification a reader would otherwise have to go find.
+
+On the hosted side, the ARC Prize community leaderboard lists this system at
+100.0% on **ARC-AGI-3 Public Demo** for $2,986, dated 29 July 2026, against
+[the official scorecard](https://arcprize.org/scorecards/08b98aa0-5df0-42c0-b501-856f553a21e9)
+— 183/183 levels and 25/25 environments, every one `WIN`. The leaderboard states
+that only ARC-AGI-1 and ARC-AGI-2 semi-private results are run and verified by
+ARC Prize and that *"everything else is scored on a public set and
+self-reported"*, so the hosting is publication rather than verification. What
+makes the number checkable here is the committed table under it, not the listing.
 
 ## 11. For Your Own Build
 
@@ -207,11 +268,17 @@ excludes too much.
 and `omitted_symlink` turn a silent gap into a named one, and the restore path
 refuses rather than materialising a partial workspace.
 
+**Ship the arm that lost.** The four-row ablation is worth more than the 100.00
+because it prices the mechanism, and the row where the authors' cleverer trigger
+underperforms their simpler one is the row a reader learns from. Commit the
+per-run table beside the mean so both can be recomputed.
+
 ## 12. Open Questions
 
-**Is anything in `artifacts/` a committed run record?** The directory exists
-and the release manifest names files; whether either lets the 100.00% figure be
-recomputed was not established.
+**Why does falsification-triggered rebuilding lose to rebuilding on demand?**
+The ablation reports it and the tree does not explain it. The obvious hypothesis
+— that a contradiction trigger fires on noise and spends its budget rebuilding —
+is not tested by anything committed here.
 
 **Does a later session read prior snapshots at all?** They are keyed by level
 and turn and used for resume, and nothing found here queries an older snapshot
@@ -233,5 +300,7 @@ snapshots are readable, and what changed, is not recorded in the tree read here.
 | `tests/workspace/test_workspace_versioning.py` | The boundary test, both directions |
 
 ## History
+
+**2026-08-28** — [`f68912a764372ead0a610db2e1c011d41ce5197e`](https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e) — same commit, second reading, covering the benchmark evidence the first pass left unopened. `artifacts/` holds six committed scorecard files, one per evaluated policy; every published mean recomputes exactly from its own per-environment table, and four of the six hold the model at Claude Opus 4.8 and vary only the world-model policy, which makes them an ablation rather than a scoreboard. Section 10 carries the table, the 9.42-RHAE price of the world model, the arm where falsification-triggered rebuilding underperforms rebuilding on demand, and the single-trajectory-per-game qualification the project states itself. `artifacts/evaluation_integrity.json` accounts for the scorecards' `trace-replay` tag with per-arm trace digests and a `scorecard_equal_canonical_trace` assertion. The open question about whether anything in `artifacts/` was a committed run record is answered and removed; it is replaced by one about why the falsification trigger loses. Marks unchanged at one.
 
 **2026-08-27** — [`f68912a764372ead0a610db2e1c011d41ce5197e`](https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e) — first reading, 24,829 lines of Python, Apache-2.0, a single commit dated 29 July 2026 beside a `PUBLIC_RELEASE_MANIFEST.json`, which reads as a squashed public release rather than a development history. Screened before reading: no auto-run surface, one execution surface — a `Makefile` whose default target is worth checking before a bare `make` — and one unpinned dependency surface. Nothing was installed and nothing was run. One mark. `negative_eval` rests on `test_workspace_versioning.py`, which asserts an agent-authored file inside an evidence directory is captured while the harness files beside it are not, and that a restore removes unmanifested files while preserving the evidence. `trust_state` is absent — the only `status` in the model describes why a file body was omitted from capture. `tombstone`, `bitemporal`, `scope_enforced`, `audit_log` and `human_review` are absent: there is no record type, no validity axis, no scope key inside a workspace, no mutation event record, and no review surface. The reading covers the workspace version store, its tests and the resume path; `artifacts/`, the planner and the serving layer were not traced.

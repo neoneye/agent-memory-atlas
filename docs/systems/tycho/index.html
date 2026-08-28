@@ -154,6 +154,11 @@ it."</em></p>
 it is still learning</strong>, sitting in a per-game workspace beside
 the harness's own record of what happened. One mark, and it is for the
 line drawn between those two things.</p>
+<p>The repository also ships the evidence for its own headline claim,
+which is rarer than the claim: six committed scorecards, four of them an
+ablation holding the model fixed and varying only the world-model
+policy, each recomputing exactly to its published mean. Section 10 works
+through them.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two kinds of file share one directory and they are not the same kind
 of thing.</p>
@@ -286,10 +291,132 @@ asserts the other direction: after a restore, <code>stale.py</code> is
 gone because the manifest does not name it, and
 <code>level_0/turn_000.txt</code> still reads
 <code>"observation"</code>.</p>
-<p>The public claim — 100.00% RHAE on ARC-AGI-3 — is a scorecard on an
-external leaderboard and is not recomputable from this tree;
-<code>artifacts/</code> and <code>PUBLIC_RELEASE_MANIFEST.json</code>
-were not traced for this reading.</p>
+<h3
+id="the-benchmark-artifacts-which-are-the-best-part-of-the-repository">The
+benchmark artifacts, which are the best part of the repository</h3>
+<p><code>artifacts/</code> holds six committed scorecard files, one per
+evaluated policy, and each one's published mean recomputes exactly from
+its own per-environment table. Recomputed for this review, all at
+<code>operation_mode: competition</code> over the same 25 public
+games:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Model</th>
+<th style="text-align: right;">Published</th>
+<th style="text-align: right;">Recomputed</th>
+<th style="text-align: right;">Actions</th>
+<th style="text-align: right;">Games won</th>
+<th style="text-align: right;">Levels</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No world model</td>
+<td>Claude Opus 4.8</td>
+<td style="text-align: right;">79.0730</td>
+<td style="text-align: right;">79.0730</td>
+<td style="text-align: right;">12,997</td>
+<td style="text-align: right;">12 / 25</td>
+<td style="text-align: right;">157 / 183</td>
+</tr>
+<tr>
+<td>Falsification-triggered builder</td>
+<td>Claude Opus 4.8</td>
+<td style="text-align: right;">83.0689</td>
+<td style="text-align: right;">83.0689</td>
+<td style="text-align: right;">9,442</td>
+<td style="text-align: right;">13 / 25</td>
+<td style="text-align: right;">162 / 183</td>
+</tr>
+<tr>
+<td>Single actor model</td>
+<td>Claude Opus 4.8</td>
+<td style="text-align: right;">85.3569</td>
+<td style="text-align: right;">85.3569</td>
+<td style="text-align: right;">11,576</td>
+<td style="text-align: right;">14 / 25</td>
+<td style="text-align: right;">162 / 183</td>
+</tr>
+<tr>
+<td>Actor-controlled builder</td>
+<td>Claude Opus 4.8</td>
+<td style="text-align: right;">88.4947</td>
+<td style="text-align: right;">88.4947</td>
+<td style="text-align: right;">10,354</td>
+<td style="text-align: right;">16 / 25</td>
+<td style="text-align: right;">166 / 183</td>
+</tr>
+<tr>
+<td>Actor-controlled builder</td>
+<td>GPT-5.6 Sol</td>
+<td style="text-align: right;">100.0000</td>
+<td style="text-align: right;">100.0000</td>
+<td style="text-align: right;">7,766</td>
+<td style="text-align: right;">25 / 25</td>
+<td style="text-align: right;">183 / 183</td>
+</tr>
+<tr>
+<td>Actor-controlled builder</td>
+<td>Claude Opus 5</td>
+<td style="text-align: right;">100.0000</td>
+<td style="text-align: right;">100.0000</td>
+<td style="text-align: right;">6,641</td>
+<td style="text-align: right;">25 / 25</td>
+<td style="text-align: right;">183 / 183</td>
+</tr>
+</tbody>
+</table></div>
+<p>The metric is RHAE — relative human action efficiency — so it is not
+a win rate; the 183/183 column is. Four arms hold the model fixed at
+Claude Opus 4.8 and vary only the world-model policy, which is what
+makes the first four rows an ablation rather than a leaderboard: the
+executable world model is worth 9.42 RHAE over not having one, and it
+<em>reduces</em> the action count while doing it, 12,997 down to 10,354.
+Swapping the model at the winning policy is worth the remaining
+11.51.</p>
+<p>Two things in that table are unusual enough to name. The
+falsification-triggered builder — the cleverer variant, which rebuilds
+the model when experience contradicts it — scores <strong>below</strong>
+the actor-controlled one that rebuilds on demand, on the fewest actions
+of any Opus 4.8 arm. That is a negative result about the authors' own
+more interesting idea, published beside the positive one. And every row
+is one trajectory per game, stated as such in
+<code>artifacts/evaluation_integrity.json</code> — <em>"one stochastic
+trajectory per game"</em> — so the 9.42-point ablation gap carries no
+variance estimate and the two 100.00 rows are one run each.</p>
+<p>That integrity file is also where the scorecards'
+<code>trace-replay</code> tag is accounted for. Every arm carries
+<code>closed_competition_replay: true</code> with a
+<code>canonical_trace_sha256</code> and
+<code>scorecard_equal_canonical_trace: true</code>; the two selected
+runs carry a <code>submission_trace_sha256</code> and
+<code>scorecard_equal_submission_trace</code>. Publishing the digest
+binds the hosted scorecard to a named local trace, which is more than
+any other harness in this group offers and still not the same as
+establishing how a trace was produced — a distinction the file makes on
+its own behalf rather than leaving to a reader.</p>
+<p><code>artifacts/community_scorecard_human_comparison.csv</code>
+compares against other public harnesses with the columns a comparison
+needs and usually lacks: <code>source_kind</code> separating an official
+scorecard from an author-released table, <code>protocol</code>, and
+<code>complete_public25</code>. It records a competitor's selection rule
+in that protocol column — <em>"Opus 4.8 first; games below 80 rerun with
+Fable 5; better per-game trajectory retained"</em> — rather than
+printing the number alone, which is the qualification a reader would
+otherwise have to go find.</p>
+<p>On the hosted side, the ARC Prize community leaderboard lists this
+system at 100.0% on <strong>ARC-AGI-3 Public Demo</strong> for $2,986,
+dated 29 July 2026, against <a
+href="https://arcprize.org/scorecards/08b98aa0-5df0-42c0-b501-856f553a21e9">the
+official scorecard</a> — 183/183 levels and 25/25 environments, every
+one <code>WIN</code>. The leaderboard states that only ARC-AGI-1 and
+ARC-AGI-2 semi-private results are run and verified by ARC Prize and
+that <em>"everything else is scored on a public set and
+self-reported"</em>, so the hosting is publication rather than
+verification. What makes the number checkable here is the committed
+table under it, not the listing.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <p><strong>Separate what your agent concluded from what your harness
 observed, in the snapshot boundary.</strong> If a rollback takes the
@@ -302,11 +429,17 @@ on an implementation that excludes too much.</p>
 string.</strong> <code>omitted_large</code> and
 <code>omitted_symlink</code> turn a silent gap into a named one, and the
 restore path refuses rather than materialising a partial workspace.</p>
+<p><strong>Ship the arm that lost.</strong> The four-row ablation is
+worth more than the 100.00 because it prices the mechanism, and the row
+where the authors' cleverer trigger underperforms their simpler one is
+the row a reader learns from. Commit the per-run table beside the mean
+so both can be recomputed.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
-<p><strong>Is anything in <code>artifacts/</code> a committed run
-record?</strong> The directory exists and the release manifest names
-files; whether either lets the 100.00% figure be recomputed was not
-established.</p>
+<p><strong>Why does falsification-triggered rebuilding lose to
+rebuilding on demand?</strong> The ablation reports it and the tree does
+not explain it. The obvious hypothesis — that a contradiction trigger
+fires on noise and spends its budget rebuilding — is not tested by
+anything committed here.</p>
 <p><strong>Does a later session read prior snapshots at all?</strong>
 They are keyed by level and turn and used for resume, and nothing found
 here queries an older snapshot to compare models across attempts — which
@@ -352,6 +485,23 @@ restore</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-28</strong> — <a
+href="https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e"><code class="commit-id" title="f68912a764372ead0a610db2e1c011d41ce5197e">f68912a7…</code></a>
+— same commit, second reading, covering the benchmark evidence the first
+pass left unopened. <code>artifacts/</code> holds six committed
+scorecard files, one per evaluated policy; every published mean
+recomputes exactly from its own per-environment table, and four of the
+six hold the model at Claude Opus 4.8 and vary only the world-model
+policy, which makes them an ablation rather than a scoreboard. Section
+10 carries the table, the 9.42-RHAE price of the world model, the arm
+where falsification-triggered rebuilding underperforms rebuilding on
+demand, and the single-trajectory-per-game qualification the project
+states itself. <code>artifacts/evaluation_integrity.json</code> accounts
+for the scorecards' <code>trace-replay</code> tag with per-arm trace
+digests and a <code>scorecard_equal_canonical_trace</code> assertion.
+The open question about whether anything in <code>artifacts/</code> was
+a committed run record is answered and removed; it is replaced by one
+about why the falsification trigger loses. Marks unchanged at one.</p>
 <p><strong>2026-08-27</strong> — <a
 href="https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e"><code class="commit-id" title="f68912a764372ead0a610db2e1c011d41ce5197e">f68912a7…</code></a>
 — first reading, 24,829 lines of Python, Apache-2.0, a single commit

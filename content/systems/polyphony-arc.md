@@ -33,8 +33,11 @@ Polyphony ARC is Mininglamp AI's ARC-AGI-3 harness — 6,542 lines of its own
 Python beside 79,035 vendored, MIT, a single commit dated 6 July 2026 and no
 tests directory.
 
-Its memory is a compaction: when the context budget runs out, the model writes
-a handoff summary and a fresh context starts from it. Two design decisions in
+Its published ARC-AGI-3 result is 19.80% at $115 — 2 of 21 games won, 59/157
+levels — which is the lower end of that leaderboard and well below the two
+harnesses this report compares it to. Its memory is a compaction: when the
+context budget runs out, the model writes a handoff summary and a fresh context
+starts from it. Two design decisions in
 `hs_compaction.py` are worth a report. The summary is **bounded and its stakes
 are stated to the writer** — *"Under 2500 words. This is the next instance's
 only memory of your thinking."* And the successor is told not to trust it:
@@ -149,6 +152,30 @@ compaction path.
 
 There is no tests directory. Nothing was run for this review.
 
+The published result is
+[the official scorecard](https://arcprize.org/scorecards/d0895597-2bb5-4191-9b7b-ec97917da1aa),
+listed on the ARC Prize community leaderboard as **19.80%** on ARC-AGI-3 Public
+Demo for $115, dated 7 July 2026 and tagged `v11.2-swarm`. Underneath: **2 of 21
+environments won**, 59/157 levels, 6,838 actions. Two games finish at 100.00
+(`lp85-305b61c3` and `tu93-0768757b`) and eleven score below 5. The 21
+per-environment scores average to 19.8029, so the figure recomputes from its own
+table.
+
+Two qualifications belong beside it. The metric is RHAE — relative human action
+efficiency — so 19.80% is not a completion rate, and the 59/157 levels is the
+closer thing to one. And this run covers **21 environments where
+[Tycho](../tycho/) and [Retrodict](../retrodict/) cover 25**: `ft09`, `r11l`,
+`sb26` and `sc25` are absent here, so the three numbers are not means over the
+same set, which matters for anyone below a ceiling. The leaderboard hosts but
+does not check these — only ARC-AGI-1 and ARC-AGI-2 semi-private results are run
+and verified by ARC Prize, and *"everything else is scored on a public set and
+self-reported."*
+
+A harness at 19.80% with no committed test of its compaction path is not a
+system whose memory design has been demonstrated. The two prompt lines in
+section 4 are worth reading because they are well-stated, not because a result
+vouches for them.
+
 ## 11. For Your Own Build
 
 **Tell the summariser what the summary is for.** *"This is the next instance's
@@ -181,5 +208,7 @@ mechanism inside it would not have been seen.
 | vendored tree | 79,035 lines, not read |
 
 ## History
+
+**2026-08-28** — [`9bb384c25d1bc95501cb08a124af7871c9ea24eb`](https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb) — same commit, second reading, covering the published scorecard: 19.80% on ARC-AGI-3 Public Demo at $115, 2 of 21 environments won, 59/157 levels, 6,838 actions, recomputing from its own per-environment table. The run covers 21 environments where the two harnesses this report compares against cover 25, so the three means are not over the same set. Sections 1 and 10 now carry the result, which the first reading described only as "a benchmark claim". Marks unchanged at none.
 
 **2026-08-27** — [`9bb384c25d1bc95501cb08a124af7871c9ea24eb`](https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb) — first reading, MIT, 6,542 lines of harness code beside 79,035 vendored, a single commit dated 6 July 2026, no tests directory. Screened before reading: no auto-run surface, no execution surface, one unpinned dependency surface. Nothing was installed and nothing was run. No marks. The whole memory mechanism is a compaction that asks the model for a handoff summary under 2,500 words and hands the successor that summary beside a file listing headed as authoritative. `trust_state` is withheld: the files-outrank-memory rule is prompt text with nothing reading it, and no memory carries a status field. `tombstone`, `bitemporal`, `scope_enforced`, `audit_log` and `human_review` are absent, and `negative_eval` cannot be earned — there are no tests. The reading covers the harness's own code; the vendored tree was not read.

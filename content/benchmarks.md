@@ -1408,6 +1408,51 @@ None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
 
+### A self-reported leaderboard whose artifacts are checkable anyway
+
+The ARC Prize [community leaderboard](https://arcprize.org/leaderboard/community)
+hosts three harnesses this atlas reports on, and the way it hosts them is the
+interesting part. Its own note draws the line: results on the ARC-AGI-1 and
+ARC-AGI-2 semi-private sets *"are run and verified by ARC Prize"*, and
+*"everything else is scored on a public set and self-reported."* ARC-AGI-3 is in
+the second category. The foundation adds that it *"won't independently verify
+submissions except in extraordinary cases"* and asks readers to validate for
+themselves — a publication venue saying plainly that listing is not
+verification, which is more than most leaderboards do.
+
+What makes the invitation actionable is that each entry links a scorecard
+carrying a per-environment table: score, levels completed, terminal state,
+actions and resets for every game. The headline is the unweighted mean of that
+column, so it recomputes. Three checked for this page:
+
+| Harness | Published | Recomputed | Environments | Levels | Actions | Cost |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| [Tycho](../systems/tycho/) | 100.00 | 100.0000 | 25 / 25 won | 183 / 183 | 6,641 | $2,986 |
+| [Retrodict](../systems/retrodict/) | 99.86 | 99.8564 | 25 / 25 won | 183 / 183 | 7,703 | $654 |
+| [Polyphony ARC](../systems/polyphony-arc/) | 19.80 | 19.8029 | 2 / 21 won | 59 / 157 | 6,838 | $115 |
+
+Three things that table teaches, none of which the leaderboard ordering shows.
+
+**The metric is not a completion rate.** RHAE is relative human action
+efficiency, so the top two entries differ by 0.14 points while solving *exactly
+the same 183 levels*; the gap is action count on two games out of twenty-five.
+Ranking them as "100.00 beats 99.86" is true and reads as a capability
+difference that the scorecards do not support — particularly against a 4.6×
+cost difference in the other direction.
+
+**The denominators differ.** Polyphony's run covers 21 environments where the
+other two cover 25. A mean over a subset is not comparable to a mean over the
+superset unless the entrant is at a ceiling, and nothing in a leaderboard row
+says which set an entry ran.
+
+**One entrant shipped the ablation.** Tycho's `artifacts/` commits six scorecard
+files, four of them holding the model fixed and varying only the world-model
+policy, each recomputing to its published mean — pricing its own mechanism at
+9.42 RHAE and publishing the arm where its cleverer variant lost. That is the
+standard this page credits [Perseus Vault](../systems/perseus-vault/) for, met
+by a benchmark entrant rather than a memory vendor, and it is what separates a
+self-reported number a reader can audit from one they can only accept.
+
 ### A vendor head-to-head that ships the runs undercutting its own headline
 
 `memstate-ai/memstate-mcp` publishes a benchmark against [Mem0](../systems/mem0/)
