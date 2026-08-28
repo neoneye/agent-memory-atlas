@@ -33,12 +33,21 @@ matrix:
 
 ## 1. Executive Summary
 
-This is where the OpenHands agent's memory lives. The repository at
-`OpenHands/OpenHands` is Agent Canvas, a control centre that renders somebody
-else's condenser settings; the SDK is the thing being controlled — 140,853
-lines of Python outside `tests/`, MIT, 2,244 commits since 23 August 2025,
-across four packages (`openhands-sdk`, `openhands-tools`,
+This is where the OpenHands agent's memory lives, and the organisation's own
+layout is the shortest proof. `OpenHands/OpenHands` is Agent Canvas, a control
+centre that renders somebody else's condenser settings; `OpenHands/legacy`,
+archived 27 July 2026, holds what used to be there and has no memory package
+left in it; `OpenHands/enterprise` carries the server layer and declares
+`openhands-sdk==1.43.1`, `openhands-agent-server==1.43.1` and
+`openhands-tools==1.43.1` as dependencies. This is the package they all depend
+on — 140,853 lines of Python outside `tests/`, MIT, 2,244 commits since
+23 August 2025, across four packages (`openhands-sdk`, `openhands-tools`,
 `openhands-agent-server`, `openhands-workspace`).
+
+The persistent tier is recent and is being worked on: `context/memory.py`
+arrived on 22 July 2026 under *"feat: add opt-in persistent memory across
+sessions"*, and `load_memory` was exposed in the agent-settings schema three
+weeks after that.
 
 Two mechanisms, and they answer different questions.
 
@@ -359,4 +368,4 @@ satisfying all four is safe to serialize for every provider.
 
 ## History
 
-**2026-08-28** — [`9a24f6c8866f353042a57df0514ccc900e3a0691`](https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691) — first reading, MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds a settings page, a mutation hook and a typed `CondensationEvent` describing this SDK's condenser rather than implementing one. Screened before reading: no auto-run surface, fourteen build-time execution surfaces, four unpinned surfaces and six files inside the seven-day cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run. Three marks. `audit_log` rests on `Condensation` being appended to an `EventLog` whose only mutator is `append` — the forgotten events stay on disk and leave the view. `negative_eval` rests on a per-event loop asserting the forgotten id is absent while the length drops by exactly one. `scope_enforced` is the weak form: `working_dir` reaches the project-tier read with no canonicalization or containment check. `tombstone`, `trust_state`, `bitemporal` and `human_review` are absent — a memory file has no fields at all, and nothing reviews one. The reading covers the context package, the event store, the condenser and their tests; `openhands-agent-server`, `openhands-tools` and the workspace package were not traced.
+**2026-08-28** — [`9a24f6c8866f353042a57df0514ccc900e3a0691`](https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691) — first reading, MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds a settings page, a mutation hook and a typed `CondensationEvent` describing this SDK's condenser rather than implementing one. Screened before reading: no auto-run surface, fourteen build-time execution surfaces, four unpinned surfaces and six files inside the seven-day cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run. Three marks. `audit_log` rests on `Condensation` being appended to an `EventLog` whose only mutator is `append` — the forgotten events stay on disk and leave the view. `negative_eval` rests on a per-event loop asserting the forgotten id is absent while the length drops by exactly one. `scope_enforced` is the weak form: `working_dir` reaches the project-tier read with no canonicalization or containment check. `tombstone`, `trust_state`, `bitemporal` and `human_review` are absent — a memory file has no fields at all, and nothing reviews one. The reading covers the context package, the event store, the condenser and their tests; `openhands-agent-server`, `openhands-tools` and the workspace package were not traced. Repository provenance was checked against the organisation rather than inferred from the one clone: `agent-canvas` and `legacy` are both archived as of 27 July 2026, neither `legacy/openhands` nor `enterprise/openhands` contains a memory package, `OpenHands-Cloud` is deployment manifests, and `enterprise` pins the three `openhands-*` distributions published from this tree. `context/memory.py` and the view properties were confirmed present in `git ls-tree` at the pinned sha, not only in the working tree.
