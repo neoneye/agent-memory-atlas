@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 342 reports.**
+**This page covers all 343 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3023,3 +3023,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, ~18,500 lines of Python with 5,840 across 35 test files, two commits both dated 14 August 2026 — a squashed release. Two marks. Its `docs/guide/benchmarks.md` is the best reproduction protocol in this corpus: frozen recipes pinning reader, distiller, judge and encoder, a tolerance band argued from binomial standard error, a rule that a `--lite` subset is rejected rather than scored against a full-run number, and a competitor table that prints the systems scoring higher beside what graded them. It commits no run artifacts, so the 92.6% recomputes only by paying for a rerun.
 - Study when: you are writing a benchmark claim you want a skeptic to be able to check, or you need the shape of supersession that a delete can safely undo.
 - Do not copy when: you need to audit a past answer, or more than one principal shares a store — `subject` is stored and never filtered on, and the docstring says retrieval is not scoped by it.
+
+### [`habitus-ai`](../systems/habitus-ai/)
+
+- Best idea: **immutability is a property of the file, not of the write method.** `records_are_immutable_update` and `records_are_immutable_delete` both `RAISE(ABORT, 'canonical records are immutable')`, so the guarantee survives a caller that bypasses the store class and holds for anything that opens the SQLite file — and `pytest.raises(sqlite3.IntegrityError, match="immutable")` pins both directions. Most systems here that call their records immutable enforce it in one method and leave the table writable underneath.
+- Second idea: **the conservation claim has a checker, and the checker is called from the CLI.** `validate_invariants` verifies that global edge mass and the local probabilities out of every source both sum to 1.0, that `SELF`'s frontiers are exactly the three input and three output trunks, and that no lower child carries semantic payload — returning a list of strings, asserted empty after a reload. A physics claim with a machine check attached is a different kind of claim from one without.
+- Third idea: **unverified feedback is a no-op, not a small update.** `reinforce_edges` opens with `if not verified: return`, and `record_outcome` raises before storing anything when a verified external outcome carries no receipt id. There is no setting of the weights at which unverified evidence leaks in.
+- Biggest risk: **the shipped dense space is a hash.** `DeterministicHashEmbedder` builds its 1024-dimension vector from hashed tokens, trigrams and adjacent pairs, and says so — *"Production callers should supply an actual semantic model"* — while the README contrasts the system against "Traditional Vector RAG" and describes "dense nearest neighbors" without that qualification. Out of the box the Dense + BM25 hybrid is two lexical signals.
+- Second risk: **the audit tables have no reader.** `outcomes` and `traces` record which edges moved and under which receipt, by bare `INSERT`, and no `SELECT`, CLI verb or API surfaces either. The gate it feeds also checks only that a receipt *id* is present, never the receipt's own `status`.
+- Maturity impression: Apache-2.0, zero runtime dependencies, 5,551 lines under `src/` with 893 of tests, two commits both dated 28 August 2026. One mark. The fourth system from this author in the atlas, after [AIMAOS](../systems/aimaos/), [Cognitive Spatial Memory](../systems/cognitive-spatial-memory/) and [Helix AGI](../systems/helix-agi/), and the one where most of the physics turns out to be machinery.
+- Study when: you want the enforced version of immutability, a normalisation invariant you can actually check, or a learning gate that discards rather than discounts.
+- Do not copy when: more than one principal shares a store — `source_id` is stamped on every record and no query filters on it — or you need to mark a record doubtful, since the only statement available is that a later record supersedes it.

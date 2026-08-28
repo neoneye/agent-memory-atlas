@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 342 reports.</strong></p>
+<p><strong>This page covers all 343 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11442,6 +11442,62 @@ can safely undo.</li>
 <li>Do not copy when: you need to audit a past answer, or more than one
 principal shares a store — <code>subject</code> is stored and never
 filtered on, and the docstring says retrieval is not scoped by it.</li>
+</ul>
+<h3 id="habitus-ai"><a
+href="../systems/habitus-ai/"><code>habitus-ai</code></a></h3>
+<ul>
+<li>Best idea: <strong>immutability is a property of the file, not of
+the write method.</strong> <code>records_are_immutable_update</code> and
+<code>records_are_immutable_delete</code> both
+<code>RAISE(ABORT, 'canonical records are immutable')</code>, so the
+guarantee survives a caller that bypasses the store class and holds for
+anything that opens the SQLite file — and
+<code>pytest.raises(sqlite3.IntegrityError, match="immutable")</code>
+pins both directions. Most systems here that call their records
+immutable enforce it in one method and leave the table writable
+underneath.</li>
+<li>Second idea: <strong>the conservation claim has a checker, and the
+checker is called from the CLI.</strong>
+<code>validate_invariants</code> verifies that global edge mass and the
+local probabilities out of every source both sum to 1.0, that
+<code>SELF</code>'s frontiers are exactly the three input and three
+output trunks, and that no lower child carries semantic payload —
+returning a list of strings, asserted empty after a reload. A physics
+claim with a machine check attached is a different kind of claim from
+one without.</li>
+<li>Third idea: <strong>unverified feedback is a no-op, not a small
+update.</strong> <code>reinforce_edges</code> opens with
+<code>if not verified: return</code>, and <code>record_outcome</code>
+raises before storing anything when a verified external outcome carries
+no receipt id. There is no setting of the weights at which unverified
+evidence leaks in.</li>
+<li>Biggest risk: <strong>the shipped dense space is a hash.</strong>
+<code>DeterministicHashEmbedder</code> builds its 1024-dimension vector
+from hashed tokens, trigrams and adjacent pairs, and says so —
+<em>"Production callers should supply an actual semantic model"</em> —
+while the README contrasts the system against "Traditional Vector RAG"
+and describes "dense nearest neighbors" without that qualification. Out
+of the box the Dense + BM25 hybrid is two lexical signals.</li>
+<li>Second risk: <strong>the audit tables have no reader.</strong>
+<code>outcomes</code> and <code>traces</code> record which edges moved
+and under which receipt, by bare <code>INSERT</code>, and no
+<code>SELECT</code>, CLI verb or API surfaces either. The gate it feeds
+also checks only that a receipt <em>id</em> is present, never the
+receipt's own <code>status</code>.</li>
+<li>Maturity impression: Apache-2.0, zero runtime dependencies, 5,551
+lines under <code>src/</code> with 893 of tests, two commits both dated
+28 August 2026. One mark. The fourth system from this author in the
+atlas, after <a href="../systems/aimaos/">AIMAOS</a>, <a
+href="../systems/cognitive-spatial-memory/">Cognitive Spatial Memory</a>
+and <a href="../systems/helix-agi/">Helix AGI</a>, and the one where
+most of the physics turns out to be machinery.</li>
+<li>Study when: you want the enforced version of immutability, a
+normalisation invariant you can actually check, or a learning gate that
+discards rather than discounts.</li>
+<li>Do not copy when: more than one principal shares a store —
+<code>source_id</code> is stamped on every record and no query filters
+on it — or you need to mark a record doubtful, since the only statement
+available is that a later record supersedes it.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A zero-dependency SQLite memory
+whose canonical records are made immutable by triggers, whose edge
+weights are conserved by a checked invariant, and whose learning refuses
+to run on an unverified outcome.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Habitus AI — Agent Memory Atlas">
+    <meta property="og:description" content="A zero-dependency SQLite
+memory whose canonical records are made immutable by triggers, whose
+edge weights are conserved by a checked invariant, and whose learning
+refuses to run on an unverified outcome.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Habitus
+AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A zero-dependency SQLite
+memory whose canonical records are made immutable by triggers, whose
+edge weights are conserved by a checked invariant, and whose learning
+refuses to run on an unverified outcome.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Habitus AI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Habitus AI",
+      "description": "A zero-dependency SQLite memory whose canonical records are made immutable by triggers, whose edge weights are conserved by a checked invariant, and whose learning refuses to run on an unverified outcome.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Immutability the database enforces</p>
+          <h1>Habitus AI</h1>
+          <p class="document-deck">A zero-dependency SQLite memory whose
+canonical records are made immutable by triggers, whose edge weights are
+conserved by a checked invariant, and whose learning refuses to run on
+an unverified outcome.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/munch2u-a11y/Habitus-AI">
+              <span>Source</span>
+              <strong>munch2u-a11y/Habitus-AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f" title="f93b770e4b3c1875151dc13eb90421598c3efa5f">
+              <span>Analyzed revision</span>
+              <code>f93b770e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-29</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Habitus AI is a memory engine with <strong>no runtime dependencies at
+all</strong> — <code>dependencies = []</code> in
+<code>pyproject.toml</code>, one SQLite file, pure Python — Apache-2.0,
+5,551 lines under <code>src/</code> against 893 of tests, two commits
+both dated 28 August 2026.</p>
+<p>Its documentation is written in the register of a physics paper: a
+folded hourglass bicone, an immutable <code>SELF</code> at layer zero,
+perceptual trunks <code>HEAR</code>, <code>SEE</code>,
+<code>NOTICE</code> above and effector trunks <code>SPEAK</code>,
+<code>LOOK</code>, <code>DO</code> below, a travel-time cipher and
+conserved fluid edge weights summing to 1.0. The atlas has read three of
+this author's systems already — <a href="../aimaos/">AIMAOS</a>, <a
+href="../cognitive-spatial-memory/">Cognitive Spatial Memory</a> and <a
+href="../helix-agi/">Helix AGI</a> — and the recurring question for the
+family is whether the physics is machinery or vocabulary.</p>
+<p>Here a good deal of it is machinery, and the report's job is to
+separate the parts. <strong>One mark</strong>, and three mechanisms that
+deserve to be copied independently of the geometry they arrive wrapped
+in:</p>
+<ul>
+<li>Canonical records are immutable because <strong>SQLite triggers
+abort every UPDATE and DELETE</strong>, and both directions are
+tested.</li>
+<li>The conservation claim is a <strong>checked invariant</strong>, not
+a slogan: <code>validate_invariants</code> verifies global and
+per-source edge mass against 1.0 and is called from the CLI, the app,
+the demo and two tests.</li>
+<li>Durable learning <strong>discards an unverified outcome</strong> and
+refuses a verified external one that carries no receipt id.</li>
+</ul>
+<p>Against that, the default embedding space is a hash, the audit tables
+have no reader, and the one field that could scope a read never reaches
+a query.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two things are stored and only one of them can change.</p>
+<p>A <strong>record</strong> is canonical and permanent. It carries its
+text, its embedding, its provenance and an optional pointer at the
+record it supersedes, and the database will not let anything modify or
+remove it. Correction is addition.</p>
+<p>The <strong>graph</strong> is where everything mutable lives —
+concepts, and edges between them carrying a <code>log_strength</code>
+and a <code>conflict_penalty</code>. Retrieval walks the graph; learning
+moves the edges. Because the strengths are normalised to sum to one,
+reinforcing a path necessarily costs its competitors, which is the
+design's answer to score inflation.</p>
+<p>The interesting boundary is what is allowed to move an edge.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the store is split so that everything permanent is enforced permanent by triggers and everything mutable moves only through a gate that discards unverified evidence</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the store is split so that everything permanent is enforced permanent by triggers and everything mutable moves only through a gate that discards unverified evidence
+    IN[&quot;a turn, a tool return, a notification&quot;] --&gt; REC[(&quot;records&lt;br/&gt;text · embedding · provenance · supersedes_id&quot;)]
+    REC -.-&gt;|&quot;BEFORE UPDATE / BEFORE DELETE&lt;br/&gt;RAISE(ABORT, &#39;canonical records are immutable&#39;)&quot;| STOP([&quot;correction is a new row&quot;])
+
+    REC --&gt; G[(&quot;concepts · edges · vaults&lt;br/&gt;log_strength · conflict_penalty&quot;)]
+
+    Q[&quot;recall(query)&quot;] --&gt; L1[&quot;lane 1: locked top-3 dense rail&lt;br/&gt;straight from records&quot;]
+    Q --&gt; L2[&quot;lane 2: Y-path traversal by travel-time cipher&lt;br/&gt;→ vault expansion → dense + BM25 rerank&quot;]
+    L1 --&gt; PKT[&quot;packet: direct_record_ids first,&lt;br/&gt;then graph candidates&quot;]
+    L2 --&gt; PKT
+
+    PKT --&gt; DEC[&quot;output decision → trunk&quot;]
+    DEC --&gt; OUT{&quot;record_outcome(verified, receipt_id)&quot;}
+    OUT --&gt;|&quot;verified and external and no receipt&quot;| ERR([&quot;ValueError&quot;])
+    OUT --&gt;|&quot;not verified&quot;| DROP([&quot;reinforce_edges returns immediately&quot;])
+    OUT --&gt;|&quot;verified&quot;| RE[&quot;reinforce_edges: move log_strength&lt;br/&gt;credit split across the path&quot;]
+    RE --&gt; G
+
+    OUT --&gt; AUD[(&quot;outcomes / traces&lt;br/&gt;INSERT only · credited_edge_ids · receipt_id&quot;)]
+    AUD -.-&gt;|&quot;nothing in the tree reads them back&quot;| NOREAD([&quot;no SELECT, no CLI verb, no API&quot;])
+
+    G --&gt; INV[&quot;validate_invariants()&lt;br/&gt;global mass = 1.0, per-source mass = 1.0&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite file and nothing else. Eleven tables — records, record
+links, concepts, edges, edge evidence, vault membership, traces,
+outcomes, experience state, experience projections and overlap clusters
+— plus two triggers and six indexes, all created inline.
+<code>chromadb</code>, <code>pinecone-client</code> and
+<code>pgvector</code> sit in an optional <code>vector-stores</code>
+extra behind <code>vector_adapters.py</code>; nothing needs them.</p>
+<p>The zero-dependency claim is true and it has a price, described in
+section 6.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Immutability is a database property, not a
+convention.</strong></p>
+<pre class="sql"><code>CREATE TRIGGER IF NOT EXISTS records_are_immutable_update
+BEFORE UPDATE ON records BEGIN
+    SELECT RAISE(ABORT, &#39;canonical records are immutable&#39;);
+END;</code></pre>
+<p>with the matching <code>BEFORE DELETE</code>. This is the strongest
+form of the guarantee available in SQLite: it survives a caller that
+bypasses the store class, and it holds for anything that opens the file.
+Most systems in this corpus that call their records immutable enforce it
+in the write method and leave the table writable underneath.</p>
+<p><strong>The conservation invariant is checked, and by more than a
+test.</strong> <code>validate_invariants</code> walks the graph and
+returns a list of strings: <code>SELF</code> must exist, every seed
+trunk must exist, the global edge mass must be 1.0 within tolerance,
+<strong>the local probabilities out of every source on both sides must
+sum to 1.0</strong>, <code>SELF</code>'s input frontier must be exactly
+<code>HEAR</code>/<code>SEE</code>/<code>NOTICE</code> and its output
+frontier exactly <code>SPEAK</code>/<code>LOOK</code>/<code>DO</code>,
+and every lower child must have an overlap cluster and carry no semantic
+payload. It is called from <code>cli.py</code>, <code>app.py</code>,
+<code>demo.py</code>, and asserted empty in two tests. A physics claim
+with a checker attached is a different kind of claim from one
+without.</p>
+<p><strong>Learning is gated twice.</strong> <code>record_outcome</code>
+raises before it stores anything when the outcome claims to be verified
+on an external trunk and carries no receipt id:</p>
+<pre class="python"><code>if verified and decision.trunk is not None and not receipt_id:
+    raise ValueError(&quot;verified external outcomes require a receipt ID&quot;)</code></pre>
+<p>and <code>reinforce_edges</code> opens with
+<code>if not verified: return</code>. So an unverified outcome is
+recorded and changes no weights, and a verified one cannot be asserted
+without naming the receipt that backs it. The credit is then split
+<code>1.0 / len(credited)</code> across the path's edges and scaled by
+an evidence-quality factor, with a negative delta raising the edge's
+<code>conflict_penalty</code> rather than only lowering its
+strength.</p>
+<p>The gate checks that a receipt <em>id</em> is present. It does not
+check that the receipt exists, that it succeeded, or that it matches the
+decision — the <code>ToolReceipt</code> dataclass carries
+<code>status</code>, <code>verified</code> and <code>error</code>
+fields, and nothing on this path consults them.</p>
+<p><strong>The two lanes meet on a canonical id.</strong> Lane 1 pulls
+the top three dense neighbours straight out of the records table; lane 2
+traverses the graph and expands vaults.
+<code>test_graph_candidates_cannot_evict_three_direct_records</code>
+asserts <code>selected_record_ids[:3] == direct_record_ids</code>, so a
+graph score cannot displace the direct rail — the eviction failure the
+README's comparison table claims as a differentiator, tested.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record carries <code>record_id</code>, <code>event_id</code>,
+<code>record_type</code>, <code>source_id</code>,
+<code>timestamp</code>, <code>text</code>, <code>embedding_json</code>,
+<code>provenance_json</code>, <code>metadata_json</code> and
+<code>supersedes_id</code>. Two absences shape what the system can
+say.</p>
+<p><strong>There is no epistemic status.</strong>
+<code>RecordType</code> is a kind — <code>FACT</code>,
+<code>OBSERVATION</code>, <code>INBOUND_MESSAGE</code>,
+<code>OUTBOUND_MESSAGE</code>, <code>RECEIPT</code> — and the only
+confidence in the schema is a float on
+<code>experience_projections</code>. Nothing can mark a record disputed,
+unverified or withdrawn; the strongest statement available is that a
+later record supersedes it.</p>
+<p><strong>There is one time axis.</strong> <code>timestamp</code> is
+set by the caller or defaults to <code>utc_now()</code> at write, and no
+column records when a fact was true as distinct from when the row
+arrived. Concepts carry <code>created_pulse</code> and
+<code>last_active_pulse</code>, which are logical clocks over the graph
+rather than a validity axis on a fact.</p>
+<p><code>source_id</code> is stamped on every record and defaults to
+<code>"human"</code>. No read path filters on it, so it is provenance
+for a reader rather than a scope key — the corpus's most common
+declared-and-unapplied shape, at its most benign here because the system
+is single-tenant by construction.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lane 1 is dense top-3 against the records table, locked. Lane 2
+computes travel times along Y-paths —
+<code>Δy / (ε + local_probability) + conflict_penalty</code> — activates
+the visited nodes' vaults, and reranks the pooled candidates by dense
+similarity plus BM25.</p>
+<p><strong>The default dense space is a hash.</strong>
+<code>DeterministicHashEmbedder</code> builds a 1024-dimension vector by
+hashing tokens at weight 1.0, character trigrams at 0.20 and adjacent
+token pairs at 0.35, signing each by a digest bit and normalising. Its
+own docstring is candid — <em>"Offline lexical embedder for reproducible
+tests and demonstrations. Production callers should supply an actual
+semantic model"</em> — and an <code>Embedder</code> Protocol plus the
+vector adapters make substitution easy.</p>
+<p>That candour is in the code and not in the README, which contrasts
+Habitus against "Traditional Vector RAG" and describes "shared 1024D
+concept vectors" and "dense nearest neighbors" without saying that the
+shipped space is lexical. A reader running the demo is comparing a
+hashed bag of tokens against BM25, and the "Dense + BM25 hybrid" is then
+two lexical signals.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous and insert-only. A record is written, its embedding
+computed inline, its concepts and vault membership updated, and the
+traversal trace saved. There is no queue and no background pass;
+gestation and hatching are explicit calls, and
+<code>test_gestation_and_agent.py</code> pins that hatching twice raises
+<code>already hatched</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python library first, with <code>HabitusAI</code> and
+<code>HabitusMemory</code> aliasing <code>BaseAgenticMemoryRAG</code>, a
+CLI, an agent wrapper, and a <code>ToolRegistry</code> that binds each
+tool to an output trunk — <code>SPEAK</code> for verbal,
+<code>LOOK</code> for non-mutating inspection, <code>DO</code> for
+external state change — and returns a <code>ToolReceipt</code> from
+every execution. The trunk classification is the part of the geometry
+that earns its keep: distinguishing an inspection from a mutation before
+the call is a distinction most tool layers make after it, if at all.</p>
+<p>The README's capability table names this mechanism
+<code>ActionReceipt</code>. The tree contains <code>ToolReceipt</code>
+and an <code>AudioReceipt</code>, and no <code>ActionReceipt</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The immutability triggers, the verified-only reinforcement and the
+invariant checker are three independent guards, and each is the enforced
+rather than the documented version of its claim. That is unusual in this
+corpus and it is the reason to read the repository.</p>
+<p>What is missing sits on the other side of the write. There is no
+scope key on any query, no status a record can carry, no validity axis,
+and no review surface. And the audit tables — the one mark this report
+awards — are <strong>write-only</strong>: <code>save_outcome</code> and
+<code>save_trace</code> are bare <code>INSERT</code>s with no
+<code>SELECT</code> against either table anywhere in <code>src/</code>,
+no CLI verb that lists them and no API that returns them. The record of
+which weights moved and on what evidence is being kept faithfully for a
+reader who does not yet exist.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Thirty-seven test functions across ten files, 893 lines. Nothing was
+run for this review; the README's badge says 31, which is stale in the
+harmless direction.</p>
+<p>The suite is aimed at the guarantees rather than at coverage, which
+is the right choice at this size.
+<code>pytest.raises(sqlite3.IntegrityError, match="immutable")</code>
+appears twice, once for the update trigger and once for the delete;
+<code>pytest.raises(ValueError, match="receipt")</code> pins the
+learning gate; <code>validate_invariants() == []</code> is asserted
+after a reload, which makes it a persistence test as well as a topology
+one. <code>test_multiresolution_memory.py</code> asserts
+<code>"text" not in projection.metadata</code> and
+<code>"text" not in columns</code> — the projection layer must carry
+activations and not content.</p>
+<p><strong><code>negative_eval</code> is withheld and the near-miss is
+worth naming, because it points the other way.</strong> The retrieval
+suite's strongest case,
+<code>test_graph_candidates_cannot_evict_three_direct_records</code>,
+asserts that particular material must <em>not be evicted</em> — the
+mirror of the column, and a rarer assertion. What no committed case does
+is establish that particular material must not be
+<strong>returned</strong>: no distractor is asserted absent from a
+result, and no query is asserted to retrieve nothing.</p>
+<p>No benchmark result is committed and none is claimed, which is worth
+stating plainly given that the same author publishes <a
+href="https://github.com/munch2u-a11y/FP-AMB">FP-AMB</a>, a memory
+benchmark this atlas <a
+href="../../benchmarks/#a-benchmark-whose-baseline-wins-and-the-category-that-cannot-fail">reads
+on its benchmarks page</a>. Habitus AI does not appear in its committed
+scorecards.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Enforce immutability in the database, not in the
+method.</strong> Two triggers and four lines make "canonical records are
+immutable" a property of the file rather than a property of the code
+path everyone happens to use.</p>
+<p><strong>Give your conservation law a checker, and call it from more
+than a test.</strong> <code>validate_invariants</code> returning a list
+of strings — checked by the CLI, the app and the demo — is what
+separates a normalisation that holds from one that is asserted to hold
+in the README.</p>
+<p><strong>Make unverified feedback a no-op rather than a small
+update.</strong> <code>if not verified: return</code> at the top of the
+reinforcement function is a stronger statement than a confidence
+multiplier, because there is no setting of the weights at which
+unverified evidence leaks in.</p>
+<p><strong>Then read the receipt you demanded.</strong> Requiring a
+receipt id and never checking the receipt's <code>status</code> leaves
+the gate satisfiable by any string.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Who is supposed to read <code>outcomes</code> and
+<code>traces</code>?</strong> The rows carry exactly what a debugging
+session would want — which edges moved, by how much, under which
+receipt. Nothing surfaces them, and a log with no reader tends to drift
+out of correctness unnoticed.</p>
+<p><strong>What does the geometry buy over a flat graph?</strong> The
+invariants pin the shape — <code>SELF</code> at the centre, three trunks
+each side — and nothing committed measures a retrieval difference
+against an unstructured baseline. The author's own benchmark would
+answer it.</p>
+<p><strong>Does the travel-time cipher beat cosine on anything?</strong>
+The formula is central to the design and no test or artifact compares it
+against the direct rail alone.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/habitus_ai/store.py</code></td>
+<td>The eleven tables, the immutability triggers,
+<code>save_outcome</code> and <code>save_trace</code></td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/graph.py</code></td>
+<td><code>reinforce_edges</code>, the verified gate,
+<code>validate_invariants</code></td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/pipeline.py</code></td>
+<td>Ingest, <code>record_outcome</code> and the receipt requirement</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/retrieval.py</code></td>
+<td>The two lanes and the rerank</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/embeddings.py</code></td>
+<td><code>DeterministicHashEmbedder</code> and the <code>Embedder</code>
+protocol</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/tools.py</code></td>
+<td><code>ToolReceipt</code>, the trunk binding,
+<code>ToolRegistry.execute</code></td>
+</tr>
+<tr>
+<td><code>tests/test_store_and_topology.py</code></td>
+<td>The two immutability assertions</td>
+</tr>
+<tr>
+<td><code>tests/test_graph_and_learning.py</code></td>
+<td>The receipt gate assertion</td>
+</tr>
+<tr>
+<td><code>tests/test_retrieval_pipeline.py</code></td>
+<td>The direct-rail eviction test, invariants after reload</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-29</strong> — <a
+href="https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f"><code class="commit-id" title="f93b770e4b3c1875151dc13eb90421598c3efa5f">f93b770e…</code></a>
+— first reading, Apache-2.0, 5,551 lines under <code>src/</code> and 893
+of tests across ten files, two commits both dated 28 August 2026.
+Screened before reading: no auto-run surface, no build-time execution
+surface, one unpinned surface and a <code>pyproject.toml</code> modified
+the same day. Nothing was installed and nothing was run. One mark.
+<code>audit_log</code> rests on <code>outcomes</code> and
+<code>traces</code> being insert-only records of which edge strengths a
+pulse changed and under which receipt, with the caveat recorded in the
+evidence field that nothing in the tree reads either table back.
+<code>tombstone</code> is withheld because <code>supersedes_id</code> is
+supersession; <code>trust_state</code> because <code>RecordType</code>
+names a kind and the only confidence is a float on a projection;
+<code>bitemporal</code> because a record has one timestamp and no
+validity axis; <code>scope_enforced</code> because
+<code>source_id</code> is stamped on every record and no query filters
+on it; <code>human_review</code> because no approval, review or
+quarantine surface exists. <code>negative_eval</code> is withheld with
+the near-miss named: the retrieval suite asserts that the direct rail's
+records cannot be <em>evicted</em>, which is the mirror of the mark, and
+no committed case asserts that particular material must not be returned.
+The fourth system from this author in the atlas, after <a
+href="../aimaos/">AIMAOS</a>, <a
+href="../cognitive-spatial-memory/">Cognitive Spatial Memory</a> and <a
+href="../helix-agi/">Helix AGI</a>. The reading covers the store, the
+graph, the pipeline, retrieval, tools and the tests; the app, the audio
+path and the vector adapters were not traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
