@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 340 reports.**
+**This page covers all 341 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3003,3 +3003,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 6,542 lines of harness code beside 79,035 vendored, one commit dated 6 July 2026. No marks, and 19.80 RHAE on ARC-AGI-3 Public Demo — 2 of 21 games won, 59/157 levels — so nothing about the result vouches for the design. Two source comments record the failures the design answers — an approach that *"deleted the agent's WORKING MEMORY"*, and per-turn trimming that *"destroyed prefix cache + working memory"*.
 - Study when: you are choosing what to tell a model at a compaction boundary, and want the two lines that do the most work.
 - Do not copy when: the memory has to be checkable by anything but the model that wrote it.
+
+### [`openhands-sdk`](../systems/openhands-sdk/)
+
+- Best idea: **the token budget proposes a cut and four structural properties dispose.** `View.manipulation_indices` intersects the index sets admitted by tool-call matching, tool-loop atomicity, batch atomicity and observation uniqueness, and the summarizing condenser snaps both ends of its budget-derived window to the nearest surviving index. Adding a fifth property can only tighten the set, so a whole class of compaction damage — an action severed from its observation — is unrepresentable rather than tested for.
+- Second idea: **a forgetting is an appended event, not a deletion.** `Condensation` carries the ids being dropped, an optional summary and offset, and the `llm_response_id` of the completion that chose them; `EventLog`'s only mutator is `append`, with no delete, truncate or `__setitem__` anywhere. The events leave the view and stay on disk, so *what did the agent stop being able to see, and when* is answerable from the primary store with no audit table.
+- Third idea: **each property carries a repair as well as a rule.** `ViewPropertyBase` requires both `manipulation_indices` and an `enforce` that returns ids to remove from an already-broken view, and the base class says which is the mechanism — indices make the properties hold inductively, enforcement is *"a fallback mechanism to handle edge cases, bad data, or unforeseen situations"* and therefore needs every event in the conversation rather than the view.
+- Biggest risk: **the half that outlives a session is a text file with a character cap.** The two-tier `MEMORY.md` has no schema, no status, no provenance and no writer in code; the agent maintains it with ordinary file tools under prompt guidance, `load_memory` defaults to `False`, and the 6,000-character budget deletes the oldest lines of an index every session with nothing anywhere recording what they said. The `[earlier memory truncated]` notice is charged to the budget so the model can see that it happened, which is the right instinct and is the whole of the mitigation.
+- Maturity impression: MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside — more test than product, across four packages. Three marks. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds the settings page for this SDK's condenser rather than a condenser.
+- Study when: you compact a tool-using agent's history and need the boundary rules written down, or you want the shape of a forgetting that is auditable by construction.
+- Do not copy when: the durable memory has to be trustworthy. Nothing validates a memory file, nothing records what truncation dropped, and a credential the model writes into `MEMORY.md` is injected into every session afterwards.
