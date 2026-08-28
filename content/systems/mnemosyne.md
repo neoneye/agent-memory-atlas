@@ -6,19 +6,19 @@ root: ../..
 page_kind: system
 source_name: "mnemosyne-oss/mnemosyne"
 source_url: https://github.com/mnemosyne-oss/mnemosyne
-revision: 19048f5c8adcaf84af226e475b056663007df6c0
-revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0
-analyzed_at: 2026-08-19
+revision: b922da1f72777eeb57723ec64e5e6db615348858
+revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858
+analyzed_at: 2026-08-27
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  tombstone: "the memory store — supersession keyed so a re-extracted fact finds the superseded row | mnemosyne/core/beam.py | `invalidate(memory_id, replacement_id)` at :4548 sets `superseded_by` when a replacement is given and `valid_until` to the current time when it is not; the dedup lookup finds the superseded row, bumps its mention count and does not re-assert it | tests/ — committed cases exercise supersession; no test asserts the re-extraction path itself"
-  bitemporal: "the memory store — validity columns beside record time | mnemosyne/core/beam.py | `valid_from_msg_idx` and `valid_to_msg_idx` on the memory row (:925, :934) alongside `version_id`, `previous_value` and `source_memory_id`, so when a fact held is tracked separately from when it was written | tests/ — read rather than run"
+  tombstone: "the memory store — supersession keyed so a re-extracted fact finds the superseded row | mnemosyne/core/beam.py | `invalidate(memory_id, replacement_id)` at :4593 sets `superseded_by` when a replacement is given and `valid_until` to the current time when it is not; the dedup lookup finds the superseded row, bumps its mention count and does not re-assert it | tests/ — committed cases exercise supersession; no test asserts the re-extraction path itself"
+  bitemporal: "the memory store — validity columns beside record time | mnemosyne/core/beam.py | `valid_from_msg_idx` and `valid_to_msg_idx` on the memory row (:963, :964) alongside `version_id`, `previous_value` and `source_memory_id`, so when a fact held is tracked separately from when it was written | tests/ — read rather than run"
   scope_enforced: "recall — a session and user key applied on the read path | mnemosyne/core/beam.py | the recall queries filter on the session and user key rather than tagging rows with it | tests/test_batch_transaction_owner_726.py"
-  audit_log: "the store — an append-only record of what consolidation did | mnemosyne/core/beam.py | `consolidation_log` created at :1032, written by the consolidation passes | tests/ — committed cases assert log rows"
-  negative_eval: "recall, as committed cases | tests/ | committed cases assert particular material must not come back, including owner-scoped batch isolation and dry-run imports that must write nothing | tests/test_batch_transaction_owner_726.py, tests/test_file_import_dry_run.py"
+  audit_log: "the store — an append-only record of what consolidation did | mnemosyne/core/beam.py | `consolidation_log` created at :1070, written by the consolidation passes | tests/ — committed cases assert log rows"
+  negative_eval: "recall, as committed cases | tests/ | committed cases assert particular material must not come back: `test_recall_precision_regressions.py` asserts what must not appear among the top results for fifteen natural-language queries, `test_sessions_cross_session_and_sibling_databases_are_isolated` asserts a warmed enhanced-recall entry is served to neither another session on the same database nor a same-named session on a sibling file while the warming session's repeat call is asserted to hit, and owner-scoped batch isolation and dry-run imports assert nothing is written | tests/test_recall_precision_regressions.py, tests/test_enhanced_recall_cache.py, tests/test_batch_transaction_owner_726.py, tests/test_file_import_dry_run.py"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A working-memory row that ages into an episodic row, plus extracted subject-predicate-object facts consolidated into a separate table keyed by the hash of the triple"
   storage: "One SQLite file at `~/.hermes/mnemosyne/data/mnemosyne.db`, with sqlite-vec and FTS5 virtual tables, optional int8 or bit vector quantization, and per-bank database files for isolation"
@@ -35,13 +35,13 @@ matrix:
 
 ## 1. Executive Summary
 
-Mnemosyne is a local-first memory engine for agents: 43,559 lines of Python
-under `mnemosyne/`, MIT-licensed, 956 commits between 5 April 2026 and the
-pinned commit of 6 August 2026, with one runtime dependency (`PyYAML`) and
+Mnemosyne is a local-first memory engine for agents: 48,436 lines of Python
+under `mnemosyne/`, MIT-licensed, 1,201 commits between 5 April 2026 and the
+pinned commit of 27 August 2026, with one runtime dependency (`PyYAML`) and
 everything else optional. It stores into a single SQLite file, retrieves with
 sqlite-vec and FTS5 inside that same file, and exposes forty MCP tools plus a
 Python SDK, a CLI, an OpenWebUI bridge, an OpenClaw provider and a first-party
-plugin for the Hermes Agent. Its 160 test files run to 51,407 lines — more test
+plugin for the Hermes Agent. Its 195 test files run to 65,228 lines — more test
 code than the atlas usually sees beside an engine this size — and CI runs them
 on every push.
 
@@ -98,7 +98,7 @@ standing.
 
 The second field is worse. `trust_tier` holds `STATED`, `DERIVED`,
 `EXTERNAL_WRITE` or `IMPORTED`, is derived from `source` by `TRUST_TIER_MAP`
-(`mnemosyne/core/beam.py:152`), and is documented as *"Trust classification for
+(`mnemosyne/core/beam.py:169`), and is documented as *"Trust classification for
 prompt-injection defense."* Two things are true about it at this commit. Its
 fallbacks resolve upward: an unrecognized source returns `STATED`, an explicitly
 supplied value outside the four-item enum is coerced to `STATED`, and the map's
@@ -205,8 +205,8 @@ One process, one file, no services.
 
 **Runtime shape.** Mnemosyne is a Python library first
 (`from mnemosyne import remember, recall`), with four wrappers over the same
-core: a CLI (`mnemosyne/cli.py`, 1,732 lines, 28 subcommands), an MCP server
-over stdio or SSE (`mnemosyne/mcp_server.py`), a read-only web dashboard
+core: a CLI (`mnemosyne/cli.py`, 1,842 lines, 28 subcommands), an MCP server
+over stdio, SSE or Streamable HTTP (`mnemosyne/mcp_server.py`), a read-only web dashboard
 (`mnemosyne/integrations/memory_browser.py`), and an optional HTTP sync server
 (`mnemosyne/core/sync_server.py`). Nothing is required to be running for memory
 to work.
@@ -273,46 +273,46 @@ ablation toggle are all environment-settable at import time.
 
 ## 4. Essential Implementation Paths
 
-**Capture/write.** `mnemosyne/core/memory.py:357` (`Mnemosyne.remember`, the
-public facade) into `mnemosyne/core/beam.py:3384` (`BeamMemory.remember`).
+**Capture/write.** `mnemosyne/core/memory.py:528` (`Mnemosyne.remember`, the
+public facade) into `mnemosyne/core/beam.py:3708` (`BeamMemory.remember`).
 Veracity is clamped, `trust_tier` derived from source, exact-content duplicates
 found by `_find_duplicate`, then one `INSERT` and an immediate `commit()`.
 Everything after the commit is enrichment on the same thread.
 
 **Extraction/consolidation.** Three extractors run from the write path.
-`extract_and_store_facts` (`beam.py:4869`) is the always-on regex pass that
+`extract_and_store_facts` (`beam.py:5346`) is the always-on regex pass that
 fills the `memoria_*` tables with no LLM cost. `_extract_and_store_entities` and
 `_extract_and_store_facts` are opt-in per call. `_ingest_graph_and_veracity`
-(`beam.py:3865`) extracts a gist and facts into the episodic graph and feeds
+(`beam.py:4237`) extracts a gist and facts into the episodic graph and feeds
 each fact to `VeracityConsolidator.consolidate_fact`. All three are wrapped in
 bare `except: pass` — the comments say *"Graph failures are non-blocking"* and
 *"Veracity failures are non-blocking"*, and the effect is that a memory can be
 stored with none of its derived structure and no signal that this happened.
 
-**Retrieval.** `BeamMemory.recall` (`beam.py:5640`) is a 1,266-line method:
+**Retrieval.** `BeamMemory.recall` (`beam.py:6117`) is a 1,266-line method:
 query tokenization, hyphenation expansion, CJK and Cyrillic fallbacks, FTS5,
 vector search over both tiers, MEMORIA structured routing by inferred ability,
 fusion, veracity and tier multipliers, cross-tier dedup and sandwich ordering.
-`recall_enhanced` (`beam.py:7036`) layers a query cache over it.
-`_recall_polyphonic` (`beam.py:7469`) hands off to
+`recall_enhanced` (`beam.py:7626`) layers a query cache over it.
+`_recall_polyphonic` (`beam.py:8059`) hands off to
 `mnemosyne/core/polyphonic_recall.py` for the four-voice path.
 
-**Context assembly.** `get_context` (`beam.py:4080`) returns the most recent
+**Context assembly.** `get_context` (`beam.py:4452`) returns the most recent
 working rows for prompt injection, excluding consolidated ones unless
 `MNEMOSYNE_CONTEXT_INCLUDE_CONSOLIDATED` is set. `format_context` and
-`_sandwich_order` (`beam.py:7396`) place the highest-scoring results at the
+`_sandwich_order` (`beam.py:7986`) place the highest-scoring results at the
 beginning and end of the block.
 
-**Update/delete/forget/conflict.** `invalidate` (`beam.py:4203`) sets
+**Update/delete/forget/conflict.** `invalidate` (`beam.py:4593`) sets
 `valid_until` and optionally `superseded_by`, trying working memory then
 episodic, and is scoped by `session_id = ? OR scope = 'global'`.
-`forget_working` (`beam.py:4512`) deletes. `_detect_conflicts` (`beam.py:4233`)
+`forget_working` (`beam.py:4970`) deletes. `_detect_conflicts` (`beam.py:4691`)
 compares embeddings at consolidation time above a 0.88 cosine threshold.
 `VeracityConsolidator.resolve_conflict` and `resolve_conflict_by_facts`
 (`veracity_consolidation.py:593`, `:831`) handle the fact layer.
 `mnemosyne/core/hygiene.py` audits and cleans stored noise and secrets.
 
-**Schema.** `init_beam` (`beam.py:594`) is 650 lines of `CREATE TABLE IF NOT
+**Schema.** `init_beam` (`beam.py:651`) is 657 lines of `CREATE TABLE IF NOT
 EXISTS` plus in-place `ALTER TABLE ... ADD COLUMN` migrations wrapped in
 try/except, which is how the schema has absorbed a dozen versions without a
 migration framework. `mnemosyne/migrations/e6_triplestore_split.py` is the one
@@ -412,9 +412,19 @@ Retrieval is tool-mediated by default: the agent calls `mnemosyne_recall`.
 Automatic injection exists only through the Hermes plugin's lifecycle hooks and
 `get_context`.
 
-Failure modes visible in the code: the query cache is invalidated on write
-(the pinned commit is the fix for a stale-cache-after-`remember` bug), so
-cross-process cache coherence rests on that one path; `_find_duplicate` matches
+Failure modes visible in the code: cross-process cache coherence rests on one
+path, the query-cache invalidation that every mutating method calls, and that
+path draws a distinction worth copying. `_invalidate_query_cache_after_commit`
+(`beam.py:4577`) is used only where the mutation has already been committed, and
+it swallows and logs whatever the invalidation raises — losing a write because
+the cache could not be cleared is the worse outcome once the row is durable. A
+caller-owned transaction takes the other branch and calls the strict form, so an
+invalidation failure still reaches the caller with the write not yet committed.
+`invalidate`, `forget_working`, `remember`, consolidation, reclaim, `sleep` and
+`degrade_episodic` all pick their branch on `self.conn.in_transaction` sampled
+before the first `UPDATE`, and `tests/test_enhanced_recall_cache.py` pins both
+sides — a post-commit invalidation failure must not lose the mutation, and the
+same failure inside a caller's transaction must not be swallowed. `_find_duplicate` matches
 exact content only, so near-duplicates accumulate and the conflict detector has
 to catch them at 0.88 cosine later; and `_minimum_recall_relevance` gates on
 lexical overlap, which will drop a correct dense match phrased differently from
@@ -455,6 +465,29 @@ write-time ignore patterns and `detect_secrets`, and
 `mnemosyne/core/hygiene.py` retroactively audits and cleans what was written
 before those filters existed or through paths that bypassed them, logging every
 action to `hygiene_audit_log` with a 200-character preview of what it removed.
+
+The secret patterns are one of the few places in this corpus where a redaction
+regex is written against a non-Latin script rather than assumed to be Latin.
+`SECRET_LABELED_PATTERNS` carries a `cjk_secret_assignment` entry over a curated
+label set — 密码, 密钥, 令牌, 口令, 私钥, パスワード, 秘密鍵, トークン, 비밀번호 — accepting
+the fullwidth separators `：` and `＝` beside ASCII, and the value predicate is
+built to cut both ways: a candidate must be eight or more characters with no
+CJK inside it and no CJK ideograph directly after it, so `密码：建议每90天更换一次`
+is prose and `密码：s3cr3t_pa55word_x1y2z3w4，请勿外传` is a secret with the trailing
+Chinese punctuation not swallowed into the token. The reachability of that
+distinction is the point: a Latin-only pattern set does not fail loudly on
+Chinese input, it silently stores the credential.
+
+**Media becomes an ordinary memory.** `remember_media(ref)` registers an asset
+in the `media_assets` and `media_moments` sidecar tables, sends it to a
+configured OpenAI-compatible modality endpoint, and writes the returned
+description back through the normal write path, so recall never learns about
+media at all. It returns a `MediaIngestResult` whose status is `ok`, `partial`,
+`unavailable` or `refused`, and `unavailable` is documented as a success: the
+asset is registered and describable later once a provider exists. That is a
+status about an ingest attempt rather than about a memory's truth, and it does
+not move the trust picture below — but it is the right shape for a degrading
+pipeline, and it is off unless `modality_enabled` is set.
 
 ### Operational cost
 
@@ -550,15 +583,54 @@ default bind is `127.0.0.1` and `--behind-tls-proxy` is required for cleartext
 elsewhere, which are the right guards, but the unauthenticated case is a
 configuration away rather than a refusal.
 
+**The MCP server, on the same question, refuses.** Both HTTP transports resolve
+their posture from the bind address before anything starts serving. A
+non-loopback host with `MNEMOSYNE_MCP_TOKEN` unset raises rather than binding,
+and the Streamable HTTP transport additionally raises when
+`MNEMOSYNE_MCP_ALLOWED_HOSTS` is unset, because the SDK's DNS-rebinding
+protection only arms itself for the exact loopback strings — so an operator
+must declare the Host header values clients will present. The sharp part is
+`_is_loopback` (`mnemosyne/mcp_server.py:106`), which matches an exact set and
+treats every alias as non-loopback: `ip6-localhost` and `LOCALHOST` are
+loopback in fact and fail closed here, precisely because they are not what the
+SDK's own allowlist recognises. `tests/test_mcp_streamable_http.py` — 917 lines
+— asserts each of those aliases refuses without a token and without a host
+policy, and that an origin allowlist alone does not satisfy the host gate.
+
+Two network surfaces in one project, then, with opposite defaults: the MCP
+server will not start unauthenticated off loopback, and the sync server will.
+
 **Backup** is `mnemosyne backup`, `restore`, `verify`, `backups list`, plus
 JSON export/import and importers for Mem0, Zep, Letta, Honcho, Cognee,
 Supermemory, Hindsight, Holographic and agentic formats. Migrating *into*
 Mnemosyne is a first-class supported path from nine other systems, which is more
 migration surface than any other system in this atlas offers.
 
+**The JSON export declares what it fails to carry, and computes that against the
+live schema rather than a list someone maintained.** `_export_completeness`
+(`mnemosyne/core/memory.py:118`) walks `sqlite_master`, skips the `fts_` and
+`vec_` tables that rebuild themselves, and for every other populated table asks
+two questions: is this table exported at all, and for one that is, which of its
+columns hold a value that the export's field set drops. The second question is
+answered per column against that column's own SQLite default — decoded without
+evaluating schema SQL — and reported as a count of affected rows, so
+`partial_surfaces` names the field and how many rows actually lose something.
+The result rides in the export metadata, comes back out on import as
+`restore_complete`, and the docstring states the point: *"a successful file
+write never implies a lossless database backup."*
+
+That is worth separating from the feature. A store with roughly thirty tables
+and an export that covers ten has a disclosure problem, and the two usual
+answers are to document the gap in prose that goes stale or to widen the export
+until it is a second implementation of the schema. Deriving the gap from
+`sqlite_master` at export time means a table added next month appears in the
+manifest without anybody remembering to add it, and a reader restoring from the
+file is told which surfaces to rebuild — `facts`, `gists`, `graph_edges`,
+`consolidated_facts` and `conflicts` each carry their own rerun instruction.
+
 ## 10. Tests, Evals, and Benchmarks
 
-160 test files and 51,407 lines, run in CI on every push against a matrix that
+195 test files and 65,228 lines, run in CI on every push against a matrix that
 includes a no-optional-dependencies configuration. Coverage is behavioral rather
 than nominal: tests exist for the additive-sleep contract, cross-tier dedup,
 vector/content alignment after degradation, embedding dimension guards, multiple
@@ -573,6 +645,16 @@ appear — `assertNotIn("orchid care dashboard", joined)`,
 particular material stays out of a result set are rare in this corpus, and they
 are the only test shape that catches a ranking change by regression rather than
 by someone noticing.
+
+A second one sits over the recall cache.
+`test_sessions_cross_session_and_sibling_databases_are_isolated` warms an
+enhanced-recall entry in one session and asserts it is served to nobody else —
+a second session against the same database file and a same-named session
+against a sibling file both miss and call the underlying recall — while the
+repeat call in the *warming* session is asserted to hit. That control is what
+makes it a leak test rather than a cache-is-broken test, and flipping
+`cross_session` to `True` is asserted to force a miss in the session that was
+being served from cache a line earlier.
 
 **On the benchmark claims, the README is unusually careful about its own
 numbers.** It states plainly that BEAM figures were measured on v3.0.0 in May
@@ -709,7 +791,7 @@ connected.
 ## Appendix: File Index
 
 **Storage and schema**
-- `mnemosyne/core/beam.py:594` — `init_beam`, the full schema and its in-place migrations
+- `mnemosyne/core/beam.py:651` — `init_beam`, the full schema and its in-place migrations
 - `mnemosyne/core/banks.py` — per-bank database files
 - `mnemosyne/core/canonical.py` — canonical fact slots and the partial unique index
 - `mnemosyne/core/triples.py` — bitemporal triple store
@@ -718,30 +800,32 @@ connected.
 - `mnemosyne/migrations/e6_triplestore_split.py`
 
 **Write path**
-- `mnemosyne/core/memory.py:357` — public `Mnemosyne.remember`
-- `mnemosyne/core/beam.py:3384` — `BeamMemory.remember`
-- `mnemosyne/core/beam.py:3865` — `_ingest_graph_and_veracity`
-- `mnemosyne/core/beam.py:4869` — always-on MEMORIA regex extraction
+- `mnemosyne/core/memory.py:528` — public `Mnemosyne.remember`
+- `mnemosyne/core/beam.py:3708` — `BeamMemory.remember`
+- `mnemosyne/core/beam.py:4237` — `_ingest_graph_and_veracity`
+- `mnemosyne/core/beam.py:5346` — always-on MEMORIA regex extraction
 - `mnemosyne/core/veracity_consolidation.py:445` — `consolidate_fact`
-- `mnemosyne/core/filters.py` — write-time noise and secret patterns
+- `mnemosyne/core/filters.py` — write-time noise and secret patterns, including the CJK label set and the credential-value predicate
+- `mnemosyne/core/media.py`, `modality_backends.py`, `modality_openai_compat.py` — media ingest and the OpenAI-compatible description backend
 
 **Retrieval path**
-- `mnemosyne/core/beam.py:5640` — `recall`
-- `mnemosyne/core/beam.py:7036` — `recall_enhanced`
+- `mnemosyne/core/beam.py:6117` — `recall`
+- `mnemosyne/core/beam.py:7626` — `recall_enhanced`
 - `mnemosyne/core/polyphonic_recall.py` — four voices and RRF
 - `mnemosyne/core/shmr.py` — harmonic belief clustering
 - `mnemosyne/core/episodic_graph.py` — gists, facts, edges
 - `mnemosyne/core/query_cache.py`
+- `mnemosyne/core/beam.py:4577` — `_invalidate_query_cache_after_commit`, the best-effort branch
 
 **Context assembly**
-- `mnemosyne/core/beam.py:4080` — `get_context`
-- `mnemosyne/core/beam.py:7396` — `_sandwich_order` and `format_context`
+- `mnemosyne/core/beam.py:4452` — `get_context`
+- `mnemosyne/core/beam.py:7986` — `_sandwich_order` and `format_context`
 - `mnemosyne/core/persona.py` — persona tier extraction and `persona.md` rendering
 
 **Correction and maintenance**
-- `mnemosyne/core/beam.py:4203` — `invalidate`
-- `mnemosyne/core/beam.py:8705` — `degrade_episodic`, the uncalled compressor
-- `mnemosyne/core/beam.py:8504` — `sleep`
+- `mnemosyne/core/beam.py:4593` — `invalidate`
+- `mnemosyne/core/beam.py:8768` — `degrade_episodic`, the uncalled compressor
+- `mnemosyne/core/beam.py:9117` — `sleep`
 - `mnemosyne/core/hygiene.py` — noise audit, cleanup, `hygiene_audit_log`
 - `mnemosyne/doctor.py`, `mnemosyne/repair.py`, `mnemosyne/dr/recovery.py`
 
@@ -764,6 +848,14 @@ connected.
 - `_benchmarks/`, `docs/beam-benchmark.md`
 
 ## History
+
+**2026-08-27** — [`b922da1f72777eeb57723ec64e5e6db615348858`](https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858) — 88 commits on. All five marks re-verified and none moved; `trust_tier` still has twenty-five occurrences and no read path, so `trust_state` stays withheld for the same reason. The central finding holds: `degrade_episodic` has no caller outside its own tests.
+
+Four mechanisms are new to this reading. The Streamable HTTP MCP transport arrived with two fail-closed gates on a non-loopback bind — a bearer token and a declared Host allowlist — and `_is_loopback` matching an exact set, so `ip6-localhost` and `LOCALHOST` refuse to start; `tests/test_mcp_streamable_http.py` pins each of those. That sits against the sync server's `_check_auth`, unchanged, which still returns `True` when no credential is configured — two network surfaces in one project with opposite defaults, which the report now states side by side. The JSON export gained a completeness manifest computed from `sqlite_master` at export time rather than a maintained list. Query-cache invalidation split into a strict form and a best-effort post-commit form, with `tests/test_enhanced_recall_cache.py` pinning both directions. And the write-time secret filter gained a CJK label set with a value predicate that keeps Chinese prose out of the match and Chinese punctuation out of the token.
+
+Two things this reading corrected in what was published rather than in the system. Section 1's line count, commit count and pin date described the 6 August first reading and had been carried through a re-pin unchanged; they now describe this commit. And every `beam.py` and `memory.py` line reference in the body and appendix pointed at the first reading's file, not the previous pin's — only `degrade_episodic`, the one the previous entry re-resolved by hand, was correct. All of them were re-resolved by symbol here, and the `veracity_consolidation.py` references, in a file that has not changed, were already right. The media subsystem existed at the previous pin and went unreported; it is described now.
+
+Screened before reading: the committed `.githooks/` PII pre-commit and tag pre-push, still uninstalled; `setup.py` and `tests/conftest.py` executing at install and collection; `pyproject.toml` and `uv.lock` both inside the seven-day cooldown; four unpinned manifests. Nothing was installed and no test was run. `stack_source` promoted from `seeded` to `reviewed`.
 
 **2026-08-19** — [`19048f5c8adcaf84af226e475b056663007df6c0`](https://github.com/mnemosyne-oss/mnemosyne/commit/19048f5c8adcaf84af226e475b056663007df6c0) — re-read 157 commits on, at the 4.0.0b1 beta. Most of that run is release machinery, changelog sweeps and tests; the memory package itself took 4,516 added lines across 25 files, and no claim in this report went stale under them. All five marks re-verified and all five now carry evidence records, which this report did not have.
 
