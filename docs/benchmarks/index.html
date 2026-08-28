@@ -2009,6 +2009,103 @@ read for this page, so this does not assert that no community entrant
 appears further down — it asserts that the competition's rules exclude
 the design those entries use.</p>
 <h3
+id="a-benchmark-whose-baseline-wins-and-the-category-that-cannot-fail">A
+benchmark whose baseline wins, and the category that cannot fail</h3>
+<p><code>munch2u-a11y/FP-AMB</code> is a first-person agent-memory
+benchmark — 60 sessions, 679 turns, ~512,889 tokens, ten categories, a
+two-method provider interface — read at <a
+href="https://github.com/munch2u-a11y/FP-AMB/commit/c7516f369a0ecee3ca0523fbc368651000ba83f2"><code class="commit-id" title="c7516f369a0ecee3ca0523fbc368651000ba83f2">c7516f36…</code></a>,
+MIT. It gets no report because it stores nothing, and it belongs on this
+page for two reasons that point in opposite directions.</p>
+<p><strong>The result it ships is the one this page keeps asking someone
+to check.</strong> Four scorecards are committed to
+<code>results/</code>, each with a per-question
+<code>*_misses.txt</code> classifying every failure as a retrieval miss,
+a generation miss, a distractor trap or a keyword-format mismatch. They
+rank like this:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Provider</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Avg retrieval latency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TF-IDF baseline</td>
+<td style="text-align: right;">69.7%</td>
+<td style="text-align: right;">3.1 ms</td>
+</tr>
+<tr>
+<td>real mRAG</td>
+<td style="text-align: right;">66.6%</td>
+<td style="text-align: right;">4,534 ms</td>
+</tr>
+<tr>
+<td>Fractal Memory (the author's own)</td>
+<td style="text-align: right;">50.2%</td>
+<td style="text-align: right;">37,930 ms</td>
+</tr>
+<tr>
+<td>MemPalace</td>
+<td style="text-align: right;">36.1%</td>
+<td style="text-align: right;">178 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>A lexical baseline that answers in three milliseconds beats every
+real memory architecture on the list, including the benchmark author's
+own, which finishes third at a twelve-thousandfold latency penalty. This
+page's <a href="#the-baseline-is-usually-too-weak">section on weak
+baselines</a> argues that a memory system compared only against
+no-memory is not being measured; here is the same argument run to its
+conclusion by someone with every incentive not to publish it.</p>
+<p><strong>And the category the benchmark advertises as its
+differentiator cannot fail.</strong> <em>Unanswerable &amp; Absent
+Memory Refusal</em> scores <strong>35/35 for all four providers</strong>
+— identical, perfect, ~13% of a 262-item exam handed to everyone.
+<code>fp_amb/evaluator.py</code> shows why, and the two evaluation modes
+fail differently.</p>
+<p>In retrieval-only mode the predicate is a flag that starts false and
+can be set by exactly three hardcoded string triples —
+<code>tokyo</code>, <code>electric car</code>, <code>dog</code> — after
+which <code>match = not fetched_distractor</code>. Of the 35 refusal
+questions in <code>data/fp_amb_cross_session_questions.json</code>,
+<strong>8 contain any of those strings</strong>, so 27 of 35 are
+<code>match = not False</code> for any provider, including one that
+returns nothing.</p>
+<p>In generation mode — which is what all four committed scorecards used
+— the predicate becomes
+<code>any(w in target_clean for w in ["unknown", "not mentioned", "not stated", "no information", "never discussed"])</code>.
+That tests the <em>reader's</em> refusal vocabulary, and all four arms
+are read by the same <code>gemini-2.5-flash</code>, so the score is
+constant by construction rather than by coincidence.</p>
+<p>Excluding the dead category changes every number and no ordering:
+TF-IDF 65.0%, mRAG 61.5%, Fractal 43.1%, MemPalace 26.2%. The inflation
+is uniform, which is the mildest version of this bug — and it is still
+35 free points on the one category this atlas most wants measured, since
+refusal to answer from absent memory is the behaviour almost nothing
+tests. Silica's rule applies exactly: <em>"A metric that cannot fail
+reports PASS regardless of the arm, and the gate reads as a
+result."</em></p>
+<p><strong>One comparability note, in fairness in both
+directions.</strong> The Fractal run is scored over 281 questions where
+the other three are scored over 262, with the category composition
+shifted — <em>Adaptability &amp; Fact Correction Overwrites</em> is 35
+items against 18, <em>Source Credibility</em> 3 against 7 — so those
+four percentages are not means over one exam. The README's comparison
+table lists only the three that share the 262-item exam and says so
+twice; the run it leaves out is the author's own. A
+<code>real_mem0_provider.py</code> adapter ships against local Ollama
+and Chroma with no scorecard committed beside it.</p>
+<p>The lesson to take is not that this benchmark is unusually flawed. It
+is that a suite good enough to commit its own losing result, its
+per-question misses and its latency profile still shipped a headline
+category that every arm passes perfectly — and nothing in the repository
+would have told the author, because there is no negative control
+asserting that some arm must fail some category.</p>
+<h3
 id="the-reproduction-protocol-this-page-has-been-describing-written-by-a-vendor">The
 reproduction protocol this page has been describing, written by a
 vendor</h3>

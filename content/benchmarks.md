@@ -1486,6 +1486,76 @@ this page, so this does not assert that no community entrant appears further
 down — it asserts that the competition's rules exclude the design those entries
 use.
 
+### A benchmark whose baseline wins, and the category that cannot fail
+
+`munch2u-a11y/FP-AMB` is a first-person agent-memory benchmark — 60 sessions,
+679 turns, ~512,889 tokens, ten categories, a two-method provider interface —
+read at
+[`c7516f369a0ecee3ca0523fbc368651000ba83f2`](https://github.com/munch2u-a11y/FP-AMB/commit/c7516f369a0ecee3ca0523fbc368651000ba83f2),
+MIT. It gets no report because it stores nothing, and it belongs on this page
+for two reasons that point in opposite directions.
+
+**The result it ships is the one this page keeps asking someone to check.** Four
+scorecards are committed to `results/`, each with a per-question
+`*_misses.txt` classifying every failure as a retrieval miss, a generation miss,
+a distractor trap or a keyword-format mismatch. They rank like this:
+
+| Provider | Accuracy | Avg retrieval latency |
+| --- | ---: | ---: |
+| TF-IDF baseline | 69.7% | 3.1 ms |
+| real mRAG | 66.6% | 4,534 ms |
+| Fractal Memory (the author's own) | 50.2% | 37,930 ms |
+| MemPalace | 36.1% | 178 ms |
+
+A lexical baseline that answers in three milliseconds beats every real memory
+architecture on the list, including the benchmark author's own, which finishes
+third at a twelve-thousandfold latency penalty. This page's [section on weak
+baselines](#the-baseline-is-usually-too-weak) argues that a memory system
+compared only against no-memory is not being measured; here is the same argument
+run to its conclusion by someone with every incentive not to publish it.
+
+**And the category the benchmark advertises as its differentiator cannot fail.**
+*Unanswerable & Absent Memory Refusal* scores **35/35 for all four providers** —
+identical, perfect, ~13% of a 262-item exam handed to everyone. `fp_amb/evaluator.py`
+shows why, and the two evaluation modes fail differently.
+
+In retrieval-only mode the predicate is a flag that starts false and can be set
+by exactly three hardcoded string triples — `tokyo`, `electric car`, `dog` —
+after which `match = not fetched_distractor`. Of the 35 refusal questions in
+`data/fp_amb_cross_session_questions.json`, **8 contain any of those strings**,
+so 27 of 35 are `match = not False` for any provider, including one that returns
+nothing.
+
+In generation mode — which is what all four committed scorecards used — the
+predicate becomes `any(w in target_clean for w in ["unknown", "not mentioned",
+"not stated", "no information", "never discussed"])`. That tests the *reader's*
+refusal vocabulary, and all four arms are read by the same
+`gemini-2.5-flash`, so the score is constant by construction rather than by
+coincidence.
+
+Excluding the dead category changes every number and no ordering: TF-IDF 65.0%,
+mRAG 61.5%, Fractal 43.1%, MemPalace 26.2%. The inflation is uniform, which is
+the mildest version of this bug — and it is still 35 free points on the one
+category this atlas most wants measured, since refusal to answer from absent
+memory is the behaviour almost nothing tests. Silica's rule applies exactly: *"A
+metric that cannot fail reports PASS regardless of the arm, and the gate reads as
+a result."*
+
+**One comparability note, in fairness in both directions.** The Fractal run is
+scored over 281 questions where the other three are scored over 262, with the
+category composition shifted — *Adaptability & Fact Correction Overwrites* is 35
+items against 18, *Source Credibility* 3 against 7 — so those four percentages
+are not means over one exam. The README's comparison table lists only the three
+that share the 262-item exam and says so twice; the run it leaves out is the
+author's own. A `real_mem0_provider.py` adapter ships against local Ollama and
+Chroma with no scorecard committed beside it.
+
+The lesson to take is not that this benchmark is unusually flawed. It is that a
+suite good enough to commit its own losing result, its per-question misses and
+its latency profile still shipped a headline category that every arm passes
+perfectly — and nothing in the repository would have told the author, because
+there is no negative control asserting that some arm must fail some category.
+
 ### The reproduction protocol this page has been describing, written by a vendor
 
 `memseekai/membukkit` claims 92.6% on LongMemEval-S, and
