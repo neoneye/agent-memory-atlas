@@ -231,6 +231,21 @@ Review and update every applicable area:
   Be strict, and put the near-miss in the prose. "Almost has a tombstone" is the
   most useful sentence in several of these reports, and it is only legible
   because the flag is withheld.
+
+  **Apply the scope test to the mechanism, not only to the system.** Admitting a
+  repository is one decision; each mark is another, and a mark must be earned by
+  a mechanism that is itself memory. Ask of the specific thing you are crediting:
+  *could what it holds turn out to be false?* A record of which events reached
+  the model in one run cannot — it happened — so an audit of that record is not
+  `audit_log`, and a test that an event is absent from the assembled window is
+  not `negative_eval`, however rigorous either is. This is the failure that cost
+  OpenHands SDK two marks between 28 and 29 August 2026, and its direction is the
+  warning: that repository defends its context window with four formal
+  properties, an intersection lattice and 2,960 lines of tests, while the memory
+  beside it is a text file with a character cap. A reviewer who reads for
+  engineering quality follows the better code across the boundary. Check where
+  each mark's evidence sits before writing the frontmatter, and say in the prose
+  which side of the line the impressive machinery is on.
 - Lifecycle, retrieval, write, correction, trust, integration, and operations comparisons.
 - Implementation hotspots and patterns worth stealing.
 - Risks, recommendations, and build-vs-borrow conclusions.
