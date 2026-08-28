@@ -1453,6 +1453,39 @@ standard this page credits [Perseus Vault](../systems/perseus-vault/) for, met
 by a benchmark entrant rather than a memory vendor, and it is what separates a
 self-reported number a reader can audit from one they can only accept.
 
+#### The same metric, in a venue where the top score is 5.99
+
+The ARC Prize 2026 Kaggle competition scores ARC-AGI-3 on the **same measure**:
+*"A score of 100% represents an agent matching human-level performance, meaning
+it beat every game while matching the number of actions humans took… The final
+score averages individual game scores across levels."* That is the RHAE the
+community leaderboard reports. The
+[public leaderboard](https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3/leaderboard)
+carries 2,579 teams, and the top of it reads 5.99, 4.99, 4.67, 3.88, 3.37.
+
+One hundred against six, on one metric, is the largest gap this page has had to
+explain, and none of it is the metric's fault. Three rules separate the venues.
+The Kaggle competition runs as a notebook with **internet access disabled** and
+a nine-hour cap, so a harness built on paid frontier-model calls cannot enter —
+which is what Tycho and Retrodict are, at $2,986 and $654 of API list price for
+a single 25-game run. Its games are **hidden**, where the community entries run
+the 25 public ones a developer can iterate a harness, a prompt set and a
+world-model template against. And a Kaggle entry gets nine hours for everything.
+
+So the two boards do not rank the same population, and the 100.00 does not sit
+above the 5.99 on any axis a reader can use. The honest reading is narrower and
+more interesting: **an executable world model plus a frontier API solves the
+public 25 outright, and nobody has yet carried a comparable result into a
+hidden, offline, nine-hour box.** Whether the memory design or the API is doing
+that work is the question, and it is the one Tycho's own ablation answers in
+part — at a fixed model, the world model is worth 9.42 RHAE, and swapping the
+model is worth the remaining 11.51.
+
+A caveat on the population claim: only the top 49 Kaggle teams were read for
+this page, so this does not assert that no community entrant appears further
+down — it asserts that the competition's rules exclude the design those entries
+use.
+
 ### A vendor head-to-head that ships the runs undercutting its own headline
 
 `memstate-ai/memstate-mcp` publishes a benchmark against [Mem0](../systems/mem0/)
