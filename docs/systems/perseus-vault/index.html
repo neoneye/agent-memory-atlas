@@ -115,14 +115,14 @@ tombstone stores a digest rather than the value it refuses.</p>
               <strong>Perseus-Computing-LLC/perseus-vault</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36" title="88c14ed9fc430f8a80094796617b3f95fe3f4a36">
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36" title="9c829207a4b44a8e679ba912b4c1c5608c8f1e36">
               <span>Analyzed revision</span>
-              <code>88c14ed9…</code>
+              <code>9c829207…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-22</strong>
+              <strong>2026-08-27</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -507,6 +507,91 @@ a different one.</p>
 <p>Measured latencies, from the artifacts the claims audit points at
 rather than from prose: FTS5 recall p50 3.14 ms at 10K entities; dense
 recall p50 194.5 ms at 1M entities on the uniform arm.</p>
+<h3 id="the-projection-that-says-why-a-memory-was-not-returned">The
+projection that says why a memory was not returned</h3>
+<p><code>include_selection_decisions: true</code> on a fused recall
+attaches a bounded per-candidate record of the selection, specified in
+<code>docs/specs/selection-decisions-v1.md</code> and implemented in
+<code>src/selection_decisions.rs</code>. Several systems in this corpus
+record why a candidate was refused at <em>write</em> time — <a
+href="../knowledge-worker/">Knowledge Worker</a>'s validator enumerates
+<code>bad_type:&lt;t&gt;</code> and <code>orphan_src:&lt;id&gt;</code>,
+<a href="../wenlan/">Wenlan</a> types its extraction refusals. This is
+the same discipline on the read path, and the read path is where it is
+scarce: the artifact answers not <em>what came back</em> but <em>why
+this did not</em>.</p>
+<p>Each candidate carries one disposition from a closed set —
+<code>selected</code>, <code>dropped_budget</code>,
+<code>dropped_type_cap</code>, <code>dropped_caller_limit</code>,
+<code>dropped_coverage</code>, <code>filtered_lifecycle</code>,
+<code>filtered_scope</code>, <code>filtered_policy</code>,
+<code>abstained</code>, <code>unavailable</code>,
+<code>not_in_candidate_pool</code> — beside its source-arm ranks, its
+fused, rerank and validity components where those exist, a token
+estimate with the estimator named, and a one-based
+<code>final_rank</code>. Six design decisions in the spec are what make
+it evidence rather than telemetry.</p>
+<ul>
+<li><strong>It reconciles after the serving gates, not before
+them.</strong> The fused database path records arm, fusion,
+type-allocation, coverage, caller-limit and budget decisions; the tool
+layer then walks the six governed gates — requesting-agent visibility,
+retrieval profile and workspace scope, external-reference filters,
+post-ranking and caller limit, temporal reconstruction and valid-time
+filtering, confirmed-query fallback — snapshotting the surviving ids
+before each one, so a candidate is attributed to the <em>first</em> gate
+that removed it and the reported order is the delivered order. A
+projection built from the pre-filter fused ranking would be a different
+document and a misleading one.</li>
+<li><strong>A missing score is omitted rather than zeroed.</strong>
+<code>missing_scores_are_explicit_and_raw_content_has_no_serialization_slot</code>
+asserts the serialized trace contains no <code>fused_score</code> and no
+<code>token_estimate</code> key when neither was computed — the
+discipline the atlas's <a href="../../benchmarks/">benchmarks page</a>
+keeps asking for, applied to a per-request artifact.</li>
+<li><strong>A failed arm is reported and produces no
+candidates.</strong> <code>arms</code> carries each engaged source arm's
+<code>ok</code>, <code>empty</code>, <code>degraded</code>,
+<code>skipped</code> or <code>unavailable</code> state, and
+<code>unavailable_arms_are_explicit_without_fabricating_candidates</code>
+pins that an arm that could not run contributes nothing rather than an
+empty slot that reads as a considered-and-rejected candidate.</li>
+<li><strong>It fails closed rather than truncating.</strong> The
+candidate list caps at 4,096, retaining delivered candidates first; if
+the final <em>served</em> order itself exceeds the bound, the projection
+refuses rather than returning what the spec calls <em>"an unverifiable
+partial order."</em></li>
+<li><strong>Tampering breaks the fingerprint.</strong>
+<code>replay_fingerprint_sha256</code> covers membership, policy digest,
+arm state, ranks, score components, dispositions, counts, token
+accounting and final order;
+<code>tampering_with_a_decision_invalidates_the_replay_fingerprint</code>
+flips one disposition and then increments the token budget, and asserts
+<code>validate()</code> fails on each.</li>
+<li><strong>It cannot change what was served.</strong> The spec states
+that the gates remain authoritative and the projection <em>"cannot
+resurrect a superseded, expired, quarantined, redacted, invisible, or
+out-of-scope entity"</em>, and — the sentence worth the whole document —
+that it <em>"must not be treated as evidence of model-internal causal
+reasoning."</em> A system publishing an explanation surface and bounding
+what the explanation is evidence <em>of</em> is rarer than the
+surface.</li>
+</ul>
+<p>The projection is hash-only: <code>candidate_id</code> is the
+existing opaque entity identifier, and no body, query, prompt,
+credential or tool argument enters it, with policy inputs represented
+only inside the one-way <code>policy_digest</code>. It introduces no new
+MCP tool and no persistence table, and it defaults to off, so the
+ordinary recall response shape is unchanged.</p>
+<p>The consumer is in the other repository.
+<code>Perseus-Computing-LLC/perseus</code>, the context engine this
+atlas <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-22-a-context-engine-that-expires-on-purpose.md">triaged
+and excluded</a>, projects the same vocabulary through
+<code>src/perseus/context_inspector.py</code> and the MCP tool
+<code>perseus_context_inspect</code> — and carries no producer of its
+own, which is what a reader looking at either repository alone would
+conclude was an unwired mechanism.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes arrive as MCP tool calls and are synchronous against SQLite.
 Supersession writes a history row, closes the prior interval and sets
@@ -615,11 +700,10 @@ than restating figures.</p>
 <p>The untested surface is the one the tool-count finding exposes:
 nothing in CI runs the audit's verification command, so a claim with a
 documented check went stale anyway.</p>
-<h2 id="10a-three-mechanisms-added-since-the-previous-reading">10a.
-Three mechanisms added since the previous reading</h2>
-<p>125 commits and roughly 109,000 added lines in <code>src/</code>
-alone sit between the two pins. Most of it extends machinery this report
-already describes; three pieces are new in kind and belong here.</p>
+<h2 id="10a-mechanisms-beside-the-store">10a. Mechanisms beside the
+store</h2>
+<p>Three pieces of machinery sit next to the entity store rather than
+inside it, and each answers a question the store cannot.</p>
 <p><strong>A zero-token write gate.</strong>
 <code>src/write_gate.rs</code> is a deterministic precheck the provider
 flow calls <em>before</em> LLM enrichment: content-hash dedup, key
@@ -659,6 +743,44 @@ itself a <strong>skeleton</strong>, and lists what exists rather than
 what it found: no results are committed and no run is claimed. An
 adversarial suite for a memory store is something this atlas has asked
 for and not found; this is the first, and it has not been run.</p>
+<h3 id="four-subsystems-around-the-entity">Four subsystems around the
+entity</h3>
+<p>Four modules extend what an entity can carry without changing what an
+entity is, and each is versioned, bounded and opt-in.</p>
+<p><strong><code>src/evidence_lanes.rs</code> separates the summary from
+the span it came from.</strong> Two governed representations —
+<code>Derived</code> and <code>Verbatim</code> — are requestable over
+already-ranked candidates, and the docstring is explicit that <em>"the
+ordinary recall path never calls this function."</em> The verbatim lane
+recovers a source span out of a retained entity body and refuses to
+guess: <em>"A bad hash returns a structured result with no text;
+malformed storage or bounds are errors that the caller maps to a
+non-disclosing exclusion reason."</em> The receipt over the selection is
+content-free, order-independent and digest-verified. The detail worth
+stealing is temporal: residual spans carry their own creation time, and
+<code>residual_projection_respects_temporal_anchor_and_bounds</code>
+asserts that a valid-time view does not pick up a residual recorded
+after the coordinate being asked about — <em>"Do not attach current
+residuals to a valid-time view."</em> A bitemporal store that gets this
+wrong reports today's evidence for a question about last month, and
+nothing about the answer looks wrong.</p>
+<p><strong><code>src/task_lineage.rs</code> carries an action's lineage
+across a session boundary</strong> as a <code>deny_unknown_fields</code>
+request with a transition, an action class, a budget cost and an impact
+count, bounded at 64 history entries.</p>
+<p><strong><code>src/declared_graph.rs</code> makes the graph declared
+and attested rather than inferred</strong> — nodes and edges submitted
+with a namespace, a canonical id, a revision and a span reference,
+capped at 256 nodes and 512 edges per submission. Every other graph
+memory in this corpus derives its edges from an extractor; this one
+accepts them under attestation and bounds what it will accept.</p>
+<p><strong><code>src/provider_source.rs</code> keeps provider-native
+identity and event lifecycle</strong> — five event types
+(<code>upsert</code>, <code>comment</code>, <code>reply</code>,
+<code>attachment</code>, <code>delete</code>) and two states
+(<code>active</code>, <code>deleted</code>) — as hash-only metadata
+embedded in an existing entity body, under a comment that draws the
+boundary: <em>"Provider bodies never belong in this type."</em></p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -749,6 +871,14 @@ and what would it cost to retire the lenient one?</li>
 <code>src/tools.rs</code> (<code>handle_operator_review</code>, recall,
 supersede, correct, purge).</li>
 <li>Trust admission: <code>src/trust_admission.rs</code>.</li>
+<li>Selection explanation: <code>src/selection_decisions.rs</code>,
+<code>docs/specs/selection-decisions-v1.md</code>, and the
+<code>include_selection_decisions</code> reconciliation in
+<code>src/tools.rs</code>.</li>
+<li>Evidence, lineage, graph and provider identity:
+<code>src/evidence_lanes.rs</code>, <code>src/task_lineage.rs</code>,
+<code>src/declared_graph.rs</code>,
+<code>src/provider_source.rs</code>.</li>
 <li>Storage and deletion tests: <code>src/db.rs</code>
 (<code>purge_erases_history_and_redacts_journal_for_purged_entities</code>,
 <code>purge_does_not_redact_other_workspace_live_journal_rows</code>).</li>
@@ -766,6 +896,32 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-27</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36"><code class="commit-id" title="9c829207a4b44a8e679ba912b4c1c5608c8f1e36">9c829207…</code></a>
+— fifth reading, twenty commits on, five new modules totalling roughly
+7,000 lines of Rust. All seven marks stand and none changed; no claim in
+this report went stale.</p>
+<p>The addition worth the re-pin is
+<code>src/selection_decisions.rs</code> with its own spec, described in
+section 6: an opt-in per-candidate record of why each recall candidate
+was or was not delivered, reconciled <em>after</em> the six governed
+serving gates rather than from the pre-filter fused order, with omitted
+rather than zeroed scores, failed arms reported without fabricated
+candidates, a fail-closed bound, and a replay fingerprint a committed
+test tampers with. Its consumer is the context engine in the sibling
+repository, which carries the disposition vocabulary and no producer —
+half a mechanism in each repository, and the reason reading either alone
+gives the wrong answer.</p>
+<p>Four more subsystems arrived beside the entity, described in section
+10a: evidence lanes separating a derived summary from the verbatim span
+with a temporal rule that keeps current residuals out of a valid-time
+view; task lineage across session boundaries; a declared and attested
+graph, bounded per submission; and provider-native source identity kept
+as hash-only metadata. Screened again first: two auto-run publication
+manifests, one build-time execution point, nine unpinned surfaces and
+four files inside the seven-day cooldown; nothing was built, installed
+or executed. <code>stack_source</code> promoted from <code>seeded</code>
+to <code>reviewed</code>.</p>
 <p><strong>2026-08-22</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36"><code class="commit-id" title="88c14ed9fc430f8a80094796617b3f95fe3f4a36">88c14ed9…</code></a>
 — fourth reading, two commits on. Screened again first: two auto-run

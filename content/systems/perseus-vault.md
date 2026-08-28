@@ -6,13 +6,13 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 88c14ed9fc430f8a80094796617b3f95fe3f4a36
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36
-analyzed_at: 2026-08-22
+revision: 9c829207a4b44a8e679ba912b4c1c5608c8f1e36
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36
+analyzed_at: 2026-08-27
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 capability_evidence:
   tombstone: "entity store — remember-path write gate | src/db.rs | normalize_rejected_value + rejected_value_digest against rejected_value_tombstones | src/db.rs::rejected_value_tombstone_blocks_same_value_under_any_key_in_scope"
   trust_state: "entity store | src/models.rs | epistemic_state, schema v27 vocabulary candidate/verified/corroborated/rejected/defensively_recalled | src/db.rs::recall_filters_by_epistemic_state_on_all_paths"
@@ -385,6 +385,77 @@ Measured latencies, from the artifacts the claims audit points at rather than
 from prose: FTS5 recall p50 3.14 ms at 10K entities; dense recall p50 194.5 ms at
 1M entities on the uniform arm.
 
+### The projection that says why a memory was not returned
+
+`include_selection_decisions: true` on a fused recall attaches a bounded
+per-candidate record of the selection, specified in
+`docs/specs/selection-decisions-v1.md` and implemented in
+`src/selection_decisions.rs`. Several systems in this corpus record why a
+candidate was refused at *write* time — [Knowledge Worker](../knowledge-worker/)'s
+validator enumerates `bad_type:<t>` and `orphan_src:<id>`,
+[Wenlan](../wenlan/) types its extraction refusals. This is the same discipline
+on the read path, and the read path is where it is scarce: the artifact answers
+not *what came back* but *why this did not*.
+
+Each candidate carries one disposition from a closed set — `selected`,
+`dropped_budget`, `dropped_type_cap`, `dropped_caller_limit`,
+`dropped_coverage`, `filtered_lifecycle`, `filtered_scope`, `filtered_policy`,
+`abstained`, `unavailable`, `not_in_candidate_pool` — beside its source-arm
+ranks, its fused, rerank and validity components where those exist, a token
+estimate with the estimator named, and a one-based `final_rank`. Six design
+decisions in the spec are what make it evidence rather than telemetry.
+
+- **It reconciles after the serving gates, not before them.** The fused database
+  path records arm, fusion, type-allocation, coverage, caller-limit and budget
+  decisions; the tool layer then walks the six governed gates — requesting-agent
+  visibility, retrieval profile and workspace scope, external-reference filters,
+  post-ranking and caller limit, temporal reconstruction and valid-time
+  filtering, confirmed-query fallback — snapshotting the surviving ids before
+  each one, so a candidate is attributed to the *first* gate that removed it and
+  the reported order is the delivered order. A projection built from the
+  pre-filter fused ranking would be a different document and a misleading one.
+- **A missing score is omitted rather than zeroed.**
+  `missing_scores_are_explicit_and_raw_content_has_no_serialization_slot`
+  asserts the serialized trace contains no `fused_score` and no `token_estimate`
+  key when neither was computed — the discipline the atlas's
+  [benchmarks page](../../benchmarks/) keeps asking for, applied to a per-request
+  artifact.
+- **A failed arm is reported and produces no candidates.** `arms` carries each
+  engaged source arm's `ok`, `empty`, `degraded`, `skipped` or `unavailable`
+  state, and `unavailable_arms_are_explicit_without_fabricating_candidates`
+  pins that an arm that could not run contributes nothing rather than an empty
+  slot that reads as a considered-and-rejected candidate.
+- **It fails closed rather than truncating.** The candidate list caps at 4,096,
+  retaining delivered candidates first; if the final *served* order itself
+  exceeds the bound, the projection refuses rather than returning what the spec
+  calls *"an unverifiable partial order."*
+- **Tampering breaks the fingerprint.** `replay_fingerprint_sha256` covers
+  membership, policy digest, arm state, ranks, score components, dispositions,
+  counts, token accounting and final order;
+  `tampering_with_a_decision_invalidates_the_replay_fingerprint` flips one
+  disposition and then increments the token budget, and asserts `validate()`
+  fails on each.
+- **It cannot change what was served.** The spec states that the gates remain
+  authoritative and the projection *"cannot resurrect a superseded, expired,
+  quarantined, redacted, invisible, or out-of-scope entity"*, and — the sentence
+  worth the whole document — that it *"must not be treated as evidence of
+  model-internal causal reasoning."* A system publishing an explanation surface
+  and bounding what the explanation is evidence *of* is rarer than the surface.
+
+The projection is hash-only: `candidate_id` is the existing opaque entity
+identifier, and no body, query, prompt, credential or tool argument enters it,
+with policy inputs represented only inside the one-way `policy_digest`. It
+introduces no new MCP tool and no persistence table, and it defaults to off, so
+the ordinary recall response shape is unchanged.
+
+The consumer is in the other repository. `Perseus-Computing-LLC/perseus`, the
+context engine this atlas
+[triaged and excluded](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-22-a-context-engine-that-expires-on-purpose.md),
+projects the same vocabulary through `src/perseus/context_inspector.py` and the
+MCP tool `perseus_context_inspect` — and carries no producer of its own, which
+is what a reader looking at either repository alone would conclude was an
+unwired mechanism.
+
 ## 7. Write Mechanics
 
 Writes arrive as MCP tool calls and are synchronous against SQLite. Supersession
@@ -486,11 +557,10 @@ The untested surface is the one the tool-count finding exposes: nothing in CI
 runs the audit's verification command, so a claim with a documented check went
 stale anyway.
 
-## 10a. Three mechanisms added since the previous reading
+## 10a. Mechanisms beside the store
 
-125 commits and roughly 109,000 added lines in `src/` alone sit between the two
-pins. Most of it extends machinery this report already describes; three pieces
-are new in kind and belong here.
+Three pieces of machinery sit next to the entity store rather than inside it,
+and each answers a question the store cannot.
 
 **A zero-token write gate.** `src/write_gate.rs` is a deterministic precheck the
 provider flow calls *before* LLM enrichment: content-hash dedup, key
@@ -525,6 +595,42 @@ a **skeleton**, and lists what exists rather than what it found: no results are
 committed and no run is claimed. An adversarial suite for a memory store is
 something this atlas has asked for and not found; this is the first, and it has
 not been run.
+
+### Four subsystems around the entity
+
+Four modules extend what an entity can carry without changing what an entity is,
+and each is versioned, bounded and opt-in.
+
+**`src/evidence_lanes.rs` separates the summary from the span it came from.**
+Two governed representations — `Derived` and `Verbatim` — are requestable over
+already-ranked candidates, and the docstring is explicit that *"the ordinary
+recall path never calls this function."* The verbatim lane recovers a source
+span out of a retained entity body and refuses to guess: *"A bad hash returns a
+structured result with no text; malformed storage or bounds are errors that the
+caller maps to a non-disclosing exclusion reason."* The receipt over the
+selection is content-free, order-independent and digest-verified. The detail
+worth stealing is temporal: residual spans carry their own creation time, and
+`residual_projection_respects_temporal_anchor_and_bounds` asserts that a
+valid-time view does not pick up a residual recorded after the coordinate being
+asked about — *"Do not attach current residuals to a valid-time view."* A
+bitemporal store that gets this wrong reports today's evidence for a question
+about last month, and nothing about the answer looks wrong.
+
+**`src/task_lineage.rs` carries an action's lineage across a session boundary**
+as a `deny_unknown_fields` request with a transition, an action class, a budget
+cost and an impact count, bounded at 64 history entries.
+
+**`src/declared_graph.rs` makes the graph declared and attested rather than
+inferred** — nodes and edges submitted with a namespace, a canonical id, a
+revision and a span reference, capped at 256 nodes and 512 edges per submission.
+Every other graph memory in this corpus derives its edges from an extractor;
+this one accepts them under attestation and bounds what it will accept.
+
+**`src/provider_source.rs` keeps provider-native identity and event lifecycle**
+— five event types (`upsert`, `comment`, `reply`, `attachment`, `delete`) and
+two states (`active`, `deleted`) — as hash-only metadata embedded in an existing
+entity body, under a comment that draws the boundary: *"Provider bodies never
+belong in this type."*
 
 ## 11. For Your Own Build
 
@@ -607,6 +713,11 @@ background consolidation passes are the leg no committed test walks.
 - Tools and review surface: `src/mcp.rs` (registry),
   `src/tools.rs` (`handle_operator_review`, recall, supersede, correct, purge).
 - Trust admission: `src/trust_admission.rs`.
+- Selection explanation: `src/selection_decisions.rs`,
+  `docs/specs/selection-decisions-v1.md`, and the `include_selection_decisions`
+  reconciliation in `src/tools.rs`.
+- Evidence, lineage, graph and provider identity: `src/evidence_lanes.rs`,
+  `src/task_lineage.rs`, `src/declared_graph.rs`, `src/provider_source.rs`.
 - Storage and deletion tests: `src/db.rs`
   (`purge_erases_history_and_redacts_journal_for_purged_entities`,
   `purge_does_not_redact_other_workspace_live_journal_rows`).
@@ -619,6 +730,12 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-27** — [`9c829207a4b44a8e679ba912b4c1c5608c8f1e36`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36) — fifth reading, twenty commits on, five new modules totalling roughly 7,000 lines of Rust. All seven marks stand and none changed; no claim in this report went stale.
+
+The addition worth the re-pin is `src/selection_decisions.rs` with its own spec, described in section 6: an opt-in per-candidate record of why each recall candidate was or was not delivered, reconciled *after* the six governed serving gates rather than from the pre-filter fused order, with omitted rather than zeroed scores, failed arms reported without fabricated candidates, a fail-closed bound, and a replay fingerprint a committed test tampers with. Its consumer is the context engine in the sibling repository, which carries the disposition vocabulary and no producer — half a mechanism in each repository, and the reason reading either alone gives the wrong answer.
+
+Four more subsystems arrived beside the entity, described in section 10a: evidence lanes separating a derived summary from the verbatim span with a temporal rule that keeps current residuals out of a valid-time view; task lineage across session boundaries; a declared and attested graph, bounded per submission; and provider-native source identity kept as hash-only metadata. Screened again first: two auto-run publication manifests, one build-time execution point, nine unpinned surfaces and four files inside the seven-day cooldown; nothing was built, installed or executed. `stack_source` promoted from `seeded` to `reviewed`.
 
 **2026-08-22** — [`88c14ed9fc430f8a80094796617b3f95fe3f4a36`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36) — fourth reading, two commits on. Screened again first: two auto-run surfaces, one build-time execution point, eight unpinned surfaces and one file inside the seven-day cooldown; nothing was built or executed. The tombstone gained lineage propagation — `src/db.rs` grows a suppression check shared by ordinary reads and maintenance scans, following `source_ids`, `evidence_for` and `promoted_from` recursively with a cycle set, a depth cap of eight and fail-closed behaviour at both the cap and an unauthentic source body, with `rejected_value_does_not_flow_through_maintenance_derived_writes` committed beside it. `enforce_strict_workspace_binding` adds a scope path that refuses an unbound profile instead of treating it as legacy. The official Python client gains a temp-owned, per-run-key ephemeral admitted fixture exercised against the real binary in CI, and `tests/encryption_bootstrap.rs` grows. All seven marks stand; the tombstone's evidence is stronger than it was, because the mechanism now covers the derivation path that a digest alone cannot.
 

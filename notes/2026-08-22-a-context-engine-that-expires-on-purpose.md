@@ -1,7 +1,8 @@
 # A context engine that expires on purpose
 
-**Status:** triage. One repository read on 2026-08-22, no report. Screened
-before reading; nothing installed or run.
+**Status:** triage. One repository read on 2026-08-22 and again on 2026-08-27
+at [`ca09efa022eb64fcfe283ed98791728b304c1068`](https://github.com/Perseus-Computing-LLC/perseus/commit/ca09efa022eb64fcfe283ed98791728b304c1068),
+no report. Screened before each reading; nothing installed or run.
 **Origin:** submitted as a re-analysis of Perseus Vault. It is a different
 repository.
 
@@ -80,3 +81,52 @@ a rejected-value tombstone that now follows derived provenance, and a strict
 workspace-binding path. Folded into
 [the Vault report](../content/systems/perseus-vault.md) and into
 [rejected value tombstone](../content/patterns/rejected-value-tombstone.md).
+
+---
+
+## The second reading, and why the verdict is the same
+
+Seventeen commits later the checkpoint store is unchanged — `ttl_s` still
+defaults to 86,400, `max_keep` to 30, and every record still carries the
+`stale_after` it was written with. Nothing new here survives a session as a
+belief. The exclusion stands.
+
+Two things arrived that are worth recording anyway, and one of them completes a
+mechanism this atlas had only half of.
+
+**`--offline` stopped being a label.** The flag's own help text read
+*"(Hidden) Enable air-gapped deployment mode. No-op."* — a declared-and-unwired
+switch of exactly the kind the atlas's producer check exists to find, sitting in
+the CLI of a tool sold on governed context. It is now `src/perseus/offline.py`,
+415 lines whose docstring opens *"`--offline` is an enforcement mode, not a
+label"*: connects, sends and name-service lookups fail closed unless they target
+a numeric loopback address or a local Unix socket, with a seccomp syscall filter
+installed where the platform supports one and an explicit statement that
+container policy is still required for subprocesses. A no-op flag that later
+becomes enforcement is the rarer direction of that finding, and worth naming as
+such.
+
+**The selection inspector is the consumer half of a pair whose producer is in
+the Vault.** `src/perseus/context_inspector.py` is a read-only projection over a
+run artifact: per candidate, a disposition drawn from a closed set —
+`selected`, `dropped_budget`, `dropped_type_cap`, `dropped_caller_limit`,
+`filtered_lifecycle`, `filtered_scope`, `filtered_policy`, `superseded`,
+`abstained`, `not_in_candidate_pool` — with hash commitments over policy,
+configuration, code and the projection itself, and a stated resolution of
+*"commitments, bounded identifiers, source references, and digests only; raw
+bodies require a separate authorized local path."* It is reachable as a CLI verb
+and as the MCP tool `perseus_context_inspect`.
+
+It also has no producer in this repository: grepping the tree for the
+disposition vocabulary finds `context_inspector.py`, its tests, and the
+generated single-file `perseus.py` bundle, and nothing else. The artifact it
+projects comes from `perseus-vault`, where
+[`9ecda85`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9ecda85729a5eda2e80f1780d2e662a983c5076a)
+(25 August 2026) added `src/selection_decisions.rs` and a
+`docs/specs/selection-decisions-v1.md` under an opt-in
+`include_selection_decisions` request flag. So the answer to *why was this
+memory not retrieved* is produced by the memory system and rendered by the
+context engine, across two repositories — which is the reason a reader
+reconciling this organisation by project name will find half a mechanism and
+conclude it is unwired. Folded into
+[the Vault report](../content/systems/perseus-vault.md).
