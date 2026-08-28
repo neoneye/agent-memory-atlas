@@ -11357,54 +11357,43 @@ model that wrote it.</li>
 <h3 id="openhands-sdk"><a
 href="../systems/openhands-sdk/"><code>openhands-sdk</code></a></h3>
 <ul>
-<li>Best idea: <strong>the token budget proposes a cut and four
-structural properties dispose.</strong>
-<code>View.manipulation_indices</code> intersects the index sets
-admitted by tool-call matching, tool-loop atomicity, batch atomicity and
-observation uniqueness, and the summarizing condenser snaps both ends of
-its budget-derived window to the nearest surviving index. Adding a fifth
-property can only tighten the set, so a whole class of compaction damage
-— an action severed from its observation — is unrepresentable rather
-than tested for.</li>
-<li>Second idea: <strong>a forgetting is an appended event, not a
-deletion.</strong> <code>Condensation</code> carries the ids being
-dropped, an optional summary and offset, and the
-<code>llm_response_id</code> of the completion that chose them;
-<code>EventLog</code>'s only mutator is <code>append</code>, with no
-delete, truncate or <code>__setitem__</code> anywhere. The events leave
-the view and stay on disk, so <em>what did the agent stop being able to
-see, and when</em> is answerable from the primary store with no audit
-table.</li>
-<li>Third idea: <strong>each property carries a repair as well as a
-rule.</strong> <code>ViewPropertyBase</code> requires both
-<code>manipulation_indices</code> and an <code>enforce</code> that
-returns ids to remove from an already-broken view, and the base class
-says which is the mechanism — indices make the properties hold
-inductively, enforcement is <em>"a fallback mechanism to handle edge
-cases, bad data, or unforeseen situations"</em> and therefore needs
-every event in the conversation rather than the view.</li>
-<li>Biggest risk: <strong>the half that outlives a session is a text
-file with a character cap.</strong> The two-tier <code>MEMORY.md</code>
-has no schema, no status, no provenance and no writer in code; the agent
-maintains it with ordinary file tools under prompt guidance,
-<code>load_memory</code> defaults to <code>False</code>, and the
-6,000-character budget deletes the oldest lines of an index every
-session with nothing anywhere recording what they said. The
-<code>[earlier memory truncated]</code> notice is charged to the budget
-so the model can see that it happened, which is the right instinct and
-is the whole of the mitigation.</li>
+<li>Best idea: <strong>the truncation notice is charged to the
+budget.</strong> When the two <code>MEMORY.md</code> indexes overflow
+6,000 characters, <code>_truncate_top</code> deletes whole leading lines
+until the body plus <code>[earlier memory truncated]</code> fits — so
+the notice costs characters rather than being free, and the model can
+tell it is reading a fragment. Truncation keeps the tail because the
+maintenance instructions tell the agent to append, and partial lines
+never survive.</li>
+<li>Second idea: <strong>an index with pointers, and only the index is
+injected.</strong> Dated daily logs hold the detail and are <em>"never
+injected automatically; read them on demand when <code>MEMORY.md</code>
+points to them"</em>, so the budget applies to a routing table rather
+than to the knowledge. A working answer to "the memory does not fit"
+that needs no retriever.</li>
+<li>Biggest risk: <strong>nothing in code stands between the model and
+the file it maintains.</strong> No schema, no writer, no validation, no
+id on a line, no record of what truncation dropped, and
+<code>load_memory</code> defaults to <code>False</code>. The prompt asks
+the agent not to record secrets; a credential it writes anyway is
+injected into every session afterwards.</li>
+<li>The comparison the repository makes with itself: several thousand
+lines defend the <em>context window</em> — four formal properties, an
+intersection lattice, a repair path per property, 2,960 lines of tests —
+and the part that outlives a session is 97 lines of loader over a text
+file. Section 9a of the report describes the first, which earns no mark
+here because an event cannot turn out to be false.</li>
 <li>Maturity impression: MIT, 2,244 commits since 23 August 2025,
-140,853 lines of Python outside <code>tests/</code> and 220,761 inside —
-more test than product, across four packages. Three marks. Reached from
-<code>OpenHands/OpenHands</code>, which is Agent Canvas and holds the
-settings page for this SDK's condenser rather than a condenser.</li>
-<li>Study when: you compact a tool-using agent's history and need the
-boundary rules written down, or you want the shape of a forgetting that
-is auditable by construction.</li>
-<li>Do not copy when: the durable memory has to be trustworthy. Nothing
-validates a memory file, nothing records what truncation dropped, and a
-credential the model writes into <code>MEMORY.md</code> is injected into
-every session afterwards.</li>
+140,853 lines of Python outside <code>tests/</code> and 220,761 inside.
+One mark. Reached from <code>OpenHands/OpenHands</code>, which is Agent
+Canvas and holds the settings page for this SDK's condenser rather than
+a condenser.</li>
+<li>Study when: you inject a curated index under a character budget and
+need the overflow rules written down, or you want the context-window
+boundary discipline in section 9a.</li>
+<li>Do not copy when: the durable memory has to be trustworthy or
+correctable. Nothing validates a memory file, nothing can mark a line
+wrong, and nothing records what was lost.</li>
 </ul>
         </article>
       </div>

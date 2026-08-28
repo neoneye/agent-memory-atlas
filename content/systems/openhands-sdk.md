@@ -1,150 +1,217 @@
 ---
 title: "OpenHands SDK"
-eyebrow: "The budget proposes, the properties dispose"
-description: "An agent SDK where compaction may only cut at positions four structural properties agree are safe, and every forgetting is an append-only event naming exactly what it dropped."
+eyebrow: "Six thousand characters, oldest lines first"
+description: "OpenHands V1's durable memory is two agent-maintained markdown indexes under a shared character budget, off by default — beside a much larger body of context-window machinery that is not memory and is worth reading anyway."
 root: ../..
 page_kind: system
 source_name: "OpenHands/software-agent-sdk"
 source_url: https://github.com/OpenHands/software-agent-sdk
 revision: 9a24f6c8866f353042a57df0514ccc900e3a0691
 revision_url: https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691
-analyzed_at: 2026-08-28
-capabilities: "scope_enforced, audit_log, negative_eval"
+analyzed_at: 2026-08-29
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "persistent memory — the project tier is read from the workspace path | openhands-sdk/openhands/sdk/context/memory.py:69,:72, conversation/impl/local_conversation.py:1160 | `load_memory(working_dir)` reads `<working_dir>/.openhands/memory/MEMORY.md` for the project tier beside `~/.openhands/memory/MEMORY.md` for the user tier, and `LocalConversation` supplies `self.workspace.working_dir`, so another workspace's project memory is not loaded. The key reaches the read, which is what the mark certifies; there is no canonicalization and no containment check, so a caller passing a different `working_dir` reads that workspace's memory instead | tests/sdk/context/test_memory.py"
-  audit_log: "the event log — a forgetting is an appended event, not a deletion | openhands-sdk/openhands/sdk/event/condenser.py:11-35, conversation/event_store.py:184-230 | `Condensation` carries `forgotten_event_ids`, an optional `summary`, a `summary_offset` and the `llm_response_id` of the completion that decided the drop, and it is appended to `EventLog`, whose only mutator is `append` — duplicate ids rejected, parent required to exist, one file per event, and no delete, truncate or `__setitem__` anywhere in the class. The forgotten events stay in the store and leave the *view*, so the record of what was dropped outlives the drop | tests/sdk/context/view/test_view.py"
-  negative_eval: "the view handed to the model | tests/sdk/context/view/test_view.py:45-68 | `test_view_keeps_non_forgotten_events` iterates every message id, forgets exactly that one, and asserts both `len(view.events) == len(message_events) - 1` and `forgotten_event_id not in [event.id for event in view.events]` — the positive half is the control that stops the negative half passing on an empty view, and the fixture comment says that is why only one event is forgotten | this is the test"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "Two units that do not mix: an `Event` in the append-only conversation log, and a line in an agent-maintained `MEMORY.md` index under a user or project tier"
-  storage: "One JSON file per event under an `EventLog` directory with a lock file, plus `~/.openhands/memory/` and `<workspace>/.openhands/memory/` holding `MEMORY.md` and dated daily logs"
-  retrieval: "No index and no query. `MEMORY.md` is concatenated into the system prompt under a 6,000-character budget; the event log is projected into a `View` by the condenser; daily logs are read by the agent on demand"
-  write: "The agent writes its own memory files with ordinary file tools. The harness writes events, and a condensation appends a `Condensation` event rather than removing anything"
-  update_delete: "Nothing is deleted. Forgetting removes events from the view and records the ids in the log; a memory file is the agent's to overwrite, and over-budget index text is truncated line-wise from the top behind a visible `[earlier memory truncated]` notice"
+  memory_unit: "A line in an agent-maintained `MEMORY.md` index, in a user tier or a project tier, with dated daily logs beside it holding the detail"
+  storage: "Markdown files under `~/.openhands/memory/` and `<workspace>/.openhands/memory/`. No database, no index, no schema"
+  retrieval: "None. Both `MEMORY.md` indexes are concatenated into the system prompt under a 6,000-character budget; daily logs are never injected and the agent reads them on demand"
+  write: "The agent writes its own memory files with ordinary file tools. No code in the SDK creates, parses or validates one"
+  update_delete: "The agent's to overwrite. Over-budget text is truncated line-wise from the top behind a visible `[earlier memory truncated]` notice, and nothing records what the truncated lines said"
   scoping: "Two tiers by path — `~/.openhands/memory/` for the user, `<working_dir>/.openhands/memory/` for the project — with the workspace path supplied by the conversation"
-  integration: "A Python SDK with an agent server, a tools package and a workspace package; the OpenHands agent platform and the Agent Canvas control centre are both clients of it"
-  background: "None over memory. Condensation runs inline when the context budget or an explicit request triggers it"
-  trust: "None on a memory. The prompt asks the agent to record what was expensive to learn and not to record secrets, and nothing checks either"
-  strengths: "Compaction cuts only at indices four structural properties agree are safe, each property also carrying a repair path for a view that is already broken; and the forgetting itself is an append-only event naming the ids it dropped and the LLM response that chose them"
-  risks: "The persistent tier defaults to off, nothing in code writes or validates a memory file, and the 6,000-character budget truncates the oldest lines with no record of what was lost beyond a notice in the prompt"
+  integration: "`AgentContext.load_memory`, default `False`, resolved lazily by `LocalConversation` on the first `send_message()` / `run()` and rendered into a `<MEMORY_CONTEXT>` prompt block"
+  background: "None"
+  trust: "None. The prompt asks the agent to record what was expensive to learn and not to record secrets, and nothing checks either"
+  strengths: "The budget is explicit, the split between tiers is fair-share with rollover, truncation keeps the tail rather than the head, and the truncation notice is charged to the budget so the model can see that its index is a fragment"
+  risks: "There is no schema, no writer in code, no validation and no record of what truncation dropped; the feature is off by default; and a credential the model writes into `MEMORY.md` is injected into every session afterwards"
 ---
 
 ## 1. Executive Summary
 
-This is where the OpenHands agent's memory lives, and the organisation's own
-layout is the shortest proof. `OpenHands/OpenHands` is Agent Canvas, a control
-centre that renders somebody else's condenser settings; `OpenHands/legacy`,
-archived 27 July 2026, holds what used to be there and has no memory package
-left in it; `OpenHands/enterprise` carries the server layer and declares
+This is the package OpenHands V1 actually runs on, and the organisation's layout
+is the shortest proof: `OpenHands/OpenHands` is Agent Canvas, a control centre
+that renders somebody else's condenser settings; `OpenHands/legacy`, archived
+27 July 2026, holds what used to be there and has no memory package left in it;
+`OpenHands/enterprise` carries the server layer and declares
 `openhands-sdk==1.43.1`, `openhands-agent-server==1.43.1` and
-`openhands-tools==1.43.1` as dependencies. This is the package they all depend
-on — 140,853 lines of Python outside `tests/`, MIT, 2,244 commits since
-23 August 2025, across four packages (`openhands-sdk`, `openhands-tools`,
-`openhands-agent-server`, `openhands-workspace`).
+`openhands-tools==1.43.1` as dependencies. 140,853 lines of Python outside
+`tests/`, MIT, 2,244 commits since 23 August 2025.
 
-The persistent tier is recent and is being worked on: `context/memory.py`
-arrived on 22 July 2026 under *"feat: add opt-in persistent memory across
-sessions"*, and `load_memory` was exposed in the agent-settings schema three
-weeks after that.
+**The durable memory is 97 lines.** `context/memory.py` reads two markdown
+indexes — `~/.openhands/memory/MEMORY.md` for the user and
+`<workspace>/.openhands/memory/MEMORY.md` for the project — concatenates them
+under a 6,000-character budget, and hands the result to the system prompt. The
+agent maintains both files with ordinary file tools; no code in this repository
+creates, parses or validates one. It arrived on 22 July 2026 under *"feat: add
+opt-in persistent memory across sessions"*, and `AgentContext.load_memory`
+defaults to `False`.
 
-Two mechanisms, and they answer different questions.
+One mark, and it is the weak form of `scope_enforced`.
 
-**Within a session, the problem is that compaction damages structure.** A
-tool call separated from its result is not a shorter history, it is a broken
-one, and some providers reject it outright. The SDK's answer is that a
-condenser does not choose where to cut. It computes the window it *wants* from
-the token budget, and then snaps both ends to the nearest index that four
-independent structural properties agree is legal.
-
-**Across sessions, the problem is the ordinary one**, and the answer is the
-ordinary one: two tiers of agent-maintained markdown, user and project, loaded
-into the prompt under a character budget. It is off by default.
-
-Three marks. The interesting one is `audit_log`, and it is interesting because
-the log and the store are the same object.
+**Most of what looks like memory here is not.** The `View`, the four view
+properties and the condenser pipeline are several thousand lines of careful
+work deciding which events reach the model *within a run*. By this atlas's
+[scope test](../../compare/#not-in-scope-conversation-window-management) —
+whether the store holds anything that could turn out to be false — that is
+context engineering, not memory: an event cannot be wrong, it happened.
+Section 9a describes it because it is the best-engineered thing in the tree and
+because a reader comparing frameworks will be shown it as a memory feature.
 
 ## 2. Mental Model
 
-Nothing is ever deleted. That is the whole design, and everything else follows.
+The memory is an index with pointers, and the interesting decision is what
+happens when the index outgrows its budget.
 
-The conversation is an append-only log of events. What the model sees is not
-the log but a **`View`** — a projection of it. When context runs short, a
-condenser does not remove events; it appends a `Condensation` event carrying
-the set of ids to be forgotten, and the next `View.from_events` builds a
-projection with those events absent. The events are still on disk. What
-changed is what the model is shown.
+Each tier holds a `MEMORY.md` the agent curates and dated `YYYY-MM-DD.md` daily
+logs it does not. Only the indexes are injected. The daily logs are *"never
+injected automatically; read them on demand when `MEMORY.md` points to them"* —
+so the index is a routing table over detail the agent can fetch, and the budget
+applies only to the routing table.
 
-So "forgetting" here is a fact recorded in the same store as the thing
-forgotten, and it names its own cause: `Condensation` carries the
-`llm_response_id` of the completion that decided the drop.
-
-The second half is the constraint on where a drop may begin and end.
+When the two indexes together exceed 6,000 characters, `load_memory` does not
+drop a tier and does not cut mid-line. It subtracts the header overhead, splits
+the remainder evenly between the tiers with *"a short tier's unused share
+rolling over to the other"*, and then deletes whole leading lines from each body
+until it fits — keeping the tail, because the maintenance instructions tell the
+agent to append.
 
 ```mermaid
 flowchart TD
-%% caption: the token budget proposes a window and four structural properties dispose — a cut is legal only at an index every property admits, and the drop is then recorded in the same append-only log as the events it dropped
-    LOG[("EventLog — one JSON file per event<br/>append only: no delete, no truncate")] --> VF["View.from_events"]
-    VF --> V["View: what the model is shown"]
+%% caption: the durable half is two files under one shared budget, and every rule about what happens when they overflow lives in ninety-seven lines of loader with nothing validating what the agent wrote
+    AG["the agent, with ordinary file tools"] -->|"append detail"| DL[("YYYY-MM-DD.md daily logs<br/>never injected")]
+    AG -->|"fold durable facts"| U[("~/.openhands/memory/MEMORY.md<br/>user tier")]
+    AG -->|"fold durable facts"| P[("&lt;workspace&gt;/.openhands/memory/MEMORY.md<br/>project tier")]
 
-    V --> BUD["token budget →<br/>naive_end = len(view) − events_from_tail"]
+    U & P --> LM["load_memory(working_dir)"]
+    LM --> FIT{"combined &le; 6,000 chars?"}
+    FIT -->|yes| OUT["&lt;MEMORY_CONTEXT&gt; block"]
+    FIT -->|no| SPLIT["subtract header overhead<br/>split evenly, short tier's share rolls over"]
+    SPLIT --> TRUNC["_truncate_top: delete whole leading lines<br/>keep the tail"]
+    TRUNC -->|"prepend [earlier memory truncated]<br/>counted against the budget"| OUT
 
-    subgraph P["manipulation_indices — set intersection"]
-        P1["ToolCallMatching<br/>an action keeps its observation"]
-        P2["ToolLoopAtomicity"]
-        P3["BatchAtomicity"]
-        P4["ObservationUniqueness"]
-    end
-    V --> P
-    P --> MI{"legal cut indices"}
+    OUT --> PROMPT["system prompt"]
+    DL -.->|"agent reads on demand<br/>when MEMORY.md points here"| PROMPT
 
-    BUD --> SNAP["find_next(keep_first)<br/>find_next(naive_end)"]
-    MI --> SNAP
-    SNAP --> FE["forgotten_events = view[start:end]"]
-
-    FE --> CE["append Condensation<br/>forgotten_event_ids · summary<br/>summary_offset · llm_response_id"]
-    CE --> LOG
-
-    P -.->|"view already broken"| ENF["enforce() → remove violating ids<br/>fallback, needs all events"]
-
-    MEM[("~/.openhands/memory/MEMORY.md<br/>&lt;workspace&gt;/.openhands/memory/MEMORY.md")] -->|"6,000 char budget<br/>truncate from the top"| PROMPT["&lt;MEMORY_CONTEXT&gt; block"]
-    AG["the agent, with ordinary file tools"] --> MEM
+    GATE["AgentContext.load_memory<br/>default False"] --> LM
+    TRUNC -.->|"nothing records<br/>what the dropped lines said"| LOSS(["silent across sessions"])
 ```
 
 ## 3. Architecture
 
-One process, no services, no database. The event log is a directory of JSON
-files with a `.eventlog.lock` beside it, and the class documents the limit of
-that choice rather than leaving it to be discovered: *"For LocalFileStore, file
-locking via flock() does NOT work reliably on NFS mounts or network
-filesystems."*
-
-The persistent memory is two directories of markdown. There is nothing to stand
-up, and nothing to migrate.
+Nothing to stand up. Two directories of markdown, read at the start of a
+session. `LocalConversation` resolves the path lazily on the first
+`send_message()` / `run()` because the workspace is not known when
+`AgentContext` validates, and stores the text in `memory_context`, which is
+`exclude=True` on serialization — *"re-resolved from disk each session and must
+not bloat persisted conversation state."* That is the right call: a saved
+conversation cannot restore a stale copy of the index.
 
 ## 4. Essential Implementation Paths
 
-**A property is two things, and the split is the good idea.**
-`ViewPropertyBase` requires both `manipulation_indices` — where the view may be
-modified while keeping the property — and `enforce`, which returns the ids to
-remove from a view that has already broken it. The docstring is explicit about
-which is load-bearing: manipulation indices are the mechanism, *"properties
-should hold inductively"*, and *"enforcement is intended as a fallback
-mechanism to handle edge cases, bad data, or unforeseen situations."* The two
-have different information needs, and the class says why — enforcement
-*"assumes the view is in a bad state"* and therefore takes all events in the
-conversation, while manipulation indices are computable from the current view
-alone.
+The whole in-scope path is `load_memory` and the two functions under it.
 
-**The legal set is an intersection.** `View.manipulation_indices` starts from
-`ManipulationIndices.complete(self.events)` and does `results &= property.
-manipulation_indices(self.events)` over `ALL_PROPERTIES`. An index survives
-only if every property admits it. Adding a fifth property therefore cannot
-loosen the constraint, which is the correct direction for a safety rule.
+`_read_index` returns `None` for a missing file, logs and returns `None` for an
+unreadable one, and returns `None` for an empty one — so an unreadable index and
+an absent index are indistinguishable downstream, which is the one place this
+function is quieter than it should be.
 
-**The budget never gets the last word.** In
-`llm_summarizing_condenser.py`, the token math produces `naive_end`, and then:
+`_truncate_top` deletes whole leading lines until the body plus an
+`[earlier memory truncated]` notice fits the budget. Three decisions in it are
+better than the average of this corpus. Truncation is **from the top**, keeping
+the tail, matching an append-oriented maintenance instruction. **Partial lines
+never survive**, so the model never reads half a fact. And the notice is
+**charged to the budget** rather than being free, which is a one-line decision
+that keeps the prompt honest: a silently shortened index reads to the model as
+a complete one.
+
+The budget arithmetic is fair-share with rollover, and the docstring states the
+floor rather than leaving it to be discovered: *"`char_budget` is honored
+whenever it covers the headers plus one notice per tier (~150 chars for both
+tiers)."*
+
+## 5. Memory Data Model
+
+There is none. `MEMORY.md` is markdown. No status, no confidence, no timestamp,
+no provenance, no id, no scope key inside a file — the tier *is* the scope, and
+it is a directory.
+
+That is the report's main criticism and it should be read against what sits
+beside it. The same repository defends its context window with four formal
+properties, an intersection lattice, a repair path per property and 2,960 lines
+of tests. The part that actually outlives a session is a text file with a
+character cap and no writer in code.
+
+## 6. Retrieval Mechanics
+
+No index, no query, no ranking. Both indexes are injected whole; the agent does
+the second hop to a daily log with a file read. For one agent in one workspace
+that is coherent, and it does not generalise past it.
+
+## 7. Write Mechanics
+
+No write path in code. The agent appends to today's daily log and folds durable
+facts into `MEMORY.md`, under prompt guidance that is unusually specific about
+the distinction worth drawing:
+
+> Record what was expensive to learn: root causes, environment quirks, user
+> preferences, decisions and their reasons.
+
+with a matching negative — do not record secrets, and do not record *"facts that
+are trivially re-discoverable (directory listings, obvious commands)"* — and a
+separation most projects conflate: *"`AGENTS.md` remains the place for
+instructions addressed to any agent working in this repository; memory is for
+what you learned yourself."*
+
+Nothing enforces any of it. The guidance is good and it is advice to a model.
+
+## 8. Agent Integration
+
+`AgentContext.load_memory` is the switch and it **defaults to `False`**. It is
+marked `SettingProminence.MAJOR` with the label "Persistent memory", so it
+surfaces in a client's settings UI — Agent Canvas has a page for it — and it
+was exposed in the agent-settings schema three weeks after the loader landed.
+With the flag off, the memory guidance in the system prompt is an older variant
+pointing at `AGENTS.md` instead.
+
+## 9. Reliability, Safety, and Trust
+
+The scope boundary is honest but thin. `load_memory(working_dir)` reads the
+project tier from the path the conversation supplies, so one workspace's project
+memory does not reach another. There is no canonicalization and no containment
+check, so this is the mark's weaker form: the key reaches the read, and a caller
+passing a different `working_dir` reads that workspace's memory.
+
+Three absences matter more. **No code writes or validates a memory file**, so
+the guidance about secrets is advice to a model, and a credential written into
+`MEMORY.md` is injected into every subsequent session's prompt. **Nothing
+records what truncation dropped** — the notice says that something was cut and
+nothing says what, so an index that loses its oldest lines each session degrades
+silently, and the daily logs it points at are not consulted to recover it.
+**Nothing can be marked wrong**: there is no status, no supersession and no
+tombstone, so a fact the agent later disproves competes with its correction on
+nothing but position in a file.
+
+## 9a. The context machinery, which is not the memory
+
+Most of the engineering effort in this tree goes into deciding which events
+reach the model within a run, and it is genuinely good work. It earns no
+capability mark here, because an event is a record of something that happened
+and cannot turn out to be false — the test this atlas uses to separate memory
+from [context engineering](../../compare/#not-in-scope-conversation-window-management).
+It is described because a reader comparing frameworks will be shown it as a
+memory feature, and because the central idea transfers.
+
+**A condenser does not choose where to cut.** `View.manipulation_indices` starts
+from `ManipulationIndices.complete(self.events)` and intersects it with the
+index set each of four properties admits — `ObservationUniquenessProperty`,
+`BatchAtomicityProperty`, `ToolCallMatchingProperty`, `ToolLoopAtomicityProperty`,
+all four listed in `ALL_PROPERTIES`. An index survives only if every property
+admits it, so adding a fifth property can only tighten the set, which is the
+correct direction for a safety rule. The summarizing condenser then computes the
+window it wants from the token budget and snaps both ends to legal positions:
 
 ```python
 forgetting_start = view.manipulation_indices.find_next(self.keep_first)
@@ -152,220 +219,104 @@ forgetting_end = view.manipulation_indices.find_next(naive_end)
 forgotten_events = view[forgetting_start:forgetting_end]
 ```
 
-`find_next` snaps to the smallest legal index at or after the requested one, so
-a window the budget wanted is widened to the next safe boundary rather than cut
-where it fell. The comments name the two lines *"boundary-aware indices"*.
+**Each property carries a repair as well as a rule.** `ViewPropertyBase`
+requires both `manipulation_indices` and an `enforce` returning the ids to
+remove from a view that has already broken the property, and the base class says
+which of the two is load-bearing — indices are the mechanism and *"properties
+should hold inductively"*, while enforcement *"is intended as a fallback
+mechanism to handle edge cases, bad data, or unforeseen situations"* and
+therefore needs every event in the conversation rather than the current view.
 
-**Tool-call matching is the property with a stated provider reason.**
-`ToolCallMatchingProperty` requires exactly one observation per action
-`tool_call_id`, because *"some providers (for example Anthropic tool use)
+**Tool-call matching states its reason.** It requires exactly one observation per
+action `tool_call_id`, because *"some providers (for example Anthropic tool use)
 require every `tool_use` to have one corresponding `tool_result` in the
-immediately following user message, so duplicate observation-like events are
-not safe to silently tolerate."* Its `enforce` collects the action and
-observation id sets and removes whichever side is unpaired — in both
-directions.
+immediately following user message"*, and its `enforce` removes whichever side
+is unpaired, in both directions.
 
-**The persistent tier is a loader, not a store.** `load_memory` reads at most
-two files, labels each with a tier header, and returns one string. When the
-combined text exceeds `MEMORY_CHAR_BUDGET` (6,000), the header overhead is
-subtracted, the remainder is split evenly between tiers, and *"a short tier's
-unused share rolling over to the other"*. Each tier is then truncated
-line-wise from the top by `_truncate_top`, which keeps deleting whole leading
-lines until the body plus an `[earlier memory truncated]` notice fits.
-
-Three decisions in that function are better than the average of this corpus.
-Truncation is **from the top**, keeping the tail, because the maintenance
-instructions tell the agent to append. Partial lines never survive. And the
-truncation is **visible to the model** — the notice counts against the budget
-rather than being free, so the agent can see that it is reading a
-prefix-deleted index rather than a complete one.
-
-## 5. Memory Data Model
-
-There are two units and they share nothing.
-
-An `Event` is a pydantic model with an id, a parent id, a source, and a kind;
-`Condensation` adds `forgotten_event_ids`, `summary`, `summary_offset` and
-`llm_response_id`. That is a record type with a real schema, and the one field
-that matters most for this atlas — what was dropped — is a set of ids rather
-than a count.
-
-The persistent tier has no schema at all. `MEMORY.md` is markdown the agent
-writes; nothing parses it, nothing validates it, and the only code that touches
-it reads it and truncates it. There is no status, no confidence, no timestamp,
-no provenance and no scope key inside a file — the tier *is* the scope, and it
-is a directory.
-
-That asymmetry is the report's main criticism and it is worth stating plainly:
-the within-session structure is defended by four properties and a test suite,
-and the across-session memory — the part that actually outlives anything — is a
-text file with a character cap.
-
-## 6. Retrieval Mechanics
-
-None, in the search sense. `MEMORY.md` is injected whole into a
-`<MEMORY_CONTEXT>` block, and daily logs are *"never injected automatically;
-read them on demand when `MEMORY.md` points to them"* — an index-and-pointer
-arrangement where the agent does the second hop with a file read. For a
-single-agent workspace that is a defensible answer and it does not scale past
-one.
-
-The event log has `__getitem__` by index and by id, and no query.
-
-## 7. Write Mechanics
-
-`EventLog.append` is the only mutator on the store. It takes a lock, re-syncs
-from disk in case another process wrote while it waited, rejects an event whose
-id already exists, rejects an event whose declared parent does not, writes one
-JSON file, and updates three in-memory indices. There is no `delete`, no
-`truncate` and no `__setitem__` on the class.
-
-Persistent memory has no write path in code. The agent appends to today's daily
-log and folds durable facts into `MEMORY.md` with ordinary file tools, under
-prompt guidance that is unusually specific about the distinction worth drawing:
-
-> Record what was expensive to learn: root causes, environment quirks, user
-> preferences, decisions and their reasons.
-
-with a matching negative — do not record secrets, and do not record *"facts
-that are trivially re-discoverable (directory listings, obvious commands)"* —
-and a separation of concerns most projects conflate: *"`AGENTS.md` remains the
-place for instructions addressed to any agent working in this repository;
-memory is for what you learned yourself."*
-
-Nothing enforces any of it.
-
-## 8. Agent Integration
-
-`AgentContext.load_memory` is the switch and it **defaults to `False`**. It is
-marked `SettingProminence.MAJOR` with the label "Persistent memory", so it
-surfaces in a client's settings UI, and `LocalConversation` resolves it lazily
-on the first `send_message()` / `run()` because the workspace path is not known
-when `AgentContext` validates. The resolved text lands in `memory_context`,
-which is `exclude=True` on serialization — *"re-resolved from disk each session
-and must not bloat persisted conversation state"*, which is the right call and
-means a stale copy cannot be restored from a saved conversation.
-
-With the flag off, the memory guidance in the system prompt is the older
-variant pointing at `AGENTS.md` instead.
-
-## 9. Reliability, Safety, and Trust
-
-The append-only log is the strongest property here. A condensation cannot lose
-data, only hide it; a bug in a condenser costs context, not history; and the
-`Condensation` event lets an operator reconstruct exactly what the model stopped
-seeing and which completion decided it. Very few systems in this corpus can
-answer *what did the agent stop being able to see, and when* — this one answers
-it from its primary store without a separate audit table.
-
-Against that, three things are missing and one is a hazard.
-
-`load_memory` defaults off, so the durable memory is a feature an integrator
-opts into rather than the system's behaviour. No code writes or validates a
-memory file, so the guidance about secrets is advice to a model, and a
-credential written into `MEMORY.md` is injected into every subsequent session's
-prompt. And the character budget silently loses the *oldest* lines of an index
-across sessions — the notice tells the model that truncation happened, and
-nothing anywhere records what was in the lines that went.
-
-The scope boundary is honest but thin. `load_memory(working_dir)` reads the
-project tier from the path the conversation supplies, so one workspace's
-project memory does not reach another. There is no canonicalization and no
-containment check, so this is the mark's weaker form: the key reaches the read,
-and a caller passing a different `working_dir` reads that workspace's memory.
+**A drop is an appended event, not a deletion.** `Condensation` carries
+`forgotten_event_ids`, an optional summary and offset, and the `llm_response_id`
+of the completion that decided the drop; `EventLog`'s only mutator is `append`,
+which rejects a duplicate id and an event whose declared parent is missing, and
+the class has no delete, truncate or `__setitem__`. The forgotten events leave
+the view and stay on disk. That makes *what did the agent stop being able to see,
+and when* answerable — a good property, and a property of a transcript rather
+than of a memory store, which is why it is here and not in the frontmatter.
 
 ## 10. Tests, Evals, and Benchmarks
 
 687 test files and 220,761 lines against 140,853 lines of implementation, which
-is more test than product and rare at this size. Nothing was run for this
-review.
+is more test than product and rare at this size. Nothing was run for this review.
 
-The view suite is 2,960 lines across ten files, one per property plus the
-manipulation-index machinery, and `test_view.py` holds the case that earns
-`negative_eval`:
+The distribution is the finding. The view machinery has 2,960 lines across ten
+files, one per property plus the manipulation-index lattice, including a case
+that forgets one event at a time and asserts both that the length dropped by
+exactly one and that the forgotten id is absent — a non-vacuous negative
+assertion, over a context window rather than over a recall.
 
-```python
-for forgotten_event_id in message_event_ids:
-    events = [*message_events, Condensation(
-        forgotten_event_ids={forgotten_event_id},
-        llm_response_id="condensation_response_1")]
-    view = View.from_events(events)
-    assert len(view.events) == len(message_events) - 1
-    assert forgotten_event_id not in [event.id for event in view.events]
-```
-
-Two properties make it non-vacuous. It forgets **one** event and asserts the
-length dropped by exactly one, so the negative assertion cannot pass against a
-view that returned nothing — and the fixture comment says that is the reason
-for the design: *"in this test we only want to forget one of the events. That
-way we can check that the rest of the events are preserved."* And it runs the
-whole thing once per event id, so a condensation that only worked at the ends
-would fail in the middle.
-
-Beside it, `tests/integration/tests/` runs `c01_thinking_block_condenser`,
-`c02_hard_context_reset`, `c03_delayed_condensation`, `c04_token_condenser` and
-`c05_size_condenser` as integration cases against real behaviour.
+`tests/sdk/context/test_memory.py` is what covers the durable half. No committed
+case asserts that particular material must not be retrieved from memory, so
+`negative_eval` is withheld; nothing records mutations of a memory file, so
+`audit_log` is withheld. `tests/integration/tests/` runs five condenser cases —
+`c01_thinking_block_condenser` through `c05_size_condenser` — against real
+behaviour.
 
 No paper is cited in the repository, and no benchmark result is committed for
-the memory subsystem.
+either half.
 
 ## 11. For Your Own Build
 
-**Separate "where may I cut" from "how much must I cut."** The budget is a
-number and the boundary is a structural fact, and letting the first choose the
-second is where compaction damage comes from. Computing legal indices first and
-snapping the budget's window to them costs almost nothing and makes a whole
-class of bug unrepresentable.
+**Charge the truncation notice to the budget.** A silently shortened memory index
+reads to the model as a complete one. `[earlier memory truncated]` costing
+characters is the cheapest honesty in this corpus.
 
-**Intersect the constraints, so a new rule can only tighten.**
-`results &= property.manipulation_indices(events)` means adding a property
-cannot accidentally permit a cut that was previously forbidden.
+**Truncate in the direction your instructions imply.** Telling the agent to
+append and then trimming the tail would delete exactly what it just learned.
+Keeping the tail costs one function and makes the guidance coherent.
 
-**Give every property a repair as well as a rule.** The prevent/repair split —
-manipulation indices for the normal path, `enforce` for a view that is already
-broken — is what lets the rules hold inductively while still surviving bad
-data, and the base class is worth reading for the way it states which of the two
-is the real mechanism.
+**Split an index from its detail, and inject only the index.** A routing table
+under a budget with dated logs behind it is a working answer to "the memory does
+not fit" that does not require a retriever.
 
-**Make a forgetting an event, not a deletion.** Recording the dropped ids and
-the completion that chose them, in the same append-only store as the events
-themselves, gives you the audit for free and makes every compaction reversible
-in principle.
+**Then go further than this does.** Record what truncation dropped, give a
+memory line an id so it can be corrected, and put *something* in code between
+the model and the file it is trusted to maintain.
 
-**Charge the truncation notice to the budget.** A silently shortened memory
-index reads to the model as a complete one. `[earlier memory truncated]`
-costing characters is a one-line decision that keeps the prompt honest.
+**Separate "where may I cut" from "how much must I cut."** From section 9a, and
+the one idea here worth stealing for a context window: compute the legal
+positions first, snap the budget's window to them, and intersect the constraints
+so a new rule can only tighten.
 
 ## 12. Open Questions
 
-**What did truncation drop?** The notice says that something was cut and
-nothing says what. An index that loses its oldest lines every session, with no
-record, is the durable half of this system quietly degrading — and the daily
-logs it points at are not consulted to recover it.
+**What did truncation drop?** The notice says that something was cut and nothing
+says what. This is the durable half of the system quietly degrading.
 
 **Is `load_memory` on anywhere by default?** It is `False` in the SDK. Whether
-the agent platform or Agent Canvas turns it on for real users was not
-established here, and it decides whether this is a shipped memory system or an
-available one.
+the agent platform or Agent Canvas turns it on for real users decides whether
+this is a shipped memory system or an available one, and neither was established
+here.
 
-**Are the four properties sufficient?** They are necessary — each names a
-concrete way a view breaks — and nothing in the tree argues that a view
-satisfying all four is safe to serialize for every provider.
+**Does anything ever read a daily log?** The prompt tells the agent to write them
+and to read them when the index points there. No code touches them, and nothing
+committed measures whether the pointer is followed.
 
 ## Appendix: File Index
 
 | Path | What it holds |
 | --- | --- |
-| `openhands-sdk/openhands/sdk/context/view/view.py` | `View`, and the intersection in `manipulation_indices` |
-| `openhands-sdk/openhands/sdk/context/view/properties/base.py` | The prevent/repair contract |
-| `.../properties/tool_call_matching.py`, `tool_loop_atomicity.py`, `batch_atomicity.py`, `observation_uniqueness.py` | The four properties |
-| `openhands-sdk/openhands/sdk/context/condenser/llm_summarizing_condenser.py` | The budget, and the snap to legal indices |
-| `openhands-sdk/openhands/sdk/event/condenser.py` | `Condensation`, `forgotten_event_ids`, `llm_response_id` |
-| `openhands-sdk/openhands/sdk/conversation/event_store.py` | `EventLog.append`, the only mutator |
-| `openhands-sdk/openhands/sdk/context/memory.py` | The two-tier loader, the budget and the truncation |
+| `openhands-sdk/openhands/sdk/context/memory.py` | The whole durable memory: two tiers, the budget, the truncation |
+| `openhands-sdk/openhands/sdk/context/agent_context.py` | `load_memory`, `memory_context` |
+| `openhands-sdk/openhands/sdk/conversation/impl/local_conversation.py` | The lazy resolution against the workspace path |
 | `openhands-sdk/openhands/sdk/context/prompts/sections/static.py` | The maintenance guidance the agent is given |
-| `tests/sdk/context/view/` | 2,960 lines, one file per property |
+| `tests/sdk/context/test_memory.py` | The durable half's tests |
+| `openhands-sdk/openhands/sdk/context/view/` | Section 9a: `View`, the four properties, the index lattice |
+| `openhands-sdk/openhands/sdk/context/condenser/` | Section 9a: the budget and the snap to legal indices |
+| `openhands-sdk/openhands/sdk/event/condenser.py`, `conversation/event_store.py` | Section 9a: `Condensation`, and `append` as the only mutator |
 
 ## History
 
-**2026-08-28** — [`9a24f6c8866f353042a57df0514ccc900e3a0691`](https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691) — first reading, MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds a settings page, a mutation hook and a typed `CondensationEvent` describing this SDK's condenser rather than implementing one. Screened before reading: no auto-run surface, fourteen build-time execution surfaces, four unpinned surfaces and six files inside the seven-day cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run. Three marks. `audit_log` rests on `Condensation` being appended to an `EventLog` whose only mutator is `append` — the forgotten events stay on disk and leave the view. `negative_eval` rests on a per-event loop asserting the forgotten id is absent while the length drops by exactly one. `scope_enforced` is the weak form: `working_dir` reaches the project-tier read with no canonicalization or containment check. `tombstone`, `trust_state`, `bitemporal` and `human_review` are absent — a memory file has no fields at all, and nothing reviews one. The reading covers the context package, the event store, the condenser and their tests; `openhands-agent-server`, `openhands-tools` and the workspace package were not traced. Repository provenance was checked against the organisation rather than inferred from the one clone: `agent-canvas` and `legacy` are both archived as of 27 July 2026, neither `legacy/openhands` nor `enterprise/openhands` contains a memory package, `OpenHands-Cloud` is deployment manifests, and `enterprise` pins the three `openhands-*` distributions published from this tree. `context/memory.py` and the view properties were confirmed present in `git ls-tree` at the pinned sha, not only in the working tree.
+**2026-08-29** — [`9a24f6c8866f353042a57df0514ccc900e3a0691`](https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691) — same commit, correcting the first reading, which got the scope boundary wrong in the direction that flatters a system. It led on the `View` and condenser machinery and awarded two marks to it: `audit_log` for the `Condensation` event appended to `EventLog`, and `negative_eval` for a test asserting a forgotten id is absent from the view. Both describe the set of events reaching the model within a run. An event cannot turn out to be false, so by the test this atlas uses — whether the store holds anything that could be wrong — that machinery is context engineering and not memory, and neither mark should have been awarded for it. Both are withdrawn; the marks go from three to one. `scope_enforced` stands, because it rests on `load_memory(working_dir)` and the persistent tier.
+
+The report is rebuilt around what does survive a session: the two-tier `MEMORY.md`, its 6,000-character budget, the fair-share split, top-first truncation and the notice charged against the budget. The context machinery is kept in section 9a, labelled, because it is the best-engineered thing in the tree and a reader comparing frameworks will be offered it as a memory feature.
+
+**2026-08-28** — [`9a24f6c8866f353042a57df0514ccc900e3a0691`](https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691) — first reading, MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds a settings page, a mutation hook and a typed `CondensationEvent` describing this SDK's condenser rather than implementing one. Repository provenance was checked against the organisation rather than inferred from the one clone: `agent-canvas` and `legacy` are both archived as of 27 July 2026, neither `legacy/openhands` nor `enterprise/openhands` contains a memory package, `OpenHands-Cloud` is deployment manifests, and `enterprise` pins the three `openhands-*` distributions published from this tree. `context/memory.py` and the view properties were confirmed present in `git ls-tree` at the pinned sha, not only in the working tree. Screened before reading: no auto-run surface, fourteen build-time execution surfaces, four unpinned surfaces and six files inside the seven-day cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
