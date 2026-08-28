@@ -869,6 +869,19 @@ rejection is sticky per id, so asking again is a new record citing
 <code>supersedes</code> rather than a rewrite, and revision is capped at
 three per record lifetime because <em>"without it, revise is a nag loop
 the recipient cannot stop."</em></p>
+<p><a href="../../systems/agent-framework/">Microsoft Agent
+Framework</a> contributes the smallest useful piece of this pattern, on
+its checkpoint store rather than its memory: what to do when a lookup is
+<em>unscoped</em>. Its Cosmos storage partitions on
+<code>/workflow_name</code> and <code>list_checkpoints</code> filters on
+it, but fetching by <code>checkpoint_id</code> alone is scope-free — and
+when that id matches in more than one workflow the store raises, naming
+the colliding workflows and telling the caller to use
+<code>list_checkpoints(workflow_name=...)</code> instead. Returning the
+first match is the ordinary choice, and it is how a scoped store quietly
+serves one tenant's row to another. A key that is optional on one read
+path is worth exactly this much: a refusal when the ambiguity it was
+meant to prevent actually occurs.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

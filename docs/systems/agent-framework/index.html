@@ -116,14 +116,14 @@ stay inside its base.</p>
               <strong>microsoft/agent-framework</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4" title="28389df805b97f846ca21d857e291602a7adc0a4">
+            <a class="meta-pill revision-pill" href="https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735" title="6d532cf77e26988fe2d822f13ddea021faa9d735">
               <span>Analyzed revision</span>
-              <code>28389df8…</code>
+              <code>6d532cf7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-08-28</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -321,6 +321,76 @@ of what changed in memory. <strong>No human review surface</strong>
 beyond the fact that the artifacts are Markdown a person can open —
 which this atlas does not count, on the same basis as <a
 href="../basic-memory/">Basic Memory</a>.</p>
+<h2 id="9a-workflow-checkpoints-and-why-they-are-not-the-memory">9a.
+Workflow checkpoints, and why they are not the memory</h2>
+<p>The framework has a second durable store, documented at length and
+easy to mistake for the first. A <strong>workflow checkpoint</strong> is
+written at the end of every superstep and captures <em>"the current
+state of all executors"</em>, all pending messages for the next
+superstep, pending requests and responses, and shared state. Three
+storages implement one <code>CheckpointStorage</code> protocol —
+<code>InMemoryCheckpointStorage</code>,
+<code>FileCheckpointStorage</code>, and
+<code>CosmosCheckpointStorage</code> in a separate
+<code>agent-framework-azure-cosmos</code> package — and .NET and Go have
+their equivalents behind a <code>CheckpointManager</code>.</p>
+<p><strong>It is a resume point, not a belief.</strong> What a
+checkpoint stores is what the run <em>was doing</em>, and its
+correctness criterion is fidelity to that run rather than truth about
+the world. Nothing in it can be corrected, superseded or rejected; there
+is no identity for a fact that could later turn out wrong, only an
+identity for a moment. That is the same boundary this atlas draws around
+<a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-22-a-context-engine-that-expires-on-purpose.md">Perseus</a>'s
+run records, and it is why the checkpoint subsystem earns no capability
+mark here even though it is the more heavily engineered of the two
+stores.</p>
+<p>The qualification is <code>on_checkpoint_save</code>. An executor
+overrides it to return <em>"its state as a dictionary"</em>, and nothing
+constrains what goes in that dictionary — so an adopter can put
+accumulated knowledge there and get a durable store with no correction
+path, no scope key finer than the workflow name, and pickle at the
+deserialization boundary. The documentation does not warn about that
+use, and the framework cannot detect it.</p>
+<p><strong>The pickle boundary is the part worth reading
+anyway.</strong> The file and Cosmos storages pickle non-JSON-native
+state, and <code>_checkpoint_encoding.py</code> puts a default-deny
+<code>_RestrictedUnpickler</code> in front of loading it.
+<code>find_class</code> checks a blocklist first, then a getattr shim,
+then a builtin allowlist, then the caller's
+<code>allowed_checkpoint_types</code>, then a framework/OpenAI module
+prefix — and raises otherwise. Three details separate it from the usual
+gesture at this problem. Resolution is <strong>type-only</strong>:
+<code>isinstance(resolved, type)</code> guards both the
+caller-allowlisted and the prefix-allowed branches, so <em>"helper
+functions and other non-type globals are rejected"</em>. A dotted
+<code>name</code> under an allowed module prefix is refused outright,
+because pickle's dotted names traverse attributes and would otherwise
+reach past the top-level classes the prefix was meant to admit. And
+<code>_BLOCKED_FRAMEWORK_GLOBAL_KEYS</code> names the decoder's own
+functions — <code>_RestrictedUnpickler</code>,
+<code>_base64_to_unpickle</code>, <code>decode_checkpoint_value</code>,
+<code>encode_checkpoint_value</code> — so a payload cannot reach the
+guard that is inspecting it.</p>
+<p><code>tests/workflow/test_checkpoint_unrestricted_pickle.py</code>
+tests it behaviourally rather than by inspecting the allowlist: a
+crafted payload is decoded and the test asserts
+<code>not os.path.exists(marker_file)</code>, that the code which would
+have run did not run, with the same shape repeated for the
+framework-helper case. Positive controls sit beside it — a listed user
+type decodes, builtin types round-trip — so neither half can pass
+vacuously. It does not earn <code>negative_eval</code>, which asks for
+material kept out of a <em>retrieval</em>; this is material kept out of
+an <em>execution</em>.</p>
+<p>The scope story on checkpoints is thinner than on the harness memory
+and has one good edge. Cosmos partitions on <code>/workflow_name</code>
+and <code>list_checkpoints</code> filters
+<code>WHERE c.workflow_name = @workflow_name</code>, so the key reaches
+the query. Fetching by <code>checkpoint_id</code> alone is unscoped, and
+when that matches in more than one workflow the store <strong>raises
+rather than returning one of them</strong>, naming the colliding
+workflows and telling the caller to scope the query. Returning an
+arbitrary winner is the more common choice and the wrong one.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>1,357 lines across <code>test_harness_memory.py</code> and
@@ -452,9 +522,66 @@ registration</td>
 <td>480</td>
 <td>File tools, traversal reported as tool messages</td>
 </tr>
+<tr>
+<td><code>python/packages/core/agent_framework/_workflows/_checkpoint.py</code></td>
+<td>462</td>
+<td>Checkpoint records and the storage protocol</td>
+</tr>
+<tr>
+<td><code>python/packages/core/agent_framework/_workflows/_checkpoint_encoding.py</code></td>
+<td>421</td>
+<td><code>_RestrictedUnpickler</code>, the allowlists and the blocked
+decoder globals</td>
+</tr>
+<tr>
+<td><code>python/packages/azure-cosmos/.../_checkpoint_storage.py</code></td>
+<td>—</td>
+<td><code>/workflow_name</code> partitioning and the collision
+refusal</td>
+</tr>
+<tr>
+<td><code>python/packages/core/tests/workflow/test_checkpoint_unrestricted_pickle.py</code></td>
+<td>—</td>
+<td>The did-not-execute assertions</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-28</strong> — <a
+href="https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735"><code class="commit-id" title="6d532cf77e26988fe2d822f13ddea021faa9d735">6d532cf7…</code></a>
+— re-pinned 181 commits on, prompted by the workflow-checkpoint
+documentation. <code>_harness/_memory.py</code> and
+<code>_harness/_file_memory.py</code> are byte-identical to the previous
+pin, so every claim about the memory this report is named for still
+holds, and the mark stays at one. The rest of <code>_harness/</code>
+moved — <code>_loop.py</code>, <code>_background_agents.py</code>,
+<code>_tool_approval.py</code>, <code>_file_access.py</code> — without
+touching memory.</p>
+<p>The addition is section 9a, on the second durable store. A workflow
+checkpoint is written at the end of each superstep and captures executor
+state, pending messages, pending requests and shared state; it is a
+resume point rather than a belief, nothing in it can be corrected or
+rejected, and it earns no mark on that basis. Two mechanisms in it are
+worth the section anyway: a default-deny
+<code>_RestrictedUnpickler</code> whose allowlists resolve to types
+only, which refuses dotted names under an allowed module prefix, and
+which blocks its own decoder functions so a payload cannot reach the
+guard inspecting it; and a Cosmos store that raises on a
+<code>checkpoint_id</code> colliding across workflows instead of
+returning an arbitrary match. The pickle tests assert that the code a
+crafted payload would have run did not run, with positive controls
+beside them — a good suite that does not earn
+<code>negative_eval</code>, because the mark asks about retrieval and
+this is about execution.</p>
+<p>Screened again first: two auto-run surfaces
+(<code>.devcontainer/devcontainer.json</code> and
+<code>.github/copilot-instructions.md</code>), fifteen build-time
+execution surfaces, 337 unpinned surfaces and nineteen files inside the
+seven-day cooldown; nothing was installed and nothing was run.
+<code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>. The reading covers the harness memory, the
+checkpoint subsystem and their tests; the .NET and Go implementations
+were read only as documented.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4"><code class="commit-id" title="28389df805b97f846ca21d857e291602a7adc0a4">28389df8…</code></a>
 — first reading.</p>

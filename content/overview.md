@@ -6323,7 +6323,7 @@ Privacy/deletion:
 - [aiming-lab/SimpleMem](https://github.com/aiming-lab/SimpleMem) at [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299)
 - [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`39ee7e08101c54b1ddf9c1e3a7f603f09ae34555`](https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555)
 - [camel-ai/camel](https://github.com/camel-ai/camel) at [`ec48f997f3c2a700ae5a4cf0280792838fea81f8`](https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8)
-- [microsoft/agent-framework](https://github.com/microsoft/agent-framework) at [`28389df805b97f846ca21d857e291602a7adc0a4`](https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4)
+- [microsoft/agent-framework](https://github.com/microsoft/agent-framework) at [`6d532cf77e26988fe2d822f13ddea021faa9d735`](https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735)
 - [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) at [`ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2`](https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2)
 - [gobii-ai/gobii-platform](https://github.com/gobii-ai/gobii-platform) at [`26844673ac9f134e2ad3851a12dd26762d94c3a9`](https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9)
 - [reescalder/agent-memory-supabase](https://github.com/reescalder/agent-memory-supabase) at [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53)

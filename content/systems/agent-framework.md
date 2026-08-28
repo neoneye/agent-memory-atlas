@@ -6,13 +6,13 @@ root: ../..
 page_kind: system
 source_name: "microsoft/agent-framework"
 source_url: https://github.com/microsoft/agent-framework
-revision: 28389df805b97f846ca21d857e291602a7adc0a4
-revision_url: https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4
-analyzed_at: 2026-07-30
+revision: 6d532cf77e26988fe2d822f13ddea021faa9d735
+revision_url: https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735
+analyzed_at: 2026-08-28
 capabilities: "scope_enforced"
 stack_storage: "files"
 stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_source: "reviewed"
 capability_evidence:
   scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
 matrix:
@@ -205,6 +205,66 @@ transcript archive is the raw material, not a record of what changed in memory.
 person can open — which this atlas does not count, on the same basis as
 [Basic Memory](../basic-memory/).
 
+## 9a. Workflow checkpoints, and why they are not the memory
+
+The framework has a second durable store, documented at length and easy to
+mistake for the first. A **workflow checkpoint** is written at the end of every
+superstep and captures *"the current state of all executors"*, all pending
+messages for the next superstep, pending requests and responses, and shared
+state. Three storages implement one `CheckpointStorage` protocol —
+`InMemoryCheckpointStorage`, `FileCheckpointStorage`, and
+`CosmosCheckpointStorage` in a separate `agent-framework-azure-cosmos` package
+— and .NET and Go have their equivalents behind a `CheckpointManager`.
+
+**It is a resume point, not a belief.** What a checkpoint stores is what the run
+*was doing*, and its correctness criterion is fidelity to that run rather than
+truth about the world. Nothing in it can be corrected, superseded or rejected;
+there is no identity for a fact that could later turn out wrong, only an
+identity for a moment. That is the same boundary this atlas draws around
+[Perseus](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-22-a-context-engine-that-expires-on-purpose.md)'s
+run records, and it is why the checkpoint subsystem earns no capability mark
+here even though it is the more heavily engineered of the two stores.
+
+The qualification is `on_checkpoint_save`. An executor overrides it to return
+*"its state as a dictionary"*, and nothing constrains what goes in that
+dictionary — so an adopter can put accumulated knowledge there and get a durable
+store with no correction path, no scope key finer than the workflow name, and
+pickle at the deserialization boundary. The documentation does not warn about
+that use, and the framework cannot detect it.
+
+**The pickle boundary is the part worth reading anyway.** The file and Cosmos
+storages pickle non-JSON-native state, and `_checkpoint_encoding.py` puts a
+default-deny `_RestrictedUnpickler` in front of loading it. `find_class` checks a
+blocklist first, then a getattr shim, then a builtin allowlist, then the
+caller's `allowed_checkpoint_types`, then a framework/OpenAI module prefix — and
+raises otherwise. Three details separate it from the usual gesture at this
+problem. Resolution is **type-only**: `isinstance(resolved, type)` guards both
+the caller-allowlisted and the prefix-allowed branches, so *"helper functions and
+other non-type globals are rejected"*. A dotted `name` under an allowed module
+prefix is refused outright, because pickle's dotted names traverse attributes and
+would otherwise reach past the top-level classes the prefix was meant to admit.
+And `_BLOCKED_FRAMEWORK_GLOBAL_KEYS` names the decoder's own functions —
+`_RestrictedUnpickler`, `_base64_to_unpickle`, `decode_checkpoint_value`,
+`encode_checkpoint_value` — so a payload cannot reach the guard that is inspecting
+it.
+
+`tests/workflow/test_checkpoint_unrestricted_pickle.py` tests it behaviourally
+rather than by inspecting the allowlist: a crafted payload is decoded and the
+test asserts `not os.path.exists(marker_file)`, that the code which would have
+run did not run, with the same shape repeated for the framework-helper case.
+Positive controls sit beside it — a listed user type decodes, builtin types
+round-trip — so neither half can pass vacuously. It does not earn `negative_eval`,
+which asks for material kept out of a *retrieval*; this is material kept out of
+an *execution*.
+
+The scope story on checkpoints is thinner than on the harness memory and has one
+good edge. Cosmos partitions on `/workflow_name` and `list_checkpoints` filters
+`WHERE c.workflow_name = @workflow_name`, so the key reaches the query. Fetching
+by `checkpoint_id` alone is unscoped, and when that matches in more than one
+workflow the store **raises rather than returning one of them**, naming the
+colliding workflows and telling the caller to scope the query. Returning an
+arbitrary winner is the more common choice and the wrong one.
+
 ## 10. Tests, Evals, and Benchmarks
 
 1,357 lines across `test_harness_memory.py` and `test_harness_file_memory.py`,
@@ -295,7 +355,17 @@ that wants to.
 | `python/packages/core/agent_framework/_sessions.py` | — | `ContextProvider`, `AgentSession`, state registration |
 | `python/packages/core/tests/core/test_harness_memory.py` | 877 | State, parsing, consolidation, the traversal boundary |
 | `python/packages/core/tests/core/test_harness_file_memory.py` | 480 | File tools, traversal reported as tool messages |
+| `python/packages/core/agent_framework/_workflows/_checkpoint.py` | 462 | Checkpoint records and the storage protocol |
+| `python/packages/core/agent_framework/_workflows/_checkpoint_encoding.py` | 421 | `_RestrictedUnpickler`, the allowlists and the blocked decoder globals |
+| `python/packages/azure-cosmos/.../_checkpoint_storage.py` | — | `/workflow_name` partitioning and the collision refusal |
+| `python/packages/core/tests/workflow/test_checkpoint_unrestricted_pickle.py` | — | The did-not-execute assertions |
 
 ## History
+
+**2026-08-28** — [`6d532cf77e26988fe2d822f13ddea021faa9d735`](https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735) — re-pinned 181 commits on, prompted by the workflow-checkpoint documentation. `_harness/_memory.py` and `_harness/_file_memory.py` are byte-identical to the previous pin, so every claim about the memory this report is named for still holds, and the mark stays at one. The rest of `_harness/` moved — `_loop.py`, `_background_agents.py`, `_tool_approval.py`, `_file_access.py` — without touching memory.
+
+The addition is section 9a, on the second durable store. A workflow checkpoint is written at the end of each superstep and captures executor state, pending messages, pending requests and shared state; it is a resume point rather than a belief, nothing in it can be corrected or rejected, and it earns no mark on that basis. Two mechanisms in it are worth the section anyway: a default-deny `_RestrictedUnpickler` whose allowlists resolve to types only, which refuses dotted names under an allowed module prefix, and which blocks its own decoder functions so a payload cannot reach the guard inspecting it; and a Cosmos store that raises on a `checkpoint_id` colliding across workflows instead of returning an arbitrary match. The pickle tests assert that the code a crafted payload would have run did not run, with positive controls beside them — a good suite that does not earn `negative_eval`, because the mark asks about retrieval and this is about execution.
+
+Screened again first: two auto-run surfaces (`.devcontainer/devcontainer.json` and `.github/copilot-instructions.md`), fifteen build-time execution surfaces, 337 unpinned surfaces and nineteen files inside the seven-day cooldown; nothing was installed and nothing was run. `stack_source` promoted from `seeded` to `reviewed`. The reading covers the harness memory, the checkpoint subsystem and their tests; the .NET and Go implementations were read only as documented.
 
 **2026-07-30** — [`28389df805b97f846ca21d857e291602a7adc0a4`](https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4) — first reading.
