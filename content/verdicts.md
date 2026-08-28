@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 341 reports.**
+**This page covers all 342 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3013,3 +3013,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 2,244 commits since 23 August 2025, 140,853 lines of Python outside `tests/` and 220,761 inside. One mark. Reached from `OpenHands/OpenHands`, which is Agent Canvas and holds the settings page for this SDK's condenser rather than a condenser.
 - Study when: you inject a curated index under a character budget and need the overflow rules written down, or you want the context-window boundary discipline in section 9a.
 - Do not copy when: the durable memory has to be trustworthy or correctable. Nothing validates a memory file, nothing can mark a line wrong, and nothing records what was lost.
+
+### [`membukkit`](../systems/membukkit/)
+
+- Best idea: **a correction never destroys its predecessor, and deleting the correction brings the predecessor back.** A newer similar fact sets `superseded_by` and `valid_to` on the older one instead of overwriting it; `is_active_as_of` then drops superseded facts out of the evidence pool rather than ranking them down, and `delete_facts` revives whatever a deleted fact had displaced, with `revived` on the returned report. The backend also clears a `superseded_by` whose target no longer exists, because treating it as *"'excluded' without checking the target still exists"* would hide a live fact behind a correction that is gone.
+- Second idea: **`status="noop"` on the write receipt.** An LLM distiller that extracted nothing returns a distinct status with a warning rather than a cheerful zero, which is the smallest mechanism that makes the quietest failure in model-backed capture legible to a caller.
+- Biggest risk: **one time axis dressed as two.** `valid_to` is set to the replacement fact's own timestamp, so both ends of the interval are validity time and nothing on a fact records when the store learned it. `ask(as_of=...)` reconstructs what was true on a date and cannot reconstruct what the memory believed on that date — the half you need to explain a past answer. `bitemporal` is withheld on exactly this.
+- Second risk: **supersession is automatic, unreviewed and unmeasured.** Cosine 0.78 plus an entity overlap or a mutable-state regex hit is enough to hide an older fact, with no confidence recorded and nothing committed measuring how often the threshold displaces the wrong one.
+- Maturity impression: Apache-2.0, ~18,500 lines of Python with 5,840 across 35 test files, two commits both dated 14 August 2026 — a squashed release. Two marks. Its `docs/guide/benchmarks.md` is the best reproduction protocol in this corpus: frozen recipes pinning reader, distiller, judge and encoder, a tolerance band argued from binomial standard error, a rule that a `--lite` subset is rejected rather than scored against a full-run number, and a competitor table that prints the systems scoring higher beside what graded them. It commits no run artifacts, so the 92.6% recomputes only by paying for a rerun.
+- Study when: you are writing a benchmark claim you want a skeptic to be able to check, or you need the shape of supersession that a delete can safely undo.
+- Do not copy when: you need to audit a past answer, or more than one principal shares a store — `subject` is stored and never filtered on, and the docstring says retrieval is not scoped by it.

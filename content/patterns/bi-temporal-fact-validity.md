@@ -174,6 +174,20 @@ systems merge — `invalidated_at`, set when another fact supersedes this one, a
 interval: an `invalidated_at` earlier than `valid_from` is dropped rather than
 written.
 
+[MemBukkit](../../systems/membukkit/) is the counterexample worth keeping beside
+those, because it has everything this pattern needs except the second axis and
+reads as though it has both. A fact carries `timestamp` for when it was true and
+`valid_to` for when it stopped being true; `is_active_as_of` filters the evidence
+pool by them; `ask(as_of=...)` is a first-class argument on every surface. And
+`link_supersessions` sets `valid_to` to **the replacement fact's own timestamp**,
+so both ends of the interval sit on the validity axis and no fact row records
+when the store learned anything. The store can answer *what was true in May* and
+cannot answer *what I believed in May* — which is the question you have when an
+agent said something wrong and you are trying to find out whether the memory was
+wrong then or the retrieval was. The single-axis version is genuinely useful and
+much cheaper; the distinction is worth drawing explicitly, because a reader
+comparing feature lists will see `as_of` and `valid_to` and assume the pair.
+
 ## Tests to require
 
 - Backfilled old events ingested today.

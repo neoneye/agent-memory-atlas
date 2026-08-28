@@ -289,6 +289,24 @@ an expiry the fact carried from the start — with
 from superseding)". It also refuses to store an incoherent interval: an
 <code>invalidated_at</code> earlier than <code>valid_from</code> is
 dropped rather than written.</p>
+<p><a href="../../systems/membukkit/">MemBukkit</a> is the
+counterexample worth keeping beside those, because it has everything
+this pattern needs except the second axis and reads as though it has
+both. A fact carries <code>timestamp</code> for when it was true and
+<code>valid_to</code> for when it stopped being true;
+<code>is_active_as_of</code> filters the evidence pool by them;
+<code>ask(as_of=...)</code> is a first-class argument on every surface.
+And <code>link_supersessions</code> sets <code>valid_to</code> to
+<strong>the replacement fact's own timestamp</strong>, so both ends of
+the interval sit on the validity axis and no fact row records when the
+store learned anything. The store can answer <em>what was true in
+May</em> and cannot answer <em>what I believed in May</em> — which is
+the question you have when an agent said something wrong and you are
+trying to find out whether the memory was wrong then or the retrieval
+was. The single-axis version is genuinely useful and much cheaper; the
+distinction is worth drawing explicitly, because a reader comparing
+feature lists will see <code>as_of</code> and <code>valid_to</code> and
+assume the pair.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Backfilled old events ingested today.</li>
