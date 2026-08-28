@@ -110,14 +110,14 @@ append-only store.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774" title="bdf19051cd0541f1e9f3e008a570998c37f77774">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">
               <span>Analyzed revision</span>
-              <code>bdf19051…</code>
+              <code>eb86dda7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-08-29</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -416,6 +416,49 @@ the triggers <em>"are NOT the adversarial guarantee (a process with file
 write access can drop them) — that is the hash-chain."</em> Most audit
 implementations in this corpus assert their own tamper-resistance. This
 one names which half of it an attacker can remove.</p>
+<p><strong>A poison gate sits at every boundary where untrusted text
+becomes prompt context, and the memory write path is one of
+them.</strong> <code>src/headers/integrity.h</code> declares a
+deterministic Layer 1 pattern gate over six source classes —
+<code>USER_STATED</code>, <code>WEB</code>, <code>DOCUMENT</code>,
+<code>TOOL</code>, <code>DELEGATE</code>, <code>AGENT_MESSAGE</code> —
+returning one of four verdicts: <code>ACCEPT</code>,
+<code>QUARANTINE</code>, <code>REJECT</code>,
+<code>REVIEW_NEEDED</code>. The pattern categories are named for what
+they attack: <code>MEMORY_RESET</code>, <code>IDENTITY_OVERRIDE</code>,
+<code>AUTHORITY_CLAIM</code>, <code>INSTRUCTION_INJECTION</code> at
+block severity, and <code>ENCODED_PAYLOAD</code> at warn.</p>
+<p>The asymmetry is the design. A block-severity hit rejects when the
+source is anything but the user, and only <em>quarantines</em> when it
+is the user — the header states the rule as <em>"never auto-reject user
+input"</em>, which keeps a person able to say a sentence that looks like
+an attack.</p>
+<p><code>integrity_ingress_decide</code> is the materialization
+boundary, and it is wired at nine reachable call sites across five named
+boundaries: <code>document</code> for KB ingest and PDF chunks,
+<code>retrieval</code> on pre-injection, <code>learning</code> on the
+learning router, <code>recall</code> in the KB client, and
+<code>memory</code> three times. The memory sites carry the argument for
+why memory is treated as hostile by default:</p>
+<blockquote>
+<p>Durable memory becomes future prompt context, so treat it as
+agent-message authority unless a future typed ingress carries an
+authenticated user provenance. Ambiguous provenance fails closed.</p>
+</blockquote>
+<p>At the authority-aware site the source is chosen rather than fixed —
+<code>MEMORY_AUTHORITY_USER</code> maps to
+<code>INTEGRITY_SOURCE_USER_STATED</code>, everything else to
+<code>INTEGRITY_SOURCE_AGENT_MESSAGE</code>, with the autonomous flag
+set only for the non-user case — so a memory the user stated is
+quarantined where one the agent wrote is rejected. That a gate also runs
+on <code>recall</code> is the half most systems omit: a value that got
+in before the gate existed is still checked on the way out.</p>
+<p>Retention moved off inline SQL in the same window.
+<code>db2_memory_health</code> now calls
+<code>kb_memory_retention_reap(days)</code> and
+<code>kb_memory_sensitivity_retention_reap</code>, server-side functions
+returning the number of rows reaped, rather than issuing a
+<code>DELETE ... WHERE created_at &lt; pg_now_text(?)</code> from C.</p>
 <p>Row-level security on <code>aimee-kb</code> is enabled and
 <code>FORCE</code>d on <code>kb_team</code>, <code>kb_project</code>,
 <code>kb_team_membership</code>, <code>kb_project_membership</code> and
@@ -596,6 +639,33 @@ resolution</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-29</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code class="commit-id" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">eb86dda7…</code></a>
+— re-pinned 42 commits on, still on <code>testing</code>, 416 files and
+roughly 76,500 added lines in two days — most of it release blockers,
+Windows and macOS build work, CI ratchets and a static-analysis
+baseline. All seven marks re-verified and none moved.</p>
+<p>One change reaches the memory path and it is described in section 9:
+the deterministic poison gate declared in
+<code>src/headers/integrity.h</code> is now called from
+<code>memory_core_crud.c</code> at two sites and from
+<code>memory_advanced.c</code> at a third, joining
+<code>document</code>, <code>retrieval</code>, <code>learning</code> and
+<code>recall</code> for nine reachable call sites. The comment at the
+memory site states the reasoning — durable memory becomes future prompt
+context, so it is treated as agent-message authority and ambiguous
+provenance fails closed — and the authority-aware site picks
+<code>USER_STATED</code> over <code>AGENT_MESSAGE</code> from the
+memory's own authority, which is the difference between quarantining a
+user's odd sentence and rejecting an agent's. Retention also moved from
+inline <code>DELETE</code> statements to the server-side
+<code>kb_memory_retention_reap</code> and
+<code>kb_memory_sensitivity_retention_reap</code> functions, each
+returning a reaped count.</p>
+<p>Screened before reading: one auto-run surface
+(<code>.claude/hooks/</code>), one build-time execution surface, three
+unpinned surfaces and five files inside the seven-day cooldown; nothing
+was installed and nothing was run.</p>
 <p><strong>2026-08-27</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code class="commit-id" title="bdf19051cd0541f1e9f3e008a570998c37f77774">bdf19051…</code></a>
 — re-pinned 47 commits on, still on <code>testing</code>. Screened

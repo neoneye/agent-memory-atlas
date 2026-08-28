@@ -1,30 +1,35 @@
 ---
 title: "Mastra Observational Memory"
-eyebrow: "Observer–reflector context"
-description: "A framework-native memory that compresses messages into dated observations and reflects them into durable context."
+eyebrow: "Observations, and a graph with a ceiling"
+description: "A framework-native memory that compresses messages into dated observations, beside a scoped knowledge graph whose records carry a stamped ceiling on how widely they may ever be shared."
 root: ../..
 page_kind: system
 source_name: "mastra-ai/mastra"
 source_url: https://github.com/mastra-ai/mastra
-revision: 470f286e98c9ad95f4c42087e411c0af363a4a2c
-revision_url: https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c
-analyzed_at: 2026-08-06
-capabilities: "scope_enforced"
+revision: 4a41ea611732860395104e5af5ebe279ff9a796e
+revision_url: https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e
+analyzed_at: 2026-08-29
+capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 stack_storage: "delegated"
+capability_evidence:
+  bitemporal: "the knowledge graph — validity time beside record time on every record | packages/core/src/storage/domains/knowledge/base.ts:47-61 | `KnowledgeRecord` carries `capturedAt`, stamped by code when the record is written, and an optional `when` for the time the fact refers to. The capture extractor asks the model for `when` per record and `parseWhen` throws on an unparseable value rather than dropping it silently; `knowledge-tools.ts:60` serialises it back for the curator. It is a point rather than an interval — there is no `valid_to`, no as-of query, and nothing filters on it | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:176-177"
+  scope_enforced: "the knowledge graph — a scope key on the read path plus a stamped ceiling on the write path | packages/core/src/storage/domains/knowledge/base.ts:271,:360-378, inmemory.ts:330,:420,:443 | scopes are `org` < `resource` < `thread`; `listKnowledgeAbout`, `listKnowledgeMentioning` and `listKnowledgeRelatedTo` all take a scope and return only records visible in it. Beyond the filter, `maxScope` is stamped on a record and `assertKnowledgeScopeWithinCeiling` re-checks it on append and on every rescope, so a curator cannot widen a thread-ceilinged record to the org | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:180-183, __tests__/scope.test.ts:44"
+  audit_log: "the knowledge store — an activity record of every mutation | packages/core/src/storage/domains/knowledge/base.ts:14-21,:471-475, inmemory.ts:132,:235,:313,:315,:346,:400,:411,:423 | a closed seven-value `KnowledgeActivityAction` — node-created, node-updated, node-merged, record-created, record-deleted, record-restored, record-rescoped — written by `#recordActivity` at every mutating call site and read back through `listActivity`, which is `abstract` on the storage base so every adapter must implement it | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:231"
+  negative_eval: "the knowledge graph read path | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:179-183 | one assertion block requires the record to come back for the node it is about in the permitted scope, and requires zero records for a different node and for a sibling scope — `listKnowledgeRelatedTo({node: marco, scope: sibling})` is asserted empty on the same fixture where the same query in `thread` returns the record, so the negative cannot pass on an empty store | this is the test"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
-  memory_unit: "Raw message, dated observation group, reflected observation context"
-  storage: "Mastra `MemoryStorage` adapters"
-  retrieval: "Sequential active observations + recent raw tail; optional observation-vector retrieval"
+  memory_unit: "Two units: a dated observation group derived from raw messages, and a knowledge record — text about a node, with a scope, a stamped ceiling, a capture time and an optional validity time"
+  storage: "Mastra storage adapters. The knowledge domain adds nodes, records, mentions, an activity log and a semantic outbox, with the record bound and the description bound part of the storage contract every adapter enforces"
+  retrieval: "Sequential active observations plus a recent raw tail for the context path; for the graph, scope-filtered listings by node, mention and relation, with a semantic index maintained through an outbox"
   write: "Processor observes at token thresholds; reflector compacts observations"
-  update_delete: "Range replacement, buffered activation, clear/clone records"
-  scoping: "Thread or resource"
+  update_delete: "Range replacement and buffered activation for observations. Knowledge records are immutable — an edit is a remove plus an append — and removal is a soft delete stamping `deletedAt` and `deletedBy`; the curator has no tool to restore or physically erase one"
+  scoping: "`org` < `resource` < `thread`, applied as a filter on every graph read, plus a per-record `maxScope` ceiling re-checked on append and rescope and raisable only through a dedicated call"
   integration: "Deep Mastra input/output processor integration"
-  background: "Early async observation/reflection buffers with activation"
-  trust: "Exact covered ranges and markers; summary has no truth state"
-  strengths: "Non-blocking context compaction for long sessions"
-  risks: "Distributed locking and progressive summary drift"
+  background: "Early async observation and reflection buffers with activation, plus a subconscious of observation agents (capture, remind) and reflection agents (curate, learn) over a worklist whose cursor advances only on completion"
+  trust: "None as a field. A knowledge record carries free-form `metadata` holding the capture agent's stated reason, and no status, confidence or verification anywhere"
+  strengths: "A ceiling that caps how widely a record may ever be shared, re-checked on every rescope; an activity log of every mutation on the storage base class; a rescope that re-enqueues the semantic index for both the old and the new scope, so the vector view follows the permission change"
+  risks: "Distributed locking and progressive summary drift, and a soft delete that nothing consults on the capture path — a curator removes a superseded record and the next observation of the same fact writes a new one"
 ---
 
 ## 1. Executive Summary
@@ -33,7 +38,9 @@ Mastra Observational Memory is a context-compaction system integrated directly i
 
 The promising idea is buffered activation. Observation and reflection can run before the hard context threshold, store their results as inactive buffers, and activate them instantly when needed. This moves expensive LLM compression off the critical path without simply fire-and-forgetting work.
 
-The tradeoff is complexity. This is not just a summarizer: it is a threshold state machine with message markers, storage capabilities, resource/thread scopes, in-process locks, buffering cursors, retries, idle/provider-change activation, and processor-step semantics. It is strong at keeping long conversations alive, but it is not a general factual memory or verification system.
+The tradeoff is complexity. This is not just a summarizer: it is a threshold state machine with message markers, storage capabilities, resource/thread scopes, in-process locks, buffering cursors, retries, idle/provider-change activation, and processor-step semantics.
+
+**Beside it now sits a second subsystem that is a general factual memory.** The Subconscious is a scoped knowledge graph — nodes, and records of text about them — maintained by four background agents: `capture` and `remind` on the observation side, `curate` and `learn` on the reflection side. Its records carry a scope, a code-stamped capture time, an optional time the fact refers to, and a **ceiling**: the widest scope this record may ever be given, re-checked every time anyone tries to move it. Section 4a describes it, and it is where three of the four marks come from.
 
 ## 2. Mental Model
 
@@ -94,6 +101,76 @@ The feature lives under `packages/memory/src/processors/observational-memory/`:
 - Context-range parsing: `message-utils.ts`.
 - Retrieval indexing: `Memory.indexObservation()` and `onIndexObservations` wiring in `index.ts`.
 - Working-memory side effect: `WorkingMemoryExtractor` in `working-memory-extractor.ts`.
+
+## 4a. The Subconscious knowledge graph
+
+`packages/memory/src/processors/observational-memory/subconscious/` is fifteen
+files; the storage contract it writes through is
+`packages/core/src/storage/domains/knowledge/`, 1,238 lines across an abstract
+base and an in-memory reference implementation.
+
+**Four agents, two phases, and a cursor that will not lie.** `capture` and
+`remind` run as observation extractors; `curate` and `learn` run as reflections.
+Each is bounded by `maxSteps`, and the default is not uniform — `curate` gets
+200 against 50, with the reason written down: *"Curation walks a worklist that
+can reach hundreds of records, and its completion marker is fail-closed: a
+curator that runs out of steps advances no cursor at all."* A background pass
+that half-finishes and advances anyway is how records get silently skipped
+forever; this one refuses to record progress it did not make.
+
+**A record's scope has a ceiling, and the ceiling is the mechanism.** Scopes are
+ordered `org` < `resource` < `thread`. A `KnowledgeRecord` carries `scope` and
+an optional `maxScope`, and `assertKnowledgeScopeWithinCeiling` runs on append
+(`inmemory.ts:330`) and again on every rescope (`:420`), so a record captured
+under a thread ceiling cannot be promoted to the organisation later. `capture`
+clamps at the source too — `clampScope(level, ceiling)` narrows a model-proposed
+scope rather than rejecting the record — and `pinned.ts` states the bypass it is
+guarding: *"creating a resource-level record under a thread ceiling would bypass
+the ceiling."*
+
+Widening the ceiling itself is possible and deliberately awkward: it has its own
+call, `raiseKnowledgeCeiling`, guarded by `assertKnowledgeCeilingRaised`, which
+refuses to move a ceiling in the tightening direction. So the cap is one-way,
+and the direction it opens is the permissive one — a reader should take the
+ceiling as a guarantee about what a *curator agent* can do to a record, not as a
+guarantee about what an operator can.
+
+**Validity time is separate from capture time.** `capturedAt` is stamped by code;
+`when` is the time the fact refers to, asked of the capture model per record and
+validated by `parseWhen`, which throws on an unparseable value rather than
+dropping it. Nothing queries on it — the model is told in prose that *"the newer
+observation supersedes the older one"* — so this is the axis separation without
+the temporal query that would exploit it.
+
+**Editing is remove plus append, and removal is one-way for the curator.**
+Knowledge records are immutable; `pinned.ts` says an *"edit is remove plus append
+because knowledge records are immutable"*. `knowledge_remove` is described as
+*"Soft-delete a visible record. Curators cannot restore or physically erase
+knowledge records"* — and the tool surface backs that up, since no restore tool
+and no hard-delete tool is offered. The storage API does have
+`record-restored` in its activity vocabulary, so the host retains the power the
+curator is denied.
+
+**Every mutation is logged where the records live.** `KnowledgeActivityAction`
+is a closed set of seven — `node-created`, `node-updated`, `node-merged`,
+`record-created`, `record-deleted`, `record-restored`, `record-rescoped` — and
+`#recordActivity` is called at each mutating site, with `listActivity` declared
+`abstract` on the storage base so no adapter can ship without it.
+
+**A rescope moves the vector index with it.** `rescopeKnowledge` enqueues a
+semantic-index `delete` under the old scope key and an `upsert` under the new
+one. The stale-vector leak — a record whose permissions changed but whose
+embedding still answers the old query — is the failure this atlas records for
+most systems that rescope, and it is closed here by making the index follow the
+scope rather than the id.
+
+**The near-miss worth naming is the tombstone.** A curator soft-deletes a
+superseded record, and nothing on the capture path consults `deletedAt`. The
+next observation of the same fact writes a fresh record, because the deletion is
+keyed on a record id and not on the value. The design has the vocabulary for a
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/) —
+immutability, a soft delete with `deletedBy`, a rule that curators may never
+restore — and stops one step short of the thing that would make deletion stick.
 
 ## 5. Memory Data Model
 
@@ -158,6 +235,15 @@ The package has unusually dense unit coverage for thresholds, long sessions, mid
 
 The tests strongly support lifecycle correctness. They do not, by themselves, establish that observer or reflector prose preserves all facts. Summary quality remains model-, prompt-, language-, and conversation-dependent.
 
+The knowledge domain's own suite is where the marks are checkable. `packages/core/src/storage/domains/knowledge/__tests__/base.test.ts` builds one fixture and then asserts, in a single block, that the record comes back for the node it is about in the permitted scope, that a *different* node returns none, and that the same relation query in a **sibling scope** returns none — the positive control and the cross-scope negative on the same fixture, which is what stops the negative half passing against an empty store. The same test pins `capturedAt` as a code-stamped `Date` and `when` as the caller's `2026-07-01`, so the two time axes are asserted apart rather than merely declared apart.
+
+`scope.test.ts` covers the ceiling directly:
+`assertKnowledgeScopeWithinCeiling(['org:o1'], 'resource')` is asserted to throw
+`exceeds resource ceiling`, so the promotion the design exists to prevent is a
+committed failing case rather than a comment.
+
+Across `packages/memory/src` the ratio is 46,040 lines of test to 29,632 of implementation.
+
 ## 11. For Your Own Build
 
 ### Steal
@@ -210,10 +296,22 @@ Do not substitute observational summaries for an auditable long-term store when 
 - `packages/memory/src/processors/observational-memory/reflector-runner.ts`
 - `packages/memory/src/processors/observational-memory/observation-strategies/`
 - `packages/memory/src/processors/observational-memory/working-memory-extractor.ts`
+- `packages/memory/src/processors/observational-memory/subconscious/` — `capture.ts`, `remind.ts`, `curate.ts`, `learn.ts`, `pinned.ts`, `scope.ts`, `semantic-index.ts`, `knowledge-write-tools.ts`
+- `packages/core/src/storage/domains/knowledge/base.ts` — the record shape, the scope order, the ceiling assertions, the activity vocabulary
+- `packages/core/src/storage/domains/knowledge/inmemory.ts` — the reference implementation and every `#recordActivity` call site
+- `packages/core/src/storage/domains/knowledge/__tests__/` — `base.test.ts`, `scope.test.ts`, `wikilinks.test.ts`
 - `packages/memory/src/processors/observational-memory/__tests__/`
 - `packages/memory/integration-tests/`
 
 ## History
+
+**2026-08-29** — [`4a41ea611732860395104e5af5ebe279ff9a796e`](https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e) — re-pinned 1,049 commits on, and the system has grown a second memory subsystem that carries three of its four marks. Marks go from one to four: `scope_enforced` was already held and is now stronger, and `bitemporal`, `audit_log` and `negative_eval` are added.
+
+The Subconscious is a scoped knowledge graph of nodes and records, maintained by four background agents, described in section 4a. `bitemporal` rests on `capturedAt` stamped by code beside an optional `when` supplied per record by the capture model and validated rather than dropped — a point rather than an interval, with nothing querying on it. `audit_log` rests on a closed seven-value activity vocabulary written at every mutating call site, with `listActivity` `abstract` on the storage base. `negative_eval` rests on one assertion block that requires the record in its own scope and zero records in a sibling scope, on the same fixture. `scope_enforced` now covers more than a filter: a per-record `maxScope` ceiling is re-checked on append and on every rescope, and raising it has its own guarded call.
+
+Two mechanisms are worth reading beyond the marks. A rescope enqueues a semantic-index delete for the old scope key and an upsert for the new one, so the vector view follows the permission change rather than answering the old query. And `curate` is given a larger step budget than its siblings with the reason written down — its completion marker is fail-closed, so a curator that runs out of steps advances no cursor at all.
+
+`tombstone` is withheld and it is the near-miss: records are immutable, removal is a soft delete stamping `deletedAt` and `deletedBy`, the curator has no restore or hard-delete tool — and nothing on the capture path consults the deletion, so re-observing the same fact writes a new record. `trust_state` and `human_review` are absent: a record's `metadata` holds the capture agent's free-text reason and no status, and no surface exists for a person to adjudicate one. `stack_source` promoted from `seeded` to `reviewed`. Screened before reading: three auto-run surfaces, two build-time execution surfaces, 255 unpinned surfaces and 118 files inside the seven-day cooldown; nothing was installed and nothing was run.
 
 **2026-08-06** — [`470f286e98c9ad95f4c42087e411c0af363a4a2c`](https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c) — 403 commits on the monorepo, 99 files touching a memory path. The observational-memory mechanism this report covers is unchanged; what moved is the reliability around it.
 

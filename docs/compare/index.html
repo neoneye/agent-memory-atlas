@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 180 of 341 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 114 of
+<li><strong>Negative evidence is almost never tested.</strong> 115 of
 341 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-five tombstones, one hundred and fourteen negative-eval suites —
+twenty-five tombstones, one hundred and fifteen negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -8631,20 +8631,44 @@ as documented</td>
 </tr>
 <tr>
 <td><code>mastra-observational-memory</code></td>
-<td>Raw message, dated observation group, reflected observation
-context</td>
-<td>Mastra <code>MemoryStorage</code> adapters</td>
-<td>Sequential active observations + recent raw tail; optional
-observation-vector retrieval</td>
+<td>Two units: a dated observation group derived from raw messages, and
+a knowledge record — text about a node, with a scope, a stamped ceiling,
+a capture time and an optional validity time</td>
+<td>Mastra storage adapters. The knowledge domain adds nodes, records,
+mentions, an activity log and a semantic outbox, with the record bound
+and the description bound part of the storage contract every adapter
+enforces</td>
+<td>Sequential active observations plus a recent raw tail for the
+context path; for the graph, scope-filtered listings by node, mention
+and relation, with a semantic index maintained through an outbox</td>
 <td>Processor observes at token thresholds; reflector compacts
 observations</td>
-<td>Range replacement, buffered activation, clear/clone records</td>
-<td>Thread or resource</td>
+<td>Range replacement and buffered activation for observations.
+Knowledge records are immutable — an edit is a remove plus an append —
+and removal is a soft delete stamping <code>deletedAt</code> and
+<code>deletedBy</code>; the curator has no tool to restore or physically
+erase one</td>
+<td><code>org</code> &lt; <code>resource</code> &lt;
+<code>thread</code>, applied as a filter on every graph read, plus a
+per-record <code>maxScope</code> ceiling re-checked on append and
+rescope and raisable only through a dedicated call</td>
 <td>Deep Mastra input/output processor integration</td>
-<td>Early async observation/reflection buffers with activation</td>
-<td>Exact covered ranges and markers; summary has no truth state</td>
-<td>Non-blocking context compaction for long sessions</td>
-<td>Distributed locking and progressive summary drift</td>
+<td>Early async observation and reflection buffers with activation, plus
+a subconscious of observation agents (capture, remind) and reflection
+agents (curate, learn) over a worklist whose cursor advances only on
+completion</td>
+<td>None as a field. A knowledge record carries free-form
+<code>metadata</code> holding the capture agent's stated reason, and no
+status, confidence or verification anywhere</td>
+<td>A ceiling that caps how widely a record may ever be shared,
+re-checked on every rescope; an activity log of every mutation on the
+storage base class; a rescope that re-enqueues the semantic index for
+both the old and the new scope, so the vector view follows the
+permission change</td>
+<td>Distributed locking and progressive summary drift, and a soft delete
+that nothing consults on the capture path — a curator removes a
+superseded record and the next observation of the same fact writes a new
+one</td>
 </tr>
 <tr>
 <td><code>mateclaw</code></td>
@@ -14505,7 +14529,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 href="../systems/weave/"><code>weave</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>42 of 341:</em> <a
+<p><em>43 of 341:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -14526,7 +14550,8 @@ href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
-href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
+href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
+<a href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memory-lancedb-pro/"><code>memory-lancedb-pro</code></a>,
 <a href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memv/"><code>memv</code></a>, <a
@@ -14742,7 +14767,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>100 of 341:</em> <a
+<p><em>101 of 341:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -14786,7 +14811,8 @@ href="../systems/lethe/"><code>lethe</code></a>, <a
 href="../systems/lorekit/"><code>lorekit</code></a>, <a
 href="../systems/lossless-context-mcp/"><code>lossless-context-mcp</code></a>,
 <a href="../systems/magic-context/"><code>magic-context</code></a>, <a
-href="../systems/mem0/"><code>mem0</code></a>, <a
+href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
+<a href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
@@ -14941,7 +14967,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>114 of 341:</em> <a
+<p><em>115 of 341:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -14992,6 +15018,8 @@ href="../systems/klypix-mcp/"><code>klypix-mcp</code></a>, <a
 href="../systems/kube-coder/"><code>kube-coder</code></a>, <a
 href="../systems/lethe/"><code>lethe</code></a>, <a
 href="../systems/lossless-context-mcp/"><code>lossless-context-mcp</code></a>,
+<a
+href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
 <a href="../systems/matrix-os/"><code>matrix-os</code></a>, <a
 href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
@@ -15076,7 +15104,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and fourteen repositories of three hundred and forty-one assert
+hundred and fifteen repositories of three hundred and forty-one assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -19468,7 +19496,7 @@ href="https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb
 href="https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3"><code class="commit-id" title="425bf2481b51437e43455e09d241c5f46e3d95f3">425bf248…</code></a></li>
 <li><a href="https://github.com/mastra-ai/mastra">mastra-ai/mastra</a>
 at <a
-href="https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c"><code class="commit-id" title="470f286e98c9ad95f4c42087e411c0af363a4a2c">470f286e…</code></a></li>
+href="https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e"><code class="commit-id" title="4a41ea611732860395104e5af5ebe279ff9a796e">4a41ea61…</code></a></li>
 <li><a href="https://github.com/MemTensor/MemOS">MemTensor/MemOS</a> at
 <a
 href="https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00"><code class="commit-id" title="3fd109e7cbaba291af2253f107e0a595dbf62b00">3fd109e7…</code></a></li>
@@ -21001,7 +21029,7 @@ come from the tree and its nine migrations. There is no
 <li><a
 href="https://github.com/RakuenSoftware/aimee">RakuenSoftware/aimee</a>
 at <a
-href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code class="commit-id" title="bdf19051cd0541f1e9f3e008a570998c37f77774">bdf19051…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code class="commit-id" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">eb86dda7…</code></a>
 — read only; one auto-run surface, one build-time execution surface,
 three unpinned surfaces and two files inside the seven-day cooldown.
 Nothing was installed and nothing was built. The commit is on
@@ -22463,23 +22491,26 @@ recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
 — but a reader looking for agent memory here will not find it.</li>
 <li><strong><code>os-factory/har</code> was examined and has no report,
 and it is the same boundary carrying the atlas's rarest mechanism
-anyway.</strong> Apache-2.0, re-read at release 0.55.0, <a
-href="https://github.com/os-factory/har/commit/241ef6da39660fcc93eef92454ce0b6f8501ccf2"><code class="commit-id" title="241ef6da39660fcc93eef92454ce0b6f8501ccf2">241ef6da…</code></a>,
-38 commits past the first reading: a harness that gives each coding
-agent its own git worktree, ports and database, runs the project's own
-checks through one pipeline, and keeps the evidence. The scope call is
-settled by its schema — <code>control/prisma/schema.prisma</code> is
-byte-identical across those 38 commits, twelve Prisma models covering
-repositories, slots, sessions, spans, runs, work units, attempts,
-validation bindings and change batches, and across 16,277 lines of
-<code>src/</code> the words <code>recall</code>, <code>remember</code>,
-<code>forget</code>, <code>embedding</code> and <code>vector</code>
-appear <strong>twice</strong>, both incidental. Nothing stored is a
-claim that could be false; the 38 commits are plugins (Semgrep, Trivy,
-Gitleaks, Kerno), docs, iOS fixes and node provisioning, none of which
-touches the durable-belief question. <strong>What makes it worth
-recording is one of those twelve.</strong>
-<code>UnregisteredRepository</code> is a <a
+anyway.</strong> Apache-2.0, read three times, most recently at release
+1.0.0, <a
+href="https://github.com/os-factory/har/commit/3eec6453f98f38130b4d997de6e39c81e1605f5f"><code class="commit-id" title="3eec6453f98f38130b4d997de6e39c81e1605f5f">3eec6453…</code></a>:
+a harness that gives each coding agent its own git worktree, ports and
+database, runs the project's own checks through one pipeline, and keeps
+the evidence. The scope call is settled by its schema —
+<code>control/prisma/schema.prisma</code> held still through the first
+two readings and grew by one model at 1.0, thirteen Prisma models
+covering repositories, slots, sessions, spans, runs, work units,
+attempts, validation bindings and change batches, and across 16,277
+lines of <code>src/</code> the words <code>recall</code>,
+<code>remember</code>, <code>forget</code>, <code>embedding</code> and
+<code>vector</code> appear <strong>twice</strong>, both incidental.
+Nothing stored is a claim that could be false; the intervening work is
+plugins (Semgrep, Trivy, Gitleaks, Kerno), docs, iOS fixes, node
+provisioning, a two-signal drift model separating user-edited from
+upstream-updated, and a 1.0 release turning <code>.har/</code> into a
+configuration surface — none of which touches the durable-belief
+question. <strong>What makes it worth recording is one of those
+twelve.</strong> <code>UnregisteredRepository</code> is a <a
 href="../patterns/rejected-value-tombstone/">rejected-value
 tombstone</a> in a repository registry: <code>deleteRepository</code>
 writes the path into it <em>before</em> deleting the row,
@@ -22514,7 +22545,29 @@ with a floor on how much a regenerating writer may delete. The
 self-invalidating key is the one a memory system cannot copy and should
 read anyway: bi-temporal validity, decay and re-verification exist
 because memories are keyed by subject rather than by content, and this
-is what the alternative buys.</li>
+is what the alternative buys. <strong>At 1.0 the schema moved for the
+first time across these readings, and the scope call survives
+it.</strong> Eighty-one commits added <code>AgentTrajectoryRecord</code>
+— a thirteenth Prisma model holding one row per agent trajectory event,
+uniquely keyed on
+<code>(repositoryId, source, sourceEventId, contentKey)</code> — and a
+<code>harvestVersion</code> counter on <code>AgentSessionUsage</code>
+whose comment marks the generation behind a row (<em>"0 = pre-dedupe,
+reads high"</em>), so counts written by an older harvester are legible
+as overcounted rather than silently wrong. A trajectory event is still a
+record of what happened, so none of it is a claim that could turn out
+false. <strong>What is worth carrying is the disclosure class.</strong>
+Every trajectory row is stamped at ingest by
+<code>canonicalContentDisclosure</code> with one of <code>full</code>,
+<code>truncated</code>, <code>withheld</code> or
+<code>metadata_only</code>, and
+<code>serializeTrajectoryForEgress</code> applies it on the way out —
+the API route that returns trajectory records maps every row through it
+— with <code>trajectory-privacy.ts</code> redacting secret-looking
+attribute leaves by regex beside it. A per-record classification of how
+much of it may leave, enforced on the read path rather than at the point
+of collection, is a shape a memory system with mixed-sensitivity records
+could take directly, and this atlas has not found it in one.</li>
 <li><strong><code>MoonshotAI/kimi-code</code> was examined and has no
 report, and it is the clean contrast to a system the atlas does have one
 for.</strong> MIT, ~410,000 lines of non-test TypeScript across

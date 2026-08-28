@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "RakuenSoftware/aimee"
 source_url: https://github.com/RakuenSoftware/aimee
-revision: bdf19051cd0541f1e9f3e008a570998c37f77774
-revision_url: https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774
-analyzed_at: 2026-08-27
+revision: eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8
+revision_url: https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8
+analyzed_at: 2026-08-29
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "memory_rejection_tombstones, consulted before an assert on both object kinds | src/modules/db2/c/schema.sql:111-128, src/modules/db2/c/fact_mutation.c:78-104,:748,:1390, src/modules/db2/c/memory_score_fields.c:631, scripts/memory-governance-pg-test.sql:32-49 | a table keyed on the value and nothing else: `(source, relation, target)` for a fact and `(memory_key, memory_content, scope_type, scope_value)` for an episodic row, each under a partial unique index restricted to `active=1`, so one live refusal per value. `fm_tombstone_blocks` runs before the mutation seam admits anything, and the memory side has its own consult. `active`, `restored_at` and `restored_by` make the refusal reversible by a named actor rather than permanent, and the shipped Postgres check refuses to start when the runtime role can erase the record — *\\\"memory tombstone runtime privileges permit erasure or prevent review\\\"* fires if the role holds DELETE or TRUNCATE, or lacks SELECT, INSERT and UPDATE. Underneath it the typed-fact seam carries the same property structurally: `fm_load_exact` looks up the triple *without* filtering lifecycle, so a re-assertion finds the dead row, and revival requires `actor->rank >= exact.authority_rank` — a model-authority extractor cannot raise what a user-authority actor invalidated, and a blocked revival lands as a quarantined candidate rather than as a live fact | scripts/memory-governance-pg-test.sql, src/tests/test_fact_lifecycle.c:443"
@@ -330,6 +330,43 @@ can drop them) — that is the hash-chain."* Most audit implementations in this
 corpus assert their own tamper-resistance. This one names which half of it an
 attacker can remove.
 
+**A poison gate sits at every boundary where untrusted text becomes prompt
+context, and the memory write path is one of them.** `src/headers/integrity.h`
+declares a deterministic Layer 1 pattern gate over six source classes —
+`USER_STATED`, `WEB`, `DOCUMENT`, `TOOL`, `DELEGATE`, `AGENT_MESSAGE` — returning
+one of four verdicts: `ACCEPT`, `QUARANTINE`, `REJECT`, `REVIEW_NEEDED`. The
+pattern categories are named for what they attack: `MEMORY_RESET`,
+`IDENTITY_OVERRIDE`, `AUTHORITY_CLAIM`, `INSTRUCTION_INJECTION` at block
+severity, and `ENCODED_PAYLOAD` at warn.
+
+The asymmetry is the design. A block-severity hit rejects when the source is
+anything but the user, and only *quarantines* when it is the user — the header
+states the rule as *"never auto-reject user input"*, which keeps a person able
+to say a sentence that looks like an attack.
+
+`integrity_ingress_decide` is the materialization boundary, and it is wired at
+nine reachable call sites across five named boundaries: `document` for KB ingest
+and PDF chunks, `retrieval` on pre-injection, `learning` on the learning router,
+`recall` in the KB client, and `memory` three times. The memory sites carry the
+argument for why memory is treated as hostile by default:
+
+> Durable memory becomes future prompt context, so treat it as agent-message
+> authority unless a future typed ingress carries an authenticated user
+> provenance. Ambiguous provenance fails closed.
+
+At the authority-aware site the source is chosen rather than fixed —
+`MEMORY_AUTHORITY_USER` maps to `INTEGRITY_SOURCE_USER_STATED`, everything else
+to `INTEGRITY_SOURCE_AGENT_MESSAGE`, with the autonomous flag set only for the
+non-user case — so a memory the user stated is quarantined where one the agent
+wrote is rejected. That a gate also runs on `recall` is the half most systems
+omit: a value that got in before the gate existed is still checked on the way
+out.
+
+Retention moved off inline SQL in the same window. `db2_memory_health` now calls
+`kb_memory_retention_reap(days)` and `kb_memory_sensitivity_retention_reap`,
+server-side functions returning the number of rows reaped, rather than issuing a
+`DELETE ... WHERE created_at < pg_now_text(?)` from C.
+
 Row-level security on `aimee-kb` is enabled and `FORCE`d on `kb_team`,
 `kb_project`, `kb_team_membership`, `kb_project_membership` and `kb_admin_grant`
 — the policy data itself. The content policies over `kb_documents` and
@@ -462,6 +499,12 @@ authority — would close it.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-08-29** — [`eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8`](https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8) — re-pinned 42 commits on, still on `testing`, 416 files and roughly 76,500 added lines in two days — most of it release blockers, Windows and macOS build work, CI ratchets and a static-analysis baseline. All seven marks re-verified and none moved.
+
+One change reaches the memory path and it is described in section 9: the deterministic poison gate declared in `src/headers/integrity.h` is now called from `memory_core_crud.c` at two sites and from `memory_advanced.c` at a third, joining `document`, `retrieval`, `learning` and `recall` for nine reachable call sites. The comment at the memory site states the reasoning — durable memory becomes future prompt context, so it is treated as agent-message authority and ambiguous provenance fails closed — and the authority-aware site picks `USER_STATED` over `AGENT_MESSAGE` from the memory's own authority, which is the difference between quarantining a user's odd sentence and rejecting an agent's. Retention also moved from inline `DELETE` statements to the server-side `kb_memory_retention_reap` and `kb_memory_sensitivity_retention_reap` functions, each returning a reaped count.
+
+Screened before reading: one auto-run surface (`.claude/hooks/`), one build-time execution surface, three unpinned surfaces and five files inside the seven-day cooldown; nothing was installed and nothing was run.
 
 **2026-08-27** — [`bdf19051cd0541f1e9f3e008a570998c37f77774`](https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774) — re-pinned 47 commits on, still on `testing`. Screened again: one auto-run surface, one build-time execution surface, three unpinned surfaces, two files inside the seven-day cooldown; nothing was installed or built. No mark moved.
 
