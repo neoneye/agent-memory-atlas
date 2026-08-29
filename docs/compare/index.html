@@ -23864,35 +23864,41 @@ file backs RELC-Bench where the atlas can read it. The open, inspectable
 systems it names are already reviewed here; the rest are hosted products
 on the closed-engine side of the line. Recorded so a reader arriving
 from that page finds why it is not itself an atlas entry.</li>
-<li><strong><code>DeusData/codebase-memory-mcp</code> was examined and
-has no report: it is a code-intelligence engine, not agent
-memory.</strong> MIT, a pure-C native binary at <a
-href="https://github.com/DeusData/codebase-memory-mcp/commit/3162f091730109b7e5cef56d0c41554ed242a786"><code class="commit-id" title="3162f091730109b7e5cef56d0c41554ed242a786">3162f091…</code></a>,
-158 languages through tree-sitter with a Hybrid-LSP type-resolution
-layer, that full-indexes a repository into a persistent knowledge graph
-of functions, classes, call chains, HTTP routes and cross-service links
-and answers structural queries over 15 MCP tools. Its durable store is
-that graph — a corpus index <em>of the user's source</em>, regenerated
-from the source, the boundary already drawn for
-<code>VectorSpaceLab/general-agentic-memory</code>,
+<li><strong><code>DeusData/codebase-memory-mcp</code> was examined twice
+and has no report: it is a code-intelligence engine, not agent memory,
+and the reversal condition set at the first reading is still
+unmet.</strong> MIT, a pure-C native binary re-read at <a
+href="https://github.com/DeusData/codebase-memory-mcp/commit/997d087b211124a904af58ae9545356de97daf2f"><code class="commit-id" title="997d087b211124a904af58ae9545356de97daf2f">997d087b…</code></a>,
+264 commits on: 158 languages through tree-sitter with a Hybrid-LSP
+type-resolution layer, full-indexing a repository into a persistent
+knowledge graph of functions, classes, call chains, HTTP routes and
+cross-service links, now answering over <strong>32 MCP tools</strong>
+where the first reading found 15. Its durable store is that graph —
+<code>nodes</code>, <code>edges</code>, <code>file_hashes</code>,
+<code>index_coverage</code>, <code>lsp_surface</code> — a corpus index
+<em>of the user's source</em>, regenerated from the source, the boundary
+already drawn for <code>VectorSpaceLab/general-agentic-memory</code>,
 <code>ShamGaneshan2008/Kodiak</code>'s ChromaDB source index and
-<code>perplexityai/numbat</code>. The <code>sqlite</code> (53k) and
-<code>memory</code> (5.7k) vocabulary counts are the vendored SQLite
-amalgamation and the project's own name, not a belief store. The one
-genuine agent-memory surface is <code>manage_adr</code> (internally
-<code>ln</code>): a single per-project Architecture Decision Record
-document (<code>cbm_adr_t</code>, ≤8000 chars, section-structured)
-CRUD-able across sessions — <a
-href="../patterns/memory-as-an-editing-surface/">memory as an editing
-surface</a> with nothing behind it, no status, supersession, provenance
-or scope beyond the project, the same call made for Cline's Memory Bank.
-Its own preprint is <a
-href="https://arxiv.org/abs/2603.27277">arXiv:2603.27277</a>, on
-tree-sitter knowledge graphs for code exploration, distinct from the two
-papers submitted alongside it. If the ADR store grew into a real belief
-store — multiple records with status and correction semantics — the call
-would flip; today it is code navigation with a decisions document
-attached.</li>
+<code>perplexityai/numbat</code>. <strong>The one agent-memory surface
+is still one document.</strong> The first reading said the call would
+flip if the ADR store <em>"grew into a real belief store — multiple
+records with status and correction semantics."</em> It has instead grown
+a better editor: <code>manage_adr</code> gained a
+<code>set_sections</code> mode that <em>"rewrites only the named
+sections and leaves every other byte of the stored document
+untouched,"</em> with idempotency stated for the case that matters —
+<em>"setting the same section to the same body twice leaves the document
+byte-identical, so retrying after a lost response is safe."</em> That is
+<a href="../patterns/memory-as-an-editing-surface/">memory as an editing
+surface</a> done carefully, and it is still a single row:
+<code>cbm_store_adr_get</code> reads <code>project_summaries</code>,
+whose primary key is <code>project</code>. No status, no supersession,
+no per-decision identity, no scope below the project. The table it
+shares is the tell — the other columns are <code>summary</code> and a
+<code>source_hash</code>, so an authored decisions document and a
+regenerable derived cache occupy the same row shape. Its own preprint is
+<a href="https://arxiv.org/abs/2603.27277">arXiv:2603.27277</a>, on
+tree-sitter knowledge graphs for code exploration.</li>
 <li><strong><code>arXiv:2309.02427</code> was examined and has no
 report: it is a framework, not a system.</strong> <em>Cognitive
 Architectures for Language Agents</em> (Sumers, Yao, Narasimhan &amp;
