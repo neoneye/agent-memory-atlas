@@ -7729,16 +7729,21 @@ a time, with no committed evaluation</td>
 <td><code>hillock</code></td>
 <td>A subject-predicate-object triple, plus a decaying co-activation
 weight between two entities</td>
-<td>One SQLite file with three tables — entities, relations,
-hebbian_weights; the 10,000-dimensional codebook is in-process only</td>
+<td>One SQLite file with four tables — entities, relations,
+hebbian_weights and an <code>hdc_reservoirs</code> blob store for
+multi-hop path vectors; the 10,000-dimensional codebook is in-process
+only</td>
 <td>String entity linking, a one-hop SQL fetch, then cosine over bundled
-±1 hypervectors against a fixed 0.72 threshold; every vector is derived
-from the string's character n-grams rather than drawn at random</td>
+±1 hypervectors against a fixed threshold, <code>0.55</code> at this
+pin; every vector is derived from the string's character n-grams rather
+than drawn at random</td>
 <td>An LLM extracts triples from ingested text or from a conversational
 assertion; there is no admission gate</td>
-<td><code>update_relation</code> deletes prior rows only for five named
-functional predicates; every other relation is append-only, and
-<code>/reset</code> drops all three tables</td>
+<td>Nothing is corrected. The functional-predicate <code>DELETE</code>
+is commented out under <em>"Keep all extracted candidates in DB rather
+than destructively deleting earlier valid facts"</em>, so every relation
+is now append-only with no supersession in its place;
+<code>clear_and_reinitialize</code> drops all four tables</td>
 <td>None — one database, one user, no scope key anywhere in the
 schema</td>
 <td>A local console loop against Ollama; no API, no MCP, no library
@@ -7749,8 +7754,9 @@ fact</td>
 <td>The refusal is a return statement — the model is never asked a
 question the symbolic layer could not answer</td>
 <td>The gate's threshold is fixed while its similarity falls with query
-length, and at 0.72 none of the benchmark's own answerable questions
-clears it — a distribution the verification suite computes and does not
+length, and none of the four benchmark questions the report scores
+clears it at <code>0.72</code> or at the <code>0.55</code> that replaced
+it — a distribution the verification suite computes and does not
 assert</td>
 </tr>
 <tr>
@@ -20838,7 +20844,7 @@ framework dependencies</li>
 <li><a
 href="https://github.com/roandejager/Hillock">roandejager/Hillock</a> at
 <a
-href="https://github.com/roandejager/Hillock/commit/a30ce1a25f0d5763f10a6e591feb2a8122175180"><code class="commit-id" title="a30ce1a25f0d5763f10a6e591feb2a8122175180">a30ce1a2…</code></a>
+href="https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a"><code class="commit-id" title="5fdaeffe7dadee52a15cf1772b46013cc1af256a">5fdaeffe…</code></a>
 — read only; its benchmark needs a local Ollama model and its first
 launch fetches 822 MB of GloVe vectors, so the published numbers were
 read rather than reproduced, and the encoder and gate-geometry findings

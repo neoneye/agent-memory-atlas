@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
-revision: a30ce1a25f0d5763f10a6e591feb2a8122175180
-revision_url: https://github.com/roandejager/Hillock/commit/a30ce1a25f0d5763f10a6e591feb2a8122175180
-analyzed_at: 2026-08-27
+revision: 5fdaeffe7dadee52a15cf1772b46013cc1af256a
+revision_url: https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a
+analyzed_at: 2026-08-30
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the benchmark fixture and the gate metric | evaluate_hillock_PROTO_ish.py `generate_test_assets` (lines 77-86), `run_evaluation` | ten of the thirty generated questions carry `\"answerable\": False` and no expected triple, so the only correct behaviour is a refusal — a question about a person the corpus never mentions (`Where was Thomas Edison born?`), a predicate the subject does not carry (`What did Albert Einstein discover?`), a relation asked in the wrong direction (`Who cracked Enigma?`), and a bare identity probe (`Who is Turing?`). They are asserted against a real read path: `run_evaluation` ingests, queries each one, and counts a `HALLUCINATION_LEAK` whenever the gate admits a fact for a question that has no answer. Since v0.5 the run is unseeded — all three tables are dropped and the in-process HDC state, codebook and vocabulary book cleared — so a negative cannot be satisfied by a store that was never populated, and `verify_hillock.py`'s seventh check pins the seed-overlap arithmetic at four | the harness is the mechanism; no run output is committed, and `verify_hillock.py` check 8 computes how many negatives leak and asserts nothing with the number"
@@ -17,16 +17,16 @@ stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A subject-predicate-object triple, plus a decaying co-activation weight between two entities"
-  storage: "One SQLite file with three tables — entities, relations, hebbian_weights; the 10,000-dimensional codebook is in-process only"
-  retrieval: "String entity linking, a one-hop SQL fetch, then cosine over bundled ±1 hypervectors against a fixed 0.72 threshold; every vector is derived from the string's character n-grams rather than drawn at random"
+  storage: "One SQLite file with four tables — entities, relations, hebbian_weights and an `hdc_reservoirs` blob store for multi-hop path vectors; the 10,000-dimensional codebook is in-process only"
+  retrieval: "String entity linking, a one-hop SQL fetch, then cosine over bundled ±1 hypervectors against a fixed threshold, `0.55` at this pin; every vector is derived from the string's character n-grams rather than drawn at random"
   write: "An LLM extracts triples from ingested text or from a conversational assertion; there is no admission gate"
-  update_delete: "`update_relation` deletes prior rows only for five named functional predicates; every other relation is append-only, and `/reset` drops all three tables"
+  update_delete: "Nothing is corrected. The functional-predicate `DELETE` is commented out under *\"Keep all extracted candidates in DB rather than destructively deleting earlier valid facts\"*, so every relation is now append-only with no supersession in its place; `clear_and_reinitialize` drops all four tables"
   scoping: "None — one database, one user, no scope key anywhere in the schema"
   integration: "A local console loop against Ollama; no API, no MCP, no library surface"
   background: "None; Hebbian decay runs inline on every turn"
   trust: "No status, no confidence, no provenance and no timestamp on a stored fact"
   strengths: "The refusal is a return statement — the model is never asked a question the symbolic layer could not answer"
-  risks: "The gate's threshold is fixed while its similarity falls with query length, and at 0.72 none of the benchmark's own answerable questions clears it — a distribution the verification suite computes and does not assert"
+  risks: "The gate's threshold is fixed while its similarity falls with query length, and none of the four benchmark questions the report scores clears it at `0.72` or at the `0.55` that replaced it — a distribution the verification suite computes and does not assert"
 ---
 
 ## 1. Executive Summary
@@ -117,30 +117,36 @@ One thing bounds the risk: `transformers` and `glirel` are absent from `requirem
 
 ### The gate — `main.py`, `select_answering_facts`
 
-The query is bundled into one hypervector by summing the vector of every surviving token. Each candidate fact is bundled from **exactly three components**: resolved subject, resolved object, and the predicate's hypervector from `resolve_predicate_hypervector`. Cosine is taken between the two bundles and compared against `HDC_THRESHOLD = 0.72`.
+The query is bundled into one hypervector by summing the vector of every surviving token. Each candidate fact is bundled from **exactly three components**: resolved subject, resolved object, and the predicate's hypervector from `resolve_predicate_hypervector`. Cosine is taken between the two bundles and compared against `HDC_THRESHOLD`, which is `0.55` at this pin.
 
 The three-component rule is deliberate and the README explains it: holding every fact to the same number of components keeps a short fact from scoring higher than a long one for structural rather than semantic reasons. That reasoning is right, and it is more care than most threshold-based retrieval in this corpus receives.
 
 The unhandled half is that the *query* side has no such rule. Tokens are deduplicated by resolved identity and anything of two characters or fewer is dropped unless it is a known entity, but what survives is an unbounded bundle compared against a bundle of three. Because the encoder is near-orthogonal on unrelated strings — measured at `+0.003` mean pairwise cosine — the bundle of n components has a norm proportional to `sqrt(n)`, so the score falls as the question gets longer while the threshold stays fixed. Reimplementing the encoder and the bundling in separate code, with the subject and object shared between query and fact:
 
-| Surviving query components | Cosine | Against the `0.72` in `config.py` | Against the `0.42` the README prints |
+| Surviving query components | Cosine | Against the `0.55` in `config.py` | Against the `0.42` the README prints |
 | --- | --- | --- | --- |
 | 2 | 0.822 | pass | pass |
-| 3 | 0.663 | **block** | pass |
+| 3 | 0.663 | pass | pass |
 | 4 | 0.495 | **block** | pass |
 | 5 | 0.385 | **block** | **block** |
 | 8 | 0.217 | **block** | **block** |
 
-Same fact, same overlap, opposite outcomes — and the window in which a two-component match survives is two tokens wide. Sharing all three components buys four: `1.000`, `0.868`, `0.691`, `0.553` at n = 3, 4, 5, 6.
+Same fact, same overlap, opposite outcomes — and the window in which a shared-subject-and-object match survives is three tokens wide at `0.55`, two at the `0.72` that preceded it. Sharing all three components buys four either way: `1.000`, `0.868`, `0.691`, `0.553` at n = 3, 4, 5, 6, the last of which clears `0.55` by three thousandths.
 
 **Run the benchmark's own questions through it and none of them clears the gate.** Each scored against the exact triple it asks about:
 
-| Benchmark question | Cosine | `config.py` 0.72 | README 0.42 |
-| --- | --- | --- | --- |
-| *"Where was Marie Curie born?"* | 0.423 | **block** | pass |
-| *"Where was Alan Turing born?"* | 0.429 | **block** | pass |
-| *"What did Alan Turing crack?"* | 0.450 | **block** | pass |
-| *"Who did Turing work with?"* | 0.367 | **block** | **block** |
+| Benchmark question | Cosine | `config.py` 0.55 | the 0.72 before it | README 0.42 |
+| --- | --- | --- | --- | --- |
+| *"Where was Marie Curie born?"* | 0.423 | **block** | **block** | pass |
+| *"Where was Alan Turing born?"* | 0.429 | **block** | **block** | pass |
+| *"What did Alan Turing crack?"* | 0.450 | **block** | **block** | pass |
+| *"Who did Turing work with?"* | 0.367 | **block** | **block** | **block** |
+
+**The threshold moved 0.17 and not one of them crossed.** All four sit between
+`0.367` and `0.450`, below both settings, so a recalibration described as
+eliminating hallucination leaks changed the verdict on none of the sampled
+answerable questions. The number the change was made for is the one the
+verification suite computes and does not assert.
 
 The two threshold columns are both the project's own: `0.72` is what `config.py` sets and `0.42` is what the README's architecture diagram advertises, so the documentation describes a gate that admits three of these four questions and the code ships one that admits none. For a system whose central claim is refusing to answer when it should, the threshold is the most important number in the repository, and raising it *"to eliminate hallucination leaks"* is the move that trades answers for refusals without changing what the gate measures. The README's own table records the trade in the two columns that depend on it: retrieval accuracy fell from 55.0% to 45.0% and gate accuracy from 56.7% to 43.3% while precision rose. Normalising the query side the way the fact side is normalised — a fixed component budget, or dividing by the component count — is the change the fixed threshold is waiting for, and it is the change that would let the threshold be raised without paying for it in answerable questions.
 
@@ -155,14 +161,23 @@ That is the strongest idea here and it generalizes past the prototype. A system 
 ### Correction — `database.py`, `update_relation`
 
 ```python
-SINGLE_VALUED_PREDICATES = {"born_in", "died_in", "capital_of", "place_of_birth", "place_of_death"}
-...
-if predicate in SINGLE_VALUED_PREDICATES:
-    cursor.execute("DELETE FROM relations WHERE source_id = ? AND predicate = ?", (src_key, predicate))
+# Keep all extracted candidates in DB rather than destructively deleting earlier valid facts
+                #if predicate in SINGLE_VALUED_PREDICATES:
+                #    cursor.execute("DELETE FROM relations WHERE source_id = ? AND predicate = ?", (src_key, predicate))
 cursor.execute("INSERT OR REPLACE INTO relations VALUES (?, ?, ?)", (src_key, predicate, tgt_key))
 ```
 
-Correction is destructive and unrecorded where it happens at all: the prior object is gone, with no supersession pointer, no tombstone, no event and no timestamp. Re-ingesting the same document re-derives the same fact, and nothing consults what a user previously replaced.
+**Correction does not happen at all.** The functional-predicate `DELETE` is
+commented out, under a comment that gives the right reason — destroying an
+earlier valid fact to make room for a later one loses data — and puts nothing in
+its place. So a newer `born_in` no longer removes the older one, both rows
+persist, and there is no supersession pointer, no tombstone, no timestamp and no
+ordering to say which the system now believes. Both are candidates at the next
+retrieval, and the gate scores them on cosine alone.
+
+That is a real improvement on the destructive version and it is half a change.
+The comment identifies the problem with `DELETE`; the fix for it is a
+supersession row or a `valid_to`, not the absence of both.
 
 **The allowlist is the whole correction policy, and it reaches one of the predicates this system produces.** `predicate_map` in `main.py` normalises everything the extractor emits into four canonical forms — `born_in`, `collaborated_with`, `discovered`, `cracked` — of which only `born_in` appears in the set. `capital_of` exists only in the seed data; `died_in`, `place_of_birth` and `place_of_death` appear nowhere but this set, the fifty-relation taxonomy in `talon_engine.py`, and that file's `ORIGIN_PREDICATES`. Anything the model extracts under an un-normalised predicate — the README's own example of extraction noise is `[Grace_Hopper] -[became_a_pioneer]-> […]` — is append-only by construction. `talon_engine.py` does define `get_canonical_triple_key`, which folds a symmetric relation and its inverse onto one key and is precisely what would let `collaborated_with` be corrected; no code outside that file calls it.
 
@@ -247,15 +262,21 @@ publishes is the right instinct, and so is asserting that the ingestion path
 halts loudly rather than degrading when its extractor is missing.
 
 **Check 8 computes the number this report is about and asserts nothing with
-it.** It builds a seed-only database, runs all thirty benchmark questions through
+it.** It builds a seed-only database, runs every benchmark question through
 `select_answering_facts` with `threshold=-1.0` — the gate disabled, so the raw
 score distribution comes back — and then:
 
 ```python
 passes = sum(1 for a, m, _ in rows if a and m is not None and m >= HDC_THRESHOLD)
 leaks  = sum(1 for a, m, _ in rows if not a and m is not None and m >= HDC_THRESHOLD)
-check("gate-distribution-ran", len(rows) == 30, f"verified gate distribution on {len(rows)} queries")
+check("gate-distribution-ran", len(rows) == 32, f"verified gate distribution on {len(rows)} queries")
 ```
+
+The `32` is the whole of what the file has changed since the benchmark grew:
+the fixture went from thirty questions to thirty-two, and the assertion's
+constant was updated to match. `passes` and `leaks` are each assigned once, on
+the two lines above, and appear nowhere else in the repository — the line was
+edited without the question being asked.
 
 `passes` is how many answerable questions clear 0.72. `leaks` is how many baited
 ones do. Neither identifier appears again in the file. The only assertion is that
@@ -324,7 +345,7 @@ The hyperdimensional layer is the part to be most careful about, and not because
 
 - Does the revived reservoir resolve pronouns correctly in practice, or does the bundle term dominate the permutation-bound term enough that word order stops mattering?
 - Is the five-predicate allowlist meant to grow with the extractor's vocabulary, and what maintains it?
-- `HDC_THRESHOLD` has been `0.42`, `0.78`, `0.68` and `0.72` across four releases. What is it calibrated against, given that at `0.72` none of the benchmark's own answerable questions clears it?
+- `HDC_THRESHOLD` has been `0.42`, `0.78`, `0.68`, `0.72` and `0.55` across five releases, under a comment that has read *"Recalibrated gating threshold to eliminate hallucination leaks"* for the last two of them. What is any of them calibrated against, and could anything committed say? `leaks` is computed once per verification run and discarded, and the four questions scored in section 4 block at `0.72` and at `0.55` alike.
 - What is the intended behaviour for a genuinely multi-valued predicate — is `collaborated_with` meant to hold one target, or is the `DELETE` an oversight?
 - The README presents `talon_engine.py` as the architecture and instructs a CUDA PyTorch install, while `requirements.txt` names none of the five packages that file imports. Is the omission deliberate, and does the author know the patch disables a `torch.load` guard on the path the README points at?
 - Is the GloVe fetch — 822 MB from `nlp.stanford.edu` on first launch, unmentioned in the setup instructions — intended, or a development convenience that shipped?
@@ -352,6 +373,16 @@ The hyperdimensional layer is the part to be most careful about, and not because
 
 ## History
 
+
+**2026-08-30** — [`5fdaeffe7dadee52a15cf1772b46013cc1af256a`](https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a) — re-pinned four commits on, at v0.6.0 with HYDRA late interaction and an `hdc_reservoirs` blob table for multi-hop path vectors. The mark is unchanged at one: the benchmark fixture grew from thirty questions to thirty-two and still carries ten unanswerable ones, so `negative_eval` holds on the same basis.
+
+**`HDC_THRESHOLD` took its fifth value and nothing the report scores changed hands.** `0.42 → 0.78 → 0.68 → 0.72 → 0.55`, under a comment that has read *"Recalibrated gating threshold to eliminate hallucination leaks"* for the last two settings. The section 4 tables carry the new column: the four benchmark questions sit at `0.367`–`0.450` and block at `0.72` and at `0.55` alike, so a 0.17 move changed the verdict on none of them. The component-window table shifts by one — a three-component query now passes where it did not — and the README's advertised `0.42` still admits three of the four.
+
+**The verification suite's one edit in this window was the constant.** `verify_hillock.py` changed exactly one line, `len(rows) == 30` to `len(rows) == 32`, keeping the check named `gate-distribution-ran`. `passes` and `leaks` are still assigned on the two lines above it and appear nowhere else in the repository, so the quantity the recalibration is named for is computed once per run and discarded — and this time the line was edited without the question being asked. The open question about what the threshold is calibrated against is narrowed accordingly: nothing committed can answer it.
+
+**Correction stopped happening.** `database.py`'s functional-predicate `DELETE` is commented out under *"Keep all extracted candidates in DB rather than destructively deleting earlier valid facts"*. The reason is right — destroying an earlier valid fact to make room for a later one loses data — and nothing replaces it, so a newer `born_in` leaves the older row in place with no supersession pointer, no timestamp and no ordering, and both are candidates at the next retrieval. The matrix's `update_delete` and `storage` fields are corrected for that and for the fourth table.
+
+Screened again first: no auto-run surface, no build-time execution surface, one unpinned surface and one manifest inside the seven-day cooldown; nothing was installed and nothing was run.
 **2026-08-27** — [`a30ce1a25f0d5763f10a6e591feb2a8122175180`](https://github.com/roandejager/Hillock/commit/a30ce1a25f0d5763f10a6e591feb2a8122175180) — re-pinned six commits on, at v0.6. Screened again: no auto-run surface, no build-time execution, one unpinned surface; nothing was installed and nothing was run. The mark is unchanged at `negative_eval`.
 
 The release is a hypergraph pass — a MaxSim sub-dimensional cascade in `reservoir.py`, positional permutation and sequential path binding for multi-hop paths, token-level late interaction replacing query bundling, and SQLite blob storage for hyperdimensional vectors. Two checks were added to `verify_hillock.py` with it, and both are real properties that can fail: permutation orthogonality asserts `abs(cos(orig, perm)) < 0.12` on a rolled vector, and the sequential-path check asserts the bound path stays bipolar with `set(np.unique(path_hv)) <= {-1, 1}`.

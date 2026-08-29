@@ -110,14 +110,14 @@ answerable questions stopped clearing it.</p>
               <strong>roandejager/Hillock</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/roandejager/Hillock/commit/a30ce1a25f0d5763f10a6e591feb2a8122175180" title="a30ce1a25f0d5763f10a6e591feb2a8122175180">
+            <a class="meta-pill revision-pill" href="https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a" title="5fdaeffe7dadee52a15cf1772b46013cc1af256a">
               <span>Analyzed revision</span>
-              <code>a30ce1a2…</code>
+              <code>5fdaeffe…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-08-30</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -367,7 +367,8 @@ every surviving token. Each candidate fact is bundled from
 <strong>exactly three components</strong>: resolved subject, resolved
 object, and the predicate's hypervector from
 <code>resolve_predicate_hypervector</code>. Cosine is taken between the
-two bundles and compared against <code>HDC_THRESHOLD = 0.72</code>.</p>
+two bundles and compared against <code>HDC_THRESHOLD</code>, which is
+<code>0.55</code> at this pin.</p>
 <p>The three-component rule is deliberate and the README explains it:
 holding every fact to the same number of components keeps a short fact
 from scoring higher than a long one for structural rather than semantic
@@ -388,7 +389,7 @@ object shared between query and fact:</p>
 <tr>
 <th>Surviving query components</th>
 <th>Cosine</th>
-<th>Against the <code>0.72</code> in <code>config.py</code></th>
+<th>Against the <code>0.55</code> in <code>config.py</code></th>
 <th>Against the <code>0.42</code> the README prints</th>
 </tr>
 </thead>
@@ -402,7 +403,7 @@ object shared between query and fact:</p>
 <tr>
 <td>3</td>
 <td>0.663</td>
-<td><strong>block</strong></td>
+<td>pass</td>
 <td>pass</td>
 </tr>
 <tr>
@@ -426,9 +427,12 @@ object shared between query and fact:</p>
 </tbody>
 </table></div>
 <p>Same fact, same overlap, opposite outcomes — and the window in which
-a two-component match survives is two tokens wide. Sharing all three
-components buys four: <code>1.000</code>, <code>0.868</code>,
-<code>0.691</code>, <code>0.553</code> at n = 3, 4, 5, 6.</p>
+a shared-subject-and-object match survives is three tokens wide at
+<code>0.55</code>, two at the <code>0.72</code> that preceded it.
+Sharing all three components buys four either way: <code>1.000</code>,
+<code>0.868</code>, <code>0.691</code>, <code>0.553</code> at n = 3, 4,
+5, 6, the last of which clears <code>0.55</code> by three
+thousandths.</p>
 <p><strong>Run the benchmark's own questions through it and none of them
 clears the gate.</strong> Each scored against the exact triple it asks
 about:</p>
@@ -437,7 +441,8 @@ about:</p>
 <tr>
 <th>Benchmark question</th>
 <th>Cosine</th>
-<th><code>config.py</code> 0.72</th>
+<th><code>config.py</code> 0.55</th>
+<th>the 0.72 before it</th>
 <th>README 0.42</th>
 </tr>
 </thead>
@@ -446,17 +451,20 @@ about:</p>
 <td><em>"Where was Marie Curie born?"</em></td>
 <td>0.423</td>
 <td><strong>block</strong></td>
+<td><strong>block</strong></td>
 <td>pass</td>
 </tr>
 <tr>
 <td><em>"Where was Alan Turing born?"</em></td>
 <td>0.429</td>
 <td><strong>block</strong></td>
+<td><strong>block</strong></td>
 <td>pass</td>
 </tr>
 <tr>
 <td><em>"What did Alan Turing crack?"</em></td>
 <td>0.450</td>
+<td><strong>block</strong></td>
 <td><strong>block</strong></td>
 <td>pass</td>
 </tr>
@@ -465,9 +473,16 @@ about:</p>
 <td>0.367</td>
 <td><strong>block</strong></td>
 <td><strong>block</strong></td>
+<td><strong>block</strong></td>
 </tr>
 </tbody>
 </table></div>
+<p><strong>The threshold moved 0.17 and not one of them
+crossed.</strong> All four sit between <code>0.367</code> and
+<code>0.450</code>, below both settings, so a recalibration described as
+eliminating hallucination leaks changed the verdict on none of the
+sampled answerable questions. The number the change was made for is the
+one the verification suite computes and does not assert.</p>
 <p>The two threshold columns are both the project's own:
 <code>0.72</code> is what <code>config.py</code> sets and
 <code>0.42</code> is what the README's architecture diagram advertises,
@@ -507,15 +522,23 @@ unreachable, and the system's ceiling is whatever its triple extractor
 managed to store.</p>
 <h3 id="correction--databasepy-update_relation">Correction —
 <code>database.py</code>, <code>update_relation</code></h3>
-<pre class="python"><code>SINGLE_VALUED_PREDICATES = {&quot;born_in&quot;, &quot;died_in&quot;, &quot;capital_of&quot;, &quot;place_of_birth&quot;, &quot;place_of_death&quot;}
-...
-if predicate in SINGLE_VALUED_PREDICATES:
-    cursor.execute(&quot;DELETE FROM relations WHERE source_id = ? AND predicate = ?&quot;, (src_key, predicate))
+<pre class="python"><code># Keep all extracted candidates in DB rather than destructively deleting earlier valid facts
+                #if predicate in SINGLE_VALUED_PREDICATES:
+                #    cursor.execute(&quot;DELETE FROM relations WHERE source_id = ? AND predicate = ?&quot;, (src_key, predicate))
 cursor.execute(&quot;INSERT OR REPLACE INTO relations VALUES (?, ?, ?)&quot;, (src_key, predicate, tgt_key))</code></pre>
-<p>Correction is destructive and unrecorded where it happens at all: the
-prior object is gone, with no supersession pointer, no tombstone, no
-event and no timestamp. Re-ingesting the same document re-derives the
-same fact, and nothing consults what a user previously replaced.</p>
+<p><strong>Correction does not happen at all.</strong> The
+functional-predicate <code>DELETE</code> is commented out, under a
+comment that gives the right reason — destroying an earlier valid fact
+to make room for a later one loses data — and puts nothing in its place.
+So a newer <code>born_in</code> no longer removes the older one, both
+rows persist, and there is no supersession pointer, no tombstone, no
+timestamp and no ordering to say which the system now believes. Both are
+candidates at the next retrieval, and the gate scores them on cosine
+alone.</p>
+<p>That is a real improvement on the destructive version and it is half
+a change. The comment identifies the problem with <code>DELETE</code>;
+the fix for it is a supersession row or a <code>valid_to</code>, not the
+absence of both.</p>
 <p><strong>The allowlist is the whole correction policy, and it reaches
 one of the predicates this system produces.</strong>
 <code>predicate_map</code> in <code>main.py</code> normalises everything
@@ -693,13 +716,19 @@ constant against the number the README publishes is the right instinct,
 and so is asserting that the ingestion path halts loudly rather than
 degrading when its extractor is missing.</p>
 <p><strong>Check 8 computes the number this report is about and asserts
-nothing with it.</strong> It builds a seed-only database, runs all
-thirty benchmark questions through <code>select_answering_facts</code>
-with <code>threshold=-1.0</code> — the gate disabled, so the raw score
+nothing with it.</strong> It builds a seed-only database, runs every
+benchmark question through <code>select_answering_facts</code> with
+<code>threshold=-1.0</code> — the gate disabled, so the raw score
 distribution comes back — and then:</p>
 <pre class="python"><code>passes = sum(1 for a, m, _ in rows if a and m is not None and m &gt;= HDC_THRESHOLD)
 leaks  = sum(1 for a, m, _ in rows if not a and m is not None and m &gt;= HDC_THRESHOLD)
-check(&quot;gate-distribution-ran&quot;, len(rows) == 30, f&quot;verified gate distribution on {len(rows)} queries&quot;)</code></pre>
+check(&quot;gate-distribution-ran&quot;, len(rows) == 32, f&quot;verified gate distribution on {len(rows)} queries&quot;)</code></pre>
+<p>The <code>32</code> is the whole of what the file has changed since
+the benchmark grew: the fixture went from thirty questions to
+thirty-two, and the assertion's constant was updated to match.
+<code>passes</code> and <code>leaks</code> are each assigned once, on
+the two lines above, and appear nowhere else in the repository — the
+line was edited without the question being asked.</p>
 <p><code>passes</code> is how many answerable questions clear 0.72.
 <code>leaks</code> is how many baited ones do. Neither identifier
 appears again in the file. The only assertion is that thirty rows were
@@ -877,9 +906,14 @@ word order stops mattering?</li>
 <li>Is the five-predicate allowlist meant to grow with the extractor's
 vocabulary, and what maintains it?</li>
 <li><code>HDC_THRESHOLD</code> has been <code>0.42</code>,
-<code>0.78</code>, <code>0.68</code> and <code>0.72</code> across four
-releases. What is it calibrated against, given that at <code>0.72</code>
-none of the benchmark's own answerable questions clears it?</li>
+<code>0.78</code>, <code>0.68</code>, <code>0.72</code> and
+<code>0.55</code> across five releases, under a comment that has read
+<em>"Recalibrated gating threshold to eliminate hallucination
+leaks"</em> for the last two of them. What is any of them calibrated
+against, and could anything committed say? <code>leaks</code> is
+computed once per verification run and discarded, and the four questions
+scored in section 4 block at <code>0.72</code> and at <code>0.55</code>
+alike.</li>
 <li>What is the intended behaviour for a genuinely multi-valued
 predicate — is <code>collaborated_with</code> meant to hold one target,
 or is the <code>DELETE</code> an oversight?</li>
@@ -930,7 +964,48 @@ twenty checks; check 8 holds the unasserted gate distribution).</li>
 <li>Launchers: <code>run.sh</code>, <code>run.bat</code>.</li>
 </ul>
 <h2 id="history">History</h2>
-<p><strong>2026-08-27</strong> — <a
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a"><code class="commit-id" title="5fdaeffe7dadee52a15cf1772b46013cc1af256a">5fdaeffe…</code></a>
+— re-pinned four commits on, at v0.6.0 with HYDRA late interaction and
+an <code>hdc_reservoirs</code> blob table for multi-hop path vectors.
+The mark is unchanged at one: the benchmark fixture grew from thirty
+questions to thirty-two and still carries ten unanswerable ones, so
+<code>negative_eval</code> holds on the same basis.</p>
+<p><strong><code>HDC_THRESHOLD</code> took its fifth value and nothing
+the report scores changed hands.</strong>
+<code>0.42 → 0.78 → 0.68 → 0.72 → 0.55</code>, under a comment that has
+read <em>"Recalibrated gating threshold to eliminate hallucination
+leaks"</em> for the last two settings. The section 4 tables carry the
+new column: the four benchmark questions sit at
+<code>0.367</code>–<code>0.450</code> and block at <code>0.72</code> and
+at <code>0.55</code> alike, so a 0.17 move changed the verdict on none
+of them. The component-window table shifts by one — a three-component
+query now passes where it did not — and the README's advertised
+<code>0.42</code> still admits three of the four.</p>
+<p><strong>The verification suite's one edit in this window was the
+constant.</strong> <code>verify_hillock.py</code> changed exactly one
+line, <code>len(rows) == 30</code> to <code>len(rows) == 32</code>,
+keeping the check named <code>gate-distribution-ran</code>.
+<code>passes</code> and <code>leaks</code> are still assigned on the two
+lines above it and appear nowhere else in the repository, so the
+quantity the recalibration is named for is computed once per run and
+discarded — and this time the line was edited without the question being
+asked. The open question about what the threshold is calibrated against
+is narrowed accordingly: nothing committed can answer it.</p>
+<p><strong>Correction stopped happening.</strong>
+<code>database.py</code>'s functional-predicate <code>DELETE</code> is
+commented out under <em>"Keep all extracted candidates in DB rather than
+destructively deleting earlier valid facts"</em>. The reason is right —
+destroying an earlier valid fact to make room for a later one loses data
+— and nothing replaces it, so a newer <code>born_in</code> leaves the
+older row in place with no supersession pointer, no timestamp and no
+ordering, and both are candidates at the next retrieval. The matrix's
+<code>update_delete</code> and <code>storage</code> fields are corrected
+for that and for the fourth table.</p>
+<p>Screened again first: no auto-run surface, no build-time execution
+surface, one unpinned surface and one manifest inside the seven-day
+cooldown; nothing was installed and nothing was run.
+<strong>2026-08-27</strong> — <a
 href="https://github.com/roandejager/Hillock/commit/a30ce1a25f0d5763f10a6e591feb2a8122175180"><code class="commit-id" title="a30ce1a25f0d5763f10a6e591feb2a8122175180">a30ce1a2…</code></a>
 — re-pinned six commits on, at v0.6. Screened again: no auto-run
 surface, no build-time execution, one unpinned surface; nothing was
