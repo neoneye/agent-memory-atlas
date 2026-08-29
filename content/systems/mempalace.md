@@ -6,22 +6,26 @@ root: ../..
 page_kind: system
 source_name: MemPalace/mempalace
 source_url: https://github.com/MemPalace/mempalace
-revision: afd0428823b47f9a9d1d68c450d54bb0045a4988
-revision_url: https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988
-analyzed_at: 2026-07-26
-capabilities: "scope_enforced"
-stack_storage: "sqlite, postgres, chroma, qdrant"
+revision: a9f345cc63254eb4dea7abad36963b85c9f8453a
+revision_url: https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a
+analyzed_at: 2026-08-30
+capabilities: "bitemporal, scope_enforced, audit_log"
+stack_storage: "sqlite, postgres, chroma, qdrant, milvus"
+capability_evidence:
+  bitemporal: "the knowledge graph — a validity interval beside the extraction instant | mempalace/knowledge_graph.py:163-178,:106-120,:370-403 | a `triples` row carries `valid_from` and `valid_to` for when the fact held and `extracted_at DEFAULT CURRENT_TIMESTAMP` for when the row was written, and `_temporal_filter_sql` runs the as-of query against the validity pair with a deliberately strict upper bound: *\"a fact whose `valid_to` equals the query instant has already ended at that instant, so the interval is treated as half-open.\"* `supersede` closes the predecessor and opens the successor at one identical instant in one transaction, because hand-rolling it with a date-only boundary leaves both facts sharing the whole day — `valid_to` expanding to `T23:59:59Z` while `valid_from` expands to `T00:00:00Z` | tests/"
+  audit_log: "the palace directory — a write-ahead log of memory mutations | mempalace/wal.py:74-97 | `_wal_log(operation, params, result)` appends one JSON line per write through `os.open(..., O_APPEND | O_CREAT, 0o600)`, and the eight operations it is called with are the memory mutations: `add_drawer`, `update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`, `kg_invalidate`, `kg_supersede`, `diary_write`. Payload keys — `content`, `document`, `entry`, `query`, `text` — are redacted before the line is written, so the record says what changed without carrying it. The caveat belongs with the mark: a WAL failure is *\"logged and non-fatal, never crashing the tool call,\"* so the record is best-effort where [Veracium](../veracium/) makes it a precondition | tests/"
+  scope_enforced: "the searcher — wing/room/source scope applied as a where clause on the read path | mempalace/searcher.py:391-408,:425-447 | `build_where_filter(wing, room, source_file)` turns the caller's scope into a ChromaDB `where` clause — bare for one clause, `$and` for several — and `search()` hands it to the collection query, so out-of-scope drawers are never scored rather than filtered after ranking. `_scoped_source_filter` narrows further to `parent_drawer_id` when the matched chunk carries one, so two unrelated pastes tagged the same `source_file` stop reading as siblings | tests/test_searcher.py:79-104 — `test_wing_filter`, `test_room_filter`, `test_wing_and_room_filter`, `test_source_file_filter`, and `test_source_file_with_wing_filter` each assert every returned row carries the requested scope"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
-  memory_unit: "Verbatim drawer chunks, closets, KG triples"
+  memory_unit: "Verbatim drawer chunks, closets, and KG triples carrying a validity interval beside the instant they were extracted"
   storage: "Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG"
   retrieval: "Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback"
   write: "Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text"
-  update_delete: "Delete/update drawers, delete by source, dedup, repair; limited epistemic correction"
+  update_delete: "Delete/update drawers, delete by source, dedup, repair; in the graph, `supersede` closes the predecessor and opens the successor at one shared instant so an as-of query at the boundary returns only the successor"
   scoping: "Palace, wing, room, source file, parent drawer, backend namespace"
-  integration: "MCP, CLI, hooks, skills, wake-up stack"
-  background: "Mining, closet/hallway/tunnel computation, repair/sync/backup"
+  integration: "MCP, CLI, hooks, skills, wake-up stack, and a remote hub one host owns while a fleet of agents connects over MCP"
+  background: "Mining, closet/hallway/tunnel computation, repair/sync/backup, and anti-entropy replication of the coordination log between palaces"
   trust: "Strong source provenance; weak candidate/verified/rejected trust state"
   strengths: "Evidence-preserving raw baseline, hybrid retrieval, operational hardening"
   risks: "Raw stores get large/noisy; contradiction resolution mostly outside core recall"
@@ -212,10 +216,55 @@ This stack is simpler than Letta's runtime memory but useful: bounded startup co
 `knowledge_graph.py` stores entities and temporal triples in SQLite with WAL. Triples include:
 
 - `subject`, `predicate`, `object`;
-- `valid_from`, `valid_to`;
+- `valid_from`, `valid_to` — when the fact held;
+- `extracted_at`, defaulted to `CURRENT_TIMESTAMP` — when the row was written;
 - `confidence`;
 - source closet/file/drawer provenance;
 - adapter name.
+
+**The last two of those are two different clocks, and the graph queries them
+separately.** `_temporal_filter_sql` builds the as-of predicate against the
+validity pair, with an upper bound that is deliberately strict — *"a fact whose
+`valid_to` equals the query instant has already ended at that instant, so the
+interval is treated as half-open `[valid_from, valid_to)`"* — while
+`extracted_at` records when the system learned it and is not what the as-of
+filter compares. Legacy date-only values are normalised for comparison so a
+`valid_from` of `2026-05-06` reads as `T00:00:00Z` and a `valid_to` of the same
+date reads as `T23:59:59Z`.
+
+`supersede` is where that asymmetry stops being a footnote. It closes the open
+`(subject, predicate, old_obj)` triple with `valid_to = at` and opens the
+successor with `valid_from = at` **in one transaction at one identical
+instant**, and the docstring works through the bug that motivates it: doing the
+handover by hand as `invalidate(ended=D)` plus `add_triple(valid_from=D)` with a
+date-only `D` leaves the two facts sharing the whole of day `D`, because the
+`valid_to` expands to the end of the day and the `valid_from` to its start, so
+an as-of query on `D` returns both. Writing one precise boundary to both sides
+is the fix, and a date-only `at` is normalised to `T00:00:00Z` rather than left
+asymmetric. If no open predecessor exists the successor is opened anyway, so
+`supersede` degrades to `add_triple` rather than failing.
+
+### The write-ahead log
+
+`wal.py` appends one JSON line per write operation — `{timestamp, operation,
+params, result}` — through `os.open(..., O_WRONLY | O_APPEND | O_CREAT, 0o600)`.
+The eight operations it is called with are the memory mutations themselves:
+`add_drawer`, `update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`,
+`kg_invalidate`, `kg_supersede`, `diary_write`.
+
+Two decisions in it are worth copying. Payload keys — `content`, `document`,
+`entry`, `query`, `text` — are redacted before the line is written, so the log
+records *what changed* without carrying the thing that changed, which is what
+lets it be kept as long as an operator wants. And `_ensure_wal` deliberately
+does not run at import time, because a user who deleted `~/.mempalace` has
+engaged the documented kill switch, and recreating the directory on import would
+*"silently re-arm the autosave/mining hooks they disabled."*
+
+The limit is stated in the module too: a WAL failure is *"logged and non-fatal,
+never crashing the tool call."* The record is best-effort, which is the ordinary
+arrangement in this corpus and the opposite of the one
+[Veracium](../veracium/) makes, where the audit row committing is a precondition
+for the state change.
 
 `fact_checker.py` is conservative. It flags:
 
@@ -318,6 +367,50 @@ MemPalace is strong operationally:
 - WAL logging for MCP writes.
 
 This is a system built by people who have hit local-agent failure modes in practice.
+
+## 9a. The shared brain, and the line it draws through itself
+
+The largest addition since the first reading is a fleet layer, and the project
+splits it from the memory on exactly the axis this atlas uses. From
+`website/guide/shared-brain.md`:
+
+| | Memory (drawers, KG, diary) | Logstream (events, artifacts) |
+| --- | --- | --- |
+| Holds | Durable knowledge worth recalling | Active work moving between agents |
+| Access | Semantic search | Structured filters + long-poll |
+| Examples | Decisions, facts, people, outcomes | Delegations, replies, patches, acks |
+
+> Rule of thumb: if another agent should **act** on it, it's an event. If a
+> future session should **know** it, it's a drawer.
+
+That is the memory/coordination boundary in one sentence, and it is load-bearing
+here rather than decorative: **one hub process owns the palace**, and the fleet
+— local Claude and Codex over stdio, remote agents over HTTPS with a bearer
+token — connects to it over MCP. The memory is centralised. What replicates
+between palaces is the *logstream*: `logsync.py` is a pull-based anti-entropy
+engine that diffs version vectors and pulls missing per-origin op ranges,
+artifacts first *"so referenced ids never dangle,"* with no push path and no
+coordinator.
+
+`hlc.py` is the ordering primitive under it — a hybrid logical clock rendered as
+`<unix_ms:13>-<counter:6 hex>-<replica_id>` so that *"SQLite TEXT comparison IS
+the causal comparison"* — and it carries the distinction most implementations of
+this get wrong:
+
+> Cursor semantics stay LOCAL (rowid arrival order) […] a tail consumer must see
+> late-arriving remote ops even though their HLC is older. HLC is the
+> *display/merge* order; arrival is the *delivery* order.
+
+Conflating those two is how a consumer silently skips a remote op whose
+timestamp sorts before its cursor. Naming them as separate orders, in the
+module's own docstring, is the kind of care this atlas usually has to reconstruct
+from a bug report.
+
+**None of it earns a mark, and the reason is the boundary the project itself
+drew.** The logstream is append-only with immutable events and corrections that
+reference prior ones, which is the shape of an audit log — but what it records is
+delegations, replies and patches between agents, not changes to the memory
+store. The mutations of memory are logged elsewhere, by the WAL in section 6.
 
 ## 10. Tests and Evidence
 
@@ -436,6 +529,16 @@ For your own memory system, MemPalace is the strongest reminder that extraction 
 
 ## History
 
+
+**2026-08-30** — [`a9f345cc63254eb4dea7abad36963b85c9f8453a`](https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a) — re-pinned 452 commits on, and the marks go from one to three. **Both additions are corrections rather than new capability: each mechanism was present at the first pin and neither was credited.**
+
+`bitemporal` was missed on a column the first reading's own field list left out. A `triples` row carries `valid_from` and `valid_to` — which that list records — beside `extracted_at DEFAULT CURRENT_TIMESTAMP`, which it does not, and the two are separate axes queried separately: `_temporal_filter_sql` runs the as-of predicate against the validity pair with a half-open upper bound, while `extracted_at` holds when the row was written. Both columns exist at the earlier commit. Section 6 now carries them and the `supersede` primitive that closes a predecessor and opens its successor at one identical instant, with the date-only boundary bug the docstring works through.
+
+`audit_log` was missed on a module that has since moved rather than appeared. `_wal_log` was called nine times from `mcp_server.py` at the first pin and now lives in its own `wal.py` with eight call sites, appending one JSON line per write through `O_APPEND` at mode `0600`. The operations are the memory mutations — `add_drawer`, `update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`, `kg_invalidate`, `kg_supersede`, `diary_write` — with payload keys redacted before the line is written. The mark's caveat is in the module: a WAL failure is *"logged and non-fatal, never crashing the tool call."*
+
+**What actually is new is a fleet layer, and it earns nothing on purpose.** Fifteen new modules — `hlc.py`, `logstream.py`, `logsync.py`, `replica.py`, `transport.py`, `server_registry.py`, `mcp_proxy.py`, `tasks.py`, `write_routing.py`, a Milvus backend among them — build a shared hub: one host owns the palace, a fleet of local and remote agents connects over MCP, and an anti-entropy engine replicates the *coordination log* between palaces. Section 9a describes it, including the hybrid logical clock's distinction between merge order and delivery order. The logstream is append-only and immutable and still not an `audit_log`, because what it records is delegations and patches between agents rather than changes to the memory — a line the project's own documentation draws better than this report had: *"if another agent should act on it, it's an event. If a future session should know it, it's a drawer."*
+
+`stack_source` promoted from `seeded` to `reviewed`, and `milvus` added to the storage census. The repository's canonical path resolves as `MemPalace/mempalace` again, so the rename recorded below has reverted. Screened again first: five auto-run surfaces — a plugin directory, a devcontainer, two MCP manifests and a hooks directory — two build-time execution surfaces and one unpinned surface; nothing was installed and nothing was run.
 **2026-08-09** — the repository now lives at `milla-jovovich/mempalace` and `MemPalace/mempalace` redirects to it; the pin below resolves unchanged. Recorded because an outside corpus listed the new path as an uncovered system, and a join on `source_url` cannot see an owner change.
 
 **2026-07-26** — [`afd0428823b47f9a9d1d68c450d54bb0045a4988`](https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988) — first reading.

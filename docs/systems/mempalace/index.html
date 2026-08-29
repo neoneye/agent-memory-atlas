@@ -106,17 +106,17 @@ the evidence.</p>
               <strong>MemPalace/mempalace</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988" title="afd0428823b47f9a9d1d68c450d54bb0045a4988">
+            <a class="meta-pill revision-pill" href="https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a" title="a9f345cc63254eb4dea7abad36963b85c9f8453a">
               <span>Analyzed revision</span>
-              <code>afd04288…</code>
+              <code>a9f345cc…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-08-30</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -357,11 +357,65 @@ in SQLite with WAL. Triples include:</p>
 <ul>
 <li><code>subject</code>, <code>predicate</code>,
 <code>object</code>;</li>
-<li><code>valid_from</code>, <code>valid_to</code>;</li>
+<li><code>valid_from</code>, <code>valid_to</code> — when the fact
+held;</li>
+<li><code>extracted_at</code>, defaulted to
+<code>CURRENT_TIMESTAMP</code> — when the row was written;</li>
 <li><code>confidence</code>;</li>
 <li>source closet/file/drawer provenance;</li>
 <li>adapter name.</li>
 </ul>
+<p><strong>The last two of those are two different clocks, and the graph
+queries them separately.</strong> <code>_temporal_filter_sql</code>
+builds the as-of predicate against the validity pair, with an upper
+bound that is deliberately strict — <em>"a fact whose
+<code>valid_to</code> equals the query instant has already ended at that
+instant, so the interval is treated as half-open
+<code>[valid_from, valid_to)</code>"</em> — while
+<code>extracted_at</code> records when the system learned it and is not
+what the as-of filter compares. Legacy date-only values are normalised
+for comparison so a <code>valid_from</code> of <code>2026-05-06</code>
+reads as <code>T00:00:00Z</code> and a <code>valid_to</code> of the same
+date reads as <code>T23:59:59Z</code>.</p>
+<p><code>supersede</code> is where that asymmetry stops being a
+footnote. It closes the open <code>(subject, predicate, old_obj)</code>
+triple with <code>valid_to = at</code> and opens the successor with
+<code>valid_from = at</code> <strong>in one transaction at one identical
+instant</strong>, and the docstring works through the bug that motivates
+it: doing the handover by hand as <code>invalidate(ended=D)</code> plus
+<code>add_triple(valid_from=D)</code> with a date-only <code>D</code>
+leaves the two facts sharing the whole of day <code>D</code>, because
+the <code>valid_to</code> expands to the end of the day and the
+<code>valid_from</code> to its start, so an as-of query on
+<code>D</code> returns both. Writing one precise boundary to both sides
+is the fix, and a date-only <code>at</code> is normalised to
+<code>T00:00:00Z</code> rather than left asymmetric. If no open
+predecessor exists the successor is opened anyway, so
+<code>supersede</code> degrades to <code>add_triple</code> rather than
+failing.</p>
+<h3 id="the-write-ahead-log">The write-ahead log</h3>
+<p><code>wal.py</code> appends one JSON line per write operation —
+<code>{timestamp, operation, params, result}</code> — through
+<code>os.open(..., O_WRONLY | O_APPEND | O_CREAT, 0o600)</code>. The
+eight operations it is called with are the memory mutations themselves:
+<code>add_drawer</code>, <code>update_drawer</code>,
+<code>delete_drawer</code>, <code>delete_by_source</code>,
+<code>kg_add</code>, <code>kg_invalidate</code>,
+<code>kg_supersede</code>, <code>diary_write</code>.</p>
+<p>Two decisions in it are worth copying. Payload keys —
+<code>content</code>, <code>document</code>, <code>entry</code>,
+<code>query</code>, <code>text</code> — are redacted before the line is
+written, so the log records <em>what changed</em> without carrying the
+thing that changed, which is what lets it be kept as long as an operator
+wants. And <code>_ensure_wal</code> deliberately does not run at import
+time, because a user who deleted <code>~/.mempalace</code> has engaged
+the documented kill switch, and recreating the directory on import would
+<em>"silently re-arm the autosave/mining hooks they disabled."</em></p>
+<p>The limit is stated in the module too: a WAL failure is <em>"logged
+and non-fatal, never crashing the tool call."</em> The record is
+best-effort, which is the ordinary arrangement in this corpus and the
+opposite of the one <a href="../veracium/">Veracium</a> makes, where the
+audit row committing is a precondition for the state change.</p>
 <p><code>fact_checker.py</code> is conservative. It flags:</p>
 <ul>
 <li>similar-name confusion against known entities;</li>
@@ -487,6 +541,72 @@ integrations.</li>
 </ul>
 <p>This is a system built by people who have hit local-agent failure
 modes in practice.</p>
+<h2 id="9a-the-shared-brain-and-the-line-it-draws-through-itself">9a.
+The shared brain, and the line it draws through itself</h2>
+<p>The largest addition since the first reading is a fleet layer, and
+the project splits it from the memory on exactly the axis this atlas
+uses. From <code>website/guide/shared-brain.md</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Memory (drawers, KG, diary)</th>
+<th>Logstream (events, artifacts)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Holds</td>
+<td>Durable knowledge worth recalling</td>
+<td>Active work moving between agents</td>
+</tr>
+<tr>
+<td>Access</td>
+<td>Semantic search</td>
+<td>Structured filters + long-poll</td>
+</tr>
+<tr>
+<td>Examples</td>
+<td>Decisions, facts, people, outcomes</td>
+<td>Delegations, replies, patches, acks</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>Rule of thumb: if another agent should <strong>act</strong> on it,
+it's an event. If a future session should <strong>know</strong> it, it's
+a drawer.</p>
+</blockquote>
+<p>That is the memory/coordination boundary in one sentence, and it is
+load-bearing here rather than decorative: <strong>one hub process owns
+the palace</strong>, and the fleet — local Claude and Codex over stdio,
+remote agents over HTTPS with a bearer token — connects to it over MCP.
+The memory is centralised. What replicates between palaces is the
+<em>logstream</em>: <code>logsync.py</code> is a pull-based anti-entropy
+engine that diffs version vectors and pulls missing per-origin op
+ranges, artifacts first <em>"so referenced ids never dangle,"</em> with
+no push path and no coordinator.</p>
+<p><code>hlc.py</code> is the ordering primitive under it — a hybrid
+logical clock rendered as
+<code>&lt;unix_ms:13&gt;-&lt;counter:6 hex&gt;-&lt;replica_id&gt;</code>
+so that <em>"SQLite TEXT comparison IS the causal comparison"</em> — and
+it carries the distinction most implementations of this get wrong:</p>
+<blockquote>
+<p>Cursor semantics stay LOCAL (rowid arrival order) […] a tail consumer
+must see late-arriving remote ops even though their HLC is older. HLC is
+the <em>display/merge</em> order; arrival is the <em>delivery</em>
+order.</p>
+</blockquote>
+<p>Conflating those two is how a consumer silently skips a remote op
+whose timestamp sorts before its cursor. Naming them as separate orders,
+in the module's own docstring, is the kind of care this atlas usually
+has to reconstruct from a bug report.</p>
+<p><strong>None of it earns a mark, and the reason is the boundary the
+project itself drew.</strong> The logstream is append-only with
+immutable events and corrections that reference prior ones, which is the
+shape of an audit log — but what it records is delegations, replies and
+patches between agents, not changes to the memory store. The mutations
+of memory are logged elsewhere, by the WAL in section 6.</p>
 <h2 id="10-tests-and-evidence">10. Tests and Evidence</h2>
 <p>The repo has broad test coverage:</p>
 <ul>
@@ -627,8 +747,61 @@ sync?</li>
 <li>Tests: <code>mempalace/tests/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
-<p><strong>2026-08-09</strong> — the repository now lives at
-<code>milla-jovovich/mempalace</code> and
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a"><code class="commit-id" title="a9f345cc63254eb4dea7abad36963b85c9f8453a">a9f345cc…</code></a>
+— re-pinned 452 commits on, and the marks go from one to three.
+<strong>Both additions are corrections rather than new capability: each
+mechanism was present at the first pin and neither was
+credited.</strong></p>
+<p><code>bitemporal</code> was missed on a column the first reading's
+own field list left out. A <code>triples</code> row carries
+<code>valid_from</code> and <code>valid_to</code> — which that list
+records — beside <code>extracted_at DEFAULT CURRENT_TIMESTAMP</code>,
+which it does not, and the two are separate axes queried separately:
+<code>_temporal_filter_sql</code> runs the as-of predicate against the
+validity pair with a half-open upper bound, while
+<code>extracted_at</code> holds when the row was written. Both columns
+exist at the earlier commit. Section 6 now carries them and the
+<code>supersede</code> primitive that closes a predecessor and opens its
+successor at one identical instant, with the date-only boundary bug the
+docstring works through.</p>
+<p><code>audit_log</code> was missed on a module that has since moved
+rather than appeared. <code>_wal_log</code> was called nine times from
+<code>mcp_server.py</code> at the first pin and now lives in its own
+<code>wal.py</code> with eight call sites, appending one JSON line per
+write through <code>O_APPEND</code> at mode <code>0600</code>. The
+operations are the memory mutations — <code>add_drawer</code>,
+<code>update_drawer</code>, <code>delete_drawer</code>,
+<code>delete_by_source</code>, <code>kg_add</code>,
+<code>kg_invalidate</code>, <code>kg_supersede</code>,
+<code>diary_write</code> — with payload keys redacted before the line is
+written. The mark's caveat is in the module: a WAL failure is
+<em>"logged and non-fatal, never crashing the tool call."</em></p>
+<p><strong>What actually is new is a fleet layer, and it earns nothing
+on purpose.</strong> Fifteen new modules — <code>hlc.py</code>,
+<code>logstream.py</code>, <code>logsync.py</code>,
+<code>replica.py</code>, <code>transport.py</code>,
+<code>server_registry.py</code>, <code>mcp_proxy.py</code>,
+<code>tasks.py</code>, <code>write_routing.py</code>, a Milvus backend
+among them — build a shared hub: one host owns the palace, a fleet of
+local and remote agents connects over MCP, and an anti-entropy engine
+replicates the <em>coordination log</em> between palaces. Section 9a
+describes it, including the hybrid logical clock's distinction between
+merge order and delivery order. The logstream is append-only and
+immutable and still not an <code>audit_log</code>, because what it
+records is delegations and patches between agents rather than changes to
+the memory — a line the project's own documentation draws better than
+this report had: <em>"if another agent should act on it, it's an event.
+If a future session should know it, it's a drawer."</em></p>
+<p><code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>, and <code>milvus</code> added to the storage
+census. The repository's canonical path resolves as
+<code>MemPalace/mempalace</code> again, so the rename recorded below has
+reverted. Screened again first: five auto-run surfaces — a plugin
+directory, a devcontainer, two MCP manifests and a hooks directory — two
+build-time execution surfaces and one unpinned surface; nothing was
+installed and nothing was run. <strong>2026-08-09</strong> — the
+repository now lives at <code>milla-jovovich/mempalace</code> and
 <code>MemPalace/mempalace</code> redirects to it; the pin below resolves
 unchanged. Recorded because an outside corpus listed the new path as an
 uncovered system, and a join on <code>source_url</code> cannot see an

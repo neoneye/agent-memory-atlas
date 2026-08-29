@@ -71,7 +71,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
 | [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
-| [`mempalace`](../../content/systems/mempalace.md) | `.devcontainer/devcontainer.json`, `mcp.json` |
+| [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
 | [`mnemosyne`](../../content/systems/mnemosyne.md) | `.githooks/` |
