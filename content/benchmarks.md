@@ -1583,6 +1583,17 @@ Hard Set, 31.04–33.98% against 40.19–47.76% on the 332-session suite. A
 compression paper whose own result is *we compress less* is reporting the axis
 that matters instead of the one that flatters.
 
+A neighbouring paper measures the other half of the same question.
+*SKILL.state* ([arXiv:2608.26263](https://arxiv.org/abs/2608.26263), 26 August
+2026) replaces an append-only history with a mutable execution state, and its
+recovery experiment asks how long a wrong value keeps being acted on *after* it
+has been corrected: a state that overwrites needs **zero recovery steps**, where
+an append-only history leaves the correction sitting after the claim and the
+model to reconcile them. Self-GC asks whether a removal broke a future
+dependency; this asks how many turns a correction takes to take effect. Both are
+counts over the real continuation rather than judgements about a summary, and
+neither is a metric this page had before.
+
 The limitations section names what reproduction would require, which is the
 list this page would have written: *"reproducibility requires sanitized
 fixtures, prompt templates, per-sample judge outputs, and scripts for recomputing

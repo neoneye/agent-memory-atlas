@@ -22722,6 +22722,55 @@ reversibility work is genuinely relevant to memory systems with
 restartable background passes — the read-generation fence question
 recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
 — but a reader looking for agent memory here will not find it.</li>
+<li><strong><code>avarshvir/oxygen</code> was examined and has no
+report: it stores nothing at all.</strong> Apache-2.0, 486 lines of
+Python, 39 commits since 24 August 2026, at <a
+href="https://github.com/avarshvir/oxygen/commit/0a65d56b9bb5ea3f2f1f88e0f31ac3e4aa8ede9d"><code class="commit-id" title="0a65d56b9bb5ea3f2f1f88e0f31ac3e4aa8ede9d">0a65d56b…</code></a>.
+It is a LangGraph pipeline of five role-specialised agents — project
+manager, researcher, developer, tester, technical writer — driven over a
+WebSocket, with a human approval gate before code generation. The scope
+call takes one file: <code>backend/state.py</code> is a
+<code>TypedDict</code> holding messages, the LLM config, the
+requirements, proposal, source, test results, documentation and five UI
+status strings, and the only <code>json.dump</code> in the backend
+writes to the socket. No database, no file write, no store; nothing
+survives the run. <strong>The approval gate is worth naming because it
+is the thing a reader might mistake for the <a
+href="../capabilities/">human review</a> mark.</strong>
+<code>approval_router</code> matches the user's message against a list —
+<code>accept</code>, <code>approve</code>, <code>looks good</code>,
+<code>ok</code>, <code>proceed</code>, <code>yes</code>,
+<code>go ahead</code>, <code>sure</code> — and routes the graph. A
+person is approving a <em>proposal inside a run</em>, not adjudicating a
+stored claim, and the two are different surfaces however similar the
+word is.</li>
+<li><strong><code>SKILL.state</code> was examined and has no report, and
+the boundary is the same one Self-GC draws.</strong> <em>SKILL.state:
+Scalable Long-Horizon Agent Skills</em> (<a
+href="https://arxiv.org/abs/2608.26263">arXiv:2608.26263</a>, 26 August
+2026; Badhe, Tiwari and Chung, accepted at EMNLP) replaces an
+append-only conversation history with <em>"an explicit, mutable
+execution state"</em>: at each step the model gets the immutable skill
+specification, the current state and the latest observation, and
+<em>"intermediate reasoning is discarded immediately after producing a
+validated state update."</em> The state is within-run — across InterCode
+CTF it is a five-field schema (<code>discovered_flags</code>,
+<code>tested_hypotheses</code>, <code>active_files</code>,
+<code>working_dir</code>, <code>cmd_summary</code>) merged by
+<code>Σₜ₊₁ = Σₜ ⊕ ΔΣₜ</code> with null-deletion — and nothing in the
+paper describes a durable store or anything surviving a run. No code is
+released. <strong>Two things transfer anyway.</strong> Schema ownership
+and validation <em>"reside in the deterministic runtime rather than the
+model,"</em> so a malformed patch triggers a rollback-retry rather than
+corrupting the state — the code-owns-the-structure rule this atlas keeps
+finding, applied to state transitions. And the recovery experiment
+measures something memory systems are rarely asked: after a corrective
+observation, a mutable state needs <strong>zero recovery steps</strong>
+because the wrong value is overwritten, where an append-only history
+leaves the correction sitting after the claim it corrects. How long a
+wrong belief keeps being acted on after it has been corrected is a
+measurable quantity, and this is the clearest instance of it being
+measured.</li>
 <li><strong><code>WikiSkill</code> was examined and has no report, and
 its ablation is the finding.</strong> <em>WikiSkill: Compiling Agent
 Experience into Persistent Knowledge for Skill Evolution</em> (<a
