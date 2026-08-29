@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 344 reports.**
+**This page covers all 345 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3044,3 +3044,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 18,989 lines under `openkb/` against 22,036 across 63 test files, 175 commits since 4 April 2026. Two marks. `log.md` is append-only and does record ingest, recompile and remove — with queries in the same file, and entries carrying counts rather than page ids.
 - Study when: you keep a knowledge base in files and want the write path done properly, or you want to see how far index-and-pointer retrieval goes with no vectors underneath it.
 - Do not copy when: a page needs to be markable as disputed, or more than one principal shares a store — the boundary is the knowledge-base directory and no query filters on a key.
+
+### [`veracium`](../systems/veracium/)
+
+- Best idea: **the audit record is a precondition for the state change, not a consequence of it.** `confirm_edge` is the only path that clears `needs_confirmation`, and it writes the `confirmations` row in the same transaction under a stated rule — *"if the record cannot commit, the whole confirmation fails and the flag stays set"* — with idempotency on `(user_id, correlation_id)` against a digest of the caller's own inputs, and a contract that *"a backend that cannot do this atomically MUST raise, not degrade."* Every other audit log in this corpus is written after the fact.
+- Second idea: **third-party claims are quarantined by the channel they arrived on.** A claim from received email or an external document is born `QUARANTINED` — *"unverified third-party claim; never asserted"* — with no classifier in the loop, and the read path gates on a derived `assertable = active ∧ ¬quarantined ∧ ¬use_only`. The claim stays queryable and cannot be spoken.
+- Third idea: **the refusals are recorded too.** `supersession_refusals` stores the corrections the system declined to make — prior edge, incoming edge, both effective authorities, and the `rule_version` that refused — so a later rule change can be evaluated against the decisions the old rule made. Nothing else here records what it would not supersede.
+- Fourth idea: **revocation is keyed on content and consulted at birth.** `source_revocations` is append-only with `revoke`/`lift` over an `identity_digest`, the standing set derived rather than stored, and `ingest` marks a re-ingested revoked source `QUARANTINED` rather than readmitting it. `tests/test_0023_non_revival.py` pins six paths it must not return by.
+- Biggest risk: **the apparatus is larger than the mechanism.** Fifteen declared schema versions, inline spec-section citations throughout, an ALTER path held as a reviewed constant the migration must byte-match, a scope surface that *"survived fourteen review rounds"*. What an adopter takes on is a governance model with a store attached, and whether that trade is right depends on whether their corrections have to be defensible to anyone.
+- Maturity impression: MIT, 17,707 lines of source against 39,168 lines of tests across 104 files — the highest ratio at this size in the corpus — 1,067 commits since 11 July 2026. All seven marks, which nine systems here carry. Released alongside [arXiv:2607.21962](https://arxiv.org/abs/2607.21962), whose tenure-crossover finding is on the [benchmarks page](../benchmarks/).
+- Study when: your memory has to explain itself to somebody — an auditor, a regulator, a user asking why it said that — or you ingest text other people wrote.
+- Do not copy when: you want a memory library. This is a specification with an implementation attached, and the smallest useful piece of it is larger than most systems here in full.

@@ -973,7 +973,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and sixteen of three hundred and forty-four. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and seventeen of three hundred and forty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1407,6 +1407,61 @@ drops oldest advice first, [Fireweed MCP](../systems/fireweed-mcp/)'s read gate.
 None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
+
+### The tenure crossover: which memory wins depends on how long you measure
+
+*Ground Truth First: A Longitudinal Evaluation Instrument for Agent Memory, and
+the Tenure Crossover in Memory-Architecture Rankings*
+([arXiv:2607.21962](https://arxiv.org/abs/2607.21962), Quentin Spencer, 24 July
+2026), released with [Veracium](../systems/veracium/) and its corpus generator
+and harness. It is the most consequential benchmark result this page carries for
+everyone *else's* benchmark design.
+
+**The ground truth is generated before the text.** The paper's complaint about
+the field is that benchmarks *"generate conversations first and extract answer
+keys afterwards — with documented label-error and contamination problems."* This
+one inverts it: a seeded life-script sampler emits facts with validity intervals,
+volatility classes and source channels; an LLM renders chat and email from
+per-event fact manifests; a fidelity verifier confirms every planted fact; and
+questions are instantiated mechanically from the script, so gold answers are
+*"script-valid by construction"* and separately validated for answerability.
+About 380 questions, 15 types, fictionalised.
+
+**And then the rankings invert with history length.** Five memory architectures
+against a no-memory control, fixed answerer, versioned judge, three replicates,
+two horizons. At three weeks a budgeted curated-map memory leads at 96%; by nine
+weeks it has fallen to **72%** as evicted content is lost, while a
+provenance-typed graph rises to **90%**. The inversion is positive for all six
+users under complete cross-family re-judging, exact p=0.031.
+
+That is a finding about method, not about products. **Almost every evaluation on
+this page is short-horizon**, and a short horizon systematically flatters designs
+that evict — because nothing has yet been asked that the eviction destroyed. A
+leaderboard measured at three weeks would have ranked these two architectures the
+wrong way round for anyone deploying past two months.
+
+Three more parts of the setup are worth copying.
+
+**A full-history baseline that beats the memory systems, published.** The
+full-rendered-history arm *"ties or exceeds the best memory system at the short
+horizon but shows no judge-independent advantage at nine weeks, at about twice
+the read cost."* An author reporting that pasting the transcript matches their
+own memory system — at the horizon most benchmarks use — is the
+[route-around test](#a-memory-the-system-can-route-around-is-one-nobody-ever-exercises)
+run against themselves, and it is why the ranking is readable despite the system
+and the instrument sharing an author.
+
+**Write quality is measured, not assumed.** *"Weakly-written facts fail 24% vs
+2%."* This page has repeatedly recorded capture treated as the cheap half of a
+memory system while retrieval gets the attention; that is the number.
+
+**Injection is tested as a structural property.** Resistance *"tracked whether
+provenance boundaries survive representation"* — the same claim Veracium's
+quarantine design makes, evaluated rather than asserted, with probes embedded in
+a benign harness rather than as a separate adversarial suite.
+
+What no artifact here recomputes is the published means: the generator and
+harness ship, the run records do not.
 
 ### A memory the system can route around is one nobody ever exercises
 
@@ -2742,7 +2797,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 343 repositories,
+  [comparative report](../compare/). It is a statement about 344 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

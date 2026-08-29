@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 196 of 344 screened at the report's current pin.**
+**Progress: 197 of 345 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 72 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 72 |
-| Repositories with build-time execution (`EXEC`) | 152 |
+| Repositories with an auto-run surface (`RUNS`) | 73 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 73 |
+| Repositories with build-time execution (`EXEC`) | 153 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -100,5 +100,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
+| [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 

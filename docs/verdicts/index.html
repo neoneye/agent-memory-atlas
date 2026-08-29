@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 344 reports.</strong></p>
+<p><strong>This page covers all 345 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11544,6 +11544,62 @@ retrieval goes with no vectors underneath it.</li>
 <li>Do not copy when: a page needs to be markable as disputed, or more
 than one principal shares a store — the boundary is the knowledge-base
 directory and no query filters on a key.</li>
+</ul>
+<h3 id="veracium"><a
+href="../systems/veracium/"><code>veracium</code></a></h3>
+<ul>
+<li>Best idea: <strong>the audit record is a precondition for the state
+change, not a consequence of it.</strong> <code>confirm_edge</code> is
+the only path that clears <code>needs_confirmation</code>, and it writes
+the <code>confirmations</code> row in the same transaction under a
+stated rule — <em>"if the record cannot commit, the whole confirmation
+fails and the flag stays set"</em> — with idempotency on
+<code>(user_id, correlation_id)</code> against a digest of the caller's
+own inputs, and a contract that <em>"a backend that cannot do this
+atomically MUST raise, not degrade."</em> Every other audit log in this
+corpus is written after the fact.</li>
+<li>Second idea: <strong>third-party claims are quarantined by the
+channel they arrived on.</strong> A claim from received email or an
+external document is born <code>QUARANTINED</code> — <em>"unverified
+third-party claim; never asserted"</em> — with no classifier in the
+loop, and the read path gates on a derived
+<code>assertable = active ∧ ¬quarantined ∧ ¬use_only</code>. The claim
+stays queryable and cannot be spoken.</li>
+<li>Third idea: <strong>the refusals are recorded too.</strong>
+<code>supersession_refusals</code> stores the corrections the system
+declined to make — prior edge, incoming edge, both effective
+authorities, and the <code>rule_version</code> that refused — so a later
+rule change can be evaluated against the decisions the old rule made.
+Nothing else here records what it would not supersede.</li>
+<li>Fourth idea: <strong>revocation is keyed on content and consulted at
+birth.</strong> <code>source_revocations</code> is append-only with
+<code>revoke</code>/<code>lift</code> over an
+<code>identity_digest</code>, the standing set derived rather than
+stored, and <code>ingest</code> marks a re-ingested revoked source
+<code>QUARANTINED</code> rather than readmitting it.
+<code>tests/test_0023_non_revival.py</code> pins six paths it must not
+return by.</li>
+<li>Biggest risk: <strong>the apparatus is larger than the
+mechanism.</strong> Fifteen declared schema versions, inline
+spec-section citations throughout, an ALTER path held as a reviewed
+constant the migration must byte-match, a scope surface that
+<em>"survived fourteen review rounds"</em>. What an adopter takes on is
+a governance model with a store attached, and whether that trade is
+right depends on whether their corrections have to be defensible to
+anyone.</li>
+<li>Maturity impression: MIT, 17,707 lines of source against 39,168
+lines of tests across 104 files — the highest ratio at this size in the
+corpus — 1,067 commits since 11 July 2026. All seven marks, which nine
+systems here carry. Released alongside <a
+href="https://arxiv.org/abs/2607.21962">arXiv:2607.21962</a>, whose
+tenure-crossover finding is on the <a href="../benchmarks/">benchmarks
+page</a>.</li>
+<li>Study when: your memory has to explain itself to somebody — an
+auditor, a regulator, a user asking why it said that — or you ingest
+text other people wrote.</li>
+<li>Do not copy when: you want a memory library. This is a specification
+with an implementation attached, and the smallest useful piece of it is
+larger than most systems here in full.</li>
 </ul>
         </article>
       </div>

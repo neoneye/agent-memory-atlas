@@ -8,6 +8,16 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-30-the-boundary-is-doing-most-of-the-work.md](2026-08-30-the-boundary-is-doing-most-of-the-work.md) —
+  seven artifacts read in nine days that got no report, sorted by *why*: it
+  stores nothing falsifiable (Self-GC, har, FP-AMB, Perseus); it is
+  model-internal (short-window attention); there is no code at a pinned commit
+  (WikiSkill); the memory lives in another repository (OpenHands). The phrase
+  "examined and has no report" is carrying four different judgements, only one
+  of which reverses on its own — WikiSkill is excluded for a reason that has
+  nothing to do with the quality of the idea. Argues the exclusion entries
+  should say which kind they are. Closes on the trap that cost two marks this
+  month: the scope test applies per mark, not only per system.
 - [2026-08-29-a-memory-you-can-route-around-is-one-nobody-exercises.md](2026-08-29-a-memory-you-can-route-around-is-one-nobody-exercises.md) —
   synthesis over four readings. A Meta FAIR pretraining paper states the
   principle best and is not about agent memory at all: widening the attention
