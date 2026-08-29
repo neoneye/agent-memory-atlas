@@ -311,6 +311,13 @@ if ! python3 "$project_dir/scripts/check_diagram_captions.py"; then
   exit 1
 fi
 
+# A cited paper the reader has to retype an identifier to find is a dead end, and
+# the atlas cites papers constantly. Every arXiv mention in content/ and notes/
+# must be a link.
+if ! python3 "$project_dir/scripts/check_arxiv_links.py" "$project_dir"; then
+  exit 1
+fi
+
 # Heading ids are generated from heading text, so a numbered section changes its
 # anchor whenever sections are renumbered. Catch fragment links that no longer land.
 broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"

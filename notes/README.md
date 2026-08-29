@@ -69,7 +69,7 @@ when the work happens.
   admitted exception — that Weave gets right. Plus the projects that measure
   against their own architecture.
 - [2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md](2026-08-24-the-policy-over-the-memory-is-the-thing-nobody-learns.md) —
-  EvoHarness-RL (arXiv:2608.05446) triaged: no repository, so no report, but it
+  EvoHarness-RL ([arXiv:2608.05446](https://arxiv.org/abs/2608.05446)) triaged: no repository, so no report, but it
   names the thing every system in the corpus does by hand — *"prompts,
   heuristics, or domain-specific conventions, leaving the external workspace and
   its usage policy manually engineered"* — and proposes learning the read /
@@ -120,7 +120,7 @@ when the work happens.
   new finding is that two subsystems now delete from one store while the audit
   compares the journal only to the filesystem.
 - [2026-08-21-a-search-that-keeps-what-worked-and-nothing-it-refused.md](2026-08-21-a-search-that-keeps-what-worked-and-nothing-it-refused.md) —
-  AVO (arXiv:2603.24517) triaged: an evolutionary-search paper, not agent memory
+  AVO ([arXiv:2603.24517](https://arxiv.org/abs/2603.24517)) triaged: an evolutionary-search paper, not agent memory
   and with no repository to pin, carrying one observation this atlas keeps
   finding in genres it was not looking at — the lineage store keeps what worked
   and nothing about what it refused.
@@ -396,7 +396,7 @@ when the work happens.
   7 August with a re-entry condition attached, and the condition is checkable —
   which is the point of attaching one.
 - [2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md](2026-08-14-two-long-context-papers-and-the-boundary-of-what-memory-is-for.md) —
-  Chroma's Context Rot report and the Oolong benchmark (arXiv:2511.02817), read
+  Chroma's Context Rot report and the Oolong benchmark ([arXiv:2511.02817](https://arxiv.org/abs/2511.02817)), read
   and triaged — neither a memory system, both measurements that bound what a
   memory layer is for. Context Rot's LongMemEval result (every model family
   scores higher on a focused ~300-token prompt than the full ~113K conversation)
@@ -563,7 +563,7 @@ when the work happens.
   that pins the current behaviour.
 
 - [2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md](2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md) —
-  arXiv:2608.00017 measures the self-grading feedback loop this atlas keeps
+  [arXiv:2608.00017](https://arxiv.org/abs/2608.00017) measures the self-grading feedback loop this atlas keeps
   asserting from code: wrong episodes get inflated scores, the inflation couples
   to reuse, and agent error rises with retrieved-set corruption at a measured
   slope. Its Error-Independence Assumption says a stronger judge from the same
@@ -675,7 +675,7 @@ when the work happens.
   distinction the audit turns on: "no ablation" is a claim about the work, "no
   result is committed to this repository" is a claim about the artifact.
 - [2026-08-09-the-database-people-arrived-at-the-same-four.md](2026-08-09-the-database-people-arrived-at-the-same-four.md) —
-  a data-management vision paper (arXiv:2605.26252) derives this atlas's argument
+  a data-management vision paper ([arXiv:2605.26252](https://arxiv.org/abs/2605.26252)) derives this atlas's argument
   from the other side: four failure modes that match the four reported here, and
   six correctness conditions of which C2 is the rejected-value tombstone stated
   as a property and C4 is provenance-preserving forgetting. It proves append-only

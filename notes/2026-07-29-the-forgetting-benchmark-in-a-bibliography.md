@@ -115,7 +115,7 @@ one that excluded MemEngine.
 
 ## Two leads not followed
 
-- **arXiv:2606.15903**, *Control-Plane Placement Shapes Forgetting: An
+- **[arXiv:2606.15903](https://arxiv.org/abs/2606.15903)**, *Control-Plane Placement Shapes Forgetting: An
   Architectural Study of Agent Memory Across Thirteen System Configurations*.
   The title describes an experiment the atlas has effectively been running by
   hand across 73 reports. Surfaced while chasing FiFA; not read.

@@ -369,7 +369,7 @@ LongMemEval and compare them, which is a real contribution to reproducibility an
 changes nothing about what is being measured. A system that scores well on all
 three of these has demonstrated recall three times.
 
-**MemEvoBench** (arXiv:2604.15774, submitted 17 April 2026, revised 21 May)
+**MemEvoBench** ([arXiv:2604.15774](https://arxiv.org/abs/2604.15774), submitted 17 April 2026, revised 21 May)
 is the crop's one genuine departure and could not be read, because no artifact
 was found. It benchmarks *memory misevolution* — behavioural drift from
 repeated exposure to misleading information — across "7 domains and 36 risk
@@ -1259,7 +1259,7 @@ instruction. Joining them is one assertion.
 
 - **[PersistBench](https://github.com/ivaxi0s/PersistBench)** is the newest and,
   by title, the most promising: *"When Should Long-Term Memories Be Forgotten by
-  LLMs?"* (ICML'26, arXiv:2602.01146). It is not a deletion test, and the gap
+  LLMs?"* (ICML'26, [arXiv:2602.01146](https://arxiv.org/abs/2602.01146)). It is not a deletion test, and the gap
   between its title and its task is worth being precise about — see below.
 
 That is the entire state of the art in code, and none of it tests the failure

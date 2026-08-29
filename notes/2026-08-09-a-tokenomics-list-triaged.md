@@ -463,7 +463,7 @@ turn would cost nothing and keep the history cached.
 file justified the report. `agentdb-retrieval-guard.ts` screens retrieved chunks
 for injection before assembly, wrapping the harness's existing tool-output
 guardrail rather than writing a second pattern library, and names the attack with
-a citation: SMSR (arXiv:2606.12703), 93–100% undefended success against 0% behind
+a citation: SMSR ([arXiv:2606.12703](https://arxiv.org/abs/2606.12703)), 93–100% undefended success against 0% behind
 a certified guard. It **refuses to truncate** an oversized chunk because
 *"truncation would let an attacker pad a payload past the guardrail's own scan
 window"* — the second-order failure most size gates walk into.

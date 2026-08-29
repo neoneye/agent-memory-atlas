@@ -45,7 +45,7 @@ One file is not that, and it is why this report exists.
 `agentdb-retrieval-guard.ts` screens retrieved chunks for prompt injection
 **before they are assembled into an agent's context**, and its header states the
 threat model with a citation: *"AgentDB's retrieval path has zero certified
-defenses against poisoned memory entries — SMSR (arXiv:2606.12703) shows 93-100%
+defenses against poisoned memory entries — SMSR ([arXiv:2606.12703](https://arxiv.org/abs/2606.12703)) shows 93-100%
 undefended attack success, reduced to 0% behind a certified content guard."*
 
 Three details make it worth copying rather than merely noting. It **does not
@@ -302,7 +302,7 @@ The retrieval guard is the strongest safety artifact in this report and deserves
 its detail:
 
 - **The threat is named and cited.** Poisoned memory entries, SMSR
-  (arXiv:2606.12703), 93–100% undefended success against 0% behind a certified
+  ([arXiv:2606.12703](https://arxiv.org/abs/2606.12703)), 93–100% undefended success against 0% behind a certified
   guard. Whether that transfers to this deployment is not established here, and
   the citation is still worth more than the usual silence.
 - **It reuses the existing defence.** `ToolOutputGuardrail` (ADR-131) is the
