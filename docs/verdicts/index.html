@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 343 reports.</strong></p>
+<p><strong>This page covers all 344 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11498,6 +11498,52 @@ discards rather than discounts.</li>
 <code>source_id</code> is stamped on every record and no query filters
 on it — or you need to mark a record doubtful, since the only statement
 available is that a later record supersedes it.</li>
+</ul>
+<h3 id="openkb"><a
+href="../systems/openkb/"><code>openkb</code></a></h3>
+<ul>
+<li>Best idea: <strong>a markdown knowledge base with database write
+mechanics.</strong> <code>mutation.py</code> stages files, hardlinks a
+snapshot, fsyncs file and directory, publishes atomically, and leaves a
+journal so an interrupted recompile rolls back on the next lock
+acquisition — with the retry cap explained rather than assumed: without
+it <em>"a deterministically-failing rollback (e.g. persistent ENOSPC) is
+retried on every lock acquisition forever."</em> A <code>.md</code> tree
+that survives being killed mid-write is rarer here than any retrieval
+trick.</li>
+<li>Second idea: <strong>there are no embeddings at all, and the index
+is the retriever.</strong> No vector store, no cosine, no BM25 anywhere
+in the package. A query agent reads <code>index.md</code>, follows
+one-line descriptions into summaries, concepts and entities, and drops
+into a source by page range through the PageIndex tree. Every answer is
+reached by a path a person can retrace, at the cost of tokens, turns,
+and no ranking to fall back on when an index line undersells its
+page.</li>
+<li>Third idea: <strong>code owns the frontmatter, the model owns the
+prose.</strong> The compiler is told <em>"do not include YAML
+frontmatter (---) in generated content; it is managed by code,"</em> so
+the model cannot forge <code>type</code>, <code>sources</code> or the
+<code>full_text</code> pointer. A model-chosen page name is sanitised,
+resolved, and then checked with <code>is_relative_to</code> before any
+write.</li>
+<li>Biggest risk: <strong>the linter finds contradictions and the pages
+do not learn about it.</strong> <code>agent/linter.py</code> asks
+whether pages <em>"make conflicting claims about the same fact"</em> and
+writes what it finds into <code>reports/</code>; no field on the page
+changes, and the next query is served the contradicted synthesis
+unchanged. Recompilation is a full body rewrite with no version kept, so
+a wrong claim is replaced without a trace.</li>
+<li>Maturity impression: Apache-2.0, 18,989 lines under
+<code>openkb/</code> against 22,036 across 63 test files, 175 commits
+since 4 April 2026. Two marks. <code>log.md</code> is append-only and
+does record ingest, recompile and remove — with queries in the same
+file, and entries carrying counts rather than page ids.</li>
+<li>Study when: you keep a knowledge base in files and want the write
+path done properly, or you want to see how far index-and-pointer
+retrieval goes with no vectors underneath it.</li>
+<li>Do not copy when: a page needs to be markable as disputed, or more
+than one principal shares a store — the boundary is the knowledge-base
+directory and no query filters on a key.</li>
 </ul>
         </article>
       </div>

@@ -8,6 +8,18 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-29-a-memory-you-can-route-around-is-one-nobody-exercises.md](2026-08-29-a-memory-you-can-route-around-is-one-nobody-exercises.md) —
+  synthesis over four readings. A Meta FAIR pretraining paper states the
+  principle best and is not about agent memory at all: widening the attention
+  window makes long-context recall worse, because the recurrent layers *never
+  learned to carry anything* while a cheaper path was available. The evaluation
+  consequence arrives from three other directions in the same week — FP-AMB's
+  TF-IDF baseline beating every real memory architecture on its own corpus,
+  Self-GC's no-impact rate asking whether a *future* dependency survived, and
+  Tycho pricing its world model at 9.42 RHAE by running the arm without one.
+  The rule: measure the memory by removing it, on the cases where nothing else
+  can answer. Lists the three shapes that make a memory bypassable and what
+  that asks of section 10 of a report.
 - [2026-08-26-where-the-producer-sits-decides-what-the-log-can-answer.md](2026-08-26-where-the-producer-sits-decides-what-the-log-can-answer.md) —
   synthesis over six readings in three days. Six audit stories sorted on one
   variable — **where the code that writes the log lives** — from a database

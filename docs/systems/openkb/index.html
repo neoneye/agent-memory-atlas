@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A knowledge base compiled into a
+wiki of markdown pages with no embeddings anywhere, where retrieval is
+an agent walking an index and the write path is journaled like a
+database.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenKB — Agent Memory Atlas">
+    <meta property="og:description" content="A knowledge base compiled
+into a wiki of markdown pages with no embeddings anywhere, where
+retrieval is an agent walking an index and the write path is journaled
+like a database.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenKB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A knowledge base compiled
+into a wiki of markdown pages with no embeddings anywhere, where
+retrieval is an agent walking an index and the write path is journaled
+like a database.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenKB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenKB",
+      "description": "A knowledge base compiled into a wiki of markdown pages with no embeddings anywhere, where retrieval is an agent walking an index and the write path is journaled like a database.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The index is the retriever</p>
+          <h1>OpenKB</h1>
+          <p class="document-deck">A knowledge base compiled into a wiki
+of markdown pages with no embeddings anywhere, where retrieval is an
+agent walking an index and the write path is journaled like a
+database.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/VectifyAI/OpenKB">
+              <span>Source</span>
+              <strong>VectifyAI/OpenKB</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/VectifyAI/OpenKB/commit/ff54396e575ee6feb0113b631a34caa082b441cc" title="ff54396e575ee6feb0113b631a34caa082b441cc">
+              <span>Analyzed revision</span>
+              <code>ff54396e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-29</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenKB compiles documents into a wiki and then answers from the wiki.
+Apache-2.0, 18,989 lines under <code>openkb/</code> against
+<strong>22,036 lines of tests across 63 files</strong>, 175 commits
+since 4 April 2026.</p>
+<p>The premise is stated against RAG directly: <em>"Traditional RAG
+rediscovers knowledge from scratch on every query. Nothing accumulates.
+OpenKB compiles knowledge once into a persistent wiki, then keeps it
+current."</em> The pages are per-document summaries, cross-document
+concepts, named entities and saved explorations, linked with
+<code>[[wikilinks]]</code> and catalogued in an
+<code>index.md</code>.</p>
+<p><strong>There are no embeddings in the repository.</strong> Not a
+vector store behind an adapter — no embedding call, no cosine, no BM25,
+nothing. Retrieval is a query agent that reads <code>index.md</code>,
+follows it into the page trees, and drops into a source document by page
+range when it needs the detail. The index is not a thing the retriever
+consults; the index <em>is</em> the retriever's map, and the model is
+the retriever.</p>
+<p>Two marks. The report's other finding is unrelated to any of that: a
+markdown knowledge base with <strong>journaled, fsync'd,
+rollback-capable writes</strong>, which is database machinery under a
+directory of <code>.md</code> files and is not something this corpus
+usually finds.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A document arrives and is compiled once. What accumulates is a set of
+derived pages that are claims about the corpus — <em>this document says
+X</em>, <em>these three documents share concept Y</em>, <em>this
+organisation is Z</em> — and those claims can be wrong, can go stale
+when a source changes, and are rewritten rather than appended to.</p>
+<p>Reading is navigation rather than search. The compiler's job is to
+leave behind a structure a model can walk: an index with one line per
+page, summaries that carry a <code>full_text</code> pointer back to the
+source, concepts that link the documents they span, entities kept in
+sync across everything that mentions them.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nothing is embedded and nothing is scored — the compiler's product is a map, and retrieval is an agent walking it down to a page range in the source</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: nothing is embedded and nothing is scored — the compiler&#39;s product is a map, and retrieval is an agent walking it down to a page range in the source
+    D[&quot;a document: PDF, docx, md, html, xlsx, URL&quot;] --&gt; C[&quot;LLM compiler&quot;]
+    C --&gt; S[(&quot;summaries/ — one per source&quot;)]
+    C --&gt; K[(&quot;concepts/ — cross-document synthesis&quot;)]
+    C --&gt; E[(&quot;entities/ — people, orgs, places, products&quot;)]
+    C --&gt; IDX[(&quot;index.md — one line per page&quot;)]
+    D --&gt; SRC[(&quot;sources/ — raw content;&lt;br/&gt;long docs as a PageIndex tree&quot;)]
+
+    C -.-&gt;|&quot;frontmatter is managed by code;&lt;br/&gt;the model is told not to emit it&quot;| FM[&quot;type · description · sources · full_text&quot;]
+    C -.-&gt;|&quot;name sanitised, path resolved,&lt;br/&gt;is_relative_to(dir) or refuse&quot;| GUARD([&quot;a page cannot escape its directory&quot;])
+
+    Q[&quot;question&quot;] --&gt; A[&quot;query agent&quot;]
+    A --&gt;|1| IDX
+    IDX --&gt;|2| S
+    S --&gt;|3| K
+    S &amp; K --&gt; E
+    S --&gt;|&quot;full_text pointer&quot;| SRC
+    A --&gt;|&quot;get_page_content(doc, pages)&quot;| SRC
+
+    W[&quot;every page write&quot;] --&gt; J{&quot;journaled mutation&quot;}
+    J --&gt;|commit| WIKI[(&quot;wiki/&quot;)]
+    J --&gt;|&quot;crash&quot;| RB[&quot;recover_pending_journals → rollback&lt;br/&gt;capped at 5 attempts&quot;]
+
+    L[&quot;ingest · recompile · remove · lint · query&quot;] --&gt; LOG[(&quot;log.md — append only&quot;)]
+    LINT[&quot;LLM linter&quot;] -.-&gt;|&quot;contradictions, staleness, orphans&quot;| REP[(&quot;reports/&quot;)]
+    REP -.-&gt;|&quot;names the problem, changes nothing&quot;| K</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One directory per knowledge base — <code>wiki/</code>,
+<code>sources/</code>, <code>.openkb/</code> — with no database and no
+vector service. Long documents are handled by <a
+href="https://github.com/VectifyAI/PageIndex">PageIndex</a>, the same
+author's tree indexer, which is what makes page-range access into a
+large PDF possible without chunk embeddings.</p>
+<p>The wiki's own schema is documented to the model in an
+<code>AGENTS.md</code> the code generates, which is a neat inversion:
+the memory's structure is defined once and handed to the agent that
+writes it and the agent that reads it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Writes are transactional, which markdown stores almost never
+are.</strong> <code>mutation.py</code> stages files, hardlinks or copies
+for a snapshot, fsyncs both file and directory, publishes atomically,
+and leaves a journal so an interrupted mutation can be rolled back on
+the next lock acquisition. The retry cap has its reasoning written
+down:</p>
+<blockquote>
+<p>Without a cap, a deterministically-failing rollback (e.g. persistent
+ENOSPC) is retried on every lock acquisition forever, re-doing the
+failed work and never releasing the backup dir + journal.</p>
+</blockquote>
+<p><code>recover_pending_journals</code> runs the recovery. Three tests
+assert that no journal files remain after a successful mutation — the
+state that means the transaction finished and cleaned up after
+itself.</p>
+<p><strong>A model-chosen filename is contained after resolution, not
+before.</strong> Concept and entity pages are named by the compiling
+model. The write path sanitises the name, resolves the path, and then
+checks it:</p>
+<pre class="python"><code>path = (concepts_dir / f&quot;{safe_name}.md&quot;).resolve()
+if not path.is_relative_to(concepts_dir.resolve()):
+    logger.warning(&quot;Concept name escapes concepts dir: %s&quot;, name)
+    return</code></pre>
+<p>Sanitise-then-verify is the correct order, and the verification is
+the half most implementations omit.</p>
+<p><strong>Code owns the frontmatter and the model owns the
+prose.</strong> The schema handed to the compiler says so in as many
+words: <em>"Do not include YAML frontmatter (---) in generated content;
+it is managed by code."</em> Every summary, concept and entity page
+carries a non-empty <code>type:</code> because the Google <a
+href="https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing">Open
+Knowledge Format</a> requires it, plus a one-line
+<code>description:</code> and the <code>sources:</code> the page was
+built from. A model that cannot write the metadata cannot forge the
+provenance.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A page is a markdown file with code-managed frontmatter. The fields
+are <code>type</code>, <code>description</code>, <code>sources</code>,
+and on a summary a <code>full_text</code> pointer to the raw document;
+the body is prose with wikilinks.</p>
+<p><strong>Nothing on a page says how much to believe it.</strong> There
+is no status, no confidence, no verification flag, no validity date and
+no supersession pointer. That matters more here than in most systems in
+this corpus, because the pages are <em>synthesis</em> — a concept page
+is a claim assembled from several documents, and the one thing the
+design cannot express is that the claim is disputed.</p>
+<p>The linter knows this. <code>agent/linter.py</code> asks the model
+<em>"Do any pages make conflicting claims about the same fact?"</em> and
+looks for contradictions, redundancy, staleness and orphans. What it
+produces is a report under <code>reports/</code>. The contradiction is
+found, written down where a person may read it, and the page it concerns
+is served to the next query exactly as before. The README's
+<em>"contradictions are flagged"</em> is true and the flag is not on the
+page.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval system. Grepping <code>openkb/</code> for
+embeddings, vectors, cosine or BM25 returns nothing but a comment about
+vector-rendered figures and one about a language vector.</p>
+<p>The query agent is given the wiki schema and a search strategy: read
+<code>index.md</code> first, then summaries, then concepts, then
+entities for a named thing, and follow a summary's
+<code>full_text</code> frontmatter into the source —
+<code>read_file</code> for a short document,
+<code>get_page_content(doc_name, pages)</code> with tight page ranges
+for a PageIndex tree. Up to 50 turns.</p>
+<p>This is the index-and-pointer arrangement taken to its limit. It buys
+exact provenance — every answer is reached by a path a person can
+retrace — and pays for it in tokens and turns, with no ranking to fall
+back on when the index line does not describe the page well enough for
+the model to know it should open it. Nothing committed measures that
+failure mode.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Compilation is an LLM pass per document producing a summary, then
+concept and entity updates across the corpus, published through the
+journaled mutation. A <code>HashRegistry</code> over document content
+hashes decides what needs recompiling; a watcher recompiles changed
+sources.</p>
+<p>Recompilation <strong>rewrites a page body in place</strong> — the
+prompt asks for a full rewrite rather than a delta, and the code
+replaces the body while preserving the frontmatter and prepending any
+new source. So an entity page's history is not kept, and what a page
+said before the last recompile is recoverable only from version control
+the user happens to be running.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an HTTP API, a React frontend, and three generators over the
+wiki foundation: query, chat, and a Skill Factory that turns compiled
+knowledge into agent skills. The project cites Karpathy's description of
+the idea and adopts Google's Open Knowledge Format for the page
+metadata.</p>
+<p>Worth recording as a coincidence rather than a connection:
+<em>WikiSkill</em> (<a
+href="https://arxiv.org/abs/2608.27454">arXiv:2608.27454</a>, 27 August
+2026) proposes co-evolving agent skills with a persistent wiki, and
+reports an ablation finding that the accumulated wiki is what makes the
+skills work. Two independent projects arrived at
+compile-experience-into-a-wiki within the same month, one as a shipped
+CLI and one as a paper with no code.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The write mechanics are the strongest part and are strong in an
+unfashionable way: crash safety, atomic publish, rollback, a containment
+check on a model-supplied path. A markdown knowledge base that survives
+being killed mid-recompile is rarer in this corpus than any retrieval
+trick.</p>
+<p>The epistemic side is where it is thin, and the two gaps compound. A
+page has no status, so a contradiction cannot be recorded on it; and a
+recompile rewrites the body, so the previous claim is gone. Between
+them, a wrong synthesis is corrected silently or not at all, and the
+only durable trace is <code>log.md</code> saying that a recompilation
+happened.</p>
+<p><code>log.md</code> is the one mark on this axis and its limits
+should be read with it: it is append-only and it does record mutations,
+and an entry is a timestamp, an operation word and a free-text
+description. <code>recompile</code> logs how many pages were recompiled
+and skipped, not which. Queries share the file.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>63 test files and 22,036 lines against 18,989 of implementation —
+more test than product, which at this size is unusual and worth saying.
+Nothing was run for this review.</p>
+<p>The suite is aimed at the machinery: <code>test_mutation.py</code>
+asserts no journal survives a completed mutation,
+<code>test_recompile.py</code> asserts no <code>.bak</code> file is left
+behind, <code>test_list_status.py</code> pins what the CLI does and does
+not print. Those are real negative assertions about <em>state</em>, and
+none of them is about retrieval.</p>
+<p><strong><code>negative_eval</code> is withheld.</strong> No committed
+case establishes that particular material stays out of an answer — which
+is a harder gap here than usual, because the retriever is a model
+walking an index, so the natural failure is that it opens the wrong page
+or stops early, and nothing measures either.</p>
+<p>No benchmark result is committed and none is claimed. Given that the
+system's central bet is that a compiled wiki beats vector RAG on the
+same corpus, the absence of a head-to-head against a vector baseline is
+the measurement this project most obviously needs — and by <a
+href="../../benchmarks/#a-memory-the-system-can-route-around-is-one-nobody-ever-exercises">the
+rule this atlas has been sharpening</a>, the questions it would have to
+use are the ones a single-document lookup cannot answer.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Journal your markdown.</strong> A knowledge base of files is
+still a database, and <code>mutation.py</code> is the smallest complete
+example this corpus has of staging, fsync, atomic publish, journal and
+capped rollback over a directory tree.</p>
+<p><strong>Verify a model-chosen path after resolving it.</strong>
+<code>is_relative_to</code> on the resolved path, after sanitising the
+name, is two lines and closes the whole class.</p>
+<p><strong>Let code own the frontmatter.</strong> Telling the compiler
+<em>"do not include YAML frontmatter; it is managed by code"</em> means
+a model cannot invent its own provenance, which is the field you least
+want it writing.</p>
+<p><strong>If you can find a contradiction, put it on the page.</strong>
+A linter that writes <code>reports/</code> has done the hard part — the
+detection — and stopped one field short of the read path noticing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>What happens to a page's previous claim?</strong>
+Recompilation is a full body rewrite with no version kept. Whether a
+user is expected to run the whole KB under git is not stated anywhere
+read here.</p>
+<p><strong>Does the index line carry enough for the agent to know it
+should open a page?</strong> The entire retrieval strategy rests on a
+one-line description per page. Nothing committed measures how often the
+walk misses.</p>
+<p><strong>How does it compare to a vector baseline on the same
+corpus?</strong> The premise is a comparison and no artifact makes
+it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openkb/schema.py</code></td>
+<td>The wiki layout and the <code>AGENTS.md</code> schema handed to the
+compiling and querying agents</td>
+</tr>
+<tr>
+<td><code>openkb/mutation.py</code></td>
+<td>Snapshots, journals, atomic publish,
+<code>recover_pending_journals</code>, the retry cap</td>
+</tr>
+<tr>
+<td><code>openkb/agent/compiler.py</code></td>
+<td>Page writing, the name sanitiser and the containment check</td>
+</tr>
+<tr>
+<td><code>openkb/agent/query.py</code></td>
+<td>The search strategy — index, summaries, concepts, entities, page
+ranges</td>
+</tr>
+<tr>
+<td><code>openkb/agent/linter.py</code></td>
+<td>The contradiction, staleness and orphan prompts</td>
+</tr>
+<tr>
+<td><code>openkb/log.py</code></td>
+<td><code>append_log</code> and <code>wiki/log.md</code></td>
+</tr>
+<tr>
+<td><code>openkb/api_pages_router.py</code></td>
+<td>Read, edit, delete and backlinks for a page</td>
+</tr>
+<tr>
+<td><code>openkb/frontmatter.py</code>,
+<code>openkb/documents.py</code></td>
+<td>Code-owned metadata and the content-hash registry</td>
+</tr>
+<tr>
+<td><code>tests/test_mutation.py</code>,
+<code>tests/test_recompile.py</code></td>
+<td>The journal and leftover-file assertions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-29</strong> — <a
+href="https://github.com/VectifyAI/OpenKB/commit/ff54396e575ee6feb0113b631a34caa082b441cc"><code class="commit-id" title="ff54396e575ee6feb0113b631a34caa082b441cc">ff54396e…</code></a>
+— first reading, Apache-2.0, 18,989 lines under <code>openkb/</code> and
+22,036 across 63 test files, 175 commits since 4 April 2026. Screened
+before reading: one auto-run surface, one build-time execution surface,
+one unpinned surface, and both lockfiles unchanged for more than a
+month; <code>AGENTS.md</code> and <code>CLAUDE.md</code> are addressed
+to a reading agent and were treated as data. Nothing was installed and
+nothing was run. Two marks. <code>audit_log</code> rests on
+<code>wiki/log.md</code>, opened in append mode with no rewrite path,
+carrying <code>ingest</code>, <code>recompile</code> and
+<code>remove</code> beside <code>query</code> and <code>lint</code>.
+<code>human_review</code> rests on the page API and frontend — read,
+edit, delete and backlinks over a compiled page.
+<code>trust_state</code> is withheld and it is the report's sharpest
+absence: an LLM linter looks for pages that <em>"make conflicting claims
+about the same fact"</em> and writes what it finds into
+<code>reports/</code>, and no field on the page it concerns changes.
+<code>scope_enforced</code> is withheld on the same basis as <a
+href="../membukkit/">MemBukkit</a> — the boundary is the knowledge-base
+directory rather than a key on a record, and no query filters on one.
+<code>tombstone</code> and <code>bitemporal</code> are absent:
+<code>hashes.json</code> is a content registry for change detection, not
+a record of a rejected value, and a page carries no time.
+<code>negative_eval</code> is withheld — the suite's negatives are about
+journals, leftover files and CLI output, not about material staying out
+of an answer. <code>stack_retrieval</code> is empty because there is
+none of the three arms in the tree: no embeddings, no vectors, no BM25,
+and retrieval is a query agent walking <code>index.md</code>. The
+reading covers the schema, the compiler, the query and lint agents, the
+mutation layer, the log and the page API; the frontend, the Skill
+Factory, the deck generator and the PageIndex dependency were not
+traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

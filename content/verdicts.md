@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 343 reports.**
+**This page covers all 344 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3034,3 +3034,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, zero runtime dependencies, 5,551 lines under `src/` with 893 of tests, two commits both dated 28 August 2026. One mark. The fourth system from this author in the atlas, after [AIMAOS](../systems/aimaos/), [Cognitive Spatial Memory](../systems/cognitive-spatial-memory/) and [Helix AGI](../systems/helix-agi/), and the one where most of the physics turns out to be machinery.
 - Study when: you want the enforced version of immutability, a normalisation invariant you can actually check, or a learning gate that discards rather than discounts.
 - Do not copy when: more than one principal shares a store — `source_id` is stamped on every record and no query filters on it — or you need to mark a record doubtful, since the only statement available is that a later record supersedes it.
+
+### [`openkb`](../systems/openkb/)
+
+- Best idea: **a markdown knowledge base with database write mechanics.** `mutation.py` stages files, hardlinks a snapshot, fsyncs file and directory, publishes atomically, and leaves a journal so an interrupted recompile rolls back on the next lock acquisition — with the retry cap explained rather than assumed: without it *"a deterministically-failing rollback (e.g. persistent ENOSPC) is retried on every lock acquisition forever."* A `.md` tree that survives being killed mid-write is rarer here than any retrieval trick.
+- Second idea: **there are no embeddings at all, and the index is the retriever.** No vector store, no cosine, no BM25 anywhere in the package. A query agent reads `index.md`, follows one-line descriptions into summaries, concepts and entities, and drops into a source by page range through the PageIndex tree. Every answer is reached by a path a person can retrace, at the cost of tokens, turns, and no ranking to fall back on when an index line undersells its page.
+- Third idea: **code owns the frontmatter, the model owns the prose.** The compiler is told *"do not include YAML frontmatter (---) in generated content; it is managed by code,"* so the model cannot forge `type`, `sources` or the `full_text` pointer. A model-chosen page name is sanitised, resolved, and then checked with `is_relative_to` before any write.
+- Biggest risk: **the linter finds contradictions and the pages do not learn about it.** `agent/linter.py` asks whether pages *"make conflicting claims about the same fact"* and writes what it finds into `reports/`; no field on the page changes, and the next query is served the contradicted synthesis unchanged. Recompilation is a full body rewrite with no version kept, so a wrong claim is replaced without a trace.
+- Maturity impression: Apache-2.0, 18,989 lines under `openkb/` against 22,036 across 63 test files, 175 commits since 4 April 2026. Two marks. `log.md` is append-only and does record ingest, recompile and remove — with queries in the same file, and entries carrying counts rather than page ids.
+- Study when: you keep a knowledge base in files and want the write path done properly, or you want to see how far index-and-pointer retrieval goes with no vectors underneath it.
+- Do not copy when: a page needs to be markable as disputed, or more than one principal shares a store — the boundary is the knowledge-base directory and no query filters on a key.

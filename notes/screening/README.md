@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 195 of 343 screened at the report's current pin.**
+**Progress: 196 of 344 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 71 |
+| Repositories with an auto-run surface (`RUNS`) | 72 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 72 |
-| Repositories with build-time execution (`EXEC`) | 151 |
+| Repositories with build-time execution (`EXEC`) | 152 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -86,6 +86,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 | [`openexecutive`](../../content/systems/openexecutive.md) | `.claude/settings.json`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
+| [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
