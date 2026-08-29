@@ -1408,6 +1408,73 @@ None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
 
+### The metric that asks whether the pruning broke anything later
+
+*Self-GC: Self-Governing Context for Long-Horizon LLM Agents*
+([arXiv:2607.00692](https://arxiv.org/abs/2607.00692), 1 July 2026), Hao, Meng,
+Yin, Zhu and Cao of Xiaohongshu. No code is released, and the system itself is
+context management rather than memory — the authors place it beside memory
+stores rather than among them. **Its evaluation belongs on this page anyway**,
+because it measures the thing the Compaction Cliff above says goes unmeasured,
+and it does so against real future turns.
+
+**No-impact rate is a counterfactual, not a proxy.** The definition:
+
+> **No-impact Rate** measures whether the retained context still supports the
+> real future continuation. Given the retained prefix, candidate plan, compact
+> before/after patches, and ground-truth future turns, a GPT-5.5 judge checks
+> whether exact URLs, paths, row values, task identifiers, editable bodies, and
+> source-backed evidence remain available.
+
+So the question is not *does the summary read well* but *did the removal destroy
+something a later turn actually needed* — asked per session against the turns
+that really followed. Four properties of the setup are worth copying.
+
+**It is diff-grounded, and the agent view and the judge view differ on purpose.**
+*"The tested agent view contains only the retained context; the removed-content
+diff is judge-only counterfactual evidence."* The judge sees what was cut; the
+system under test does not. That asymmetry is what makes the question answerable
+without leaking the answer.
+
+**It reports Wilson 95% confidence intervals on a binary judgment.** On the
+33-session Hard Set the intervals are wide enough to overlap — Self-GC 84.85%
+[69.08, 93.35] against the best heuristic's 69.70% [52.66, 82.62] — and the paper
+prints them rather than the point estimates alone. Almost nothing else on this
+page reports an interval at all.
+
+**It calibrates its own judge on the cases where the judge disagrees with
+itself.** Single-prompt judgments give 89.76% and 92.47%; an A/B judge over the
+20 disagreement cases prefers Self-GC in 11, ties in seven, and prefers the
+baseline in two, yielding *"calibrated estimates of 92.77% versus 87.46%."*
+Measuring the judge is the step this page's
+[judge-variance section](#judge-variance) asks for and rarely sees.
+
+**It measures how often the model breaks the rule the prompt states, and then
+stops trusting the prompt.** The planner is told never to compress the latest
+visible user turn; the audit found it touching that turn in 25/330 parsed plans for
+one backbone, 15/330 for another and 12/328 for a third, and the
+conclusion is enforcement rather than better wording: *"The prompt usually
+works, but the residual risk justifies mandatory last-turn protection."* That is
+the atlas's most repeated finding — a rule stated to a model is not a rule —
+arrived at by measurement and closed in the harness.
+
+**And the headline is a trade the authors publish against themselves.** Self-GC
+prunes **less** than every baseline it beats: 43.95% against 61.90–69.87% on the
+Hard Set, 31.04–33.98% against 40.19–47.76% on the 332-session suite. A
+compression paper whose own result is *we compress less* is reporting the axis
+that matters instead of the one that flatters.
+
+The limitations section names what reproduction would require, which is the
+list this page would have written: *"reproducibility requires sanitized
+fixtures, prompt templates, per-sample judge outputs, and scripts for recomputing
+aggregate statistics."* It also refuses to over-read the production result — the
+online account-level split is *"operational monitoring evidence rather than a
+fully randomized quality experiment,"* the 10–15% daytime input-token reduction
+*"does not by itself prove user-quality preservation or net billed-cost
+reduction,"* and the side-channel planner's own cost is *"not a substitute for a
+matched billed-cost audit."* None of those artifacts is released, so nothing
+here recomputes; what transfers is the metric.
+
 ### A self-reported leaderboard whose artifacts are checkable anyway
 
 The ARC Prize [community leaderboard](https://arcprize.org/leaderboard/community)

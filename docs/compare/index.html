@@ -22593,6 +22593,30 @@ reversibility work is genuinely relevant to memory systems with
 restartable background passes — the read-generation fence question
 recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
 — but a reader looking for agent memory here will not find it.</li>
+<li><strong><code>Self-GC</code> was examined and has no report, and the
+authors draw the same boundary this page does.</strong> <em>Self-GC:
+Self-Governing Context for Long-Horizon LLM Agents</em> (<a
+href="https://arxiv.org/abs/2607.00692">arXiv:2607.00692</a>, 1 July
+2026, Xiaohongshu) turns a run's user turns, tool spans and skill state
+into indexed objects and has a side-channel planner propose fold, mask
+and prune actions over them, which the harness rehearses and commits
+only at a safe turn boundary. It governs the active context of a run;
+the full transcript stays outside that view, and the paper positions the
+work as <em>"complementary to memory-store methods"</em> rather than as
+one. Nothing it holds is a claim that could turn out false, which is <a
+href="#not-in-scope-conversation-window-management">the test</a>, and no
+code is released. <strong>Two things in it are worth carrying and are
+traced in <a href="../benchmarks/">benchmarking agent
+memory</a>.</strong> Its no-impact rate asks whether a pruning destroyed
+something the <em>real</em> future turns needed, judged against those
+turns with the removed content shown to the judge and withheld from the
+system under test, reported with Wilson intervals and calibrated on the
+cases where the judge disagrees with itself. And its planner is told
+never to compress the latest user turn, audited at 25/330 parsed plans
+violating that instruction for one backbone, and then overridden in the
+harness — <em>"the prompt usually works, but the residual risk justifies
+mandatory last-turn protection"</em> — which is this atlas's most
+repeated finding reached by measurement.</li>
 <li><strong><code>munch2u-a11y/FP-AMB</code> was examined and has no
 report, because it is a benchmark rather than a memory, and it is the
 most useful negative result this atlas has read in one.</strong> MIT,
