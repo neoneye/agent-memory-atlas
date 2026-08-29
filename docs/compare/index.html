@@ -10776,8 +10776,10 @@ packed to a token budget. A second read path takes no query at all:
 staged files and returns unresolved failures</td>
 <td>Collectors per source, cursor-resumed; an opt-in shell hook appends
 a JSONL of command, cwd and exit code, and scrape fallbacks tail
-bash/zsh/PSReadLine without either; pattern redaction runs before
-anything reaches the index</td>
+bash/zsh/PSReadLine without either; pattern redaction is applied by two
+collectors of seven — conversation in full and code diffs on a
+high-confidence profile — and not by the shell, docs, git-commit,
+session or GitHub collectors</td>
 <td>Three granules. <code>forget &lt;value&gt;</code> deletes every
 matching node and writes a standing deny list consulted at every future
 write, with a hash-only tombstone and an audit row per operation;
@@ -10824,13 +10826,13 @@ corpus, because bm25 rewards rarity only within the corpus it is run
 against</td>
 <td>The deletion story is complete only through <code>forget</code>:
 <code>--prune-source</code> writes no tombstone and no audit row, so the
-coarse path is the unrecorded one; a contradiction suggestion can only
-be closed by accepting it, so a person who disagrees with the model has
-nowhere to record that and the memoized judgment re-surfaces it forever;
-<code>signal</code> is a prior nothing updates from use; the pre-commit
-signal fires on a basename token match, so it warns about a failure that
-merely shares a word with the file and stays silent about one that does
-not name it</td>
+coarse path is the unrecorded one; the GitHub source stores an issue or
+PR body verbatim without passing it through the redaction the
+conversation collector uses, and files it at the same provenance tier as
+the user's own words; <code>signal</code> is a prior nothing updates
+from use; the pre-commit signal fires on a basename token match, so it
+warns about a failure that merely shares a word with the file and stays
+silent about one that does not name it</td>
 </tr>
 <tr>
 <td><code>nocturne-memory</code></td>
@@ -21632,6 +21634,19 @@ report now carries one. The error is worth naming because of its
 direction: the window machinery there is more carefully built than the
 memory beside it, and a reviewer follows the engineering rather than the
 boundary.</li>
+<li><strong>A redaction claim was overstated and was narrowed on 30
+August 2026.</strong> <a href="../systems/nexusmem/">NexusMem</a>'s
+matrix said pattern redaction ran before anything reached the index. It
+is called by two collectors of seven — conversation in full, code diffs
+on a high-confidence profile — and by neither the store nor
+<code>sync</code> centrally, so the shell, docs, git-commit, session and
+GitHub collectors write unredacted. The scoping turns out to be reasoned
+rather than accidental, which is why the first reading's summary was
+plausible: the module's own docstring names the two sources it was built
+for. The error is the general one — <strong>a safety pass that exists
+was described as though it were global</strong>, and the check that
+would have caught it is counting the call sites rather than reading the
+module.</li>
 <li>The capability flags in the index are the reviewer's judgements
 against strict definitions, applied to code read at the pinned commits.
 A flag's absence means the mechanism was not found, not that it is

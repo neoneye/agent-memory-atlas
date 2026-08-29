@@ -25,14 +25,14 @@ matrix:
   memory_unit: "A `node` — kind, project, event timestamp, source, title, body, a `signal` float and a JSON `meta` blob — with an id of `sha256(projectId + kind + naturalKey)`; seven kinds declared and six collected, of which `shell_command` is the one no other store here holds"
   storage: "One `better-sqlite3` file per repository: `nodes` plus an external-content FTS5 index, a `sqlite-vec` vec0 table, a `node_files` path index, a `node_links` edge table and a `file_edges` import graph that is not made of nodes and is replaced wholesale on every sync"
   retrieval: "BM25 over FTS5 fused with cosine over sqlite-vec, then ranked by `relevance x signal^e x recency^e` where the exponents split one joint overturn budget between the two query-independent priors, then packed to a token budget. A second read path takes no query at all: `precheck` derives match tokens from the basenames of the staged files and returns unresolved failures"
-  write: "Collectors per source, cursor-resumed; an opt-in shell hook appends a JSONL of command, cwd and exit code, and scrape fallbacks tail bash/zsh/PSReadLine without either; pattern redaction runs before anything reaches the index"
+  write: "Collectors per source, cursor-resumed; an opt-in shell hook appends a JSONL of command, cwd and exit code, and scrape fallbacks tail bash/zsh/PSReadLine without either; pattern redaction is applied by two collectors of seven — conversation in full and code diffs on a high-confidence profile — and not by the shell, docs, git-commit, session or GitHub collectors"
   update_delete: "Three granules. `forget <value>` deletes every matching node and writes a standing deny list consulted at every future write, with a hash-only tombstone and an audit row per operation; `--prune-source` wipes one source across the live project id and its prior identities, unaudited; `sync --rebuild` clears the project. `mark-stale <id> --supersedes <newId>` down-weights without deleting, prompted by a local model that judges whether a newer node contradicts an older one and files a suggestion a person has to accept"
   scoping: "`project_id` on every node and a required predicate on both read arms; a cross-project query opens each registered repository`s own database and tags every hit with its origin"
   integration: "A CLI, a four-tool stdio MCP server (search, sync, status, list-recent), a read-only VS Code panel, and an opt-in `.git/hooks/pre-commit` block that runs `nexusmem precheck` — without `--strict`, so it warns and cannot block a commit"
   background: "None on a schedule. Every collector runs inside `nexusmem sync`, invoked by hand, by a shell hook or by the MCP `sync_project` tool; the git hook triggers a read rather than a write. `sync` also spends at most three local-model judgments per run on contradiction checking, on by default"
   trust: "Two axes kept apart. `trust_state` is `candidate` until a person runs `nexusmem review`, then `verified` or `rejected`, read on both arms and worth a 0.3 multiplier against a rejected node. Beside it a `signal` float for ranking, plus `provenance` on a four-tier ordering — `observed`, `authored`, `recorded`, `derived` — set per collector, consumed by the ranker as a per-tier decay multiplier and printed in the packed context. An ordering, not a status: the ranker's floors are a deliberate refusal to let any tier gate a result, and the tier's one exclusion is from the staleness queue rather than from retrieval"
   strengths: "A value-keyed deny list whose test proves the resurrection case — forget, rebuild from the untouched append-only log, and the value stays gone while a control survives; shell commands with exit codes, which git cannot supply and scrollback loses; a ranker that bounds how far query-independent priors may overturn the query, as one budget shared between them; redaction split into a high-confidence profile safe to run over source code and a broader one that is not; a document-frequency filter that drops tokens which are boilerplate in this project`s own corpus, because bm25 rewards rarity only within the corpus it is run against"
-  risks: "The deletion story is complete only through `forget`: `--prune-source` writes no tombstone and no audit row, so the coarse path is the unrecorded one; a contradiction suggestion can only be closed by accepting it, so a person who disagrees with the model has nowhere to record that and the memoized judgment re-surfaces it forever; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
+  risks: "The deletion story is complete only through `forget`: `--prune-source` writes no tombstone and no audit row, so the coarse path is the unrecorded one; the GitHub source stores an issue or PR body verbatim without passing it through the redaction the conversation collector uses, and files it at the same provenance tier as the user's own words; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
 ---
 
 ## 1. Executive Summary
@@ -560,6 +560,43 @@ with mark-stale as the only way to make one stop, which only works when the
 suggestion was actually right."* Marking a node stale to silence a wrong
 suggestion is a lie in the data, and this is the field that avoids telling it.
 
+## 9a-bis. What the GitHub source carries in with it
+
+`nexusmem sync --github` collects issue and PR threads into
+`kind: 'github_thread'` nodes, rendering the opening body and every comment
+under a `--- @author (date) ---` header, truncated at 4,000 characters. Two
+properties of that node are worth stating because they are the first time this
+store ingests text **a stranger wrote**.
+
+**Its provenance tier is `recorded`** — the collector's own comment says
+*"verbatim discourse, same tier as conversation_turn."* Within the four-tier
+ordering that is defensible: `provenance` encodes *how the claim was obtained*,
+and an issue comment is obtained the same way a chat turn is. The consequence is
+that the ordering carries no information about **who** made the claim. A shell
+command the user ran is `observed`; a sentence the user typed is `recorded`; a
+sentence a stranger typed into a bug report three years ago is also `recorded`,
+and the ranker's per-tier decay multiplier treats them identically. Authorship
+survives only as `@author` text inside the body, which nothing parses.
+
+**It does not pass through redaction, and the reason is legible.**
+`conversation/redact.ts` describes its own scope: it exists *"because
+conversation text is the collector most likely to contain something sensitive (a
+pasted credential, a key a user asked for help debugging), but a committed `.env`
+or a hard-coded key makes the code-diff collector a real second candidate."* Two
+collectors call it — `conversation.ts` in full and `diffs.ts` on the
+`high-confidence` profile, the latter because the key/value rule *"matches
+ordinary code such as `const apiKey = process.env.API_KEY` and would corrupt the
+very lines a diff is indexed for."* Neither the store nor `sync` applies it
+centrally.
+
+So the coverage is a reasoned two of seven rather than an oversight. A GitHub
+thread is nonetheless a third candidate of exactly the shape the docstring
+describes — a bug report is where people paste the credential they are asking for
+help with — and it is stored verbatim, indexed into FTS, embedded, and packed
+into agent context. `shell-history.ts`, the collector this system is named for,
+does not redact either; a `curl -H "Authorization: Bearer …"` is captured as
+typed.
+
 ## 9b. Scope pushed into the nearest-neighbour search
 
 `nodes_vec` declares `project_id TEXT PARTITION KEY` rather than carrying it as a
@@ -581,11 +618,29 @@ records that vec0 cannot `ALTER TABLE ADD COLUMN` or be renamed without
 orphaning its shadow tables — *"tried first, confirmed broken"* — so the upgrade
 stages into a temp table, drops the virtual table and reloads.
 
-One overfetch survives, scoped to a single path: the `--as-of` arm
-still asks for `Math.max(limit * 8, 50)`, because the record-time predicate is
-applied after the neighbour search rather than inside it. The same silent-short
-failure is therefore still reachable through a time-travel query on a small
-project sharing a database with a large one.
+One overfetch survives, scoped to a single path, and the function's own comment
+concedes it: *"`created_at` isn't a partition column though (an `--as-of` query is
+rare and per-query, not worth a second one), so that path still over-fetches to
+compensate for rows the time filter drops afterward — the same heuristic this
+function used to need for both dimensions, now needed for only one."*
+
+The residual failure is worth spelling out, because it bites hardest on the query
+the feature exists for. With `--as-of`, vec0 returns the `k = max(limit * 8, 50)`
+nearest neighbours *within the project* — the partition key does its job — and
+`n.created_at <= ?` then removes rows, and `LIMIT` takes what is left. The result
+is short, silently, whenever more than `k - limit` of the project's nearest
+neighbours to that query were recorded after the cutoff. In a project whose
+recent months are its busiest, asking what the store held a year ago is exactly
+the case where the k-window fills with post-cutoff rows the filter was always
+going to discard, and an empty answer is indistinguishable from *the store knew
+nothing about this a year ago*.
+
+The bi-temporal semantics are pinned — `store.test.ts`'s *"asOfEpoch excludes a
+node recorded after the cutoff, even though it happened before"* is the exact
+distinction the mark is about. What no committed case covers is the short
+return: the cross-project version of this bug was reproduced in a scratch script
+before it was fixed, and its surviving twin on the time axis is reasoned about
+rather than measured.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -615,7 +670,19 @@ once the harness existed it was grid-searched:
 
 The constant is set to 2.4: not the optimum, but the highest value that still
 passes every case in both suites, with the instruction to re-run both after
-touching it. A project that builds a scoring harness and then *declines to take
+touching it.
+
+**Nobody outside that machine can check any of it.** `scripts/eval.ts` imports
+`loadContext` and `OllamaEmbeddingProvider` and runs against the local project's
+own store, and a case's ground truth is a list of `relevantNodeIds` — which are
+`sha256(projectId + kind + naturalKey)`, computed over the author's own shell
+commands, commits and conversations. A reader cloning this repository gets 28
+queries whose correct answers are ids no other database contains. The harness is
+real, the discipline around it is real, and the corpus is not portable: the MRR
+figures, the grid search and the plateau it declined are all unreproducible
+outside the machine that produced them. Nothing about that is hidden — it is a
+consequence of content-addressed ids over private data, and it is the same
+trade the atlas records for every production-derived evaluation. A project that builds a scoring harness and then *declines to take
 its top score* — because a regression test outside the corpus knows something the
 corpus does not — is the answer to the failure this atlas records as a metric
 optimised into a bug. The eval corpus is 28 hand-labelled cases and its limits
@@ -860,6 +927,18 @@ leaves no record that it happened.
 
 ## History
 
+
+**2026-08-30** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — same commit, a second reading covering three things the first pass left open, and it corrected a published claim.
+
+**The matrix said pattern redaction ran before anything reached the index. It does not.** `conversation/redact.ts` is called by two collectors of seven — `conversation.ts` in full and `diffs.ts` on a `high-confidence` profile — and by neither the store nor `sync` centrally. The scoping is reasoned rather than accidental: the module's docstring names conversation text as the likeliest carrier and a committed `.env` as the second, and explains why only the shape rules are safe over source code. The claim has been narrowed to what the code does. `shell-history.ts` does not redact, which matters for a system whose headline source is shell commands.
+
+**The GitHub source, traced end to end.** A thread becomes one `github_thread` node at `provenance: 'recorded'` — *"verbatim discourse, same tier as conversation_turn"* — so the four-tier ordering, which encodes how a claim was obtained, treats a stranger's issue comment exactly as it treats the user's own typing; authorship survives only as `@author` text in the body that nothing parses. The collector does not call `redact`, so a credential pasted into a bug report is indexed, embedded and packable verbatim. Section 9a-bis.
+
+**The eval harness cannot be run by anyone but its author.** `scripts/eval.ts` resolves the local project's store through `loadContext` and embeds through Ollama, and each case's ground truth is a list of content-addressed node ids computed over that machine's own shell history and commits. The MRR figures and the `MAX_PRIOR_OVERTURN` grid search are therefore unreproducible outside it. Recorded in section 10 beside the decision itself, which remains the strongest thing in the repository.
+
+**The surviving `--as-of` overfetch, stated as a failure rather than a caveat.** The function's comment concedes that `created_at` is not a partition column, so that path still fetches `max(limit * 8, 50)` and filters afterwards. The consequence is a silent short return whenever more than `k - limit` of a project's nearest neighbours postdate the cutoff — worst on exactly the far-back queries the feature exists for, and indistinguishable from the store having known nothing. The bi-temporal semantics are pinned by a committed case; the short return is not, where the cross-project twin of this bug was reproduced in a scratch script before being fixed.
+
+Nothing was installed and nothing was run: the tree carries two manifests inside the seven-day dependency cooldown, and the eval harness needs a store this machine cannot reconstruct in any case.
 
 **2026-08-29** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — re-pinned 61 commits on, and the marks go from four to **all seven**. Three schema migrations carry it, and each names in its own comment the failure it removes.
 
