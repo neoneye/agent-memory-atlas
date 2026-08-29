@@ -1891,6 +1891,66 @@ overflows. This paper is the measurement of what that costs, and the
 operators are a typed answer: classify each line, then let type decide
 fidelity.</p>
 <h3
+id="a-memory-the-system-can-route-around-is-one-nobody-ever-exercises">A
+memory the system can route around is one nobody ever exercises</h3>
+<p><em>Short window attention enables long-term memorization</em> (<a
+href="https://arxiv.org/abs/2509.24552">arXiv:2509.24552</a>, Cabannes,
+Beck, Szilvasy, Douze, Lomeli, Copet, Mazaré, Synnaeve and Jégou; Meta
+FAIR with ENS Paris Saclay, Paris Cité and JKU Linz) is a pretraining
+paper about hybrid architectures, not an agent memory system, and it is
+on this page for one finding that generalises past its subject.</p>
+<p>SWAX alternates sliding-window attention layers with xLSTM recurrent
+layers. The counterintuitive result is that <strong>widening the
+attention window makes long-context recall worse</strong>: on RULER
+needle-in-a-haystack at 131k tokens, a 128-token window recalls around
+30% and a 2048-token window recalls approximately nothing. The authors'
+explanation is the part to keep:</p>
+<blockquote>
+<p>The most likely cause for this phenomenon is that during training,
+most of the dependencies to model fall inside the 2048 tokens window.
+Therefore, during pretraining, it was advantageous for the model with a
+window of 2048 to use the more precise softmax attention from the
+sliding window rather than having to rely on the less precise Linear
+Attention layers to model most dependencies.</p>
+</blockquote>
+<p>and the consequence:</p>
+<blockquote>
+<p>once tested on longer sequence length where the dependencies are
+outside of the window length, the model does not extrapolate since it
+never learned to rely on the Linear Attention layers to do long-context
+modeling. […] This highlights the impact that the window size can have
+on how much supervision the linear attention layers receive.</p>
+</blockquote>
+<p><strong>The memory pathway atrophied because a cheaper path was
+available whenever it was being trained.</strong> The recurrent layers
+were present the whole time, had capacity the whole time, and were never
+obliged to carry anything, so they never learned to. The fix the paper
+lands on is to remove the shortcut part of the time — sampling the
+window between 128 and 2048 during training — which recovers the
+long-context behaviour without giving up short-context quality.</p>
+<p>The mechanism is a training-time claim about model internals and does
+not transfer to an agent memory system directly. <strong>The evaluation
+lesson does.</strong> If the answer is usually also in the recent turns,
+or in the system prompt, or in whatever the retriever would have
+surfaced anyway, then the memory path is not being exercised by your
+evaluation either — and its failures stay invisible until the case where
+nothing else can answer. Three items already on this page are the same
+observation from other directions: FP-AMB's TF-IDF baseline beating
+every real memory architecture on its own corpus, which is what a
+bypassable memory looks like from the scoreboard; Self-GC's no-impact
+rate, which is built to ask whether a <em>future</em> dependency
+survived rather than whether the present answer did; and <a
+href="../systems/tycho/">Tycho</a>'s ablation, which prices its world
+model at 9.42 RHAE by running the arm without one.</p>
+<p>The practical form is the same in all four: <strong>measure the
+memory by removing it, on the cases where nothing else can
+answer.</strong> An evaluation whose questions the recent context can
+satisfy is measuring the context.</p>
+<p>One qualification the paper states itself: the effect is clearest on
+RULER, and <em>"results on LongBench/Babilong show mixed outcomes where
+fixed long windows sometimes outperform stochastic training."</em> No
+code repository is linked.</p>
+<h3
 id="the-metric-that-asks-whether-the-pruning-broke-anything-later">The
 metric that asks whether the pruning broke anything later</h3>
 <p><em>Self-GC: Self-Governing Context for Long-Horizon LLM Agents</em>
