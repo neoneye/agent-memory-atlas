@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **346 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **347 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -45,6 +45,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/aimaos/"><span class="az-id">AIMAOS</span><span class="az-what">Contradictions embeddings place far apart</span><code class="az-repo">munch2u-a11y/AIMAOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/aimee/"><span class="az-id">aimee</span><span class="az-what">Authority caps the actor</span><code class="az-repo">RakuenSoftware/aimee</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/aipass/"><span class="az-id">AIPass</span><span class="az-what">A budget on how often memory may speak</span><code class="az-repo">AIOSAI/AIPass</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/all-agentic-architectures/"><span class="az-id">All Agentic Architectures</span><span class="az-what">A teaching catalog&#x27;s memory floor</span><code class="az-repo">FareedKhan-dev/all-agentic-architectures</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/alma-memory/"><span class="az-id">ALMA</span><span class="az-what">A write guard on one door of six</span><code class="az-repo">RBKunnela/ALMA-memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/always-on-memory-agent/"><span class="az-id">Always-On Memory Agent</span><span class="az-what">No vector DB — the model is the retriever</span><code class="az-repo">GoogleCloudPlatform/generative-ai (always-on-memory-agent)</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/sovereign/"><span class="az-id">AMITY / Archangel-8</span><span class="az-what">The capacity to refuse</span><code class="az-repo">Renkasha/Sovereign</code><span class="az-caps"></span></a></li>

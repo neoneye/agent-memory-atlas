@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 346 reports.</strong></p>
+<p><strong>This page covers all 347 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11667,6 +11667,85 @@ want memory failure scored in outcomes rather than in recall.</li>
 98,843-record catalog and the 365 daily market reports are excluded by
 design, no run output is committed, and both the human and rule-based
 baselines depend on data the public tree does not contain.</li>
+</ul>
+<h3 id="all-agentic-architectures"><a
+href="../systems/all-agentic-architectures/"><code>all-agentic-architectures</code></a></h3>
+<ul>
+<li>Best idea: <strong>an unsupported query raises rather than returning
+nothing.</strong> <code>NetworkXGraphMemory.query</code> translates
+three Cypher shapes and refuses the rest with the offending query and
+the remedy — <em>"Switch to GRAPH_BACKEND=neo4j for full Cypher
+support."</em> A translator that silently returns <code>[]</code> for a
+pattern it does not understand is indistinguishable from an empty store;
+this one will not be mistaken for one.</li>
+<li>Second idea: <strong>the memory tutorial's three questions.</strong>
+What is the atomic stored unit, what is the retrieval key, what is the
+persistence scope — a better framing of the design space than most
+production systems apply to themselves, in a document whose own table
+then gets the third answer wrong.</li>
+<li>Biggest risk: <strong>the two backends that persist are the two the
+flagship memory architecture cannot read.</strong> Nothing in the
+library writes to disk, so Qdrant and Neo4j are the only stores that
+survive a restart. <code>EpisodicSemanticAgent._retrieve</code> gates
+episodic recall on <code>self.episodic.episodes</code> — an in-process
+list a fresh object starts empty, while <code>recall()</code> reads the
+vector store — and lists semantic entities only under
+<code>if isinstance(backend, NetworkXGraphMemory)</code>. Against a
+populated Qdrant collection and a populated Neo4j graph it recalls
+nothing from either half, silently.</li>
+<li>Second risk: <strong>two parameters accepted at the boundary and
+discarded by the default backend.</strong>
+<code>facts_about(entity, depth=N)</code> serializes the depth into
+Cypher and the NetworkX translator parses it back with
+<code>int(tok.split("..")[-1].rstrip("]"))</code>, which sees
+<code>2]-(other)</code>, raises, and falls to <code>depth = 1</code> for
+every N — while <code>GraphMemoryAgent</code> defaults to
+<code>traversal_depth=2</code> and its notebook calibrates the reader's
+expectations against a two-hop traversal that never runs.
+<code>get_vector_store</code>'s FAISS branch never references
+<code>collection_name</code>, which is the parameter the notebooks tell
+readers to use for per-user isolation.</li>
+<li>Third risk: <strong>nothing can be deleted.</strong> Not an episode,
+not a triple, not a document. <code>reset()</code> empties the whole
+store and is the only removal in the package — and MemGPT's context tier
+re-archives evicted <code>[recalled]</code> entries, so retrieval writes
+truncated duplicates into a store with no way to reclaim them.</li>
+<li>Maturity impression: MIT, 33 commits since 24 September 2025, 10,959
+lines under <code>src/</code> against 1,045 of tests, 35 notebooks
+duplicated byte-identically into <code>docs/</code>. No marks. Not one
+test references <code>EpisodicMemory</code>,
+<code>SemanticMemory</code>, <code>facts_about</code> or
+<code>NetworkXGraphMemory</code>, which is how a depth parser that
+discards its input survives a repository with CI, mypy and
+pre-commit.</li>
+<li>The test that passes when the system is bypassed:
+<code>test_graph_memory_real</code> calls <code>run()</code> twice —
+which queries and never ingests — then asserts
+<code>"ada" in r.output.lower()</code>. The graph is empty,
+<code>_facts_block</code> returns
+<code>"(no relevant facts in graph)"</code>, and the prompt says <em>"Do
+NOT use parametric knowledge."</em> It can only pass if the model
+disobeys. It is also gated behind <code>RUN_INTEGRATION=1</code> and
+excluded from CI.</li>
+<li>The benchmark artifact, read rather than cited: the README's 33/42
+recomputes exactly from <code>docs/benchmarks_raw.json</code>, and 27 of
+those 33 passing rows are impossible under the committed scorer —
+<code>correct: true</code> with <code>contains_hits: []</code> on a task
+with a non-empty <code>expected_contains</code>, which
+<code>contains_pass</code> forbids. <code>output_excerpt</code> is blank
+in 41/42 rows. Separately, <code>GraphMemoryAgent</code> was benchmarked
+against an empty graph: the harness passes <code>documents=</code> to
+six architectures, five declare it, and
+<code>base.Architecture.__init__</code> files the sixth's copy into
+<code>self.config</code> and forgets it — 1.2 seconds against GraphRAG's
+64.5 on the same task.</li>
+<li>Study when: you want 35 worked architectures with the reference
+paper cited on each, or a short list of the ways a backend seam diverges
+when no conformance test runs against both sides.</li>
+<li>Do not copy when: memory has to outlive a process, be scoped to a
+principal, or be corrected. The tutorial's own last bullet says
+persistence is not enabled by default; its table twelve lines above says
+the scope is "across runs" and calls MemGPT's archival tier "disk".</li>
 </ul>
         </article>
       </div>

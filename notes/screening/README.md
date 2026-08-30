@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 198 of 346 screened at the report's current pin.**
+**Progress: 199 of 347 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 73 |
+| Repositories with an auto-run surface (`RUNS`) | 74 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 74 |
-| Repositories with build-time execution (`EXEC`) | 153 |
+| Repositories with build-time execution (`EXEC`) | 154 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -37,6 +37,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
+| [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
