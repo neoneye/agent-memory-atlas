@@ -163,8 +163,8 @@ has gone to the trouble of asking a human whether to believe something throws
 the answer away when the answer is no. Keying the rejection on the normalised
 content — the [rejected-value tombstone](../../patterns/rejected-value-tombstone/)
 — would cost one hash column and one lookup in the extraction path, and it is the
-single change that would take this system from three marks' worth of shape to
-the mechanism only three repositories in the corpus have.
+single change that would take this system from three marks' worth of shape to a
+value-keyed rejection the store could act on.
 
 **No bi-temporality, no append-only mutation audit.** `update_memory` moves the
 status in place; the previous status is gone, so "when was this approved, and by

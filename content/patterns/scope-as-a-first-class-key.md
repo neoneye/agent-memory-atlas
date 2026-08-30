@@ -262,10 +262,15 @@ warns about, closed. MIRIX also separates `read_scopes` (a list) from
 `write_scope` (one value) on the client, which makes "may read everything, may
 write only here" a single field rather than a policy document.
 
-MIRIX is additionally the only system in the atlas that **tests** the boundary the
-way this pattern's first required test asks: `tests/test_filter_tags_db.py` creates
-a memory under one scope, searches under another, and asserts the id is absent —
-which is why it carries the atlas's rarest capability mark.
+MIRIX also **tests** the boundary the way this pattern's first required test
+asks, and does it twice: `tests/test_filter_tags_db.py` creates a memory under one
+scope, searches under another, and asserts the id is absent, while
+`tests/test_search_all_users.py` runs the four-user version across a scope
+boundary and an organization boundary at once. That earns `negative_eval`, which
+this atlas awards on exactly this shape — a committed case establishing that
+named material stayed out of a result set that is otherwise populated — and which
+a good number of systems here now carry. The test is what the mark is for; being
+rare is not what makes it worth copying.
 
 The counterexamples are as instructive as the implementations.
 [Holographic](../../systems/holographic/) describes itself as a "single-user

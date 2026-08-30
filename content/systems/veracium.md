@@ -44,7 +44,7 @@ Memory-Architecture Rankings*
 2026). MIT, 17,707 lines under `src/` against **39,168 lines of tests across 104
 files**, 1,067 commits since 11 July 2026.
 
-**All seven capability marks**, which nine systems here now carry. The reasons
+**All seven capability marks**, which eight systems here carry. The reasons
 are what make it worth a report rather than a row: three of the seven are the
 strongest instance of their mark the atlas has read.
 

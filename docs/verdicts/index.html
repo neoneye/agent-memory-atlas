@@ -1175,12 +1175,15 @@ and nothing can ever confirm it, because the source type that would is
 never written.</li>
 <li>Maturity impression: ~15,900 lines of TypeScript, 24 commits, seven
 packages, 204 tests, local Ollama, and a README that says it is not
-production-ready. No capability mark. The single negative retrieval test
-asserts <code>results.every(m =&gt; m.status !== ARCHIVED)</code>
-against a database seeded with one archived row and nothing else, so it
-passes on an empty result — the vacuity this atlas keeps naming, with
-its own positive control sitting two tests above it in the same
-file.</li>
+production-ready. Three capability marks — <code>trust_state</code>,
+<code>scope_enforced</code> and <code>negative_eval</code>, the last of
+them awarded only at the second reading. At the first, the single
+negative retrieval test asserted
+<code>results.every(m =&gt; m.status !== ARCHIVED)</code> against a
+database seeded with one archived row and nothing else, so it passed on
+an empty result — the vacuity this atlas keeps naming, with its own
+positive control sitting two tests above it in the same file. The repair
+was one line, and it landed.</li>
 <li>Study when: you are building an ingest path and want the shape of a
 cheap, testable, model-free admission decision — or you want a worked
 example of how far a schema can describe a system the code has not
@@ -3767,7 +3770,7 @@ automatic re-extraction cannot lift, because the dedup lookup finds the
 rejected row without exempting it — the whole tombstone, in a loop that
 was written for deduplication.</li>
 <li>Maturity impression: 25,000 lines of one author's carefully
-documented Python with an unusually detailed changelog, four capability
+documented Python with an unusually detailed changelog, five capability
 marks, and 21 test files holding five assertions between them — so the
 mechanisms that earn the marks are pinned by nobody, and the
 verification is a person's practice rather than the repository's.</li>
@@ -8594,11 +8597,14 @@ unused.</li>
 repeat itself, and want to see the smallest thing that works — four
 plain files, no schema, no index — together with what that costs once
 the run is long.</li>
-<li>Do not copy when: you need memory to be accountable. It carries no
-capability mark and that is the honest answer: history is a ring rather
-than an audit log, there is no status field, no scope key inside any
-record, no human gate on memory content, and no test asserts anything
-about what memory must not return.</li>
+<li>Do not copy when: you need a memory whose <em>contents</em> can be
+judged. It carries <code>audit_log</code> and <code>negative_eval</code>
+— a per-writer append-only event log over a content-addressed blob
+store, and committed cases that particular content must not be archived
+— and neither of the two marks is about belief. There is no status
+field, no scope key inside any record, and no human gate on memory
+content, so the archive can prove what happened to a blob and cannot say
+whether the blob is true.</li>
 </ul>
 <h3 id="trueforge"><a
 href="../systems/trueforge/"><code>TrueForge</code></a></h3>
@@ -9898,14 +9904,21 @@ positive scored −9.685, stronger than two real links at −5.899 and
 −6.559.</li>
 <li>Maturity impression: MIT, v0.4.0 at 118 commits, ~10,850 lines of
 TypeScript, 619 tests across 47 files, CI, an npm package, a four-tool
-MCP server, a VS Code panel and an opt-in git pre-commit hook. Four
-capability marks — <code>tombstone</code>, <code>audit_log</code>,
-<code>scope_enforced</code> (<code>project_id</code> a required
-predicate on every read arm) and <code>negative_eval</code>
-(cross-project leak tests on both retrieval arms, plus three suppression
-cases on the pre-commit arm). Two near-misses stated in the report: a
-bi-temporal pair whose record-time column no read path queries, and a
-viewer that displays without reviewing.</li>
+MCP server, a VS Code panel and an opt-in git pre-commit hook. Six
+capability marks after the 29 August re-pin — <code>tombstone</code>,
+<code>audit_log</code>, <code>scope_enforced</code>
+(<code>project_id</code> a required predicate on every read arm),
+<code>negative_eval</code> (cross-project leak tests on both retrieval
+arms, plus three suppression cases on the pre-commit arm), and
+<code>bitemporal</code> and <code>human_review</code> added by three
+schema migrations that each name in their own comment the failure they
+remove. The near-miss is now the sharpest thing in the report:
+<code>trust_state</code> is a real
+<code>candidate</code>/<code>verified</code>/<code>rejected</code>
+column a person sets and a re-sync cannot overwrite, and
+<code>rank.ts</code> spends it as a 0.3 score multiplier while nothing
+in the tree filters on it — a state built well and used as a
+number.</li>
 <li>Study when: you want an agent to know what you already tried, you
 work locally in one repository at a time, and you would rather ship raw
 stored text through a good ranker than summaries through a model — or

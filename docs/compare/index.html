@@ -162,7 +162,7 @@ path</strong>, and the rest keep material out of a projection, a
 preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 75 of 348
+<li><strong>Trust is usually a number, not a state.</strong> 74 of 348
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -3168,12 +3168,10 @@ diffusion-based associative retrieval. <strong>Second Me</strong> is the
 only system here whose memory ends up in <em>weights</em>: documents
 become a versioned biography, the biography becomes synthesized training
 data, and LoRA fine-tuning plus DPO produce a local model that answers
-without retrieving anything. It is the atlas's single instance of memory
-that <em>is</em> weights — <a href="../systems/memos/">MemOS</a> mounts
-a parametric module beside four other forms — and the limitations say
-what one instance is and is not evidence of. <strong>NOOA
-Memory</strong> implements the cognitive models the others approximate —
-ACT-R base-level activation with spreading activation for retrieval, the
+without retrieving anything. The known limitations say what a single
+instance is and is not evidence of. <strong>NOOA Memory</strong>
+implements the cognitive models the others approximate — ACT-R
+base-level activation with spreading activation for retrieval, the
 Ebbinghaus curve for forgetting — and stores the score components of
 every retrieval on the memory that was retrieved.</p>
 <p><strong>PRO-LONG</strong> is the family's cheapest memory and its
@@ -11000,17 +10998,19 @@ warns and cannot block a commit</td>
 MCP <code>sync_project</code> tool; the git hook triggers a read rather
 than a write. <code>sync</code> also spends at most three local-model
 judgments per run on contradiction checking, on by default</td>
-<td>Two axes kept apart. <code>trust_state</code> is
-<code>candidate</code> until a person runs <code>nexusmem review</code>,
-then <code>verified</code> or <code>rejected</code>, read on both arms
-and worth a 0.3 multiplier against a rejected node. Beside it a
-<code>signal</code> float for ranking, plus <code>provenance</code> on a
-four-tier ordering — <code>observed</code>, <code>authored</code>,
-<code>recorded</code>, <code>derived</code> — set per collector,
-consumed by the ranker as a per-tier decay multiplier and printed in the
-packed context. An ordering, not a status: the ranker's floors are a
-deliberate refusal to let any tier gate a result, and the tier's one
-exclusion is from the staleness queue rather than from retrieval</td>
+<td>Two axes kept apart, and neither withholds. <code>trust_state</code>
+is <code>candidate</code> until a person runs
+<code>nexusmem review</code>, then <code>verified</code> or
+<code>rejected</code>, read on both arms and worth a 0.3 multiplier
+against a rejected node — a score, not a gate, which is why the mark is
+withheld. Beside it a <code>signal</code> float for ranking, plus
+<code>provenance</code> on a four-tier ordering — <code>observed</code>,
+<code>authored</code>, <code>recorded</code>, <code>derived</code> — set
+per collector, consumed by the ranker as a per-tier decay multiplier and
+printed in the packed context. An ordering, not a status: the ranker's
+floors are a deliberate refusal to let any tier gate a result, and the
+tier's one exclusion is from the staleness queue rather than from
+retrieval</td>
 <td>A value-keyed deny list whose test proves the resurrection case —
 forget, rebuild from the untouched append-only log, and the value stays
 gone while a control survives; shell commands with exit codes, which git
@@ -14824,7 +14824,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>75 of 348:</em> <a
+<p><em>74 of 348:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -14869,7 +14869,6 @@ href="../systems/mindcache/"><code>mindcache</code></a>, <a
 href="../systems/monet/"><code>monet</code></a>, <a
 href="../systems/muninn/"><code>muninn</code></a>, <a
 href="../systems/muninndb/"><code>muninndb</code></a>, <a
-href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
@@ -21918,6 +21917,27 @@ report now carries one. The error is worth naming because of its
 direction: the window machinery there is more carefully built than the
 memory beside it, and a reviewer follows the engineering rather than the
 boundary.</li>
+<li><strong>A capability mark was awarded against the rubric's own
+definition and was withdrawn on 30 August 2026.</strong> <a
+href="../systems/nexusmem/">NexusMem</a> was credited with
+<code>trust_state</code> at its 29 August re-pin on the strength of a
+real discrete field:
+<code>trust_state TEXT NOT NULL DEFAULT 'candidate'</code>, set to
+<code>verified</code> or <code>rejected</code> by a human running
+<code>nexusmem review</code>, kept out of the upsert path so a re-sync
+cannot overwrite the verdict, selected on both retrieval arms and tagged
+into the packed context. What it never does is withhold anything.
+<code>rank.ts:192</code> multiplies a rejected node's score by
+<code>REJECTED_TRUST_PENALTY = 0.3</code> and nothing in
+<code>src/</code> filters on the column, which is the case the mark's
+definition exists to exclude — <em>"a confidence number answers 'how
+sure' and gets used for ranking; a state answers 'may this be acted on'
+and gets used for filtering."</em> The report's own sections 5 and 9 had
+said the mark was withheld and were left contradicting the frontmatter,
+which is how the error stayed visible for a day without being caught.
+NexusMem carries six marks. The general lesson is the one the OpenHands
+SDK correction taught two days earlier, one layer down: the definition
+has to be applied to the mechanism, not to the field's existence.</li>
 <li><strong>A redaction claim was overstated and was narrowed on 30
 August 2026.</strong> <a href="../systems/nexusmem/">NexusMem</a>'s
 matrix said pattern redaction ran before anything reached the index. It

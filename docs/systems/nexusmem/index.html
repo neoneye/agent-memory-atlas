@@ -124,7 +124,7 @@ rebuild it would otherwise be undone by.</p>
               <strong>2026-08-29</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -383,11 +383,13 @@ about events"</em>; session summaries are <code>derived</code>, <em>"a
 model's distillation"</em>. <code>supersedes</code> is a nullable
 pointer from the newer node to the one it replaces, with a partial index
 over the non-null rows.</p>
-<p><strong>An ordering is not a state machine, which is why
-<code>trust_state</code> is withheld,</strong> and the code makes the
-distinction better than the rubric does. Four tiers distinguish where a
-claim came from, not whether anyone has checked it: there is no
-candidate, no verified, no rejected. More to the point, the ranker's
+<p><strong>An ordering is not a state machine, and the code makes the
+distinction better than the rubric does.</strong> Four tiers distinguish
+where a claim came from, not whether anyone has checked it, and the V10
+migration says so in as many words before adding
+<code>trust_state</code> as the separate axis — which is a genuine
+candidate/verified/rejected field, and is withheld for a different
+reason set out in section 9a. More to the point here, the ranker's
 floors are an explicit decision that no tier may gate — <em>"Floors keep
 the combination a reordering within each dimension instead of an on/off
 gate"</em> — so <code>derived</code> decays four times faster than
@@ -632,13 +634,15 @@ Trust</h2>
 <p><code>signal</code> is a float in <code>[0.2, 1]</code> consulted
 only by the ranker. It is set at ingest from the kind and source and
 nothing updates it from use, so a node that is retrieved constantly and
-one that is never retrieved carry the same prior forever. Nothing
-withholds a node from being returned — <code>provenance</code>,
-<code>supersedes</code> and a confirmed contradiction all change a
-node's <em>weight</em> or its <em>visibility in a maintenance list</em>,
-and none of them changes its <em>admissibility</em> — which is why
-<code>trust_state</code> is withheld even with four tiers and a model
-willing to say one memory refutes another.</p>
+one that is never retrieved carry the same prior forever.
+<strong>Nothing withholds a node from being returned.</strong>
+<code>provenance</code>, <code>supersedes</code>, a confirmed
+contradiction and a human's own <code>rejected</code> verdict all change
+a node's <em>weight</em> or its <em>visibility in a maintenance
+list</em>, and none of them changes its <em>admissibility</em>. That is
+one sentence about four separate mechanisms, and it is why
+<code>trust_state</code> is withheld: the store has a reviewer, a
+verdict and three states, and no query that acts on them.</p>
 <p><strong>The audit is real and its coverage is partial, which is the
 thing to check before relying on it.</strong>
 <code>mutation_audit</code> is append-only, has one producer, and that
@@ -690,7 +694,8 @@ nothing about whether anyone has checked it. <code>trust_state</code> is
 that separate axis — 'candidate' until a human runs
 <code>nexusmem review</code>, then 'verified' or 'rejected'.</p>
 </blockquote>
-<p>Three properties make it a mechanism rather than a column.</p>
+<p>Three properties make it a mechanism rather than a column, and a
+fourth is the reason the mark is withheld anyway.</p>
 <p><strong>A re-sync cannot overwrite a verdict.</strong>
 <code>trust_state</code> is deliberately left out of
 <code>upsertNodes</code>' own INSERT columns and its
@@ -707,8 +712,23 @@ supersession penalty, under a comment that draws the distinction: <em>"a
 human explicitly rejected this claim, not just a newer node quietly
 replacing it. Still not zero — <code>review</code> demotes, it doesn't
 delete."</em> A rejected memory can still surface when nothing better
-exists, which is the correct behaviour for a store whose reviewer may
-have been wrong.</p>
+exists, which is a defensible product decision for a store whose
+reviewer may have been wrong.</p>
+<p><strong>And it is why <code>trust_state</code> is withheld.</strong>
+The mark asks for a discrete status <em>"including at least one state
+that withholds a memory from being treated as true"</em>, and draws the
+line at what the status is used for: a score gets used for ranking, a
+state gets used for filtering. A grep for <code>trust_state</code>
+across <code>src/</code> returns the schema, the two retrieval arms
+selecting it, <code>nodes.ts:290</code> writing it, and
+<code>rank.ts:192</code> multiplying by
+<code>REJECTED_TRUST_PENALTY = 0.3</code>. Nothing filters on it
+anywhere. So this is the rubric's own collapse case built deliberately
+and well: a genuine three-value status, human-set, protected from
+re-sync, surfaced to the model — used as a confidence number. Everything
+except the property the mark is for is here, and one
+<code>WHERE trust_state != 'rejected'</code> on an opt-in flag would
+supply it.</p>
 <p><strong>It reaches the model.</strong> <code>pack.ts</code> prefixes
 a reviewed node's line with <code>[verified]</code> or
 <code>[rejected]</code> in the injected context and stays <em>"silent
@@ -1215,9 +1235,9 @@ manifests inside the seven-day dependency cooldown, and the eval harness
 needs a store this machine cannot reconstruct in any case.</p>
 <p><strong>2026-08-29</strong> — <a
 href="https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6"><code class="commit-id" title="8c196e84199dec64761870a16949b8089a0c0bf6">8c196e84…</code></a>
-— re-pinned 61 commits on, and the marks go from four to <strong>all
-seven</strong>. Three schema migrations carry it, and each names in its
-own comment the failure it removes.</p>
+— re-pinned 61 commits on, and the marks go from four to
+<strong>six</strong>. Three schema migrations carry it, and each names
+in its own comment the failure it removes.</p>
 <p>V10 adds <code>trust_state</code> to <code>nodes</code>,
 <code>candidate</code> by default and set to <code>verified</code> or
 <code>rejected</code> by a new
@@ -1226,8 +1246,9 @@ own comment the failure it removes.</p>
 clauses so a re-sync cannot overwrite a person's verdict, selected on
 both retrieval arms, worth a 0.3 multiplier against a rejected node in
 <code>rank.ts</code>, and tagged into the packed context by
-<code>pack.ts</code>. That earns <code>trust_state</code> and
-<code>human_review</code>; section 9a describes both. V9 adds
+<code>pack.ts</code>. That earns <code>human_review</code>;
+<code>trust_state</code> is withheld because the verdict is a ranking
+multiplier and nothing filters on it, which section 9a sets out. V9 adds
 <code>dismissed</code> to <code>contradiction_checks</code>, so a
 suggestion the reviewer disagreed with can be silenced through
 <code>nexusmem stale --dismiss</code> without marking the candidate

@@ -190,6 +190,17 @@ belongs and leave the rest alone.
   was wrong, what was wrong and in which direction.
 - The system's verdict in `content/overview.md` section 9, if the verdict itself
   changed. It carries no dated line.
+- **The system's entry in `content/verdicts.md`, whenever a mark moved.** This is
+  a separate file from the overview and it was on no checklist until 30 August
+  2026, so an entry written at a first reading kept its original mark count
+  through every later pin. Four were stale when that was found, and the worst
+  argued *against* a mark the report awards: lossless-context-mcp's read
+  *"It carries no capability mark and that is the honest answer: history is a
+  ring rather than an audit log"* while the report credits `audit_log` on a
+  per-writer append-only event log. `scripts/check_verdict_marks.py` now fails
+  the build on a stated count that disagrees with the report, so this line and
+  the check were added together; the check cannot see a stale *reason*, which is
+  what that example was.
 - The commit link in the repositories-inspected list in the appendix. This is a
   separate hand edit from the frontmatter and it is the one that gets forgotten —
   three entries had drifted before `scripts/check_inspected_pins.py` existed, all

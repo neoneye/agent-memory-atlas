@@ -9,13 +9,12 @@ source_url: https://github.com/yaminbkk/NexusMem
 revision: 8c196e84199dec64761870a16949b8089a0c0bf6
 revision_url: https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6
 analyzed_at: 2026-08-29
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capabilities: "tombstone, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
   audit_log: "removals, in the store's own tables | src/store/forget.ts:129, src/store/schema.ts (V5 `mutation_audit`, `tombstones`) | `forget` opens a `mutation_audit` row before the delete sweep — action, project, a JSON detail of the pattern, match type, case flag, reason and the project ids in scope, started and finished timestamps — and each removed node leaves a `tombstones` row carrying kind, source, ts, signal, body length and `body_sha256`/`title_sha256`, foreign-keyed to both the deny-list entry and the audit row. The schema states the reason for hashing: *\"this table exists to prove a value was removed, not to retain a second copy of it… so the record that something was forgotten never itself becomes something worth forgetting.\"* One audit row is written whether or not anything matched. The gap is coverage: `pruneSourceNodes`, the other destructive path, writes neither an audit row nor a tombstone | tests/forget.test.ts:231 asserts one `mutation_audit` row and at least one `tombstones` row survive `sync --rebuild`"
   scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
   negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
-  trust_state: "the node store — a status a human sets, applied on the read path | src/store/schema.ts (V10), src/store/nodes.ts:290, src/cli/commands/review.ts, src/retrieval/rank.ts, src/retrieval/pack.ts | `trust_state TEXT NOT NULL DEFAULT \"candidate\"` becomes `verified` or `rejected` through `nexusmem review <nodeId>`, and the migration states the axis it is not: *\"`provenance` records where a claim came from … it says nothing about whether anyone has checked it.\"* It is deliberately excluded from `upsertNodes`' INSERT columns and its `ON CONFLICT SET` clause so *\"a re-sync must never overwrite a human's verdict\"*. Both retrieval arms select it, `rank.ts` multiplies a rejected node by `REJECTED_TRUST_PENALTY = 0.3` — harsher than the supersession penalty and deliberately not zero, because *\"review demotes, it doesn't delete\"* — and `pack.ts` tags a reviewed node in the injected context while staying silent for the default | tests/"
   bitemporal: "the node store — a record-time read beside the event time already on the row | src/store/schema.ts:26-36, src/store/search.ts:79 | a node carries `ts`/`ts_epoch`, *\"kept verbatim from the source event\"*, and a separate `created_at` for when the row was written; `--as-of` adds `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm and its equivalent to the vector arm, so a query can ask what the store held at a past moment while the event's own time stays untouched. The commit that added it names it: *bi-temporal read over created_at* | tests/"
   human_review: "one node at a time, from the CLI | src/cli/commands/review.ts, src/cli/index.ts:284-286, src/cli/commands/stale.ts:49-52 | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
 stack_storage: "sqlite"
@@ -30,7 +29,7 @@ matrix:
   scoping: "`project_id` on every node and a required predicate on both read arms; a cross-project query opens each registered repository`s own database and tags every hit with its origin"
   integration: "A CLI, a four-tool stdio MCP server (search, sync, status, list-recent), a read-only VS Code panel, and an opt-in `.git/hooks/pre-commit` block that runs `nexusmem precheck` — without `--strict`, so it warns and cannot block a commit"
   background: "None on a schedule. Every collector runs inside `nexusmem sync`, invoked by hand, by a shell hook or by the MCP `sync_project` tool; the git hook triggers a read rather than a write. `sync` also spends at most three local-model judgments per run on contradiction checking, on by default"
-  trust: "Two axes kept apart. `trust_state` is `candidate` until a person runs `nexusmem review`, then `verified` or `rejected`, read on both arms and worth a 0.3 multiplier against a rejected node. Beside it a `signal` float for ranking, plus `provenance` on a four-tier ordering — `observed`, `authored`, `recorded`, `derived` — set per collector, consumed by the ranker as a per-tier decay multiplier and printed in the packed context. An ordering, not a status: the ranker's floors are a deliberate refusal to let any tier gate a result, and the tier's one exclusion is from the staleness queue rather than from retrieval"
+  trust: "Two axes kept apart, and neither withholds. `trust_state` is `candidate` until a person runs `nexusmem review`, then `verified` or `rejected`, read on both arms and worth a 0.3 multiplier against a rejected node — a score, not a gate, which is why the mark is withheld. Beside it a `signal` float for ranking, plus `provenance` on a four-tier ordering — `observed`, `authored`, `recorded`, `derived` — set per collector, consumed by the ranker as a per-tier decay multiplier and printed in the packed context. An ordering, not a status: the ranker's floors are a deliberate refusal to let any tier gate a result, and the tier's one exclusion is from the staleness queue rather than from retrieval"
   strengths: "A value-keyed deny list whose test proves the resurrection case — forget, rebuild from the untouched append-only log, and the value stays gone while a control survives; shell commands with exit codes, which git cannot supply and scrollback loses; a ranker that bounds how far query-independent priors may overturn the query, as one budget shared between them; redaction split into a high-confidence profile safe to run over source code and a broader one that is not; a document-frequency filter that drops tokens which are boilerplate in this project`s own corpus, because bm25 rewards rarity only within the corpus it is run against"
   risks: "The deletion story is complete only through `forget`: `--prune-source` writes no tombstone and no audit row, so the coarse path is the unrecorded one; the GitHub source stores an issue or PR body verbatim without passing it through the redaction the conversation collector uses, and files it at the same provenance tier as the user's own words; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
 ---
@@ -253,10 +252,12 @@ events"*; session summaries are `derived`, *"a model's distillation"*.
 `supersedes` is a nullable pointer from the newer node to the one it replaces,
 with a partial index over the non-null rows.
 
-**An ordering is not a state machine, which is why `trust_state` is withheld,**
-and the code makes the distinction better than the rubric does. Four tiers
-distinguish where a claim came from, not whether anyone has checked it: there is
-no candidate, no verified, no rejected. More to the point, the ranker's floors
+**An ordering is not a state machine, and the code makes the distinction better
+than the rubric does.** Four tiers distinguish where a claim came from, not
+whether anyone has checked it, and the V10 migration says so in as many words
+before adding `trust_state` as the separate axis — which is a genuine
+candidate/verified/rejected field, and is withheld for a different reason set out
+in section 9a. More to the point here, the ranker's floors
 are an explicit decision that no tier may gate — *"Floors keep the combination a
 reordering within each dimension instead of an on/off gate"* — so `derived`
 decays four times faster than `observed` and is still returned. The tier has
@@ -477,11 +478,12 @@ so.
 `signal` is a float in `[0.2, 1]` consulted only by the ranker. It is set at
 ingest from the kind and source and nothing updates it from use, so a node that
 is retrieved constantly and one that is never retrieved carry the same prior
-forever. Nothing withholds a node from being returned — `provenance`,
-`supersedes` and a confirmed contradiction all change a node's *weight* or its
-*visibility in a maintenance list*, and none of them changes its
-*admissibility* — which is why `trust_state` is withheld even with four tiers and
-a model willing to say one memory refutes another.
+forever. **Nothing withholds a node from being returned.** `provenance`,
+`supersedes`, a confirmed contradiction and a human's own `rejected` verdict all
+change a node's *weight* or its *visibility in a maintenance list*, and none of
+them changes its *admissibility*. That is one sentence about four separate
+mechanisms, and it is why `trust_state` is withheld: the store has a reviewer, a
+verdict and three states, and no query that acts on them.
 
 **The audit is real and its coverage is partial, which is the thing to check
 before relying on it.** `mutation_audit` is append-only, has one producer, and
@@ -528,7 +530,8 @@ the module that wrote it calls itself *"a safety net, not a guarantee."*
 > anyone has checked it. `trust_state` is that separate axis — 'candidate' until
 > a human runs `nexusmem review`, then 'verified' or 'rejected'.
 
-Three properties make it a mechanism rather than a column.
+Three properties make it a mechanism rather than a column, and a fourth is
+the reason the mark is withheld anyway.
 
 **A re-sync cannot overwrite a verdict.** `trust_state` is deliberately left out
 of `upsertNodes`' own INSERT columns and its `ON CONFLICT SET` clause, the same
@@ -543,7 +546,20 @@ else touches it.
 comment that draws the distinction: *"a human explicitly rejected this claim, not
 just a newer node quietly replacing it. Still not zero — `review` demotes, it
 doesn't delete."* A rejected memory can still surface when nothing better exists,
-which is the correct behaviour for a store whose reviewer may have been wrong.
+which is a defensible product decision for a store whose reviewer may have been
+wrong.
+
+**And it is why `trust_state` is withheld.** The mark asks for a discrete status
+*"including at least one state that withholds a memory from being treated as
+true"*, and draws the line at what the status is used for: a score gets used for
+ranking, a state gets used for filtering. A grep for `trust_state` across `src/`
+returns the schema, the two retrieval arms selecting it, `nodes.ts:290` writing
+it, and `rank.ts:192` multiplying by `REJECTED_TRUST_PENALTY = 0.3`. Nothing
+filters on it anywhere. So this is the rubric's own collapse case built
+deliberately and well: a genuine three-value status, human-set, protected from
+re-sync, surfaced to the model — used as a confidence number. Everything except
+the property the mark is for is here, and one `WHERE trust_state != 'rejected'`
+on an opt-in flag would supply it.
 
 **It reaches the model.** `pack.ts` prefixes a reviewed node's line with
 `[verified]` or `[rejected]` in the injected context and stays *"silent for the
@@ -940,9 +956,9 @@ leaves no record that it happened.
 
 Nothing was installed and nothing was run: the tree carries two manifests inside the seven-day dependency cooldown, and the eval harness needs a store this machine cannot reconstruct in any case.
 
-**2026-08-29** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — re-pinned 61 commits on, and the marks go from four to **all seven**. Three schema migrations carry it, and each names in its own comment the failure it removes.
+**2026-08-29** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — re-pinned 61 commits on, and the marks go from four to **six**. Three schema migrations carry it, and each names in its own comment the failure it removes.
 
-V10 adds `trust_state` to `nodes`, `candidate` by default and set to `verified` or `rejected` by a new `nexusmem review <nodeId>`, kept out of `upsertNodes`' INSERT and `ON CONFLICT SET` clauses so a re-sync cannot overwrite a person's verdict, selected on both retrieval arms, worth a 0.3 multiplier against a rejected node in `rank.ts`, and tagged into the packed context by `pack.ts`. That earns `trust_state` and `human_review`; section 9a describes both. V9 adds `dismissed` to `contradiction_checks`, so a suggestion the reviewer disagreed with can be silenced through `nexusmem stale --dismiss` without marking the candidate stale — the lie in the data that was previously the only way to stop it resurfacing. V11 makes `project_id` a vec0 `PARTITION KEY` on `nodes_vec`, pushing the scope filter into the k-nearest-neighbour search itself; the migration reports the failure reproduced first in a scratch script, 495 rows in one project against 5 in another where a global `k=50` surfaced none of the 5.
+V10 adds `trust_state` to `nodes`, `candidate` by default and set to `verified` or `rejected` by a new `nexusmem review <nodeId>`, kept out of `upsertNodes`' INSERT and `ON CONFLICT SET` clauses so a re-sync cannot overwrite a person's verdict, selected on both retrieval arms, worth a 0.3 multiplier against a rejected node in `rank.ts`, and tagged into the packed context by `pack.ts`. That earns `human_review`; `trust_state` is withheld because the verdict is a ranking multiplier and nothing filters on it, which section 9a sets out. V9 adds `dismissed` to `contradiction_checks`, so a suggestion the reviewer disagreed with can be silenced through `nexusmem stale --dismiss` without marking the candidate stale — the lie in the data that was previously the only way to stop it resurfacing. V11 makes `project_id` a vec0 `PARTITION KEY` on `nodes_vec`, pushing the scope filter into the k-nearest-neighbour search itself; the migration reports the failure reproduced first in a scratch script, 495 rows in one project against 5 in another where a global `k=50` surfaced none of the 5.
 
 `bitemporal` is earned by `--as-of`, which adds `n.created_at <= ?` to both arms while the event's own `ts` stays on the row — a record-time read beside an event time the schema describes as *"kept verbatim from the source event."* The one surviving `limit * 8` overfetch is now confined to that path, so the silent-short failure the partition key removed is still reachable through a time-travel query.
 

@@ -246,6 +246,22 @@ Review and update every applicable area:
   engineering quality follows the better code across the boundary. Check where
   each mark's evidence sits before writing the frontmatter, and say in the prose
   which side of the line the impressive machinery is on.
+
+  **And read the whole definition, not the first clause of it.** Each row in the
+  table above states what the mechanism must *do*, and the trap is a mechanism
+  that has the right shape and does something else with it. `trust_state` is the
+  one this keeps happening on, because its clause is the easiest to skip: it asks
+  for a discrete status *"including at least one state that withholds a memory
+  from being treated as true"*, and draws the line at usage — *"a confidence
+  number answers 'how sure' and gets used for ranking; a state answers 'may this
+  be acted on' and gets used for filtering."* NexusMem cost this repository a
+  mark on exactly that on 30 August 2026: a real `candidate`/`verified`/`rejected`
+  column, human-set through a CLI verdict, deliberately kept out of the upsert so
+  a re-sync cannot overwrite it, selected on both retrieval arms and tagged into
+  the packed context — and spent as `score * 0.3`, with nothing in the tree
+  filtering on it. Everything the mark's *shape* asks for, and none of what it is
+  for. The check is one grep per mark: find every read of the field and ask
+  whether any of them excludes a row.
 - Lifecycle, retrieval, write, correction, trust, integration, and operations comparisons.
 - Implementation hotspots and patterns worth stealing.
 - Risks, recommendations, and build-vs-borrow conclusions.

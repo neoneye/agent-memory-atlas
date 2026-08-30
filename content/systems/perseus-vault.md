@@ -676,7 +676,7 @@ belong in this type."*
 Right if you want a single-binary local memory with real correction semantics —
 bi-temporal history, supersession with a readable past, a tamper-evident journal,
 tested purge — and you would rather read a project's own audit of its claims than
-take its README on faith. All seven marks is a position three other systems here
+take its README on faith. All seven marks is a position several other systems here
 hold.
 
 Wrong if you need multi-machine memory without manual file movement, or

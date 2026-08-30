@@ -368,7 +368,7 @@ on boundaries rather than on recall quality: `test_client_agent_isolation.py`,
 `test_search_all_users.py`, `test_deletion_apis.py`, `test_raw_memory.py`,
 `test_temporal_queries.py`, plus Redis-cache equivalents.
 
-**This is where MIRIX earns a mark two other repositories in the atlas carry.**
+**This is where MIRIX earns `negative_eval`, and it earns it twice over.**
 `tests/test_filter_tags_db.py:300` creates a raw memory under scope `test-ft`,
 searches under `scopes=["other-scope"]`, and asserts `mem.id not in result_ids` —
 named material, reachable by the same query under a different key, asserted absent.

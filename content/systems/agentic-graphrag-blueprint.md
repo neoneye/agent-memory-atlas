@@ -103,7 +103,7 @@ right. A community's fingerprint changes when its membership or its internal
 edges change; that produces a new report id, the report is regenerated, and the
 id that no longer appears is deleted. So a summary that stopped being true about
 the graph stops being retrievable. That is a correction mechanism, keyed on
-content, and it is the only one here.
+content, and it is the only one this system has.
 
 Everything underneath it is append-only by omission rather than by design.
 Nothing marks a node doubtful, nothing supersedes an edge, nothing notices that a

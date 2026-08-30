@@ -89,6 +89,19 @@ if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; the
   exit 1
 fi
 
+# check_verdict_anchors.py proves the slug resolves; nothing proved the entry
+# under it still describes the report. A re-analysis updates the report, the
+# overview, the homepage card and the bound counts, and the verdicts entry was
+# on none of those checklists — four were stale on 2026-08-30, one of them
+# arguing against a mark the report awards.
+if ! python3 "$project_dir/scripts/check_verdict_marks.py" --self-test; then
+  echo "check_verdict_marks.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_verdict_marks.py" "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside
