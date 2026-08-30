@@ -24180,6 +24180,55 @@ recorded as a method rather than reviewed as a system. The transferable
 claim for the corpus: split procedural memory by <em>when it is
 needed</em> — inject strategy and example always, retrieve convention
 only on failure — and the middle tier carries the most weight.</li>
+<li><strong><code>DevrG03/AgentMesh</code> was examined and has no
+report: it is a workflow execution engine, and nothing it persists is a
+claim that could be false.</strong> A C++20 control plane — 26 headers
+and 26 translation units, a DAG scheduler with atomic in-degrees, a
+priority ready queue, a thread pool, and a pybind11 adapter that
+compiles a LangGraph <code>StateGraph</code> onto it — read at <a
+href="https://github.com/DevrG03/AgentMesh/commit/ae2e2dac09509f16072f08af80ca492072e0f757"><code class="commit-id" title="ae2e2dac09509f16072f08af80ca492072e0f757">ae2e2dac…</code></a>,
+9 commits since 18 August 2026, <strong>with no licence file and no
+licence claim anywhere in the tree</strong>, so a reader has no grant to
+rely on. The scope call is settled by what the store holds.
+<code>IStateRepository</code> persists a <code>WorkflowExecution</code>
+— an id, a <code>WorkflowState</code>, a map of
+<code>TaskExecution</code> records, and start and completion timestamps
+— into two Postgres tables,
+<code>workflows(workflow_id, state, started_at, completed_at)</code> and
+<code>tasks(workflow_id, task_id, state, attempt, result_success, result_output, result_error, …)</code>;
+the only read-back is <code>loadActiveWorkflows()</code>, documented
+<em>"for crash recovery and scheduling"</em> and filtered to Pending or
+Running. That a task ran and returned a string is a fact about what
+happened, and applying the per-mark scope test to it gives the same
+answer as for <a href="../systems/openhands-sdk/">OpenHands SDK</a>,
+<code>os-factory/har</code> and <code>perplexityai/numbat</code>: it
+cannot turn out to be false, so an audit of it is not
+<code>audit_log</code> and a snapshot of it is not memory. The
+vocabulary confirms it — across <code>include/</code>,
+<code>src/</code>, <code>apps/</code> and <code>python_adapter/</code>,
+every occurrence of <code>memory</code> is RAM (<em>"memory bloat"</em>,
+<em>"prevent memory leaks"</em>, <code>InMemoryStateRepository</code>),
+and <code>recall</code>, <code>knowledge</code> and
+<code>embedding</code> appear zero times. Unlike OpenHands SDK there is
+no memory sitting beside the engine to report on. <strong>Recorded
+rather than dropped for the benchmark artifact.</strong>
+<code>benchmark_analysis.md</code> publishes an eight-row matrix against
+LangGraph — 1,900× on in-memory hops, +5.0% and +2.7% on replayed swarms
+with paired <em>t</em>-tests, 95% less RAM — and the repository commits
+exactly one head-to-head result set,
+<code>benchmarks/langgraph_comparison/results_langgraph.json</code>
+beside <code>results_agentmesh.csv</code>, 100 paired runs each. It
+recomputes cleanly and honourably: 50.77 ms against 39.02 ms,
+<strong>23.1% faster</strong>. It is also not any of the eight published
+rows, and none of those rows has a committed artifact behind it — the
+committed file's own <code>peak_ram_mb</code> of 83.1 for LangGraph is a
+third of the matrix's 240 MB, because they are different measurements.
+The shape is worth naming because it is the inverse of the failure this
+atlas usually records: not a claim with no evidence, but a genuine
+committed measurement standing next to a headline table it does not
+support. The reversal condition, should anyone return to this: a store
+that outlives a workflow and holds something an agent concluded rather
+than something the engine did.</li>
 <li><strong><code>aimultiple.com/ai-memory</code> was examined and is
 not a reviewable system: it is an analyst survey with an embedded
 benchmark.</strong> The page introduces RELC-Bench (100 items over 14
