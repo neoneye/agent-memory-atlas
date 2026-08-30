@@ -85,6 +85,7 @@ split — how to do something, what is true of this person, what is true in gene
 The lifecycle is where the design is unusual:
 
 ```mermaid
+%% caption: integration has four verdicts, and the correcting one annotates inline with the path that contradicted it rather than rewriting or deleting
 flowchart TB
     C["conversation"] -->|auto_memory| DN["daily note"]
     R["resource"] -->|auto_resource| DN
@@ -116,6 +117,7 @@ key. The design has left room for a trust state and has not built one.
 ## 3. Architecture
 
 ```mermaid
+%% caption: one pipeline writes markdown into a workspace and the indexes are derived from it, so the wikilink traverse and the two search arms read the same files
 flowchart TD
     A["agent / CLI / service"] --> S["reme.Application<br/>step pipelines"]
     S --> AM["auto_memory"]

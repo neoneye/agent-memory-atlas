@@ -174,7 +174,8 @@ and memory <em>policy</em> is left to the application. There is no trust
 state, no provenance, no correction path, and no scope key — the same
 limitation the atlas records for langmem.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the token budget is split by ratio between chat history and memory blocks, and history overflow is flushed into the blocks rather than dropped</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the token budget is split by ratio between chat history and memory blocks, and history overflow is flushed into the blocks rather than dropped
+flowchart TB
     TL([&quot;token_limit&quot;]) --- SPLIT{{&quot;split by chat_history_token_ratio&lt;br/&gt;default 0.7&quot;}}
     SPLIT --&gt; CH[&quot;chat history&lt;br/&gt;&lt;i&gt;0.7 of the budget&lt;/i&gt;&quot;]
     SPLIT --&gt; MB[&quot;memory blocks&lt;br/&gt;&lt;i&gt;the remaining budget, split among them&lt;/i&gt;&quot;]
@@ -217,7 +218,8 @@ excludes from scope; the newer <code>Memory</code> plus blocks is what
 makes LlamaIndex reviewable here. Both ship, which is worth knowing when
 reading the docs — "memory" in LlamaIndex means two quite different
 things depending on which API you land on.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same budget split seen from the flush side — overflowing messages become static, vector and fact blocks before reassembly</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same budget split seen from the flush side — overflowing messages become static, vector and fact blocks before reassembly
+flowchart TD
   Msgs[&quot;Chat messages&quot;] --&gt; Hist[&quot;short-term history&lt;br/&gt;(0.7 of budget)&quot;]
   Hist --&gt;|overflow: token_flush_size| Flush[&quot;flush&quot;]
   Flush --&gt; Static[&quot;StaticMemoryBlock&quot;]

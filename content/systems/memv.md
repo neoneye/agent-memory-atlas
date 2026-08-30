@@ -78,6 +78,7 @@ it was true and when the system stopped believing it, and queries can ask as of
 either.
 
 ```mermaid
+%% caption: extraction predicts what the episode should contain, calibrates the prediction against the original messages rather than its own narrative, and stores only the gaps
 flowchart TD
     EX["add_exchange(user, assistant)"] --> EP["episode — title + original_messages"]
     EP --> P["stage 1: predict what this episode<br/>should contain, given existing knowledge"]

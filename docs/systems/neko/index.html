@@ -205,7 +205,8 @@ not a storage field"</em>, and that archival additionally requires
 <code>sub_zero_days &gt;= EVIDENCE_ARCHIVE_DAYS</code> — an entry must
 stay negative for a sustained period, not merely dip.</p>
 <p>The lifecycle, with the two unusual things marked:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — reinforcement and disputation are separate counters on separate decay clocks, every mutation appends to the event log, and a ban-topic directive expires after three days</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: reinforcement and disputation are separate counters on separate decay clocks, every mutation appends to the event log, and a ban-topic directive expires after three days
+flowchart TB
     U[&quot;utterance&quot;] --&gt; EX[&quot;extraction&quot;]
     EX --&gt; OB[&quot;outbox&quot;] --&gt; DD[&quot;dedup&quot;] --&gt; ST[(&quot;facts / reflections / persona&quot;)]
     ST --&gt;|&quot;every mutation&quot;| EL[(&quot;event_log&lt;br/&gt;append-only&quot;)]
@@ -222,7 +223,8 @@ stay negative for a sustained period, not merely dip.</p>
 separate counters, so "long confirmed, recently disputed" is a state
 this system can hold and a single confidence float cannot.</p>
 <p>Recall runs in one direction with two gates that both matter:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the scope filter runs before ranking and a hard filter drops suppressed entries before the LLM reranker ever sees them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the scope filter runs before ranking and a hard filter drops suppressed entries before the LLM reranker ever sees them
+flowchart LR
     Q[&quot;query&quot;] --&gt; SF[&quot;scope filter&quot;]
     SF --&gt; BM[&quot;BM25 + cosine&quot;] --&gt; RRF[&quot;RRF fusion&quot;] --&gt; HF[&quot;hard filter&quot;] --&gt; RR[&quot;LLM rerank&quot;]
     SF -.- N1[&quot;before ranking,&lt;br/&gt;never after&quot;]
@@ -287,7 +289,8 @@ and about 24,000 lines:</p>
 </tr>
 </tbody>
 </table></div>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write and read halves together, with the scope filter failing closed to the private namespace</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the write and read halves together, with the scope filter failing closed to the private namespace
+flowchart TB
     U[Utterance] --&gt; EX[extraction]
     U --&gt; UD[user_directives&lt;br/&gt;ban-topic, TTL 3d]
     EX --&gt; OB[outbox] --&gt; DD[fact_dedup] --&gt; V[(facts / reflections / persona JSON)]

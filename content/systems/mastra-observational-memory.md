@@ -62,6 +62,7 @@ raw messages + recent observations
 With asynchronous buffering enabled, an observer or reflector runs early. Its output records the exact message or observation range it covers. Activation replaces only that covered range, preserving anything appended afterward.
 
 ```mermaid
+%% caption: raw messages become dated observation groups at a token threshold, which a reflector compacts into the context the agent actually sees
 flowchart TB
     Msgs["Raw messages"] -->|"processor fires at a token threshold"| Obs[("Dated observation group")]
     Obs -->|"reflector compacts"| Ref[("Reflected observation context")]

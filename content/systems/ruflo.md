@@ -103,6 +103,7 @@ from the result set. That judgement is not written back — the entry in the sto
 is unchanged, so the same chunk is re-screened on every retrieval.
 
 ```mermaid
+%% caption: the retrieval guard is off by default and, when on, its verdict is not written back — so every retrieval re-scans the same chunks
 flowchart TD
     I["insight recorded"] --> B["AutoMemoryBridge<br/>bidirectional sync"]
     B --> MD[("Claude Code auto-memory<br/>MEMORY.md + topic files")]

@@ -94,6 +94,7 @@ headless binaries; in the CLI a folder's skills are seeded once and no state in
 this diagram is ever entered.
 
 ```mermaid
+%% caption: approval is required by default and forced for custom sources, staging a proposal beside the live file — and a rejection deletes it, recording nothing that would stop the same proposal returning
 flowchart TB
     SRC["finished sessions<br/>+ user feedback<br/>+ subagent traces"]
     SRC -->|"scheduler runs run_synthesis"| PR["Proposal<br/>kind: create or update<br/>name, content, rationale, based_on"]
@@ -133,6 +134,7 @@ No entries, no identity below the project, no review.
 ## 3. Architecture
 
 ```mermaid
+%% caption: the synthesizer and the agent loop both write into the skills directory, with everything else on disk as plain JSON
 flowchart TD
     UI["native Rust UI /<br/>embedded web UI /<br/>Telegram, LINE"] --> SRV["axum server<br/>src/server/routes"]
     SRV --> AL["agent_loop<br/>+ toolbox, mcp, graph"]

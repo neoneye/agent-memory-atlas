@@ -81,6 +81,7 @@ insertion with a new date rather than an edit. The old text is gone; only the
 transcript remembers it existed.
 
 ```mermaid
+%% caption: `forget` removes every line matching a substring and leaves no receipt of what went, while the file itself stays a plain git-ignored markdown a person can open and edit
 flowchart TB
     M["Model"] -->|"memory tool<br/>action: remember"| Add["append '- [YYYY-MM-DD] fact'"]
     M -->|"action: forget<br/>match: substring"| Del["remove EVERY matching line<br/>no receipt of what went"]

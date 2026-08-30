@@ -85,6 +85,7 @@ a `tag_summaries` row with `covers_through_turn`, `source_segment_refs` and
 covers and where it stops.
 
 ```mermaid
+%% caption: the tagger is fed the existing vocabulary so it reuses tags rather than inventing synonyms, and a split writes aliases so old queries still resolve
 flowchart TD
     T["completed turn"] --> LT["LLM tagger — semantic tags"]
     LT --> VF["vocabulary feedback loop:<br/>reuse 'storage', do not invent 'data-persistence'"]

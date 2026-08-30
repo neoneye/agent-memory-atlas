@@ -119,6 +119,7 @@ What that picture has no room for is a state meaning anything other than *replac
 - `cloud_sync.py`, `schema.py` (332), `cli.py`.
 
 ```mermaid
+%% caption: the follow mode decides whether superseded rows are hidden, resolved to the current leaf, or returned — with the safest behaviour on omission and `all` requiring an explicit choice
 flowchart TD
   In["MCP writes · documents ·<br/>images"] --> Mem["memories (+fts,<br/>embeddings)"]
   Mem --> Rank["retrieval: FTS +<br/>vectors"]

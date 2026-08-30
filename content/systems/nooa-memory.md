@@ -150,6 +150,7 @@ related · part_of            associative, compositional
 [Memora](../memora/) rather than with the systems that flag one row.
 
 ```mermaid
+%% caption: typed edges carry spreading activation and the archived flag is keyed on the record rather than the value, beside the intent and todo types that model prospective memory
 flowchart TB
     Skill["Authoring via a memory skill"] --> M[("Memory: typed info · skill · episode<br/>intent · todo · reflection · scratch<br/>with typed edges")]
     Ep["Episodes"] -->|"reflection distils"| Gist["Gists"] --> M

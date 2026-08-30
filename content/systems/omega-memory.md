@@ -79,6 +79,7 @@ explicitly notes which one does *not* use it, which is unusually good
 navigational documentation for a heuristic engine.
 
 ```mermaid
+%% caption: a flag set by negative feedback is never cleared by positive feedback, so deletion is its only exit — and the forgetting log keeps a preview and a reason
 stateDiagram-v2
     [*] --> Stored: conflict gate, then contradiction scoring against candidates
     Stored --> Superseded: valid_until stamped, status set, in one UPDATE

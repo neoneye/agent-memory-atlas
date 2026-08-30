@@ -22,7 +22,11 @@ from pathlib import Path
 
 # Raise this only to record captions written; never to accommodate a new
 # uncaptioned diagram. A new report should carry `%% caption:` in its fence.
-UNCAPTIONED_FLOOR = 226
+#
+# It reached zero on 2026-08-30. From here the ratchet is a gate: any diagram
+# added without a caption fails the build, which is what the floor was always
+# meant to become and could not be while 348 sat under it.
+UNCAPTIONED_FLOOR = 0
 
 FENCE = re.compile(r"^```mermaid$", re.MULTILINE)
 CAPTION = re.compile(r"^%%\s*caption:\s*\S", re.MULTILINE)

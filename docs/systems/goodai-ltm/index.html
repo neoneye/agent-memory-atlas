@@ -169,7 +169,8 @@ scores.</p>
 <p>A memory is a <strong>chunk of text with a key</strong>.
 <code>add_text</code> returns a <code>TextKeyType</code>; every
 subsequent operation on that memory takes the key back.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the insert returns an address and update, read and delete all take it back — the addressed lifecycle most later frameworks in this atlas do not declare</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the insert returns an address and update, read and delete all take it back — the addressed lifecycle most later frameworks in this atlas do not declare
+flowchart TB
     ADD[&quot;add_text(text, metadata, rewrite=False)&quot;] --&gt;|&quot;returns&quot;| K([&quot;text_key&quot;])
     ADD -.-&gt;|&quot;rewrite=True routes&lt;br/&gt;the text through an LLM first&quot;| CQ
     ADD --&gt; CQ[&quot;chunk queue&quot;] --&gt; EMB[&quot;embeddings&quot;] --&gt; DB[(&quot;simple vector db&quot;)]
@@ -204,7 +205,8 @@ retrieval.</p>
 <p>A Python library, MIT licence, with no server, no daemon, no MCP
 surface and no framework binding. Its consumers are the example agents
 in <code>examples/</code>.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write path with its optional LLM rewrite, the reranked read, and the three key-addressed operations hanging off the text key</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the write path with its optional LLM rewrite, the reranked read, and the three key-addressed operations hanging off the text key
+flowchart TB
     A[add_text] --&gt; RW{rewrite?}
     RW --&gt;|yes| LLM[rewrite_model]
     RW --&gt;|no| CQ[chunk_queue]

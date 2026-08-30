@@ -73,6 +73,7 @@ report what matters, what connects and what is weak, and a context export feeds 
 filtered subset back to an AI session.
 
 ```mermaid
+%% caption: a high-confidence claim is demoted to low unless its excerpt is a literal substring of the source, and every rejection and demotion is written to a manifest with its reason
 flowchart TD
     S["chats, notes, decisions, sources"] --> EX["extractor — LLM proposes nodes and edges"]
     EX --> V{"validator"}

@@ -110,6 +110,7 @@ the repository, both times inside the prompt string. The grading exists as an
 instruction to a model and never as a field anything can filter on.
 
 ```mermaid
+%% caption: the summarisation counter compares against a running index rather than a count, so one gap stops long-term memory forever — and a non-zero similarity threshold keeps the farthest matches instead of the nearest
 flowchart TD
     A["agent calls add(msg)"] --> B["SQLite row: memory_index = MAX+1"]
     A --> C["Chroma document, doc_id = msg.id"]

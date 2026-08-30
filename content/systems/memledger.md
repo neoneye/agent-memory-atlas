@@ -120,6 +120,7 @@ initial state is the other good detail: a new fact can enter recorded but not ye
 usable, which is the state a candidate extraction should be in.
 
 ```mermaid
+%% caption: the full state machine, with `deleted` terminal and invisible to the dedup lookup — so the value it held can be written again
 stateDiagram-v2
     [*] --> quarantined
     [*] --> active

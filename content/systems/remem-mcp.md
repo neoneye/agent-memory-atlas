@@ -104,6 +104,7 @@ believed, since everything is equally believed the moment it is written. It is
 caller named a scope.
 
 ```mermaid
+%% caption: capture defaults the session key to a hash of the working directory and recall does not, so the shipped recall path searches every project — and the pipeline that would write the atom tables returns empty
 flowchart TB
     A["agent calls capture"] --> RD["redactor: 11 secret patterns<br/>plus entropy detector"]
     RD --> DH{"content_hash<br/>already present<br/>in this session?"}

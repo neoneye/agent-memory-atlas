@@ -64,6 +64,7 @@ Primary units:
 Lifecycle:
 
 ```mermaid
+%% caption: verbatim text is chunked and stored under deterministic ids, and what comes back is the drawer's original text rather than a summary of it
 flowchart TB
     SRC["files, conversations,<br/>manual MCP writes"] --> N["normalize and chunk<br/><i>verbatim text</i>"]
     N --> W["assign wing + room + metadata"]
@@ -107,6 +108,7 @@ Core files:
 Architecture:
 
 ```mermaid
+%% caption: the miner and the MCP write path both produce drawers and closet pointers over a swappable backend, with the graph and the memory stack derived beside them
 flowchart TD
   Sources["Files / JSONL /<br/>conversations /<br/>MCP writes"] --> Miner["Miner /<br/>MCP add_drawer"]
   Miner --> Drawers["mempalace_drawers"]

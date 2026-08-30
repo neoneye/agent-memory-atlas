@@ -89,6 +89,7 @@ and `relationships` with a confidence float. Beside them sits an observability
 tier — the audit chain and a rule-based loop detector.
 
 ```mermaid
+%% caption: a write closes the previous version and inserts a new one, and Postgres row-level security enforces the tenant on both the write check and every read
 flowchart TD
     W["remember(name, data)"] --> FX{"fact extraction configured?"}
     FX -->|"platform / ollama / openai / anthropic"| F["decompose into self-contained facts"]

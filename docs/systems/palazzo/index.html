@@ -235,7 +235,8 @@ Qdrant a <code>must_not</code> range on
 <code>include_superseded: true</code> lifts it for archaeology. The old
 text stays addressable through <code>palace_recall</code>, so a
 correction hides a memory without destroying it.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the dedupe probe excludes superseded points so a re-store cannot resurrect one, and a delete aborts unless its WAL entry is durable first</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the dedupe probe excludes superseded points so a re-store cannot resurrect one, and a delete aborts unless its WAL entry is durable first
+flowchart TD
     S[&quot;palace_store(text, wing/room/hall)&quot;] --&gt; E[&quot;embed 768-dim&quot;]
     E --&gt; D{&quot;top-1 cosine &gt;= 0.95&lt;br/&gt;AND text identical?&quot;}
     D --&gt;|&quot;yes&quot;| EX[&quot;return the existing id, write nothing&quot;]

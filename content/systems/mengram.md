@@ -84,6 +84,7 @@ events, `procedures()` for workflows. A failed episode can evolve the procedure
 it was linked to, producing a new version — and that promotion is gated.
 
 ```mermaid
+%% caption: evolving a procedure computes which preconditions are newly added and quarantines the new version when a dependent procedure would break, leaving the old version current
 flowchart TD
     EP["episode with an outcome<br/>linked_procedure_id, failed_at_step"] --> EV["evolve_procedure(old → new steps)"]
     EV --> NA{"newly_added_preconditions(old, new)"}

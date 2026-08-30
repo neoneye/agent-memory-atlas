@@ -115,6 +115,7 @@ surface; memories are produced automatically from traffic and removed through an
 admin API.
 
 ```mermaid
+%% caption: the jailbreak classifier on the request path means a blocked prompt produces no memory, and two contradicting facts are both stored and both retrievable
 flowchart TD
     R["chat completion through Envoy"] --> J{"jailbreak classifier<br/>on the request path"}
     J -- "blocked" --> D["no memory produced"]

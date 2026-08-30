@@ -93,6 +93,7 @@ duration of a step and does all mutation at the boundary, which is the same
 discipline a serving system needs for a different reason.
 
 ```mermaid
+%% caption: every retrieved card is credited or blamed for the rollout's score, and a card with a negative net score after three retrievals is removed with nothing left behind
 flowchart TD
     Q["Proposer question"] --> RET["SkillBank.retrieve<br/>e5-base-v2 cosine, top 3, no floor"]
     RET -->|"string-prepended to the solver prompt"| SOL["Solver rollout"]

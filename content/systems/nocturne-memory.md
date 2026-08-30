@@ -74,6 +74,7 @@ reading a system view, navigates by URI or searches by text, and edits by quotin
 the passage it wants to change.
 
 ```mermaid
+%% caption: an edit that misses exactly is retried in normalized space and mapped back to offsets in the original content, so a curly quote does not defeat a correction
 flowchart TD
     B["read_memory('system://boot')"] --> SV["system_views.generate_boot_view"]
     SV --> G["memory graph, scoped to namespace"]

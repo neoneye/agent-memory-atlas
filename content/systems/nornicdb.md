@@ -83,6 +83,7 @@ Underneath, MVCC gives every transaction a consistent snapshot and preserves
 older versions down to a retained floor.
 
 ```mermaid
+%% caption: reads resolve against one committed MVCC view and a historical read below the retained floor fails rather than guessing, while the search paths are deliberately outside that state
 flowchart TD
     W["write in a transaction"] --> MV["anchored to an MVCC version"]
     MV --> C{"constraints"}

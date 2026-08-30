@@ -105,6 +105,7 @@ ordinary tools for filesystem or network access, with their normal approval
 rules."* Saying it twice, in two audiences, is the design.
 
 ```mermaid
+%% caption: four skill roots collapse into one name-keyed catalog where a later root silently wins, and only the name and description reach the prompt until something asks for the body
 flowchart TD
     R1["~/.agents/skills"] --> C
     R2["~/.ollama/skills"] --> C

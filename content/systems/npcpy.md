@@ -78,6 +78,7 @@ memory.
 outcome in its statistics rather than as a skip.
 
 ```mermaid
+%% caption: only human-approved memories are read by context assembly, and a rejection is recorded so extraction never proposes it again
 stateDiagram-v2
     [*] --> pending_approval: background extraction<br/>from conversation
     pending_approval --> human_approved: reviewer presses a

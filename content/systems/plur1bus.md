@@ -129,6 +129,7 @@ The rendered line carries the status the penalty was computed from. `formatNeoRe
 One state transition is not epistemic at all and is worth naming here because it protects the whole loop. Text that PLUR1BUS itself injected into a prompt — recall blocks, temporal context, status reminders, cron output — is matched against a marker list and refused as a capture candidate (`isInjectedContextText`, `lib/neo-arch.js:176`, applied at `neo-arch.js:1199` and `:1242`). Without it, recall output becomes next turn's memory, which the comment above the marker list dates to a performance analysis on 29 May 2026.
 
 ```mermaid
+%% caption: supersession is dropped at one line of the recall pipeline while conflict and demotion are only ranked down and still injected, so three lifecycle states have three different read-path treatments
 stateDiagram-v2
   [*] --> candidate: agent_end capture
   candidate --> active: written to LanceDB

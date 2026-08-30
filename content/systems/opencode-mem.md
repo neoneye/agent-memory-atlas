@@ -85,6 +85,7 @@ approximate nearest-neighbour scan followed by a scope filter. A user profile is
 learned separately and versioned.
 
 ```mermaid
+%% caption: a `<private>` block redacts with a depth counter and an unclosed tag redacts to the end of the text, and the profile changelog keeps a full snapshot per version until cleanup trims to the newest N
 flowchart TD
     P["prompt / session"] --> AC["auto-capture: structured extraction"]
     AC --> PR["privacy: &lt;private&gt;…&lt;/private&gt; → [REDACTED]<br/>depth counter, unclosed tag redacts to end"]

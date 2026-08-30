@@ -177,7 +177,8 @@ comments rather than a configuration guide.</p>
 passes is extracted into facts and entities, held in a vector store and
 a graph, and retrieved by similarity plus traversal at a latency tier
 the caller chooses.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a regex drops trivial messages before any embedding is computed, then prototype similarity decides salience, and the query tier chooses how far into the graph to traverse</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a regex drops trivial messages before any embedding is computed, then prototype similarity decides salience, and the query tier chooses how far into the graph to traverse
+flowchart TD
     M[&quot;message&quot;] --&gt; RX{&quot;NON_SALIENT_PATTERNS —&lt;br/&gt;bare &#39;hi&#39;, &#39;thanks&#39;, &#39;ok&#39;, &#39;bye&#39;&quot;}
     RX --&gt;|match| DROP[&quot;dropped, no embedding computed&quot;]
     RX --&gt;|no match| MODE{&quot;SalienceMode&quot;}

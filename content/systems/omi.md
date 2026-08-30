@@ -143,6 +143,7 @@ retracted, invalidated, or rejected in review — each of which is a typed mutat
 in the ledger and a status change on the projection.
 
 ```mermaid
+%% caption: each state carries what it is permitted to do — answer, answer with a disclaimer, audit only, or nothing — and an unanswered review times out into accepted rather than staying pending
 stateDiagram-v2
     [*] --> Candidate: extraction from a transcript
     Candidate --> Accepted: no conflict, or review accepts

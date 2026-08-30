@@ -102,6 +102,7 @@ How a memory stops being current: a preference is superseded and its
 that a value was judged wrong.
 
 ```mermaid
+%% caption: one shared graph rather than per-agent silos, with reasoning traces recorded through a context manager and supersession covering preferences only
 flowchart TB
     Turn["Conversation turn"] --> Cap["Capture"]
     Cap --> GL["GLiNER extraction"]

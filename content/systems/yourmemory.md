@@ -78,6 +78,7 @@ Retrieval is lexical plus semantic, then a graph walk. A nightly job prunes what
 has decayed below threshold.
 
 ```mermaid
+%% caption: four write outcomes chosen by cosine band and whether a contradiction was detected, with decay deliberately excluded from the retrieval score and included in the graph's
 flowchart TD
     W["POST /memories"] --> SIM{"cosine against existing"}
     SIM -->|"≥ 0.92"| RE["reinforce — paraphrase,<br/>bump recall_count only"]

@@ -86,6 +86,7 @@ and excluded from the index, below 0.60 it is flagged `stale_suspected` and
 shown with a warning.
 
 ```mermaid
+%% caption: a Beta-distributed validity score decides whether an observation is quarantined, warned about, or eligible, and a bandit learns from outcomes — counting only what was actually visible
 flowchart TD
     C["tool trace / turn capture"] --> X["auto-extract, dedup, distil"]
     X --> O["observation, typed, project-scoped"]

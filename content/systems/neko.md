@@ -85,6 +85,7 @@ sustained period, not merely dip.
 The lifecycle, with the two unusual things marked:
 
 ```mermaid
+%% caption: reinforcement and disputation are separate counters on separate decay clocks, every mutation appends to the event log, and a ban-topic directive expires after three days
 flowchart TB
     U["utterance"] --> EX["extraction"]
     EX --> OB["outbox"] --> DD["dedup"] --> ST[("facts / reflections / persona")]
@@ -107,6 +108,7 @@ and a single confidence float cannot.
 Recall runs in one direction with two gates that both matter:
 
 ```mermaid
+%% caption: the scope filter runs before ranking and a hard filter drops suppressed entries before the LLM reranker ever sees them
 flowchart LR
     Q["query"] --> SF["scope filter"]
     SF --> BM["BM25 + cosine"] --> RRF["RRF fusion"] --> HF["hard filter"] --> RR["LLM rerank"]
@@ -143,6 +145,7 @@ Python, Apache-2.0, with `memory/` holding thirty modules and about 24,000 lines
 | Embedding | `embeddings.py`, `embedding_worker.py`, `embeddings_fallback.py`, `_embeddings/` |
 
 ```mermaid
+%% caption: the write and read halves together, with the scope filter failing closed to the private namespace
 flowchart TB
     U[Utterance] --> EX[extraction]
     U --> UD[user_directives<br/>ban-topic, TTL 3d]

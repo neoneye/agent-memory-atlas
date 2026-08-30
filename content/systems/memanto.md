@@ -73,6 +73,7 @@ atlas's terms.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks one of five dispositions rather than the system resolving it
 flowchart TB
     D["a day's sessions"] --> AN["scheduled daily analysis"]
     AN --> SUM["AI summary"]
@@ -115,6 +116,7 @@ was wrong. Those deserve different dispositions, and most systems collapse them.
   `MOORCHEH_ONPREM_URL`.
 
 ```mermaid
+%% caption: the same daily analysis in context — the LLM finds the conflict, the human decides it, and a manual disposition writes a human-authored replacement
 flowchart TD
   W["store · batch ·<br/>extract"] --> M["memories (Moorcheh)"]
   M --> S["search · as_of_date ·<br/>confidence"]

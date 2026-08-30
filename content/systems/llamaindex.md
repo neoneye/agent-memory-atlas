@@ -53,6 +53,7 @@ The reservation is the familiar framework one: these are primitives, and memory 
 ## 2. Mental Model
 
 ```mermaid
+%% caption: the token budget is split by ratio between chat history and memory blocks, and history overflow is flushed into the blocks rather than dropped
 flowchart TB
     TL(["token_limit"]) --- SPLIT{{"split by chat_history_token_ratio<br/>default 0.7"}}
     SPLIT --> CH["chat history<br/><i>0.7 of the budget</i>"]
@@ -93,6 +94,7 @@ Returning `Optional[T]` from `atruncate` matters: a block may decline to shrink 
 The legacy modules are the conversation-window family the atlas excludes from scope; the newer `Memory` plus blocks is what makes LlamaIndex reviewable here. Both ship, which is worth knowing when reading the docs — "memory" in LlamaIndex means two quite different things depending on which API you land on.
 
 ```mermaid
+%% caption: the same budget split seen from the flush side — overflowing messages become static, vector and fact blocks before reassembly
 flowchart TD
   Msgs["Chat messages"] --> Hist["short-term history<br/>(0.7 of budget)"]
   Hist -->|overflow: token_flush_size| Flush["flush"]

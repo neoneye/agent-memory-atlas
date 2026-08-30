@@ -78,6 +78,7 @@ episodic journals, durable `PROJECT.md` and `USER.md` notes hold the semantic
 layer, and repeated workflows can be distilled into a third, procedural one.
 
 ```mermaid
+%% caption: the dated markdown is authoritative and Milvus is a rebuildable shadow keyed on a content hash, and a mined skill candidate stays inert until a person installs it
 flowchart TD
     C["conversation turn"] --> J[".memsearch/memory/YYYY-MM-DD.md"]
     J --> W["file watcher"]

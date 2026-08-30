@@ -179,7 +179,8 @@ side-effect-free and testable.</p>
 what happens on collision. The store underneath is content-addressed and
 versioned, so every prior value is a commit away and <code>blame</code>
 will tell you who wrote it.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the key's path decides its merge policy, and the semantic path is confidence-gated so a lower-confidence write is a no-op with no commit — with reject mode surfacing the conflict to a person instead</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the key&#39;s path decides its merge policy, and the semantic path is confidence-gated so a lower-confidence write is a no-op with no commit — with reject mode surfacing the conflict to a person instead
+flowchart TD
     W[&quot;remember(path, content, confidence)&quot;] --&gt; T{&quot;memory_type_for_key(path)&quot;}
     T --&gt;|&quot;context.current, metrics.turn&quot;| WK[&quot;WORKING → REPLACE&quot;]
     T --&gt;|&quot;experience, metrics.code&quot;| EP[&quot;EPISODIC → APPEND (capped)&quot;]

@@ -92,6 +92,7 @@ operational memory layer, and it reads as one.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: the heat score orders the mid-term heap and decides promotion, and long term collapses into one merged profile string per user
 flowchart TB
     ST["short term<br/><i>FIFO of dialogue QA pairs</i>"] -->|"capacity reached"| MT
     MT["mid term<br/><i>LLM segments dialogue into topic sessions,<br/>each carrying N_visit, L_interaction,<br/>last_visit_time, R_recency, H_segment</i>"]

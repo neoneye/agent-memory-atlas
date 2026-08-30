@@ -110,6 +110,7 @@ Packages, in lines of TypeScript excluding tests:
 - `queries/` — seventeen numbered psql benchmark files plus tuned variants.
 
 ```mermaid
+%% caption: three credential kinds resolve to one principal in middleware, so the scope reaching the store does not depend on which surface the caller used
 flowchart TD
   Cred["OAuth ·<br/>api key ·<br/>cookie"] --> MW["middleware<br/>resolves principal"]
   MW --> BTA["core.build_tree_access(principal, space)"]

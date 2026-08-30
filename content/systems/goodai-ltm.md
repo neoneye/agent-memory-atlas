@@ -71,6 +71,7 @@ A memory is a **chunk of text with a key**. `add_text` returns a `TextKeyType`;
 every subsequent operation on that memory takes the key back.
 
 ```mermaid
+%% caption: the insert returns an address and update, read and delete all take it back — the addressed lifecycle most later frameworks in this atlas do not declare
 flowchart TB
     ADD["add_text(text, metadata, rewrite=False)"] -->|"returns"| K(["text_key"])
     ADD -.->|"rewrite=True routes<br/>the text through an LLM first"| CQ
@@ -111,6 +112,7 @@ A Python library, MIT licence, with no server, no daemon, no MCP surface and no
 framework binding. Its consumers are the example agents in `examples/`.
 
 ```mermaid
+%% caption: the write path with its optional LLM rewrite, the reranked read, and the three key-addressed operations hanging off the text key
 flowchart TB
     A[add_text] --> RW{rewrite?}
     RW -->|yes| LLM[rewrite_model]

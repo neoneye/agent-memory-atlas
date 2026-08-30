@@ -180,7 +180,8 @@ BufferZone      blobs awaiting processing</code></pre>
 <p>The life of a memo is a three-way decision made by one LLM call, and
 the vocabulary comes straight from
 <code>src/server/api/memobase_server/prompts/merge_profile.py</code>:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three merge verdicts, one of which rewrites the memo so the previous text ceases to exist</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three merge verdicts, one of which rewrites the memo so the previous text ceases to exist
+flowchart TB
     N[&quot;new information about&lt;br/&gt;(topic, subtopic)&quot;] --&gt; M{&quot;merge_profile&quot;}
     M --&gt;|APPEND| A[&quot;the memo did not exist,&lt;br/&gt;or this is additive&quot;]
     M --&gt;|UPDATE| U[&quot;rewrite the memo —&lt;br/&gt;&lt;b&gt;old text ceases to exist&lt;/b&gt;&quot;]
@@ -211,7 +212,8 @@ validity</a> is about — when it was said versus when it was true — and
 it lives inside a text string, maintained by asking a language model
 nicely, queryable by nothing.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — blobs buffer until a token threshold flushes them through extract-merge-organize, and the source blob is deleted afterwards unless chat persistence is on</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: blobs buffer until a token threshold flushes them through extract-merge-organize, and the source blob is deleted afterwards unless chat persistence is on
+flowchart LR
     APP[&quot;app / SDK / MCP&quot;] --&gt;|insert blob| API[&quot;FastAPI&lt;br/&gt;memobase_server&quot;]
     API --&gt; BLOB[(&quot;general_blobs&quot;)]
     API --&gt; BUF[(&quot;buffer_zones&quot;)]

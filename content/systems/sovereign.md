@@ -83,6 +83,7 @@ An episode enters only if the runtime has the energy to accept it, and once in,
 it is immutable, unaddressable, and eventually evicted without a record.
 
 ```mermaid
+%% caption: an energy budget can refuse a heartbeat outright with a reason, and the episodic log is a bounded deque whose oldest entries are dropped silently and not counted
 flowchart TB
     IN["heartbeat(payload, origin, priority)"] --> SOV{"SovereigntyArtery<br/>energy − cost×priority"}
     SOV -->|"energy ≤ 0.2"| REF["<b>refused</b><br/>reason string returned<br/>boundary_active = true"]

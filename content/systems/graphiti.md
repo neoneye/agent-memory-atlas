@@ -57,6 +57,7 @@ Two clocks answer two different questions:
 That distinction makes backfilled and corrected history representable without pretending ingestion time equals event time.
 
 ```mermaid
+%% caption: a contradicting fact closes the previous edge's validity interval instead of erasing it, so what was believed last March stays answerable — and nothing marks any claim verified or rejected
 flowchart TB
     Ep["Episode ingested"] --> Ext["Entity and edge extraction"]
     Ext --> Res["Entity resolution<br/>against existing nodes"]

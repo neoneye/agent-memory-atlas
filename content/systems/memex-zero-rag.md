@@ -124,6 +124,7 @@ the levels are a discretised self-assessment with no state that withholds
 anything from use.
 
 ```mermaid
+%% caption: the ingest tool returns a numbered list of instructions and the model may or may not follow them, search is unranked substring matching, and the contradiction file no tool touches
 flowchart TD
     RAW["raw/ — immutable sources"] --> ING["wiki_ingest"]
     ING --> INSTR["returns a numbered list<br/>to the model"]

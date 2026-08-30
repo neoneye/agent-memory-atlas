@@ -189,7 +189,8 @@ creates, section 9.</p>
 facts, <code>episodes()</code> for events, <code>procedures()</code> for
 workflows. A failed episode can evolve the procedure it was linked to,
 producing a new version — and that promotion is gated.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — evolving a procedure computes which preconditions are newly added and quarantines the new version when a dependent procedure would break, leaving the old version current</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: evolving a procedure computes which preconditions are newly added and quarantines the new version when a dependent procedure would break, leaving the old version current
+flowchart TD
     EP[&quot;episode with an outcome&lt;br/&gt;linked_procedure_id, failed_at_step&quot;] --&gt; EV[&quot;evolve_procedure(old → new steps)&quot;]
     EV --&gt; NA{&quot;newly_added_preconditions(old, new)&quot;}
     NA --&gt;|&quot;none added&quot;| SAFE[&quot;no new demand — cannot newly break a dependent&quot;]

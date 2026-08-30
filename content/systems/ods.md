@@ -65,6 +65,7 @@ A memory becomes durable by being in the baseline, which means a person put it t
 That makes the epistemics unusually blunt and unusually clear. The agent's own notes are explicitly not trusted to persist, and the README names what that is for: role drift, context bloat, confusion between past and present tasks, and the agent rewriting its own operating parameters. Where most of this corpus tries to decide *which* agent-written memories deserve to last, this decides that none of them do, and pushes anything worth keeping into a different store — the project repository — by instruction rather than by mechanism.
 
 ```mermaid
+%% caption: archival takes the text below the *last* separator, so an agent that writes its own `---` loses everything above it when the baseline is restored
 stateDiagram-v2
   [*] --> Baseline: operator authors MEMORY.md above the separator
   Baseline --> Working: agent appends scratch notes below it

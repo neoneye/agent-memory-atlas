@@ -84,6 +84,7 @@ injects a bounded excerpt; the agent then queries QMD by meaning and reads only
 what it needs.
 
 ```mermaid
+%% caption: the eager layer degrades worst-priority sections first to fit its byte budget and names every section it dropped in a size meter
 flowchart TD
     SS["SessionStart"] --> EL["eager layer: small excerpts,<br/>filenames, git summary"]
     EL --> BUD{"over eager_layer_budget_bytes (80,000)?"}

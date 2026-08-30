@@ -92,6 +92,7 @@ surface because it isn't similar to the failure, only causally upstream". It is
 described as a faithful port of Cai 2024 and is backward-only by construction.
 
 ```mermaid
+%% caption: suppression compounds per call and expires, merges keep an undo payload, and purge is the one irreversible transition — leaving a content-free tombstone row
 stateDiagram-v2
     [*] --> Active: captured
     Active --> Dormant: time_decay

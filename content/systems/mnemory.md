@@ -98,6 +98,7 @@ Death is by TTL (`ttl_days`, `expires_at`), by batch delete, by a person in the
 UI, or by maintenance pruning rows that consolidation superseded.
 
 ```mermaid
+%% caption: one LLM call extracts, classifies and dedups, consolidation writes supersession that penalises at recall rather than excluding, and the injection scan surfaces a cached issue list for a person to act on
 stateDiagram-v2
     [*] --> Extracted: one LLM call extracts, classifies and dedups
     Extracted --> Raw: stored with memory_layer raw

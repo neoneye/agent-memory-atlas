@@ -85,6 +85,7 @@ path excludes both superseded and soft-deleted rows, and `include_superseded`
 exists for the caller that wants history.
 
 ```mermaid
+%% caption: the duplicate check filters on `deleted_at IS NULL`, so forgetting a memory frees its content hash and the same text can be remembered again
 flowchart TD
     R["remember"] --> H["normalize + content_hash"]
     H --> Q{"existing node with<br/>this hash?"}

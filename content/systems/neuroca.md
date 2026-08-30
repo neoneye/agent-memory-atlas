@@ -94,6 +94,7 @@ explicit soft-delete state rather than an implied one — a memory in that state
 gone from the agent's view and still present for whatever needs to clean it up.
 
 ```mermaid
+%% caption: consolidation promotes a copy into a higher tier and records what it came from, while forgetting is a mark that maintenance later acts on
 stateDiagram-v2
     [*] --> active: added through the MemoryManager, routed to a tier
     active --> decaying: natural decay, strength falling

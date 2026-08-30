@@ -100,6 +100,7 @@ you what went — deletion is something the system expects to be asked about
 afterwards.
 
 ```mermaid
+%% caption: an abstention gate returns nothing rather than a weak answer, and evolution links a successor to its predecessor with an effective date instead of overwriting
 flowchart TD
     W["Write via MCP / REST / gRPC / MBP"] --> E[("Engram<br/>TrustLevel, importance,<br/>ValidFrom / ValidUntil")]
     W --> P[("Provenance log, per engram<br/>source, agent, operation, reason")]

@@ -71,6 +71,7 @@ fuses lexical, semantic and graph signals; a bandit decides which of those
 stages to run; vitality and importance scores decay and reinforce from access.
 
 ```mermaid
+%% caption: a per-query-type bandit decides whether each retrieval stage is worth running, abstaining below a threshold, and the warmth re-rank writes an audit line recording how far each result moved
 flowchart TD
     N["markdown notes in a vault"] --> WL["wiki-links → graph edges"]
     N --> IDX["SQLite index"]

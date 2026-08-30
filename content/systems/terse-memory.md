@@ -104,6 +104,7 @@ belong with the mark. Status is required on only two of the six kinds, so a
 nothing sets, because `MEM-C stale` is the deferred rule.
 
 ```mermaid
+%% caption: the hot-buttons section is always loaded and never retrieved, and the checks that would find stale or duplicate entries are deferred to a later version
 flowchart TD
     U["user says something"] --> A["agent follows SKILL.md"]
     A --> HB{"does # Hot buttons ## Don't forbid it?"}

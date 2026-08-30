@@ -82,6 +82,7 @@ a git history rewrite across every branch, which is a category of operation
 rather than a call.
 
 ```mermaid
+%% caption: a session is a branch and a turn is a commit, so the dedup index is a regenerable projection and a fork is a replay onto a different history — the log records what happened, with a correction and the mistake both in it and nothing preferring either
 flowchart TB
     U["User turn"] --> C["_commit_turn()"]
     A["Assistant turn"] --> C

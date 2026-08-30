@@ -64,6 +64,7 @@ workspace/
 Two stages, deliberately separated:
 
 ```mermaid
+%% caption: the dream pass advances its cursor only when no tool errored, so a failed consolidation is retried against the same history rather than skipped
 flowchart TB
     subgraph S1["Stage 1 — Consolidator, pressure-driven"]
         P["context window under pressure"] --> SL["summarize the oldest safe slice"]
@@ -100,6 +101,7 @@ The documentation is explicit that `history.jsonl` "is not the final memory. It 
 - Workspace `prompts/dream.md` — user-editable instructions steering Dream's behaviour.
 
 ```mermaid
+%% caption: two cursors over one append-only history, with the durable files edited surgically and committed with a message grounded in the actual delta
 flowchart TD
   Conv["session.messages"] --> Cons["Consolidator (on<br/>context pressure)"]
   Cons --> Hist["history.jsonl<br/>(append-only)"]

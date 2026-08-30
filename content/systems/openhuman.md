@@ -85,6 +85,7 @@ turns it came from.
 Cutting across all three is the label that matters:
 
 ```mermaid
+%% caption: taint decides what a memory may drive, and anything unknown, corrupt or legacy fails closed to the external class
 flowchart LR
     U["user typed it"] --> I["MemoryTaint::Internal"]
     S["synced from email,<br/>docs, MCP"] --> E["MemoryTaint::ExternalSync"]
@@ -134,6 +135,7 @@ connection helper belongs one layer down."*
 | `memory_search` | 718 | Hybrid and vector search tools |
 
 ```mermaid
+%% caption: taint is preserved through scrubbing and every read path passes the same gate, whether it came from the tree walk or from search
 flowchart TB
     S[Sources: chat, email, docs, MCP, Composio] --> ING[memory ingest_pipeline]
     ING --> SAN[memory_store safety<br/>secret + PII scrub, taint preserved]

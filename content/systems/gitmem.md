@@ -89,6 +89,7 @@ must answer it, and the answer is recorded along with whether the resulting
 action succeeded.
 
 ```mermaid
+%% caption: a scar is refused without a severity and two counter-arguments, a PreToolUse hook blocks a consequential command while surfaced scars are unconfirmed, and a repeat mistake is recorded against the scar that failed to prevent it
 flowchart TD
     CL["create_learning(type='scar')"] --> V{"validateScar"}
     V -->|"no severity, or fewer than 2 counter_arguments"| REJ["write refused, errors returned"]

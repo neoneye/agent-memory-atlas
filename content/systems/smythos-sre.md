@@ -111,6 +111,7 @@ The mechanism worth drawing is not that lifecycle, which is short. It is what
 happens to the transcript when the conversation leaves the process.
 
 ```mermaid
+%% caption: the cache id arrives in a header the remote runtime does not validate, and access resolves through the team branch — which under the default account puts every candidate on one team
 sequenceDiagram
     participant Conv as Conversation (local)
     participant Ctx as LLMContext

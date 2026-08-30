@@ -94,6 +94,7 @@ stores the argument for it, and puts it somewhere the garbage collector cannot
 reach.
 
 ```mermaid
+%% caption: contested is the state that keeps both sides visible and joined by an edge, because the evidence will not say which decision replaced which
 stateDiagram-v2
     [*] --> PENDING: extracted from the session
     PENDING --> IN_PROGRESS

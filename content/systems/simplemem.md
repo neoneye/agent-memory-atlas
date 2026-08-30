@@ -95,6 +95,7 @@ the `confidence` default of 0.7 is never revised by corroboration. No
 different question.
 
 ```mermaid
+%% caption: extraction resolves pronouns and absolutises timestamps so the stored entry is self-contained, and the only removal verb wipes everything because no entry carries a key to delete by
 flowchart TB
     Dlg["Dialogue window"] --> Ext["LLM extraction<br/>Φ_coref: pronouns resolved<br/>Φ_time: timestamps absolutised"]
     Ext --> Entry["MemoryEntry<br/>semantic + lexical + symbolic layers<br/>timestamp = when it HAPPENED"]

@@ -80,6 +80,7 @@ Four memory kinds coexist with very different guarantees:
 Write lifecycle:
 
 ```mermaid
+%% caption: the write gate, threat scan, drift check and budget refusal all run before the disk write — and the system prompt is unchanged for the rest of the session, because the frozen snapshot is only re-rendered at the next session start
 flowchart TB
     A["memory(action = add, replace or remove,<br/>target = memory or user)"] --> G{"write gate"}
     G -->|block| B["refused"]
@@ -114,6 +115,7 @@ session the agent's memory and its context disagree, by design.
 - `tools/skill_manager_tool.py`, `tools/skill_provenance.py`, `agent/skill_*.py`: skills as procedural memory.
 
 ```mermaid
+%% caption: the same gated write beside the two read paths, with session search over FTS5 and one external provider's prefetch block
 flowchart TD
   Model["Model"] --> Tool["memory tool<br/>(add/replace/remove)"]
   Tool --> Gate["write_approval gate"]

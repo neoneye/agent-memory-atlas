@@ -77,6 +77,7 @@ happens on collision. The store underneath is content-addressed and versioned,
 so every prior value is a commit away and `blame` will tell you who wrote it.
 
 ```mermaid
+%% caption: the key's path decides its merge policy, and the semantic path is confidence-gated so a lower-confidence write is a no-op with no commit — with reject mode surfacing the conflict to a person instead
 flowchart TD
     W["remember(path, content, confidence)"] --> T{"memory_type_for_key(path)"}
     T -->|"context.current, metrics.turn"| WK["WORKING → REPLACE"]

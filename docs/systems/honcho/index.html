@@ -167,7 +167,8 @@ from an observer's perspective.</li>
 deductive observations.</li>
 </ul>
 <p>Lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — messages are stored synchronously and the representation the query path reads is derived later by a queued deriver, so an observation is retrievable only after that batch runs</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: messages are stored synchronously and the representation the query path reads is derived later by a queued deriver, so an observation is retrievable only after that batch runs
+flowchart TB
     ADD[&quot;session.add_messages&quot;] --&gt; MT[(&quot;messages table&quot;)]
     ADD -.-&gt;|optional| PE[&quot;pending embeddings&quot;]
     MT --&gt; ENQ[&quot;enqueue representation tasks&quot;]
@@ -208,7 +209,8 @@ memory.</li>
 <li><code>honcho/src/reconciler/*</code>: vector reconciliation.</li>
 </ul>
 <p>Architecture:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the queue table between the API and the deriver workers, with an external reconciler holding Postgres and the vector store together</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the queue table between the API and the deriver workers, with an external reconciler holding Postgres and the vector store together
+flowchart TD
   API[&quot;FastAPI routers&quot;] --&gt; CRUD[&quot;CRUD layer&quot;]
   CRUD --&gt; PG[&quot;Postgres + pgvector&quot;]
   CRUD --&gt; Queue[&quot;queue table&quot;]

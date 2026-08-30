@@ -96,6 +96,7 @@ The dense retrieval arm is deliberately weak — passage nodes are seeded at 0.0
 - `reproduce/` — benchmark reproduction harness and dataset scaffolding.
 
 ```mermaid
+%% caption: the query builds a personalization vector from reranked facts and dense retrieval, and Personalized PageRank diffuses relevance across the graph rather than planning hops
 flowchart TD
   Docs["Documents"] --> Chunk["Chunking"]
   Chunk --> OpenIE["OpenIE triple<br/>extraction<br/>(LLM)"]

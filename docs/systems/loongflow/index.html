@@ -189,7 +189,8 @@ mechanism, not as a general memory design.</p>
                                                                     ▲
                                                             population diversity</code></pre>
 <p>Selection lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population's own spread decides how greedy the next pick is</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population&#39;s own spread decides how greedy the next pick is
+flowchart TB
     P[&quot;population of scored solutions&quot;] --&gt; D[&quot;_calculate_diversity&lt;br/&gt;&lt;i&gt;samples 50 pairs → 0 identical .. 1 max&lt;/i&gt;&quot;]
     D --&gt; T[&quot;_adaptive_temperature_by_diversity&lt;br/&gt;(current, min, max, base)&lt;br/&gt;&lt;i&gt;blends 20% of the current temperature&lt;br/&gt;for stability&lt;/i&gt;&quot;]
     T --&gt; B[&quot;_boltzmann_selection_with_weights(scores, temperature)&quot;]
@@ -221,7 +222,8 @@ temperature), <code>base_memory.py</code> (<code>Solution</code>,
 <code>compressor/</code>, <code>storage/</code>.</li>
 <li><code>README.md</code> in the memory package.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the evolutionary loop beside the three-tier compression path, which is where anything survives a session</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the evolutionary loop beside the three-tier compression path, which is where anything survives a session
+flowchart TD
   Att[&quot;Attempt&quot;] --&gt; Sol[&quot;Solution&lt;br/&gt;{text, score,&lt;br/&gt;ts}&quot;]
   Sol --&gt; Pop[&quot;population&lt;br/&gt;(in-memory&lt;br/&gt;| redis)&quot;]
   Pop --&gt; Div[&quot;_calculate_diversity&lt;br/&gt;(50 sampled pairs)&quot;]

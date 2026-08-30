@@ -98,6 +98,7 @@ scheduler          → dream reports, nudges
 - `mateclaw-server/src/main/resources/prompts/memory/` — externalized prompts.
 
 ```mermaid
+%% caption: the turn lifecycle mediating between providers, with extraction, contradiction detection and projection running off the completed turn rather than in it
 flowchart TD
   Turn["TurnStartedEvent"] --> Med["MemoryLifecycleMediator"]
   Med --> Mgr["MemoryManager"]

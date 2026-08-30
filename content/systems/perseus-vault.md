@@ -144,6 +144,7 @@ An entity's standing is three separate things — a discrete `status`, a boolean
 own history.
 
 ```mermaid
+%% caption: world time and transaction time are separate column pairs on both the entity and its history, so supersession leaves the prior version readable as-of a past date
 stateDiagram-v2
     [*] --> candidate: trust admission
     candidate --> active: accepted

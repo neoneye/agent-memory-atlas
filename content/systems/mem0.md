@@ -57,6 +57,7 @@ The primary memory unit is a text fact stored as a vector-store payload:
 The lifecycle is:
 
 ```mermaid
+%% caption: extraction runs against nearby existing memories rather than the message alone, so the LLM decides what is new — and a hash dedupe is the only thing between it and the store
 flowchart TB
     M["messages"] --> P["parse, vision handling"]
     P --> N["retrieve nearby existing memories"]
@@ -98,6 +99,7 @@ Core files:
 Runtime shape:
 
 ```mermaid
+%% caption: the components one `Memory` object owns, with the entity collection and the SQLite history beside the main vector store
 flowchart LR
   App["App / Agent SDK"] --> Memory["Memory"]
   Memory --> LLM["LLM extractor"]

@@ -145,6 +145,7 @@ precise about what that proves: *"It detects that the code changed — never tha
 the claim became false."*
 
 ```mermaid
+%% caption: archived is not a field but a parent container's title, and burial is keyed on card id and honoured across merges — while the capture path never reads it, so the same claim returns as a new card
 stateDiagram-v2
     [*] --> Live: "capture — marker grammar, no LLM"
     Live --> Live: "~ update in place (overlap 0.45)"

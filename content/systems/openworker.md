@@ -82,6 +82,7 @@ list with no ranking. And `memory_forget` is a hard delete with no trace.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: the whole store: three scopes applied when listing, with update replacing content in place and forget deleting the row
 flowchart TB
     R["remember(content, scope)"] --> ROW[("memories(scope, key, content,<br/>workspace, session_id, created_at)")]
     ROW --> LS["list(scope?, workspace?)<br/><i>scope is GLOBAL, WORKSPACE or SESSION,<br/>applied when listing</i>"]

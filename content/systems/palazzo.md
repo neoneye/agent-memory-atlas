@@ -109,6 +109,7 @@ it for archaeology. The old text stays addressable through `palace_recall`, so a
 correction hides a memory without destroying it.
 
 ```mermaid
+%% caption: the dedupe probe excludes superseded points so a re-store cannot resurrect one, and a delete aborts unless its WAL entry is durable first
 flowchart TD
     S["palace_store(text, wing/room/hall)"] --> E["embed 768-dim"]
     E --> D{"top-1 cosine >= 0.95<br/>AND text identical?"}

@@ -147,6 +147,7 @@ bulk-insert path here" and then re-derives it tomorrow writes it back into the
 same slot, and nothing in the system records that a human once removed it.
 
 ```mermaid
+%% caption: every transition is logged and none of them preserves the value that was there, and because the unique index is partial a purge frees the key for the same claim to return
 stateDiagram-v2
     [*] --> Active: memory.write upserts on scope plus key
     [*] --> Active: a PR comment passes the deterministic signal filter

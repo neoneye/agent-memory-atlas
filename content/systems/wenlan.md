@@ -90,6 +90,7 @@ A claim becomes a belief by passing a gate and stops being one by being
 superseded — with how easily depending on what kind of claim it is:
 
 ```mermaid
+%% caption: the stability tier decides how a supersession happens — silently, automatically, or held for a person — so identity and preference facts cannot be overwritten unattended
 stateDiagram-v2
     [*] --> Rejected: quality gate — noise, too short, credential, not novel
     [*] --> Stored: admitted, typed schema validated, stability tier assigned

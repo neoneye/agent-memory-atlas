@@ -94,6 +94,7 @@ not have admitted today. A threshold that moved should not orphan what it
 already wrote.
 
 ```mermaid
+%% caption: the episodic event store is permanent and forgetting happens only in the semantic projection, and consolidation stores its four importance factors rather than only their total, so the coefficients can be tuned by replay
 flowchart TB
     Perc["Perception this tick"] --> WM[("Working memory<br/>Redis list · 6h TTL · 50 entries")]
     WM -->|"tick end"| Cons["Consolidation<br/>importance = 0.35·emotion + 0.30·relationship<br/>+ 0.20·goal + 0.15·rarity"]

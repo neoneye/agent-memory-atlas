@@ -76,6 +76,7 @@ Feature flags gate real cost: `local-embeddings` pulls in llama-cpp-2 with an ex
 Design plans are committed alongside: `plans/postgres-pgvector-memory-backend.md` and `plans/core-memory-lifecycle-unification.md`.
 
 ```mermaid
+%% caption: a chat session is sanitised into the same markdown corpus everything else is chunked from, so there is one store rather than a session store beside a note store
 flowchart TD
   Notes["Markdown corpus"] --> Chunk["chunker.rs"]
   Sess["Chat session"] --> San["session_export.rs (sanitize)"]

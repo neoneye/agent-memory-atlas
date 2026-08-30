@@ -105,6 +105,7 @@ the row outright. The state is declared and unused.
 ## 3. Architecture
 
 ```mermaid
+%% caption: the layers are a pipeline into weights: documents become a versioned biography, the biography becomes synthesized training data, and LoRA plus DPO produce a local model
 flowchart TD
     UI["lpm_frontend<br/>Next.js"] --> API["Flask kernel<br/>lpm_kernel/api"]
     API --> L0["L0: document + chunk<br/>raw_content retained"]

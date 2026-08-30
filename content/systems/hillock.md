@@ -66,6 +66,7 @@ then multiplies every pair *not* co-active this turn by `1 - decay` (0.01). Rein
 The third structure does not survive anything. The codebook is an in-process dictionary, allocated lazily on first sight of a token, and the reservoir state is a NumPy array in memory. Both are rebuilt from scratch on every launch, and rebuilding them is free: `get_or_allocate_hypervector` routes every string through `resolve_predicate_hypervector`, which sums the character 3-, 4- and 5-grams of the padded string, each hashed with MD5 into a seeded ±1 draw. A given entity therefore resolves to the *same* hypervector in every run, and two strings sharing character n-grams resolve to correlated ones. Measuring the encoder in separate code, ten unrelated entity names average a pairwise cosine of `+0.003`, while `born` against `born_in` is `+0.32` and `discover` against `discovered` is `+0.55`. That morphological signal does real work — it is how a query token reaches a fact predicate without a synonym table. The vector layer holds no memory in the sense this atlas uses the word: nothing is stored, and every vector is a pure function of its string.
 
 ```mermaid
+%% caption: below the cosine threshold the model is never called and a fixed refusal is returned, so the gate is a hard admission test rather than a ranking
 flowchart TD
   Q["user turn"] --> L["link_entities:<br/>string match to entity ids"]
   L --> F["SQL: every triple where the entity<br/>is subject or object"]

@@ -217,7 +217,8 @@ be algebraically probed out of a fact — or out of a whole category bank
 — without keyword matching:</p>
 <pre class="text"><code>unbind(fact_vector, bind(entity, ROLE_ENTITY)) ≈ content_vector</code></pre>
 <p>Write lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three write surfaces converge on one insert, and every write re-bundles the whole category's holographic bank</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three write surfaces converge on one insert, and every write re-bundles the whole category&#39;s holographic bank
+flowchart TB
     A[&quot;fact_store(action=add)&quot;] --&gt; AF
     B[&quot;on_memory_write mirror&quot;] --&gt; AF
     C[&quot;on_session_end regex extraction&quot;] --&gt; AF
@@ -232,7 +233,8 @@ bank is one bundled vector, adding a single fact re-bundles the
 <strong>whole category</strong>, so write cost grows with the category
 rather than with the write.</p>
 <p>Retrieval lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — FTS5 supplies the candidates and the holographic similarity only reranks them, and the top-k reaches the prompt unfenced</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: FTS5 supplies the candidates and the holographic similarity only reranks them, and the top-k reaches the prompt unfenced
+flowchart TB
     Q[&quot;fact_store(action = search, probe, related,&lt;br/&gt;reason or contradict), or prefetch(query)&quot;] --&gt; F[&quot;FTS5 candidates&lt;br/&gt;&lt;i&gt;limit×3, sanitized OR-query, trust ≥ min_trust&lt;/i&gt;&quot;]
     F --&gt; RR[&quot;rerank:&lt;br/&gt;0.4 × fts + 0.3 × jaccard + 0.3 × hrr_similarity&quot;]
     RR --&gt; SC[&quot;score = relevance × trust_score&lt;br/&gt;&lt;i&gt;× optional temporal decay&lt;/i&gt;&quot;]
@@ -265,7 +267,8 @@ sanitization and Jaccard reranking.</li>
 <code>MemoryProvider</code> ABC, tool schemas, and end-of-session regex
 extraction.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the SQLite tables, the derived vectors and per-category banks, and the retriever that assembles the prefetch block</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the SQLite tables, the derived vectors and per-category banks, and the retriever that assembles the prefetch block
+flowchart TD
   Tools[&quot;fact_store / fact_feedback&lt;br/&gt;tools&quot;] --&gt; Provider[&quot;HolographicMemoryProvider&quot;]
   Hooks[&quot;on_memory_write /&lt;br/&gt;on_session_end&quot;] --&gt; Provider
   Provider --&gt; Store[&quot;MemoryStore&lt;br/&gt;(SQLite)&quot;]

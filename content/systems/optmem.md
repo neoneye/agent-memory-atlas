@@ -120,6 +120,7 @@ One file. The parts worth naming:
 - `repair`, `parse`, `records` — tolerance for partial writes.
 
 ```mermaid
+%% caption: the model is asked for a summary line only when a block falls due, and forgetting blanks that summary — so what changes is the collapsed view, never the log underneath
 flowchart TD
   N["note '...'"] --> L["LOG.txt append"]
   L --> P{"is a<br/>block<br/>due?"}

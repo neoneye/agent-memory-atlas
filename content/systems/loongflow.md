@@ -75,6 +75,7 @@ grade/                                  evolution/
 Selection lifecycle:
 
 ```mermaid
+%% caption: measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population's own spread decides how greedy the next pick is
 flowchart TB
     P["population of scored solutions"] --> D["_calculate_diversity<br/><i>samples 50 pairs → 0 identical .. 1 max</i>"]
     D --> T["_adaptive_temperature_by_diversity<br/>(current, min, max, base)<br/><i>blends 20% of the current temperature<br/>for stability</i>"]
@@ -105,6 +106,7 @@ changes the population its own diversity was measured from.
 - `README.md` in the memory package.
 
 ```mermaid
+%% caption: the evolutionary loop beside the three-tier compression path, which is where anything survives a session
 flowchart TD
   Att["Attempt"] --> Sol["Solution<br/>{text, score,<br/>ts}"]
   Sol --> Pop["population<br/>(in-memory<br/>| redis)"]

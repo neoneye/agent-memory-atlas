@@ -95,6 +95,7 @@ Nothing here has an identity a correction could name. A memory plugin supplies
 that, entirely.
 
 ```mermaid
+%% caption: the host ships sessions and two experimental hooks and no memory contract, so a plugin reads the SQLite session tables directly — a seam without a contract relocates the design work rather than avoiding it
 flowchart TB
     subgraph Host["OpenCode — what it actually ships"]
       S[("Sessions · messages · parts · todos")]

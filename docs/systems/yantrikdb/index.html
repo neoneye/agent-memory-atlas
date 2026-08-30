@@ -199,7 +199,8 @@ database thinks about what it holds.</p>
 place: the original is tombstoned, a new version is created, "entity
 relationships are transferred to the new memory", and an optional
 <code>correction_note</code> records why.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it
+flowchart TD
     R[&quot;remember / correct / forget / relate&quot;] --&gt; CL[&quot;commit substrate — one mutation grammar,&lt;br/&gt;idempotent on op_id, per-tenant log_index&quot;]
     CL --&gt; AP[&quot;applier → storage + HNSW index&quot;]
     CL --&gt; IB[&quot;invalidation bus&quot;]

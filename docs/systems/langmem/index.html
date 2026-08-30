@@ -155,7 +155,8 @@ engine.</p>
 usually:</p>
 <pre class="python"><code>{&quot;content&quot;: &lt;string or JSON-serializable structured object&gt;}</code></pre>
 <p>The memory lifecycle has two main modes:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two write paths into one namespaced store — the agent's own tools, and a background manager whose reflection executor schedules the extraction for later</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two write paths into one namespaced store — the agent&#39;s own tools, and a background manager whose reflection executor schedules the extraction for later
+flowchart LR
     A[&quot;agent&quot;] --&gt;|&quot;manage_memory tool&quot;| PUT[&quot;put / delete&quot;]
     A --&gt;|&quot;search_memory tool&quot;| SRCH[&quot;search&quot;]
     PUT --&gt; ST
@@ -186,7 +187,8 @@ can quietly restate something the agent deleted through the tool.</p>
 background manager path.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Runtime shape:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same store reached by agent tools and by a trustcall extractor, with the reflection executor deferring the manager's pass off the hot path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same store reached by agent tools and by a trustcall extractor, with the reflection executor deferring the manager&#39;s pass off the hot path
+flowchart TD
   Agent[&quot;LangGraph&lt;br/&gt;agent&quot;] --&gt; Tools[&quot;LangMem&lt;br/&gt;tools&quot;]
   Tools --&gt; Store[&quot;LangGraph&lt;br/&gt;BaseStore&quot;]
   Conversation[&quot;Conversation&quot;] --&gt; Manager[&quot;MemoryManager&quot;]

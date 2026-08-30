@@ -76,6 +76,7 @@ as raw text in `history_database`, and as a pruned list of word ids in
 `histories_word_id_database`.
 
 ```mermaid
+%% caption: the same word table both prunes overly common words and scores every stored pair, and the most recent twenty pairs are excluded because they are already in the context window
 flowchart TB
     subgraph W["after every exchange"]
         TK["tokenise both halves into the word table (counts += 1)"]
@@ -114,6 +115,7 @@ and the 7 is now an arbitrary nonzero.
 Python, no server, no database. Three JSON files:
 
 ```mermaid
+%% caption: three JSON files hold the words, the per-pair scores and the raw text, and retrieval injects the best pair together with its two neighbours
 flowchart TB
     M[message pair] --> P[parse_words_to_database<br/>tokenise, count]
     P --> WD[(LiveRAG_Words.json<br/>word / count / value)]

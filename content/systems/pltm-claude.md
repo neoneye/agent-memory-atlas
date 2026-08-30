@@ -79,6 +79,7 @@ is stored. Conflicts against existing memories are detected by rules rather than
 by a model. Retrieval is per-user, ranked by strength with decay.
 
 ```mermaid
+%% caption: a rejected item leaves no record of what was refused, and a quarantined one is halved and tagged in its context — arriving at retrieval indistinguishable from a decayed memory
 flowchart TD
     IN["incoming content"] --> EX["extraction"]
     EX --> J["jury: memory, safety, time, consensus"]

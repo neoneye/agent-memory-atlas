@@ -193,7 +193,8 @@ keep them small.</p>
     ├── .dream_cursor    # Dream consumption cursor
     └── .git/            # version history for the durable files</code></pre>
 <p>Two stages, deliberately separated:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the dream pass advances its cursor only when no tool errored, so a failed consolidation is retried against the same history rather than skipped</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the dream pass advances its cursor only when no tool errored, so a failed consolidation is retried against the same history rather than skipped
+flowchart TB
     subgraph S1[&quot;Stage 1 — Consolidator, pressure-driven&quot;]
         P[&quot;context window under pressure&quot;] --&gt; SL[&quot;summarize the oldest safe slice&quot;]
         SL --&gt; AP[&quot;append one JSON line&lt;br/&gt;to history.jsonl&quot;]
@@ -235,7 +236,8 @@ template.</li>
 <li>Workspace <code>prompts/dream.md</code> — user-editable instructions
 steering Dream's behaviour.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two cursors over one append-only history, with the durable files edited surgically and committed with a message grounded in the actual delta</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two cursors over one append-only history, with the durable files edited surgically and committed with a message grounded in the actual delta
+flowchart TD
   Conv[&quot;session.messages&quot;] --&gt; Cons[&quot;Consolidator (on&lt;br/&gt;context pressure)&quot;]
   Cons --&gt; Hist[&quot;history.jsonl&lt;br/&gt;(append-only)&quot;]
   Cons --&gt; C1[&quot;.cursor&quot;]

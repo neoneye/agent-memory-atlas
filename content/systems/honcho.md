@@ -59,6 +59,7 @@ Honcho's memory model:
 Lifecycle:
 
 ```mermaid
+%% caption: messages are stored synchronously and the representation the query path reads is derived later by a queued deriver, so an observation is retrievable only after that batch runs
 flowchart TB
     ADD["session.add_messages"] --> MT[("messages table")]
     ADD -.->|optional| PE["pending embeddings"]
@@ -98,6 +99,7 @@ Core files:
 Architecture:
 
 ```mermaid
+%% caption: the queue table between the API and the deriver workers, with an external reconciler holding Postgres and the vector store together
 flowchart TD
   API["FastAPI routers"] --> CRUD["CRUD layer"]
   CRUD --> PG["Postgres + pgvector"]

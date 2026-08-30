@@ -85,6 +85,7 @@ Three different correction strategies chosen per type, each with a stated reason
 Most systems in this atlas apply one strategy to everything.
 
 ```mermaid
+%% caption: the journal is appended before the graph is mutated, and a removal writes a tombstone that lets replay distinguish validly deleted from not yet replayed
 flowchart TD
     OP["add_node / add_edge / update_node<br/>remove_node / remove_edge"] --> J["append to journal.jsonl<br/>C-4: journal FIRST"]
     J --> H["running sha256 over the file"]

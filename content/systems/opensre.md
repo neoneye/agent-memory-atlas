@@ -101,6 +101,7 @@ enough that the whole thing is rendered into the prompt, so the ordinary case
 needs no recall call at all.
 
 ```mermaid
+%% caption: redaction runs before anything leaves the machine, three independent screens can drop a candidate — one of them naming the rule without logging the value — and forgetting unlinks the file while the statement stays in the transcript
 flowchart TD
     T["Session transcript<br/>last 30 turns"] --> RED["redact_memory_unsafe_text<br/>before anything leaves the machine"]
     RED --> LLM["Classification model<br/>returns a JSON array, max 5"]

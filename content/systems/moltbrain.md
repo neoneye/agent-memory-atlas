@@ -66,6 +66,7 @@ service mirrors them into ChromaDB so semantic search works. The web viewer read
 SQLite.
 
 ```mermaid
+%% caption: the Chroma sync fails fast rather than falling back, and the only deletion path is a duplicate-cleanup script a person runs by hand
 flowchart TD
     S["agent session"] --> X["XML blocks in the SDK response"]
     X --> P["parser.ts"]

@@ -71,6 +71,7 @@ Persisted across three stores that must agree:
 Write lifecycle — note where the gate sits:
 
 ```mermaid
+%% caption: nothing enters the skill library until the critic confirms the code worked in the environment, so a failed attempt is retried and never stored
 flowchart TB
     C["curriculum proposes a task"] --> A["action agent writes code<br/><i>retrieved skills as context</i>"]
     A --> E["execute in the environment"]
@@ -95,6 +96,7 @@ of memory validated by execution rather than by adjudication.
 Read lifecycle:
 
 ```mermaid
+%% caption: retrieval matches against the LLM-written descriptions and returns the code, so what is searched and what is injected are different artifacts
 flowchart LR
     T["task context"] --> R["retrieve_skills(query=context)"]
     R --> S["Chroma similarity_search_with_score<br/>over <i>descriptions</i>, k = min(count, 5)"]
@@ -118,6 +120,7 @@ Voyager is small — about 1,459 lines across five agent modules — and the mem
 - `voyager/control_primitives/` — hand-written base functions always available.
 
 ```mermaid
+%% caption: the curriculum, action and critic agents around one skill store, with the outcome deciding whether anything is written
 flowchart TD
   Curr["Curriculum agent"] --> Task["Next task"]
   Task --> Retr["retrieve_skills(context)"]

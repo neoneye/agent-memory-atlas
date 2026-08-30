@@ -92,6 +92,7 @@ and can never silently occupy the whole context. That is a smaller claim than
 most systems here make and a much more defensible one.
 
 ```mermaid
+%% caption: the namespace is resolved by application code and never reachable as a tool argument, and a backend returning a path outside the requested scope raises rather than being filtered
 flowchart TB
     App["Application code"] -->|"namespace: str or Callable<br/>never a tool argument"| Scope["resolve_scope()<br/>{namespace}/{agent_name}"]
     Model["Model"] -->|"write_memory / read_memory<br/>search_memory / delete_memory"| Tool["MemoryToolset"]

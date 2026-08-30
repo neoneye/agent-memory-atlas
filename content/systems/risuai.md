@@ -91,6 +91,7 @@ The state machine is short, and the interesting transitions are the ones that
 kill a memory:
 
 ```mermaid
+%% caption: each summary records the message ids it came from, so deleting a source message drops the summary that depended on it — deletion propagates instead of stranding a derived claim
 flowchart TB
     OV[context overflows] --> RUN[a run of messages is summarized]
     RUN --> S["Summary — text + chatMemos"]
@@ -118,6 +119,7 @@ It is a client: there is no server, no database process and no worker queue.
 Everything below runs in the user's browser.
 
 ```mermaid
+%% caption: the orphan check runs before selection, and the token budget reserves four bands so a pinned summary cannot be crowded out by similarity
 flowchart TB
     C[Chat messages] --> OV{context<br/>overflow?}
     OV -->|no| P[Prompt]

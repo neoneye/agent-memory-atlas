@@ -107,6 +107,7 @@ A candidate is judged before it is stored, stored under a scope the database
 enforces, and every transition is chained into an audit that can be verified.
 
 ```mermaid
+%% caption: the admission gate can block, hold for governance approval or save, and every one of those outcomes — including the block — is written into the per-tenant hash-chained audit
 flowchart TB
     IN["candidate"] --> ADM{"admission gate"}
     ADM -->|"block / drop"| NO["never stored<br/><i>audited with a reason</i>"]

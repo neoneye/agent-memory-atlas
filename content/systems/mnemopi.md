@@ -94,6 +94,7 @@ is the third arrangement of that category's three requirements and it satisfies
 none of them.
 
 ```mermaid
+%% caption: type is decided by regex with no model call, and each type carries its own Weibull decay and a veracity weight — where labelling something inferred or tool-derived lowers its standing below leaving it unknown
 flowchart TB
     In["remember()"] --> Ty["Regex type patterns<br/>→ one of 14 types + priority<br/>(no model call)"]
     Ty --> Wb["Weibull curve per type<br/>profile k=0.3 η=8760<br/>fact k=0.8 η=720<br/>observation k=0.9 η=480"]

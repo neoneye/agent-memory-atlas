@@ -189,7 +189,8 @@ messages</strong>:</p>
 }</code></pre>
 <p>The state machine is short, and the interesting transitions are the
 ones that kill a memory:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — each summary records the message ids it came from, so deleting a source message drops the summary that depended on it — deletion propagates instead of stranding a derived claim</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: each summary records the message ids it came from, so deleting a source message drops the summary that depended on it — deletion propagates instead of stranding a derived claim
+flowchart TB
     OV[context overflows] --&gt; RUN[a run of messages is summarized]
     RUN --&gt; S[&quot;Summary — text + chatMemos&quot;]
     S --&gt;|user pins it| PIN[&quot;isImportant: always selected first&quot;]
@@ -211,7 +212,8 @@ was ever asserted.</p>
 <p>TypeScript and Svelte, GPL-3.0, running as a web app and a Tauri
 desktop build. It is a client: there is no server, no database process
 and no worker queue. Everything below runs in the user's browser.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the orphan check runs before selection, and the token budget reserves four bands so a pinned summary cannot be crowded out by similarity</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the orphan check runs before selection, and the token budget reserves four bands so a pinned summary cannot be crowded out by similarity
+flowchart TB
     C[Chat messages] --&gt; OV{context&lt;br/&gt;overflow?}
     OV --&gt;|no| P[Prompt]
     OV --&gt;|yes| SUM[summarize&lt;br/&gt;LLM or local WebLLM]

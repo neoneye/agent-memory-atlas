@@ -83,6 +83,7 @@ rather than inline conditions, and rules as their own classes (`CanSubmitRule`,
 `CanCodifyRule`, `CanCloseRule`).
 
 ```mermaid
+%% caption: the goal lifecycle, where rejection carries its review issues and `lastWaitingStatus` remembers where a blocked goal came back from
 stateDiagram-v2
     [*] --> defined
     defined --> refined

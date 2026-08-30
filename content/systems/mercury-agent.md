@@ -111,6 +111,7 @@ conversation
 - `ui/src/pages/brain/Memory.tsx` — the operator review page.
 
 ```mermaid
+%% caption: candidates reach a review page where a person dismisses or supersedes them, and a paused learning flag stops candidates being produced at all
 flowchart TD
   Conv["Conversation"] --> Cand["UserMemoryCandidate"]
   Cand --> Store["UserMemoryStore"]

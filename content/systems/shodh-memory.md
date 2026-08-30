@@ -105,6 +105,7 @@ belief is an edge weight. That is a coherent position and it is why most of the
 atlas's seven marks do not apply.
 
 ```mermaid
+%% caption: fourteen gates, a reputation filter and a PMI check stand between extraction and an edge — and the upsert endpoint bypasses all of them
 flowchart TD
     T["text"] --> NER["GLiNER NER, 141 fine labels<br/>sigmoid 0.3, confidence floor 0.6"]
     T --> Y["YAKE keywords, in parallel"]

@@ -99,6 +99,7 @@ them work end to end:
   reason. Read-side only: ranking consults it, nothing writes it.
 
 ```mermaid
+%% caption: a high-trust learning downgrades its own supersession into a pending proposal, and nothing reads or clears that state — the documented confirmation path has no implementation
 stateDiagram-v2
     [*] --> Active: extraction pipeline writes a learning
     Active --> Superseded: trust below 3.0, superseded_by set, valid_until stamped

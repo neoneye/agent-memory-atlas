@@ -200,7 +200,8 @@ line of SQL.</p>
 Behavioural analyses run as scheduled tasks over the audit history and
 write a new <code>behavioral_profiles</code> row, version incremented.
 That profile is the only thing that survives the session.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a read-only allowlist short-circuits in under a millisecond, everything else reaches an LLM judge behind a five-second circuit breaker, and the audit log feeds precedent within the session only</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a read-only allowlist short-circuits in under a millisecond, everything else reaches an LLM judge behind a five-second circuit breaker, and the audit log feeds precedent within the session only
+flowchart TD
     TC[&quot;Tool call&quot;] --&gt; CL{&quot;Classifier:&lt;br/&gt;read-only allowlist?&quot;}
     CL -- &quot;yes&quot; --&gt; OK[&quot;Approved, sub-millisecond&quot;]
     CL -- &quot;no&quot; --&gt; P[&quot;Precedent match:&lt;br/&gt;capability family + scope&quot;]

@@ -67,6 +67,7 @@ separate from its body. Retrieval surfaces headlines, filters to `active`, and
 expands the body only when a rule says it matters.
 
 ```mermaid
+%% caption: a headline is always shown and the full content expands only on an explicit rule, so the surfacing decision is separate from the retrieval one
 flowchart TD
     S["session ends"] --> CU["curator — reads the transcript,<br/>proposes memories with a session summary<br/>and an interaction tone"]
     CU --> M["memory: headline + content,<br/>confidence_score, context_type (11 values),<br/>status, importance_weight,<br/>sessions_since_surfaced = 0"]

@@ -53,6 +53,7 @@ Letta memory layers:
 Lifecycle:
 
 ```mermaid
+%% caption: a memory write mutates agent state and the system prompt is rebuilt from it, so the edit takes effect by recompiling the prompt rather than by injection
 flowchart TB
     P["agent receives prompt"] --> SP["system prompt includes<br/>compiled core memory"]
     SP --> T["agent calls memory tools"]
@@ -86,6 +87,7 @@ Core files:
 Runtime shape:
 
 ```mermaid
+%% caption: the managers behind the core memory tools, with blocks compiled into the prompt and passages held for archival search
 flowchart TD
   Agent["Agent<br/>loop"] --> Tools["Core memory<br/>tools"]
   Tools --> Executor["LettaCoreToolExecutor"]

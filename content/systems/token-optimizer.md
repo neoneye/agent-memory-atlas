@@ -111,6 +111,7 @@ claim anything is *true*. It claims a prior session on a similar topic reached
 some decisions, hands them over labelled as data, and leaves the model to decide.
 
 ```mermaid
+%% caption: a checkpoint recovered into a new session is fenced as untrusted data with control characters neutralised, and another project's decisions are dropped with a disclosure line saying so
 flowchart TD
     S["session running"] --> P{"fill band 20/35/50/65/80,<br/>quality through 80/70/50/40,<br/>or a milestone?"}
     P -- "yes, first time" --> CP["write checkpoint:<br/>decisions, edited files, state"]

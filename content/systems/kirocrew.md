@@ -123,6 +123,7 @@ replacement. Nothing marks a value as *wrong*, and nothing stops the same value
 arriving again.
 
 ```mermaid
+%% caption: seven checks can refuse a write and four of the refusals are auditable — and nothing consults that log, so a refused value can be proposed again
 stateDiagram-v2
     [*] --> Proposed: a write arrives with a source and a confidence
     Proposed --> Refused: one of seven SemanticRejectCode checks fails

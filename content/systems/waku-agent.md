@@ -102,6 +102,7 @@ line count above understates the system:
   handler is human CRUD over the same store.
 
 ```mermaid
+%% caption: a small model decides whether to retrieve at all, and the admin path updates and deletes in place with nothing recording the value removed
 flowchart TD
   Msg["User message"] --> Gate{"should_retrieve?<br/>small model"}
   Gate -->|false| Answer["answer<br/>without<br/>memory"]

@@ -132,6 +132,7 @@ different statements, and almost every system in this atlas offers only the
 first.
 
 ```mermaid
+%% caption: rejecting with suppress-similar writes a key the write gate checks at four points, so a delete sticks and the same canonical label cannot be re-admitted
 stateDiagram-v2
     [*] --> Candidate: extraction proposes an object with evidence and guesses
     Candidate --> Node: a person promotes it through the review endpoint

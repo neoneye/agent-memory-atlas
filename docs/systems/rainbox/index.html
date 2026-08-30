@@ -233,7 +233,8 @@ columns are schema groundwork that the Tier-1 ranker does not yet use
     last_hit_at=...
 )</code></pre>
 <p>Write lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the actor decides the starting state — a human's assertion is active, a model's is a candidate — and dedupe, tombstone and conflict checks all run under one advisory lock</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the actor decides the starting state — a human&#39;s assertion is active, a model&#39;s is a candidate — and dedupe, tombstone and conflict checks all run under one advisory lock
+flowchart TB
     IN[&quot;explicit human command,&lt;br/&gt;assistant remember,&lt;br/&gt;or the review UI&quot;] --&gt; RB[&quot;record_belief(actor, …)&quot;]
     RB --&gt; LOCK[&quot;under an advisory lock:&lt;br/&gt;dedupe → tombstone → conflict → create&quot;]
     LOCK --&gt; WHO{&quot;actor?&quot;}
@@ -249,7 +250,8 @@ columns are schema groundwork that the Tier-1 ranker does not yet use
 the same call produces different standing depending on the actor, and
 nothing a model says is believed on arrival.</p>
 <p>Correction lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a correction is one locked operation that supersedes the old claim, writes a tombstone against its value, and records the replacement</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a correction is one locked operation that supersedes the old claim, writes a tombstone against its value, and records the replacement
+flowchart TB
     C[&quot;correct that OLD to NEW,&lt;br/&gt;or the /memory UI correct action&quot;] --&gt; CB[&quot;correct_belief(old_uuid, new_text,&lt;br/&gt;actor, evidence)&quot;]
     CB --&gt; L[&quot;advisory lock on both the old and new keys&quot;]
     L --&gt; SUP[&quot;supersede the old claim&quot;]
@@ -265,7 +267,8 @@ atomically. The tombstone is the highlighted one: superseding alone
 would leave the old value re-assertable, which is the failure this atlas
 is organised around.</p>
 <p>Retrieval lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — hard filters run before ranking and every recalled memory is fenced with its angle brackets neutralised before it reaches the prompt</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: hard filters run before ranking and every recalled memory is fenced with its angle brackets neutralised before it reaches the prompt
+flowchart TB
     T[&quot;user turn or assistant action&quot;] --&gt; Q[&quot;build query&quot;]
     Q --&gt; HF[&quot;hard_filtered_claims:&lt;br/&gt;active, non-expired,&lt;br/&gt;allowed sensitivity, matching scope&quot;]
     HF --&gt; RK[&quot;retrieve_memories_hybrid:&lt;br/&gt;vector + full-text&lt;br/&gt;+ subject/object entity boost&quot;]
@@ -319,7 +322,8 @@ high-level design doc.</li>
 event semantics.</li>
 </ul>
 <p>Architecture:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the whole path from either UI to the prompt, with retrieval events and feedback feeding the eval cases</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the whole path from either UI to the prompt, with retrieval events and feedback feeding the eval cases
+flowchart TD
   UI[&quot;Chat / Assistant / Memory UI&quot;] --&gt; Ops[&quot;memory.ops / assistant actions / memory_api&quot;]
   Ops --&gt; RecordBelief[&quot;record_belief / correct_belief&quot;]
   RecordBelief --&gt; Claims[&quot;MemoryClaim&quot;]

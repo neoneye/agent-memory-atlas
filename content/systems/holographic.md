@@ -93,6 +93,7 @@ unbind(fact_vector, bind(entity, ROLE_ENTITY)) ≈ content_vector
 Write lifecycle:
 
 ```mermaid
+%% caption: three write surfaces converge on one insert, and every write re-bundles the whole category's holographic bank
 flowchart TB
     A["fact_store(action=add)"] --> AF
     B["on_memory_write mirror"] --> AF
@@ -112,6 +113,7 @@ cost grows with the category rather than with the write.
 Retrieval lifecycle:
 
 ```mermaid
+%% caption: FTS5 supplies the candidates and the holographic similarity only reranks them, and the top-k reaches the prompt unfenced
 flowchart TB
     Q["fact_store(action = search, probe, related,<br/>reason or contradict), or prefetch(query)"] --> F["FTS5 candidates<br/><i>limit×3, sanitized OR-query, trust ≥ min_trust</i>"]
     F --> RR["rerank:<br/>0.4 × fts + 0.3 × jaccard + 0.3 × hrr_similarity"]
@@ -136,6 +138,7 @@ Core files, all under `plugins/memory/holographic/`:
 - `__init__.py` (465 lines): the `HolographicMemoryProvider` implementation of Hermes's `MemoryProvider` ABC, tool schemas, and end-of-session regex extraction.
 
 ```mermaid
+%% caption: the SQLite tables, the derived vectors and per-category banks, and the retriever that assembles the prefetch block
 flowchart TD
   Tools["fact_store / fact_feedback<br/>tools"] --> Provider["HolographicMemoryProvider"]
   Hooks["on_memory_write /<br/>on_session_end"] --> Provider

@@ -80,6 +80,7 @@ extracted into facts and entities, held in a vector store and a graph, and
 retrieved by similarity plus traversal at a latency tier the caller chooses.
 
 ```mermaid
+%% caption: a regex drops trivial messages before any embedding is computed, then prototype similarity decides salience, and the query tier chooses how far into the graph to traverse
 flowchart TD
     M["message"] --> RX{"NON_SALIENT_PATTERNS —<br/>bare 'hi', 'thanks', 'ok', 'bye'"}
     RX -->|match| DROP["dropped, no embedding computed"]

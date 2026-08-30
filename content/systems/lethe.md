@@ -91,6 +91,7 @@ here: a system whose subject is deletion durability has chosen not to model
 belief, and says so by having one column.
 
 ```mermaid
+%% caption: depth is the whole lifecycle — release makes a memory present but unreachable rather than deleting it, and purge retires the rowid so a later write cannot impersonate it, optionally with a signed receipt over the log's Merkle root
 stateDiagram-v2
     [*] --> Surface: inscribe — depth 1.0
     Surface --> Sinking: gravity over time

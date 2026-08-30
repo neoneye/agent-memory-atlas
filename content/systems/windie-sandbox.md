@@ -99,6 +99,7 @@ the model produced are the same kind of row afterwards, and nothing records whic
 is which.
 
 ```mermaid
+%% caption: editing a message overwrites it in place and invalidates the compactions in the same transaction, and is refused while a running session depends on it — while forking leaves the ancestors untouched
 flowchart TB
     R["root A"] --> B["B"]
     B --> C["C — selected head"]

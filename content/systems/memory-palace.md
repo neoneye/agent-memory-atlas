@@ -110,6 +110,7 @@ asymmetric in what they are allowed to do:
 - `ProceduralEngine` inserts drafts and changes exactly one field per operation.
 
 ```mermaid
+%% caption: only a human-approved pattern can be recommended; a rejected draft can never be approved and must be re-created, and its row is kept for audit
 stateDiagram-v2
     [*] --> Draft: extract_pattern persists review_state=draft
     Draft --> Draft: re-extraction of the same sources makes a NEW draft

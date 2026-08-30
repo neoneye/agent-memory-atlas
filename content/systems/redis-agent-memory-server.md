@@ -67,6 +67,7 @@ re-run does not duplicate.
 Lifecycle:
 
 ```mermaid
+%% caption: extraction is debounced and scheduled trailing rather than run per message, and three dedupe passes — hash, id, then semantic — stand between it and the long-term index
 flowchart TB
     C["client writes messages"] --> WM[("working memory<br/>Redis, TTL-expired")]
     WM --> Q{"should_extract_session_thread()?"}
@@ -103,6 +104,7 @@ Largest modules under `V0/agent_memory_server/`:
 - `migrations.py`, `docket_tasks.py`, `tasks.py` — schema migration and background task execution.
 
 ```mermaid
+%% caption: the same path by component, with compaction and forgetting as periodic jobs against the long-term index rather than steps in the write
 flowchart TD
   Client["REST / MCP /<br/>SDK client"] --> WM["Working memory<br/>(Redis + TTL)"]
   WM --> Debounce["extraction debounce +<br/>trailing schedule"]

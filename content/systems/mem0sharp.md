@@ -136,6 +136,7 @@ worse paraphrase, being able to read what was there before is a meaningful
 partial answer, and it is available by query rather than by log-grepping.
 
 ```mermaid
+%% caption: the history table records every removal by INSERT only, and the write path never reads it — so what was rejected is recorded and cannot stop the value returning
 flowchart TB
     In["Conversation"] --> Ex["LlmMemoryExtractor"]
     Ex --> Cand["Candidate memories"]

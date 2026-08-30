@@ -118,6 +118,7 @@ went well.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: rejection deletes the row and writes a SHA-256 digest of the normalized value that the write path then refuses — an exact-match tombstone, not a semantic one
 flowchart TD
     C["capture / CLI / HTTP / MCP write"] --> S["stored with confidence:<br/>verified, observed or inferred"]
     S --> R{"read"}

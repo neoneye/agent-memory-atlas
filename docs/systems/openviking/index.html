@@ -224,7 +224,8 @@ authorization:</p>
 <code>user_space</code>, so "about me" and "about a peer" are one
 addressing scheme rather than two code paths.</p>
 <p>Retrieval lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score
+flowchart TB
     Q[&quot;TypedQuery + RequestContext&lt;br/&gt;&lt;i&gt;tenant, permissions&lt;/i&gt;&quot;] --&gt; DIR[&quot;resolve start directories&lt;br/&gt;&lt;i&gt;explicit target_dirs, or defaults by context_type&lt;/i&gt;&quot;]
     DIR --&gt; EMB[&quot;embed the query &lt;b&gt;once&lt;/b&gt;&lt;br/&gt;&lt;i&gt;dense + optional sparse&lt;/i&gt;&quot;]
     EMB --&gt; WALK[&quot;recursive directory walk&lt;br/&gt;QUICK or THINKING&lt;br/&gt;&lt;i&gt;THINKING adds a rerank&lt;/i&gt;&quot;]
@@ -273,7 +274,8 @@ filtering.</li>
 <li><code>benchmark/</code>: LoCoMo, LongMemEval, tau2, SkillsBench,
 RAG, cuVS, and vector-DB performance harnesses.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extraction passes through an isolation handler before files are written, and the level tags it assigns are what the retriever filters on</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extraction passes through an isolation handler before files are written, and the level tags it assigns are what the retriever filters on
+flowchart TD
   Sessions[&quot;Session messages&quot;] --&gt; Extract[&quot;extract_loop /&lt;br/&gt;memory_updater&quot;]
   Extract --&gt; Isolation[&quot;MemoryIsolationHandler&lt;br/&gt;(user_space, peers)&quot;]
   Isolation --&gt; Files[&quot;Memory files&lt;br/&gt;(L0/L1/L2 +&lt;br/&gt;links)&quot;]

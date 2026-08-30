@@ -40,6 +40,7 @@ That distinction runs through the whole site, and it is worth seeing once
 because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
+%% caption: the generated pages are complete by construction and the written ones are complete as a fact about today, and the checks around them catch a dead link or a count that stopped matching — not a verdict nobody wrote
 flowchart TD
     R["Every report<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
@@ -51,8 +52,8 @@ flowchart TD
     MX --> CONST
     CI --> CONST
     HAND --> TODAY["Complete as a fact about today<br/>a new report shows up only if someone writes the paragraph"]
-    CHK["check_verdict_anchors.py<br/>check_homepage.py"] -.->|"catches a dead link or a stale count"| TODAY
-    CHK -.->|"cannot notice a verdict nobody wrote"| TODAY
+    CHK["check_verdict_anchors.py<br/>check_verdict_marks.py<br/>check_homepage.py"] -.->|"catches a dead link, a stale count,<br/>or a verdict whose mark count<br/>stopped matching its report"| TODAY
+    CHK -.->|"cannot notice a verdict nobody wrote,<br/>or a reason that went stale"| TODAY
 ```
 
 The dotted edges are the honest part. A check can tell you that something

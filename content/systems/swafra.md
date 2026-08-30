@@ -70,6 +70,7 @@ Each chunk holds its text and embedding directly. The "knowledge graph" is a sep
 Lifecycle:
 
 ```mermaid
+%% caption: fact extraction closes conflicting facts as part of ingestion, so supersession happens at write time rather than being resolved at query time
 flowchart TB
     A["MCP add_knowledge"] --> B["choose Leiden<br/>or fallback chunking"]
     B --> C["annotate and embed chunks"]
@@ -94,6 +95,7 @@ Stored chunk text is undifferentiated evidence — no distinction between user s
 A **fact** is a `(subject, relation, value)` triple carrying `chunk_id`, `source_id`, `created_at`, `confidence`, `evidence` (the original text span), `valid_until`, and `superseded_by`. Its states are exactly two:
 
 ```mermaid
+%% caption: a transition phrase with a similar slot supersedes rather than deletes, and the superseded fact penalises its chunk's score instead of removing it
 flowchart TB
     EX["extract_facts()<br/>regex patterns over chunk text"] --> ACTIVE["active fact<br/>valid_until = None"]
     TR["a later <i>transition</i> fact arrives —<br/>&quot;I switched to X&quot;, &quot;changed to&quot;, &quot;stopped&quot;, &quot;replaced&quot; —<br/>same subject, different value, slot similarity ≥ 0.65"] --> SUP
@@ -140,6 +142,7 @@ External dependencies:
 If FastEmbed cannot load, `_local_vector()` creates deterministic signed hash vectors over words and character trigrams. If Leiden dependencies are unavailable, ingestion uses conversation/paragraph chunking.
 
 ```mermaid
+%% caption: two MCP servers over one Python engine, with the Node one bridging through a JSON-line subprocess
 flowchart TD
   Client["MCP client"] --> PyMCP["Python FastMCP server"]
   Client --> NodeMCP["Node MCP server"]

@@ -65,6 +65,7 @@ Co-retrieval strengthens edges, disuse decays them, and feedback moves both the
 node and its edges. Retrieval picks a traversal by the *intent* of the question.
 
 ```mermaid
+%% caption: query intent selects which of the four graph edge types to follow, co-retrieval strengthens edges Hebbian-style, and explicit feedback moves node and edge weights by fixed amounts
 flowchart TD
     R["memcp_remember"] --> SEC{"secret detection — 8 regex patterns"}
     SEC -->|"match"| BLK["blocked"]

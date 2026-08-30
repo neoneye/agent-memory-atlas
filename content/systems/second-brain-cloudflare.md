@@ -80,6 +80,7 @@ system state: `status:` (canonical / draft / deprecated), `volatility:`
 and a nightly pass writes them.
 
 ```mermaid
+%% caption: a contradiction deprecates the loser and deletes its vectors while keeping the row, and the staleness heuristic returns null rather than guessing a volatility class
 flowchart TD
     CAP["capture entry"] --> CD{"contradiction with an existing entry?"}
     CD -->|yes| LOSE["loser tagged status:deprecated (row kept)<br/>vector_ids cleared in D1<br/>Vectorize deleteByIds on the old vectors<br/>contradiction_losses += 1"]

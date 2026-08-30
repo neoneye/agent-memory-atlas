@@ -96,6 +96,7 @@ A memory becomes retrievable and stops being retrievable, and that is the whole
 state machine:
 
 ```mermaid
+%% caption: the segment is the unit that is embedded and searched, and file scores are rolled up from their best segment rather than computed directly
 flowchart TB
     C["commit_results"] --> RF["RecallFile<br/><i>track: memory or skill</i>"]
     C --> RS["Resource<br/><i>track: workspace</i>"]

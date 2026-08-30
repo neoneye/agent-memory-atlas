@@ -114,6 +114,7 @@ where each memory carries its own retrieval metadata and a ranker compares them.
 Here the previous document decides what the next one is for.
 
 ```mermaid
+%% caption: the agent is handed names and follows `mem:` links from a declared root, a rename rewrites every reference, and the checker finds stale links in one direction only
 flowchart TD
     A["project activation"] --> B["agent is handed<br/>memory names only"]
     B --> C["read mem:core<br/>the declared root"]

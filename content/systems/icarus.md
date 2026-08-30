@@ -87,6 +87,7 @@ orders.user_id; that didn't help." — and `end_session` archives what happened 
 promotes findings.
 
 ```mermaid
+%% caption: rollback is terminal and the only exit from contradicted, and supersession moves lifecycle without touching trust — the two axes are kept apart
 stateDiagram-v2
     [*] --> Unverified: write, evidence pointers optional
     Unverified --> Verified: verify, logged with verifier and note

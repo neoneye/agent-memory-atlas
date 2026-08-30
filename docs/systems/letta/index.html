@@ -165,7 +165,8 @@ an archive/agent.</li>
 <li>Conversation messages: searchable prior interaction history.</li>
 </ul>
 <p>Lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory write mutates agent state and the system prompt is rebuilt from it, so the edit takes effect by recompiling the prompt rather than by injection</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory write mutates agent state and the system prompt is rebuilt from it, so the edit takes effect by recompiling the prompt rather than by injection
+flowchart TB
     P[&quot;agent receives prompt&quot;] --&gt; SP[&quot;system prompt includes&lt;br/&gt;compiled core memory&quot;]
     SP --&gt; T[&quot;agent calls memory tools&quot;]
     T --&gt; EX[&quot;core tool executor:&lt;br/&gt;mutate AgentState.memory,&lt;br/&gt;or insert / search passages&quot;]
@@ -201,7 +202,8 @@ schema.</li>
 projection.</li>
 </ul>
 <p>Runtime shape:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the managers behind the core memory tools, with blocks compiled into the prompt and passages held for archival search</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the managers behind the core memory tools, with blocks compiled into the prompt and passages held for archival search
+flowchart TD
   Agent[&quot;Agent&lt;br/&gt;loop&quot;] --&gt; Tools[&quot;Core memory&lt;br/&gt;tools&quot;]
   Tools --&gt; Executor[&quot;LettaCoreToolExecutor&quot;]
   Executor --&gt; AgentState[&quot;AgentState.memory&quot;]

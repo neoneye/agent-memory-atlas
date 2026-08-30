@@ -71,6 +71,7 @@ MemoryConfig = {
 Capture lifecycle:
 
 ```mermaid
+%% caption: envelope sludge is detected and rejected before embedding, so the capture cursor only advances on text that survived sanitisation
 flowchart TB
     M["inbound platform message<br/><i>wrapped in an OpenClaw envelope</i>"] --> X["extractUserTextContent()<br/>extractLatestUserText()"]
     X --> SAN["sanitizeForMemoryCapture()<br/><i>drop media notes, ctx markers, history and<br/>current markers, bracketed prefixes,<br/>reply lines, sender prefixes, timestamps</i>"]
@@ -92,6 +93,7 @@ problem, not an extraction one.
 Recall lifecycle:
 
 ```mermaid
+%% caption: the agent-scoped predicate is applied to the vector search rather than to its results
 flowchart LR
     T["latest user text"] --> N["normalizeRecallQuery()<br/><i>collapse whitespace, cap at 1000 chars</i>"]
     N --> E["embed"] --> V["LanceDB vector search"]
@@ -114,6 +116,7 @@ Memory-relevant code lives entirely in extensions:
 - `extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts` — embedding providers.
 
 ```mermaid
+%% caption: capture and recall over one agent-scoped store, with the plugin contract and its health checks around them
 flowchart TD
   Msg["Platform message (envelope-wrapped)"] --> Extract["extractLatestUserText"]
   Extract --> Sanitize["sanitizeForMemoryCapture"]

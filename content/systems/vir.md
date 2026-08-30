@@ -86,6 +86,7 @@ vault the user owns. A separate command offers the best of them back to
 `CLAUDE.md`.
 
 ```mermaid
+%% caption: transcripts are classified by layout with two backstops and never guessed, and the secret scrubber uses a negative lookbehind so ordinary words containing a key prefix survive
 flowchart TD
     T["~/.claude/projects transcripts"] --> CL{"classifyTranscript by layout"}
     CL -->|"<sid>/subagents/…"| SC["sidechain — skipped"]

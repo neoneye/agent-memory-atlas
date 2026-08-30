@@ -77,6 +77,7 @@ four-part tuple — `category`, `tag`, `feature_name`, `value` — plus
 The state machine is shallow, and the shallowness is the finding:
 
 ```mermaid
+%% caption: an episode is retained forever and marked ingested once, never reconsidered, while a DELETE command removes the semantic row leaving no record that it was ever asserted or rejected
 flowchart TB
     M[message arrives] --> E["Episode (is_ingested = false)<br/>retained forever"]
     E -->|background loop, every 2s, 5 per set| L["LLM emits SemanticCommand: ADD or DELETE"]
@@ -111,6 +112,7 @@ orchestrator (`main/memmachine.py`, 1,671 lines) that every entry point goes
 through.
 
 ```mermaid
+%% caption: the episode store is written synchronously and the semantic half is filled by a background loop, so what a query sees depends on whether that loop has caught up
 flowchart TB
     C[REST v2 / MCP stdio / MCP HTTP / SDKs] --> MM[MemMachine orchestrator]
     MM -->|synchronous| ES[(Episode store<br/>SQLite or Postgres)]

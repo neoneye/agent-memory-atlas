@@ -92,6 +92,7 @@ written without a character lands in a shared `events` scope, and `search()`
 always includes that scope alongside the requested one.
 
 ```mermaid
+%% caption: an add with no scope raises with the suggestion in the message, and a non-user scope is stored under a shared `events` key that every search includes
 flowchart TD
     A["add(messages, …)"] --> SC{"user_id, agent_id or run_id given?"}
     SC -->|none| ERR["Mem0ValidationError with a suggestion:<br/>'Pass user_id (a character/user profile),<br/>agent_id, or run_id to scope the memory.'"]

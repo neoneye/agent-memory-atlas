@@ -84,6 +84,7 @@ over its own history in ways a vector store cannot. It is also the least
 *legible from outside*, because the shape is discovered rather than declared.
 
 ```mermaid
+%% caption: the eight platform tables are mounted for the turn and dropped before persistence, so what survives is only the schema the model wrote itself — leaving no shape an operator can write an erasure against
 flowchart TB
     S3[("zstd SQLite<br/>one file per agent")] -->|"restore in a subprocess<br/>120s timeout + validate"| DB["Agent database"]
     Plat["Platform state"] -->|"mounted as 8 tables"| Eph["__messages · __files · __contacts<br/>__agent_config · __agent_schedules<br/>__agent_skills · __tool_results · __kanban_cards"]

@@ -199,7 +199,8 @@ manage.</p>
 <p>A fact is admitted or quarantined, ranked or excluded with a reason,
 and erasure leaves behind a durable token set that outlives the records
 it deleted.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — erasure writes durable per-tenant token sets that every later recall consults, so forgetting outlives the rows it deleted and produces a certificate in the audit log</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: erasure writes durable per-tenant token sets that every later recall consults, so forgetting outlives the rows it deleted and produces a certificate in the audit log
+flowchart TB
     IN[&quot;ingest&quot;] --&gt; ADM{&quot;governed admission&quot;}
     ADM --&gt;|&quot;injection detected&lt;br/&gt;or sensitive without consent&quot;| Q[&quot;quarantined&lt;br/&gt;&lt;i&gt;quarantine_reason&lt;/i&gt;&quot;]
     ADM --&gt;|&quot;lawful basis, provenance,&lt;br/&gt;scope stamped&quot;| LIVE[&quot;TemporalFact&lt;br/&gt;valid_at / invalid_at&lt;br/&gt;+ created_at&quot;]

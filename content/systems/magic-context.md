@@ -76,6 +76,7 @@ Four things are worth calling out against the rest of the atlas:
 Verification lifecycle — the distinctive path:
 
 ```mermaid
+%% caption: verification scope is computed per memory from whether its own backing files changed since that memory's last verification, so a broad sweep is an explicit flag rather than the default
 flowchart TB
     C["memory created<br/><i>agent, user, historian or dreamer</i>"] --> MAP["map-memories backfill<br/>assigns backing files<br/><i>unmapped to mapped, verified_at = 0</i>"]
     MAP --> PART["partitionVerifyScope()"]
@@ -112,6 +113,7 @@ Core modules, grouped by concern:
 - **Git**: `git-commits/`, with commits indexed into `git_commits`, embedded into `git_commit_embeddings`, and searchable via `git_commits_fts`.
 
 ```mermaid
+%% caption: git commits and memories both feed the verification gate, and the scheduler leases the dreamer tasks that write verification status back
 flowchart TD
   Sess["Pi / OpenCode<br/>session"] --> Ctx["context-handler<br/>(tag, inject)"]
   Ctx --> Store["SQLite: context.db"]

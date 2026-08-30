@@ -81,6 +81,7 @@ Consolidation scans the chronological message list with regex patterns for
 that"`), and writes what it finds into `fact_timeline`.
 
 ```mermaid
+%% caption: the message log is the source of truth and the fact timeline is rebuilt from it inside one savepoint, so a superseded fact falls back to history at half relevance rather than disappearing
 flowchart TD
     M["messages — the log, append-only"] --> P1["phase 1: read all messages chronologically"]
     P1 --> P2["phase 2: compute contradictions in memory<br/>regex — corrections, negations,<br/>invalidations, retractions<br/>(no write lock held)"]

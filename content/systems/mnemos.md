@@ -78,6 +78,7 @@ under `.mnemos/`, `mnemos search` returns chunks with their locations, and the
 agent reads the cited section rather than being handed a summary.
 
 ```mermaid
+%% caption: the secret scanner reports a rule name and keeps the matched value on an unexported field, and the eval strips each query's text from its host chunk before re-ingesting into an ephemeral database
 flowchart TD
     F["docs, ADRs, runbooks, source"] --> IN["mnemos ingest --collection X"]
     IN --> SEC{"SecretScanner"}

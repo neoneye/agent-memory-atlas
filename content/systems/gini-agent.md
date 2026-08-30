@@ -107,6 +107,7 @@ pointed.
 - `docs/memory.md` and an extensive `docs/adr/` corpus.
 
 ```mermaid
+%% caption: four retrieval channels fused by RRF then reranked, with reinforcement writing back to the units that were recalled
 flowchart TD
   Task["Task /<br/>session"] --> Retain["retain.ts"]
   Retain --> Units["memory_units<br/>(banks, agent_id)"]

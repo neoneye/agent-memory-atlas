@@ -55,6 +55,7 @@ There is no trust ladder, and that is a decision rather than an omission. `ARCHI
 The state that governs everything is the session, not the memory. A session is `OPEN` or `CLOSED`, and the transition between them is where every check lives.
 
 ```mermaid
+%% caption: closing a session validates before sealing, and a re-asserted tombstoned value or a failing must-not-return test sends it back to open rather than through
 stateDiagram-v2
   [*] --> Blocked: unresolved recovery candidate
   Blocked --> Open: person resolves with a note

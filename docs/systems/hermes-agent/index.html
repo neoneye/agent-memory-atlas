@@ -242,7 +242,8 @@ are model-independent."</p>
 </tbody>
 </table></div>
 <p>Write lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write gate, threat scan, drift check and budget refusal all run before the disk write — and the system prompt is unchanged for the rest of the session, because the frozen snapshot is only re-rendered at the next session start</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the write gate, threat scan, drift check and budget refusal all run before the disk write — and the system prompt is unchanged for the rest of the session, because the frozen snapshot is only re-rendered at the next session start
+flowchart TB
     A[&quot;memory(action = add, replace or remove,&lt;br/&gt;target = memory or user)&quot;] --&gt; G{&quot;write gate&quot;}
     G --&gt;|block| B[&quot;refused&quot;]
     G --&gt;|stage| H[&quot;held for human approval&quot;]
@@ -283,7 +284,8 @@ patterns, shared with the context-file scanner.</li>
 <code>tools/skill_provenance.py</code>, <code>agent/skill_*.py</code>:
 skills as procedural memory.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same gated write beside the two read paths, with session search over FTS5 and one external provider's prefetch block</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same gated write beside the two read paths, with session search over FTS5 and one external provider&#39;s prefetch block
+flowchart TD
   Model[&quot;Model&quot;] --&gt; Tool[&quot;memory tool&lt;br/&gt;(add/replace/remove)&quot;]
   Tool --&gt; Gate[&quot;write_approval gate&quot;]
   Gate --&gt;|stage| Human[&quot;Human approval&lt;br/&gt;queue&quot;]

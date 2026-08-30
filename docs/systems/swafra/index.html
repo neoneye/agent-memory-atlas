@@ -208,7 +208,8 @@ graph" is a separate list of directed edges between chunk IDs:</p>
 <li><code>cross_session</code>.</li>
 </ul>
 <p>Lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — fact extraction closes conflicting facts as part of ingestion, so supersession happens at write time rather than being resolved at query time</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: fact extraction closes conflicting facts as part of ingestion, so supersession happens at write time rather than being resolved at query time
+flowchart TB
     A[&quot;MCP add_knowledge&quot;] --&gt; B[&quot;choose Leiden&lt;br/&gt;or fallback chunking&quot;]
     B --&gt; C[&quot;annotate and embed chunks&quot;]
     C --&gt; D[&quot;add within-source&lt;br/&gt;and cross-source edges&quot;]
@@ -238,7 +239,8 @@ triple carrying <code>chunk_id</code>, <code>source_id</code>,
 <code>created_at</code>, <code>confidence</code>, <code>evidence</code>
 (the original text span), <code>valid_until</code>, and
 <code>superseded_by</code>. Its states are exactly two:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a transition phrase with a similar slot supersedes rather than deletes, and the superseded fact penalises its chunk's score instead of removing it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a transition phrase with a similar slot supersedes rather than deletes, and the superseded fact penalises its chunk&#39;s score instead of removing it
+flowchart TB
     EX[&quot;extract_facts()&lt;br/&gt;regex patterns over chunk text&quot;] --&gt; ACTIVE[&quot;active fact&lt;br/&gt;valid_until = None&quot;]
     TR[&quot;a later &lt;i&gt;transition&lt;/i&gt; fact arrives —&lt;br/&gt;&amp;quot;I switched to X&amp;quot;, &amp;quot;changed to&amp;quot;, &amp;quot;stopped&amp;quot;, &amp;quot;replaced&amp;quot; —&lt;br/&gt;same subject, different value, slot similarity ≥ 0.65&quot;] --&gt; SUP
     ACTIVE --&gt; SUP[&quot;superseded fact&lt;br/&gt;valid_until = now, superseded_by = new id&lt;br/&gt;the row is kept, never deleted&quot;]
@@ -314,7 +316,8 @@ gated behind <code>is_llm_available()</code>);</li>
 deterministic signed hash vectors over words and character trigrams. If
 Leiden dependencies are unavailable, ingestion uses
 conversation/paragraph chunking.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two MCP servers over one Python engine, with the Node one bridging through a JSON-line subprocess</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two MCP servers over one Python engine, with the Node one bridging through a JSON-line subprocess
+flowchart TD
   Client[&quot;MCP client&quot;] --&gt; PyMCP[&quot;Python FastMCP server&quot;]
   Client --&gt; NodeMCP[&quot;Node MCP server&quot;]
   NodeMCP --&gt; RPC[&quot;JSON-line subprocess bridge&quot;]

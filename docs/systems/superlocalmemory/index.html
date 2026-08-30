@@ -186,7 +186,8 @@ write passes through a <strong>trust gate</strong> before it lands;
 access passes through <strong>ABAC</strong>; expiry is decided by
 <strong>named retention rules</strong> bound to a profile; and every
 operation lands in the audit chain.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a trust gate precedes attribute-based access control on writes and deletes while reads always pass it, and every operation appends to a hash chain on its own connection</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a trust gate precedes attribute-based access control on writes and deletes while reads always pass it, and every operation appends to a hash chain on its own connection
+flowchart TD
     W[&quot;write / delete&quot;] --&gt; TG{&quot;trust gate:&lt;br/&gt;score above threshold?&quot;}
     TG --&gt;|no| DENY[&quot;refused&quot;]
     TG --&gt;|yes| AB{&quot;ABAC: agent, profile, action&quot;}

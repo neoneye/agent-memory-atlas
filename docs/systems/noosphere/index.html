@@ -206,7 +206,8 @@ subject kind (capture, session, scope, principal),
 Revocation is expressed against a <em>lineage</em>, not a row, which is
 why revoking a session or a scope propagates to everything derived from
 it.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a revocation writes a tombstone keyed on a hashed subject that refuses later captures — and the tombstone carries a ninety-day TTL, after which the refusal lapses</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a revocation writes a tombstone keyed on a hashed subject that refuses later captures — and the tombstone carries a ninety-day TTL, after which the refusal lapses
+flowchart TD
     C[&quot;capture arrives&quot;] --&gt; LK[&quot;lock lineage rows, serializable&quot;]
     LK --&gt; RV{&quot;lineage revoked?&quot;}
     RV --&gt;|yes| E1[&quot;409 — lineage has been revoked&quot;]

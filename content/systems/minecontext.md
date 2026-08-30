@@ -120,6 +120,7 @@ what is worth extracting, what to merge it into, and what they have committed to
 ## 3. Architecture
 
 ```mermaid
+%% caption: four capture sources converge on one processing chain, and everything downstream reads SQLite and the vector store rather than the sources
 flowchart TD
     SC["screenshot.py"] --> P["context_processing<br/>chunker → processor → merger"]
     FM["folder_monitor.py"] --> P

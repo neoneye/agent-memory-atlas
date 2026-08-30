@@ -202,7 +202,8 @@ MemoryConfig = {
   storageOptions?: Record&lt;string, string&gt;
 }</code></pre>
 <p>Capture lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — envelope sludge is detected and rejected before embedding, so the capture cursor only advances on text that survived sanitisation</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: envelope sludge is detected and rejected before embedding, so the capture cursor only advances on text that survived sanitisation
+flowchart TB
     M[&quot;inbound platform message&lt;br/&gt;&lt;i&gt;wrapped in an OpenClaw envelope&lt;/i&gt;&quot;] --&gt; X[&quot;extractUserTextContent()&lt;br/&gt;extractLatestUserText()&quot;]
     X --&gt; SAN[&quot;sanitizeForMemoryCapture()&lt;br/&gt;&lt;i&gt;drop media notes, ctx markers, history and&lt;br/&gt;current markers, bracketed prefixes,&lt;br/&gt;reply lines, sender prefixes, timestamps&lt;/i&gt;&quot;]
     SAN --&gt; SLU{&quot;looksLikeEnvelopeSludge()?&quot;}
@@ -218,7 +219,8 @@ in platform scaffolding, and the sanitizer strips seven kinds of it
 before a sludge check rejects whatever is still mostly wrapper — capture
 quality here is a filtering problem, not an extraction one.</p>
 <p>Recall lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent-scoped predicate is applied to the vector search rather than to its results</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent-scoped predicate is applied to the vector search rather than to its results
+flowchart LR
     T[&quot;latest user text&quot;] --&gt; N[&quot;normalizeRecallQuery()&lt;br/&gt;&lt;i&gt;collapse whitespace, cap at 1000 chars&lt;/i&gt;&quot;]
     N --&gt; E[&quot;embed&quot;] --&gt; V[&quot;LanceDB vector search&quot;]
     V --&gt; SP[&quot;scopedPredicate(agentId, filter)&quot;]
@@ -247,7 +249,8 @@ wiring: <code>index.ts</code> (248 lines), <code>api.ts</code>,
 <li><code>extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts</code>
 — embedding providers.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — capture and recall over one agent-scoped store, with the plugin contract and its health checks around them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: capture and recall over one agent-scoped store, with the plugin contract and its health checks around them
+flowchart TD
   Msg[&quot;Platform message (envelope-wrapped)&quot;] --&gt; Extract[&quot;extractLatestUserText&quot;]
   Extract --&gt; Sanitize[&quot;sanitizeForMemoryCapture&quot;]
   Sanitize --&gt; Sludge{&quot;looksLikeEnvelopeSludge?&quot;}

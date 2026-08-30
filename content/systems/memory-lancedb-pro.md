@@ -84,6 +84,7 @@ overnight and moves memories between tiers.
 The lifecycle has three exits and they are genuinely distinct:
 
 ```mermaid
+%% caption: an admission veto stops a low-utility candidate before it is stored, and being injected three times without a confirmed use suppresses a memory until a day passes without injection
 stateDiagram-v2
     [*] --> Candidate: extractor proposes
     Candidate --> [*]: admission veto — utility score at or below the floor

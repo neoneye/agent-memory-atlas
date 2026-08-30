@@ -90,6 +90,7 @@ tombstoned, a new version is created, "entity relationships are transferred to
 the new memory", and an optional `correction_note` records why.
 
 ```mermaid
+%% caption: one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it
 flowchart TD
     R["remember / correct / forget / relate"] --> CL["commit substrate — one mutation grammar,<br/>idempotent on op_id, per-tenant log_index"]
     CL --> AP["applier → storage + HNSW index"]

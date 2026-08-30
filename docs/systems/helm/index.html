@@ -218,7 +218,8 @@ free text per notable turn, with a channel tag and a timestamp. Episodes
 are the raw stream; facts are what survives it.</p>
 <p>Confidence is a float, not a state. But there are effectively two
 grades, distinguished by who wrote the row and how it was tagged:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — decay and prune both require an evidence count below two, so a corroborated fact is immortal against time and only a replacement ends it; `forget id` filters on id alone and hard-deletes with no record of the value removed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: decay and prune both require an evidence count below two, so a corroborated fact is immortal against time and only a replacement ends it; `forget id` filters on id alone and hard-deletes with no record of the value removed
+stateDiagram-v2
     direction TB
     [*] --&gt; Provisional: remember --source observed&lt;br/&gt;conf capped at 0.70, evidence 1
     [*] --&gt; Asserted: remember untagged or --force&lt;br/&gt;conf as requested, 1.0 by default
@@ -306,7 +307,8 @@ cognition as a long-lived process under launchd/systemd
 SQLite file mapping the single key <code>'owner'</code> to a Claude Code
 session id for <code>--resume</code>.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the per-turn path with recall spawned under a twelve-second timeout and confidence stripped before the prompt, beside the background jobs that consolidate and refresh the index</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the per-turn path with recall spawned under a twelve-second timeout and confidence stripped before the prompt, beside the background jobs that consolidate and refresh the index
+flowchart TB
     subgraph FE[&quot;Front doors (owner-locked)&quot;]
         D[&quot;Discord DM&quot;]
         IM[&quot;iMessage&quot;]

@@ -58,6 +58,7 @@ score = confidence · clamp(success_rate) · min(1, log1p(usage)/k)
 The state that actually matters to a session is not a property of the memory at all. It is which arm the session landed in:
 
 ```mermaid
+%% caption: a hashed cohort assignment sends a fifth of sessions down a control path that records an empty injection, so the treatment has something to be measured against
 flowchart TD
   S["session starts"] --> H{"hook registered?"}
   H -->|"no · HOOKS_OFF baseline<br/>at this commit"| Z["no injection,<br/>no record"]

@@ -67,6 +67,7 @@ A memory becomes durable in exactly one way. An extractor reads a source and pro
 Correction is supersession with a validity axis. `facts.supersedes_json` names what a claim replaces, `valid_from`/`valid_until` say when the claim was true, `created_at` says when the store learned it, and `review_after` schedules a date to look again — a memory that asks to be re-examined rather than waiting to be contradicted.
 
 ```mermaid
+%% caption: the governor blocks a proposal with no source or section id, and every applied proposal writes a before-and-after audit the undo path reads back
 flowchart TD
   I["ingest: file, PDF, session"] --> SC["safety scan"]
   SC -->|poisoning pattern| DT["trust_level forced to untrusted"]

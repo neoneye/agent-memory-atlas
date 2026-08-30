@@ -82,6 +82,7 @@ Belief lives above both. When a belief changes, the reconsolidation sweep runs,
 and memories move.
 
 ```mermaid
+%% caption: a claim waits for a person and the review event records the actor, and a reconsolidation sweep re-examines beliefs whose supporting or contesting reason has since disappeared
 stateDiagram-v2
     [*] --> PendingReview: claim extracted, claim_key unique, evidence_refs accumulate
     PendingReview --> Approved: a person decides, review_event records actor and note

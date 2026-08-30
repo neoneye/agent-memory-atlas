@@ -92,6 +92,7 @@ verified: mcp/kernel.ts, mcp/kernel.test.ts"], "suggested_action": "update"`.
 The system's own store demonstrates its own withholding.
 
 ```mermaid
+%% caption: a packet is served only while the symbol hashes it cited still match; a changed hash withholds it and counts it, and re-verification appends evidence rather than overwriting
 stateDiagram-v2
     [*] --> Rejected: strict capture, cited path does not exist
     [*] --> Pending: captured, fingerprints taken per path and per symbol

@@ -113,6 +113,7 @@ MemoryRejectedValue(
 Write lifecycle:
 
 ```mermaid
+%% caption: the actor decides the starting state — a human's assertion is active, a model's is a candidate — and dedupe, tombstone and conflict checks all run under one advisory lock
 flowchart TB
     IN["explicit human command,<br/>assistant remember,<br/>or the review UI"] --> RB["record_belief(actor, …)"]
     RB --> LOCK["under an advisory lock:<br/>dedupe → tombstone → conflict → create"]
@@ -133,6 +134,7 @@ depending on the actor, and nothing a model says is believed on arrival.
 Correction lifecycle:
 
 ```mermaid
+%% caption: a correction is one locked operation that supersedes the old claim, writes a tombstone against its value, and records the replacement
 flowchart TB
     C["correct that OLD to NEW,<br/>or the /memory UI correct action"] --> CB["correct_belief(old_uuid, new_text,<br/>actor, evidence)"]
     CB --> L["advisory lock on both the old and new keys"]
@@ -153,6 +155,7 @@ which is the failure this atlas is organised around.
 Retrieval lifecycle:
 
 ```mermaid
+%% caption: hard filters run before ranking and every recalled memory is fenced with its angle brackets neutralised before it reaches the prompt
 flowchart TB
     T["user turn or assistant action"] --> Q["build query"]
     Q --> HF["hard_filtered_claims:<br/>active, non-expired,<br/>allowed sensitivity, matching scope"]
@@ -191,6 +194,7 @@ Core files:
 Architecture:
 
 ```mermaid
+%% caption: the whole path from either UI to the prompt, with retrieval events and feedback feeding the eval cases
 flowchart TD
   UI["Chat / Assistant / Memory UI"] --> Ops["memory.ops / assistant actions / memory_api"]
   Ops --> RecordBelief["record_belief / correct_belief"]

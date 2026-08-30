@@ -80,6 +80,7 @@ adds a weekly job that exports everything and deletes the observations that neve
 earned their keep.
 
 ```mermaid
+%% caption: four numbered patches around consolidation and a weekly job that deletes observations with one proof or fewer after thirty days, recording each deletion in the backup
 flowchart TD
     IMP["import_ai_chats.py — ChatGPT / Gemini archives<br/>import_daylife.py — planner data"] --> R["engine retain"]
     R --> F["world and experience facts"]

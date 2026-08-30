@@ -99,6 +99,7 @@ copied back, or is wiped with everything else. There is no record, no identity,
 and no correction.
 
 ```mermaid
+%% caption: credentials are sanitised field by field on backup and the wrapped agent's memory is copied whole, so an ordinary restore undoes a careful deletion
 flowchart TB
     subgraph Wrapped["A wrapped agent — Hermes, OpenClaw"]
       Mem[("Its own memory<br/>NemoClaw never reads or writes it")]

@@ -123,6 +123,7 @@ mechanisms, unrelated to each other:
   Extras server).
 
 ```mermaid
+%% caption: entries are matched by logic mode against a depth-bounded scan window, then gated by sticky, cooldown and delay timers before recursion and the budget decide what reaches the prompt
 flowchart TB
     U[User authors entries] --> LB[(worlds/*.json lorebooks)]
     C[Chat messages] --> SC[scan window<br/>depth-bounded]

@@ -80,6 +80,7 @@ model the agent as a memory subject in its own right.
 The lifecycle is two states and no transitions between them:
 
 ```mermaid
+%% caption: the turn is stored durably with no model involved and augmentation is best-effort on top, and seeing a fact again increments a counter rather than changing its content
 flowchart TB
     T["turn captured"] --> C[("conversation + messages stored<br/><i>durable, no model involved</i>")]
     C --> AUG["augmentation, hosted"]
@@ -106,6 +107,7 @@ and no surface where a person adjudicates.
 ## 3. Architecture
 
 ```mermaid
+%% caption: the required path and the best-effort path side by side — capture cannot fail because of the cloud, and facts exist only if it succeeded
 flowchart LR
     SDK["Python / TS / Rust SDK"] --> TURN["capture_turn"]
     TURN -->|required| DB[("conversation +<br/>messages")]

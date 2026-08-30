@@ -78,6 +78,7 @@ alongside similarity, overlap and recency. Background passes decay, reflect and
 consolidate.
 
 ```mermaid
+%% caption: cross-sector waypoints are edges written at ingest and read as one term of the hybrid score, so structure contributes to ranking without a traversal at query time
 flowchart TD
     A["add(content, user_id, project_id)"] --> SEC["primary sector +<br/>additional sectors"]
     SEC --> WP["create_cross_sector_waypoints:<br/>edges both directions at weight 0.5<br/>between id and id:sector"]

@@ -89,6 +89,7 @@ for and rarely finds.
 **Forgetting is a queue with a cancel.**
 
 ```mermaid
+%% caption: a sleep cycle decays what was not reinforced and strengthens what was co-retrieved, with a pin protecting a memory and a dissolution queue that can be reversed while it flashes
 flowchart TD
     C["Verbatim capture"] --> E[("Episodes<br/>SQLite, AES-256-GCM")]
     E --> S["Sleep cycle:<br/>community detection, summaries,<br/>decay unreinforced, reinforce co-retrieved"]

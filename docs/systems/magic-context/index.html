@@ -224,7 +224,8 @@ and <code>dreamer</code> are the background subagents and
 instinct as RainBox's five-actor model.</li>
 </ul>
 <p>Verification lifecycle — the distinctive path:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — verification scope is computed per memory from whether its own backing files changed since that memory's last verification, so a broad sweep is an explicit flag rather than the default</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: verification scope is computed per memory from whether its own backing files changed since that memory&#39;s last verification, so a broad sweep is an explicit flag rather than the default
+flowchart TB
     C[&quot;memory created&lt;br/&gt;&lt;i&gt;agent, user, historian or dreamer&lt;/i&gt;&quot;] --&gt; MAP[&quot;map-memories backfill&lt;br/&gt;assigns backing files&lt;br/&gt;&lt;i&gt;unmapped to mapped, verified_at = 0&lt;/i&gt;&quot;]
     MAP --&gt; PART[&quot;partitionVerifyScope()&quot;]
     PART --&gt; N1[&quot;never verified&lt;br/&gt;verified_at = 0&quot;] --&gt; IN
@@ -290,7 +291,8 @@ indexed into <code>git_commits</code>, embedded into
 <code>git_commit_embeddings</code>, and searchable via
 <code>git_commits_fts</code>.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — git commits and memories both feed the verification gate, and the scheduler leases the dreamer tasks that write verification status back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: git commits and memories both feed the verification gate, and the scheduler leases the dreamer tasks that write verification status back
+flowchart TD
   Sess[&quot;Pi / OpenCode&lt;br/&gt;session&quot;] --&gt; Ctx[&quot;context-handler&lt;br/&gt;(tag, inject)&quot;]
   Ctx --&gt; Store[&quot;SQLite: context.db&quot;]
   Store --&gt; Mem[&quot;memories +&lt;br/&gt;embeddings +&lt;br/&gt;FTS&quot;]

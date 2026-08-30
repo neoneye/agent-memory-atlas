@@ -187,7 +187,8 @@ into summary as buckets fill.</p>
 <code>timestamp_ref</code>, and <code>source_turn_ids</code> pointing
 back at the turns it came from.</p>
 <p>Cutting across all three is the label that matters:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — taint decides what a memory may drive, and anything unknown, corrupt or legacy fails closed to the external class</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: taint decides what a memory may drive, and anything unknown, corrupt or legacy fails closed to the external class
+flowchart LR
     U[&quot;user typed it&quot;] --&gt; I[&quot;MemoryTaint::Internal&quot;]
     S[&quot;synced from email,&lt;br/&gt;docs, MCP&quot;] --&gt; E[&quot;MemoryTaint::ExternalSync&quot;]
     UNK[&quot;unknown, corrupt, legacy&quot;] -.-&gt;|&quot;fails closed&quot;| E
@@ -290,7 +291,8 @@ contacts</td>
 </tr>
 </tbody>
 </table></div>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — taint is preserved through scrubbing and every read path passes the same gate, whether it came from the tree walk or from search</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: taint is preserved through scrubbing and every read path passes the same gate, whether it came from the tree walk or from search
+flowchart TB
     S[Sources: chat, email, docs, MCP, Composio] --&gt; ING[memory ingest_pipeline]
     ING --&gt; SAN[memory_store safety&lt;br/&gt;secret + PII scrub, taint preserved]
     SAN --&gt; CH[(chunks + vectors + FTS5)]

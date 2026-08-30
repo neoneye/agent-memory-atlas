@@ -84,6 +84,7 @@ and records.
 ## 3. Architecture
 
 ```mermaid
+%% caption: four layers from raw conversation to persona, with recall and the two markdown layers all feeding the same assembled prompt
 flowchart TD
   OpenClaw["OpenClaw hooks"] --> Capture["Auto capture"]
   Hermes["Hermes gateway"] --> Capture

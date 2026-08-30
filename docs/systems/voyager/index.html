@@ -207,7 +207,8 @@ description:</p>
 </tbody>
 </table></div>
 <p>Write lifecycle — note where the gate sits:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nothing enters the skill library until the critic confirms the code worked in the environment, so a failed attempt is retried and never stored</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: nothing enters the skill library until the critic confirms the code worked in the environment, so a failed attempt is retried and never stored
+flowchart TB
     C[&quot;curriculum proposes a task&quot;] --&gt; A[&quot;action agent writes code&lt;br/&gt;&lt;i&gt;retrieved skills as context&lt;/i&gt;&quot;]
     A --&gt; E[&quot;execute in the environment&quot;]
     E --&gt; CR[&quot;critic agent inspects&lt;br/&gt;the resulting environment state&quot;]
@@ -227,7 +228,8 @@ than judging the text, and a failure retries without leaving anything
 behind. Voyager is the atlas's clearest instance of memory validated by
 execution rather than by adjudication.</p>
 <p>Read lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — retrieval matches against the LLM-written descriptions and returns the code, so what is searched and what is injected are different artifacts</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: retrieval matches against the LLM-written descriptions and returns the code, so what is searched and what is injected are different artifacts
+flowchart LR
     T[&quot;task context&quot;] --&gt; R[&quot;retrieve_skills(query=context)&quot;]
     R --&gt; S[&quot;Chroma similarity_search_with_score&lt;br/&gt;over &lt;i&gt;descriptions&lt;/i&gt;, k = min(count, 5)&quot;]
     S --&gt; C[&quot;return the &lt;b&gt;code&lt;/b&gt; of the top-k matches&quot;]
@@ -253,7 +255,8 @@ them together.</li>
 <li><code>voyager/control_primitives/</code> — hand-written base
 functions always available.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the curriculum, action and critic agents around one skill store, with the outcome deciding whether anything is written</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the curriculum, action and critic agents around one skill store, with the outcome deciding whether anything is written
+flowchart TD
   Curr[&quot;Curriculum agent&quot;] --&gt; Task[&quot;Next task&quot;]
   Task --&gt; Retr[&quot;retrieve_skills(context)&quot;]
   Skills[&quot;Chroma: descriptions&quot;] --&gt; Retr

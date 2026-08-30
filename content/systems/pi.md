@@ -93,6 +93,7 @@ The parts that matter for memory are small and legible:
 - `packages/coding-agent/src/core/extensions/types.ts` — the `ExtensionAPI`, including the event surface.
 
 ```mermaid
+%% caption: the session tree is the store and compaction records which files were read and modified beside the summary, so a fork replays from a node rather than from a transcript
 flowchart LR
   Msgs["Messages, tool calls"] --> Tree["Session tree (id / parentId)"]
   Tree --> JSONL["JSONL storage"]

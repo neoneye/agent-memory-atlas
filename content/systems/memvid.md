@@ -83,6 +83,7 @@ than value-keyed, and the ACL module is thin relative to the rest.
 How a thing becomes a belief, and how it stops being one:
 
 ```mermaid
+%% caption: a correction appends a new frame and links the old one; nothing is ever edited in place, so a deleted frame remains in the file
 stateDiagram-v2
     direction LR
     [*] --> Active: write — frame appended through the WAL,<br/>checksummed, committed

@@ -93,6 +93,7 @@ without being archived or deleted, which is the state most stores express as a
 tag or not at all.
 
 ```mermaid
+%% caption: the state machine the committed CRDT suite tests against, including a revival transition that needs a clock the published server does not have
 stateDiagram-v2
     [*] --> active: written, version 1
     active --> paused: withheld from recall, not archived

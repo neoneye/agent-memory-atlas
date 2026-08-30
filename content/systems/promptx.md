@@ -89,6 +89,7 @@ spreading activation is a theory about *reachability* rather than about truth.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: cue words index the engram and spreading activation decides what surfaces, and decay treats a wrong engram and an unused one identically
 flowchart TD
     R["remember operation"] --> E["engram written:<br/>content, schema, type,<br/>timestamp, strength"]
     E --> CI["cue_index rows,<br/>one per cue word"]

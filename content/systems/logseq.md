@@ -80,6 +80,7 @@ The state machine is the shortest in this atlas, because there is no epistemic
 machinery at all:
 
 ```mermaid
+%% caption: an edit simply replaces the value with no version kept, and retraction removes the entity and cleans up the pages it orphaned
 flowchart TB
     IN["a human types,<br/>or an agent calls upsertNodes"] --> N["node exists in the graph"]
     N --> FTS["indexed into FTS5<br/><i>by trigger</i>"]
@@ -113,6 +114,7 @@ shell and a Python sidecar. The relevant modules are the `deps/` workspace:
 operations), `graph-parser`, `db-sync` (multi-device), `common`, and `publish`.
 
 ```mermaid
+%% caption: DataScript over SQLite fans out to an FTS5 index by trigger and a vector index in batches, fused by RRF at search time
 flowchart TB
     U[Editor UI] --> O[outliner core]
     M[MCP server<br/>6 tools] --> API[HTTP API server]

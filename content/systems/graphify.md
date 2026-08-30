@@ -149,6 +149,7 @@ explicitly excluded from the sidecar overlay: *"those stay query-scoped,
 surfaced only in the report."*
 
 ```mermaid
+%% caption: outcome flags drive promotion from tentative to preferred, while the dead-end branch is rendered into a lessons file for a model to obey and no code path consults it
 stateDiagram-v2
     [*] --> Doc: graphify save-result writes one Markdown file
     Doc --> Unmarked: no outcome flag supplied

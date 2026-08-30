@@ -80,6 +80,7 @@ vocabulary comes straight from
 `src/server/api/memobase_server/prompts/merge_profile.py`:
 
 ```mermaid
+%% caption: three merge verdicts, one of which rewrites the memo so the previous text ceases to exist
 flowchart TB
     N["new information about<br/>(topic, subtopic)"] --> M{"merge_profile"}
     M -->|APPEND| A["the memo did not exist,<br/>or this is additive"]
@@ -115,6 +116,7 @@ string, maintained by asking a language model nicely, queryable by nothing.
 ## 3. Architecture
 
 ```mermaid
+%% caption: blobs buffer until a token threshold flushes them through extract-merge-organize, and the source blob is deleted afterwards unless chat persistence is on
 flowchart LR
     APP["app / SDK / MCP"] -->|insert blob| API["FastAPI<br/>memobase_server"]
     API --> BLOB[("general_blobs")]

@@ -175,7 +175,8 @@ from episodes. It is a four-part tuple — <code>category</code>,
 <code>metadata.citations</code>, a list of the episode IDs that produced
 it (<code>semantic_memory/semantic_model.py</code>).</p>
 <p>The state machine is shallow, and the shallowness is the finding:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an episode is retained forever and marked ingested once, never reconsidered, while a DELETE command removes the semantic row leaving no record that it was ever asserted or rejected</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an episode is retained forever and marked ingested once, never reconsidered, while a DELETE command removes the semantic row leaving no record that it was ever asserted or rejected
+flowchart TB
     M[message arrives] --&gt; E[&quot;Episode (is_ingested = false)&lt;br/&gt;retained forever&quot;]
     E --&gt;|background loop, every 2s, 5 per set| L[&quot;LLM emits SemanticCommand: ADD or DELETE&quot;]
     L --&gt;|ADD| SF[&quot;SemanticFeature + citations&quot;]
@@ -206,7 +207,8 @@ server splits into <code>episodic_memory</code>,
 <code>semantic_memory</code>, a <code>retrieval_agent</code>, and a
 <code>main</code> orchestrator (<code>main/memmachine.py</code>, 1,671
 lines) that every entry point goes through.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the episode store is written synchronously and the semantic half is filled by a background loop, so what a query sees depends on whether that loop has caught up</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the episode store is written synchronously and the semantic half is filled by a background loop, so what a query sees depends on whether that loop has caught up
+flowchart TB
     C[REST v2 / MCP stdio / MCP HTTP / SDKs] --&gt; MM[MemMachine orchestrator]
     MM --&gt;|synchronous| ES[(Episode store&lt;br/&gt;SQLite or Postgres)]
     MM --&gt; EM[Episodic memory&lt;br/&gt;short-term + long-term]

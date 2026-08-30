@@ -119,6 +119,7 @@ wrong is deleted, and the next reflection pass over the same indexed entries can
 derive it again — the deletion is not recorded anywhere the derivation consults.
 
 ```mermaid
+%% caption: a sealed log is outside transcription, indexing and the timeline by construction rather than by a filter someone must remember — and deletion records nothing, so the next reflection pass can re-derive what was deleted
 stateDiagram-v2
     [*] --> Created: a log is recorded
     Created --> Sealed: the journaller sets a delivery date

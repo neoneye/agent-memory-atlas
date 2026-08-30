@@ -80,6 +80,7 @@ Visible code areas:
 Runtime shape from visible code:
 
 ```mermaid
+%% caption: the wrappers and the prompt injection are what ships; ingestion and search happen behind a hosted API
 flowchart TD
   Agent["Agent / AI<br/>SDK / MCP"] --> Tools["Supermemory<br/>wrappers"]
   Tools --> API["Hosted Supermemory<br/>API"]

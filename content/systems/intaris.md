@@ -87,6 +87,7 @@ scheduled tasks over the audit history and write a new `behavioral_profiles` row
 version incremented. That profile is the only thing that survives the session.
 
 ```mermaid
+%% caption: a read-only allowlist short-circuits in under a millisecond, everything else reaches an LLM judge behind a five-second circuit breaker, and the audit log feeds precedent within the session only
 flowchart TD
     TC["Tool call"] --> CL{"Classifier:<br/>read-only allowlist?"}
     CL -- "yes" --> OK["Approved, sub-millisecond"]

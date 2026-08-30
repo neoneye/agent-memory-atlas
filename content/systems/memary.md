@@ -75,6 +75,7 @@ about" in different places.
 The state machine is one transition wide:
 
 ```mermaid
+%% caption: the whole of the entity knowledge store's update rule: a count that only ever increases, so nothing can become less important
 flowchart LR
     E["entity mentioned"] --> C["count += 1<br/>date = now"]
     C --> N["nothing else —<br/><b>count never decreases</b>"]
@@ -99,6 +100,7 @@ A library, not a service: `ChatAgent` in `src/memary/agent/chat_agent.py`,
 subclassing `Agent` in `base_agent.py`, plus a Streamlit front end.
 
 ```mermaid
+%% caption: a graph miss escalates to an external search whose answer is written back into the graph as if it had been known
 flowchart TD
     U["chat turn"] --> CA["ChatAgent.add_chat"]
     CA --> MS["memory_stream.json"]

@@ -80,6 +80,7 @@ Status moves only through `apply_transition`, which the demotion handler calls t
 What kills a pattern is asymmetric on purpose. Promotion is optimistic, demotion conservative, and between them sits a 20-point band of success rate that belongs to neither.
 
 ```mermaid
+%% caption: promotion needs injections, a success rate and an evidence tier together, and the band between forty and sixty per cent is hysteresis where nothing moves
 stateDiagram-v2
   [*] --> candidate: clustered from session events
   candidate --> provisional: 5 injections · 60% success · tier >= observed

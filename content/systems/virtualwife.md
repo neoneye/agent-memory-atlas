@@ -137,6 +137,7 @@ owner entirely.
 Python 3, Django, MIT-licensed. **No commit since 2024-10-27.**
 
 ```mermaid
+%% caption: the short-term query has no owner predicate and the long-term one does, so the two halves of the same store are scoped differently
 flowchart TB
     E[exchange] --> D[MemoryStorageDriver]
     D --> ST[LocalStorage<br/>Django model]

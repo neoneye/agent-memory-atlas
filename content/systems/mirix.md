@@ -91,6 +91,7 @@ the typed-memory family keeps this.
 The state machine is short, which is the point:
 
 ```mermaid
+%% caption: two states and no vocabulary for a third — an update is a hard delete and an insert, so nothing can be candidate, disputed, rejected or superseded
 stateDiagram-v2
     direction TB
     [*] --> Exists: message → accumulator → meta agent<br/>→ specialist agent → typed row
@@ -118,6 +119,7 @@ is a sentence, not a link to the `raw_memory` row it came from.
 Four services, all in `docker-compose.yml`:
 
 ```mermaid
+%% caption: an accumulator queues messages for a meta agent that routes them to six specialists, each writing its own typed rows
 flowchart LR
     C["client / SDK"] --> API["FastAPI server<br/>:8531"]
     D["React dashboard<br/>:5173"] --> API

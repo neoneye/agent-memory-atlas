@@ -51,6 +51,7 @@ LangMem treats memory as an item in a LangGraph `BaseStore`, namespaced by a tup
 The memory lifecycle has two main modes:
 
 ```mermaid
+%% caption: two write paths into one namespaced store — the agent's own tools, and a background manager whose reflection executor schedules the extraction for later
 flowchart LR
     A["agent"] -->|"manage_memory tool"| PUT["put / delete"]
     A -->|"search_memory tool"| SRCH["search"]
@@ -87,6 +88,7 @@ Memory is agent-controlled in the tool path and LLM-managed in the background ma
 Runtime shape:
 
 ```mermaid
+%% caption: the same store reached by agent tools and by a trustcall extractor, with the reflection executor deferring the manager's pass off the hot path
 flowchart TD
   Agent["LangGraph<br/>agent"] --> Tools["LangMem<br/>tools"]
   Tools --> Store["LangGraph<br/>BaseStore"]

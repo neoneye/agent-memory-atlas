@@ -65,6 +65,7 @@ Inferences become hypotheses with verification plans. Goals accumulate failures
 with lessons. Background passes consolidate all of it.
 
 ```mermaid
+%% caption: contradiction detection returns zero rather than guessing when the entity or property is missing, and a hypothesis lives in its own table that recall never reads
 flowchart TD
     R["remember"] --> F["facts: entity, property, value,<br/>confidence, valid_until"]
     F --> CD{"DetectContradictions:<br/>WHERE namespace_id = $1<br/>AND entity = $2 AND property = $3<br/>AND id != $4 AND valid_until IS NULL"}

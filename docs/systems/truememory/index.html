@@ -182,7 +182,8 @@ changes" (<code>"not X anymore"</code>, <code>"no longer X"</code>),
 "invalidations" (<code>"that's wrong"</code>) and "retractions"
 (<code>"changed my mind about X"</code>, <code>"scratch that"</code>),
 and writes what it finds into <code>fact_timeline</code>.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the message log is the source of truth and the fact timeline is rebuilt from it inside one savepoint, so a superseded fact falls back to history at half relevance rather than disappearing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the message log is the source of truth and the fact timeline is rebuilt from it inside one savepoint, so a superseded fact falls back to history at half relevance rather than disappearing
+flowchart TD
     M[&quot;messages — the log, append-only&quot;] --&gt; P1[&quot;phase 1: read all messages chronologically&quot;]
     P1 --&gt; P2[&quot;phase 2: compute contradictions in memory&lt;br/&gt;regex — corrections, negations,&lt;br/&gt;invalidations, retractions&lt;br/&gt;(no write lock held)&quot;]
     P2 --&gt; P3[&quot;phase 3: one SAVEPOINT&quot;]

@@ -92,6 +92,7 @@ cell's `effective` score folds its stated confidence, its actor's calibration,
 and the mass of supporting versus challenging neighbours.
 
 ```mermaid
+%% caption: confidence is attenuated when nothing supports it and calibrated by the producer's own Brier factor, and each later contradiction or survival feeds back into that factor
 flowchart TD
     P["WriteProposal: kind, title, body, confidence"] --> V{"validate — v5 schema"}
     V -->|structural issue| REJ["rejected"]

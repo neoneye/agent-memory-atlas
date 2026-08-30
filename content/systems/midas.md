@@ -98,6 +98,7 @@ often. The only way to gain authority is for the user to confirm something,
 which creates a new record.
 
 ```mermaid
+%% caption: the intended use decides which provenance may answer, staleness blocks a superseded belief, and a live prohibition vetoes even a user confirmation
 flowchart TD
     R["recalled evidence set"] --> U{"intended_use?"}
     U -->|planning| P["allowed: any provenance"]

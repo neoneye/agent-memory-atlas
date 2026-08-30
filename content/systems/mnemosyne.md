@@ -181,6 +181,7 @@ entries. It is agents attesting to each other, with a three-deep memory of
 having done so.
 
 ```mermaid
+%% caption: facts are keyed by a SHA-256 of the triple, so a fact that lost a conflict cannot be revived by re-extraction — the key turns supersession into a value-level refusal
 stateDiagram-v2
     [*] --> Working: remember commits the row
     Working --> Episodic: sleep summarizes and keeps the original

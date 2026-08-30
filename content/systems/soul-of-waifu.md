@@ -77,6 +77,7 @@ lifecycles — which is the design's best idea:
 | `diary_*.md` | Diary | **append-only**, never rewritten |
 
 ```mermaid
+%% caption: a rendered memory shorter than the floor is rejected and the old memory kept, so a degraded model response cannot empty the file
 flowchart TB
     B["every BATCH_SIZE (4) messages"] --> D["delta = last MAX_DELTA_MSGS (14) messages,<br/>overlapping the previous batch by MSG_OVERLAP (2)"]
     D --> R["Router sees: MEMORY.md + USER.md +<br/>RAG-selected topics + delta + world lore"]
@@ -113,6 +114,7 @@ directory tree, which makes it one of the most operationally trivial systems in
 this atlas.
 
 ```mermaid
+%% caption: the router reads the index, the user file, RAG-selected topics and the delta, and three sub-agents write to different files with the backups rolling underneath
 flowchart TB
     C[Chat, every 4 messages] --> D[delta: last 14, overlap 2]
     T[(topics/*.md)] --> RAG[TopicRAG<br/>MiniLM cosine, above threshold]

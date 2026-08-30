@@ -99,6 +99,7 @@ by pinning mass at `0.01`.
 about the belief file and the runtime indexes and silent to the journal.
 
 ```mermaid
+%% caption: every belief write snapshots into the append-only checksummed journal, and removal writes nothing to it — so the journal records what was believed and not what was withdrawn
 flowchart TD
     P["Pulse: thought or tool output"] --> J[("cognitive_journal.jsonl<br/>append-only, checksummed")]
     P --> D{"BeliefDetector<br/>local model, one question"}

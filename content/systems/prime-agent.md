@@ -95,6 +95,7 @@ The agent's own configuration is the store, and the write path is a proposal
 that must survive three checks before it lands.
 
 ```mermaid
+%% caption: a proposal is refused when the entry moved while the model was planning, and every applied edit appends before-and-after to a log that a later session can invert
 flowchart TD
     T["conversation trajectory"] --> RV{"auto-refine review<br/>cheap model: is there evidence?<br/>local or global?"}
     RV -- "shouldRefine = false" --> STOP["nothing written"]

@@ -50,6 +50,7 @@ prompt  -> recall + reflections + disposition -> reflect response
 The distinction between observation and reflection matters. `consolidation/consolidator.py` describes observations as bottom-up, automatically maintained claims. Reflections are user-curated documents. This avoids collapsing every derived artifact into one ambiguous “memory” type.
 
 ```mermaid
+%% caption: observations and reflections are derived from screened chunks, and four retrieval arms are fused then cross-encoder reranked into one context
 flowchart TB
     Src["Source document"] --> Scr["Screen"] --> Chk["Chunk"] --> Emb["Embed"]
     Emb --> Fact[("World / experience fact")]

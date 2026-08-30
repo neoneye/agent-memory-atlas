@@ -80,6 +80,7 @@ expiry is decided by **named retention rules** bound to a profile; and every
 operation lands in the audit chain.
 
 ```mermaid
+%% caption: a trust gate precedes attribute-based access control on writes and deletes while reads always pass it, and every operation appends to a hash chain on its own connection
 flowchart TD
     W["write / delete"] --> TG{"trust gate:<br/>score above threshold?"}
     TG -->|no| DENY["refused"]

@@ -95,6 +95,7 @@ There are two doors into the store, and they treat a rejected value completely
 differently.
 
 ```mermaid
+%% caption: two doors into one store — the extractor's, which a durable suppression can refuse outright, and the reviewer's, where rejecting writes that suppression on the normalised value
 flowchart TD
     W["memory_add / memory_add_many<br/>the extractor's door"] --> G{"suppression on this<br/>normalised value + project?"}
     G -- "yes" --> R["refused: rejected = true<br/>no row, no fade"]

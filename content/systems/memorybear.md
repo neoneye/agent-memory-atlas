@@ -87,6 +87,7 @@ computed from it, and the scheduler runs cycles that fuse the bottom of the
 distribution.
 
 ```mermaid
+%% caption: ACT-R activation decides what falls below the forgetting threshold, and fusion writes a summary node with DERIVED_FROM edges before deleting the originals — with each cycle's counts recorded
 flowchart TD
     P["perceive: conversation in"] --> X["extract: Statements + Entities"]
     X --> A["associate: graph edges, end_user_id stamped"]

@@ -105,6 +105,7 @@ Confidence is a float, not a state. But there are effectively two grades,
 distinguished by who wrote the row and how it was tagged:
 
 ```mermaid
+%% caption: decay and prune both require an evidence count below two, so a corroborated fact is immortal against time and only a replacement ends it; `forget id` filters on id alone and hard-deletes with no record of the value removed
 stateDiagram-v2
     direction TB
     [*] --> Provisional: remember --source observed<br/>conf capped at 0.70, evidence 1
@@ -188,6 +189,7 @@ reasoning engine. There is no server, no container, no vector service.
   `'owner'` to a Claude Code session id for `--resume`.
 
 ```mermaid
+%% caption: the per-turn path with recall spawned under a twelve-second timeout and confidence stripped before the prompt, beside the background jobs that consolidate and refresh the index
 flowchart TB
     subgraph FE["Front doors (owner-locked)"]
         D["Discord DM"]

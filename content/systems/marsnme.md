@@ -70,6 +70,7 @@ tool wrote them. Recall discloses progressively. Closing a session both rescues
 expiring memories and can leave a note for another agent.
 
 ```mermaid
+%% caption: a Postgres CHECK constraint on the origin allowlist refuses an unrecognised writer at insert, and recall is staged from an eighty-character preview up to the full text
 flowchart TD
     T["Cursor · Warp · Perplexity · Claude Code"] --> W["write"]
     W --> OC{"origin in the CHECK allowlist?<br/>sync · hermes · manual ·<br/>hermes-coco-digest · perplexity-coco ·<br/>cursor-coco · warp-coco · batch-promote · …"}

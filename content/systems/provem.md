@@ -93,6 +93,7 @@ A fact is admitted or quarantined, ranked or excluded with a reason, and erasure
 leaves behind a durable token set that outlives the records it deleted.
 
 ```mermaid
+%% caption: erasure writes durable per-tenant token sets that every later recall consults, so forgetting outlives the rows it deleted and produces a certificate in the audit log
 flowchart TB
     IN["ingest"] --> ADM{"governed admission"}
     ADM -->|"injection detected<br/>or sensitive without consent"| Q["quarantined<br/><i>quarantine_reason</i>"]

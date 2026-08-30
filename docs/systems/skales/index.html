@@ -183,7 +183,8 @@ Those seven are a reasonable cut of what a personal assistant needs, and
 <code>action_item</code> is prospective-memory-shaped — a
 <code>don't forget to …</code> becomes a stored intention, though
 nothing surfaces it at a due time.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extraction is regex over seven categories with no model call, and retrieval is a fixed weighted sum run synchronously inside the agent's decision</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extraction is regex over seven categories with no model call, and retrieval is a fixed weighted sum run synchronously inside the agent&#39;s decision
+flowchart TB
     S[(&quot;conversation files in&lt;br/&gt;.skales-data/sessions/&quot;)]
     S --&gt;|&quot;every 90 minutes,&lt;br/&gt;files with mtime &gt; lastScanTimestamp&quot;| EX[&quot;regex extraction&lt;br/&gt;&lt;i&gt;seven categories, no LLM&lt;/i&gt;&quot;]
     EX --&gt; M[(&quot;memories/{id}.json&lt;br/&gt;&lt;i&gt;provenance: source_conversation_id&lt;/i&gt;&quot;)]
@@ -250,7 +251,8 @@ UI.</li>
 <li><code>apps/web/src/actions/identity.ts</code> — the soul, known
 facts, and the tiered <code>deleteMemory(type, filename)</code>.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the scan cursor is the only thing between the conversation files and the memory store, and the UI blocks deletion of the known-facts file</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the scan cursor is the only thing between the conversation files and the memory store, and the UI blocks deletion of the known-facts file
+flowchart TB
     CH[Chat] --&gt; S[(sessions/*.json)]
     CRON[cron: every 90 min] --&gt; SC[memory-scanner&lt;br/&gt;regex, 7 categories]
     S --&gt; SC

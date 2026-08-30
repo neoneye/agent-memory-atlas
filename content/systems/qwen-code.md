@@ -92,6 +92,7 @@ state machine has two entrances and only one of them is automatic — and the
 manual entrance is the only place a memory is safe from consolidation.
 
 ```mermaid
+%% caption: extraction and consolidation both carry cursors and report noop explicitly, the pinned directory is denied to the write path, and nothing is keyed on the value a forget removed
 flowchart TB
     S["session"] --> EX["extraction<br/><i>cursor: sessionId + processedOffset</i>"]
     EX --> R1["records: updated or noop,<br/>touched topics, session id"]

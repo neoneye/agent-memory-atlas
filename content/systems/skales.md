@@ -81,6 +81,7 @@ needs, and `action_item` is prospective-memory-shaped — a `don't forget to …
 becomes a stored intention, though nothing surfaces it at a due time.
 
 ```mermaid
+%% caption: extraction is regex over seven categories with no model call, and retrieval is a fixed weighted sum run synchronously inside the agent's decision
 flowchart TB
     S[("conversation files in<br/>.skales-data/sessions/")]
     S -->|"every 90 minutes,<br/>files with mtime > lastScanTimestamp"| EX["regex extraction<br/><i>seven categories, no LLM</i>"]
@@ -131,6 +132,7 @@ unusual in this atlas.
   `deleteMemory(type, filename)`.
 
 ```mermaid
+%% caption: the scan cursor is the only thing between the conversation files and the memory store, and the UI blocks deletion of the known-facts file
 flowchart TB
     CH[Chat] --> S[(sessions/*.json)]
     CRON[cron: every 90 min] --> SC[memory-scanner<br/>regex, 7 categories]

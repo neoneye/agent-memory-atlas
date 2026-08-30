@@ -104,6 +104,7 @@ every default read filters to.
 The gap is on the write side, and the diagram is drawn on it.
 
 ```mermaid
+%% caption: reads and conflict detection filter the same way, so a suppressed claim is neither recalled nor compared against — and asserting the same value again lands in active under a new id
 stateDiagram-v2
     [*] --> active: record_claim inserts unconditionally
     active --> disputed: conflict detector on project + claim_key

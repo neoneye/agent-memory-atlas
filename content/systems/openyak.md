@@ -112,6 +112,7 @@ Beside that, a person can edit the text directly in the settings tab, or delete
 the row entirely. Both are immediate and neither is recorded.
 
 ```mermaid
+%% caption: sessions in the same directory coalesce into one pending entry, an empty rewrite is not written, and the tail past two hundred lines is dropped silently
 stateDiagram-v2
     [*] --> Queued: a conversation ends in a workspace
     Queued --> Queued: another session in the same directory joins the same pending entry

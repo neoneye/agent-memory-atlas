@@ -102,6 +102,7 @@ descriptions between versions"*, and `reconcile_active` decides which version is
 live. `update_usage_stats` records use.
 
 ```mermaid
+%% caption: three deterministic gates before any model call — a zero-cost rule trigger, a worth-storing screen, and conflict detection that tries deterministic rules before falling back to an LLM
 flowchart TD
     Q["query"] --> A["anchor on the most precise node<br/>Entity / Facet / FacetPoint / Episode"]
     A --> P["path-cost propagation over typed edges"]

@@ -183,7 +183,8 @@ repository came from as open-source, is <strong>not open source</strong>
 character turn — stored twice: as raw text in
 <code>history_database</code>, and as a pruned list of word ids in
 <code>histories_word_id_database</code>.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same word table both prunes overly common words and scores every stored pair, and the most recent twenty pairs are excluded because they are already in the context window</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same word table both prunes overly common words and scores every stored pair, and the most recent twenty pairs are excluded because they are already in the context window
+flowchart TB
     subgraph W[&quot;after every exchange&quot;]
         TK[&quot;tokenise both halves into the word table (counts += 1)&quot;]
         TK --&gt; PC[&quot;prune_common: drop word ids above 0.000937 corpus share&quot;]
@@ -218,7 +219,8 @@ a field; its semantics were deleted, and the 7 is now an arbitrary
 nonzero.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Python, no server, no database. Three JSON files:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three JSON files hold the words, the per-pair scores and the raw text, and retrieval injects the best pair together with its two neighbours</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three JSON files hold the words, the per-pair scores and the raw text, and retrieval injects the best pair together with its two neighbours
+flowchart TB
     M[message pair] --&gt; P[parse_words_to_database&lt;br/&gt;tokenise, count]
     P --&gt; WD[(LiveRAG_Words.json&lt;br/&gt;word / count / value)]
     P --&gt; HW[(LiveRAG_HistoryWordID.json&lt;br/&gt;me / her / scores)]

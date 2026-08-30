@@ -99,6 +99,7 @@ generations. Revocation is expressed against a *lineage*, not a row, which is
 why revoking a session or a scope propagates to everything derived from it.
 
 ```mermaid
+%% caption: a revocation writes a tombstone keyed on a hashed subject that refuses later captures — and the tombstone carries a ninety-day TTL, after which the refusal lapses
 flowchart TD
     C["capture arrives"] --> LK["lock lineage rows, serializable"]
     LK --> RV{"lineage revoked?"}

@@ -82,6 +82,7 @@ MemoryRecord(
 Lifecycle:
 
 ```mermaid
+%% caption: rejected is terminal — approve refuses it, and resurrection means writing a new fact rather than reviving the old one
 stateDiagram-v2
     direction LR
     [*] --> CANDIDATE: extraction, proposal,<br/>or induced rule
@@ -128,6 +129,7 @@ Core files:
 Architecture:
 
 ```mermaid
+%% caption: one protocol over several backends, with the trust gate on remember and a held-out promotion gate before anything is consolidated
 flowchart TD
   Agent["Agent loop /<br/>MCP"] --> MemoryAPI["Memory<br/>helpers"]
   MemoryAPI --> View["MemoryView<br/>protocol"]

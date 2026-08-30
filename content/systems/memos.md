@@ -55,6 +55,7 @@ scheduler -> textual memory -> activation cache / maintenance
 A cube is a deployable memory bundle, not just a namespace. It can be dumped locally, initialized from a directory, or loaded from a remote repository. This suggests sharing and composing memory resources independently from the agent process.
 
 ```mermaid
+%% caption: five memory forms in one cube, including memory held in weights, with a promotion rule whose three coefficients are left at one and no single correction contract across the modules
 flowchart TB
     In["Reader extraction"] --> Cube[("Memory cube")]
     Cube --> T1["Textual item"]

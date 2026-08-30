@@ -123,6 +123,7 @@ write_replay_report()  -> auditable record of the decision
 Plus `openclaw-metaclaw-memory/` — the OpenClaw plugin with its own sidecar manager (~5,000 lines), a plugin spec, and a plan document.
 
 ```mermaid
+%% caption: policy candidates are replayed against samples from past sessions and promoted only when eight deltas pass over at least ten samples — the retrieval policy is tuned by evidence rather than by hand
 flowchart TD
   Conv["Conversations"] --> Store["MemoryStore (units,<br/>scopes)"]
   Store --> Retr["retriever (under<br/>live policy)"]

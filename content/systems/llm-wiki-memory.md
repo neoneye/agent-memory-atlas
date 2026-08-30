@@ -62,6 +62,7 @@ Control is hybrid. Agents explicitly call memory tools; Claude Code hooks automa
 ## 3. Architecture
 
 ```mermaid
+%% caption: hooks, MCP and a scheduler all reach one wiki store, with distillation and promotion writing markdown leaves whose git history is the record
 flowchart TD
     Host["Agent host: Claude<br/>Code, Codex, Cursor,<br/>MCP client"]
     Hooks["Lifecycle hooks"]

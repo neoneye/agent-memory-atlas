@@ -179,7 +179,8 @@ is a running agent, and it accumulates its own attributes alongside the
 entity's facts. Few systems here model the agent as a memory subject in
 its own right.</p>
 <p>The lifecycle is two states and no transitions between them:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the turn is stored durably with no model involved and augmentation is best-effort on top, and seeing a fact again increments a counter rather than changing its content</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the turn is stored durably with no model involved and augmentation is best-effort on top, and seeing a fact again increments a counter rather than changing its content
+flowchart TB
     T[&quot;turn captured&quot;] --&gt; C[(&quot;conversation + messages stored&lt;br/&gt;&lt;i&gt;durable, no model involved&lt;/i&gt;&quot;)]
     C --&gt; AUG[&quot;augmentation, hosted&quot;]
     AUG --&gt; F[&quot;fact upserted&quot;]
@@ -200,7 +201,8 @@ between does not exist in the schema.</p>
 calls to remember or forget, and no surface where a person
 adjudicates.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the required path and the best-effort path side by side — capture cannot fail because of the cloud, and facts exist only if it succeeded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the required path and the best-effort path side by side — capture cannot fail because of the cloud, and facts exist only if it succeeded
+flowchart LR
     SDK[&quot;Python / TS / Rust SDK&quot;] --&gt; TURN[&quot;capture_turn&quot;]
     TURN --&gt;|required| DB[(&quot;conversation +&lt;br/&gt;messages&quot;)]
     TURN --&gt;|best effort| AUG[&quot;Memori Cloud&lt;br/&gt;agent/augmentation&quot;]

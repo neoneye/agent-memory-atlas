@@ -75,6 +75,7 @@ The state machine is entirely quantitative, and this is the design's defining
 choice:
 
 ```mermaid
+%% caption: one retention curve drives promotion, archival and forgetting, so all three are consequences of the same number
 flowchart TB
     M["memory"] -->|"retrieved → reinforce()"| RET["retention rises"]
     RET -->|"should_promote()"| PRO["promoted"]
@@ -110,6 +111,7 @@ which the model marks something wrong.
 ## 3. Architecture
 
 ```mermaid
+%% caption: two write paths — LLM extraction or a simple add — into one adapter that routes to the vector and graph stores, with the decay algorithm writing back
 flowchart LR
     SDK["SDK / MCP / CLI / HTTP"] --> M["Memory / AsyncMemory"]
     M --> IA["_intelligent_add<br/>LLM extraction"]

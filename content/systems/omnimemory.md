@@ -108,6 +108,7 @@ retrieval from in-memory test doubles unless `OMNIMEMORY_USE_STUB_HANDLERS` is
 explicitly set to `"false"`, and never constructs the audit model at all.
 
 ```mermaid
+%% caption: the specified half and the running half of the same system: a frozen transition table and a compare-and-set exercised only by tests, dispatched to a handler that logs and acknowledges
 flowchart TD
     subgraph SPEC["specified"]
       LS["EnumLifecycleState:<br/>ACTIVE → STALE → EXPIRED → ARCHIVED → DELETED"]

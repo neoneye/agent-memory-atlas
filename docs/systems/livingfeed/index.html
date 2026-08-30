@@ -208,7 +208,8 @@ factors.</p>
 gate of 0.4, so recall will return things the gate would not have
 admitted today. A threshold that moved should not orphan what it already
 wrote.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the episodic event store is permanent and forgetting happens only in the semantic projection, and consolidation stores its four importance factors rather than only their total, so the coefficients can be tuned by replay</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the episodic event store is permanent and forgetting happens only in the semantic projection, and consolidation stores its four importance factors rather than only their total, so the coefficients can be tuned by replay
+flowchart TB
     Perc[&quot;Perception this tick&quot;] --&gt; WM[(&quot;Working memory&lt;br/&gt;Redis list · 6h TTL · 50 entries&quot;)]
     WM --&gt;|&quot;tick end&quot;| Cons[&quot;Consolidation&lt;br/&gt;importance = 0.35·emotion + 0.30·relationship&lt;br/&gt;+ 0.20·goal + 0.15·rarity&quot;]
     Cons --&gt; Ep[(&quot;Episodic = the event store&lt;br/&gt;PERMANENT ORIGINAL&lt;br/&gt;source_event_ids minItems 1&quot;)]

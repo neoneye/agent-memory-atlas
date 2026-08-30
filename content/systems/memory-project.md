@@ -104,6 +104,7 @@ driven by use rather than by a scheduler.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: recall multiplies stability against a cap and cold storage is reversible, while purge records nothing about the value — so re-jotting re-admits it
 flowchart TD
     J["jot() / ingest()"] --> N["stability = base by origin<br/>episodic 7d, curated 30d"]
     N --> A["active"]

@@ -189,7 +189,8 @@ focus)";</li>
 </ul>
 <p>Underneath, MVCC gives every transaction a consistent snapshot and
 preserves older versions down to a retained floor.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — reads resolve against one committed MVCC view and a historical read below the retained floor fails rather than guessing, while the search paths are deliberately outside that state</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: reads resolve against one committed MVCC view and a historical read below the retained floor fails rather than guessing, while the search paths are deliberately outside that state
+flowchart TD
     W[&quot;write in a transaction&quot;] --&gt; MV[&quot;anchored to an MVCC version&quot;]
     MV --&gt; C{&quot;constraints&quot;}
     C --&gt;|&quot;TEMPORAL: needs key, valid_from, valid_to&quot;| REJ[&quot;rejected if the shape is wrong&quot;]

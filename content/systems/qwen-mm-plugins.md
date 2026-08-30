@@ -96,6 +96,7 @@ written. It is what the *reader* is told to do about that, and here the design
 does something unusual: it puts the correction outside the memory entirely.
 
 ```mermaid
+%% caption: retrieval selects a narrow time range and the answer is grounded by re-reading the video frames rather than by the graph, which has no delete, update, supersede or tombstone
 flowchart TB
     V["long video, 30+ min"] --> P1["phase 1: segment into MacroEvents<br/>JSONL checkpoint per macro"]
     P1 --> P2["phase 2: workers build Subgraphs<br/>entities, micro-events, OCR, edges"]

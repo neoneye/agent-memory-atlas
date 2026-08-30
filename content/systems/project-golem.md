@@ -131,6 +131,7 @@ For a rejection: it ages out after three more rejections, or is wiped by the
 next success. There is no way to make one permanent.
 
 ```mermaid
+%% caption: the avoided-work list is keyed on the proposal type rather than the value, holds three, and is cleared entirely by any single success
 stateDiagram-v2
     [*] --> Passage: memorize embeds the text under a content derived stable id
     Passage --> Recalled: vector search, optional rerank, then canonicalisation

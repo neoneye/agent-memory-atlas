@@ -89,6 +89,7 @@ durable, locked). Retrieval reranks on those, and on whether the memory belongs
 to the repo or project you are currently in.
 
 ```mermaid
+%% caption: the tool's default is to propose rather than write, the alias's default is to write, and only a durable or locked promotion is screened for secrets
 flowchart TD
     S["session memory"] -->|"memory_promote"| P["BrokerPromotionProposal:<br/>type, durability, confidence,<br/>recall_count, unique_query_count,<br/>reasons[], duplicate_matches[]"]
     P --> AP{"approve?"}

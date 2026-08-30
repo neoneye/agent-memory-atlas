@@ -226,7 +226,8 @@ in its own right, so a bad extraction into <code>semantic_memory</code>
 does not destroy the material it came from. Little else in the
 typed-memory family keeps this.</p>
 <p>The state machine is short, which is the point:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two states and no vocabulary for a third — an update is a hard delete and an insert, so nothing can be candidate, disputed, rejected or superseded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two states and no vocabulary for a third — an update is a hard delete and an insert, so nothing can be candidate, disputed, rejected or superseded
+stateDiagram-v2
     direction TB
     [*] --&gt; Exists: message → accumulator → meta agent&lt;br/&gt;→ specialist agent → typed row
     Exists --&gt; Gone: per-type update / replace&lt;br/&gt;(&lt;code&gt;semantic_memory_update&lt;/code&gt;,&lt;br/&gt;&lt;code&gt;episodic_memory_replace&lt;/code&gt;, …)&lt;br/&gt;hard delete + insert
@@ -250,7 +251,8 @@ sentence, not a link to the <code>raw_memory</code> row it came
 from.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Four services, all in <code>docker-compose.yml</code>:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an accumulator queues messages for a meta agent that routes them to six specialists, each writing its own typed rows</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an accumulator queues messages for a meta agent that routes them to six specialists, each writing its own typed rows
+flowchart LR
     C[&quot;client / SDK&quot;] --&gt; API[&quot;FastAPI server&lt;br/&gt;:8531&quot;]
     D[&quot;React dashboard&lt;br/&gt;:5173&quot;] --&gt; API
     API --&gt; ACC[&quot;TemporaryMessageAccumulator&quot;]

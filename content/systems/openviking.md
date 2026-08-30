@@ -76,6 +76,7 @@ are one addressing scheme rather than two code paths.
 Retrieval lifecycle:
 
 ```mermaid
+%% caption: the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score
 flowchart TB
     Q["TypedQuery + RequestContext<br/><i>tenant, permissions</i>"] --> DIR["resolve start directories<br/><i>explicit target_dirs, or defaults by context_type</i>"]
     DIR --> EMB["embed the query <b>once</b><br/><i>dense + optional sparse</i>"]
@@ -109,6 +110,7 @@ Selected modules under `openviking/`:
 - `benchmark/`: LoCoMo, LongMemEval, tau2, SkillsBench, RAG, cuVS, and vector-DB performance harnesses.
 
 ```mermaid
+%% caption: extraction passes through an isolation handler before files are written, and the level tags it assigns are what the retriever filters on
 flowchart TD
   Sessions["Session messages"] --> Extract["extract_loop /<br/>memory_updater"]
   Extract --> Isolation["MemoryIsolationHandler<br/>(user_space, peers)"]

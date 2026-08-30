@@ -85,6 +85,7 @@ against this target" is not inspecting memory content — and the permission
 checker can be `None`, in which case the gate is skipped entirely.
 
 ```mermaid
+%% caption: memory writes pass the same permission gate as bash and can prompt the user, with one global file following the agent and everything else scoped by project slug
 flowchart TB
     subgraph Store["MemoryStore { root, project, today }"]
       G[("MEMORY.md<br/>GLOBAL — follows the agent<br/>across every project")]

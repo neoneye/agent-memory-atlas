@@ -122,6 +122,7 @@ what is true. The second one is the interesting one, and its state machine has a
 entrance, a gate, and no exit.
 
 ```mermaid
+%% caption: a parsed relation is not stored until a person answers, and a rejected relation cannot be lifted by re-extraction — only by someone re-teaching it
 stateDiagram-v2
     [*] --> Unknown: word encountered
     Unknown: definition "unknown"<br/>confidence 0.1
