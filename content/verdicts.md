@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 345 reports.**
+**This page covers all 346 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3055,3 +3055,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 17,707 lines of source against 39,168 lines of tests across 104 files — the highest ratio at this size in the corpus — 1,067 commits since 11 July 2026. All seven marks, which nine systems here carry. Released alongside [arXiv:2607.21962](https://arxiv.org/abs/2607.21962), whose tenure-crossover finding is on the [benchmarks page](../benchmarks/).
 - Study when: your memory has to explain itself to somebody — an auditor, a regulator, a user asking why it said that — or you ingest text other people wrote.
 - Do not copy when: you want a memory library. This is a specification with an implementation attached, and the smallest useful piece of it is larger than most systems here in full.
+
+### [`merchantbench`](../systems/merchantbench/)
+
+- Best idea: **the scope key is not addressable by the model.** `read_memory_doc` declares `_NO_PARAMS` and `write_memory_doc` declares only `content`; `dispatch_tool` inspects the handler signature and passes `agent_id` from the request path, rejecting any argument the schema does not name. A model cannot ask for another agent's memory because there is no field in which to ask — a stronger guarantee than validating a scope argument the model is allowed to send.
+- Second idea: **every overwrite appends its full superseded text to a sibling file.** `_append_memory_history` writes a version marker, the simulation step, a wall-clock stamp, the byte count and the whole new document to `<agent_id>.history.md` in append mode. Nothing rotates or reads it back. It costs one file handle and it is what makes "the agent's notes went wrong" resolvable to a version and a step — both of the paper's failure diagnoses depend on it.
+- Third idea: **a metric reported as zero is not a metric never reported.** The leaderboard renders each self-declared runtime metric as `unavailable`, `partial` or `complete`, and the ReAct baseline declares `"memory_compactions": "reported"` beside `"skills_evolutions": "not_applicable"` — so a zero reads as *out of scope* rather than as *nothing happened*.
+- Biggest risk: **one turn's advisory warning, then an unconditional truncation.** At 160,000 estimated tokens the baseline appends a single user message asking the model to call `write_memory_doc`, then trims to 30,000 at the end of that same hop whether or not it did. Nothing forces the call, nothing checks compliance, and nothing records it — so an agent that chose not to save is indistinguishable afterwards from one that never understood it was asked.
+- Second risk: **nothing re-injects the document afterwards.** The observation carries world state and one line of brief saying memory tools exist. Compaction is the moment the agent is least able to notice it should go looking, and it is exactly the moment it is left to decide on its own. The human playground, by contrast, puts `read_memory_doc` in its `AUTO_TOOLS` bootstrap and renders the result into a panel on screen at every activation — the three human participants never had to remember.
+- Maturity impression: Apache-2.0, Alibaba Group's 1688 with Zhejiang University, 11 commits since 31 July 2026, 29,163 lines of non-test Python against 25,292 lines of tests in 724 cases. Three marks. The paper's headline recomputes exactly from its own Table 1 — 59.46 / 217.61 = 27.34% — and its 26-tool inventory recomputes from the registry minus the default denylist.
+- The experiment that is two lines away: `env/scenarios/default.yaml` carries `# - read_memory_doc` and `# - write_memory_doc` commented out inside the denylist. The simulator is seeded, the score is one number, and the baseline already handles the tools being absent. Nothing committed pulls the switch, so this benchmark has never priced its own memory mechanism. What exists instead is a confound: the arm with the memory doc *denied* beat the arm with it enabled for seven of eight models, while also bringing code execution, planning and skills.
+- Study when: your memory design has never been tested against a horizon long enough for a Day 54 mistake to compound to Day 322, or you want memory failure scored in outcomes rather than in recall.
+- Do not copy when: you want to reproduce the paper. The real 98,843-record catalog and the 365 daily market reports are excluded by design, no run output is committed, and both the human and rule-based baselines depend on data the public tree does not contain.

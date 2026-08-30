@@ -17,7 +17,11 @@ Six things are worth knowing before reading further.
    that scores the rest is [AOEP-v0](#aoep), which replaces the task with a
    contract, checks five named invariants deterministically, and reports a pilot
    in which three storage designs with different retrieval quality score
-   *identically* on governance. Its harness is not released.
+   *identically* on governance. Its harness is not released. The other exception
+   keeps the task and lengthens it instead:
+   [MerchantBench](#the-compaction-boundary-measured-in-money-over-a-simulated-year)
+   scores 365 simulated days of running a store on final net assets alone, so a
+   memory failure is only ever visible as money — and its simulator is released.
 2. **A bad score on one benchmark is weak evidence.** These are end-to-end
    pipelines judged by a language model, and the memory layer is one of six
    things that determine the number.
@@ -973,7 +977,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and seventeen of three hundred and forty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and eighteen of three hundred and forty-six. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1407,6 +1411,66 @@ drops oldest advice first, [Fireweed MCP](../systems/fireweed-mcp/)'s read gate.
 None of them distinguishes a constraint from an episode when the budget
 overflows. This paper is the measurement of what that costs, and the operators
 are a typed answer: classify each line, then let type decide fidelity.
+
+### The compaction boundary, measured in money over a simulated year
+
+*MerchantBench: Benchmarking LLM Agents for Long-Term Coherence in E-Commerce
+Operations* ([arXiv:2607.28956](https://arxiv.org/abs/2607.28956), submitted 31
+July 2026, revised 4 August 2026), Alibaba Group's 1688 with Zhejiang University.
+Read at
+[`f44ce969aeccfd65d1eef6afe50f69868e510946`](https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946),
+Apache-2.0 — see [MerchantBench](../systems/merchantbench/).
+
+**It is the counterexample to this page's opening complaint.** No question is
+asked about something said earlier. The agent runs a store for 365 simulated
+days, is activated every twelve simulated hours, and is scored on one number:
+final net assets, taken by `eval/scoring.py` as the last point of the
+`net_assets` series. There is no recall term, no retention term, no memory
+metric of any kind. A memory failure is only ever visible as money that did not
+arrive.
+
+That makes the two failures the paper reports the most concrete versions of the
+compaction cost the section above measures in F1. One Claude Opus 4.8 run
+concluded that removing weak listings would concentrate traffic, and its shelf
+went from 47 active listings on Day 54 to three by Day 322 — the wrong belief,
+having been written down, was re-presented at full weight for 268 days. One
+Qwen3.7-Max run misremembered Day 285 as the endpoint on Day 282 and stopped
+filling vacant slots with 83 days left, correcting only when simulated time
+passed the imagined deadline.
+
+**Where the design leaves the question open.** The reference baseline compacts at
+160,000 estimated tokens to 30,000, and appends one advisory user message first —
+*"Call write_memory_doc now if important details should be kept"* — then truncates
+whether or not the model complied, records nothing about compliance, and never
+re-injects the document afterwards. The browser client the human participants used
+does the opposite: `read_memory_doc` sits in its `AUTO_TOOLS` bootstrap, so their
+memory was on screen at every activation. The humans finished at 217.61 thousand
+RMB against 59.46 for the best LLM configuration — the abstract's 27.3%,
+recomputing exactly from the paper's own Table 1 — and nothing isolates how much
+of that gap is the read path rather than the reasoning.
+
+**And the ablation is two commented lines away.**
+`env/scenarios/default.yaml` carries `# - read_memory_doc` and
+`# - write_memory_doc` inside the scenario denylist. The simulator is seeded
+(`master_seed: 42`, with the file stating that the same seed and scenario give an
+identical trajectory), the score is one number, and the baseline already handles
+the tools being absent by skipping the reminder and truncating immediately. Three
+runs would price the memory mechanism this benchmark ships, and none is
+committed. What is published instead is a confound: the Hermes arm, which
+[denies both memory tools](https://github.com/KhanCold/merchantbench/blob/f44ce969aeccfd65d1eef6afe50f69868e510946/env/scenarios/agents/hermes.yaml)
+because it brings its own, beat the ReAct arm for seven of the eight models while
+also adding code execution, planning and skills. Meanwhile the deterministic
+rule-based baseline — no model, no memory — finishes at 24.48 and beats six of the
+sixteen LLM configurations, which bounds how much of the spread any memory
+mechanism could be explaining.
+
+**What cannot be reproduced.** No run output of any kind is committed. The 98,843
+real product records become a deterministic synthetic catalog of 1,000 products
+and 200 suppliers, and the 365 daily market reports are excluded as
+non-redistributable — which the test suite says out loud rather than hiding, with
+`pytest.skip("non-redistributable bundled daily reports are not in the artifact")`.
+That absence also takes the rule-based baseline with it: it selects replacements
+"using keywords from the daily market report".
 
 ### The tenure crossover: which memory wins depends on how long you measure
 
@@ -2808,7 +2872,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 344 repositories,
+  [comparative report](../compare/). It is a statement about 345 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

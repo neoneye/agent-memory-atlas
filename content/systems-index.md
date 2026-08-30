@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **345 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **346 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -275,6 +275,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/memvid/"><span class="az-id">Memvid</span><span class="az-what">Rewindable memory</span><code class="az-repo">memvid/memvid</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/mengram/"><span class="az-id">Mengram</span><span class="az-what">Regression tests for memory</span><code class="az-repo">alibaizhanov/mengram</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/mentisdb/"><span class="az-id">MentisDB</span><span class="az-what">A hash-chained memory that refuses to load if tampered</span><code class="az-repo">CloudLLM-ai/mentisdb</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/merchantbench/"><span class="az-id">MerchantBench</span><span class="az-what">Memory priced in money</span><code class="az-repo">KhanCold/merchantbench</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mercury-agent/"><span class="az-id">Mercury Agent</span><span class="az-what">Graded personal memory</span><code class="az-repo">cosmicstack-labs/mercury-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/metaclaw/"><span class="az-id">MetaClaw</span><span class="az-what">Self-tuning memory policy</span><code class="az-repo">aiming-lab/MetaClaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/mettaclaw/"><span class="az-id">MeTTaClaw</span><span class="az-what">Memory the agent rates itself</span><code class="az-repo">patham9/mettaclaw</code><span class="az-caps"></span></a></li>

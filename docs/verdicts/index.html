@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 345 reports.</strong></p>
+<p><strong>This page covers all 346 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11600,6 +11600,73 @@ text other people wrote.</li>
 <li>Do not copy when: you want a memory library. This is a specification
 with an implementation attached, and the smallest useful piece of it is
 larger than most systems here in full.</li>
+</ul>
+<h3 id="merchantbench"><a
+href="../systems/merchantbench/"><code>merchantbench</code></a></h3>
+<ul>
+<li>Best idea: <strong>the scope key is not addressable by the
+model.</strong> <code>read_memory_doc</code> declares
+<code>_NO_PARAMS</code> and <code>write_memory_doc</code> declares only
+<code>content</code>; <code>dispatch_tool</code> inspects the handler
+signature and passes <code>agent_id</code> from the request path,
+rejecting any argument the schema does not name. A model cannot ask for
+another agent's memory because there is no field in which to ask — a
+stronger guarantee than validating a scope argument the model is allowed
+to send.</li>
+<li>Second idea: <strong>every overwrite appends its full superseded
+text to a sibling file.</strong> <code>_append_memory_history</code>
+writes a version marker, the simulation step, a wall-clock stamp, the
+byte count and the whole new document to
+<code>&lt;agent_id&gt;.history.md</code> in append mode. Nothing rotates
+or reads it back. It costs one file handle and it is what makes "the
+agent's notes went wrong" resolvable to a version and a step — both of
+the paper's failure diagnoses depend on it.</li>
+<li>Third idea: <strong>a metric reported as zero is not a metric never
+reported.</strong> The leaderboard renders each self-declared runtime
+metric as <code>unavailable</code>, <code>partial</code> or
+<code>complete</code>, and the ReAct baseline declares
+<code>"memory_compactions": "reported"</code> beside
+<code>"skills_evolutions": "not_applicable"</code> — so a zero reads as
+<em>out of scope</em> rather than as <em>nothing happened</em>.</li>
+<li>Biggest risk: <strong>one turn's advisory warning, then an
+unconditional truncation.</strong> At 160,000 estimated tokens the
+baseline appends a single user message asking the model to call
+<code>write_memory_doc</code>, then trims to 30,000 at the end of that
+same hop whether or not it did. Nothing forces the call, nothing checks
+compliance, and nothing records it — so an agent that chose not to save
+is indistinguishable afterwards from one that never understood it was
+asked.</li>
+<li>Second risk: <strong>nothing re-injects the document
+afterwards.</strong> The observation carries world state and one line of
+brief saying memory tools exist. Compaction is the moment the agent is
+least able to notice it should go looking, and it is exactly the moment
+it is left to decide on its own. The human playground, by contrast, puts
+<code>read_memory_doc</code> in its <code>AUTO_TOOLS</code> bootstrap
+and renders the result into a panel on screen at every activation — the
+three human participants never had to remember.</li>
+<li>Maturity impression: Apache-2.0, Alibaba Group's 1688 with Zhejiang
+University, 11 commits since 31 July 2026, 29,163 lines of non-test
+Python against 25,292 lines of tests in 724 cases. Three marks. The
+paper's headline recomputes exactly from its own Table 1 — 59.46 /
+217.61 = 27.34% — and its 26-tool inventory recomputes from the registry
+minus the default denylist.</li>
+<li>The experiment that is two lines away:
+<code>env/scenarios/default.yaml</code> carries
+<code># - read_memory_doc</code> and <code># - write_memory_doc</code>
+commented out inside the denylist. The simulator is seeded, the score is
+one number, and the baseline already handles the tools being absent.
+Nothing committed pulls the switch, so this benchmark has never priced
+its own memory mechanism. What exists instead is a confound: the arm
+with the memory doc <em>denied</em> beat the arm with it enabled for
+seven of eight models, while also bringing code execution, planning and
+skills.</li>
+<li>Study when: your memory design has never been tested against a
+horizon long enough for a Day 54 mistake to compound to Day 322, or you
+want memory failure scored in outcomes rather than in recall.</li>
+<li>Do not copy when: you want to reproduce the paper. The real
+98,843-record catalog and the 365 daily market reports are excluded by
+design, no run output is committed, and both the human and rule-based
+baselines depend on data the public tree does not contain.</li>
 </ul>
         </article>
       </div>
