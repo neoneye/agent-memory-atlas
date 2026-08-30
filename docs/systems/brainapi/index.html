@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An event-centric knowledge graph
+over six datastores, whose committed LoCoMo run recomputes exactly and
+whose own notes say the number should not be published yet.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="BrainAPI — Agent Memory Atlas">
+    <meta property="og:description" content="An event-centric knowledge
+graph over six datastores, whose committed LoCoMo run recomputes exactly
+and whose own notes say the number should not be published yet.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BrainAPI — Agent Memory Atlas">
+    <meta name="twitter:description" content="An event-centric knowledge
+graph over six datastores, whose committed LoCoMo run recomputes exactly
+and whose own notes say the number should not be published yet.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>BrainAPI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "BrainAPI",
+      "description": "An event-centric knowledge graph over six datastores, whose committed LoCoMo run recomputes exactly and whose own notes say the number should not be published yet.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The ledger disagrees with its own notes</p>
+          <h1>BrainAPI</h1>
+          <p class="document-deck">An event-centric knowledge graph over
+six datastores, whose committed LoCoMo run recomputes exactly and whose
+own notes say the number should not be published yet.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Lumen-Labs/brainapi2">
+              <span>Source</span>
+              <strong>Lumen-Labs/brainapi2</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10" title="b434f92a10d5b95aceab3f845d54472212672a10">
+              <span>Analyzed revision</span>
+              <code>b434f92a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-30</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>BrainAPI turns text into an event-centric knowledge graph and answers
+questions by walking it. The pitch is the walk: <em>"Not a
+nearest-neighbour guess — a reasoned, walkable path through a graph it
+built for you."</em> Underneath is 45,741 lines of Python across six
+datastores, an agent swarm that proposes and vetoes edges before they
+land, a FastAPI service, an MCP server, a React console, a TUI
+installer, and five benchmark suites with a committed results
+ledger.</p>
+<p><strong>Licence first, because it governs what a reader may do with
+any of this.</strong> BUSL-1.1, Licensor Lumen Platforms Inc.,
+<strong>Additional Use Grant: None</strong>, Change Date 2030-08-13 to
+Apache-2.0. The strict form: no production use is granted at all before
+that date, not merely non-competing use. The Apache text ships in
+<code>licenses/</code> for after the conversion.</p>
+<p>Four findings, and the first two are the reason to read this
+report.</p>
+<p><strong>The benchmark ledger publishes a number its own notes say is
+not ready.</strong> <code>benchmarks/REPORTS.json</code> describes
+itself as "Top published scores across suites" and tops the LoCoMo
+leaderboard with <code>locomo-compose-sota-conv26-v4d</code> at 95.39%.
+The run directory beside it is committed in full — 152 rows of
+per-question output — and <strong>the headline recomputes
+exactly</strong>: 145/152 = 95.39%, with every per-category figure
+matching. Then <code>NOTES.md</code> in the same directory says the run
+"is a selective residual re-score atop v4c corrects (not a cold full-152
+under identical loop counts for every row)", that a <strong>"cold full
+re-run under frozen v4d harness [is] recommended before external
+claims"</strong>, that the judge is the same model family as the
+answerer, and that this is an "exploratory single-sample" on one
+conversation of LoCoMo's ten. Every one of those caveats is the
+project's own. None of them travels with the number into the ledger.</p>
+<p><strong>Supersession is the correction mechanism, and it is one time
+axis wearing two.</strong>
+<code>_invalidate_superseded_relationships</code> sets the older edge's
+<code>invalid_at</code> to <em>the successor's</em>
+<code>valid_at</code>, so both ends of the interval are world time and
+nothing records when the store learned anything. It then falls back to
+<code>utcnow().strftime("%d/%m/%Y")</code> — day resolution,
+non-sortable — and it does not matter, because all three read sites test
+<code>if props.get("invalid_at")</code> for truthiness and never compare
+it to a query instant. There is no as-of query in the repository.</p>
+<p><strong>The validity filter itself is good and is applied
+everywhere</strong>, which is rarer than it should be.
+<code>_is_currently_valid</code> — false on <code>invalid_at</code>,
+false on <code>deprecated</code> — is called from thirty-odd sites
+across <code>recommend.py</code>, <code>personalize.py</code>,
+<code>entity_sibilings.py</code> and the retrieve controller. A
+superseded edge stops being returned, and a keyword regex over the
+question decides whether history comes back with it.</p>
+<p><strong>Two node names reach Cypher unescaped.</strong>
+<code>deprecate_relationship</code> builds
+<code>WHERE a['name'] = '{subject.name}'</code> by f-string, on the two
+lines where it carefully passes the <em>labels</em> through a
+twelve-replacement sanitiser that strips <code>'</code>. Names come from
+LLM extraction over user text.</p>
+<p>Three marks. BUSL-1.1, 426 commits since 19 October 2025, pinned at
+<a
+href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
+(27 August 2026), with 585 test cases across 17,404 lines.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a triple, and the design's one real idea is what sits in
+the middle of it. Instead of <code>(Alice, LIVES_IN, SF)</code> as the
+atom, an <strong>event is a node</strong> — <code>Purchase</code>,
+<code>Trip</code> — and the actor's involvement is an edge to it. The
+README's framing is <em>"who did what, to whom, when, and in what
+context"</em>, and the schema follows: <code>Node.happened_at</code>
+exists precisely so an event node can carry when it occurred.</p>
+<p>That choice has a consequence the code is explicit about. A person
+accumulates one leg per event and none of them supersede the others —
+the docstring says <em>"an actor accumulates one leg per event and none
+of them supersede the others"</em> — while a functional attribute like
+<code>LIVES_IN</code> has exactly one current value and a newer one
+closes the older. So the store distinguishes <strong>things that
+happened</strong>, which accumulate, from <strong>things that are
+true</strong>, which are replaced, and that distinction is enforced in
+one function with three committed cases around it.</p>
+<p><strong>A memory has two states and one of them is a pair of
+properties.</strong> Live, or carrying <code>deprecated = true</code>
+and <code>invalid_at</code>. There is no candidate, no verified, no
+rejected. The janitor agent does emit <code>OK / ERROR / REJECT</code>
+per batch, but that verdict is a decision about whether edges are
+written at all — its veto reasons go to <code>print()</code> and a
+run-scoped <code>cost_ledger</code>, never to a field — so nothing that
+reaches the store carries an epistemic status, and nothing that was
+refused leaves a durable trace.</p>
+<p>Correction is therefore automatic, silent and one-directional: a
+newer edge of the same type from the same subject to a different object
+closes the older one. Nobody reviews it, nothing records why, and
+asserting the old value again writes a new edge that closes the new one
+in turn.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — events accumulate and attributes are replaced, and the whole distinction lives in one function — whose invalidation writes world time into invalid_at, a field every read site only ever tests for truthiness</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: events accumulate and attributes are replaced, and the whole distinction lives in one function — whose invalidation writes world time into invalid_at, a field every read site only ever tests for truthiness
+flowchart TD
+    T[&quot;ingested text&quot;] --&gt; AR[&quot;architect agent proposes edges&quot;]
+    AR --&gt; JAN{&quot;janitor verdict&quot;}
+    JAN -- &quot;REJECT, or a provider failure&quot; --&gt; DROP[&quot;batch dropped, reasons to a run-scoped cost ledger&lt;br/&gt;— nothing durable, so the same edge can be proposed again&quot;]
+    JAN -- &quot;OK / fixed&quot; --&gt; KG[&quot;KG agent writes the triple&quot;]
+    KG --&gt; CL[(&quot;kg_changes&lt;br/&gt;append-only, per brain&quot;)]
+    KG --&gt; INV{&quot;_invalidate_superseded_relationships&quot;}
+    INV -- &quot;tail or tip is an EVENT&quot; --&gt; ACC[&quot;both legs stay live&lt;br/&gt;— events accumulate&quot;]
+    INV -- &quot;same subject, same predicate,&lt;br/&gt;different object, not an event&quot; --&gt; SUP[&quot;older edge: deprecated = true&lt;br/&gt;invalid_at = the SUCCESSOR&#39;s valid_at&quot;]
+    SUP -.-&gt;|&quot;writes no changelog entry&quot;| CL
+    SUP --&gt; RD{&quot;_is_currently_valid&quot;}
+    ACC --&gt; RD
+    RD -- &quot;invalid_at truthy, or deprecated&quot; --&gt; HID[&quot;withheld from every graph read path&quot;]
+    RD -- &quot;live&quot; --&gt; OUT[&quot;returned&quot;]
+    HID -.-&gt;|&quot;only if the question matches&lt;br/&gt;a history keyword regex&quot;| OUT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six datastores, and the deployment stands up most of them.</p>
+<ul>
+<li><strong>Graph</strong> — Neo4j
+(<code>src/lib/neo4j/client.py</code>, 2,343 lines) or a NetworkX graph
+persisted in Postgres (<code>networkx_client.py</code>, 1,628 lines)
+behind one <code>AbstractGraphStore</code>-shaped adapter. Two
+implementations of one interface, and the second exists so a reader can
+run without Neo4j.</li>
+<li><strong>Documents and the change log</strong> — Mongo, one database
+per brain.</li>
+<li><strong>Vectors</strong> — Milvus, Postgres/pgvector, or
+Qdrant.</li>
+<li><strong>Cache</strong> — Redis. <strong>Queue</strong> — RabbitMQ,
+driving Celery ingestion.</li>
+<li><strong>Surfaces</strong> — FastAPI (<code>src/services/api</code>),
+an MCP server with a separate stdio-HTTP bridge, a React console, and
+<code>brainapi-tui</code>, an npm-installed wizard that clones the repo
+and starts everything.</li>
+</ul>
+<p>The agents are the interesting layer: <code>architect_agent.py</code>
+(1,993 lines) proposes entities and relationships,
+<code>janitor_agent.py</code> (736) vetoes and repairs them,
+<code>kg_agent.py</code> (615) writes, and <code>validator_agent</code>,
+<code>temporal_agent</code>, <code>scout_agent</code> and
+<code>observations_agent</code> sit alongside.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>This is the heaviest install in its family. A full run wants Neo4j,
+Mongo, a vector store, Redis and RabbitMQ, plus an LLM provider for
+ingestion <em>and</em> for retrieval — extraction, janitor, and
+answering are all model calls. There is no degraded local mode that
+keeps the graph and drops the rest; the graph is the product.</p>
+<p>The store is not human-readable in any useful sense: a brain is a
+Neo4j database and a Mongo database, and a wrong edge is repaired
+through the API or through Cypher, not by editing a file. Against that,
+the change log gives an operator something to read after the fact, which
+most graph systems in this atlas do not.</p>
+<p>The TUI is the ergonomic answer and it is a real one —
+<code>brainapi init</code> clones, installs, runs a wizard and starts
+the services — but note what it implies for a reader evaluating the
+code: the documented path installs from a tree whose dependency
+manifests changed within the last few days.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest.</strong> <code>POST</code> → Celery
+<code>ingest_data</code> (<code>src/workers/tasks/ingestion.py</code>,
+1,648 lines) → architect proposal → janitor batch → KG write →
+invalidation sweep. Fully asynchronous; nothing is retrievable until the
+task completes.</p>
+<p><strong>The janitor gate</strong>
+(<code>architect_agent.py:460-510</code>) is the part worth copying.
+Three outcomes, and the comment states the invariant: <em>"Parse /
+provider failure must not silently approve edges."</em> A
+<code>None</code> response drops the batch and appends
+<code>janitor_parse_failure</code> to the ledger; a <code>REJECT</code>
+drops it and appends the veto reasons; only <code>OK</code> or a
+repaired set proceeds. <strong>It fails closed</strong> — a model outage
+loses candidate edges rather than admitting unvetted ones.</p>
+<p><strong>Invalidation</strong> (<code>ingestion.py:507-560</code>).
+Guards first: return if either end is an event, return if either type is
+blank, skip inbound edges, skip the successor itself, skip anything
+already carrying <code>invalid_at</code>. Then
+<code>update_properties</code> with
+<code>{"invalid_at": valid_at or utcnow().strftime("%d/%m/%Y"), "deprecated": True}</code>.</p>
+<p><strong>Retrieval.</strong>
+<code>src/services/api/controllers/retrieve.py</code> (2,235 lines)
+fuses dense and lexical candidates — <code>SEARCH_MODE</code> is
+<code>hybrid</code>, <code>bm25</code>, <code>dense</code> or
+<code>ilike</code>, with <code>SEARCH_BM25_K1</code> and
+<code>SEARCH_BM25_B</code> validated at config load — then runs graph
+channels: PPR, entity siblings, catalog walks. Every predicate crossing
+those paths passes <code>_is_currently_valid</code>.</p>
+<p><strong>The history switch.</strong>
+<code>_wants_historical_facts(request.text)</code> is a keyword regex:
+<code>_HISTORY_MODE_RE</code> matches <code>previously</code>,
+<code>originally</code>, <code>chronolog</code>,
+<code>contradict</code>, <code>first said</code>;
+<code>_CURRENT_TRUTH_RE</code> matches <code>now</code>,
+<code>currently</code>, <code>latest</code> and suppresses it. When it
+fires, <code>_fact_predicates_allowed</code> returns <code>True</code>
+unconditionally and superseded edges come back.</p>
+<p><strong>Change log.</strong> <code>save_kg_changes</code> →
+<code>insert_one</code> into <code>kg_changes</code>, from three call
+sites in <code>KGAgentAddTripletsTool</code> and one in
+<code>KGAgentDeleteRelationshipTool</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>src/constants/kg.py</code> declares the whole schema, and its
+temporal fields are where the design gets read carefully.</p>
+<pre class="python"><code>class Node(BaseModel):
+    happened_at: Optional[str | None]   # when the event occurred
+    last_updated: datetime = Field(default_factory=datetime.now)</code></pre>
+<p><code>Predicate</code> carries <code>uuid</code>, <code>name</code>,
+<code>description</code>, <code>flow_key</code>,
+<code>last_updated</code>, <code>deprecated</code>,
+<code>direction</code>, <code>amount</code>, <code>level</code>,
+<code>observations</code> and a free <code>properties</code> dict.
+<strong><code>invalid_at</code> is not a declared field</strong> — it
+lives in <code>properties</code>, written by the invalidation sweep and
+read with <code>props.get("invalid_at")</code>.</p>
+<p><strong>Why <code>bitemporal</code> is withheld, in three
+steps.</strong> <code>happened_at</code> is world time and
+<code>last_updated</code> is record time, which looks like the two axes
+the mark asks for — but <code>last_updated</code> is a
+<code>default_factory</code> timestamp that overwrites, which the rubric
+names as <em>"not this"</em> in as many words. <code>invalid_at</code>
+looks like the closing end of a validity interval, and the sweep sets it
+to the <em>successor's</em> <code>valid_at</code> — so both ends of the
+interval are validity time and nothing records when the store learned
+the old value had ended. And the decisive one: all three read sites test
+<code>invalid_at</code> for truthiness. It is a boolean in a timestamp's
+clothing, and the repository contains no query that asks what was
+believed on a date.</p>
+<p><strong>No trust, no provenance, no confidence.</strong> Grepping
+<code>kg.py</code> and <code>data.py</code> for <code>status</code>,
+<code>confidence</code>, <code>verified</code>, <code>trust</code> and
+<code>provenance</code> returns nothing. <code>Node.polarity</code> is
+<code>positive | negative | neutral</code> and is about the claim's
+valence, not its standing.</p>
+<p><strong>Scoping is the brain, and the brain is the database.</strong>
+Not a column, not a predicate — Mongo's <code>database=brain_id</code>
+and Neo4j's <code>database_=brain_id</code>. The middleware refuses a
+non-alphanumeric id before it reaches either, which is what makes using
+an identifier as a database name safe.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three arms and a filter. Dense vectors from whichever store is
+configured; BM25 over Postgres, with <code>ilike</code> as a degraded
+mode and <code>dense</code> and <code>bm25</code> as single-arm modes;
+and graph channels — <code>graph_channels.py</code> (903 lines),
+<code>catalog_graph.py</code> (772), <code>recommend.py</code> (608),
+<code>personalize.py</code> — that expand from seed entities.</p>
+<p><strong>The validity filter is the strongest thing on this
+path.</strong> Two copies of the same predicate exist —
+<code>_is_currently_valid</code> in the retrieve controller and
+<code>_predicate_currently_valid</code> in
+<code>entity_sibilings.py</code>, byte-identical in behaviour — and
+between them they are called from more than thirty sites. Where a
+two-hop expansion happens, <em>both</em> predicates are checked
+(<code>_is_currently_valid(r) and _is_currently_valid(r2)</code>), so a
+path cannot be assembled through a superseded edge in the middle. That
+the two copies exist rather than one import is the mechanism's only
+softness: they can drift.</p>
+<p><strong>The history affordance is a phrasing test.</strong> Ask
+"where does Alice live now" and superseded edges are excluded; ask
+"where did Alice previously live" and they are all included, unfiltered,
+with no way to bound the answer to a date. The regex is a reasonable
+heuristic and it is doing the job an as-of parameter would do better —
+the retrieve request has no <code>as_of</code> field.</p>
+<p><strong>Latency is measured and it is not small.</strong> The
+committed LoCoMo run reports retrieval p50 at 5,194 ms and p95 at 13,786
+ms, with 43.8 million tokens across answering and judging for 152
+questions. Very few systems in this atlas report retrieval latency at
+all; this one commits it per run.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are queued and model-mediated end to end: extraction, vetting
+and graph-writing are all LLM calls, so the lag from ingest to
+retrievability is a full Celery task, and the token cost scales with the
+text rather than with the number of facts kept.</p>
+<p><strong>Deduplication happens by similarity at write time</strong> —
+<code>KGAgentAddTripletsTool</code> resolves a proposed subject and
+object against similar existing nodes before inserting. Two
+<code>TODO</code> comments at <code>:130</code> and <code>:153</code>
+say the changelog should record the merge when the resolved name differs
+from the proposed one, and it does not, so a silent entity merge is the
+one mutation with neither an audit row nor a way to see it happened.</p>
+<p><strong>Supersession is unreviewed and unrecorded.</strong> The sweep
+writes two properties and returns; the <code>except Exception</code>
+around it prints and continues, so a failed invalidation leaves the old
+edge live and the new edge live beside it, and nothing retries. Two
+contradicting facts then both pass the validity filter.</p>
+<p><strong>The Cypher construction on the deprecation path is the defect
+to fix first.</strong></p>
+<pre class="python"><code>MATCH (a:{&quot;:&quot;.join(self._clean_labels(subject.labels))}) WHERE a[&#39;name&#39;] = &#39;{subject.name}&#39;
+MATCH (b:{&quot;:&quot;.join(self._clean_labels(object.labels))}) WHERE b[&#39;name&#39;] = &#39;{object.name}&#39;</code></pre>
+<p><code>_clean_labels</code> replaces spaces, hyphens, dots, commas,
+colons, semicolons, brackets, braces and single quotes — twelve
+substitutions, including the quote that matters. It is applied to the
+labels and not to the names, on the same two lines. Node names are
+produced by an LLM reading user-supplied text, so a name containing an
+apostrophe breaks the query and a crafted one is injection against a
+database the caller already holds a PAT for. Fourteen other methods in
+the same file pass parameters properly; this one does not. The fix is a
+<code>$name</code> parameter.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing re-reads the whole store on a schedule, so there is no
+corpus-scaled nightly bill — but ingestion is expensive per document
+(architect + janitor + KG-agent calls) and retrieval is expensive per
+query (answering is a model call on top of a multi-second graph walk).
+The committed run's 43.8 million tokens for 152 questions is the number
+to plan against; the ledger records it, which is the right instinct.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The surface is HTTP plus MCP. <code>retrieve/context</code> takes a
+question and returns an answer with <code>triples</code> showing the
+path, <code>retrieve/entity/synergies</code> and
+<code>retrieve/recommend</code> expose the graph channels directly, and
+the MCP server puts the same operations in front of a coding agent, with
+a stdio-HTTP bridge for clients that only speak stdio.</p>
+<p><strong>Every route resolves the brain before it runs.</strong>
+<code>get_brain_id</code> is a FastAPI dependency reading
+<code>request.state.brain_id</code>, set by middleware that accepts the
+id from a header, a query param, a JSON body or a multipart form — and
+then validates it. The order matters: reserved-name check, then
+<code>isalnum()</code>, then the PAT check, then the route. A caller
+cannot reach a store with an unvalidated identifier.</p>
+<p><strong>The agent has no memory tools of its own.</strong> There is
+no <code>remember</code> or <code>forget</code> exposed to a model in
+the way this atlas usually finds; writing is ingestion, and correction
+is a side effect of ingestion. The <code>KGAgent*</code> tools are
+internal to the swarm, not surfaced to an adopter's agent.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance exists at the document level and not at the claim
+level.</strong> An observation carries <code>inserted_at</code> and
+ingestion tracks its source, but a predicate does not record which
+passage produced it, so a wrong edge cannot be traced to the text that
+caused it — only deprecated.</p>
+<p><strong>Prompt-injected facts have the ordinary graph-RAG path in,
+with one real obstacle.</strong> Extraction turns arbitrary text into
+proposed edges, but the janitor sits between the proposal and the write
+and can veto the batch. That is more than most systems here have. What
+it does not do is remember: a vetoed edge leaves
+<code>janitor_drop_reasons</code> in a run-scoped ledger, so the same
+text ingested again is vetted again from scratch, and a batch that
+passes on the second roll is written.</p>
+<p><strong>Multi-tenancy is the strongest part of the design.</strong>
+Database-level partition plus a per-brain PAT is a stronger boundary
+than the tag-based scoping this atlas usually finds. State the widening
+flags with it: <code>BRAIN_CREATION_ALLOWED</code> turns an unknown
+header into a new brain, <code>DEFAULT_BRAIN_FALLBACK</code> turns an
+absent one into <code>default</code>, and a system PAT bypasses the
+per-brain check on every route.</p>
+<p><strong>Two marks withheld, with the reason.</strong>
+<code>tombstone</code> — nothing anywhere is keyed on a rejected value;
+deprecation is keyed on the relationship, and re-asserting a closed
+claim writes a fresh edge that closes its replacement.
+<code>human_review</code> — the only
+<code>approve</code>/<code>REJECT</code> vocabulary in the repository
+belongs to the janitor agent adjudicating its own swarm's proposals; no
+surface puts memory content in front of a person for a decision, and the
+console displays the graph rather than gating it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>585 cases across 17,404 lines in 73 files</strong>, against
+45,741 lines of source. Fourteen skips, and every one is a
+<code>skipUnless</code> on an unavailable service — Postgres, NetworkX
+dependencies — rather than a behaviour quietly excused.</p>
+<p><code>tests/test_event_hub_invalidation.py</code> is the best test in
+the repository and is the whole basis of the <code>negative_eval</code>
+mark. Three cases over one fake graph adapter: a functional attribute
+<em>is</em> superseded, and the assertion is made in both directions
+through the real read-path predicate; an event leg is <em>not</em>; an
+inbound edge is <em>not</em>. The two negative cases assert
+<code>graph.updates == []</code>, which would be vacuous on its own and
+is not here, because the positive case proves the same fake records a
+write when one happens. That is the shape this atlas asks for and rarely
+finds.</p>
+<p><code>tests/test_benchmark_contract_guardrails.py</code> is worth
+naming for a different reason: it asserts the search harness <em>must
+not</em> score through <code>/retrieve/context</code> or
+<code>/retrieve/recommend</code>, and that the search client must not
+default to particular endpoints. A test that stops a benchmark from
+measuring the wrong thing is a rare artifact.</p>
+<p><strong>The benchmark ledger, opened rather than cited.</strong>
+<code>benchmarks/REPORTS.json</code> carries five suites — LoCoMo,
+LongMemEval, BEAM, RecSys, Search — with 103 leaderboard entries between
+them and this description: <em>"Top published scores across
+suites."</em></p>
+<ul>
+<li><strong>LongMemEval's leaderboard is empty.</strong> The suite, its
+runner and its shell wrapper are all committed; no result is.</li>
+<li><strong>Two run directories are committed of 103 entries</strong> —
+the top LoCoMo run and the top BEAM run — each with
+<code>answers.jsonl</code>, <code>manifest.json</code>,
+<code>report.json</code> and <code>report.md</code>. That is far more
+than most projects publish, and it is what makes the rest of this
+section possible.</li>
+<li><strong>The LoCoMo headline recomputes exactly.</strong> 152 rows,
+145 with <code>judge_correct</code> true, 145/152 = 95.39% against the
+ledger's 95.39, and the four per-category figures match the report to
+the tenth of a point. Zero errored rows, zero duplicates, zero empty
+predictions.</li>
+</ul>
+<p>And then the caveats, all of them the project's own, none of them
+travelling with the number:</p>
+<ul>
+<li><strong>The scope is one conversation.</strong>
+<code>scope: conv-26</code>, n=152, of LoCoMo's ten conversations.
+<code>NOTES.md</code> says so — <em>"exploratory single-sample; full-10
+still required for protocol HyperMem claim"</em> — and the ledger field
+records it while the leaderboard position does not.</li>
+<li><strong>Category 5 is absent.</strong> LoCoMo's adversarial category
+— the one where the right answer is a refusal — has zero rows in the
+file, and the report prints <em>"Abstention accuracy (cat 5): n/a
+(n=0)"</em>. The half of the benchmark that tests not answering was not
+run.</li>
+<li><strong>The judge is the answerer.</strong>
+<code>answer_model</code> and <code>judge_model</code> are both
+<code>deepseek-v4-flash</code>, and <code>report.md</code> prints
+<em>"same family as answerer: True"</em>. <code>NOTES.md</code> lists
+"Shared-family judge (deepseek)" under Caveats.</li>
+<li><strong>The run is a selective re-score.</strong> <em>"v4d seeded
+correct rows from v4c, then resumed the 11 residuals under the final
+harness."</em> Keeping the wins and retrying the losses is an optimistic
+procedure, and the notes say so: <em>"not a cold full-152 under
+identical loop counts for every row. Cold full re-run under frozen v4d
+harness recommended before external claims."</em> The artifact cannot be
+used to check that caveat — its 152 rows carry no per-row provenance
+field distinguishing a seeded row from a re-run one, and all 152
+timestamps fall inside one 44-minute window.</li>
+<li><strong>The tree was dirty.</strong> <code>report.md</code> records
+<code>Git SHA: 78cbbae5… (dirty: True)</code>.</li>
+</ul>
+<p>The honesty here is genuine and it is unusually complete — the notes
+even publish the failed arms, including <em>"v4b 87.5% — books-nudge
+overfit — do not ship"</em>, and diagnose all seven residual wrongs by
+hand. The gap is one of plumbing rather than intent:
+<code>NOTES.md</code> is a file in a run directory, and
+<code>REPORTS.json</code> is what a reader, a dashboard or an agent will
+quote. A <code>caveats</code> field on the leaderboard entry, or a
+<code>status</code> that the ledger's own upsert refuses to mark
+<code>ok</code> for a re-scored run, would close it.</p>
+<p><strong>What I would want before trusting the number.</strong> The
+cold full-152 the notes ask for; the other nine conversations; category
+5; and a judge from a different family. The harness to do all four is in
+the repository.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make an event a node.</strong> Modelling <em>who did what,
+when</em> as an event node with legs, rather than as attributes on the
+actor, is what lets this system say that two purchases both happened
+while two cities cannot both be current. The rule falls out of the data
+model instead of being a special case in the correction code.</li>
+<li><strong>Fail closed on a model failure in a write gate.</strong>
+<em>"Parse / provider failure must not silently approve edges"</em> is
+four words of comment and the difference between an outage losing
+candidates and an outage admitting unvetted ones.</li>
+<li><strong>Apply the validity predicate at every expansion
+hop.</strong> Checking both predicates of a two-hop path
+(<code>_is_currently_valid(r) and _is_currently_valid(r2)</code>) is
+what stops a superseded edge being laundered through the middle of a
+chain.</li>
+<li><strong>Commit per-question benchmark output.</strong>
+<code>answers.jsonl</code> with the prediction, the gold, the judge
+verdict and the retrieved session ids is what let this report verify a
+headline instead of repeating it. Almost nothing in this atlas can be
+checked that way.</li>
+<li><strong>Test that your benchmark cannot measure the wrong
+thing.</strong> <code>test_benchmark_contract_guardrails.py</code>
+asserts the search harness must not score through the context endpoint.
+Guarding the measurement is as valuable as guarding the code.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A ledger that drops the caveats its source
+recorded.</strong> The notes here are better than most published
+methodology sections and they stop at the run directory. If a results
+file calls itself "top published scores", the fields that make a score
+interpretable — scope, judge independence, whether the run was cold —
+belong on the row, not next to it.</li>
+<li><strong>A closing timestamp taken from the successor.</strong>
+Setting <code>invalid_at</code> to the new fact's <code>valid_at</code>
+puts both ends of the interval on the same axis and leaves nothing
+recording when the store learned. If you only ever test the field for
+truthiness, a boolean is more honest.</li>
+<li><strong>A history mode selected by keyword.</strong> Deciding
+whether superseded facts are returned by regexing the user's question
+means "previously" and "before the change" behave differently from "as
+of March", and no phrasing bounds the answer to a date. Take an
+<code>as_of</code> parameter.</li>
+<li><strong>Sanitising the labels and interpolating the names.</strong>
+The care is visible — twelve replacements including the quote — and it
+is applied to one of the two interpolations on each line.
+Parameterise.</li>
+<li><strong>An audit whose highest-volume writer bypasses it.</strong>
+Four change types, real models, a queryable list endpoint — and the
+supersession that runs on every ingest writes none of them. An audit
+that covers the agent tools and not the pipeline answers "what did the
+agent do" and not "what happened to my graph".</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a serious engineering effort and a heavy one: six datastores,
+an agent swarm, and model calls on both the write and the read path. It
+suits a reader who wants a knowledge graph built and maintained for
+them, has the operational budget for the stack, and values the traceable
+path over latency — p50 retrieval above five seconds is the cost of the
+walk.</p>
+<p>The BUSL grant makes that a narrower audience than the code implies.
+With <strong>Additional Use Grant: None</strong>, there is no production
+use before 13 August 2030; until then this is something to read, run
+locally, and learn the event-node idea from, or to license. Read that
+way it is worth the time — the invalidation rule, the fail-closed
+janitor and the committed per-question artifacts are each worth more
+than the retrieval stack around them.</p>
+<p>Anyone who needs an as-of query, a reviewable correction, or a record
+of what was refused should expect to build all three.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Has the cold full-152 run the notes ask for been
+done?</strong> If it has, it is not in the ledger; if it has not,
+<code>REPORTS.json</code> is publishing a number its author flagged as
+not yet publishable.</li>
+<li><strong>Why is LongMemEval's leaderboard empty when its harness is
+committed?</strong> A suite that runs and reports nothing is either
+unfinished or a result nobody liked, and a reader cannot tell
+which.</li>
+<li><strong>Do the two copies of the validity predicate ever
+drift?</strong> They are identical today and there is no test asserting
+they stay so.</li>
+<li><strong>Is the silent entity merge on the write path intended to
+stay unaudited?</strong> Two <code>TODO</code>s in
+<code>KGAgentAddTripletsTool</code> say the changelog should record
+it.</li>
+<li><strong>What does <code>_invalidate_superseded_relationships</code>
+do when <code>update_properties</code> fails?</strong> It prints and
+continues, leaving both edges live — whether anything reconciles that
+later is not visible in the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Data model</strong></p>
+<ul>
+<li><code>src/constants/kg.py</code> — <code>Node</code>,
+<code>Predicate</code>, <code>Triple</code>; <code>happened_at</code>,
+<code>last_updated</code>, <code>deprecated</code>.</li>
+<li><code>src/constants/data.py:81-160</code> —
+<code>KGChangesType</code> and the four change-log models.</li>
+<li><code>src/constants/agents.py:105-130</code> — the janitor's
+<code>OK / ERROR / REJECT</code> and <code>veto_reasons</code>.</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>src/workers/tasks/ingestion.py:507-560</code> —
+<code>_invalidate_superseded_relationships</code>.</li>
+<li><code>src/core/agents/architect_agent.py:460-510</code> — the
+fail-closed janitor gate.</li>
+<li><code>src/core/agents/tools/kg_agent/KGAgentAddTripletsTool.py:130,:153,:187-244</code>
+— entity resolution, the two unaudited-merge <code>TODO</code>s, the
+change-log writes.</li>
+<li><code>src/core/agents/tools/kg_agent/KGAgentDeleteRelationshipTool.py:112-131</code>.</li>
+</ul>
+<p><strong>Read path</strong></p>
+<ul>
+<li><code>src/services/api/controllers/retrieve.py:1289-1316</code> —
+<code>_is_currently_valid</code>, <code>_wants_historical_facts</code>,
+<code>_fact_predicates_allowed</code>.</li>
+<li><code>src/core/search/entity_sibilings.py:38-45</code> — the second
+copy of the predicate.</li>
+<li><code>src/core/search/recommend.py</code>,
+<code>personalize.py</code>, <code>graph_channels.py</code>,
+<code>catalog_graph.py</code> — its callers.</li>
+</ul>
+<p><strong>Storage and scope</strong></p>
+<ul>
+<li><code>src/lib/neo4j/client.py:1144-1186</code> —
+<code>deprecate_relationship</code> and the unescaped names;
+<code>:156-176</code> — <code>_clean_labels</code>.</li>
+<li><code>src/lib/mongo/client.py:193-196,:359-448</code> — the
+change-log write and reads.</li>
+<li><code>src/services/api/middlewares/brains.py:70-185</code>,
+<code>middlewares/auth.py:55-107</code>, <code>dependencies.py</code> —
+brain resolution, validation and the per-brain PAT.</li>
+</ul>
+<p><strong>Benchmarks</strong></p>
+<ul>
+<li><code>benchmarks/REPORTS.json</code> — the ledger.</li>
+<li><code>benchmarks/runs/locomo-compose-sota-conv26-v4d/</code> —
+<code>NOTES.md</code>, <code>report.md</code>,
+<code>answers.jsonl</code>.</li>
+<li><code>tests/test_benchmark_contract_guardrails.py</code>.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_event_hub_invalidation.py</code> — the three
+supersession cases.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
+— first reading, at 426 commits. Screened before reading: no auto-run
+surface, three build-time execution surfaces (a <code>Makefile</code>,
+<code>tests/conftest.py</code>, and a <code>prepublishOnly</code> script
+in <code>tui/package.json</code>), three unpinned surfaces, and
+<strong>four dependency manifests inside the seven-day freshness
+cooldown</strong> — nothing was installed and nothing was run, and both
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as data.
+Three marks. The report is organised around the second ingestion and
+around the benchmark ledger, because those are the two places where the
+design's intent and its plumbing come apart: the supersession rule is
+well-reasoned and unaudited, and the run notes are more careful than the
+file that publishes them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

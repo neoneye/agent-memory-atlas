@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 348 reports.</strong></p>
+<p><strong>This page covers all 349 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11841,6 +11841,84 @@ want a worked example of testing incrementality by spend.</li>
 about the <em>second</em> ingestion, and closing them touches the chunk
 id scheme, the entity write, the edge write and the state file — which
 is most of <code>run_ingestion</code>.</li>
+</ul>
+<h3 id="brainapi"><a
+href="../systems/brainapi/"><code>brainapi</code></a></h3>
+<ul>
+<li>Best idea: <strong>make an event a node, and let the correction rule
+fall out of the data model.</strong> An actor's involvement in an event
+is a leg to the event rather than an attribute on the actor, so
+<code>_invalidate_superseded_relationships</code> can say that two
+purchases both happened while two cities cannot both be current — with
+the docstring stating it directly, <em>"an actor accumulates one leg per
+event and none of them supersede the others."</em> The distinction lives
+in one guarded function, not in special cases scattered through the
+write path.</li>
+<li>Second idea: <strong>fail closed on a provider failure in a write
+gate.</strong> <em>"Parse / provider failure must not silently approve
+edges"</em> — a <code>None</code> response from the janitor drops the
+batch and records <code>janitor_parse_failure</code>; a
+<code>REJECT</code> drops it and records the veto reasons. An outage
+loses candidate edges instead of admitting unvetted ones.</li>
+<li>Third idea: <strong>commit per-question benchmark output.</strong>
+<code>answers.jsonl</code> carries the prediction, the gold, the judge
+verdict and the retrieved session ids for all 152 rows, which is what
+let the LoCoMo headline be verified rather than repeated: 145/152 =
+95.39% against the ledger's 95.39, with all four per-category figures
+matching.</li>
+<li>Biggest risk: <strong>the ledger publishes a number its own notes
+say is not ready.</strong> <code>REPORTS.json</code> calls itself "top
+published scores" and tops LoCoMo with
+<code>locomo-compose-sota-conv26-v4d</code>. The <code>NOTES.md</code>
+beside that run says the score is an "exploratory single-sample" on one
+conversation of ten, that the judge is the same model family as the
+answerer, and that the run "is a selective residual re-score atop v4c
+corrects… <strong>Cold full re-run under frozen v4d harness recommended
+before external claims.</strong>" Category 5 — the adversarial half,
+where the right answer is a refusal — has zero rows, and the report
+prints <code>Abstention accuracy (cat 5): n/a (n=0)</code>. Every caveat
+is the project's own; none travels with the number.</li>
+<li>Second risk: <strong>one time axis dressed as two.</strong> The
+invalidation sweep sets the older edge's <code>invalid_at</code> to the
+<em>successor's</em> <code>valid_at</code>, falling back to
+<code>utcnow().strftime("%d/%m/%Y")</code> — and all three read sites
+test <code>props.get("invalid_at")</code> for truthiness and never
+compare it to a query instant. It is a boolean in a timestamp's
+clothing, and the only history affordance is a keyword regex over the
+question text: <code>previously</code> and <code>originally</code> open
+the gate, <code>now</code> and <code>currently</code> close it, and no
+phrasing bounds an answer to a date.</li>
+<li>Third risk: <strong>the audit's highest-volume writer bypasses
+it.</strong> <code>kg_changes</code> is a real append-only log with four
+typed change models and a filterable list endpoint, written by two KG
+agent tools — and <code>_invalidate_superseded_relationships</code>,
+which runs on every ingest, calls <code>update_properties</code>
+directly and writes nothing. Two <code>TODO</code>s in
+<code>KGAgentAddTripletsTool</code> say the same of the silent entity
+merge on the write path.</li>
+<li>Fourth risk: <strong>two node names reach Cypher unescaped.</strong>
+<code>deprecate_relationship</code> builds
+<code>WHERE a['name'] = '{subject.name}'</code> by f-string on the same
+two lines where it passes the <em>labels</em> through a
+twelve-replacement sanitiser that strips the single quote. Names come
+from LLM extraction over user text, and fourteen other methods in the
+same file parameterise properly.</li>
+<li>Maturity impression: BUSL-1.1 with <strong>Additional Use Grant:
+None</strong> and a Change Date of 2030-08-13, so no production use is
+granted before then. 426 commits since 19 October 2025, 45,741 lines of
+Python under <code>src/</code> against 17,404 lines of tests in 585
+cases, six datastores, an MCP server, a React console and a TUI
+installer. Three marks. Fourteen test skips, every one a
+<code>skipUnless</code> on an unavailable service rather than a
+behaviour excused.</li>
+<li>Study when: you are building a graph whose facts get superseded and
+want the event-versus-attribute distinction done properly, or you want a
+worked example of committing benchmark artifacts a reader can actually
+recompute from.</li>
+<li>Do not copy when: you need an as-of query, a reviewable correction,
+or a record of what was refused — a vetoed edge leaves only a run-scoped
+ledger entry, so the same text ingested again is vetted from scratch and
+a batch that passes on the second roll is written.</li>
 </ul>
         </article>
       </div>
