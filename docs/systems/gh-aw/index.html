@@ -225,7 +225,8 @@ asked to decide <em>when</em> to persist will forget. The human's
 control is exercised at compile time, in frontmatter, through limits —
 and, for repo memory, afterwards, because the store is a git branch a
 person can open a pull request against.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a restored cache has its hooks deleted and is fsck'd before use, and merges run strictly down the integrity lattice so lower-trust content cannot escalate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a restored cache has its hooks deleted and is fsck&#39;d before use, and merges run strictly down the integrity lattice so lower-trust content cannot escalate
+flowchart TD
     R[&quot;cache restored from a previous run&quot;] --&gt; H[&quot;delete .git/hooks/*&lt;br/&gt;core.hooksPath = /dev/null&quot;]
     H --&gt; F{&quot;git fsck clean?&quot;}
     F -- &quot;no&quot; --&gt; RI[&quot;rm -rf .git, reinitialise&lt;br/&gt;working tree preserved&quot;]

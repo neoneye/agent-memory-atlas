@@ -206,7 +206,8 @@ though the codebase is full of statuses, and the distinction is worth
 keeping in mind when reading any system: a status on the process is not
 a status on the belief.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — sessions and messages land in Postgres synchronously while skill distillation runs through two queue hops onto disk, so a skill is readable only after both complete</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: sessions and messages land in Postgres synchronously while skill distillation runs through two queue hops onto disk, so a skill is readable only after both complete
+flowchart LR
     AG[&quot;agent (Claude Code,&lt;br/&gt;OpenClaw, SDK)&quot;] --&gt; API[&quot;FastAPI server&quot;]
     API --&gt; PG[(&quot;Postgres&lt;br/&gt;sessions, messages,&lt;br/&gt;tasks, agent_skills&quot;)]
     API --&gt; MQ[&quot;message queue&quot;]

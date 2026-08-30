@@ -176,6 +176,7 @@ session's agent is free to rediscover and re-assert it — at which point it is
 new, unverified, and starts the 30-day clock again.
 
 ```mermaid
+%% caption: promotion needs two distinct sources, and both source ids default to `unknown` with nothing assigning them — so the dedup blocks the second source and the ladder cannot be climbed except by a human
 stateDiagram-v2
     [*] --> Unverified: an agent calls add_discovery or add_solution
     Unverified --> Unverified: a corroboration arrives with a source key already seen

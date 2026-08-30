@@ -71,6 +71,7 @@ projected into a graph that is rebuilt from scratch, and served only if the inde
 is qualified.
 
 ```mermaid
+%% caption: the JSON file is canonical and Neo4j is a projection rebuilt by DETACH DELETE and re-CREATE, with the query path failing closed rather than answering from an unqualified index
 flowchart TB
     LOOP["delivery loop<br/>business-partner → task-tidy → emit"] --> JSON[("design/KG/<br/>SystemArchitecture.json<br/><b>canonical</b>")]
     JSON --> VAL["validateSystemArchitecture<br/>+ ArchiMate 3.2 rules"]

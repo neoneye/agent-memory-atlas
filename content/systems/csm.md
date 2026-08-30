@@ -201,6 +201,7 @@ The re-entry path is stricter — `agent-onboarding.ts:364` does filter
 depending on which door you knock on.
 
 ```mermaid
+%% caption: two disconnects in one lifecycle: supersession and archival set fields no read path filters on, and the promoted status the beliefs layer requires has no code path that writes it
 stateDiagram-v2
     [*] --> Packet: tool.execute.after hook
     Packet --> Distilled: deterministic distiller, confidence fixed at 0.92

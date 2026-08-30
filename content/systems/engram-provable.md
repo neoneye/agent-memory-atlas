@@ -87,6 +87,7 @@ a binding excluded from every recall query — until an admin releases or reject
 it. Everything that changes a memory appends a row to the chained mutation log.
 
 ```mermaid
+%% caption: provenance and an explicit untrusted flag route a write into quarantine with its reason, where an admin releases it — recomputing the binding — or rejects it, and every admitted row carries when it happened beside when it was stored
 flowchart TD
     W["write: content + provenance + binding"] --> C{"binding == canon?"}
     C -->|"yes — operator-curated"| ADMIT["admitted"]

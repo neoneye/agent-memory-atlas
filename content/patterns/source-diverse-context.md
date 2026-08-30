@@ -48,6 +48,7 @@ tuning constant, and every returned item keeps its source label so the agent can
 tell independent evidence from one document repeated.
 
 ```mermaid
+%% caption: one pass takes the best chunk from each source before a second fills the remaining budget under a per-source cap, so five adjacent chunks of one file cannot crowd out the rest
 flowchart TD
     C["ranked candidates"] --> P1["pass 1: best chunk per source"]
     P1 --> P2["pass 2: fill remaining budget, capped per source"]

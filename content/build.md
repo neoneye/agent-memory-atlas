@@ -19,6 +19,7 @@ before you rely on it.** Nothing here has been run against a working system by
 this project, and the page says so in the places where the omission matters.
 
 ```mermaid
+%% caption: the five stages, gated on one question: if nothing has to survive the session, the answer is a prompt and a scratchpad rather than a memory system
 flowchart TD
     Q["Does anything need to survive the session?"]
     Q -->|"no"| STOP["Build nothing.<br/>A prompt and a scratchpad are the answer"]

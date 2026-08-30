@@ -72,6 +72,7 @@ Nothing sets a `stale` bit, which is the point: *"a substrate that never self-in
 Whether a memory may *change* is a separate axis entirely. Every mutation is a `Proposal` evaluated by PAMA into one of five outcomes ordered by strictness — `allow`, `allow_with_ledger`, `require_review`, `require_external_verification`, `block`. The load-bearing property is stated in `policy.py` and guarded by tests: *"Estimator confidence is an input to evidence quality only and has no path to the outcome."* A model that is very sure of itself cannot buy authority with confidence.
 
 ```mermaid
+%% caption: a five-way policy verdict gates every mutation, and a deletion is closed transitively over its projections with an undeclared-residual sweep that must come back empty
 flowchart TD
   P["proposal to mutate"] --> PAMA{"PAMA evaluates:<br/>target class, risk,<br/>downstream authority"}
   PAMA -->|allow / allow_with_ledger| W["substrate write"]

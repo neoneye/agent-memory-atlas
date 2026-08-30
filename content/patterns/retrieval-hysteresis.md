@@ -34,6 +34,7 @@ set. Those act on one turn at a time and cannot express "not again for a while."
 Attach activation state to the unit, and let firing mutate it:
 
 ```mermaid
+%% caption: four gates between a keyword match and an injection — delay, cooldown, suppression — and firing sets the sticky and cooldown counters that gate the next turn
 flowchart TB
     Q[turn] --> M{"relevance /<br/>keyword match"}
     M -->|no| SKIP[not injected]

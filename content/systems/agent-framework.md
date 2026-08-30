@@ -86,6 +86,7 @@ compression — a bullet stops being true by being rewritten out of the file by 
 LLM, with no record that it was there.
 
 ```mermaid
+%% caption: the framework's contract is two hooks and an id with no add, query, delete or scope; everything the harness needs it builds itself, including the containment check on the per-owner path
 flowchart TB
     subgraph Contract["ContextProvider — the whole contract"]
       BR["before_run()"] --- AR["after_run()"] --- SID["source_id"]

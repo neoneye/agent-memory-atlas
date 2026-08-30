@@ -90,6 +90,7 @@ changed by a header a caller controls.
 **And the fingerprint travels with the turn.**
 
 ```mermaid
+%% caption: the policy is frozen and fingerprinted into the turn's audit metadata before either hook runs, and no status, provenance or trust crosses back over the provider boundary
 flowchart TD
     O["Agent profile + backend options"] --> V["provider.validate_options"]
     V --> RP["resolve_policy → MemoryRuntimePolicy<br/>frozen, provider-neutral"]

@@ -108,6 +108,7 @@ skipping first-seen stamping.
 ### How a thing becomes a belief
 
 ```mermaid
+%% caption: the extraction downgrades to inferred when a quote is not found verbatim in the transcript, or when a claimed outcome cites no tool result — grounding is a deterministic gate, not a model's self-report
 flowchart TB
     T["transcript span"] --> EX["LLM extraction, D-016 prompt"]
     EX -->|"claims verbatim + quote"| S["sanitize_source_ids<br/>pin_imperatives"]
@@ -342,6 +343,7 @@ the host invokes. The `pretty` extra pulls in `rich` for terminal output and is
 optional.
 
 ```mermaid
+%% caption: the checkpoint files are authoritative and the FTS5 index is disposable and rebuilt on drift, with the team sidecar and the signed receipt both opt-in
 flowchart TD
     subgraph Host["Agent host (Claude Code / Windsurf / Codex)"]
         SS["SessionStart hook"]

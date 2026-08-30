@@ -35,6 +35,7 @@ read against the path a memory takes they are seven different answers to seven
 different questions:
 
 ```mermaid
+%% caption: where each of the seven marks sits on the write, store and read path — three guard what enters, two what the store can say about it, and two what comes back
 flowchart TD
     EV["Evidence<br/>messages, files, tool output"] --> WR{"Write path"}
     WR --> ST[("Store")]

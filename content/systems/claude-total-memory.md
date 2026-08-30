@@ -96,6 +96,7 @@ an answer at all, retrieve negatively against an inverted query, score the
 conflict, and let a hard contradiction override the answer.
 
 ```mermaid
+%% caption: the filter re-appends whatever it stripped rather than losing it, and the answer path retrieves a second time for contradicting facts and scores every pair, emitting IDK rather than hedging above a threshold
 flowchart TD
     T["tool output"] --> CF{"content filter, safety=strict"}
     CF --> W["stash URLs, abs paths, ~/paths,<br/>inline code, fences"]

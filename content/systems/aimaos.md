@@ -97,6 +97,7 @@ from the beliefs that pointed at it, which is the thing a store keyed on
 cross-references has to remember to do.
 
 ```mermaid
+%% caption: a nightly pass merges a new claim into an existing belief by id, template or vector match, then decides corroboration or supersession on whether salient tokens conflict — and the superseded wording is stored where nothing reads it
 flowchart TD
     T["Thought or turn"] --> RAW[("memory.json<br/>raw chunks, decay-exempt")]
     RAW --> N["Nightly review"]

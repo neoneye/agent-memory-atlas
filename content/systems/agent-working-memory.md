@@ -86,6 +86,7 @@ Active engrams accumulate Hebbian associations, decay, and can be superseded by
 concept match or retracted as wrong.
 
 ```mermaid
+%% caption: salience decides whether a write reaches the active set or waits in staging for resonance, and a retraction propagates a cohesion penalty across the two-hop neighbourhood
 flowchart TD
     W["memory_write"] --> SAL{"salience threshold"}
     SAL -->|below| ST["staging buffer"]

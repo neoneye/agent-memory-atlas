@@ -99,6 +99,7 @@ rather than gone, and it is the one that requires an external model to be
 configured before it will run at all.
 
 ```mermaid
+%% caption: a contradiction erodes confidence toward a floor rather than removing the memory, and invalidation is an opt-in flag that drops it from both retrieval legs with no notice at query time
 stateDiagram-v2
     [*] --> Indexed: file written or observer extracts
     Indexed --> Retrievable: embed daemon syncs vector

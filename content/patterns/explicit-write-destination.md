@@ -29,6 +29,7 @@ Reads may fan out according to access policy and merge with locality or preceden
 Agent tools should make the target visible in their arguments. Defaults are acceptable only when they are safe, obvious, and surfaced to the user; shared writes often deserve confirmation.
 
 ```mermaid
+%% caption: reads merge several scopes and label each result; a write with no resolved destination is rejected rather than defaulted, and a shared one is confirmed
 flowchart TD
     Q["read"] --> RS["read_scopes:<br/>private + project<br/>+ org"]
     RS --> Merge["merge by locality<br/>/ precedence"]

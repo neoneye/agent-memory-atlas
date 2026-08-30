@@ -162,7 +162,8 @@ CREATE INDEX memory_recent ON memory (tenant_id, project_id, created_at DESC);</
 <code>hash(scope, model, body)</code>, never <code>hash(body)</code> —
 or two tenants share a vector and a deletion in one leaks into the
 other.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — scope is resolved and authorized before ranking rather than filtered after it, and background jobs inherit the same scope — a consolidation that spans two has already crossed the boundary</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: scope is resolved and authorized before ranking rather than filtered after it, and background jobs inherit the same scope — a consolidation that spans two has already crossed the boundary
+flowchart TD
     Req[&quot;request&quot;] --&gt; Res[&quot;resolve current scope&quot;]
     Res --&gt; Auth{&quot;scope authorized?&quot;}
     Auth -- &quot;no&quot; --&gt; Deny[&quot;deny — before ranking,&lt;br/&gt;not after&quot;]

@@ -81,6 +81,7 @@ The four core axioms, in the SOP's own priority order:
 - `agent_loop.py`, `llmcore.py` — the ~100-line loop and model layer.
 
 ```mermaid
+%% caption: only a succeeded tool call may become memory, four tiers feed one always-injected insight file, and what may be written is governed by prose SOPs rather than by code
 flowchart TD
   Tools["Tool calls (shell,<br/>file_read, code<br/>run)"] --> Gate{"succeeded?"}
   Gate -->|no| Drop["not memory"]

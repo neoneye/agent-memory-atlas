@@ -58,6 +58,7 @@ Where possible, have the gate produce the parameters the guarded step needs, so
 one call does two jobs.
 
 ```mermaid
+%% caption: a cheap gate decides whether the expensive operation runs, logs its reason when it skips, and fails open to running the work when the gate itself errors
 flowchart TD
     T["Turn"] --> G{"cheap gate"}
     G -- "no · reason logged" --> Skip["skip: answer without it"]

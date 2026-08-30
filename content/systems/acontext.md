@@ -109,6 +109,7 @@ belief.
 ## 3. Architecture
 
 ```mermaid
+%% caption: sessions and messages land in Postgres synchronously while skill distillation runs through two queue hops onto disk, so a skill is readable only after both complete
 flowchart LR
     AG["agent (Claude Code,<br/>OpenClaw, SDK)"] --> API["FastAPI server"]
     API --> PG[("Postgres<br/>sessions, messages,<br/>tasks, agent_skills")]

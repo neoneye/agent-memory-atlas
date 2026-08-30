@@ -71,6 +71,7 @@ when its content became true. Failed decisions are not just stored — they are
 revisited when the user goes idle.
 
 ```mermaid
+%% caption: a mutating tool is blocked without a briefing and an HMAC-signed preflight token, versions carry transaction time beside valid time, and an idle-triggered review declines to persist a verdict it has too little evidence for
 flowchart TD
     T["agent calls a mutating tool"] --> MW{"CovenantMiddleware"}
     MW -->|"no briefing"| B1["blocked: COMMUNE first"]

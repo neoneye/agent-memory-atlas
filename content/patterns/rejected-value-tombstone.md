@@ -83,6 +83,7 @@ scope + subject + predicate + normalized value
 The tombstone records why, when, and by whom the value was rejected, plus the claim or evidence that triggered the decision. Normal retrieval suppresses it. Every automated write checks it before activation.
 
 ```mermaid
+%% caption: the tombstone is keyed on the normalized value and consulted before dedupe, so a rejected value is blocked at the next extraction rather than re-asserted
 flowchart TD
     A["Candidate value"] --> B["Normalize key and value"]
     B --> C{"Rejected tombstone exists?"}

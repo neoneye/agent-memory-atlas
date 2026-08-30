@@ -3712,6 +3712,7 @@ indexing create copies of it that no longer look like it, and a correction is
 only finished when it has reached every one of them.
 
 ```mermaid
+%% caption: the nine-phase lifecycle, with correction and forgetting drawn back to the derived copies and to the evidence — the two arrows most often missing
 flowchart TD
     EV["Evidence<br/>transcripts, files, tool output"]
     EV --> CAP["Capture"]
@@ -4462,6 +4463,7 @@ passing mention in prose is not a dependency — pgvector backs 27 systems, Chro
 gives 33, 21, 19, 10 and 8.
 
 ```mermaid
+%% caption: one delete, five storage engines: the row stops being returned in all of them, and whether the bytes are gone depends on a vacuum, an optimize or a prune
 flowchart TD
     A["User: forget that"] --> B["Memory system delete<br/>row, edge, chunk"]
     B --> C{"Storage engine"}

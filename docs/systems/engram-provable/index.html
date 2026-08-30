@@ -194,7 +194,8 @@ policy and can hold the write in <code>quarantine</code> — a binding
 excluded from every recall query — until an admin releases or rejects
 it. Everything that changes a memory appends a row to the chained
 mutation log.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — provenance and an explicit untrusted flag route a write into quarantine with its reason, where an admin releases it — recomputing the binding — or rejects it, and every admitted row carries when it happened beside when it was stored</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: provenance and an explicit untrusted flag route a write into quarantine with its reason, where an admin releases it — recomputing the binding — or rejects it, and every admitted row carries when it happened beside when it was stored
+flowchart TD
     W[&quot;write: content + provenance + binding&quot;] --&gt; C{&quot;binding == canon?&quot;}
     C --&gt;|&quot;yes — operator-curated&quot;| ADMIT[&quot;admitted&quot;]
     C --&gt;|no| FW{&quot;ShouldQuarantine(provenance, explicit)&quot;}

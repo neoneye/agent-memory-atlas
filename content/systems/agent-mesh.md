@@ -153,6 +153,7 @@ clear derived SQLite rows before reprojection. `body_fidelity` admits the value
 would describe.
 
 ```mermaid
+%% caption: the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults
 stateDiagram-v2
     [*] --> Proposed: "decision_proposed — verification, checks and globs from arguments; assumptions, evidence and review_policy hardcoded empty"
     Proposed --> Accepted: "decision_accepted, ordinary tier — the quorum check passes on an empty review_policy"

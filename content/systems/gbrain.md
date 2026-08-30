@@ -88,6 +88,7 @@ profiles. Retrieval synthesises across pages, people and companies and states it
 own gaps.
 
 ```mermaid
+%% caption: a page yielding no gradeable claims writes a rejected tombstone with an idempotency tuple, so the next cycle is a cache hit instead of a repeated model call; predictions are graded into a per-holder calibration profile
 flowchart TD
     P["page write"] --> G["entity refs → typed edges, no LLM"]
     P --> PT["propose_takes phase"]

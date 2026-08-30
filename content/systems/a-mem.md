@@ -77,6 +77,7 @@ learning, factual verification, decay, or model-weight adaptation.
 ## 3. Architecture
 
 ```mermaid
+%% caption: a write pulls the nearest existing notes and lets a controller model rewrite their links, tags and context — the store is mutated by retrieval rather than only appended to
 flowchart TD
   Caller["Python caller"] --> AMS["AgenticMemorySystem"]
   AMS --> Dict["In-process MemoryNote dictionary"]

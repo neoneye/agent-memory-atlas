@@ -76,6 +76,7 @@ Durable learnings are promoted out of them into markdown, by an explicit,
 gated, audited process.
 
 ```mermaid
+%% caption: a summary version of -1 is a permanent failure that is never retried, and the audit's retirement runs in a fixed order — remove, merge, then cluster on the post-removal set — with a glob confirming each retired file is gone before the row is marked done
 flowchart TD
     S["session"] --> IMP["import_conversations — branches in SQLite + FTS5"]
     IMP --> SUM["compute_context_summary"]

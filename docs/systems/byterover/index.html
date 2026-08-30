@@ -207,7 +207,8 @@ documents parsed into <code>ContextData</code>:</p>
   rawConcept: { author, flow, task, timestamp, changes[], files[], patterns }
 }</code></pre>
 <p>Curation lifecycle — the part worth studying:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a curation write is compared against the parsed existing file first, and detected structural loss is repaired by union merge rather than reported</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a curation write is compared against the parsed existing file first, and detected structural loss is repaired by union merge rather than reported
+flowchart TB
     P[&quot;agent proposes curated content&lt;br/&gt;for an existing knowledge file&quot;] --&gt; PAR[&quot;parse existing file&lt;br/&gt;ContextData(existing)&quot;]
     PAR --&gt; DET[&quot;detectStructuralLoss(existing, proposed)&lt;br/&gt;&lt;i&gt;counts lostSnippets, lostRelations,&lt;br/&gt;lostNarrativeFields, lostRawConceptFields,&lt;br/&gt;lostArrayItems&lt;/i&gt;&quot;]
     DET --&gt; IMP[&quot;deriveImpactFromLoss(loss)&lt;br/&gt;high or low&quot;]
@@ -224,7 +225,8 @@ repairing rather than refusing. Most systems here take a proposed
 rewrite on trust; this one counts the losses by category and merges the
 pieces back.</p>
 <p>Memory write lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an LLM deduplicator decides CREATE, MERGE or SKIP for every draft except decisions, which always create because the decision log is immutable</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an LLM deduplicator decides CREATE, MERGE or SKIP for every draft except decisions, which always create because the decision log is immutable
+flowchart TB
     E[&quot;agent extracts DraftMemory[]&lt;br/&gt;&lt;i&gt;content, category, tags&lt;/i&gt;&quot;] --&gt; D[&quot;MemoryDeduplicator.deduplicate(drafts, existing)&lt;br/&gt;&lt;i&gt;LLM, concurrency 4&lt;/i&gt;&quot;]
     D --&gt; CAT{&quot;category == DECISIONS?&quot;}
     CAT --&gt;|yes| CRE[&quot;always CREATE&lt;br/&gt;&lt;i&gt;an immutable log&lt;/i&gt;&quot;]
@@ -260,7 +262,8 @@ helpers.</li>
 the <code>ContextData</code> / <code>Narrative</code> /
 <code>RawConcept</code> shapes.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the two write paths side by side — drafts through the deduplicator, curated content through structural-loss detection and repair</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the two write paths side by side — drafts through the deduplicator, curated content through structural-loss detection and repair
+flowchart TD
   Agent[&quot;Coding&lt;br/&gt;agent&quot;] --&gt; Drafts[&quot;DraftMemory[]&quot;]
   Drafts --&gt; Dedup[&quot;MemoryDeduplicator&lt;br/&gt;(LLM)&quot;]
   Dedup --&gt;|CREATE / MERGE / SKIP| Store[&quot;.byterover/cipher/memories&quot;]

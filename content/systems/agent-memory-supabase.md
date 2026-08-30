@@ -79,6 +79,7 @@ There is no trust state. `importance` is 1–10 and feeds ranking; `active` is a
 soft-delete flag. Nothing withholds a row from being treated as true.
 
 ```mermaid
+%% caption: three lanes fused by RRF then multiplied by recency, importance and usage — with corrections and preferences exempt — and two clocks on the row, record time apart from when the fact was true
 flowchart TB
     Q["Query"] --> V["Vector lane<br/>HNSW top 50"]
     Q --> T["Text lane<br/>tsvector top 30<br/>floored at min_similarity"]

@@ -130,6 +130,7 @@ Subpackage sizes, in lines of Python:
   `management/` (1,451), `write_pipeline/` (666).
 
 ```mermaid
+%% caption: the JSONL session log is the authority and the index is a rebuildable projection; grounding floors a bead's class, recall can raise it but never past that ceiling, and a rejected candidate is excluded from truth while being retained for audit
 flowchart TD
   Turn["turn / connector<br/>ingest"] --> WP["write pipeline"]
   WP --> G{"grounding\nby<br/>type or connector"}

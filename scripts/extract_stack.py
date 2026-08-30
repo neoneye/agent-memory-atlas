@@ -127,7 +127,12 @@ CLAUSE_SPLIT = re.compile(r"[;,.]|—|\s-\s")
 
 #: Reports whose stack was seeded from prose rather than confirmed against the
 #: tree. Lower it as reports are reviewed; --check fails if it rises.
-SEEDED_CEILING = 238
+#:
+#: **Tighten this whenever the live count falls below it.** It sat at 238 while
+#: the live count was 217, so twenty-one rows could silently revert to `seeded`
+#: without failing anything — a ratchet with slack in it is a ratchet for the
+#: twenty-one it does not cover. Set on 2026-08-30 to the live count.
+SEEDED_CEILING = 217
 
 
 def affirmative(text: str) -> str:

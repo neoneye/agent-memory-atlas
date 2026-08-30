@@ -25,6 +25,7 @@ the system keeps seeing them.
 Separate lifecycle strength from truth and relevance:
 
 ```mermaid
+%% caption: three quantities kept apart — epistemic confidence, retrieval strength and retention policy — with time and use moving only the second
 flowchart LR
     A["Memory + evidence"] --> B["Epistemic confidence / trust"]
     A --> C["Retrieval strength"]

@@ -112,6 +112,7 @@ About 11,000 lines under `reverie/backend_server/`:
 - `persona/prompt_template/run_gpt_prompt.py` (2,930) — every prompt, including poignancy scoring.
 
 ```mermaid
+%% caption: an LLM-scored poignancy both weights retrieval and draws down a trigger that fires reflection, so the stream decides when to think about itself
 flowchart TD
   World["Simulated world"] --> Perceive["perceive"]
   Perceive --> Poig["LLM poignancy 1-10"]

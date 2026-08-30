@@ -68,6 +68,7 @@ A memory is a `MemoryContent`: a payload (`str`, `bytes`, `dict` or `Image`), a
 it is deliberately closer to "a piece of content" than to "a belief".
 
 ```mermaid
+%% caption: the whole memory contract: add, query, update_context and clear — with `clear()` as the only removal, which empties the store
 flowchart TB
     A["application, or a sample's learning loop"] -->|"add(MemoryContent)"| S[("memory store")]
     S -->|"query(q)"| R["MemoryQueryResult"]
@@ -106,6 +107,7 @@ surface is small and deliberately so:
 - `autogen-ext/.../memory/` — `chromadb`, `redis`, `mem0`, `canvas`.
 
 ```mermaid
+%% caption: five stores behind one abstract base, all sharing the same removal semantics: there is no delete for one memory, only emptying the whole store
 flowchart TB
     APP[Application] -->|add| M[Memory ABC]
     M --> L[ListMemory<br/>in-process list]

@@ -99,6 +99,7 @@ A page's standing is four independent axes that a machine may lower and only a
 judgement may raise. The evidence ladder is the one this atlas cares about.
 
 ```mermaid
+%% caption: the epistemic ladder from signal to validated, with supersession retaining the relationship and its reason, and deterministic checks that can only emit a candidate — nothing is promoted because a check passed
 stateDiagram-v2
     [*] --> signal: intake from a source
     signal --> single_source: one source supports it

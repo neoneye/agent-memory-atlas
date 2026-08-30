@@ -172,7 +172,8 @@ cannot address, and treats scope as an adapter's business.</p>
 <code>Image</code>), a <code>MemoryMimeType</code>, and an optional
 <code>metadata</code> dict. That is the whole schema, and it is
 deliberately closer to "a piece of content" than to "a belief".</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the whole memory contract: add, query, update_context and clear — with `clear()` as the only removal, which empties the store</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the whole memory contract: add, query, update_context and clear — with `clear()` as the only removal, which empties the store
+flowchart TB
     A[&quot;application, or a sample&#39;s learning loop&quot;] --&gt;|&quot;add(MemoryContent)&quot;| S[(&quot;memory store&quot;)]
     S --&gt;|&quot;query(q)&quot;| R[&quot;MemoryQueryResult&quot;]
     S --&gt;|&quot;update_context(model_context)&quot;| P[&quot;the memory writes itself&lt;br/&gt;into the prompt&quot;]
@@ -210,7 +211,8 @@ the <code>Memory</code> ABC with <code>update_context</code>,
 <li><code>autogen-ext/.../memory/</code> — <code>chromadb</code>,
 <code>redis</code>, <code>mem0</code>, <code>canvas</code>.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — five stores behind one abstract base, all sharing the same removal semantics: there is no delete for one memory, only emptying the whole store</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: five stores behind one abstract base, all sharing the same removal semantics: there is no delete for one memory, only emptying the whole store
+flowchart TB
     APP[Application] --&gt;|add| M[Memory ABC]
     M --&gt; L[ListMemory&lt;br/&gt;in-process list]
     M --&gt; C[(ChromaDB)]

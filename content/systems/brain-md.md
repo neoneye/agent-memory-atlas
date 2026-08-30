@@ -89,6 +89,7 @@ audit and knowledge whose audit is the version-control system.
 was overturned, then reindexes. Nothing is deleted.
 
 ```mermaid
+%% caption: the CLI is the only write path; updating truth rewrites the compiled page and appends to a timeline that is deliberately exempt from link linting because its provenance may be obsolete
 flowchart TD
     A["Agent, via brain-page skill"] --> CLI["brain CLI — the only write path"]
     CLI --> UT["update-truth"]

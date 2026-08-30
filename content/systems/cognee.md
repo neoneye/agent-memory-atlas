@@ -83,6 +83,7 @@ pipelines.
 ## 3. Architecture
 
 ```mermaid
+%% caption: one add fans into relational records, a graph, vectors and summaries through the cognify pipeline, and every retriever reads the derived stores rather than the source
 flowchart TD
   Sources["Text, files, URLs,<br/>tables, media"] --> Add["add / remember"]
   Add --> Raw["Relational records +<br/>source files"]

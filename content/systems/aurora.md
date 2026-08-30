@@ -88,6 +88,7 @@ subgoals, the decomposition is verified, subgoals are routed to agents, results
 collected and synthesised, and the outcome recorded back.
 
 ```mermaid
+%% caption: the nine-step loop, with verification offering self and adversarial templates and the groundedness options the documentation describes absent from the signature
 flowchart TD
     Q["query"] --> A["1 Assess — complexity"]
     A --> R["2 Retrieve — activation-weighted chunks"]

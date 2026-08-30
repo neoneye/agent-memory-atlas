@@ -45,6 +45,7 @@ Governance   forget(scope | id) -> result               # <-- usually missing
 ```
 
 ```mermaid
+%% caption: the interface is where deletion is lost — a host with no delete hook stops the request at the boundary, and a mirrored write with no reconciliation leaves two stores disagreeing
 flowchart TD
     User["User: forget me"] --> Host["Host runtime"]
     Host --> Built["Built-in memory"]

@@ -68,6 +68,7 @@ authoritative record; the markdown vault is the derived, human-readable layer" â
 and can be read in Obsidian or grepped.
 
 ```mermaid
+%% caption: fourteen content-aware summarizers by output type, an adaptive compressor that thins an observation by age unless it is pinned, and a success fingerprint diffed when errors reappear
 flowchart TD
     T["tool call output"] --> NF["noise-filter"]
     NF --> IC["importance-classifier"]

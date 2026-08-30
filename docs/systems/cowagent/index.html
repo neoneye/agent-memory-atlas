@@ -136,7 +136,8 @@ pass, over a self-healing chunk index with hybrid search.</p>
 <code>chatgpt-on-wechat</code>), with a ~5,300-line memory subsystem
 under <code>agent/memory/</code>. Its design is the clearest
 <strong>time-boxed distillation pipeline</strong> in the atlas:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the three tiers, ending in a long-term file held to about thirty entries</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the three tiers, ending in a long-term file held to about thirty entries
+flowchart LR
     ST[&quot;conversation context&lt;br/&gt;&lt;i&gt;short-term&lt;/i&gt;&quot;] --&gt; MID[(&quot;memory/YYYY-MM-DD.md&lt;br/&gt;&lt;i&gt;daily, mid-term&lt;/i&gt;&quot;)]
     MID --&gt; LT[(&quot;MEMORY.md&lt;br/&gt;&lt;i&gt;long-term, about 30 entries&lt;/i&gt;&quot;)]</code></pre></details></figure>
 <p>Two things distinguish it from the other file-backed systems
@@ -190,7 +191,8 @@ them.</p>
 means chunks point back into the source Markdown at line granularity —
 the retrieval layer can always show where a result came from.</p>
 <p>Lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — distillation overwrites `MEMORY.md` in place to hold it near thirty entries, so the dream diary is the only record of what the consolidation decided</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: distillation overwrites `MEMORY.md` in place to hold it near thirty entries, so the dream diary is the only record of what the consolidation decided
+flowchart TB
     subgraph S1[&quot;Stage 1 — conversation to daily memory&quot;]
         TR[&quot;triggers: context trimming on turn or token limit,&lt;br/&gt;a 23:55 schedule, an API-overflow emergency save&quot;]
         TR --&gt; SUM[&quot;LLM summarizes into key events&quot;]
@@ -233,7 +235,8 @@ Dream distillation.</li>
 <code>context.mdx</code>, <code>deep-dream.mdx</code>,
 <code>self-evolution.mdx</code>.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same two-stage consolidation beside the retrieval path that chunks and indexes the memory files themselves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same two-stage consolidation beside the retrieval path that chunks and indexes the memory files themselves
+flowchart TD
   Conv[&quot;Conversation&quot;] --&gt; Trim[&quot;context trimming / 23:55 cron / overflow&quot;]
   Trim --&gt; Daily[&quot;memory/YYYY-MM-DD.md&quot;]
   Daily --&gt; Dream[&quot;Deep Dream distillation&quot;]

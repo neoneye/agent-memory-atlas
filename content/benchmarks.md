@@ -2247,6 +2247,7 @@ only one — SimpleMem — even records that a share happened, in a log its own 
 path never consults.
 
 ```mermaid
+%% caption: a deleted memory's copies are peers, not descendants — share, export, publish and snapshot each put the content somewhere the original's deletion cannot reach, and a restore puts it back
 flowchart LR
     Orig["source memory<br/>DELETED ✓"]
     Orig -- "share() before deletion" --> C1["copy in another scope<br/>NEW uuid · same content<br/>no back-reference"]
@@ -2261,6 +2262,7 @@ flowchart LR
 ```
 
 ```mermaid
+%% caption: the derived artifacts a deletion leaves behind — summary, profile, graph edge, embedding, backup — each still carrying the deleted memory into a prompt
 flowchart LR
     Raw["source memory<br/>DELETED ✓"]
     Raw -. "derived earlier" .-> Sum["session summary<br/>still contains it"]

@@ -69,6 +69,7 @@ The central distinction is between captured evidence and synthesized memory:
 Typical lifecycle:
 
 ```mermaid
+%% caption: observations and explicit facts land in separate shapes, are consolidated into three layers, and are retrieved through BM25, vector and graph arms fused by RRF then expanded by id
 flowchart TB
     H["agent hook"] -->|"mem::observe"| RO["raw observation + indexes"]
     RO -.->|optional| CMP["compression"]
@@ -101,6 +102,7 @@ adapts its state functions into a scoped key-value interface; higher-level
 modules build retrieval and lifecycle behavior on top.
 
 ```mermaid
+%% caption: hooks and tools reach the same SQLite state, which fans out into whichever of the three indexes are enabled — the vector and graph arms are optional and the BM25 one is not
 flowchart TD
   Hooks["Agent hooks"] --> Observe["mem::observe"]
   Tools["MCP / API / CLI"] --> Functions["Registered memory functions"]

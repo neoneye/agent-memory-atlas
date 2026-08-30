@@ -35,6 +35,7 @@ retrieval: embed the task -> search descriptions -> return procedures
 ```
 
 ```mermaid
+%% caption: nothing enters the skill library until an outcome verifies it; a failed attempt is critiqued and retried, and the store stays empty
 flowchart TD
     T["Task"] --> Gen["Agent writes procedure"]
     Lib["Skill library"] --> Gen

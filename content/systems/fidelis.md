@@ -74,6 +74,7 @@ passages** are handed to whatever LLM the agent already uses. Fidelis never
 rewrites them.
 
 ```mermaid
+%% caption: a write that cannot reach its backend lands in a dead-letter queue for replay rather than being lost, and the scaffold hands the model an exact refusal string to use when retrieval does not contain the answer
 flowchart TD
     N["~/notes markdown, Claude sessions"] --> W["fidelis watch — auto-ingest"]
     W --> WR{"write succeeds?"}

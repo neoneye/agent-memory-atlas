@@ -108,6 +108,7 @@ a trust level, and it is cleaner than a relevance score because a reader can
 predict exactly what the agent will see.
 
 ```mermaid
+%% caption: a human correction becomes a rule that can block a plan, and its own precision — measured from whether the agent honoured it — is what demotes it back to advisory
 flowchart TD
     H["human says 'no, not like that'"] --> DET["CLI correction-detector"]
     DET --> REC[("CorrectionRecord<br/>rule, severity, failure_class<br/>kind, authoritative")]

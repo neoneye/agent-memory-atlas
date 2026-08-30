@@ -38,6 +38,7 @@ the path that must not fail".
 Write a deterministic event envelope first:
 
 ```mermaid
+%% caption: the durable scoped event and its lexical index are written without a model in the loop, so raw recall works whether or not the optional async extraction ever runs
 flowchart TD
     A["Hook, message,<br/>tool result"] --> B["Validate + redact"]
     B --> C["Durable scoped event"]

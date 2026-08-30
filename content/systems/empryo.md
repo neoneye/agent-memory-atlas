@@ -141,6 +141,7 @@ than several systems here manage. What it is not is a rejection: nothing records
 when the same content returns.
 
 ```mermaid
+%% caption: hiding is archival rather than rejection: a soft-delete is cleared by saving the same text again, and nothing anywhere records that a value was wrong
 stateDiagram-v2
     [*] --> Live: an agent tool call saves a summary, details, topics and file paths
     Live --> Live: the same content hash arrives again, topics merge

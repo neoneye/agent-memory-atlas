@@ -173,7 +173,8 @@ architecture decision, bug, or workflow.</li>
 profiles: additional projections over the same activity.</li>
 </ul>
 <p>Typical lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — observations and explicit facts land in separate shapes, are consolidated into three layers, and are retrieved through BM25, vector and graph arms fused by RRF then expanded by id</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: observations and explicit facts land in separate shapes, are consolidated into three layers, and are retrieved through BM25, vector and graph arms fused by RRF then expanded by id
+flowchart TB
     H[&quot;agent hook&quot;] --&gt;|&quot;mem::observe&quot;| RO[&quot;raw observation + indexes&quot;]
     RO -.-&gt;|optional| CMP[&quot;compression&quot;]
     F[&quot;explicit fact&quot;] --&gt;|&quot;mem::remember&quot;| VM[&quot;versioned memory + indexes&quot;]
@@ -199,7 +200,8 @@ observation rather than calling an LLM for every event.</p>
 <code>StateKV</code> adapts its state functions into a scoped key-value
 interface; higher-level modules build retrieval and lifecycle behavior
 on top.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — hooks and tools reach the same SQLite state, which fans out into whichever of the three indexes are enabled — the vector and graph arms are optional and the BM25 one is not</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: hooks and tools reach the same SQLite state, which fans out into whichever of the three indexes are enabled — the vector and graph arms are optional and the BM25 one is not
+flowchart TD
   Hooks[&quot;Agent hooks&quot;] --&gt; Observe[&quot;mem::observe&quot;]
   Tools[&quot;MCP / API / CLI&quot;] --&gt; Functions[&quot;Registered memory functions&quot;]
   Observe --&gt; State[&quot;iii StateModule / SQLite&quot;]

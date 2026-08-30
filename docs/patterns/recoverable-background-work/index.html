@@ -134,7 +134,8 @@ job state is ephemeral, the session appears remembered while its durable
 memory is incomplete.</p>
 <h2 id="the-pattern">The pattern</h2>
 <p>Persist work before acknowledging it:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the input is durable before the job runs and the output and checkpoint land atomically, so a failure retains the input for a bounded retry rather than losing it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the input is durable before the job runs and the output and checkpoint land atomically, so a failure retains the input for a bounded retry rather than losing it
+flowchart TD
     A[&quot;Capture input&quot;] --&gt; B[&quot;Durable inbox / event&quot;]
     B --&gt; C[&quot;Idempotent job&quot;]
     C --&gt; D{&quot;Processing succeeds?&quot;}

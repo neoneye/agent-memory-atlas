@@ -87,6 +87,7 @@ the unit is large and individually addressable, and it is described under
 *Why it works* below because its cost curve differs from the other two.
 
 ```mermaid
+%% caption: stable memory is rendered once into the system prompt and turn-varying material is appended to the user turn, so a mid-session write persists to disk without invalidating the prefix cache
 flowchart TD
     A["session start"] --> B["render stable memory<br/>into system prompt"]
     B --> C["prefix cached"]

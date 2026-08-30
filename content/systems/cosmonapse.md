@@ -79,6 +79,7 @@ the corpus it is the mirror image of [RainBox](../rainbox/) or
 happens when the store is overloaded.
 
 ```mermaid
+%% caption: every write journals its own inverse so a failed workflow can be compensated LIFO — and the journal is a dict on the instance, so a worker that dies makes provisional writes permanent
 flowchart TB
     N["Neuron"] -->|recall| CS{"can_serve(query)?"}
     CS -->|false| Skip["hosting Dendrite<br/>skips responding"]

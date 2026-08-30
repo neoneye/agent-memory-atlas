@@ -98,6 +98,7 @@ background.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: a ranked provenance guard refuses a lower-ranked write over a higher-ranked memory, and contradiction resolution supersedes the loser — keyed on the record, so a ranked path can re-admit the same value
 flowchart TD
     W["write path assigns source<br/>user_stated 3, consolidated 2,<br/>model_inferred 1, legacy 0"] --> G{"provenance_guard:<br/>actor rank >= target rank?"}
     G -- "no" --> REJ["write refused"]

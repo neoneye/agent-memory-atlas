@@ -20,6 +20,7 @@ Memory systems often grow several write paths. One creates evidence, another che
 Expose narrow adapters but converge on one governed command:
 
 ```mermaid
+%% caption: every writer — command, tool, review UI, background extractor — reaches the store through one gateway that applies actor, scope and trust policy before an atomic write
 flowchart TD
     A["User command"] --> G["Governed write gateway"]
     B["Agent tool"] --> G

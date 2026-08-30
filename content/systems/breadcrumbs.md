@@ -194,6 +194,7 @@ record, the engine's semantic store on the value. Section 5 is where that split
 is worth arguing about.
 
 ```mermaid
+%% caption: supersession corrects the row and the boot matcher never reads the field, so the forbidden-check either reports a superseded entry winning a prompt slot or reports itself unexercised — beside the semantic tier, where a tombstoned value raises rather than being re-asserted
 flowchart TB
     W["a session appends a line to CONCLUSIONS.jsonl"] --> S{"who vouched for it"}
     S -->|"nobody but the author"| A["asserted"]

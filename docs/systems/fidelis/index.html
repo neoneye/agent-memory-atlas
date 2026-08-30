@@ -177,7 +177,8 @@ unchanged. The interesting engineering is in what happens when it breaks
 and dense retrieval fused with reciprocal rank fusion, and the winning
 <strong>original passages</strong> are handed to whatever LLM the agent
 already uses. Fidelis never rewrites them.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write that cannot reach its backend lands in a dead-letter queue for replay rather than being lost, and the scaffold hands the model an exact refusal string to use when retrieval does not contain the answer</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write that cannot reach its backend lands in a dead-letter queue for replay rather than being lost, and the scaffold hands the model an exact refusal string to use when retrieval does not contain the answer
+flowchart TD
     N[&quot;~/notes markdown, Claude sessions&quot;] --&gt; W[&quot;fidelis watch — auto-ingest&quot;]
     W --&gt; WR{&quot;write succeeds?&quot;}
     WR --&gt;|&quot;Ollama or mem0 unreachable&quot;| DQ[&quot;JSONL dead-letter queue&lt;br/&gt;~/.cogito/queue, MAX_ATTEMPTS = 5&quot;]

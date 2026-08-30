@@ -86,6 +86,7 @@ improves, the source is still there to re-derive from. That is a property the
 CORE gets by keeping both.
 
 ```mermaid
+%% caption: aspect classification decides whether a statement is decomposed into triples or kept whole, and a contradiction stamps `invalidAt` on the old row rather than removing it, so the read filter and a history query see different things
 flowchart TD
     E["Episode — original content kept as source of truth"] --> X["extract statements"]
     X --> A{"aspect classification, 12 values"}

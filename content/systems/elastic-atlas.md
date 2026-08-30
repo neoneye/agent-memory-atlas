@@ -78,6 +78,7 @@ material rather than over anything a person actually said.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: one consolidation pass turns episodic events into deduped semantic facts and updated procedural playbooks, and recall is RRF over BM25 and semantic filtered by user
 flowchart TB
     T["turn"] --> EP[("episodic event — <i>what happened</i><br/>atlas_memory_episodic")]
     EP -->|"consolidation: one model pass"| SE[("semantic fact — <i>what's true</i><br/>atlas_memory_semantic, deduped")]

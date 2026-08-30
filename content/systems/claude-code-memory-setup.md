@@ -97,6 +97,7 @@ cannot lose information to a bad extractor — and the cost is that the vault gr
 with every session and nothing ever prunes it.
 
 ```mermaid
+%% caption: an exported chat is tagged from a fixed keyword map and wikilinked against existing vault note names, first occurrence only and never inside a code fence, then written into the vault
 flowchart TD
     E["exported chat .md"] --> S["strip existing frontmatter"]
     S --> O["detect origin: code | web"]

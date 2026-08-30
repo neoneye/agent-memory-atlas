@@ -77,6 +77,7 @@ specific shape.
 The state machine, as implemented:
 
 ```mermaid
+%% caption: the schema declares rejected and superseded and the write path only ever produces `unreviewed` and `active`, so the two states that would express a correction are unreachable
 flowchart TB
     A["ecc memory add<br/>memory_save"] --> W["write id.md into<br/>the scope's vault root"]
     W --> T["trust = unreviewed<br/><i>the only permitted value</i>"]
@@ -114,6 +115,7 @@ vault itself is about 1,100 lines:
 - `hooks/memory-persistence/` — lifecycle hooks.
 
 ```mermaid
+%% caption: three write surfaces converge on one validating formatter, three scope roots hold the files, and search filters to active across all of them
 flowchart TB
     CLI[ecc memory CLI] --> V[memory-vault]
     MCP[memory_save MCP tool] --> V

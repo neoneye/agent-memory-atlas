@@ -203,6 +203,7 @@ field lesson behind it is written down in the project's own chronicle:
 graphs, relative mechanisms do."*
 
 ```mermaid
+%% caption: trust moves on evidence and on people — a live conflicts-with edge demotes and its withdrawal lifts the demotion, a human pin turns decay off, and retrieval stamps last_seen without moving anything
 stateDiagram-v2
     [*] --> Unseen: created_at only, trust starts low
     Unseen --> Confirmed: a deliberate update or Confirm still true

@@ -81,6 +81,7 @@ The comments document the legacy migration explicitly — `valid_from = legacy.u
 Lifecycle:
 
 ```mermaid
+%% caption: one LLM call per cluster emits the lesson and the optional procedure together, links are restricted to ids already surfaced, and deprecation flips a status while retaining the row
 flowchart TB
     S["session"] --> CL["consolidator clusters<br/>related material"]
     CL --> ONE["ONE LLM call per cluster<br/>emits a lesson and, optionally, a procedure"]
@@ -110,6 +111,7 @@ consolidator next.
 - `notes-renderer.ts`, `profile-renderer.ts`, `memory-context-provider.ts`.
 
 ```mermaid
+%% caption: the write and read halves meeting at the store, with reflection on a separate prompt slot so votes accumulate without disturbing the KV cache
 flowchart TD
   Sess["Session"] --> Cons["consolidator: cluster"]
   Cons -->|"1 LLM call (inv. 21)"| Lesson["lesson"]

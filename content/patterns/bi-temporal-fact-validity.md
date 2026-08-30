@@ -41,6 +41,7 @@ When a new fact supersedes an old one:
 Do not silently hard-delete the older edge merely because it is no longer current.
 
 ```mermaid
+%% caption: a superseding fact closes the predecessor's validity at the event boundary instead of deleting it, so an as-of query resolves to a different row than a query about now
 flowchart TD
     Ev["source event"] --> F1["fact: lives<br/>in Berlin"]
     Ev2["later<br/>source<br/>event"] --> F2["fact: lives<br/>in Lisbon"]

@@ -99,6 +99,7 @@ by hand, that is a defensible trade rather than an oversight; the memory a perso
 edits is one they are looking at.
 
 ```mermaid
+%% caption: the whole lifecycle, and the thing it does not contain: what reaches the prompt is a filter and a sort over everything, never a match against the turn
 stateDiagram-v2
     [*] --> Stored: a person or a tool calls create with validated content
     Stored --> Stored: update rewrites in place and bumps updatedAt

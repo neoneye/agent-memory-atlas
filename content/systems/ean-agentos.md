@@ -101,6 +101,7 @@ Fifteen migrations sit on top, including `012_memory_branches.sql` —
 atlas has; whether it is wired to anything at this commit is in section 14.
 
 ```mermaid
+%% caption: four hooks write to one SQLite file, and an error lookup orders by whether the solution worked — so a failed fix is the second row in the same shape as the first, and the model has to read the flag
 flowchart TD
     H1["agent tool call hook"] --> DB[("SQLite")]
     H2["bash command hook"] --> DB

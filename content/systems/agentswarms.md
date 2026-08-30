@@ -133,6 +133,7 @@ deleted through the UI is one conversation away from being extracted again, and
 the system has no way to know it ever existed.
 
 ```mermaid
+%% caption: the row's lifecycle, with the same fact inserting a second row beside the first each week, and score, usage_count and expires_at sitting on it with nothing writing any of them
 stateDiagram-v2
     [*] --> Item: gpt-4o-mini extracts a turn, or the agent calls memory_remember
     Item --> Keyworded: a Postgres trigger derives the keyword array from the content

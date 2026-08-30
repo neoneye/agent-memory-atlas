@@ -104,6 +104,7 @@ Sessions produce logs; generators produce insights and case studies; protocols
 and workflows are themselves Markdown the agent reads.
 
 ```mermaid
+%% caption: Markdown on disk indexed into SQLite for hybrid retrieval, with auditors for staleness and coverage, and a boot context whose laws are code-enforced only where a Claude Code hook exists
 flowchart TD
     S["session"] --> E["/end loop — capture"]
     E --> MD["Markdown on disk: session log, insight, case study"]

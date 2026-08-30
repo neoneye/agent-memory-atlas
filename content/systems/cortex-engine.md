@@ -78,6 +78,7 @@ Contradicting one goes through adjudication first. Background "dreaming"
 consolidates in two phases.
 
 ```mermaid
+%% caption: the adjudicator's five verdicts have different costs — only a genuine contradiction penalises confidence, while supersession routes to a revision — and embedding happens before the transaction so a network call never holds the writer mutex
 flowchart TD
     O["observe(evidence)"] --> NEAR{"nearest existing memory"}
     NEAR -->|"temporal succession detected"| MSG["message: revise with believe(valid_from);<br/>TENSION signal tracks the pending revision"]

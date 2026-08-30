@@ -89,6 +89,7 @@ ContextData {
 Curation lifecycle — the part worth studying:
 
 ```mermaid
+%% caption: a curation write is compared against the parsed existing file first, and detected structural loss is repaired by union merge rather than reported
 flowchart TB
     P["agent proposes curated content<br/>for an existing knowledge file"] --> PAR["parse existing file<br/>ContextData(existing)"]
     PAR --> DET["detectStructuralLoss(existing, proposed)<br/><i>counts lostSnippets, lostRelations,<br/>lostNarrativeFields, lostRawConceptFields,<br/>lostArrayItems</i>"]
@@ -110,6 +111,7 @@ category and merges the pieces back.
 Memory write lifecycle:
 
 ```mermaid
+%% caption: an LLM deduplicator decides CREATE, MERGE or SKIP for every draft except decisions, which always create because the decision log is immutable
 flowchart TB
     E["agent extracts DraftMemory[]<br/><i>content, category, tags</i>"] --> D["MemoryDeduplicator.deduplicate(drafts, existing)<br/><i>LLM, concurrency 4</i>"]
     D --> CAT{"category == DECISIONS?"}
@@ -139,6 +141,7 @@ Memory-relevant modules are small and easy to trace:
 - `src/server/core/domain/knowledge/markdown-writer.ts` — the `ContextData` / `Narrative` / `RawConcept` shapes.
 
 ```mermaid
+%% caption: the two write paths side by side — drafts through the deduplicator, curated content through structural-loss detection and repair
 flowchart TD
   Agent["Coding<br/>agent"] --> Drafts["DraftMemory[]"]
   Drafts --> Dedup["MemoryDeduplicator<br/>(LLM)"]

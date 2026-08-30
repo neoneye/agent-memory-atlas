@@ -118,6 +118,7 @@ instruction file, which is a different lane. The hooks decide, and they decide b
 firing.
 
 ```mermaid
+%% caption: the hook parses the payload with no model involved, and resuming without a session id returns an empty list rather than falling back to the latest — the only delete is purging the whole project store
 flowchart TD
     T["tool call in any of 17 harnesses"] --> H["PostToolUse hook"]
     H --> E["extract.ts parses the payload<br/>no model involved"]

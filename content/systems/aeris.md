@@ -100,6 +100,7 @@ has no write path by construction: there is no API through which it could return
 state.
 
 ```mermaid
+%% caption: memories carry no text and decay to a retained forgotten row; the validator refuses any projection carrying engine identifiers, and no model client exists in the tree to receive one
 flowchart TD
     P["Perception → attention → working memory"] --> M[("MemoryStore<br/>keyed by entity, no text")]
     M --> D["Decay: EffectiveImportance < 0.05"]

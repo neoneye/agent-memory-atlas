@@ -91,6 +91,7 @@ stored and deduplicated separately, with a bootstrap path that populates them
 from session JSONLs.
 
 ```mermaid
+%% caption: the character cap only lints, the LLM deduplicator returns Add, Update, Delete or Noop against existing fragments, and surfacing is refused with a reason by a threshold, a session cap, a message gap and a cooldown
 flowchart TD
     E["entry written to a branch memory file"] --> L{"check_entry: over the character cap?"}
     L -->|yes| V["lint reports a violation — read-only"]

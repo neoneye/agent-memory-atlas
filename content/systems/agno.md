@@ -91,6 +91,7 @@ the only place in the corpus where supersession is decided by a judged
 comparison rather than by a key collision:
 
 ```mermaid
+%% caption: a judge verdict over a threshold supersedes rather than overwrites, forgetting a fact is a supersession marked `forgotten`, and every retained row is filtered out of live recall
 stateDiagram-v2
     [*] --> Live: remember_about(entity, facts)
     Live --> Live: new fact, judge verdict < threshold

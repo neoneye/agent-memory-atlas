@@ -82,6 +82,7 @@ durable fact is deleted — and the deleting party is a language model.
 Two stores, one workspace, and no path between them.
 
 ```mermaid
+%% caption: an append-only replayable event log with provenance distinguishing automation from a person, beside a flat markdown memory where only one capped file reaches the prompt and session deletion never touches the notes
 flowchart TD
     U["a turn of conversation"] --> E["event_log — append-only<br/>item.created / thread.renamed / turn.completed<br/>sequence per thread, replayable"]
     E --> S["SQLite: projects, threads, items<br/>~/.deepcode/state/deepcode.sqlite3"]

@@ -86,6 +86,7 @@ re-judged on the way out — which is the safer direction, and means the stored
 column is doing less than it appears.
 
 ```mermaid
+%% caption: the classification gate escalates to a supervisor and then to a human for secret content, beside a privacy policy exported from the module and called by nothing, so no tier is filtered and nothing expires
 flowchart TB
     Q["memory_search"] --> Ret["retrieve: vector + lexical<br/>optional AND em.session_id = ?"]
     Ret --> Tier["Tier filter<br/>(NOTE: reflection and graph<br/>both return semantic)"]

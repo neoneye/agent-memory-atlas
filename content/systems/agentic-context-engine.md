@@ -122,6 +122,7 @@ the record carries the evidence for its own retirement. `purge` drops it from th
 dictionary entirely.
 
 ```mermaid
+%% caption: a stored KEEP decision with its similarity is consulted on the next dedup pass, so the model is not asked the same merge question twice
 flowchart TD
     R["run finishes: outcome + reflection"] --> M["model reads both"]
     M --> ADD["add_skill"]

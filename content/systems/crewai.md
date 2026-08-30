@@ -91,6 +91,7 @@ attached only to `final_results[0]`, so a per-match field is carrying a
 per-query fact — a small structural oddity in an otherwise good idea.
 
 ```mermaid
+%% caption: scope is a path and the caller holds a view rooted at a subtree rather than passing a key, while the consolidation plan's delete branch destroys a row with no tombstone, audit or review
 flowchart TB
     subgraph Tree["Scope as a path"]
       A["/company"] --> B["/company/engineering"] --> C["/company/engineering/alice"]

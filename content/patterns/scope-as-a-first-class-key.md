@@ -52,6 +52,7 @@ never `hash(body)` — or two tenants share a vector and a deletion in one leaks
 into the other.
 
 ```mermaid
+%% caption: scope is resolved and authorized before ranking rather than filtered after it, and background jobs inherit the same scope — a consolidation that spans two has already crossed the boundary
 flowchart TD
     Req["request"] --> Res["resolve current scope"]
     Res --> Auth{"scope authorized?"}

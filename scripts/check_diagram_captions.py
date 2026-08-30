@@ -22,7 +22,7 @@ from pathlib import Path
 
 # Raise this only to record captions written; never to accommodate a new
 # uncaptioned diagram. A new report should carry `%% caption:` in its fence.
-UNCAPTIONED_FLOOR = 348
+UNCAPTIONED_FLOOR = 226
 
 FENCE = re.compile(r"^```mermaid$", re.MULTILINE)
 CAPTION = re.compile(r"^%%\s*caption:\s*\S", re.MULTILINE)

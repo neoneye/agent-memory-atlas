@@ -79,6 +79,7 @@ boundaries.
 ## 3. Architecture
 
 ```mermaid
+%% caption: hooks feed a queue that an observer model turns into structured observations in SQLite, with FTS5 as the reliable search arm and the Chroma projection best-effort beside it
 flowchart TD
   Agent["Claude, Codex,<br/>Cursor, etc."] --> Hooks["Lifecycle hooks / transcript<br/>adapters"]
   Hooks --> Worker["Bun worker<br/>daemon"]

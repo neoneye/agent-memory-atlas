@@ -91,6 +91,7 @@ for a system whose distinctive idea is a few hundred lines.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: observations are captured without a model call and consolidate into Markdown pages in git that stay the human source of truth; SQLite is derived from them, and a handoff either gets accepted by a later session or expires
 flowchart TB
     H["harness lifecycle hooks<br/><i>SessionStart, UserPrompt, PreToolUse, PostToolUse,<br/>PreCompact, PostCompaction, Notification, Stop, SessionEnd</i>"]
     H --> OB["observations<br/><i>raw, captured without an LLM call</i>"]
@@ -123,6 +124,7 @@ Crates, in lines of Rust:
   `sanitize.rs`.
 
 ```mermaid
+%% caption: the same path across two agents — a handoff written by one session is either picked up by another or decays out, and the SQLite index is rebuildable from the pages
 flowchart TD
   H["harness hooks<br/>(8 agents)"] --> Obs["observations"]
   Obs --> Cons["opt-in consolidation"]

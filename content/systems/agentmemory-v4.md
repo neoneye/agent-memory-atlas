@@ -75,6 +75,7 @@ classification and consolidation, indexed for dense retrieval, and answered unde
 a per-question-type token budget.
 
 ```mermaid
+%% caption: the committed benchmark path end to end, with the token budget varying by question type and a `USE_DIRECT_CONTEXT` assert that crashes the run rather than letting the gold context leak in
 flowchart TD
     DS["dataset file"] --> ING["ingest case['haystack_sessions']<br/>into a fresh MemoryStore"]
     ING --> EX["extraction → classification →<br/>consolidation → calibration"]

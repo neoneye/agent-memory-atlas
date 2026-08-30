@@ -20,6 +20,7 @@ Extraction is lossy. A short claim can omit qualifiers, invert who said what, fl
 Write evidence first, then derive memory:
 
 ```mermaid
+%% caption: raw evidence is durable and indexed first; candidate facts, profiles and summaries are derived from it, so recall can be traced back to a source span
 flowchart TD
     A["Message, file, tool result"] --> B["Durable event"]
     B --> C["Evidence chunks + source spans"]

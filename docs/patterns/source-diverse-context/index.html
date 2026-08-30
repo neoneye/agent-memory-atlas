@@ -162,7 +162,8 @@ chunks.</p>
 <code>per_source_cap</code> is the only tuning constant, and every
 returned item keeps its source label so the agent can tell independent
 evidence from one document repeated.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one pass takes the best chunk from each source before a second fills the remaining budget under a per-source cap, so five adjacent chunks of one file cannot crowd out the rest</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one pass takes the best chunk from each source before a second fills the remaining budget under a per-source cap, so five adjacent chunks of one file cannot crowd out the rest
+flowchart TD
     C[&quot;ranked candidates&quot;] --&gt; P1[&quot;pass 1: best chunk per source&quot;]
     P1 --&gt; P2[&quot;pass 2: fill remaining budget, capped per source&quot;]
     P2 --&gt; Cap[&quot;enforce result and token caps&quot;]

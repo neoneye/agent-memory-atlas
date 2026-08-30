@@ -69,6 +69,7 @@ present with `grep` and reaches into the past with `git log` and `git diff` when
 a question needs it. A writer agent edits; a consolidator reorganises.
 
 ```mermaid
+%% caption: the current markdown is the now view and the git commit graph is every prior state, both reached through a quote-aware command allowlist that validates each segment of a pipeline before running it
 flowchart TD
     Q["question"] --> RA["retrieval agent"]
     RA --> CR{"command_router.run(command)"}

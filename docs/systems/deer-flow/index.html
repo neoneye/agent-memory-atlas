@@ -213,7 +213,8 @@ however it likes; the write path is <code>add</code>, likewise.
 Everything between — search, export, clear, per-fact CRUD — is a
 capability a backend may or may not have, and the caller learns which by
 catching <code>NotImplementedError</code> rather than by asking.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the contract is three tiers with the management tier defaulting to `NotImplementedError` and a 501, and every backend must return the DeerMem shape, so whatever it modelled beyond that is dropped silently</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the contract is three tiers with the management tier defaulting to `NotImplementedError` and a 501, and every backend must return the DeerMem shape, so whatever it modelled beyond that is dropped silently
+flowchart TD
     A[&quot;agent turn&quot;] --&gt; M[&quot;MemoryManager (pydantic ABC)&quot;]
     M --&gt;|&quot;tier 1: add, get_context&quot;| B{&quot;configured backend&quot;}
     B --&gt; DM[&quot;deermem — structured facts, JSON&quot;]

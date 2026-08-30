@@ -37,6 +37,7 @@ Give the store an editor, and make every verb the automatic path has available t
 a person too:
 
 ```mermaid
+%% caption: the automatic path and the editor write to the same rows, so a person can edit, delete, pin, merge, regenerate or suppress what extraction produced
 flowchart TB
     A["automatic path<br/>extract / summarise / score"] --> S[("the store")]
     S --> P[prompt]

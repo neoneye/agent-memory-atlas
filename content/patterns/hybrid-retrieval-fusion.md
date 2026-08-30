@@ -22,6 +22,7 @@ The size of that blind spot is measurable. On LIMIT, a benchmark built to expose
 Apply hard filters first, retrieve candidates through independent channels, normalize or rank their outputs, then fuse and cap the final context:
 
 ```mermaid
+%% caption: hard filters run before any candidate is scored, three arms then produce candidates that are fused, optionally reranked, and cut to a token budget
 flowchart TD
     Q["Query"] --> F["Hard scope, lifecycle,<br/>sensitivity filters"]
     F --> V["Vector<br/>candidates"]

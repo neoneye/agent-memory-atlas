@@ -81,6 +81,7 @@ first is the only one retrieval considers (`relationship_discovery.py:117`
 filters `status == MemoryStatus.ACTIVE`).
 
 ```mermaid
+%% caption: decay and reinforcement move a memory between active and decaying, with two exits: promotion to a Markdown file a human reads, and pruning, which keeps no record
 stateDiagram-v2
     [*] --> Active: created, strength 1.0
     Active --> Active: retrieved — use_count up, last_used reset, strength restored

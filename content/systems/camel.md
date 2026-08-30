@@ -83,6 +83,7 @@ recalled material sits relative to the live conversation, and it is written in
 one line with no comment explaining it.
 
 ```mermaid
+%% caption: a record's path from message to key-value store, where the write is by uuid and the agent id travels with it
 flowchart TB
     Msg["MemoryRecord<br/>message + role + uuid + agent_id"] --> W["write_records()"]
     W --> KV[("ChatHistoryBlock<br/>key-value store")]

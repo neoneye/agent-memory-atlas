@@ -96,6 +96,7 @@ is provenance as a first-class column rather than a metadata blob.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: the lifecycle from candidate to archived, driven by a utility score computed from whether a retrieved entry was used or ignored — with supersession keyed on the record, so the value can return
 flowchart TD
     E["extraction and categorisation"] --> C["state: candidate"]
     C -->|"evidence"| V["state: verified"]

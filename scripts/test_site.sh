@@ -102,6 +102,18 @@ if ! python3 "$project_dir/scripts/check_verdict_marks.py" "$project_dir"; then
   exit 1
 fi
 
+# A superlative scoped to the corpus asserts something about every report at
+# once, and nothing in this build can verify one. This is a ratchet, not a gate:
+# 535 had accrued with nothing watching, and two of them were disproved by one
+# grep each. The total may fall and may not rise.
+if ! python3 "$project_dir/scripts/list_superlatives.py" --self-test; then
+  echo "list_superlatives.py cannot demonstrate that its matcher still works." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/list_superlatives.py" --check "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside

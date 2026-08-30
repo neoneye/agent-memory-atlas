@@ -182,7 +182,8 @@ reasons to be retrieved, and <code>handoff</code> being a first-class
 kind matches <a href="../ai-memory/">ai-memory</a>'s observation that an
 interrupted task leaves behind a specific shape.</p>
 <p>The state machine, as implemented:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the schema declares rejected and superseded and the write path only ever produces `unreviewed` and `active`, so the two states that would express a correction are unreachable</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the schema declares rejected and superseded and the write path only ever produces `unreviewed` and `active`, so the two states that would express a correction are unreachable
+flowchart TB
     A[&quot;ecc memory add&lt;br/&gt;memory_save&quot;] --&gt; W[&quot;write id.md into&lt;br/&gt;the scope&#39;s vault root&quot;]
     W --&gt; T[&quot;trust = unreviewed&lt;br/&gt;&lt;i&gt;the only permitted value&lt;/i&gt;&quot;]
     W --&gt; S[&quot;status = active&lt;br/&gt;&lt;i&gt;the only value ever written&lt;/i&gt;&quot;]
@@ -219,7 +220,8 @@ shape.</li>
 instructions.</li>
 <li><code>hooks/memory-persistence/</code> — lifecycle hooks.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three write surfaces converge on one validating formatter, three scope roots hold the files, and search filters to active across all of them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three write surfaces converge on one validating formatter, three scope roots hold the files, and search filters to active across all of them
+flowchart TB
     CLI[ecc memory CLI] --&gt; V[memory-vault]
     MCP[memory_save MCP tool] --&gt; V
     HK[session hooks] --&gt; V

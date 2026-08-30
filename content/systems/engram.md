@@ -57,6 +57,7 @@ Engram memory units:
 Lifecycle:
 
 ```mermaid
+%% caption: a topic key upserts and its absence falls through to dedupe, and conflict candidates are detected after the write with judging left optional
 flowchart TB
     A["agent decides something"] --> B["mem_save"]
     B --> C["AddObservation"]
@@ -97,6 +98,7 @@ Core files:
 Architecture:
 
 ```mermaid
+%% caption: four surfaces over one store, with the sync journal as the only thing that leaves the machine
 flowchart TD
   Agent["MCP agent"] --> MCP["internal/mcp"]
   CLI["CLI/TUI"] --> Store["internal/store"]

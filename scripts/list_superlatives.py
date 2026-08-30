@@ -17,13 +17,29 @@ report called AGPL-3.0 "the most restrictive licence in this corpus" when five
 other reports carry AGPL and six carry licences that are not open source at all.
 It took one grep to disprove and had never had one.
 
-**This is a reporting tool, not a gate.** It is deliberately not wired into
-`npm test`, because a check that fails on several hundred pre-existing instances
-teaches people to skip it. Run it when adding a report, or periodically, and treat the
-output as a review list: for each hit, either the claim is checkable and should
-be checked, or it is a judgement and should say so.
+**Listing is a reporting mode, not a gate**, because a check that fails on
+several hundred pre-existing instances teaches people to skip it. `--check` is
+the gate that was added on 2026-08-30, and it is a *ratchet* rather than a
+threshold: the total may fall and may not rise. Nothing here can verify a
+superlative — that needs a person or a grep per claim — so the gate stops the
+pool growing while the pool is worked down by hand.
+
+Two audits found what the absence of any gate cost. On 2026-08-03 the
+memory-project report called AGPL-3.0 the most restrictive licence in the corpus,
+with five other AGPL reports and six non-open-source ones sitting beside it. On
+2026-08-30 the scope pattern page said MIRIX was the only system in the atlas
+that tests a scope boundary, with around two dozen `negative_eval` records
+describing exactly that test, and called its marks the rarest when it carries the
+two most common. Both took one grep to disprove and neither had ever had one.
+
+**The hole this gate does not close**, stated rather than hidden: a total ratchet
+permits deleting one claim and adding another. It stops accumulation, which is
+what actually happened — 537 of these accrued with nothing watching — and it does
+not stop a single new claim from being wrong.
 
 Usage: list_superlatives.py <project-dir> [--all]
+       list_superlatives.py --check <project-dir>
+       list_superlatives.py --self-test
        --all also lists repository-scoped superlatives, which are usually fine.
 """
 import re
@@ -41,6 +57,53 @@ CORPUS_SCOPE = (
 
 CORPUS_CLAIM = re.compile(SUPERLATIVE + r"[^.\n]{0,90}?" + CORPUS_SCOPE, re.I)
 ANY_CLAIM = re.compile(SUPERLATIVE, re.I)
+
+#: Corpus-scoped superlatives standing when the ratchet was set. Lower it as
+#: claims are checked and narrowed; --check fails if it rises. Never raise it to
+#: admit a new claim — narrow the claim, or scope it to the system under review.
+CORPUS_CLAIM_CEILING = 535
+
+
+def count_corpus_claims(content: Path) -> list[tuple[str, str]]:
+    rows = []
+    for path in sorted(content.rglob("*.md")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+            for match in CORPUS_CLAIM.finditer(line):
+                rows.append((f"{path.relative_to(content)}:{lineno}", match.group(0)))
+    return rows
+
+
+def self_test() -> int:
+    """The matcher must see a corpus claim and must not see a system-scoped one."""
+    corpus = "It is the only system in this atlas that seals its own log."
+    scoped = "It is the only writer that ever touches the table."
+    if not CORPUS_CLAIM.search(corpus):
+        print("self-test failed: a corpus-scoped superlative was not matched", file=sys.stderr)
+        return 1
+    if CORPUS_CLAIM.search(scoped):
+        print("self-test failed: a system-scoped superlative was matched", file=sys.stderr)
+        return 1
+    print("self-test: 2 controls passed")
+    return 0
+
+
+def check(root: str) -> int:
+    content = Path(root) / "content"
+    rows = count_corpus_claims(content)
+    if len(rows) > CORPUS_CLAIM_CEILING:
+        print(
+            f"corpus-scoped superlatives rose to {len(rows)} > {CORPUS_CLAIM_CEILING}.",
+            file=sys.stderr,
+        )
+        print(
+            "Each asserts something about every report at once and nothing in this "
+            "build can verify one. Narrow the new claim, or scope it to the system "
+            "under review; do not raise the ceiling to admit it.",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"{len(rows)} corpus-scoped superlatives (ceiling {CORPUS_CLAIM_CEILING}).")
+    return 0
 
 
 def main(root: str, show_all: bool = False) -> int:
@@ -72,6 +135,9 @@ def main(root: str, show_all: bool = False) -> int:
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    show_all = "--all" in args
     target = next((a for a in args if not a.startswith("--")), ".")
-    sys.exit(main(target, show_all))
+    if "--self-test" in args:
+        sys.exit(self_test())
+    if "--check" in args:
+        sys.exit(check(target))
+    sys.exit(main(target, "--all" in args))

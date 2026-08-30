@@ -188,7 +188,8 @@ regions — with no trust state and nothing recording that a digested
 claim was later judged wrong. And the surface is very large for what it
 does, with 61,000 lines of CLI.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — digesting an entry into a themed region leaves it in staging rather than moving it, and every background proposal passes a provenance schema gate and a write-scope guard before reaching the resumable ledger</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: digesting an entry into a themed region leaves it in staging rather than moving it, and every background proposal passes a provenance schema gate and a write-scope guard before reaching the resumable ledger
+flowchart TB
     ST[(&quot;staging&lt;br/&gt;&lt;i&gt;entries land here first, undigested&lt;/i&gt;&quot;)]
     ST --&gt;|&quot;AddTheme folds a gist bullet into the root&#39;s&lt;br/&gt;Themes region, creating it if absent —&lt;br/&gt;&lt;b&gt;nothing moves out of staging&lt;/b&gt;&quot;| RD[(&quot;root document&lt;br/&gt;&lt;i&gt;Themes, then a region per theme;&lt;br/&gt;entries digested into place&lt;/i&gt;&quot;)]
 
@@ -226,7 +227,8 @@ excluding tests:</p>
 <p>The interesting logic is concentrated in the small packages:
 <code>dream</code>, <code>disclosure</code>, <code>drift</code>,
 <code>journal</code>, <code>entity</code>.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same two paths in one view — entries digested into themed regions, and background proposals gated on provenance and write scope</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same two paths in one view — entries digested into themed regions, and background proposals gated on provenance and write scope
+flowchart TD
   E[&quot;entries&quot;] --&gt; Stage[&quot;staging&quot;]
   Theme[&quot;AddTheme:&lt;br/&gt;name a theme&lt;br/&gt;first&quot;] --&gt; Root[&quot;root doc&lt;br/&gt;## Themes&quot;]
   Stage --&gt; Dig[&quot;digest&lt;br/&gt;into region&quot;]

@@ -190,7 +190,8 @@ is what lets a query like "who works at Acme AI" resolve at all.</p>
 pages, grades the ones old enough to resolve, and folds the results into
 calibration profiles. Retrieval synthesises across pages, people and
 companies and states its own gaps.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a page yielding no gradeable claims writes a rejected tombstone with an idempotency tuple, so the next cycle is a cache hit instead of a repeated model call; predictions are graded into a per-holder calibration profile</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a page yielding no gradeable claims writes a rejected tombstone with an idempotency tuple, so the next cycle is a cache hit instead of a repeated model call; predictions are graded into a per-holder calibration profile
+flowchart TD
     P[&quot;page write&quot;] --&gt; G[&quot;entity refs → typed edges, no LLM&quot;]
     P --&gt; PT[&quot;propose_takes phase&quot;]
     PT --&gt; K{&quot;kind&quot;}

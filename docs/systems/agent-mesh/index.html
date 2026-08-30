@@ -289,7 +289,8 @@ before reprojection. <code>body_fidelity</code> admits the value
 <code>redacted</code>, and it is a label a caller may pass to
 <code>agent-mesh request --body-fidelity</code>; no code path produces
 it, and nothing removes the bytes it would describe.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>stateDiagram-v2
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults
+stateDiagram-v2
     [*] --&gt; Proposed: &quot;decision_proposed — verification, checks and globs from arguments; assumptions, evidence and review_policy hardcoded empty&quot;
     Proposed --&gt; Accepted: &quot;decision_accepted, ordinary tier — the quorum check passes on an empty review_policy&quot;
     Proposed --&gt; InForce: &quot;decision_accepted — architecture_contract, production_invariant or compliance_security&quot;

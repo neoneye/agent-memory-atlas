@@ -78,6 +78,7 @@ Three axes are worth separating out.
 Recall:
 
 ```mermaid
+%% caption: three retrieval channels — cosine, FTS5 BM25, and spreading activation seeded from the top semantic hits — each mapped to a numbered equation in the paper
 flowchart LR
     Q["query"] --> SEM["semantic<br/><i>cosine vs query embedding, Eqs. 9–10</i>"]
     Q --> BM["bm25<br/><i>FTS5 MATCH on memory_units_fts, Eq. 11</i>"]

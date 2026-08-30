@@ -74,6 +74,7 @@ The derived types are the model:
 - **Daily log** — a time-bucketed base handler.
 
 ```mermaid
+%% caption: the markdown root is authoritative and the rows are derived, so deprecating a superseded row stops it being returned and leaves the file it came from unchanged
 flowchart TB
     MD[("Markdown in the memory root")] -->|"watcher → scanner → worker"| H["handlers:<br/>episode, atomic_fact, agent_case,<br/>agent_skill, daily_log"]
     H --> ROWS[("rows in SQLite + LanceDB<br/><i>each carrying owner_id, owner_type,<br/>app_id, project_id</i>")]
@@ -105,6 +106,7 @@ Python, Apache 2.0, ~645 source files with ~13,800 lines in the memory package
 alone. Active — the pinned commit is dated 29 July 2026, the day it was read.
 
 ```mermaid
+%% caption: the four scope keys and the deprecation predicate are compiled into every read as a base filter rather than being passed per query
 flowchart TB
     MD[(Markdown memory root)] --> W[watcher]
     W --> SC[scanner] --> WK[worker]

@@ -179,7 +179,8 @@ plus the <code>approach</code> taken.</li>
 repeated cases.</li>
 <li><strong>Daily log</strong> — a time-bucketed base handler.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the markdown root is authoritative and the rows are derived, so deprecating a superseded row stops it being returned and leaves the file it came from unchanged</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the markdown root is authoritative and the rows are derived, so deprecating a superseded row stops it being returned and leaves the file it came from unchanged
+flowchart TB
     MD[(&quot;Markdown in the memory root&quot;)] --&gt;|&quot;watcher → scanner → worker&quot;| H[&quot;handlers:&lt;br/&gt;episode, atomic_fact, agent_case,&lt;br/&gt;agent_skill, daily_log&quot;]
     H --&gt; ROWS[(&quot;rows in SQLite + LanceDB&lt;br/&gt;&lt;i&gt;each carrying owner_id, owner_type,&lt;br/&gt;app_id, project_id&lt;/i&gt;&quot;)]
     ROWS --&gt; RD[&quot;/search and /get&lt;br/&gt;&lt;i&gt;base filter pins all four,&lt;br/&gt;plus deprecated_by IS NULL&lt;/i&gt;&quot;]
@@ -205,7 +206,8 @@ about files as much as about rows.</p>
 <p>Python, Apache 2.0, ~645 source files with ~13,800 lines in the
 memory package alone. Active — the pinned commit is dated 29 July 2026,
 the day it was read.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the four scope keys and the deprecation predicate are compiled into every read as a base filter rather than being passed per query</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the four scope keys and the deprecation predicate are compiled into every read as a base filter rather than being passed per query
+flowchart TB
     MD[(Markdown memory root)] --&gt; W[watcher]
     W --&gt; SC[scanner] --&gt; WK[worker]
     WK --&gt; H1[episode] &amp; H2[atomic_fact] &amp; H3[agent_case] &amp; H4[agent_skill]

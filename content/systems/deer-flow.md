@@ -101,6 +101,7 @@ capability a backend may or may not have, and the caller learns which by catchin
 `NotImplementedError` rather than by asking.
 
 ```mermaid
+%% caption: the contract is three tiers with the management tier defaulting to `NotImplementedError` and a 501, and every backend must return the DeerMem shape, so whatever it modelled beyond that is dropped silently
 flowchart TD
     A["agent turn"] --> M["MemoryManager (pydantic ABC)"]
     M -->|"tier 1: add, get_context"| B{"configured backend"}

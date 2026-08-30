@@ -188,7 +188,8 @@ not reachable from <code>core</code>) and <strong>dangling refs</strong>
 written).</p>
 <p>The state machine is short, and there is no epistemic content in
 it:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a replaceable Nostr event means the previous version is discarded by the relay, so a patch is refused when the value moved and a removal leaves a tombstone with dangling references</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a replaceable Nostr event means the previous version is discarded by the relay, so a patch is refused when the value moved and a removal leaves a tombstone with dangling references
+flowchart TB
     A[agent decides something is worth keeping] --&gt; S[&quot;buzz mem set / patch&quot;]
     S --&gt; P[&quot;encrypt, sign, publish&quot;]
     P --&gt; RP[&quot;relay replaces the head for this d-tag —&lt;br/&gt;the previous version is discarded&quot;]
@@ -226,7 +227,8 @@ replaceable-event path.</li>
 <li><code>buzz-conformance</code> — a property-test and replay-fixture
 harness for the spec.</li>
 </ul>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the encrypted engram's path from CLI to relay and back, with the d-tag an HMAC of the slug so the relay indexes without learning what it names</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the encrypted engram&#39;s path from CLI to relay and back, with the d-tag an HMAC of the slug so the relay indexes without learning what it names
+flowchart TB
     A[Agent / owner] --&gt;|buzz mem set, patch, rm| C[buzz-core engram]
     C --&gt;|NIP-44 encrypt under K_c| E[kind:30174 event]
     C --&gt;|d = HMAC K_c, slug| E

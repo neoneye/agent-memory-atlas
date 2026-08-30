@@ -50,6 +50,7 @@ tier boundary
 ```
 
 ```mermaid
+%% caption: promotion runs on a written rule over separable stored inputs, capped by provenance and recorded with its reasons; blending the inputs into one score is what makes a promotion unattributable
 flowchart TD
     Rec["record in the lower tier"] --> Rule["written rule, computed from stored fields"]
     In["separable inputs:<br/>frequency · recency · importance · corroboration"] --> Rule

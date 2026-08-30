@@ -188,7 +188,8 @@ evaluated</strong> — section 10.</p>
 namespaced graph. Writing a belief appends to a belief log and updates
 the memory atomically. Contradicting one goes through adjudication
 first. Background "dreaming" consolidates in two phases.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the adjudicator's five verdicts have different costs — only a genuine contradiction penalises confidence, while supersession routes to a revision — and embedding happens before the transaction so a network call never holds the writer mutex</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the adjudicator&#39;s five verdicts have different costs — only a genuine contradiction penalises confidence, while supersession routes to a revision — and embedding happens before the transaction so a network call never holds the writer mutex
+flowchart TD
     O[&quot;observe(evidence)&quot;] --&gt; NEAR{&quot;nearest existing memory&quot;}
     NEAR --&gt;|&quot;temporal succession detected&quot;| MSG[&quot;message: revise with believe(valid_from);&lt;br/&gt;TENSION signal tracks the pending revision&quot;]
     C[&quot;contradict(evidence, belief)&quot;] --&gt; ADJ{&quot;adjudicate: NLI cross-encoder,&lt;br/&gt;LLM fallback&quot;}

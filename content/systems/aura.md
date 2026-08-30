@@ -137,6 +137,7 @@ reached 0.75 can only be dislodged by `reconcile`, which nothing calls
 automatically.
 
 ```mermaid
+%% caption: two write paths with opposite failure modes — the gateway denies when governance is unwired, the legacy facade degrades open — and two fields that reach the store and are read by nothing
 flowchart TD
     W["memory write"] --> P{"which path?"}
     P -->|"action executor"| GW["MemoryWriteGateway"]

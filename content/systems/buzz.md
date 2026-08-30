@@ -87,6 +87,7 @@ refs** (a `[[slug]]` pointing at something tombstoned or never written).
 The state machine is short, and there is no epistemic content in it:
 
 ```mermaid
+%% caption: a replaceable Nostr event means the previous version is discarded by the relay, so a patch is refused when the value moved and a removal leaves a tombstone with dangling references
 flowchart TB
     A[agent decides something is worth keeping] --> S["buzz mem set / patch"]
     S --> P["encrypt, sign, publish"]
@@ -123,6 +124,7 @@ Rust, 26 crates, Apache 2.0. The memory path touches five of them:
 - `buzz-conformance` — a property-test and replay-fixture harness for the spec.
 
 ```mermaid
+%% caption: the encrypted engram's path from CLI to relay and back, with the d-tag an HMAC of the slug so the relay indexes without learning what it names
 flowchart TB
     A[Agent / owner] -->|buzz mem set, patch, rm| C[buzz-core engram]
     C -->|NIP-44 encrypt under K_c| E[kind:30174 event]

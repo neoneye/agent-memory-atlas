@@ -73,6 +73,7 @@ unit is `MemoryEntry`: a `types.Content`, plus optional `id`, `author`,
 `timestamp` and `custom_metadata`. That is the whole schema.
 
 ```mermaid
+%% caption: a session can be deleted and the memory derived from it cannot — `add_session_to_memory` is a one-way door with no removal path on the other side
 flowchart TB
     S["session<br/>events + state"] -->|"delete_session()"| G["gone"]
     S -->|"add_session_to_memory<br/>add_events_to_memory<br/>add_memory"| M["memory"]
@@ -107,6 +108,7 @@ deliberately replaceable part. The relevant modules are `memory/` (seven files,
 agent-facing surface.
 
 ```mermaid
+%% caption: three memory services and three session services behind two base classes, with `delete_session` declared on one of them and no delete method on the other
 flowchart TB
     A[Agent] -->|load_memory tool| R[Runner]
     APP[App author] -->|add_session_to_memory| R

@@ -167,7 +167,8 @@ observations.</li>
 <li>Sync mutation: durable local change journal.</li>
 </ul>
 <p>Lifecycle:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a topic key upserts and its absence falls through to dedupe, and conflict candidates are detected after the write with judging left optional</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a topic key upserts and its absence falls through to dedupe, and conflict candidates are detected after the write with judging left optional
+flowchart TB
     A[&quot;agent decides something&quot;] --&gt; B[&quot;mem_save&quot;]
     B --&gt; C[&quot;AddObservation&quot;]
     C --&gt; D{&quot;topic_key present?&quot;}
@@ -208,7 +209,8 @@ replication/server/dashboard.</li>
 detection/similarity.</li>
 </ul>
 <p>Architecture:</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four surfaces over one store, with the sync journal as the only thing that leaves the machine</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four surfaces over one store, with the sync journal as the only thing that leaves the machine
+flowchart TD
   Agent[&quot;MCP agent&quot;] --&gt; MCP[&quot;internal/mcp&quot;]
   CLI[&quot;CLI/TUI&quot;] --&gt; Store[&quot;internal/store&quot;]
   HTTP[&quot;HTTP server&quot;] --&gt; Store

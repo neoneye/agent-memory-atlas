@@ -2849,7 +2849,8 @@ not adoption.</p>
 else here would pass them. No system reviewed carries a deletion that
 follows a share, and only one — SimpleMem — even records that a share
 happened, in a log its own write path never consults.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a deleted memory's copies are peers, not descendants — share, export, publish and snapshot each put the content somewhere the original's deletion cannot reach, and a restore puts it back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a deleted memory&#39;s copies are peers, not descendants — share, export, publish and snapshot each put the content somewhere the original&#39;s deletion cannot reach, and a restore puts it back
+flowchart LR
     Orig[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
     Orig -- &quot;share() before deletion&quot; --&gt; C1[&quot;copy in another scope&lt;br/&gt;NEW uuid · same content&lt;br/&gt;no back-reference&quot;]
     Orig -- &quot;export / sync&quot; --&gt; C2[&quot;remote hub · another tenant&quot;]
@@ -2860,7 +2861,8 @@ happened, in a log its own write path never consults.</p>
     C3 --&gt; P
     C4 -- &quot;restore&quot; --&gt; Orig
     Orig -.-&gt;|&quot;step 9 follows what was DERIVED&lt;br/&gt;steps 11-13 follow what was COPIED OUT&quot;| Note[&quot;a derived artifact is downstream&lt;br/&gt;a propagated copy is a peer&quot;]</code></pre></details></figure>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart LR
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the derived artifacts a deletion leaves behind — summary, profile, graph edge, embedding, backup — each still carrying the deleted memory into a prompt</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the derived artifacts a deletion leaves behind — summary, profile, graph edge, embedding, backup — each still carrying the deleted memory into a prompt
+flowchart LR
     Raw[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
     Raw -. &quot;derived earlier&quot; .-&gt; Sum[&quot;session summary&lt;br/&gt;still contains it&quot;]
     Raw -. &quot;derived earlier&quot; .-&gt; Prof[&quot;user profile&lt;br/&gt;still contains it&quot;]

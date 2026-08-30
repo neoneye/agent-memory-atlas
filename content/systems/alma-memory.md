@@ -125,6 +125,7 @@ checking.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: the write guard refuses a write that matches an anti-pattern on two paths and is absent from four others, and every retrieval is bucketed by a verification status stamped back onto the heuristic
 flowchart TD
     T["task runs"] --> O["alma_outcomes:<br/>success, error, user_feedback"]
     O --> H["alma_heuristics:<br/>occurrence_count,<br/>success_count"]

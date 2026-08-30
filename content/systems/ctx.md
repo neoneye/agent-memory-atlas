@@ -79,6 +79,7 @@ wrong. And the surface is very large for what it does, with 61,000 lines of CLI.
 ## 2. Mental Model
 
 ```mermaid
+%% caption: digesting an entry into a themed region leaves it in staging rather than moving it, and every background proposal passes a provenance schema gate and a write-scope guard before reaching the resumable ledger
 flowchart TB
     ST[("staging<br/><i>entries land here first, undigested</i>")]
     ST -->|"AddTheme folds a gist bullet into the root's<br/>Themes region, creating it if absent —<br/><b>nothing moves out of staging</b>"| RD[("root document<br/><i>Themes, then a region per theme;<br/>entries digested into place</i>")]
@@ -117,6 +118,7 @@ The interesting logic is concentrated in the small packages: `dream`,
 `disclosure`, `drift`, `journal`, `entity`.
 
 ```mermaid
+%% caption: the same two paths in one view — entries digested into themed regions, and background proposals gated on provenance and write scope
 flowchart TD
   E["entries"] --> Stage["staging"]
   Theme["AddTheme:<br/>name a theme<br/>first"] --> Root["root doc<br/>## Themes"]

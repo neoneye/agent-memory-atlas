@@ -81,6 +81,7 @@ step, not done here)."* The tier is a caller-supplied argument defaulting to
 `episodic`, and — see §5 — `recall` never reads it.
 
 ```mermaid
+%% caption: the receipt is fsynced before the row, so a receipt that fails to write means no row exists; forgetting appends its own receipt and tombstones the content, making the rejection durable and never read again
 flowchart TB
     R["remember(content, tier)"] --> G["aukoraGovernAsk<br/>permission: memory, diff: content"]
     G -->|session LOCKED| PAUSE["PAUSE — no write"]
@@ -121,6 +122,7 @@ commits, and two concurrent writes on the same `useSeq` conflict on the manifest
 row so exactly one commits.
 
 ```mermaid
+%% caption: the gate, the append-and-fsync order, the hash chain and its verification, with the delegation manifest path producing a receipt that binds the grant to the write
 flowchart TB
     M[Model proposes] --> G{aukoraGate<br/>AUMLOK + secret classifier}
     G -->|pause / deny| X[no write]

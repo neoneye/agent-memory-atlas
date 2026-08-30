@@ -55,6 +55,7 @@ human editor / MCP tool
 The direction also works in reverse: a file watcher parses external edits and reconciles projections. Database state is not allowed to silently outrank the file.
 
 ```mermaid
+%% caption: the Markdown file stays canonical for both a human editor and an agent, and the index reconciles out-of-band edits through a file watcher, so a correction is a file edit followed by a transactional reindex
 flowchart TB
     H["Human editor"] -->|"edits the file directly"| F[("Canonical Markdown note<br/>the source of truth")]
     A["Agent via MCP/API"] -->|"create · replace · edit · move · delete<br/>each a distinct operation"| F

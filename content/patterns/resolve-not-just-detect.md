@@ -67,6 +67,7 @@ Keep the detector's *recommendation* vocabulary narrower than the resolver's
 options.
 
 ```mermaid
+%% caption: a detected conflict becomes a typed finding in a queue that stays retrievable while pending, and every disposition writes something the next extraction consults
 flowchart TD
     D["detector"] --> F["typed finding:<br/>old id, new id,<br/>description"]
     F --> Q["queue — pending<br/>stays retrievable"]

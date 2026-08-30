@@ -20,6 +20,7 @@ An LLM-generated fact, a user assertion, a document sentence, and a corroborated
 Start with a small state machine:
 
 ```mermaid
+%% caption: the states a memory moves between and what moves it — corroboration and review promote, contradiction and correction reject, and reactivation is explicit rather than automatic
 stateDiagram-v2
     [*] --> Candidate
     Candidate --> Verified: trusted source or corroboration

@@ -32,6 +32,7 @@ matrix:
 CowAgent is a conversational agent from zhayujie (the author of `chatgpt-on-wechat`), with a ~5,300-line memory subsystem under `agent/memory/`. Its design is the clearest **time-boxed distillation pipeline** in the atlas:
 
 ```mermaid
+%% caption: the three tiers, ending in a long-term file held to about thirty entries
 flowchart LR
     ST["conversation context<br/><i>short-term</i>"] --> MID[("memory/YYYY-MM-DD.md<br/><i>daily, mid-term</i>")]
     MID --> LT[("MEMORY.md<br/><i>long-term, about 30 entries</i>")]
@@ -74,6 +75,7 @@ CREATE TABLE chunks (
 Lifecycle:
 
 ```mermaid
+%% caption: distillation overwrites `MEMORY.md` in place to hold it near thirty entries, so the dream diary is the only record of what the consolidation decided
 flowchart TB
     subgraph S1["Stage 1 — conversation to daily memory"]
         TR["triggers: context trimming on turn or token limit,<br/>a 23:55 schedule, an API-overflow emergency save"]
@@ -112,6 +114,7 @@ it read are the only remaining evidence. The dream diary records what the pass
 - `docs/memory/` — `index.mdx`, `context.mdx`, `deep-dream.mdx`, `self-evolution.mdx`.
 
 ```mermaid
+%% caption: the same two-stage consolidation beside the retrieval path that chunks and indexes the memory files themselves
 flowchart TD
   Conv["Conversation"] --> Trim["context trimming / 23:55 cron / overflow"]
   Trim --> Daily["memory/YYYY-MM-DD.md"]

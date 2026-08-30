@@ -114,6 +114,7 @@ time, in frontmatter, through limits — and, for repo memory, afterwards, becau
 the store is a git branch a person can open a pull request against.
 
 ```mermaid
+%% caption: a restored cache has its hooks deleted and is fsck'd before use, and merges run strictly down the integrity lattice so lower-trust content cannot escalate
 flowchart TD
     R["cache restored from a previous run"] --> H["delete .git/hooks/*<br/>core.hooksPath = /dev/null"]
     H --> F{"git fsck clean?"}

@@ -105,6 +105,7 @@ contradicted it.
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
+%% caption: the caller picks the table; only conversational rows have a delete path, and deleting them leaves the summary that was derived from them behind
 flowchart TD
     C["caller picks the memory type"] --> W["insert into that table"]
     W --> CONV["CONVERSATIONAL"]

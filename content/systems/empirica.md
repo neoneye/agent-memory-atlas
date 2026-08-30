@@ -95,6 +95,7 @@ resolution, so a session can hand over its open questions rather than only its
 answers.
 
 ```mermaid
+%% caption: four resolution kinds that the usual vocabulary collapses into one — stale, superseded, mistyped and genuinely retracted — with unclassified left NULL rather than coerced
 stateDiagram-v2
     [*] --> Open: artifact recorded, tagged intuition / search / mixed
     Open --> Resolved_stale: was true when written, has since aged out

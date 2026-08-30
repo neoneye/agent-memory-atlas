@@ -91,6 +91,7 @@ than stored as a status, so the mark is withheld and the near-miss is that the
 *presentation* layer carries an epistemic distinction the *schema* does not.
 
 ```mermaid
+%% caption: a convention's citation decides how it is recalled — cited plainly, carried forward with a staleness warning, or rendered `[unverified]` in the text the model reads
 stateDiagram-v2
     [*] --> Cited: convention written WITH a citation<br/>(a file and line, a SHA, a trace id)
     [*] --> Uncited: convention written without<br/>(warns on write)

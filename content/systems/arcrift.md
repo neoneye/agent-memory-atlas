@@ -79,6 +79,7 @@ graph triples, chunked and embedded locally, and the most relevant material is
 prepended to the next prompt — in the browser or in the coding tool.
 
 ```mermaid
+%% caption: capture from seven web assistants and four editors converges on one local store; a weekly Playwright job files an issue when a selector goes stale, and the stress test's success condition is a forbidden key being absent
 flowchart TD
     W["browser extension:<br/>Claude · ChatGPT · Gemini · DeepSeek ·<br/>Grok · Copilot · Mistral"] --> RES{"multi-strategy selector resolver —<br/>ordered strategies, first match wins"}
     RES --> CAP["captured conversation"]

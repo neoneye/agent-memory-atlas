@@ -181,7 +181,8 @@ outlive that session. Its unit is <code>MemoryEntry</code>: a
 <code>types.Content</code>, plus optional <code>id</code>,
 <code>author</code>, <code>timestamp</code> and
 <code>custom_metadata</code>. That is the whole schema.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a session can be deleted and the memory derived from it cannot — `add_session_to_memory` is a one-way door with no removal path on the other side</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a session can be deleted and the memory derived from it cannot — `add_session_to_memory` is a one-way door with no removal path on the other side
+flowchart TB
     S[&quot;session&lt;br/&gt;events + state&quot;] --&gt;|&quot;delete_session()&quot;| G[&quot;gone&quot;]
     S --&gt;|&quot;add_session_to_memory&lt;br/&gt;add_events_to_memory&lt;br/&gt;add_memory&quot;| M[&quot;memory&quot;]
     M --&gt;|&quot;search_memory(app_name, user_id, query)&quot;| R[&quot;SearchMemoryResponse&quot;]
@@ -211,7 +212,8 @@ deliberately replaceable part. The relevant modules are
 <code>memory/</code> (seven files, ~1,720 lines) and
 <code>sessions/</code>, with <code>tools/load_memory_tool.py</code> as
 the agent-facing surface.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TB
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three memory services and three session services behind two base classes, with `delete_session` declared on one of them and no delete method on the other</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three memory services and three session services behind two base classes, with `delete_session` declared on one of them and no delete method on the other
+flowchart TB
     A[Agent] --&gt;|load_memory tool| R[Runner]
     APP[App author] --&gt;|add_session_to_memory| R
     R --&gt; BMS[BaseMemoryService]

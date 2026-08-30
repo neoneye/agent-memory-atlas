@@ -20,6 +20,7 @@ Automatic memory capture is often asynchronous. The interactive request succeeds
 Persist work before acknowledging it:
 
 ```mermaid
+%% caption: the input is durable before the job runs and the output and checkpoint land atomically, so a failure retains the input for a bounded retry rather than losing it
 flowchart TD
     A["Capture input"] --> B["Durable inbox / event"]
     B --> C["Idempotent job"]
