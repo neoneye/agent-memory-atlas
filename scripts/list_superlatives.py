@@ -50,8 +50,11 @@ SUPERLATIVE = (
     r"(the only|only system|the first|the most|the largest|the smallest|"
     r"the strongest|the weakest|the best|nothing else|no other|the sole|unique)"
 )
+#: `here` needs a boundary on BOTH sides. Written as `here\b` it matched the tail
+#: of "where", so "the only place where a mistake is permanent" — a quotation about
+#: one repository's write path — was counted as a claim about every report at once.
 CORPUS_SCOPE = (
-    r"(in (this )?(atlas|corpus|set|batch)|in the atlas|here\b|of the \d+|"
+    r"(in (this )?(atlas|corpus|set|batch)|in the atlas|\bhere\b|of the \d+|"
     r"anywhere in this)"
 )
 
@@ -61,15 +64,46 @@ ANY_CLAIM = re.compile(SUPERLATIVE, re.I)
 #: Corpus-scoped superlatives standing when the ratchet was set. Lower it as
 #: claims are checked and narrowed; --check fails if it rises. Never raise it to
 #: admit a new claim — narrow the claim, or scope it to the system under review.
-CORPUS_CLAIM_CEILING = 535
+#:
+#: Set to 535 on 2026-08-30 and corrected to 459 the same day. The first figure
+#: was the matcher's, not the corpus's: `here\b` matched the tail of "where", and
+#: a superlative quoted from the repository under review was counted as the
+#: atlas's own. Seventy-six of the 535 were one or the other. The ceiling is a
+#: measurement of the prose and inherits every defect of the thing measuring it,
+#: which is the argument for a self-test that carries the fixtures that were wrong.
+CORPUS_CLAIM_CEILING = 459
+
+
+#: A superlative the atlas *quotes* from the repository under review is that
+#: project's claim about itself, not an assertion about every report at once —
+#: which is the only thing this check exists to catch. Two verbatim quotations
+#: pushed the total up by two on 2026-08-30, and the edit a ratchet invites for a
+#: false positive is to alter the quotation, which is worse than the miscount.
+#:
+#: Matched over the whole file rather than per line, because the quotations that
+#: caused it wrapped: the opening `*"` and the superlative sat on one line and the
+#: closing quote on the next. Bounded at 800 characters so an unbalanced quote
+#: swallows a paragraph rather than the rest of the file.
+QUOTED = re.compile(r'"[^"]{0,800}?"|\u201c[^\u201d]{0,800}?\u201d', re.S)
+
+
+def _quoted_spans(text: str) -> list[tuple[int, int]]:
+    return [m.span() for m in QUOTED.finditer(text)]
 
 
 def count_corpus_claims(content: Path) -> list[tuple[str, str]]:
     rows = []
     for path in sorted(content.rglob("*.md")):
-        for lineno, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+        text = path.read_text(encoding="utf-8")
+        spans = _quoted_spans(text)
+        offset = 0
+        for lineno, line in enumerate(text.split("\n"), 1):
             for match in CORPUS_CLAIM.finditer(line):
+                start = offset + match.start()
+                if any(lo <= start < hi for lo, hi in spans):
+                    continue
                 rows.append((f"{path.relative_to(content)}:{lineno}", match.group(0)))
+            offset += len(line) + 1
     return rows
 
 
@@ -83,7 +117,29 @@ def self_test() -> int:
     if CORPUS_CLAIM.search(scoped):
         print("self-test failed: a system-scoped superlative was matched", file=sys.stderr)
         return 1
-    print("self-test: 2 controls passed")
+    # "where" must not supply the corpus scope through its own tail.
+    if CORPUS_CLAIM.search("the only place where a mistake is permanent"):
+        print("self-test failed: 'where' was read as the scope word 'here'", file=sys.stderr)
+        return 1
+    # A quotation is the subject's claim about itself, not the atlas's about the corpus.
+    quoted = 'The docstring says "it is the only thing here that has ever come back red".'
+    spans = _quoted_spans(quoted)
+    hit = CORPUS_CLAIM.search(quoted)
+    if hit is None:
+        print("self-test failed: the quoted fixture no longer matches at all", file=sys.stderr)
+        return 1
+    if not any(lo <= hit.start() < hi for lo, hi in spans):
+        print("self-test failed: a superlative inside a quotation was counted", file=sys.stderr)
+        return 1
+    # And an unquoted one on a line that also carries a quotation must still count.
+    mixed = 'It quotes "a thing" and is the only system in this atlas that does.'
+    spans = _quoted_spans(mixed)
+    hits = [m for m in CORPUS_CLAIM.finditer(mixed)
+            if not any(lo <= m.start() < hi for lo, hi in spans)]
+    if not hits:
+        print("self-test failed: an unquoted claim beside a quotation was skipped", file=sys.stderr)
+        return 1
+    print("self-test: 5 controls passed")
     return 0
 
 

@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A file-based memory format whose
+real contribution is asking whether a record will be findable before it
+is written — measured by tools that ship, over an architecture that
+mostly does not.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MOTH Memory
+Template — Agent Memory Atlas">
+    <meta property="og:description" content="A file-based memory format
+whose real contribution is asking whether a record will be findable
+before it is written — measured by tools that ship, over an architecture
+that mostly does not.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MOTH Memory
+Template — Agent Memory Atlas">
+    <meta name="twitter:description" content="A file-based memory format
+whose real contribution is asking whether a record will be findable
+before it is written — measured by tools that ship, over an architecture
+that mostly does not.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MOTH Memory Template — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MOTH Memory Template",
+      "description": "A file-based memory format whose real contribution is asking whether a record will be findable before it is written \u2014 measured by tools that ship, over an architecture that mostly does not.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A write-side gate, and the ranker it
+drifted from</p>
+          <h1>MOTH Memory Template</h1>
+          <p class="document-deck">A file-based memory format whose real
+contribution is asking whether a record will be findable before it is
+written — measured by tools that ship, over an architecture that mostly
+does not.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ScPlaceholder/MOTH-agent-memory-template">
+              <span>Source</span>
+              <strong>ScPlaceholder/MOTH-agent-memory-template</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">
+              <span>Analyzed revision</span>
+              <code>9922f209…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-30</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>A file-based memory format — one fact per Markdown file, with a
+frontmatter <code>name</code>, a one-line <code>description</code> and a
+four-value <code>metadata.type</code> — plus eleven dependency-free
+Python tools, two sample corpora with known-answer probes, and a set of
+build prompts for the engines that are <em>not</em> in the repository.
+Apache-2.0, 9 commits, all of them dated 30 August 2026.</p>
+<p><strong>The contribution worth taking is on the write side, and it is
+a genuinely under-served idea.</strong> <code>findable.py</code> asks,
+before a record is written, whether a later question would find it — and
+returns two verdicts because they fail differently. <em>FOUND?</em> runs
+the question against the whole record: fail it and the content is
+unreachable by any ranker, which is a write-time defect no retrieval
+engine recovers from. <em>WINS?</em> runs it against name and
+description only, because body hits saturate: you can be found and still
+lose to any file with the word in its name. This atlas asks after
+retrieval quality in every report and after write-time reachability in
+almost none; here it is a tool with a threshold and a measurement behind
+it.</p>
+<p><strong>The measurement discipline is unusual and it holds up when
+you run it.</strong> The benchmark's probe files carry three named
+sections that are reported separately and never summed —
+<code>works</code>, <code>boundary</code> and <code>absent</code> — with
+the reason recorded in the file: the boundary probes used to sit in the
+same table as the real ones, <em>"turning a documented limit into a
+headline 'MISS'"</em>. Every tool has a <code>--selftest</code>, and the
+README says what a passing one is worth: <em>"A passing selftest means
+the code does what the code intends. It says <strong>nothing</strong>
+about whether retrieval works."</em> All eight selftests pass.
+<code>benchmark.py --verify</code> on both shipped corpora returns 10 of
+10 found and 3 of 3 absent topics correctly empty. And
+<code>--overlap</code> reproduces the README's headline exactly:
+<strong>zero shared content words → 0 of 4 found; one or more → 20 of
+20, 18 of them at rank 1.</strong></p>
+<p><strong>What ships is a sixth of what is drawn.</strong>
+<code>coverage.py</code> enumerates twenty-one architecture boxes and
+prints the split itself: six CODE rows, thirteen SPEC rows that are
+build instructions, two prompts — and then, unprompted, <em>"ADDRESSED
+IS NOT IMPLEMENTED"</em> and <em>"That is coverage OF THIS LIST, not of
+the architecture."</em> Stage 10 — the reinforce / supersede / archive
+lifecycle — is one of the specs. So every correction mechanism this
+atlas measures is a prompt here, and the one mark this report awards is
+the only one it could award.</p>
+<p><strong>And the write gate has drifted from the ranker it
+predicts.</strong> A comment in <code>findable.py</code> explains a fix
+by describing <code>recall.py</code>'s scorer as substring counts
+crediting a filename match <em>"at 10x"</em>. The shipped
+<code>recall.py</code> uses word-boundary regex — changed on 2026-08-25
+by an external review, with its own comment saying so — and weights a
+name hit at 4. Running the comment's own example against the shipped
+scorer returns 0.0.</p>
+<p>One mark. 2,938 lines of standard-library Python, 2,145 lines of
+prose, 24 memory files across three corpora, pinned at <a
+href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd"><code class="commit-id" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">9922f209…</code></a>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one file holding one fact, and the format states why that
+constraint is load-bearing rather than stylistic: <em>"A file holding
+three facts matches three different queries and answers none of them
+well."</em></p>
+<pre class="markdown"><code>---
+name: &lt;short-kebab-case-slug&gt;
+description: &lt;one line, used to decide relevance during recall&gt;
+metadata:
+  type: user | feedback | project | reference
+---</code></pre>
+<p>Readers of this atlas will recognise the shape: it is the frontmatter
+Claude Code's own auto-memory writes, down to the four type values, the
+<code>[[name]]</code> links and the <code>**Why:**</code> /
+<code>**How to apply:**</code> convention for feedback and project
+memories. Stated as a fact about the artifact's lineage, not a criticism
+— a template for agent memory adopting the format its target agent
+already uses is the correct decision.</p>
+<p><strong>A memory has exactly one state: it exists.</strong> There is
+no candidate, no verified, no rejected, no superseded, no archived —
+those are stage 10 of the build prompts. Correction is editing the file;
+forgetting is deleting it. The one lifecycle surface that ships is
+upstream of the store entirely: <code>memory_candidates.py</code> is a
+rolling append-only queue of things that <em>might</em> become memories,
+with a design note explaining why it is a queue and not a classifier —
+<em>"the write path is the only place where a mistake is permanent — a
+bad classification becomes a memory file that is then retrieved and
+believed for months"</em> — and a counter that increments when a
+candidate is retrieved, so <em>"a candidate nobody ever pulls is
+evidence it was not worth keeping. That is usage as the filter, not
+confidence at write time."</em></p>
+<p>And then: <strong>⚠⚠ NOTHING HERE PROMOTES TO MEMORY. Not
+automatically, not on a threshold, not ever from this module. Promotion
+is a separate, human-visible decision.</strong> That is the correct call
+and the promotion surface is not in the repository, so the queue's exit
+is declared and unshipped.</p>
+<p>The epistemic event this design actually models is therefore not
+<em>how does a thing become a belief</em> but <em>will this belief be
+reachable when I need it</em>, and that is what the diagram below
+shows.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write-time gate returns two verdicts because unreachable and unrankable fail differently — and its model of the ranker is the pre-2026-08-25 substring scorer, while the shipped one matches on word boundaries and weights a name hit at 4 rather than 10</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the write-time gate returns two verdicts because unreachable and unrankable fail differently — and its model of the ranker is the pre-2026-08-25 substring scorer, while the shipped one matches on word boundaries and weights a name hit at 4 rather than 10
+flowchart TD
+    D[&quot;a record you are about to write&lt;br/&gt;+ the question you would later ask&quot;] --&gt; F{&quot;findable.py&quot;}
+    F --&gt; V1{&quot;FOUND?&lt;br/&gt;question vs the whole record&quot;}
+    V1 -- no --&gt; RW[&quot;rewrite the content —&lt;br/&gt;no ranker recovers a record&lt;br/&gt;sharing no content word&quot;]
+    V1 -- yes --&gt; V2{&quot;WINS?&lt;br/&gt;question vs name + description only&quot;}
+    V2 -- no --&gt; RN[&quot;rename the file —&lt;br/&gt;body hits saturate at BODY_CAP&quot;]
+    V2 -- yes --&gt; W[&quot;write memory/&amp;lt;name&amp;gt;.md&quot;]
+    W --&gt; ST[(&quot;a directory of .md files&lt;br/&gt;no index, no service&quot;)]
+    ST --&gt; R[&quot;recall.py: word-boundary hits&lt;br/&gt;NAME 4 · DESC 3 · body capped at 4&lt;br/&gt;× coverage²&quot;]
+    F -.-&gt;|&quot;models a scorer that was replaced:&lt;br/&gt;substring counts, filename at 10x&quot;| R
+    RN -.-&gt;|&quot;so the gate can now pass a record&lt;br/&gt;the ranker will not credit&quot;| R
+    ST --&gt; B[&quot;benchmark.py: works / boundary / absent&lt;br/&gt;reported separately, never summed&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is almost nothing to stand up, and that is deliberate:
+<em>"Plain Python 3, no dependencies, no index to build, no service to
+run."</em> <code>THIRD_PARTY.md</code> backs the claim rather than
+asserting it — a full <code>os.walk</code> from the root, no depth
+limit, testing for eleven weight-file extensions, zero matches, and the
+note that <em>"the tree is small enough that the search covers all of
+it, which is the only reason this can be stated as an absolute rather
+than a 'none found'."</em></p>
+<ul>
+<li><strong><code>memory/</code></strong> — three example records.
+<strong><code>sample/memory/</code></strong> — ten same-genre notes with
+known-answer probes. <strong><code>sample/mixed/</code></strong> —
+eleven deliberately different kinds of file, including a
+<code>hello.py</code> that exists to demonstrate that a
+non-<code>.md</code> file in the folder is not in the corpus.</li>
+<li><strong><code>tools/</code></strong> — eleven scripts, 2,938 lines,
+standard library only. Read side: <code>recall</code>,
+<code>whereis</code>, <code>memory_echo</code>. Write side:
+<code>findable</code>, <code>memory_candidates</code>,
+<code>candidate_classify</code>. Repository checks: <code>wired</code>,
+<code>coverage</code>, <code>lint_prompts</code>,
+<code>benchmark</code>.</li>
+<li><strong><code>docs/</code></strong> — <code>FORMAT.md</code>,
+<code>AGENT_INSTRUCTIONS.md</code> (the paste-in prompt block),
+<code>BUILD_PROMPTS.md</code> (the staged instructions for the engines
+not here), and <code>AUDIT.md</code>.</li>
+</ul>
+<p>The one network surface in the tree is
+<code>candidate_classify.py</code>, which posts to a local Ollama at
+<code>/api/embeddings</code>; the README labels it <strong>MEASURED
+WEAK</strong> before a reader can discover that themselves.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Copy the directory. That is the install. The store is a folder of
+Markdown a person reads and edits, which puts it at the opposite end of
+this atlas's range from the multi-datastore graph systems — and the
+tradeoff is stated rather than hidden: retrieval walks the tree on every
+query, so this is a design for tens or hundreds of notes, not tens of
+thousands.</p>
+<p><strong>The screener could not see this tree.</strong> There is no
+package manifest, no lockfile and no hook file, so
+<code>screen_repo.py</code> returned <code>NOTHING SCANNED</code>, which
+is a finding rather than a pass. Read by hand instead: every import
+across the eleven tools is standard library, the only writes are into
+<code>tempfile</code> directories inside <code>--selftest</code> paths
+cleaned up with <code>shutil.rmtree</code>, and the only outbound
+request is the local Ollama call above. That is what made it safe to run
+the tools, and the numbers in this report were produced by running
+them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Retrieval</strong> — <code>tools/recall.py:118-165</code>.
+For each query term: a word-boundary hit in the name scores
+<code>NAME_WEIGHT = 4</code>, one in the description
+<code>DESC_WEIGHT = 3</code>, and body occurrences score
+<code>min(count, BODY_CAP)</code> with <code>BODY_CAP = 4</code>. Then
+the coverage multiplier, which is the design's actual ranking idea:</p>
+<pre class="python"><code>score *= (len(matched) / float(len(qterms))) ** 2</code></pre>
+<p><em>"the fraction of the query a file accounts for dominates the raw
+tally. Without this multiplier the ranking silently degrades into 'who
+said it most'."</em></p>
+<p><strong>Word boundaries, and why they were not always there.</strong>
+The scorer used to be <code>t in name</code> and
+<code>low.count(t)</code>, so <code>"bug"</code> matched
+<code>"debug"</code>. The comment recording the fix is the best short
+statement of a defect class this atlas keeps finding: <em>"a false term
+hit counts toward COVERAGE, which is the headline claim of this whole
+tool. And the coverage multiplier IS mutation-tested — the test verifies
+the formula gets applied, and never checked that the term matcher
+feeding it was correct. <strong>A verified formula over wrong inputs is
+still wrong.</strong> The assertion guarded the arithmetic and not its
+operands."</em></p>
+<p><strong>The write gate</strong> — <code>tools/findable.py</code>. Two
+verdicts over the same pair, as described in section 1.</p>
+<p><strong>Corpus membership</strong> — <code>recall.py:186</code>,
+<code>if fn.endswith(".md")</code>. A <code>.py</code>,
+<code>.pdf</code> or <code>.txt</code> in the folder produces no error
+and never appears in a result, and <code>FORMAT.md</code> draws the
+consequence: <em>"The note is what makes the artifact findable; without
+one it is not in the corpus, it is merely in the folder."</em></p>
+<p><strong>The candidate queue</strong> —
+<code>tools/memory_candidates.py</code>, an append-only JSONL with a
+per-line failure mode chosen deliberately: <em>"a corrupt line loses one
+candidate, never the file."</em> The file itself is not committed, so
+the queue ships empty.</p>
+<p><strong>Repository checks</strong> — <code>wired.py</code> parses the
+AST rather than grepping, with the asymmetry stated: <em>"'wired' is a
+strong claim from it, 'not wired' is a weak one."</em>
+<code>coverage.py</code> walks the box list.
+<code>lint_prompts.py</code> catches build instructions that cannot be
+followed, and computes its own rule count rather than printing one,
+after a footer advertising six rules while seven ran.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four fields and a body. <code>name</code> must equal the filename
+without <code>.md</code>, and the tools rely on it.
+<code>description</code> is <em>"what a search shows first"</em>, and
+the format's highest-leverage rule is about it: <strong>write the
+description in the words you will search with</strong>, because
+<em>"when you write a note you are thinking in the vocabulary of the
+thing that just happened, and months later you search in the vocabulary
+of the problem you now have. Those are different languages."</em></p>
+<p><code>metadata.type</code> is one of <code>user</code>,
+<code>feedback</code>, <code>project</code>, <code>reference</code>. It
+is a <strong>kind</strong>, not a status — it says what the memory is
+about, never whether it is believed — so <code>trust_state</code> is
+withheld on an absence rather than on an unwired field. There is no
+confidence, no provenance, no source pointer, and no timestamp: the
+format's answer to time is a rule rather than a column, <em>"convert
+relative dates to absolute"</em>, enforced by the writer and by nothing
+else. <code>bitemporal</code> is not a near miss; the axis does not
+exist.</p>
+<p><strong>Nothing is scoped.</strong> <code>--root</code> chooses a
+directory to walk. No field on a record is applied as a filter on the
+read path, so <code>scope_enforced</code> is withheld — and for a
+single-user note folder that is the right design rather than an
+omission.</p>
+<p><strong>Nothing records a rejection.</strong> A record that should
+not have been written is deleted, and the next capture of the same text
+is a new candidate with no memory of the last one.
+<code>tombstone</code> is withheld, and the queue is where it would go:
+<code>memory_candidates.py</code> already has the append-only file and
+the per-candidate row that a rejected-value record would need.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One lexical arm, no index, no embeddings in the shipped path. The
+interesting mechanics are in what the tools refuse to claim.</p>
+<p><code>recall.py</code>'s own docstring warns against the evaluation
+error that flatters every retrieval demo: <em>"Do not evaluate retrieval
+by asking about topics you know are there"</em> — the note the query was
+written from is exactly the note the query will find.</p>
+<p><code>benchmark.py --overlap</code> then reports the boundary rather
+than the score, with this instruction attached: <em>"Read this rather
+than the hit@1 figure. hit@1 mostly reports how many zero-overlap probes
+the author happened to write; this reports the boundary itself."</em>
+Run at this commit it prints four probes with no shared content word,
+none found, and twenty with at least one, all twenty in the top three.
+That is a system publishing the shape of its own failure curve instead
+of a single number, and it is the correct instrument for a lexical
+matcher.</p>
+<p><strong>The failure mode is therefore known, measured and
+stated</strong>: a question phrased in a different vocabulary than the
+record retrieves nothing, and no ranking change fixes it. The remedy the
+project offers is the write-side one — put the search words in the
+description — and it reports the measurement behind that too: doing so
+<em>"rescued 4 of 4, every one to rank 1."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are a person or an agent creating a file. Nothing is
+asynchronous, nothing is extracted, no model is called on the shipped
+path, and a memory is retrievable the moment it is saved.</p>
+<p><strong>The gate is the mechanism, and it has drifted from what it
+gates.</strong> <code>findable.py</code> carries a long comment
+explaining why its WINS? check was loosened: it had failed a record
+titled <code>a-single-sample-instrument-cannot-prescribe-waiting</code>
+against the question <em>"wait"</em>, and the comment argues the failure
+was false because <em>"<code>recall.py</code> does NOT tokenise the
+target. Its scorer is
+<code>b, n, d = low.count(t), name.count(t), desc.count(t)</code> —
+SUBSTRING counts. <code>\"wait\" in \"…prescribe-waiting\"</code> is
+True, so recall would have credited that filename match at
+10x."</em></p>
+<p>Neither half of that is true of the shipped scorer.
+<code>recall.py</code> matches on word boundaries, changed on
+2026-08-25, and weights a name hit at 4. Scoring the comment's own
+example against <code>recall.score_file</code> at this commit returns
+<strong>0.0 for <code>"wait"</code></strong> and 4.0 for
+<code>"waiting"</code>.</p>
+<p>The consequence is the mirror of the defect the file's docstring
+warns about. It warns that <em>"a gate that rejects good records is
+worse than no gate, because you learn to ignore it"</em> — and the
+loosening made in response to that now lets the gate
+<strong>pass</strong> records the ranker will not credit. A false pass
+is the quieter failure: a record that clears WINS? and then does not
+surface produces no signal at all.</p>
+<p><strong>The README's field weights are the same drift, one file
+over.</strong> It says name and description carry <em>"roughly 10x and
+8x the weight"</em> of a body hit; the constants are 4 and 3 against a
+body contribution that starts at 1 and saturates at 4. In a repository
+whose README opens by correcting itself for saying "three small tools"
+while eight shipped — <em>"A count typed into prose is a claim nothing
+verifies… Prose cannot compute, so prose should not count"</em> — this
+is the same defect the same document diagnoses two paragraphs earlier,
+about numbers it did not think of as counts.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Zero on the write path and zero on the read path: no embedding, no
+model call, no index build. The cost is linear in corpus size per query,
+since <code>walk</code> reads every <code>.md</code> on every search.
+For a folder of a few hundred notes that is the right trade; the point
+at which it stops being so is not measured here, and the build prompts'
+indexing stage exists for it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>docs/AGENT_INSTRUCTIONS.md</code> is a paste-in prompt block,
+and the tools are command-line programs an agent shells out to. There is
+no MCP server, no library API and no hook.</p>
+<p><strong>Agency over memory is total and the design's caution is about
+exactly that.</strong> The agent decides what to write, and the two
+write-side tools exist to put a checkable step in front of that decision
+rather than a policy behind it — ask <code>findable.py</code> first,
+look at <code>memory_echo.py</code>'s nearest existing records before
+adding another. Neither can refuse a write; both are advisory by
+construction, which is consistent with a template a reader is meant to
+adapt.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No provenance, no verification, no uncertainty.</strong> A
+memory says what it says. Nothing records where it came from, who wrote
+it, or whether anyone checked it, and the format is explicit that this
+is a store of stated facts rather than adjudicated ones.</p>
+<p><strong>Prompt injection is unaddressed and is a live path</strong>,
+because the corpus is a folder an agent both reads and writes and the
+recall output goes into a prompt unfenced. Nothing here neutralises
+markup or marks recalled text as data. For a personal note folder that
+is a reasonable posture; for an agent ingesting third party text into
+the same directory it is not, and the repository does not draw that
+line.</p>
+<p><strong>The strongest safety property is the one about the
+queue</strong>, and it is a design argument rather than a mechanism: the
+write path is where a mistake becomes permanent, so the classifier was
+deliberately not wired to it, and the queue that replaced it is
+reversible by construction. Beside it sits a measured reason: <em>"a
+real hit scored 0.727 while junk scored 0.693 and 0.719, so the answer
+sat inside the noise band. Every score-based gate I own is fighting
+that."</em></p>
+<p><strong><code>docs/AUDIT.md</code> is the document to read</strong>,
+and it is the rarest artifact in this repository. It separates
+mechanical checks — <em>"a question with an exact answer should never be
+sent to a model"</em> — from model reviews, and reports the reviews by
+reproduction rate: a local model claimed twelve findings with zero
+reproducible, Codex claimed five with five reproduced and five fixed,
+<em>"each now has a regression test verified by re-introducing the
+bug."</em> Verifying a regression test by re-introducing the fault it
+guards is the negative control this atlas asks of every checker, done
+here by hand. One of its checks is a shadow-copy test — that
+<code>whereis</code> holds no private copy of <code>BODY_CAP</code>,
+<code>DESC_WEIGHT</code>, <code>score_file</code> or <code>terms</code>,
+because <em>"a shadow copy would let the two files' ranking drift apart
+while every test still passed."</em> The drift documented in section 7
+is that same failure between two files the audit did not pair.</p>
+<p><strong><code>human_review</code> is withheld and the near-miss is
+worth naming.</strong> Promotion from the candidate queue to memory is
+declared a human decision in as many words, in bold, twice. No tool in
+the repository performs it. The surface is designed, argued for, and
+absent.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Every tool carries <code>--selftest</code>, and all eight run clean
+at this commit. The README pre-empts the reading that would matter:
+<em>"A passing selftest means the code does what the code intends. It
+says <strong>nothing</strong> about whether retrieval works — that is
+what <code>benchmark.py</code> is for, and it is the only thing here
+that has ever come back red."</em></p>
+<p><strong>The probe files are the evaluation, and their structure is
+the finding.</strong> Three sections, three jobs, never summed,
+<em>"because summing them produces a number that answers no question
+anybody has"</em>:</p>
+<ul>
+<li><code>works</code> — ten questions per corpus phrased the way a
+person asks months later. <em>"Expected: nearly all at rank 1. If this
+section drops, there is a bug."</em></li>
+<li><code>boundary</code> — questions sharing zero content words with
+their answer, expected <em>not</em> to return it. Not scored as
+failures: <em>"they are what the limit looks like, shown deliberately so
+a user meets it here rather than by surprise."</em></li>
+<li><code>absent</code> — topics not in the corpus, which must return
+nothing.</li>
+</ul>
+<p>The correction that produced the split is recorded in the file: the
+boundary probes used to sit in the same table as the real ones,
+<em>"turning a documented limit into a headline 'MISS' and a score that
+looked like mediocrity."</em></p>
+<p><strong>Run at this pin</strong>, <code>benchmark.py --verify</code>
+gives 10 of 10 found on both corpora with one not first, 3 of 3 absent
+topics correctly empty, and the boundary probes listed by name with what
+they should have found. <code>--overlap</code> gives 0 of 4 and 20 of 20
+with 18 at rank 1 — the README's headline, reproduced.</p>
+<p><strong>And the harness prints its own limits under a heading that
+says so.</strong> <em>"WHAT THIS DOES NOT TELL YOU"</em>: nothing about
+the reader's real notes; nothing about the engines in the diagram that
+are not in this repository; and the one that matters most — <em>"If your
+agent WROTE the probes as well as the code, this check is circular — it
+picked both the exam and the answers. Write at least a few questions
+yourself. That is the part nobody can do for you."</em> A benchmark
+naming circularity as its own most serious threat, in its own output,
+puts the warning where the reader is already deciding what to
+believe.</p>
+<p><strong>What is not tested.</strong> Nothing exercises the format
+rules the whole design rests on: no check that <code>name</code> equals
+the filename, that a file holds one fact, or that a description is
+written in searchable words — the rules are enforced by the writer, and
+<code>FORMAT.md</code> says a validator enforces the name rule while no
+validator ships. Nothing measures the <code>.md</code>-only boundary as
+a case, though <code>sample/mixed/hello.py</code> exists to demonstrate
+it. And no test pairs <code>findable.py</code> against
+<code>recall.py</code> on the same input, which is the check that would
+have caught section 7.</p>
+<p><strong>No paper, and none claimed.</strong>
+<code>docs/AUDIT.md</code> is the closest thing, and it is a better
+artifact than most papers in this corpus for the specific purpose of
+telling a reader what was and was not verified.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Ask whether a record will be findable before writing it, and
+return two verdicts.</strong> Unreachable and unrankable are different
+failures with different fixes — rewrite the content, or rename the file
+— and collapsing them into one score tells the writer nothing
+actionable. This is the idea to take.</li>
+<li><strong>Report benchmark sections separately and refuse to sum
+them.</strong> A documented limit inside the headline number reads as
+mediocrity; a fabrication check inside it reads as accuracy. Three
+numbers that each answer a question beat one that answers none.</li>
+<li><strong>Print what the benchmark does not tell you, in the
+benchmark's own output.</strong> Not in a README a reader skips — in the
+text they are already looking at, at the moment they are deciding what
+to believe.</li>
+<li><strong>Verify a regression test by re-introducing the bug.</strong>
+<code>AUDIT.md</code> does this for all five reproduced findings, which
+is the difference between a test that passes and a test that would
+notice.</li>
+<li><strong>Report a model review by reproduction rate.</strong> Twelve
+claimed and zero reproducible, beside five claimed and five reproduced,
+is more useful than either raw count — and it is the number that tells
+you which reviewer to run again.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate that models the thing it gates instead of calling
+it.</strong> <code>findable.py</code> reimplements its idea of
+<code>recall.py</code>'s scorer in a comment and in code, and when the
+scorer changed the gate did not. If the ranker is importable — it is,
+and <code>whereis.py</code> and <code>memory_echo.py</code> both import
+it — the gate should score through it, so drift becomes impossible
+rather than merely tested for.</li>
+<li><strong>Numbers in prose that describe constants in code.</strong>
+The README diagnoses this exactly once, about tool counts, and then
+states field weights as 10x and 8x where the constants are 4 and 3.
+Anything a reader could check against a constant should be printed from
+it.</li>
+<li><strong>A queue whose exit is a decision nobody can make
+yet.</strong> The argument for human promotion is right and the
+promotion surface is absent, so a candidate captured today has no path
+to becoming a memory at all.</li>
+<li><strong>Shipping the diagram and the specification as if they were
+the system.</strong> <code>coverage.py</code> is honest about this and
+it is still the reader's job to notice that six of twenty-one boxes ship
+code, and that the thirteen specs include every correction
+mechanism.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this as a <strong>format plus a measurement toolchain</strong>,
+not as a memory system, and it is worth an afternoon. The format is
+Claude Code's own auto-memory shape with the reasoning written down, and
+the tools around it are the part that does not exist elsewhere: a
+write-time findability check, a benchmark that can come back red and
+says so, and an audit that separates what was verified from what was
+assumed.</p>
+<p>Who should walk away: anyone who needs the memory to be
+<em>corrected</em> rather than edited. Supersession, archival and
+reinforcement are build prompts, and a reader who adopts this gets a
+folder of notes with a good search over it and no lifecycle at all. That
+is a defensible product for a personal note store and it is not what
+most of this atlas's readers are shopping for.</p>
+<p>The other reason to read it is the prose. Several of the comments in
+this repository are better statements of failure modes than the systems
+that suffer from them manage — <em>"A verified formula over wrong inputs
+is still wrong. The assertion guarded the arithmetic and not its
+operands"</em> is a sentence worth carrying into any review.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was the <code>findable.py</code> loosening re-checked after
+<code>recall.py</code> moved to word-boundary matching?</strong> Both
+changes are dated to the same week and the comment describing the older
+scorer is still in the file.</li>
+<li><strong>Where do the 10x and 8x weights come from?</strong> They may
+describe the BM25 field-weighted engine specified in
+<code>BUILD_PROMPTS.md</code> rather than the shipped scorer, in which
+case the README is describing two engines in one sentence.</li>
+<li><strong>What performs promotion from the candidate queue?</strong>
+The decision is specified as human and the surface is not in the
+repository.</li>
+<li><strong>At what corpus size does walking the tree per query stop
+being the right choice?</strong> The design is explicit that no index is
+built and silent about where that ends.</li>
+<li><strong>Is the <code>metadata.type</code> vocabulary ever read by
+anything?</strong> No shipped tool filters or weights by it, so it is
+currently documentation for the writer.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Format and store</strong></p>
+<ul>
+<li><code>docs/FORMAT.md</code> — the four fields, the four types, and
+the rules with their reasons.</li>
+<li><code>memory/</code> (3 files), <code>sample/memory/</code> (10),
+<code>sample/mixed/</code> (11, including the <code>hello.py</code> that
+demonstrates the <code>.md</code>-only boundary).</li>
+</ul>
+<p><strong>Read path</strong></p>
+<ul>
+<li><code>tools/recall.py:48-52</code> — <code>BODY_CAP</code>,
+<code>DESC_WEIGHT</code>, <code>NAME_WEIGHT</code>;
+<code>:118-165</code> — <code>score_file</code>, the word-boundary
+matchers and the coverage multiplier; <code>:186</code> — the
+<code>.md</code> filter.</li>
+<li><code>tools/whereis.py</code>, <code>tools/memory_echo.py</code> —
+both importing <code>recall</code>.</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>tools/findable.py</code> — the two verdicts;
+<code>:178-192</code> — the comment describing the superseded
+scorer.</li>
+<li><code>tools/memory_candidates.py</code> — the append-only queue, the
+retrieval counter, and the no-promotion rule.</li>
+<li><code>tools/candidate_classify.py</code> — the local-Ollama
+classifier, labelled MEASURED WEAK.</li>
+</ul>
+<p><strong>Measurement</strong></p>
+<ul>
+<li><code>sample/probes.json</code>,
+<code>sample/mixed_probes.json</code> — <code>works</code> /
+<code>boundary</code> / <code>absent</code>.</li>
+<li><code>tools/benchmark.py</code> — <code>--selftest</code>,
+<code>--verify</code>, <code>--overlap</code>.</li>
+<li><code>tools/coverage.py</code> — the twenty-one boxes and the
+CODE/SPEC/PROMPT split.</li>
+<li><code>tools/wired.py</code> — AST call detection with its asymmetry
+stated.</li>
+<li><code>tools/lint_prompts.py</code> — computes its own rule
+count.</li>
+</ul>
+<p><strong>Provenance</strong></p>
+<ul>
+<li><code>docs/AUDIT.md</code> — mechanical checks, model reviews by
+reproduction rate, and what was not verified.</li>
+<li><code>THIRD_PARTY.md</code> — the bounded absence claim and the
+optional-tier licence table.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd"><code class="commit-id" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">9922f209…</code></a>
+— first reading, at the ninth commit of a repository whose first commit
+is dated the same day. Screening returned
+<strong><code>NOTHING SCANNED</code></strong> — no manifest, hook or
+agent file at any path it knows — which is a finding rather than a pass,
+so the execution surface was read by hand: every import across the
+eleven tools is standard library, the only writes are into
+<code>tempfile</code> directories inside <code>--selftest</code> paths,
+and the only outbound request is a local Ollama call in the tool the
+README already labels MEASURED WEAK. On that basis the tools were run,
+and the numbers in sections 1, 6 and 10 were produced rather than
+quoted: all eight selftests pass, <code>--verify</code> returns 10/10
+and 3/3 on both corpora, <code>--overlap</code> reproduces the README's
+0-of-4 and 20-of-20, and <code>recall.score_file</code> returns 0.0 for
+the example <code>findable.py</code>'s comment says would be credited at
+10x. One mark.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

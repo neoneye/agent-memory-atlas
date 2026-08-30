@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 349 reports.</strong></p>
+<p><strong>This page covers all 350 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11919,6 +11919,77 @@ recompute from.</li>
 or a record of what was refused — a vetoed edge leaves only a run-scoped
 ledger entry, so the same text ingested again is vetted from scratch and
 a batch that passes on the second roll is written.</li>
+</ul>
+<h3 id="moth-memory-template"><a
+href="../systems/moth-memory-template/"><code>moth-memory-template</code></a></h3>
+<ul>
+<li>Best idea: <strong>ask whether a record will be findable before
+writing it, and return two verdicts.</strong> <code>findable.py</code>
+takes the pair — the record you are about to write and the question you
+would later ask — and separates <em>FOUND?</em> (the question against
+the whole record; failing it means the content is unreachable by any
+ranker) from <em>WINS?</em> (the question against name and description
+only, because body hits saturate). Unreachable and unrankable are
+different failures with different fixes, rewrite versus rename, and this
+atlas asks after retrieval quality in every report and after write-time
+reachability in almost none.</li>
+<li>Second idea: <strong>three benchmark sections that are never
+summed.</strong> <code>works</code> must find its known answer,
+<code>boundary</code> shares zero content words and is expected to fail,
+<code>absent</code> must return nothing. The correction that produced
+the split is recorded in the probe file: the boundary probes used to sit
+in the same table, <em>"turning a documented limit into a headline
+'MISS' and a score that looked like mediocrity."</em></li>
+<li>Third idea: <strong>the harness prints what it does not tell you, in
+its own output.</strong> Including the one that matters — <em>"If your
+agent WROTE the probes as well as the code, this check is circular — it
+picked both the exam and the answers."</em> A benchmark naming
+circularity as its own most serious threat, where the reader is already
+looking, puts the warning at the moment it can still change a
+decision.</li>
+<li>Biggest risk: <strong>the write gate models the ranker instead of
+calling it, and the ranker moved.</strong> A comment in
+<code>findable.py</code> justifies loosening WINS? by describing
+<code>recall.py</code> as substring counts crediting a filename match
+<em>"at 10x"</em>. The shipped <code>recall.py</code> matches on word
+boundaries — changed 2026-08-25 by an external review — and weights a
+name hit at 4. Scoring the comment's own example returns 0.0. The
+loosening now lets the gate <strong>pass</strong> records the ranker
+will not credit, which is the quieter version of the failure the file's
+own docstring warns about, since a false pass produces no signal at all.
+Both files are importable; <code>whereis.py</code> and
+<code>memory_echo.py</code> already import the scorer.</li>
+<li>Second risk: <strong>six of twenty-one architecture boxes ship
+code.</strong> <code>coverage.py</code> prints the split itself and adds
+<em>"ADDRESSED IS NOT IMPLEMENTED"</em> — thirteen rows are build
+prompts, and one of them is stage 10, the reinforce / supersede /
+archive lifecycle. Every correction mechanism this atlas measures is a
+prompt here.</li>
+<li>Third risk: <strong>the README states field weights the code does
+not have.</strong> <em>"roughly 10x and 8x the weight"</em> against
+<code>NAME_WEIGHT = 4</code> and <code>DESC_WEIGHT = 3</code>. The same
+README opens by correcting itself for saying "three small tools" while
+eight shipped, with the right diagnosis — <em>"Prose cannot compute, so
+prose should not count"</em> — and then states two numbers it did not
+think of as counts.</li>
+<li>Maturity impression: Apache-2.0, 9 commits all dated 30 August 2026,
+2,938 lines of standard-library Python and 2,145 lines of prose over 24
+memory files. One mark. Screening returned <code>NOTHING SCANNED</code>,
+so the execution surface was read by hand and the tools were then run:
+all eight selftests pass, <code>--verify</code> returns 10/10 found and
+3/3 absent on both corpora, and <code>--overlap</code> reproduces the
+README's headline exactly — 0 of 4 probes with no shared content word
+found, 20 of 20 with at least one, 18 at rank 1.</li>
+<li>Read <code>docs/AUDIT.md</code>: it separates mechanical checks from
+model reviews, reports the reviews by reproduction rate (a local model
+12 claimed / 0 reproducible; Codex 5 / 5, all fixed), and verifies each
+regression test <strong>by re-introducing the bug</strong> — the
+negative control this atlas asks of every checker, done by hand.</li>
+<li>Study when: you want the write-side idea, or a worked example of a
+benchmark that reports its boundary instead of its hit rate.</li>
+<li>Do not copy when: you need memory to be corrected rather than
+edited. What you get is a folder of notes with a good search over it and
+no lifecycle at all.</li>
 </ul>
         </article>
       </div>
