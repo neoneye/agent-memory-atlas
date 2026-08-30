@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **347 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **348 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -32,6 +32,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/agent-afk/"><span class="az-id">agent-afk</span><span class="az-what">A citation or an [unverified] tag</span><code class="az-repo">griffinwork40/agent-afk</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/agentdatabase/"><span class="az-id">AgentDatabase</span><span class="az-what">A policy the store predates</span><code class="az-repo">LinzeColin/AgentDatabase</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/agentic-context-engine/"><span class="az-id">Agentic Context Engine</span><span class="az-what">A decision not to merge, kept</span><code class="az-repo">kayba-ai/agentic-context-engine</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
+<li><a class="az-row" href="../systems/agentic-graphrag-blueprint/"><span class="az-id">Agentic GraphRAG Blueprint</span><span class="az-what">One delete, four leaks</span><code class="az-repo">sebastianbrzustowicz/Agentic-GraphRAG-Blueprint</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/agentictrading/"><span class="az-id">AgenticTrading</span><span class="az-what">A memory graph nothing scopes</span><code class="az-repo">Open-Finance-Lab/AgenticTrading</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/agentmemory/"><span class="az-id">agentmemory</span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">rohitg00/agentmemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/agentmemory-v4/"><span class="az-id">agentmemory V4</span><span class="az-what">The run log names a different dataset from the claim</span><code class="az-repo">jordanmccann/agentmemory</code><span class="az-caps"></span></a></li>

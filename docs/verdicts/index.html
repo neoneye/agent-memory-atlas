@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 347 reports.</strong></p>
+<p><strong>This page covers all 348 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -11746,6 +11746,87 @@ when no conformance test runs against both sides.</li>
 principal, or be corrected. The tutorial's own last bullet says
 persistence is not enabled by default; its table twelve lines above says
 the scope is "across runs" and calls MemGPT's archival tier "disk".</li>
+</ul>
+<h3 id="agentic-graphrag-blueprint"><a
+href="../systems/agentic-graphrag-blueprint/"><code>agentic-graphrag-blueprint</code></a></h3>
+<ul>
+<li>Best idea: <strong>key a derived artifact by a fingerprint of its
+inputs.</strong> A community report's id is
+<code>report-{sha1(sorted members + sorted internal edges)[:12]}</code>,
+so whether to regenerate is a membership test, which reports went stale
+is a set difference, and an unchanged community is provably unchanged.
+It is also the only place in the system where something that stopped
+being true is removed.</li>
+<li>Second idea: <strong>test a cost claim by asserting the call
+count.</strong>
+<code>test_run_ingestion_incremental_skips_unchanged_files</code>
+re-runs against pre-populated stores and asserts
+<code>fake.calls == calls_after_first</code> — zero LLM calls — then
+edits the file and asserts exactly two: one extraction, one report. A
+test that only compared outputs would have passed against a full
+rebuild.</li>
+<li>Third idea: <strong>check that two stores agree and rebuild when
+they do not.</strong>
+<code>if vector_store.count() == 0 and graph_store.node_count() &gt; 0</code>
+turns a silently half-broken index into a loud expensive one.</li>
+<li>Biggest risk: <strong>positional chunk ids leak in one direction
+only.</strong> A chunk's id is <code>chunk-{basename}-{index}</code>, so
+re-ingesting a document upserts <code>0..n-1</code> and an edit that
+produces <em>fewer</em> chunks leaves the previous version's tail in the
+vector store, carrying the same <code>source</code> metadata and
+indistinguishable from current content. The failure is invisible and
+depends on whether an edit grew or shrank the file.</li>
+<li>Second risk: <strong>write-once-if-absent standing in for
+merge.</strong> Entities are added under
+<code>if name not in known_entities</code>, so the first description an
+LLM writes is permanent — and <code>NetworkXGraphStore.add_node</code>'s
+own update-on-exists branch is unreachable from the only production
+caller. Relations, meanwhile, are appended to a
+<code>MultiDiGraph</code> with no dedup, so an edited file
+re-contributes a parallel copy of every relation its unchanged
+paragraphs still support.</li>
+<li>Third risk: <strong>the deployment guarantees the guard
+fires.</strong> Terraform mounts <code>/app/data</code> from an Azure
+File share and sets <code>GRAPH_PATH</code> inside it, while leaving
+<code>CHROMA_DIR=/app/.chroma_db</code> outside the mount — so every
+restart loses Chroma, keeps the graph, and the next ingestion
+re-extracts the whole corpus. That is the token cost the README's
+incremental claim exists to avoid, defeated by the infrastructure
+shipped beside it, and the fix is one line.</li>
+<li>Fourth risk: <strong>the store is persisted with <code>pickle</code>
+into the directory <code>/upload</code> writes to.</strong>
+<code>os.path.basename</code> blocks traversal and is tested; it does
+not stop an upload named <code>graph.gpickle</code>, and
+<code>app.py</code> calls <code>pickle.load</code> at import. Credit
+where due: the API container app is
+<code>external_enabled = false</code> and the UI sits behind Entra ID
+with <code>app_role_assignment_required = true</code>, so this needs an
+assigned user rather than the internet — but an authenticated user of a
+document Q&amp;A tool should not be one filename away from code
+execution.</li>
+<li>Two claims that do not survive the code: <strong>there is no agentic
+routing</strong> — <code>mode</code> is a request field and a React
+dropdown, and <code>app.py</code> is
+<code>if request.mode == "global"</code> — and the community detection
+is Leiden (<code>leidenalg</code>,
+<code>ModularityVertexPartition</code>, <code>seed=0</code>) while the
+README diagram and <code>CITATION.cff</code> both say Louvain.</li>
+<li>Maturity impression: MIT, 37 commits, first commit dated 28 August
+2026 — a two-day-old repository at this pin. 1,241 lines of Python under
+<code>backend/src</code> plus <code>app.py</code>, 656 lines of tests
+across 38 cases, and every dependency manifest inside the seven-day
+freshness cooldown. No marks. Terraform provisions an Azure AI Search
+service, a Cosmos SQL <code>chat_history</code> container, a Cosmos
+Gremlin graph, a Blob container and nine Key Vault secrets, and the
+backend connects to none of them, while the C4 diagram asserts several
+of those edges as facts.</li>
+<li>Study when: you are building any pipeline that summarises a mutable
+substructure and need the fingerprint-keyed regeneration pattern, or you
+want a worked example of testing incrementality by spend.</li>
+<li>Do not copy when: your documents get edited. Every defect here is
+about the <em>second</em> ingestion, and closing them touches the chunk
+id scheme, the entity write, the edge write and the state file — which
+is most of <code>run_ingestion</code>.</li>
 </ul>
         </article>
       </div>
