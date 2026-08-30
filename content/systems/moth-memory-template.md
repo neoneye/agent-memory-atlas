@@ -18,7 +18,7 @@ capability_evidence:
 matrix:
   memory_unit: "One Markdown file holding one fact: `name`, a one-line `description` written in the words you would search with, `metadata.type` of user, feedback, project or reference, then the fact and its why-and-how"
   storage: "A directory of `.md` files. No index, no service, no database — the walker reads the tree on every query"
-  retrieval: "Word-boundary term matching over name, description and body, weighted 4 / 3 / capped-at-4, multiplied by the square of the fraction of query terms a file covers"
+  retrieval: "Shipped: word-boundary term matching over name, description and body, weighted 4 / 3 / capped-at-4, times the square of query coverage. Specified in `BUILD_PROMPTS.md` and measured there: a persistent index, chunking, RRF fusion, a SPLADE sparse tier, a dense embedding tier and a cross-encoder rerank — the last two measured and the rerank rejected"
   write: "A person or an agent writes the file. `findable.py` is asked first — will this be found, and will it win — and `memory_echo.py` shows the nearest existing memories before a new one is added"
   update_delete: "Editing or deleting the file. The reinforce / supersede / archive lifecycle is stage 10 of the build prompts, not code in this repository"
   scoping: "None. `--root` selects a directory; nothing is stored on a record that a query filters by"
@@ -67,6 +67,20 @@ NOT IMPLEMENTED"* and *"That is coverage OF THIS LIST, not of the architecture."
 Stage 10 — the reinforce / supersede / archive lifecycle — is one of the specs.
 So every correction mechanism this atlas measures is a prompt here, and the one
 mark this report awards is the only one it could award.
+
+**But a spec here is not an empty box, and the difference matters.** Every one of
+the twelve build stages carries a `TESTED` or `NOT TESTED` marker, every one has
+been run, and each records the defects the run found — including defects in the
+prompt's own wording and, at stage 4, *"an acceptance step that could not fail"*.
+Two of them came back **REJECT on measurement**, against the author's own
+architecture: the cross-encoder rerank the literature treats as the standard final
+stage took retrieval from 10 of 14 down to **6 of 14**, below the baseline it was
+meant to improve, and the dense embedding tier rescued **1 of 3** boundary probes
+where editing the descriptions rescued 4 of 4 for free. Both had previously been
+marked *"NOT TESTED — cannot be, here"*, and both markers turned out to be false:
+the models were already in the local cache. So the shipped sixth is the floor, and
+the specified remainder comes with a published, negative, reproducible-in-principle
+account of what adding it bought — which is the opposite of the usual roadmap.
 
 **And the write gate has drifted from the ranker it predicts.** A comment in
 `findable.py` explains a fix by describing `recall.py`'s scorer as substring
@@ -251,8 +265,14 @@ row that a rejected-value record would need.
 
 ## 6. Retrieval Mechanics
 
-One lexical arm, no index, no embeddings in the shipped path. The interesting
-mechanics are in what the tools refuse to claim.
+One lexical arm, no index, no embeddings in the shipped path — which is why this
+report records the retrieval stack as lexical. The atlas counts only the arms a
+read path actually runs, so a tier specified in `BUILD_PROMPTS.md` and measured
+there is evidence about the design and not a column in the comparison table. The
+sparse, dense and rerank tiers, and what measuring them cost and returned, are in
+section 10.
+
+The interesting mechanics in what does ship are in what the tools refuse to claim.
 
 `recall.py`'s own docstring warns against the evaluation error that flatters every
 retrieval demo: *"Do not evaluate retrieval by asking about topics you know are
@@ -414,6 +434,31 @@ ships. Nothing measures the `.md`-only boundary as a case, though `sample/mixed/
 exists to demonstrate it. And no test pairs `findable.py` against `recall.py` on
 the same input, which is the check that would have caught section 7.
 
+**The build stages are themselves an ablation record, and it is the strongest
+evidence in the repository.** `BUILD_PROMPTS.md` runs to 899 lines and the results
+are stated against a fixed 14-probe set on the shipped corpora:
+
+| tier | found | verdict |
+| --- | ---: | --- |
+| keyword + RRF fusion baseline | 7/14 | the shipped floor |
+| SPLADE sparse expansion | 10/14 | gate (a) passes, gate (b) fails — *"A net gain is not a strict gain"* |
+| SPLADE + cross-encoder rerank | **6/14** | **REJECT** — *"it destroyed four results the previous stage had already found"* |
+| dense embeddings (`nomic-embed-text`) | rescued 1 of 3 boundary probes | against **4 of 4** for editing the descriptions, free |
+
+Three things about that table are worth more than the numbers. It is a negative
+result about the author's own design, published in the document that tells you to
+build it. It names the mechanism rather than the score — SPLADE loses a probe the
+baseline answered, so the failure is about *placement in a fusion*, not about
+SPLADE. And the embeddings stage records the safety consequence rather than only
+the hit rate: the miss *"returned the wrong file with confidence"* where the
+lexical engine returned nothing, and *"a semantic tier converts 'no answer' into
+'a plausible wrong answer,' and those are not equally safe."*
+
+Two of these stages carried *"NOT TESTED — cannot be, here"* until 2026-08-25, and
+both lines were wrong — the SPLADE and reranker checkpoints were already in the
+local HuggingFace cache. The file records that too, which is why the untested
+markers elsewhere in it can be read as claims rather than as hedges.
+
 **No paper, and none claimed.** `docs/AUDIT.md` is the closest thing, and it is a
 better artifact than most papers in this corpus for the specific purpose of
 telling a reader what was and was not verified.
@@ -436,6 +481,11 @@ telling a reader what was and was not verified.
 - **Verify a regression test by re-introducing the bug.** `AUDIT.md` does this for
   all five reproduced findings, which is the difference between a test that passes
   and a test that would notice.
+- **Publish the measurement that rejects your own next stage.** The cross-encoder
+  is the standard final tier in most retrieval write-ups; here it is measured on
+  the actual corpus, comes back below baseline, and the stage stays in the
+  document marked REJECT with the numbers attached. A roadmap that tells a reader
+  which of its own steps not to take is worth more than one that only advertises.
 - **Report a model review by reproduction rate.** Twelve claimed and zero
   reproducible, beside five claimed and five reproduced, is more useful than
   either raw count — and it is the number that tells you which reviewer to run
@@ -470,10 +520,19 @@ back red and says so, and an audit that separates what was verified from what wa
 assumed.
 
 Who should walk away: anyone who needs the memory to be *corrected* rather than
-edited. Supersession, archival and reinforcement are build prompts, and a reader
-who adopts this gets a folder of notes with a good search over it and no
-lifecycle at all. That is a defensible product for a personal note store and it
-is not what most of this atlas's readers are shopping for.
+edited today. Supersession, archival and reinforcement are stage 10, so what a
+reader adopts at this pin is a folder of notes with a good search over it and no
+lifecycle — a defensible product for a personal note store, and not what most of
+this atlas's readers are shopping for.
+
+Whether that is a limitation or a division of labour depends on the reader, and
+the repository's own framing is the honest one: every corpus differs, so the
+engines are specified rather than shipped and the choice of which to add is left
+to whoever owns the corpus. Two things make that more than a disclaimer. The
+stages carry acceptance conditions naming the exact probes that must improve — not
+an average — and where they have been run the results are published including the
+two that failed. A reader following this roadmap is told, before installing
+anything, that the dense tier bought less than editing four descriptions did.
 
 The other reason to read it is the prose. Several of the comments in this
 repository are better statements of failure modes than the systems that suffer
@@ -535,4 +594,4 @@ carrying into any review.
 
 ## History
 
-**2026-08-30** — [`9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd) — first reading, at the ninth commit of a repository whose first commit is dated the same day. Screening returned **`NOTHING SCANNED`** — no manifest, hook or agent file at any path it knows — which is a finding rather than a pass, so the execution surface was read by hand: every import across the eleven tools is standard library, the only writes are into `tempfile` directories inside `--selftest` paths, and the only outbound request is a local Ollama call in the tool the README already labels MEASURED WEAK. On that basis the tools were run, and the numbers in sections 1, 6 and 10 were produced rather than quoted: all eight selftests pass, `--verify` returns 10/10 and 3/3 on both corpora, `--overlap` reproduces the README's 0-of-4 and 20-of-20, and `recall.score_file` returns 0.0 for the example `findable.py`'s comment says would be credited at 10x. One mark.
+**2026-08-30** — [`9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd) — first reading, at the ninth commit of a repository whose first commit is dated the same day. Screening returned **`NOTHING SCANNED`** — no manifest, hook or agent file at any path it knows — which is a finding rather than a pass, so the execution surface was read by hand: every import across the eleven tools is standard library, the only writes are into `tempfile` directories inside `--selftest` paths, and the only outbound request is a local Ollama call in the tool the README already labels MEASURED WEAK. On that basis the tools were run, and the numbers in sections 1, 6 and 10 were produced rather than quoted: all eight selftests pass, `--verify` returns 10/10 and 3/3 on both corpora, `--overlap` reproduces the README's 0-of-4 and 20-of-20, and `recall.score_file` returns 0.0 for the example `findable.py`'s comment says would be credited at 10x. One mark. `docs/BUILD_PROMPTS.md` was read in full on a second pass the same day: the twelve stages are not empty boxes but executed prompts with per-stage defect counts and, at stages 6 to 8, measured retrieval results — two of them REJECT — which sections 1, 6 and 10 now carry.

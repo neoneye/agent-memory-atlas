@@ -181,6 +181,23 @@ the architecture."</em> Stage 10 — the reinforce / supersede / archive
 lifecycle — is one of the specs. So every correction mechanism this
 atlas measures is a prompt here, and the one mark this report awards is
 the only one it could award.</p>
+<p><strong>But a spec here is not an empty box, and the difference
+matters.</strong> Every one of the twelve build stages carries a
+<code>TESTED</code> or <code>NOT TESTED</code> marker, every one has
+been run, and each records the defects the run found — including defects
+in the prompt's own wording and, at stage 4, <em>"an acceptance step
+that could not fail"</em>. Two of them came back <strong>REJECT on
+measurement</strong>, against the author's own architecture: the
+cross-encoder rerank the literature treats as the standard final stage
+took retrieval from 10 of 14 down to <strong>6 of 14</strong>, below the
+baseline it was meant to improve, and the dense embedding tier rescued
+<strong>1 of 3</strong> boundary probes where editing the descriptions
+rescued 4 of 4 for free. Both had previously been marked <em>"NOT TESTED
+— cannot be, here"</em>, and both markers turned out to be false: the
+models were already in the local cache. So the shipped sixth is the
+floor, and the specified remainder comes with a published, negative,
+reproducible-in-principle account of what adding it bought — which is
+the opposite of the usual roadmap.</p>
 <p><strong>And the write gate has drifted from the ranker it
 predicts.</strong> A comment in <code>findable.py</code> explains a fix
 by describing <code>recall.py</code>'s scorer as substring counts
@@ -368,8 +385,15 @@ is a new candidate with no memory of the last one.
 <code>memory_candidates.py</code> already has the append-only file and
 the per-candidate row that a rejected-value record would need.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p>One lexical arm, no index, no embeddings in the shipped path. The
-interesting mechanics are in what the tools refuse to claim.</p>
+<p>One lexical arm, no index, no embeddings in the shipped path — which
+is why this report records the retrieval stack as lexical. The atlas
+counts only the arms a read path actually runs, so a tier specified in
+<code>BUILD_PROMPTS.md</code> and measured there is evidence about the
+design and not a column in the comparison table. The sparse, dense and
+rerank tiers, and what measuring them cost and returned, are in section
+10.</p>
+<p>The interesting mechanics in what does ship are in what the tools
+refuse to claim.</p>
 <p><code>recall.py</code>'s own docstring warns against the evaluation
 error that flatters every retrieval demo: <em>"Do not evaluate retrieval
 by asking about topics you know are there"</em> — the note the query was
@@ -538,6 +562,59 @@ a case, though <code>sample/mixed/hello.py</code> exists to demonstrate
 it. And no test pairs <code>findable.py</code> against
 <code>recall.py</code> on the same input, which is the check that would
 have caught section 7.</p>
+<p><strong>The build stages are themselves an ablation record, and it is
+the strongest evidence in the repository.</strong>
+<code>BUILD_PROMPTS.md</code> runs to 899 lines and the results are
+stated against a fixed 14-probe set on the shipped corpora:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>tier</th>
+<th style="text-align: right;">found</th>
+<th>verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>keyword + RRF fusion baseline</td>
+<td style="text-align: right;">7/14</td>
+<td>the shipped floor</td>
+</tr>
+<tr>
+<td>SPLADE sparse expansion</td>
+<td style="text-align: right;">10/14</td>
+<td>gate (a) passes, gate (b) fails — <em>"A net gain is not a strict
+gain"</em></td>
+</tr>
+<tr>
+<td>SPLADE + cross-encoder rerank</td>
+<td style="text-align: right;"><strong>6/14</strong></td>
+<td><strong>REJECT</strong> — <em>"it destroyed four results the
+previous stage had already found"</em></td>
+</tr>
+<tr>
+<td>dense embeddings (<code>nomic-embed-text</code>)</td>
+<td style="text-align: right;">rescued 1 of 3 boundary probes</td>
+<td>against <strong>4 of 4</strong> for editing the descriptions,
+free</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three things about that table are worth more than the numbers. It is
+a negative result about the author's own design, published in the
+document that tells you to build it. It names the mechanism rather than
+the score — SPLADE loses a probe the baseline answered, so the failure
+is about <em>placement in a fusion</em>, not about SPLADE. And the
+embeddings stage records the safety consequence rather than only the hit
+rate: the miss <em>"returned the wrong file with confidence"</em> where
+the lexical engine returned nothing, and <em>"a semantic tier converts
+'no answer' into 'a plausible wrong answer,' and those are not equally
+safe."</em></p>
+<p>Two of these stages carried <em>"NOT TESTED — cannot be, here"</em>
+until 2026-08-25, and both lines were wrong — the SPLADE and reranker
+checkpoints were already in the local HuggingFace cache. The file
+records that too, which is why the untested markers elsewhere in it can
+be read as claims rather than as hedges.</p>
 <p><strong>No paper, and none claimed.</strong>
 <code>docs/AUDIT.md</code> is the closest thing, and it is a better
 artifact than most papers in this corpus for the specific purpose of
@@ -562,6 +639,12 @@ to believe.</li>
 <code>AUDIT.md</code> does this for all five reproduced findings, which
 is the difference between a test that passes and a test that would
 notice.</li>
+<li><strong>Publish the measurement that rejects your own next
+stage.</strong> The cross-encoder is the standard final tier in most
+retrieval write-ups; here it is measured on the actual corpus, comes
+back below baseline, and the stage stays in the document marked REJECT
+with the numbers attached. A roadmap that tells a reader which of its
+own steps not to take is worth more than one that only advertises.</li>
 <li><strong>Report a model review by reproduction rate.</strong> Twelve
 claimed and zero reproducible, beside five claimed and five reproduced,
 is more useful than either raw count — and it is the number that tells
@@ -600,11 +683,20 @@ write-time findability check, a benchmark that can come back red and
 says so, and an audit that separates what was verified from what was
 assumed.</p>
 <p>Who should walk away: anyone who needs the memory to be
-<em>corrected</em> rather than edited. Supersession, archival and
-reinforcement are build prompts, and a reader who adopts this gets a
-folder of notes with a good search over it and no lifecycle at all. That
-is a defensible product for a personal note store and it is not what
-most of this atlas's readers are shopping for.</p>
+<em>corrected</em> rather than edited today. Supersession, archival and
+reinforcement are stage 10, so what a reader adopts at this pin is a
+folder of notes with a good search over it and no lifecycle — a
+defensible product for a personal note store, and not what most of this
+atlas's readers are shopping for.</p>
+<p>Whether that is a limitation or a division of labour depends on the
+reader, and the repository's own framing is the honest one: every corpus
+differs, so the engines are specified rather than shipped and the choice
+of which to add is left to whoever owns the corpus. Two things make that
+more than a disclaimer. The stages carry acceptance conditions naming
+the exact probes that must improve — not an average — and where they
+have been run the results are published including the two that failed. A
+reader following this roadmap is told, before installing anything, that
+the dense tier bought less than editing four descriptions did.</p>
 <p>The other reason to read it is the prose. Several of the comments in
 this repository are better statements of failure modes than the systems
 that suffer from them manage — <em>"A verified formula over wrong inputs
@@ -697,7 +789,11 @@ quoted: all eight selftests pass, <code>--verify</code> returns 10/10
 and 3/3 on both corpora, <code>--overlap</code> reproduces the README's
 0-of-4 and 20-of-20, and <code>recall.score_file</code> returns 0.0 for
 the example <code>findable.py</code>'s comment says would be credited at
-10x. One mark.</p>
+10x. One mark. <code>docs/BUILD_PROMPTS.md</code> was read in full on a
+second pass the same day: the twelve stages are not empty boxes but
+executed prompts with per-stage defect counts and, at stages 6 to 8,
+measured retrieval results — two of them REJECT — which sections 1, 6
+and 10 now carry.</p>
         </article>
       </div>
     </main>
