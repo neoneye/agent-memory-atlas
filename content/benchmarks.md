@@ -1570,7 +1570,7 @@ a benign harness rather than as a separate adversarial suite.
 What no artifact here recomputes is the published means: the generator and
 harness ship, the run records do not.
 
-### An accumulation curve, and a repository that is not there
+### Live extraction, and an accumulation curve over twenty iterations
 
 *PILOT in the Loop: Live Self-Improvement for Long-Horizon Agents*
 ([arXiv:2608.26530](https://arxiv.org/abs/2608.26530), 27 August 2026; Xiao, Sun,
@@ -1611,9 +1611,7 @@ marks is second. The prose does not overstate this; it says five of six.
 variants; the GitHub account is real and public with three other repositories,
 none of them this one. So the skill library, the extraction prompts and the
 excluded-task lists the paper promises are not inspectable, and none of the
-numbers above can be reproduced from an artifact. That is the difference between
-a result on this page and a report in this atlas: the systems here are read at a
-commit, and this one has no commit to read.
+numbers above can be reproduced from an artifact.
 
 ### A memory the system can route around is one nobody ever exercises
 
@@ -2236,16 +2234,16 @@ without committed artifacts" is a named antipattern here with several instances
 among the systems; this is the same antipattern in the evaluation literature,
 and it was caught the same way — by reading past the abstract.
 
-### The measured version of a line this atlas draws by hand
+### A decaying score and a latched state, ninety-seven points apart
 
 Every capability judgement on this site turns on one distinction, stated in the
 rubric as *"a confidence number answers 'how sure' and gets used for ranking; a
 state answers 'may this be acted on' and gets used for filtering."* It is applied
-from code inspection, and it has cost systems a mark — most recently
-[NexusMem](../systems/nexusmem/), whose `rejected` status is spent as a `0.3`
-score multiplier, and [Areev](../systems/areev/), whose retraction is `-0.3` on a
-clamped priority. A reasonable objection to both rulings is that the difference
-is a matter of degree: a large enough penalty is a filter.
+from code inspection, and it costs a mark wherever a status is spent as a
+number — [NexusMem](../systems/nexusmem/) multiplies a `rejected` node's score by
+`0.3`, [Areev](../systems/areev/) adds `-0.3` to a clamped priority, and neither
+filters on the field. The reasonable objection is that the difference is a matter
+of degree: a large enough penalty is a filter.
 
 *Safety Does Not Compose: Non-Decaying Loop State for Autonomous LLM Agents*
 ([arXiv:2608.27141](https://arxiv.org/abs/2608.27141), 27 August 2026, revised 28
@@ -2308,9 +2306,8 @@ different `γ` and `θ` would move the crossing point — the point is that a
 crossing point exists and a patient adversary finds it. It is a safety monitor,
 so nothing here says a memory system with a `0.3` multiplier is *unsafe*. What it
 says is narrower and sufficient: a score that decays and a state that latches are
-different kinds of object, the difference is not a tuning parameter, and there is
-now a number on it. The atlas's rulings on NexusMem and Areev rest on that
-difference, and this is the closest thing to outside evidence for them.
+different kinds of object, and the difference is not a tuning parameter. That is
+the distinction the NexusMem and Areev rulings turn on.
 
 Two smaller things from the same paper. The state LoopHarness refuses to reset is
 listed as a risk cumulant, commit counters, a degradation level, an

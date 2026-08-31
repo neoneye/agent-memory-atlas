@@ -2108,13 +2108,20 @@ successor with a justification and an authorisation list and is filtered out by
 reclaims the attachment bytes — with the standard written into the code twice,
 *"a tombstone that leaves the text findable is not a tombstone"* and *"a tombstone
 that leaves the attachment bytes on disk is not a tombstone"* — and replicates,
-because `import_bundle` replays the op-log record; *retract* sets
-`verification_status = retracted` and is applied as `-0.3` on a clamped priority
-score, so a memory a person retracted ranks lower and still reaches the model.
-That last one is why `trust_state` is withheld here despite a four-value status
-held apart from a confidence float and written by the rollback path, and it is the
-same shape as the mark [NexusMem](../systems/nexusmem/) lost on the same day, in a
-much larger system. What it does govern is unusual: `entity_at` takes a *world* or
+because `import_bundle` replays the op-log record; and *retract* means two
+different things depending on which substrate answers — the `OmsSubstrate` trait
+and its in-memory reference implementation set `verification_status = retracted`,
+while the adapter over the real store rejects that mapping in a comment,
+*"the honest mapping for undoing an engine-created ADD is a tombstone of that
+grain"*, and calls `forget`. So a loop rollback erases on a real deployment, and
+the status is caller-authored in practice: the reference substrate is the only
+automatic writer of `"retracted"` in the tree. Where the status does appear it is
+applied as `-0.3` on a clamped priority score, so a grain marked retracted ranks
+lower and still reaches the model, and that is why `trust_state` is withheld here
+despite a four-value status held apart from a confidence float — the same shape as
+the mark [NexusMem](../systems/nexusmem/) lost, in a much larger system. No case
+in the conformance kit exercises `retract`, so the one verb whose two backends
+disagree is the one the multi-backend suite does not cover. What it does govern is unusual: `entity_at` takes a *world* or
 *knowledge* axis so "what was true" and "what did we believe" are two answerable
 questions, and every review transition writes an immutable Observation grain,
 hash-chained to its predecessor, carrying the actor, the observer type and a

@@ -2929,42 +2929,51 @@ bytes — with the standard written into the code twice, <em>"a tombstone
 that leaves the text findable is not a tombstone"</em> and <em>"a
 tombstone that leaves the attachment bytes on disk is not a
 tombstone"</em> — and replicates, because <code>import_bundle</code>
-replays the op-log record; <em>retract</em> sets
-<code>verification_status = retracted</code> and is applied as
-<code>-0.3</code> on a clamped priority score, so a memory a person
-retracted ranks lower and still reaches the model. That last one is why
-<code>trust_state</code> is withheld here despite a four-value status
-held apart from a confidence float and written by the rollback path, and
-it is the same shape as the mark <a
-href="../systems/nexusmem/">NexusMem</a> lost on the same day, in a much
-larger system. What it does govern is unusual: <code>entity_at</code>
-takes a <em>world</em> or <em>knowledge</em> axis so "what was true" and
-"what did we believe" are two answerable questions, and every review
-transition writes an immutable Observation grain, hash-chained to its
-predecessor, carrying the actor, the observer type and a
-<code>because</code> field that is a <code>String</code> rather than an
-<code>Option</code>. <strong>Verel</strong> separates confidence,
-retrieval strength, and verification state, carries rejected values
-forward, and fences recall as untrusted data. <strong>RainBox</strong>
-adds governed atomic correction, lattice-aware conflict detection, and
-rejected-value tombstones that block model re-assertion. <strong>Magic
-Context</strong> maps each memory to the files it describes and
-re-verifies when git reports those files changed, keeping lifecycle and
-verification on separate axes. <strong>MetaClaw</strong> applies the
-idea one level up, promoting a candidate <em>retrieval policy</em> only
-when it does not regress across eight measured deltas. <strong>Core
-Memory</strong> goes furthest on the axis: a record's epistemic
-grounding sets a <em>ceiling</em> on how trusted it can ever become, so
-a speculative memory cannot be promoted into canon by being recalled
-often — the guarantee is structural rather than procedural.
-<strong>Daimon</strong> attacks the problem one step earlier than any of
-them: the model is asked to label each item verbatim or inferred <em>and
-to cite the span</em>, and then code greps the quote against the
-transcript and downgrades the item when it is not there. Everywhere else
-in this family, trust is assigned by policy over a claim; here the
-claim's own evidence is mechanically falsifiable, which is why it is the
-only system in the atlas whose trust classes can be wrong in a way the
-system itself detects.</p>
+replays the op-log record; and <em>retract</em> means two different
+things depending on which substrate answers — the
+<code>OmsSubstrate</code> trait and its in-memory reference
+implementation set <code>verification_status = retracted</code>, while
+the adapter over the real store rejects that mapping in a comment,
+<em>"the honest mapping for undoing an engine-created ADD is a tombstone
+of that grain"</em>, and calls <code>forget</code>. So a loop rollback
+erases on a real deployment, and the status is caller-authored in
+practice: the reference substrate is the only automatic writer of
+<code>"retracted"</code> in the tree. Where the status does appear it is
+applied as <code>-0.3</code> on a clamped priority score, so a grain
+marked retracted ranks lower and still reaches the model, and that is
+why <code>trust_state</code> is withheld here despite a four-value
+status held apart from a confidence float — the same shape as the mark
+<a href="../systems/nexusmem/">NexusMem</a> lost, in a much larger
+system. No case in the conformance kit exercises <code>retract</code>,
+so the one verb whose two backends disagree is the one the multi-backend
+suite does not cover. What it does govern is unusual:
+<code>entity_at</code> takes a <em>world</em> or <em>knowledge</em> axis
+so "what was true" and "what did we believe" are two answerable
+questions, and every review transition writes an immutable Observation
+grain, hash-chained to its predecessor, carrying the actor, the observer
+type and a <code>because</code> field that is a <code>String</code>
+rather than an <code>Option</code>. <strong>Verel</strong> separates
+confidence, retrieval strength, and verification state, carries rejected
+values forward, and fences recall as untrusted data.
+<strong>RainBox</strong> adds governed atomic correction, lattice-aware
+conflict detection, and rejected-value tombstones that block model
+re-assertion. <strong>Magic Context</strong> maps each memory to the
+files it describes and re-verifies when git reports those files changed,
+keeping lifecycle and verification on separate axes.
+<strong>MetaClaw</strong> applies the idea one level up, promoting a
+candidate <em>retrieval policy</em> only when it does not regress across
+eight measured deltas. <strong>Core Memory</strong> goes furthest on the
+axis: a record's epistemic grounding sets a <em>ceiling</em> on how
+trusted it can ever become, so a speculative memory cannot be promoted
+into canon by being recalled often — the guarantee is structural rather
+than procedural. <strong>Daimon</strong> attacks the problem one step
+earlier than any of them: the model is asked to label each item verbatim
+or inferred <em>and to cite the span</em>, and then code greps the quote
+against the transcript and downgrades the item when it is not there.
+Everywhere else in this family, trust is assigned by policy over a
+claim; here the claim's own evidence is mechanically falsifiable, which
+is why it is the only system in the atlas whose trust classes can be
+wrong in a way the system itself detects.</p>
 <p><strong>OmniIntelligence is the family's most complete lifecycle and
 its clearest demonstration that a lifecycle can be argued and unwired at
 the same time.</strong> A learned pattern carries two axes: a status
