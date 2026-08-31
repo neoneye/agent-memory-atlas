@@ -145,7 +145,7 @@ built around one idea: memory is a filesystem.</p>
 <em>"Hierarchical path organizing the memory (e.g.
 /company/team/user)"</em> — and everything else follows from that.
 <code>Memory</code> holds the whole tree. <code>MemoryScope</code> is
-<em>"a view of Memory restricted to a root path"</em>, with
+<em>"View of Memory restricted to a root path."</em>, with
 <code>subscope()</code> to descend, a <code>read_only</code> flag, and
 <code>tree()</code>, <code>info()</code> and <code>list_scopes()</code>
 for navigation. <code>MemorySlice</code> is a view over several scopes
@@ -165,8 +165,9 @@ assertion, with a positive control in the same test, and it earns the
 mark.</p>
 <p>There is a second scope axis on top of the path. Every record carries
 a <code>source</code> — <em>"Origin of this memory (e.g. user ID,
-session ID), used for provenance tracking and privacy filtering"</em> —
-and a <code>private</code> boolean. Recall filters
+session ID). Used for provenance tracking and privacy filtering."</em>
+(<code>types.py:63-64</code>) — and a <code>private</code> boolean.
+Recall filters
 <code>if not r.private or r.source == self.state.source</code>, so a
 private memory only returns to the origin that wrote it, with an
 explicit <code>include_private=True</code> bypass. Two orthogonal
@@ -222,8 +223,17 @@ flowchart TB
 default and is embedded, so a local install needs no service;
 <code>qdrant_edge_storage.py</code> (903 lines) is the alternative and
 the larger of the two implementations. Both sit behind
-<code>storage/backend.py</code>, selected by
-<code>storage/factory.py</code>. A separate SQLite-backed
+<code>storage/backend.py</code>. The selection itself is in
+<code>Memory</code> — a chain on the <code>storage</code> spec string at
+<code>unified_memory.py:233-249</code>, where <code>"qdrant-edge"</code>
+picks <code>QdrantEdgeStorage</code>, any other string is a LanceDB
+path, and the default is <code>LanceDBStorage()</code>.
+<code>storage/factory.py</code> is not that chain but an override in
+front of it: <code>set_memory_storage_factory</code> installs a
+process-wide hook consulted first, and its own docstring says a factory
+<em>"must return <code>None</code> for specs it does not handle to let
+the built-in LanceDB/Qdrant/path selection take over."</em> An explicit
+<code>storage=</code> instance beats both. A separate SQLite-backed
 <code>kickoff_task_outputs_storage.py</code> persists task outputs and
 is a different concern from the memory tree.</p>
 <p>Both flows are <code>crewai.flow.Flow</code> subclasses with
@@ -260,8 +270,9 @@ browser.</li>
 <code>metadata</code>, <code>importance</code> (0.0–1.0),
 <code>created_at</code>, <code>last_accessed</code>,
 <code>embedding</code> (excluded from serialisation <em>"to save
-tokens"</em>, with three tests asserting it never appears in a dump, a
-JSON string or a <code>repr</code>), <code>source</code>,
+tokens"</em>, with one test asserting in three places that it never
+appears in a dump, a JSON string or a <code>repr</code>, and a second
+covering <code>MemoryMatch</code>), <code>source</code>,
 <code>private</code>.</p>
 <p>Two clocks and both are record clocks — <code>created_at</code> and
 <code>last_accessed</code>. There is no validity time, so a corrected
@@ -329,10 +340,11 @@ where a person could see it before or after. A model that misjudges two
 records as duplicates removes one, and nothing anywhere records that it
 did.</p>
 <p><strong><code>memory_events.py</code> is not an audit log</strong>,
-and it is worth naming because the filename suggests otherwise. Its ten
-classes are <code>MemoryQueryStarted/Completed/ Failed</code>,
-<code>MemorySaveStarted/Completed/Failed</code>,
-<code>MemoryRetrievalStarted/Completed/ Failed</code> — runtime events
+and it is worth naming because the filename suggests otherwise. Its nine
+event classes, all deriving from a shared <code>MemoryBaseEvent</code>,
+are <code>MemoryQueryStarted/Completed/Failed</code>,
+<code>MemorySaveStarted/Completed/Failed</code> and
+<code>MemoryRetrievalStarted/Completed/Failed</code> — runtime events
 published on the framework's bus for observability. They are not
 durable, not in the memory store, and half of them are about retrieval,
 which the rubric explicitly counts as the other half of the pattern.
@@ -347,17 +359,41 @@ scope prefix, category, age, metadata filter or explicit ids — and it is
 a hard delete with nothing left behind.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>147 test functions across seven files, none run here.
+<p>147 test functions across five files, none run here.
 <code>test_memory_root_scope.py</code> alone holds 63 of them and is the
 reason two marks are earned: it drives root scoping through recall,
 listing, nesting, path normalisation
 (<code>assert "//" not in record.scope</code>), and the global case.</p>
-<p><code>test_concurrent_storage.py</code> and
-<code>test_dimension_mismatch.py</code> cover the two failure modes a
-vector-backed store actually hits, and
-<code>test_qdrant_edge_storage.py</code> asserts local paths and orphans
-are cleaned up. Three tests assert the embedding never leaks into a
-serialisation.</p>
+<p><code>test_dimension_mismatch.py</code> (11 tests) is the substantial
+one: an embedder swapped under a populated LanceDB store must raise on
+save, on a mixed batch, on search, on update, on a store reopened at the
+new dimension, and through the background-save path — with
+<code>test_memory_reset_all_rebuilds_reopened_store_with_new_dimension</code>
+as the positive control and
+<code>test_error_is_not_a_runtime_error</code> pinning the exception
+type. <code>test_qdrant_edge_storage.py</code> (19) asserts local paths
+and, in <code>test_orphaned_shard_cleanup</code>, that orphans are
+cleaned up. <code>test_storage_factory.py</code> (4) covers the
+pluggable-backend hook.</p>
+<p><strong>The other failure mode a vector-backed store hits ships
+asserting nothing.</strong> <code>test_concurrent_storage.py</code> is
+twelve lines: a docstring describing an Airflow pattern of N worker
+processes writing one storage directory, <code>import pytest</code>, and
+<code>pytestmark = pytest.mark.skip(reason="Multiprocessing tests incompatible with xdist --import-mode=importlib")</code>.
+There is no test function under the skip — the bodies are gone, not
+merely skipped — so concurrent multi-process writes are covered by a
+filename and a paragraph of intent. That is worse than an absent file,
+because a reader scanning the directory counts it as coverage.</p>
+<p>Embedding exclusion is two tests, not three:
+<code>test_memory_record_embedding_excluded_from_serialization</code>
+(<code>test_unified_memory.py:76</code>) makes the three assertions in
+one body — absent from <code>model_dump()</code>, absent from the
+<code>model_dump_json()</code> string, absent from <code>repr</code> —
+and additionally asserts a rehydrated record's embedding is
+<code>None</code> while the original still holds its three floats.
+<code>test_memory_match_embedding_excluded_from_serialization</code>
+(<code>:98</code>) repeats the dump check one level up, through
+<code>MemoryMatch</code>.</p>
 <p>No memory benchmark, no retrieval-quality measurement, and no
 published numbers — so nothing to check, and nothing claimed. What is
 <em>not</em> tested is the consolidation plan's judgement: nothing
@@ -387,8 +423,10 @@ its term does not clear threshold is better than testing the score.</li>
 explaining why the store is asked for 2× the requested results — so
 scoring, dedup and filtering have candidates to work with — is the kind
 of thing that is otherwise a magic number forever.</li>
-<li><strong>Exclude embeddings from serialisation, and test it three
-ways.</strong> Dump, JSON and <code>repr</code>.</li>
+<li><strong>Exclude embeddings from serialisation, and assert it three
+ways.</strong> Dump, JSON and <code>repr</code> — and again one level
+up, on the wrapper type that nests the record, since that is where the
+exclusion is easiest to lose.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -400,6 +438,13 @@ written.</li>
 <li><strong>Naming a file <code>memory_events.py</code> when it holds
 observability events.</strong> The name is the one an auditor will
 search for.</li>
+<li><strong>Leaving a test file that asserts nothing.</strong> A
+module-level <code>pytestmark = pytest.mark.skip</code> over an emptied
+file keeps the filename, the docstring and the intent while the
+assertions are gone, and a directory listing reads it as coverage. If
+the harness cannot run the case, delete the file and record the gap
+somewhere a reader will not mistake for a test — daimon's
+<code>known-gap</code> surface declaration is one shape for that.</li>
 <li><strong>A memory browser with no edit.</strong> The TUI is one
 keystroke away from being a review surface and stops short of it, which
 is the most common near-miss in this atlas.</li>
@@ -431,7 +476,7 @@ is on the record; whether recall updates it, and what that costs a
 vector store per query, was not traced.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Path</th>
@@ -490,18 +535,48 @@ navigation</td>
 <tr>
 <td><code>events/types/memory_events.py</code></td>
 <td>103</td>
-<td>Ten bus events; not an audit log</td>
+<td>Nine bus events over one base class; not an audit log</td>
 </tr>
 <tr>
 <td><code>lib/crewai/tests/memory/</code></td>
-<td>147 tests</td>
-<td>63 of them on root scoping</td>
+<td>147 tests in 5 files</td>
+<td>63 on root scoping; <code>test_concurrent_storage.py</code> is a
+12-line skip with no test in it</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2"><code class="commit-id" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">ceed4a3f…</code></a>
+— audited at the same pin; no mark moved and no matrix field changed.
+Five claims were wrong at this commit.</p>
+<p>The one that mattered was a coverage claim in the wrong direction —
+credit for a test that does not exist. Section 10 said
+<code>test_concurrent_storage.py</code> and
+<code>test_dimension_mismatch.py</code> <em>"cover the two failure modes
+a vector-backed store actually hits"</em>.
+<code>test_concurrent_storage.py</code> is twelve lines — a docstring,
+<code>import pytest</code>, and a module-level
+<code>pytest.mark.skip</code> — with zero test functions.
+<code>test_dimension_mismatch.py</code>'s eleven tests are real.
+Concurrent multi-process writes are covered by a filename.</p>
+<p>The 147 test functions are exact and live in <strong>five</strong>
+files, not seven; the two extra entries were <code>__init__.py</code>
+and the empty stub. Embedding exclusion is three assertions inside one
+test body (<code>test_unified_memory.py:76</code>) plus a second test
+covering <code>MemoryMatch</code> (<code>:98</code>), not three tests.
+<code>memory_events.py</code> holds <strong>nine</strong> event classes
+over one <code>MemoryBaseEvent</code>, not ten.</p>
+<p><code>storage/factory.py</code> does not select the backend. The
+LanceDB/Qdrant choice is a chain on the spec string inside
+<code>Memory</code> (<code>unified_memory.py:233-249</code>);
+<code>factory.py</code> is a process-wide override hook consulted ahead
+of it, as its own docstring says. Two quotations were rendered loosely —
+<code>MemoryScope</code>'s docstring is <em>"View of Memory restricted
+to a root path."</em> and the <code>source</code> field description is
+two sentences — and both are now exact.</p>
 <p><strong>2026-07-30</strong> — <a
-href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2"><code>ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2</code></a>
+href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2"><code class="commit-id" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">ceed4a3f…</code></a>
 — first reading.</p>
         </article>
       </div>

@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An audit chain that logs memory
+ids and never their content, over a decay model deliberately kept out of
+the ranking formula because it would bury old-but-valid memories.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="YourMemory — Agent Memory Atlas">
+    <meta property="og:description" content="An audit chain that logs
+memory ids and never their content, over a decay model deliberately kept
+out of the ranking formula because it would bury old-but-valid
+memories.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="YourMemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="An audit chain that logs
+memory ids and never their content, over a decay model deliberately kept
+out of the ranking formula because it would bury old-but-valid
+memories.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>YourMemory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "YourMemory",
+      "description": "An audit chain that logs memory ids and never their content, over a decay model deliberately kept out of the ranking formula because it would bury old-but-valid memories.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Decay decides what to prune, never what to
+rank</p>
+          <h1>YourMemory</h1>
+          <p class="document-deck">An audit chain that logs memory ids
+and never their content, over a decay model deliberately kept out of the
+ranking formula because it would bury old-but-valid memories.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sachitrafa/yourmemory">
+              <span>Source</span>
+              <strong>sachitrafa/yourmemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e" title="0bda3e0331e67b357832735f6beec3d3f7fb022e">
+              <span>Analyzed revision</span>
+              <code>0bda3e03…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>YourMemory is a persistent memory service — FastAPI over Postgres,
+SQLite or DuckDB, an MCP server, hook templates, a Cloudflare worker,
+and an Ebbinghaus-derived decay model.</p>
+<p><strong>Two decisions in it are better than most of this atlas
+manages.</strong></p>
+<p><strong>First, decay is deliberately excluded from ranking</strong>,
+and <code>BENCHMARKS.md</code> says why:</p>
+<blockquote>
+<p>"Decay is intentionally excluded from the ranking formula —
+multiplying cosine by strength would penalise old-but-valid memories
+below newer irrelevant ones. Instead, decay governs the 24h pruning job
+(threshold 0.05) and graph node scores."</p>
+</blockquote>
+<p>The code backs the claim. <code>_score_candidates</code> computes
+<code>strength</code> per candidate for display and pruning and never
+multiplies it into the score:</p>
+<pre class="python"><code>hybrid_score = W_BM25 * bm25_norm + W_VECTOR * m[&quot;similarity&quot;]
+hybrid_score += temporal_score_boost(m.get(&quot;created_at&quot;), temporal_range)</code></pre>
+<p>— <code>src/services/retrieve.py:410-411</code>, with
+<code>W_BM25 = 0.5</code> and <code>W_VECTOR = 0.5</code> at
+<code>:21-22</code> and <code>TEMPORAL_BOOST = 0.25</code> at
+<code>src/services/temporal.py:14</code>. Decay decides what gets
+<em>deleted</em> and how the graph weighs a node, not what wins a query.
+This atlas has repeatedly found systems where an exponential decay term
+in the score turns age into a veto; here the failure is named and the
+term is simply not there.</p>
+<p><strong>The published formula is not the shipped one,
+though.</strong> <code>BENCHMARKS.md:239-241</code> prints
+<code>hybrid_score = 0.4 × bm25_norm + 0.6 × cosine_similarity</code>
+and omits the temporal term the service adds unconditionally. The
+divergence runs deeper than a stale document — section 10 has it — but
+the exclusion of decay, which is the interesting decision, is the part
+the code and the document agree on.</p>
+<p>The decay itself is type-dependent —
+<code>base_λ: fact=0.16, strategy=0.10, assumption=0.20, failure=0.35</code>
+— so an assumption fades faster than a fact and a recorded failure
+fastest of all, with
+<code>λ_eff = base_λ × (1 − importance × 0.8)</code> letting importance
+slow it and <code>(1 + recall_count × 0.2)</code> letting use strengthen
+it.</p>
+<p><strong>Second, the audit log does not become a copy of the data it
+audits.</strong> <code>src/services/audit.py</code> is a hash-chained
+append-only record of every read, write, delete and admin action, and
+its design notes carry the constraint most audit implementations
+miss:</p>
+<blockquote>
+<p>"Privacy: we log memory <em>ids</em> and lightweight metadata
+(counts, query length) — never raw memory content or query text — so the
+audit log itself isn't a data-leak vector."</p>
+</blockquote>
+<p>Plus a retention floor — "prune_expired() deletes rows older than the
+retention window, which is floored at 90 days (a smaller value is
+silently raised to 90)" — so the audit cannot be configured away.</p>
+<p><strong>And the benchmark reporting is in the top tier of this
+corpus</strong> — with one caveat about which ranker produced the
+figures, in section 10.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a typed statement with an importance and a recall count.
+Writing one compares it against what exists and takes one of four
+actions by similarity band. Retrieval is lexical plus semantic, then a
+graph walk. A nightly job prunes what has decayed below threshold.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the two write surfaces diverge on supersession — the explicit update logs the old content to memory_history, the dedup replace branch overwrites without it — and decay is excluded from the retrieval score while included in the graph's</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the two write surfaces diverge on supersession — the explicit update logs the old content to memory_history, the dedup replace branch overwrites without it — and decay is excluded from the retrieval score while included in the graph&#39;s
+flowchart TD
+    W[&quot;POST /memories&quot;] --&gt; SIM{&quot;cosine against existing&quot;}
+    SIM --&gt;|&quot;≥ 0.92&quot;| RE[&quot;reinforce — paraphrase,&lt;br/&gt;bump recall_count only&quot;]
+    SIM --&gt;|&quot;0.85–0.92 + contradiction&quot;| RP[&quot;replace — overwrite with incoming&quot;]
+    SIM --&gt;|&quot;0.85–0.92, no contradiction&quot;| MG[&quot;merge — entity-append to existing&quot;]
+    SIM --&gt;|&quot;&lt; 0.85&quot;| NW[&quot;new — plain INSERT&quot;]
+    U[&quot;PUT /memories/{id}&lt;br/&gt;MCP update_memory&quot;] --&gt; MH[&quot;memory_history&lt;br/&gt;memory_id, old_content,&lt;br/&gt;reason, superseded_at&lt;br/&gt;&lt;i&gt;written on update, read by nothing&lt;/i&gt;&quot;]
+    MH --&gt; OW[&quot;then overwrite content,&lt;br/&gt;embedding, category&quot;]
+    RP -.-&gt;|&quot;overwrites, no history row&quot;| MH
+    MG -.-&gt;|&quot;overwrites, no history row&quot;| MH
+    Q[&quot;query&quot;] --&gt; H[&quot;hybrid_score =&lt;br/&gt;0.5 × bm25_norm + 0.5 × cosine&lt;br/&gt;+ 0.25 if within a resolved time window&quot;]
+    H --&gt; G[&quot;graph BFS expansion, depth 2&quot;]
+    G --&gt; R[&quot;results, WHERE m.user_id = ?&quot;]
+    R --&gt;|&quot;sim &amp;gt; 0.75&quot;| RC[&quot;recall_count reinforced&quot;]
+    D[&quot;Ebbinghaus decay&lt;br/&gt;strength = importance · e^(−λ_eff·days) · (1 + recall_count·0.2)&lt;br/&gt;λ_eff = base_λ · (1 − importance·0.8)&lt;br/&gt;fact 0.16 · strategy 0.10 · assumption 0.20 · failure 0.35&quot;] --&gt; PR[&quot;24h prune at strength &amp;lt; 0.05&quot;]
+    D --&gt; GS[&quot;graph node scores&quot;]
+    D -.-&gt;|&quot;deliberately NOT an input&quot;| H
+    ANY[&quot;read | write | delete | admin&quot;] --&gt; AU[&quot;audit_log:&lt;br/&gt;row_hash = sha256(prev_hash ‖ canonical(fields))&lt;br/&gt;ids and counts only — never content or query text&lt;br/&gt;retention floored at 90 days&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/services/</code> is the engine — <code>retrieve</code>,
+<code>resolve</code> (and a fallback), <code>extract</code> (and a
+fallback), <code>embed</code>, <code>decay</code>,
+<code>compaction</code>, <code>temporal</code>, <code>session</code>,
+<code>hook_sync</code>, <code>agent_registry</code>,
+<code>api_keys</code>, <code>auth</code>, <code>audit</code>.
+<code>src/db/</code> carries one connection layer with three schemas —
+<code>schema.sql</code>, <code>sqlite_schema.sql</code>,
+<code>duckdb_schema.sql</code> — and a migrator.</p>
+<p>Around it: an MCP server (<code>memory_mcp.py</code>), hook
+templates, a Cloudflare worker, Docker, a Railway config, a PyInstaller
+spec, a marketing site and an <code>llms.txt</code>.</p>
+<p>The <code>_fallback</code> pairs — <code>resolve_fallback.py</code>
+beside <code>resolve.py</code>, <code>extract_fallback.py</code> beside
+<code>extract.py</code> — are worth noting: the LLM-dependent paths have
+non-LLM counterparts, so the system degrades rather than stopping when a
+model is unavailable.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Resolve a write</strong> —
+<code>src/services/resolve.py</code> (the four-band policy
+<code>:1-9</code>), <code>resolve_fallback.py</code>.</p>
+<p><strong>Rank</strong> — <code>src/services/retrieve.py</code> (the
+user filter <code>:32-40</code>, <code>:89</code>, the weights
+<code>:21-22</code>, <code>_score_candidates</code>
+<code>:382-424</code> and the score itself <code>:410-411</code>),
+<code>src/services/temporal.py</code> (<code>TEMPORAL_BOOST</code>
+<code>:14</code>, <code>score_boost</code> <code>:80-96</code>).</p>
+<p><strong>Supersede</strong> —
+<code>src/routes/memories.py:237-268</code> and
+<code>memory_mcp.py:787-816</code> write <code>memory_history</code>
+before the overwrite; <code>src/routes/memories.py:98-116</code> and
+<code>memory_mcp.py:570-597</code> do not.</p>
+<p><strong>Decay and prune</strong> —
+<code>src/services/decay.py</code>,
+<code>src/services/compaction.py</code> (<code>user_id</code>-scoped
+scans <code>:85-92</code>, <code>:161</code>, <code>:232</code>).</p>
+<p><strong>Audit</strong> — <code>src/services/audit.py</code> (the
+design docstring <code>:1-21</code>, <code>GENESIS</code>
+<code>:29</code>, <code>verify_chain</code>,
+<code>prune_expired</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory carries content, an embedding, a type, an
+<code>importance</code>, a <code>recall_count</code>, and timestamps.
+The <code>memories</code> row has no status column and no
+<code>superseded_by</code> pointer. Three backends share one schema
+shape.</p>
+<p><strong>Superseded content is kept, in a second table.</strong> All
+three schemas define it under the same comment — <em>"Feature:
+supersession audit log"</em> — at <code>src/db/schema.sql:77-85</code>,
+<code>sqlite_schema.sql:70-78</code> and
+<code>duckdb_schema.sql:28-35</code>:</p>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS memory_history (
+    id            SERIAL PRIMARY KEY,
+    memory_id     INTEGER NOT NULL,
+    old_content   TEXT NOT NULL,
+    reason        TEXT NOT NULL DEFAULT &#39;update&#39;,
+    superseded_at TIMESTAMP DEFAULT NOW()
+);</code></pre>
+<p>It is written, not decorative. The HTTP update route
+(<code>src/routes/memories.py:237-268</code>, under <em>"Supersession:
+log old content before overwriting"</em>) reads the prior row, checks
+ownership, and inserts the old content before the <code>UPDATE</code>;
+the MCP <code>update_memory</code> tool does the same at
+<code>memory_mcp.py:787-816</code>.
+<code>tests/test_features.py:260-300</code> asserts the row lands with
+<code>reason='update'</code>.</p>
+<p><strong>The dedup path is the one that skips it.</strong>
+<code>resolve.py</code>'s <code>replace</code> and <code>merge</code>
+outcomes are applied by the write endpoint itself, and that branch —
+<code>src/routes/memories.py:98-116</code> on HTTP,
+<code>memory_mcp.py:570-597</code> on MCP — issues
+<code>UPDATE memories SET content = …</code> with no
+<code>memory_history</code> insert above it. So the correction path that
+runs <em>without a person naming a memory id</em> is exactly the one
+that discards what it replaced. The contradiction was detected — the
+system <em>knows</em> the two statements conflict, which is more than
+most here manage — and on that branch the outcome is an overwrite.</p>
+<p>Two smaller things about the log. Nothing reads it back:
+<code>FROM memory_history</code> appears in
+<code>tests/test_features.py</code> and nowhere under <code>src/</code>,
+in <code>memory_mcp.py</code> or in <code>main.py</code>, so there is no
+endpoint or tool that returns a memory's prior values. And the table
+carries no <code>user_id</code>, so scoping a read of it would mean
+joining back through <code>memories</code> — the
+<code>WHERE user_id = ?</code> discipline that earns
+<code>scope_enforced</code> on every other read path has no counterpart
+here, because there is no read path.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>hybrid_score = 0.5 × bm25_norm + 0.5 × cosine_similarity</code>,
+plus a flat <code>+0.25</code> for any memory whose
+<code>created_at</code> falls inside a time window parsed out of the
+query by <code>detect_temporal_range</code>, then graph BFS to depth 2,
+with <code>multi-qa-mpnet-base-dot-v1</code> as the embedder — chosen,
+per <code>BENCHMARKS.md</code>, because it is "retrieval-tuned,
+question→passage" rather than symmetric, and the switch is credited with
+most of the gain over <code>all-mpnet-base-v2</code>.</p>
+<p><code>WHERE m.user_id = ?</code> on the retrieval query, on the
+compaction scans and on the audit read earns
+<code>scope_enforced</code>.</p>
+<p>Memories above similarity <code>0.75</code> have their
+<code>recall_count</code> reinforced on retrieval — so use feeds back
+into the decay strength, which feeds the pruning job, which is a closed
+loop that never touches ranking.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>resolve.py</code> is a clean four-way collision policy:</p>
+<ul>
+<li><strong>≥ 0.92</strong> — reinforce: it is a paraphrase, bump
+<code>recall_count</code> only.</li>
+<li><strong>0.85–0.92 with a contradiction</strong> — replace.</li>
+<li><strong>0.85–0.92 without one</strong> — merge by
+entity-append.</li>
+<li><strong>&lt; 0.85</strong> — new.</li>
+</ul>
+<p>Splitting the middle band by <em>whether the two statements
+contradict each other</em> is the right question to ask there, and the
+atlas has seen very few systems ask it: most treat 0.85–0.92 as "close
+enough to merge" regardless of whether the overlap is agreement or
+conflict.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, Claude Code hook templates with a
+<code>hook_sync</code> service, a <code>sample_CLAUDE.md</code>,
+<code>MEMORY_RULES.md</code>, a FastAPI HTTP surface with API keys and
+an agent registry, a Cloudflare worker, Docker and Railway configs, and
+a single-binary build.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Two marks: scope enforced and audit log.</strong></p>
+<p><strong>The audit implementation is among the best in this
+atlas</strong>, and for reasons beyond the hash chain:</p>
+<ul>
+<li><code>row_hash = sha256(prev_hash ‖ canonical(fields))</code> from a
+<code>GENESIS</code> of zeros, with <code>verify_chain()</code> — "Any
+later edit or deletion inside the retained window breaks the chain and
+is detected."</li>
+<li>It covers <strong>reads</strong> as well as writes and deletes, with
+an action class and a source surface (<code>http</code> |
+<code>mcp</code>).</li>
+<li><strong>It refuses to store the content it audits.</strong> Ids,
+counts and query <em>length</em> — not query text. An audit log that
+mirrors the memory store doubles the blast radius of a breach, and
+almost nothing else in this corpus addresses that.</li>
+<li><strong>Retention has a floor</strong>, silently raised to 90 days,
+so shortening it is not a way to erase the trail.</li>
+<li><strong>It fails open, and names the compensating control</strong>:
+"logging never raises into the caller; a logging failure must not break
+a memory operation. Integrity gaps are themselves detectable via
+<code>verify_chain()</code>." Failing open on an audit is a real
+trade-off; failing open <em>and</em> being able to detect the gap
+afterwards is a considered one.</li>
+</ul>
+<p><strong><code>SOC2_READINESS_REPORT.md</code> is labelled
+honestly.</strong> "Report type: Internal readiness self-assessment (NOT
+a SOC 2 attestation)… Prepared by: Automated codebase assessment (Claude
+Code)… This is <strong>not</strong> a SOC 2 report — only a licensed CPA
+firm can issue [one]." A compliance-shaped document in a repository is a
+thing buyers misread; naming it as machine-generated and non-attesting
+on line 2 is the right handling.</p>
+<p><strong>Trust state, tombstone, bitemporal, human review, negative
+eval — no.</strong></p>
+<p><code>memory_history</code> is the one that deserves an explicit
+ruling, because it is close enough to two marks to be mistaken for
+either. It is not a <strong>tombstone</strong>: the rubric wants a
+durable record of a <em>rejected value</em>, keyed on the value, and
+this is keyed on <code>memory_id</code> and holds the string that was
+replaced. Nothing on the write path hashes incoming content and asks
+whether it has been thrown out before, so re-extraction of a superseded
+claim produces a fresh row and walks straight past the log. It is not
+<strong>bitemporal</strong> either — <code>superseded_at</code> is when
+the record changed, not when the fact stopped holding, and there is no
+valid-time column anywhere in the three schemas. What it does is
+reinforce the <code>audit_log</code> mark
+<code>src/services/audit.py</code> earns on its own, by putting the
+<em>value</em> somewhere the hash-chained log deliberately refuses to
+keep it.</p>
+<p>The sharpest absence is section 5's: the branch that corrects a
+memory automatically is the branch that writes no history row.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Three external datasets, dated runs, committed scripts, and
+reporting that belongs beside <a href="../fidelis/">Fidelis</a> and <a
+href="../telemem/">TeleMem</a>.</strong></p>
+<p><code>BENCHMARKS.md</code> covers LongMemEval-S, LoCoMo-10 and
+HotpotQA, plus two internal efficiency measurements, with full citations
+to all three dataset papers.</p>
+<p><strong>It leads with the strict metric.</strong> The LongMemEval
+headline is <strong><code>recall_all@5</code> = 84.8%</strong> — "all
+gold sessions must appear in top-5" — with <code>recall_any@5</code> of
+95.8% reported <em>beside</em> it rather than instead of it. Choosing
+the harder number as the headline when the easier one is eleven points
+better is rare.</p>
+<p><strong>It publishes the ablation that attributes the gain.</strong>
+"Graph BFS expansion adds ~+0.8pp on recall-all@5. The switch to
+<code>multi-qa-mpnet-base-dot-v1</code>… accounts for the improvement
+over the symmetric <code>all-mpnet-base-v2</code> baseline." The graph —
+the architecturally interesting part — is credited with 0.8 points, and
+the embedding swap with the rest. Most projects would let the reader
+assume the architecture did it.</p>
+<p><strong>The LoCoMo table carries 95% confidence intervals, sample
+completion counts, and a disclosure that hurts its own
+margin:</strong></p>
+<blockquote>
+<p>"* Supermemory exhausted its free-tier quota (10,000 queries) at
+sample 5. Mem0 exhausted its quota (1,000 ops) at sample 7. Hits
+computed over all 1,534 pairs using 0 for unfinished samples —
+<strong>figures would likely improve on a full run</strong>."</p>
+</blockquote>
+<p>Then a per-sample breakdown restricted to "YourMemory vs Zep — both
+completed all 10 samples", so the headline comparison is like-for-like,
+and an explanation of the gap that is a hypothesis rather than a boast:
+"Zep's LLM-based extraction condenses sessions into abstract facts,
+losing the specific dates, names, and events that LoCoMo QA pairs
+target."</p>
+<p>That last sentence is also the caveat the document does not draw: it
+is a statement that YourMemory's representation happens to suit <em>this
+benchmark's question style</em>, which is the workload-transfer point
+Fidelis makes explicitly about its own paths. A reader should take the
+59%-versus-28% as a result about LoCoMo-style questions, which is what
+it is.</p>
+<p><strong>The harnesses do not run the service's weights.</strong>
+<code>benchmarks/longmemeval_fullstack.py:50</code> heads its constant
+block <em>"Production constants (mirror retrieve.py)"</em> and then sets
+<code>W_BM25 = 0.4</code>, <code>W_VECTOR = 0.6</code> at
+<code>:54-55</code>; <code>benchmarks/locomo_qa_model.py:36-37</code>
+carries the same pair. <code>src/services/retrieve.py:21-22</code> has
+<code>0.5</code> and <code>0.5</code>, and adds
+<code>temporal_score_boost</code> at <code>:411</code> that neither
+harness applies on its direct-match path
+(<code>longmemeval_fullstack.py:227</code>,
+<code>locomo_qa_model.py:106</code>). The rest of each script is a
+careful reimplementation — the same thresholds, the same
+<code>REINFORCE_THRESHOLD</code>, the same graph depth, and a docstring
+at <code>:15-19</code> listing which production fixes it reproduces —
+which is what makes the two constants worth naming rather than shrugging
+at: the numbers in section 10 were produced by a ranker that is one edit
+away from the shipped one and is not it. The 84.8% is a result about
+<code>0.4/0.6</code> without a temporal term.</p>
+<p>That also explains the <code>BENCHMARKS.md:241</code> formula, which
+matches the harnesses rather than the service. Which set is intended is
+a question for the maintainer; what is checkable is that they
+differ.</p>
+<p>Five test files under <code>tests/</code>, which is thin against the
+benchmark infrastructure. <code>tests/test_features.py:260-300</code> is
+the one that covers supersession.</p>
+<p><strong>I ran nothing.</strong> Every figure above is read from the
+repository's own <code>BENCHMARKS.md</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep decay out of the ranking formula.</strong> "Multiplying
+cosine by strength would penalise old-but-valid memories below newer
+irrelevant ones." Let decay drive pruning and graph weights; let
+relevance drive rank.</li>
+<li><strong>Make the decay rate depend on the claim type.</strong> A
+recorded failure (0.35) should fade faster than a strategy (0.10), and
+importance should slow the constant rather than being a separate
+multiplier.</li>
+<li><strong>Split the ambiguous similarity band by
+contradiction.</strong> Between 0.85 and 0.92, "does this conflict with
+what we have" is the question that decides between merge and replace —
+and most systems never ask it.</li>
+<li><strong>Do not log memory content in your audit trail.</strong> Ids,
+counts and query <em>length</em>. An audit log that mirrors the store
+doubles what a breach exposes.</li>
+<li><strong>Floor your audit retention.</strong> Silently raising a
+shorter window to 90 days means the trail cannot be configured
+away.</li>
+<li><strong>If your audit fails open, say so and name the
+detector.</strong> <code>verify_chain()</code> makes the gap findable,
+which is what turns failing open from a shortcut into a trade-off.</li>
+<li><strong>Audit reads, not just writes.</strong> With an action class
+and the source surface (<code>http</code> | <code>mcp</code>) on every
+row.</li>
+<li><strong>Ship non-LLM fallbacks beside the LLM paths.</strong>
+<code>resolve_fallback.py</code> and <code>extract_fallback.py</code>
+mean a missing model degrades the system instead of stopping it.</li>
+<li><strong>Lead with the strict metric.</strong>
+<code>recall_all@5</code> at 84.8% with <code>recall_any@5</code> at
+95.8% printed next to it.</li>
+<li><strong>Attribute the gain to the component that produced
+it</strong>, even when it is the boring one — the embedding swap, not
+the graph.</li>
+<li><strong>Disclose when a competitor's number is depressed by your
+measurement constraints</strong>, and say their figures "would likely
+improve on a full run".</li>
+<li><strong>Restrict the headline comparison to the systems that
+completed the run.</strong></li>
+<li><strong>Label a compliance document as not being an attestation, on
+line 2.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Put the supersession write inside the function that
+overwrites, not beside the caller.</strong> One table, two writers that
+log to it and two that do not, is what happens when the history insert
+lives in the route handler rather than in the update itself. The branch
+that skipped it is the automatic one.</li>
+<li><strong>Do not let the benchmark harness carry its own copy of the
+production constants.</strong> A comment saying <em>"mirror
+retrieve.py"</em> over a literal <code>0.4</code> is the failure mode;
+importing the module's own <code>W_BM25</code> would have made the drift
+impossible.</li>
+<li><strong>Do not let a representation advantage read as a general
+one.</strong> "Zep's extraction loses the dates and names LoCoMo
+targets" is a statement about the benchmark's question style as much as
+about Zep.</li>
+<li><strong>Do not let five test files carry three benchmark
+suites.</strong> The benchmark work is careful; the unit-test coverage
+is not proportionate to it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A good fit for a self-hosted single-user or small-team memory service
+where you want an audit trail that would survive a compliance
+conversation and a decay model that prunes rather than distorts
+ranking.</p>
+<p>Read <code>BENCHMARKS.md</code> and
+<code>src/services/audit.py</code> regardless. The first is a model for
+reporting; the second is the only audit implementation in this atlas
+that treats the log itself as a privacy surface.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the <code>memory_history</code> gap on the
+<code>replace</code> branch intended?</strong> The two explicit update
+paths log the old content and the two dedup-driven ones do not; whether
+that is a deliberate scoping of the feature to human-named ids or an
+omission is not answerable from the tree.</li>
+<li><strong>Which ranking weights are the intended ones —
+<code>0.5/0.5</code> or <code>0.4/0.6</code>?</strong>
+<code>retrieve.py</code> and the benchmark harnesses disagree, and
+<code>BENCHMARKS.md</code> sides with the harnesses.</li>
+<li><strong>What reads <code>memory_history</code>?</strong> Nothing in
+the repository does. Whether a console or an operator query is meant to
+is not visible here.</li>
+<li><strong>How is contradiction detected in the 0.85–0.92
+band?</strong> <code>resolve.py</code> names it; the detector was not
+traced.</li>
+<li><strong>Are the decay constants tuned?</strong>
+<code>fact=0.16</code> through <code>failure=0.35</code> are plausible
+and no ablation appears.</li>
+<li><strong>Does <code>verify_chain()</code> run anywhere
+automatically?</strong> It exists; a scheduled caller was not
+found.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Audit</strong> — <code>src/services/audit.py</code> (the
+design docstring: chain, retention floor, privacy constraint and
+fail-open rationale <code>:1-21</code>, <code>GENESIS</code>
+<code>:29</code>, the <code>actor_user_id</code> filter
+<code>:120</code>)</p>
+<p><strong>Write resolution</strong> —
+<code>src/services/resolve.py</code> (the four-band policy
+<code>:1-9</code>), <code>src/services/resolve_fallback.py</code>,
+<code>src/services/extract.py</code>,
+<code>src/services/extract_fallback.py</code></p>
+<p><strong>Retrieval and decay</strong> —
+<code>src/services/retrieve.py</code> (<code>user_id</code> predicates
+<code>:32-40</code>, <code>:89</code>, the hybrid weights
+<code>:21-22</code>, <code>_score_candidates</code>
+<code>:382-424</code> with the score at <code>:410-411</code>),
+<code>src/services/decay.py</code>,
+<code>src/services/compaction.py</code> (<code>:85-92</code>,
+<code>:161</code>, <code>:232</code>),
+<code>src/services/temporal.py</code> (<code>TEMPORAL_BOOST</code>
+<code>:14</code>, <code>score_boost</code> <code>:80-96</code>)</p>
+<p><strong>Supersession</strong> — <code>src/routes/memories.py</code>
+(the logged update <code>:237-268</code>, the unlogged dedup
+replace/merge <code>:98-116</code>), <code>memory_mcp.py</code> (the
+logged update <code>:787-816</code>, the unlogged dedup replace/merge
+<code>:570-597</code>), <code>tests/test_features.py</code>
+(<code>:260-300</code>)</p>
+<p><strong>Storage</strong> — <code>src/db/connection.py</code>,
+<code>schema.sql</code> (<code>memory_history</code>
+<code>:77-85</code>), <code>sqlite_schema.sql</code>
+(<code>:70-78</code>), <code>duckdb_schema.sql</code>
+(<code>:28-35</code>), <code>migrate.py</code></p>
+<p><strong>Benchmarks</strong> — <code>BENCHMARKS.md</code>
+(LongMemEval-S with the strict metric and the ablation
+<code>:7-42</code>, the temporal-boost ablation <code>:43-68</code>,
+LoCoMo-10 with CIs and the quota disclosure <code>:69-115</code>, the
+per-sample like-for-like table <code>:98-114</code>, HotpotQA
+<code>:149-186</code>, token and LLM-call savings <code>:187-221</code>,
+decay-based pruning <code>:222-236</code>, the scoring formula and the
+decay-excluded-from-ranking rationale <code>:237-255</code>, dataset
+citations <code>:256-271</code>),
+<code>benchmarks/longmemeval_fullstack.py</code> (the "mirror
+retrieve.py" constant block <code>:50-58</code>, the direct-match score
+<code>:227</code>), <code>benchmarks/locomo_qa_model.py</code>
+(<code>:36-37</code>, <code>:106</code>)</p>
+<p><strong>Compliance</strong> — <code>SOC2_READINESS_REPORT.md</code>
+(the not-an-attestation framing <code>:1-12</code>),
+<code>SECURITY.md</code>, <code>MEMORY_RULES.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e"><code class="commit-id" title="0bda3e0331e67b357832735f6beec3d3f7fb022e">0bda3e03…</code></a>
+— same pin, two corrections, both in the direction of the report being
+harsher and looser than the code. Section 5 asserted "no supersession
+pointer and no tombstone… the prior content is gone from the store", and
+an open question said no supersession record was found. All three
+schemas define <code>memory_history</code> under the comment "Feature:
+supersession audit log" (<code>src/db/schema.sql:77-85</code>) and both
+explicit update paths write it before overwriting
+(<code>src/routes/memories.py:237-268</code>,
+<code>memory_mcp.py:787-816</code>). The criticism survives narrowed to
+the dedup-driven <code>replace</code>/<code>merge</code> branch
+(<code>src/routes/memories.py:98-116</code>,
+<code>memory_mcp.py:570-597</code>), which overwrites with no history
+insert, and to the fact that nothing in the repository reads the table
+back. <code>tombstone</code> was re-checked against the rubric and stays
+withheld: the log is keyed on <code>memory_id</code>, not on the
+rejected value. No mark moved. Second, the ranking formula was taken
+from <code>BENCHMARKS.md:241</code> rather than from code:
+<code>src/services/retrieve.py:21-22</code> sets
+<code>W_BM25 = W_VECTOR = 0.5</code>, not <code>0.4/0.6</code>, and
+<code>:411</code> adds an unconditional
+<code>temporal_score_boost</code> the document's formula omits. The two
+committed benchmark harnesses carry the document's constants under a
+comment reading "Production constants (mirror retrieve.py)", so the
+published figures describe a ranker the service does not run.</p>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e"><code class="commit-id" title="0bda3e0331e67b357832735f6beec3d3f7fb022e">0bda3e03…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no benchmark was run. The figures in section 10 are read
+from the repository's own <code>BENCHMARKS.md</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

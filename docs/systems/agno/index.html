@@ -190,11 +190,11 @@ changes is the return value of <code>instructions()</code>
 (<code>agno/learn/stores/learned_knowledge.py:252</code>): the model is
 handed a prompt that says <em>"<strong>RULE 3: Only save after explicit
 approval.</strong> Call <code>save_learning</code> ONLY after the user
-says 'yes'"</em>. The <code>save_learning</code> tool it is handed in
-that same mode calls <code>self.save(...)</code> with <strong>no
-approval check of any kind</strong>. The gate is a sentence in a system
-prompt, addressed to the one component in the system that cannot be
-relied on to follow it.</p>
+says 'yes' to your proposal."</em> The <code>save_learning</code> tool
+it is handed in that same mode calls <code>self.save(...)</code> with
+<strong>no approval check of any kind</strong>. The gate is a sentence
+in a system prompt, addressed to the one component in the system that
+cannot be relied on to follow it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Agno's memory has no epistemic states. A written thing is true, and
 it stays true until something replaces it. There is a
@@ -231,12 +231,14 @@ to the previous value", in one framework, and only one of them keeps
 it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is one storage abstraction — <code>agno.db.base.BaseDb</code>
-and its async twin — and twenty implementations behind it: Postgres,
-async Postgres, MySQL, SQLite, SingleStore, MongoDB, Redis, Valkey,
-DynamoDB, Firestore, ClickHouse, SurrealDB, GCS-backed JSON, plain JSON
-files, and an in-memory dict. <code>BaseDb.__init__</code> names
-nineteen tables (<code>agno/db/base.py:38-57</code>), of which memory
-uses <code>memory_table</code> and <code>learnings_table</code>.</p>
+and its async twin — and eighteen implementations behind it: fourteen
+subclass <code>BaseDb</code> (Postgres, MySQL, SQLite, SingleStore,
+MongoDB, Redis, Valkey, DynamoDB, Firestore, ClickHouse, SurrealDB,
+GCS-backed JSON, plain JSON files, and an in-memory dict) and four
+subclass <code>AsyncBaseDb</code> (async Postgres, async MySQL, async
+SQLite, async MongoDB). <code>BaseDb.__init__</code> names twenty-three
+tables (<code>agno/db/base.py:38-60</code>), of which memory uses
+<code>memory_table</code> and <code>learnings_table</code>.</p>
 <p>To stand this up you need a database and a model provider. That is
 the whole operational bill for the memory path, and it is a genuinely
 low one — the JSON and SQLite backends make a local install a file.
@@ -258,7 +260,7 @@ Paths</h2>
 <li><code>agno/learn/machine.py</code> — <code>LearningMachine</code>,
 the coordinator. Holds the store registry, builds the post-run capture
 hooks, aggregates tools, and dispatches to stores with signature-aware
-kwargs filtering (<code>_filter_store_kwargs</code>, line 43) so a
+kwargs filtering (<code>_filter_store_kwargs</code>, line 44) so a
 third-party store written without <code>**kwargs</code> does not break
 when the framework adds context.</li>
 <li><code>agno/learn/stores/protocol.py</code> — the
@@ -282,7 +284,7 @@ and <code>deduplicate</code>.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Six units, and the differences between them are the design:</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Store</th>
@@ -322,7 +324,7 @@ and <code>deduplicate</code>.</li>
 <td>Append</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><code>Memories.add_memory</code> (<code>agno/learn/schemas.py</code>)
 carries a comment that is the right instinct written down:
 <em>"<code>created_at</code> and <code>updated_at</code> are stamped by
@@ -347,7 +349,7 @@ methods and no fourth:</p>
 <li><code>first_n</code> — the oldest.</li>
 <li><code>agentic</code> — send the memories to a model with the query
 and take back a list of <code>memory_ids</code>
-(<code>MemorySearchResponse</code>, line 38).</li>
+(<code>MemorySearchResponse</code>, line 36).</li>
 </ul>
 <p>So relevance ranking, where it exists at all, costs a model call per
 search and is only as good as that model's id-copying. There is no
@@ -380,7 +382,7 @@ otherwise, which is the opposite of the fail-closed instinct in
 <p>Two paths in.</p>
 <p><strong><code>ALWAYS</code> mode</strong> fires from a post-run hook.
 <code>LearningMachine.capture_hook()</code>
-(<code>agno/learn/machine.py:624</code>) returns a callable that
+(<code>agno/learn/machine.py:608</code>) returns a callable that
 collects the run's messages and then does one of two things: if the
 agent has a <code>background_executor</code>, it submits
 <code>machine.process</code> to it; <strong>otherwise it calls
@@ -388,11 +390,11 @@ agent has a <code>background_executor</code>, it submits
 extraction call on the response path, after the user has their answer
 but before the run completes. Whether writes block therefore depends on
 a runtime setting most readers will not know they have.
-<code>acapture_hook()</code> is unambiguous:
-<code>asyncio.create_task</code>, strong-referenced so it is not garbage
-collected mid-flight, with failures logged and never raised into the
-run. Memory extraction cannot fail a request — and cannot tell you that
-it failed, either.</p>
+<code>acapture_hook()</code> (line 647) is unambiguous:
+<code>asyncio.create_task</code> at line 662, strong-referenced so it is
+not garbage collected mid-flight, with failures logged and never raised
+into the run. Memory extraction cannot fail a request — and cannot tell
+you that it failed, either.</p>
 <p><strong><code>AGENTIC</code> mode</strong> hands the model tools:
 <code>update_profile</code>, <code>update_user_memory</code>,
 <code>remember_about</code>, <code>link_entities</code>,
@@ -572,7 +574,7 @@ six.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Agno suits a team that wants an agent platform and will accept its
-memory as part of the bargain — the AgentOS control plane, twenty
+memory as part of the bargain — the AgentOS control plane, eighteen
 database backends and a model-agnostic runtime are the product, and the
 learning stores are a good default that comes with them. Take it if your
 memory needs are <em>typed and modest</em>: facts about entities, some
@@ -607,7 +609,7 @@ path on extraction depends on whether apps set
 <code>MemoryTools</code> toolkit serve.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Path</th>
@@ -697,10 +699,22 @@ only</td>
 <td>The six-method <code>LearningStore</code> Protocol</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba"><code class="commit-id" title="7c68873c1357321a5152397c8ab4fb8b3f587bba">7c68873c…</code></a>
+— count and citation audit at the same pin. <code>BaseDb.__init__</code>
+names 23 table parameters, not nineteen, and they run to line 60 rather
+than 57. The storage abstraction has 18 implementations, not twenty — 14
+subclassing <code>BaseDb</code> and 4 subclassing
+<code>AsyncBaseDb</code>; §3's own list named only 15. Four line
+references had drifted: <code>capture_hook</code> 624→608,
+<code>MemorySearchResponse</code> 38→36,
+<code>_filter_store_kwargs</code> 43→44. The RULE 3 quote was truncated
+mid-sentence and is quoted whole. No finding or capability mark
+changed.</p>
 <p><strong>2026-07-30</strong> — <a
-href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba"><code>7c68873c1357321a5152397c8ab4fb8b3f587bba</code></a>
+href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba"><code class="commit-id" title="7c68873c1357321a5152397c8ab4fb8b3f587bba">7c68873c…</code></a>
 — first reading.</p>
         </article>
       </div>

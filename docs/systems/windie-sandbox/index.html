@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A conversation stored as one
+shared message tree where forking preserves every branch and editing
+overwrites the message in place — so the half of the promise that keeps
+the original is the half that does not edit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Windie
+Sandbox — Agent Memory Atlas">
+    <meta property="og:description" content="A conversation stored as
+one shared message tree where forking preserves every branch and editing
+overwrites the message in place — so the half of the promise that keeps
+the original is the half that does not edit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Windie
+Sandbox — Agent Memory Atlas">
+    <meta name="twitter:description" content="A conversation stored as
+one shared message tree where forking preserves every branch and editing
+overwrites the message in place — so the half of the promise that keeps
+the original is the half that does not edit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Windie Sandbox — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Windie Sandbox",
+      "description": "A conversation stored as one shared message tree where forking preserves every branch and editing overwrites the message in place \u2014 so the half of the promise that keeps the original is the half that does not edit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Branches are kept, versions are not</p>
+          <h1>Windie Sandbox</h1>
+          <p class="document-deck">A conversation stored as one shared
+message tree where forking preserves every branch and editing overwrites
+the message in place — so the half of the promise that keeps the
+original is the half that does not edit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/buiilding/Windie-Sandbox">
+              <span>Source</span>
+              <strong>buiilding/Windie-Sandbox</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/buiilding/Windie-Sandbox/commit/90f949b88be84243a79691b0183a0693641df4d8" title="90f949b88be84243a79691b0183a0693641df4d8">
+              <span>Analyzed revision</span>
+              <code>90f949b8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-10</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Windie Sandbox is an MIT-licensed Rust desktop runtime — about 40,800
+lines across 134 files — for an AI assistant that runs on your own
+machine. Its README tagline is the reason it is in this atlas: <em>"AI
+that lives on your computer: edit what it sees and branch conversations
+without losing the original."</em></p>
+<p>That sentence describes a memory design, and the design is real. A
+conversation is <strong>one shared message tree</strong> in SQLite.
+Every message is persisted once with a <code>parent_message_id</code>; a
+branch is a second child of an existing node, not a copy of the history
+above it. A request does not send the tree — it selects a head message
+and resolves the root-to-head path, and that path is the model's
+context. <code>docs/conversation-tree-and-paths.md</code> states the
+alternative it rejected — materialising a linear path per branch — and
+why: duplicated ancestors that the database would then have to keep
+synchronised.</p>
+<p>This clears the atlas's scope bar without strain, and it is worth
+saying why, because a "conversation history" store usually does not.
+Messages here survive the session with a stable identity, sessions point
+at a head <strong>without owning or copying messages</strong>, and
+edits, deletions and truncations are operations on named tree nodes.
+That is durable memory with correctable units, not a chat buffer
+deciding what stays in the window.</p>
+<p>The design is careful in places this atlas rarely sees.
+<code>ensure_message_mutation_allowed</code> refuses to modify any
+message that a <code>Running</code> or <code>WaitingForApproval</code>
+session depends on, and names both the message and the session in the
+error. Every edit and every delete calls
+<code>delete_compactions_for_conversation</code> in the same
+transaction, so a summary derived from history through a message cannot
+outlive the history it summarised. Removing a tool-call assistant
+message — or any tool-result below it — deletes the whole group, "so
+model context cannot contain dangling tool calls or dangling tool
+results."</p>
+<p>And then the finding. The tagline joins two operations with
+<em>and</em>, and only one of them keeps the original.
+<code>fork_conversation_at_message</code> creates a branch and every
+ancestor stays exactly where it was. <code>replace_message</code> is
+<code>UPDATE messages SET content = ?1 WHERE conversation_id = ?2 AND id = ?3</code>.
+There is no version row, no supersession pointer, and no prior-content
+record anywhere in the schema. <strong>The tree preserves branches. It
+does not preserve versions of a message.</strong> Editing what the AI
+sees loses the original; branching away from it does not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a message node</strong>: an id, a parent, a role,
+content, optional metadata, and ordered parts beneath it. Nothing is
+extracted, summarised or inferred into a separate representation — what
+was said is what is stored, and the structure is the only interpretation
+the system adds.</p>
+<p>The state machine is about <em>position in a tree</em>, not about
+belief:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>State</th>
+<th>How it is reached</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>in the tree, off the selected path</td>
+<td>a sibling branch exists; the model never sees it</td>
+</tr>
+<tr>
+<td>in the tree, on the selected path</td>
+<td>the head resolves through it</td>
+</tr>
+<tr>
+<td>content replaced</td>
+<td><code>replace_message</code> — same node, new bytes, old bytes
+gone</td>
+</tr>
+<tr>
+<td>spliced out</td>
+<td><code>remove_message</code> — children reparent to the
+grandparent</td>
+</tr>
+<tr>
+<td>cut</td>
+<td><code>truncate_after_message</code> — the subtree below a node is
+removed</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two of those five transitions are lossless with respect to history
+and three are not, which is the honest summary of the design. Branching
+is free and reversible; editing and deleting are not.</p>
+<p>Nothing here carries trust, confidence or provenance.
+<code>sessions.status</code> has a <code>WaitingForApproval</code>
+value, but it gates whether a <em>tool call</em> proceeds, not whether a
+memory may be believed. A message that the user rewrote and a message
+the model produced are the same kind of row afterwards, and nothing
+records which is which.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — editing a message overwrites it in place and invalidates the compactions in the same transaction, and is refused while a running session depends on it — while forking leaves the ancestors untouched</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: editing a message overwrites it in place and invalidates the compactions in the same transaction, and is refused while a running session depends on it — while forking leaves the ancestors untouched
+flowchart TB
+    R[&quot;root A&quot;] --&gt; B[&quot;B&quot;]
+    B --&gt; C[&quot;C — selected head&quot;]
+    B --&gt; D[&quot;D — sibling branch&quot;]
+
+    C -.-&gt; P[&quot;path resolution:&lt;br/&gt;A, B, C only&quot;]
+    D -.-&gt; X[&quot;never in this path&quot;]
+
+    E[&quot;user edits B&quot;] --&gt; U[&quot;UPDATE messages SET content&lt;br/&gt;&lt;i&gt;same node id, prior bytes gone&lt;/i&gt;&quot;]
+    U --&gt; INV[&quot;delete_compactions_for_conversation&lt;br/&gt;&lt;i&gt;same transaction&lt;/i&gt;&quot;]
+    U --&gt; GRD{&quot;any Running or&lt;br/&gt;WaitingForApproval session&lt;br/&gt;depending on B?&quot;}
+    GRD -- yes --&gt; REJ[&quot;conflict — names the message&lt;br/&gt;and the session&quot;]
+    GRD -- no --&gt; U2[&quot;edit applies to both branches at once&quot;]
+
+    F[&quot;user forks at B&quot;] --&gt; NB[&quot;new child of B&lt;br/&gt;&lt;i&gt;A and B untouched&lt;/i&gt;&quot;]
+
+    style U fill:#f4c9c9,stroke:#a33
+    style NB fill:#d8ecd8,stroke:#4a7c4a</code></pre></details></figure>
+<p>The two shaded boxes are the same promise resolved two ways. A fork
+is additive and the original is intact. An edit is destructive, and
+because the edited node is <em>shared by every branch below it</em>, it
+rewrites the history of branches the user was not looking at — which is
+the sharp end of a design whose whole virtue is that ancestors have one
+identity and one copy.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A <strong>local desktop application</strong>, not a service: a Rust
+binary with a tray, a CLI, a gateway, an MCP surface
+(<code>src/mcp.rs</code>, <code>src/mcp_http.rs</code>,
+<code>src/tool_provider/mcp/</code>) and one SQLite file.
+<code>src/store/</code> is the persistence layer at 7,967 lines,
+<code>src/session/</code> runs sessions, <code>src/operation/</code> is
+the operation layer the CLI and API call into, and <code>src/llm/</code>
+handles providers and streaming.</p>
+<p>The schema (<code>src/store/schema.rs</code>) is twelve tables:
+<code>conversations</code>, <code>messages</code>,
+<code>message_parts</code>, <code>image_assets</code>,
+<code>sessions</code>, <code>session_events</code>,
+<code>session_inputs</code>, <code>compactions</code>,
+<code>tool_schemas</code>, <code>installed_providers</code>,
+<code>chrome_devtools_settings</code> and
+<code>provider_tool_catalogs</code>, with seven indexes named for the
+access paths they serve — <code>messages_parent_idx</code> for the
+traversal, <code>messages_id_conversation_idx</code> for the containment
+check.</p>
+<p>Three submodules are declared in <code>.gitmodules</code>, all owned
+by the same account: <code>vendor/bifrost</code> (tracking a
+<code>dev</code> branch), <code>vendor/windie-landing-2nd</code> and
+<code>vendor/windie-inspector</code>. <strong>They were left
+uninitialised for this reading</strong>, so nothing in them is described
+here, and <code>bifrost</code> in particular — pinned to a moving
+development branch rather than a tag — is a dependency surface this
+report did not inspect.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to stand up beyond the application: one SQLite file, no
+server, no key required to store anything. The store is inspectable with
+any SQLite client and repairable by hand, which matters more than usual
+here because there is no history to recover an edit from.</p>
+<p><code>src/store/schema.rs</code> versions the database and the tests
+assert it <strong>rejects a newer schema, an older schema, and an
+existing unversioned database</strong> — three directions, where most
+projects check one. <code>open_memory()</code> exists for tests, so the
+store runs entirely in memory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Path resolution.</strong>
+<code>load_path_to_message(conversation_id, head_message_id)</code>
+follows parent links from the head to the root and returns root-to-head
+order. The doc is explicit that the current SQLite implementation
+"performs the parent traversal in one recursive query. It is not making
+one network request per ancestor, but it still has to resolve the
+ancestry because only the immediate parent is stored on each message."
+<code>load_message_tree</code> returns everything;
+<code>root_to_leaf_paths</code> enumerates every branch.</p>
+<p><strong>Fork.</strong> <code>fork_conversation_at_message</code>
+(<code>src/operation/conversation.rs:84</code> →
+<code>src/store/message.rs:877</code>) creates a branch at a chosen
+node. Ancestors are shared, not copied — the property the whole storage
+model exists to provide.</p>
+<p><strong>Edit.</strong> <code>src/operation/message.rs:63</code> calls
+<code>store.replace_message</code>
+(<code>src/store/message.rs:629</code>), which validates the
+conversation, validates containment, calls the mutation guard, then runs
+a single <code>UPDATE</code>, replaces the text parts, deletes the
+conversation's compactions and touches the conversation timestamp — all
+in one transaction. The transaction is correct and complete. What it
+does not do is keep the old content.</p>
+<p><strong>The mutation guard.</strong>
+<code>ensure_message_mutation_allowed</code>
+(<code>src/store/session.rs:51</code>) walks the conversation's
+sessions, skips any not <code>Running</code> or
+<code>WaitingForApproval</code>, and for the rest checks whether the
+message being changed is in that session's protected set. If it is, the
+operation fails with a conflict: <em>"cannot modify message {id}; it is
+part of active session {id}"</em>. Correction that refuses to race
+in-flight work is rare in this atlas — most stores here let the edit
+land and discover the inconsistency later.</p>
+<p><strong>Splice delete.</strong> <code>remove_message</code> reparents
+direct children onto the removed node's parent and leaves deeper
+descendants alone. Its docstring defines the tool-call group — "one
+assistant message with tool-call metadata plus the linear
+<code>role: tool</code> result chain below it" — and deleting either end
+deletes the whole group before splicing. This is a correctness property
+about <em>model context</em> enforced in the <em>storage layer</em>,
+which is the right place for it: no caller can forget it, and no branch
+can end up presenting a tool result with no call.</p>
+<p><strong>Compaction invalidation.</strong>
+<code>delete_compactions_for_conversation</code> runs inside the edit
+transaction and inside the delete transaction. A <code>Compaction</code>
+is a summary "through" a specific message, so mutating the history it
+covers makes it wrong; dropping it is the conservative choice and it is
+taken atomically with the change that caused it.</p>
+<p><strong>Compaction writing.</strong> <code>save_compaction</code>
+carries <code>#[allow(dead_code)]</code> and a docstring: <em>"This is
+currently a stored primitive for future automatic compaction; no CLI
+command writes compactions yet."</em> The table exists, the read path
+exists, the invalidation exists, and the writer is declared absent in
+the code rather than left for a reader to discover.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>messages</code> is <code>id</code>,
+<code>conversation_id</code>, <code>parent_message_id</code>,
+<code>role</code>, <code>content</code>, <code>metadata</code>,
+<code>created_at</code>, with foreign keys to <code>conversations</code>
+and to itself. <code>message_parts</code> holds ordered
+<code>(position, kind, text, image_asset_id)</code> rows with
+<code>ON DELETE CASCADE</code>, and <code>image_assets</code> stores
+bytes with a <code>sha256</code> — so an image is content-addressed and
+shared rather than duplicated per message, the same instinct as the
+shared-ancestor tree applied one level down.</p>
+<p><strong>Temporal fields are <code>created_at</code> only.</strong>
+There is no <code>updated_at</code> on a message, which is worth stating
+precisely: after <code>replace_message</code>, a message's stored
+timestamp is when it was <em>first written</em>, and nothing records
+that it changed or when. The conversation's <code>updated_at</code>
+moves; the message's does not.</p>
+<p><strong>Scope is the conversation and the selected path.</strong>
+<code>conversation_id</code> is enforced on every read and write through
+<code>ensure_message_belongs_to_conversation</code>, and
+<code>rejects_message_parent_from_another_conversation</code> is a
+committed test. There is no user, tenant or agent key, and none is
+wanted — this is one person's machine, and calling that a deficiency
+would be the category error the rubric warns about. The mark is withheld
+because a conversation is a container rather than a principal, and the
+boundary that does real work here is the selected-head path, which is a
+view rather than an authorization.</p>
+<p><strong>No trust state, no provenance, no supersession.</strong> A
+message knows its parent and nothing about where its content came from
+or whether anyone has since decided it was wrong.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search. No keyword index, no embeddings, no ranking, no
+reranking and no relevance model of any kind —
+<code>stack_retrieval</code> is empty, and that is a design position
+rather than a gap.</p>
+<p>Retrieval is <strong>structural</strong>: pick a head, resolve its
+ancestry, send the path. What the model sees is exactly the branch the
+user is standing on, in order, every time.
+<code>system_prompt_is_tree_wide_same_for_any_head</code> and
+<code>tool_schemas_are_tree_wide_same_for_any_head</code> are committed
+tests confirming that conversation-level inputs apply across branches
+while messages do not.</p>
+<p>The consequences are worth being clear about, because they cut both
+ways. <strong>There is no over-recall and there are no irrelevant
+hits</strong> — the path is the path, and a sibling branch cannot leak
+into it. That is a real guarantee, and
+<code>loads_path_to_message</code> asserts it directly.
+<strong>Under-recall is total and by design</strong>: anything on
+another branch, or above a truncation, or in another conversation, is
+unreachable from this request no matter how relevant it is. A user who
+explored an idea on a fork and came back has no mechanism to bring that
+finding across except copying it by hand.</p>
+<p>Token budgeting is not addressed at this layer. The path grows
+monotonically with the branch, <code>save_compaction</code> is the
+intended answer, and nothing writes compactions yet — so the practical
+bound on context is the user forking, editing or truncating.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous, user- or run-driven, and
+cheap</strong>: an insert with a parent link, plus part rows. There is
+no model call on the write path, no extraction and no background pass. A
+message is retrievable the moment it is committed.</p>
+<p><code>insert_message</code>, <code>insert_run_message</code>,
+<code>insert_tool_result_message</code>,
+<code>insert_run_tool_result_message</code>,
+<code>insert_run_tool_result_message_with_parts</code> and
+<code>insert_message_with_parts</code> are six insert variants, and
+<code>batch_attached_tool_insert_is_atomic</code> is a test asserting
+the batched form is all-or-nothing — the failure that otherwise leaves a
+tool call without its results.</p>
+<p>Deduplication does not apply; every message is a new node. Conflict
+handling is the mutation guard, and it handles the conflict that
+matters: a person editing history while a session is reading it.</p>
+<p><strong>Correction is destructive and the loss is silent.</strong>
+<code>replace_message</code> succeeds and returns <code>Ok(())</code>;
+nothing tells the caller what the previous content was, and nothing in
+the database retains it. A user who edits a message to test a different
+phrasing, then wants the original back, has no path to it — while the
+same user who <em>forked</em> instead of editing has both. The mechanism
+to preserve the original exists, is well built, and is a different
+button.</p>
+<p>The sharper version of the same point: because ancestors are shared,
+editing a node rewrites the context of <strong>every branch descending
+from it</strong>. That is the correct consequence of the storage model
+and it is the opposite of what "without losing the original" leads a
+reader to expect.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks on a model. A fork costs one row regardless of history
+depth, which is the design's headline efficiency claim and it holds —
+<code>benches/</code> and <code>src/perf/scenarios.rs</code> exercise
+both the edit and the fork paths.</p>
+<p>Path resolution costs one recursive CTE per request, growing with
+branch depth rather than tree size. No pass ever rewrites the store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Windie is the agent, not a memory library mounted into one. The
+memory operations are user operations:
+<code>src/operation/message.rs</code>, <code>conversation.rs</code>,
+<code>session.rs</code>, <code>session_cli.rs</code> and
+<code>session_approval.rs</code> expose editing, deleting, truncating
+and forking to the person at the keyboard, and <code>src/cli/</code> and
+the MCP surface carry them.</p>
+<p>The model has <strong>no agency over memory</strong> at all. It
+cannot fork, edit, delete or choose a head; it receives a resolved path
+and appends to it. Every structural decision belongs to the user. That
+is an unusual and defensible split — the failure modes of model-managed
+memory simply do not exist here — and it means the system's memory
+quality is bounded by how much curation a person is willing to do.</p>
+<p><code>approve_session_tool</code> and <code>deny_session_tool</code>
+gate tool execution per call, with <code>WaitingForApproval</code> as a
+session status. That is an approval surface over <em>actions</em>, not
+over memory content.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The mutation guard is the standout.</strong> Refusing to
+modify a message an active session depends on, and saying which session,
+is a concurrency property most memory stores in this atlas do not
+attempt. It is also narrow by construction: sessions that are not
+<code>Running</code> or <code>WaitingForApproval</code> are skipped, so
+the guard protects live reads and not durability of anything else.</p>
+<p><strong>Transactional discipline throughout.</strong> Edit, delete
+and truncate each take a transaction covering the message, its parts,
+the compactions they invalidate and the conversation timestamp. Session
+repair after deletion happens inside the same transaction.</p>
+<p><strong>Tool-group integrity enforced in storage</strong>, so a
+malformed context cannot be constructed by any caller.</p>
+<p>Against those:</p>
+<p><strong>No mutation audit.</strong> <code>session_events</code> is an
+append-only autoincrement log, and it records <em>session run</em>
+events. <code>replace_message</code> writes no event to it — the only
+reference to <code>session_events</code> in the message store is a
+<code>DELETE</code> during cleanup. So the store can answer "what did
+this session do" and cannot answer "who changed this message, when, and
+from what". The mark is withheld on that basis, and it is the gap that
+makes the destructive edit worse than it needs to be: with an event log,
+the prior content would at least be reconstructible.</p>
+<p><strong>No trust state and no provenance.</strong> After an edit, a
+message the user wrote is indistinguishable from one the model
+produced.</p>
+<p><strong>No user-facing recovery from an edit.</strong> SQLite backups
+are the answer, and they are the user's problem.</p>
+<p><strong>A submodule tracking a branch.</strong>
+<code>vendor/bifrost</code> is pinned to <code>dev</code> rather than to
+a commit or a tag, which means what that dependency resolves to is not
+fixed by this repository's own history. Nothing about it is claimed
+here; it was not initialised.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, and none implied — no
+<code>CITATION.cff</code>, no arXiv or DOI reference in the README or
+<code>docs/</code>.</p>
+<p><strong>414 test functions across <code>src/</code></strong>, with
+105 in <code>src/store/tests.rs</code> alone — 3,319 lines of tests
+against 4,648 lines of store code, which is the ratio this atlas sees in
+its better-engineered entries. <strong>I did not run them.</strong>
+<code>Cargo.toml</code> and <code>Cargo.lock</code> both changed the day
+of this reading, inside the seven-day cooldown, so nothing was built and
+nothing was installed.</p>
+<p>The schema-version tests are a small model of the file's character:
+<code>rejects_newer_database_schema_version</code>,
+<code>rejects_older_database_schema_version</code> and
+<code>rejects_existing_unversioned_database_schema</code> — three
+refusals where one is the norm.</p>
+<p><strong>The negative retrieval assertion is
+<code>loads_path_to_message</code>.</strong> It inserts a root, then two
+assistant messages as <em>siblings</em> under it, resolves the path to
+the first, and asserts the length, both expected ids, and then
+explicitly:</p>
+<pre class="rust"><code>assert_ne!(path[1].id.as_deref(), Some(second_branch_id.as_str()));</code></pre>
+<p>That last line is the mark. It is not an exact-equality check that
+happens to exclude the sibling — it is a written assertion that the
+other branch must not appear in what retrieval returns, which is exactly
+the shape the rubric asks for and which most systems here never write
+down.</p>
+<p>What is <strong>not</strong> tested is the property the tagline
+claims. There is no case asserting that anything survives
+<code>replace_message</code> other than metadata
+(<code>replacing_message_text_preserves_metadata</code> asserts the
+metadata does), because there is nothing for such a case to assert. The
+absence is consistent with the code rather than a coverage gap.</p>
+<p>Before trusting this: a test that edits a node with two descendant
+branches and asserts what each branch's resolved path now contains,
+since that is the consequence a user is least likely to predict.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Store the conversation as a tree of shared nodes, not as a
+path per branch.</strong> One row per message with a parent link means a
+fork costs one insert at any depth, shared ancestors have one identity,
+and there are no duplicated paths to keep synchronised.
+<code>docs/conversation-tree-and-paths.md</code> makes the argument
+better than most design docs make any argument, including the
+counterfactual it rejected.</p>
+<p><strong>Refuse to mutate memory an active reader depends on, and name
+both in the error.</strong> <em>"cannot modify message X; it is part of
+active session Y"</em> tells the user what to do next. Most stores in
+this atlas let the write land and let the reader discover the
+inconsistency, which converts a recoverable conflict into a confusing
+result.</p>
+<p><strong>Delete a derived summary in the same transaction as the edit
+that invalidates it.</strong> A compaction "through" a message is wrong
+the moment that history changes. Dropping it atomically means the system
+can be behind, but never confidently wrong — and being behind is the
+failure you can detect.</p>
+<p><strong>Enforce context well-formedness in the storage
+layer.</strong> Deleting any member of a tool-call group deletes the
+group, so no caller anywhere can assemble a context with a dangling tool
+result. A rule that lives in the store cannot be forgotten by the next
+call site.</p>
+<p><strong>Mark an unbuilt primitive as unbuilt, in the code.</strong>
+<code>save_compaction</code> is <code>#[allow(dead_code)]</code> with a
+docstring saying nothing writes compactions yet. A reader checking the
+schema would otherwise conclude compaction is implemented, which is the
+mistake the same reader makes with several other systems here.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Editing in place when your whole premise is that the original
+survives.</strong> If a design offers both a branching operation and an
+edit operation, users will read the branching guarantee as covering
+both. Either make the edit fork — write the new content as a sibling and
+move the head — or say plainly, at the point of the edit, that the
+previous text is gone.</p>
+<p><strong>Shipping a destructive correction with no event log behind
+it.</strong> The two gaps compound: an in-place overwrite is survivable
+when an append-only record of mutations exists, because the prior value
+is reconstructible. With neither, the only recovery is a database backup
+the user did not know to take.</p>
+<p><strong>Leaving a message's <code>created_at</code> as its only
+timestamp after you have let it be edited.</strong> A row whose content
+changed and whose sole timestamp says when it was first written cannot
+be reasoned about at all — not "is this current", not "what did we
+believe last Tuesday".</p>
+<p><strong>Pinning a submodule to a branch.</strong>
+<code>vendor/bifrost</code> tracks <code>dev</code>, so what a fresh
+recursive clone resolves to is decided by another repository's activity
+rather than by this one's history. Whatever the trust relationship, that
+is a reproducibility property given away for nothing.</p>
+<h3 id="fit">Fit</h3>
+<p>Right for a single person who wants a local assistant whose history
+they control directly — where branching to try an approach, cutting a
+bad turn, and keeping several lines of enquiry alive under one root is
+the actual workflow. The tree is the correct structure for that, it is
+implemented properly, and the guard around in-flight sessions shows
+someone thought about what happens when curation meets a running
+agent.</p>
+<p>Wrong wherever memory must be defensible. There is no provenance, no
+trust state, no audit of changes and no recoverable history of an edit,
+so "why does it believe this" and "what did it say before I changed it"
+are both unanswerable from the store. Wrong too if you need recall
+rather than navigation: nothing searches, and a finding on a branch you
+are not standing on is, from the model's point of view, gone.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the in-place edit intentional, given the tagline? A fork-on-edit
+would cost one insert and a head move in a model that already supports
+both.</li>
+<li>What does <code>vendor/bifrost</code> contribute, and is it on the
+memory path? It was left uninitialised, and it tracks a moving
+branch.</li>
+<li>Does anything in the UI warn that editing a shared ancestor rewrites
+every descendant branch's context? The storage consequence is
+unavoidable; the disclosure was not traced.</li>
+<li>What writes <code>session_events</code>, and is there any event type
+that names a message mutation? The table shape would support one.</li>
+<li>Is automatic compaction in progress? The read path, the invalidation
+and the table are all present and only the writer is missing.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and store</strong></p>
+<ul>
+<li><code>src/store/schema.rs</code> — twelve tables, seven indexes,
+schema versioning</li>
+<li><code>src/store/message.rs</code> —
+<code>load_path_to_message</code>, <code>load_message_tree</code>,
+<code>root_to_leaf_paths</code>, <code>replace_message</code>,
+<code>remove_message</code>, <code>truncate_after_message</code>,
+<code>fork_conversation_at_message</code></li>
+<li><code>src/store/session.rs</code> —
+<code>ensure_message_mutation_allowed</code>, session head
+resolution</li>
+<li><code>src/store/compaction.rs</code> —
+<code>latest_compaction</code>, <code>save_compaction</code> (dead
+code), <code>delete_compactions_for_conversation</code></li>
+<li><code>src/store/conversation.rs</code>,
+<code>system_prompt.rs</code>, <code>tool_schema.rs</code>,
+<code>mod.rs</code></li>
+</ul>
+<p><strong>Operations</strong></p>
+<ul>
+<li><code>src/operation/message.rs</code> — the edit entry point</li>
+<li><code>src/operation/conversation.rs</code> — the fork entry
+point</li>
+<li><code>src/operation/session.rs</code>,
+<code>session_approval.rs</code>, <code>session_cli.rs</code></li>
+</ul>
+<p><strong>Session runtime</strong></p>
+<ul>
+<li><code>src/session/manager.rs</code>, <code>model.rs</code>,
+<code>event.rs</code> — <code>SessionStatus</code>, approval gating</li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>docs/conversation-tree-and-paths.md</code> — the storage
+argument, including the rejected alternative</li>
+</ul>
+<p><strong>Tests and benchmarks</strong></p>
+<ul>
+<li><code>src/store/tests.rs</code> — 105 tests, including
+<code>loads_path_to_message</code></li>
+<li><code>src/perf/scenarios.rs</code>, <code>benches/</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-10</strong> — <a
+href="https://github.com/buiilding/Windie-Sandbox/commit/90f949b88be84243a79691b0183a0693641df4d8"><code class="commit-id" title="90f949b88be84243a79691b0183a0693641df4d8">90f949b8…</code></a>
+— first reading. Screened before reading: 1 auto-run surface
+(<code>.gitmodules</code>, declaring three submodules owned by the same
+account, one of them tracking a <code>dev</code> branch), 0 build-time
+exec surfaces and no <code>build.rs</code> anywhere in the tree, and
+<code>Cargo.toml</code> and <code>Cargo.lock</code> both changed the
+same day — inside the seven-day cooldown, so nothing was built,
+installed or executed. The submodules were left uninitialised and
+nothing in <code>vendor/</code> is described here. The screen scanned
+four files: the manifest surface at the repository root is thin, and
+most of what it would ordinarily examine lives in the submodules it did
+not enter.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

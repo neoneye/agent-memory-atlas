@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Rejecting a candidate can write a
+suppression keyed on its canonical label, and four checks in the write
+gate refuse anything that matches — the fourth rejected-value tombstone
+in this atlas, beside a golden retrieval set with forbidden ids.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Universal Memory
+Engine — Agent Memory Atlas">
+    <meta property="og:description" content="Rejecting a candidate can
+write a suppression keyed on its canonical label, and four checks in the
+write gate refuse anything that matches — the fourth rejected-value
+tombstone in this atlas, beside a golden retrieval set with forbidden
+ids.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Universal Memory
+Engine — Agent Memory Atlas">
+    <meta name="twitter:description" content="Rejecting a candidate can
+write a suppression keyed on its canonical label, and four checks in the
+write gate refuse anything that matches — the fourth rejected-value
+tombstone in this atlas, beside a golden retrieval set with forbidden
+ids.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Universal Memory Engine — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Universal Memory Engine",
+      "description": "Rejecting a candidate can write a suppression keyed on its canonical label, and four checks in the write gate refuse anything that matches \u2014 the fourth rejected-value tombstone in this atlas, beside a golden retrieval set with forbidden ids.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A suppression the write gate obeys</p>
+          <h1>Universal Memory Engine</h1>
+          <p class="document-deck">Rejecting a candidate can write a
+suppression keyed on its canonical label, and four checks in the write
+gate refuse anything that matches — the fourth rejected-value tombstone
+in this atlas, beside a golden retrieval set with forbidden ids.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/12ziyad/universal-memory-engine">
+              <span>Source</span>
+              <strong>12ziyad/universal-memory-engine</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb" title="db98ef59999beb5c33d9aba190cb2c82bf9401cb">
+              <span>Analyzed revision</span>
+              <code>db98ef59…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Universal Memory Engine — UML in its own README — is a
+Cloudflare-native memory service: D1 for storage, Durable Objects, an
+MCP endpoint, per-tool tokens, and a dashboard. Roughly 34,000 lines of
+JavaScript across eleven migrations. It is Apache-2.0.</p>
+<p>The memory model is a small graph. <strong>Nodes</strong> are people,
+projects, skills, health facts, tools, interests, preferences and life
+events, each with a category, a <code>state</code>, aliases and a
+canonical label. <strong>Slices</strong> hold durable detail about a
+node. <strong>Events</strong> record change — started, paused,
+completed, diagnosed, passed away. <strong>Edges</strong> join nodes.
+<strong>Candidates</strong> are things not yet promoted to any of
+that.</p>
+<p>Two mechanisms put it near the top of this atlas.</p>
+<p><strong>It has a rejected-value tombstone, and the write gate obeys
+it.</strong> Rejecting a candidate with <code>suppress_similar</code>
+calls <code>addSuppression</code> with the candidate's
+<code>canonical_key</code>. <code>memory_suppressions</code> is a real
+table with a lookup index on <code>(user_id, kind, canonical_key)</code>
+and an optional <code>suppressed_until</code> for a time-boxed
+rejection. Then, in <code>gates.js</code>, every write is checked:</p>
+<pre class="js"><code>const isSuppressed = (kind, label) =&gt; suppressionByKindKey.has(`${kind}:${canonicalKey(label)}`);</code></pre>
+<p>— consulted at four points, and a hit produces
+<code>reject(obj, "suppressed_blocked")</code> so the object never
+reaches the plan. That is the shape this atlas has been asking for in
+every report: a durable record of a rejected value, keyed on the value,
+consulted so later extraction cannot re-assert it. <strong>Three systems
+carried it before this one.</strong></p>
+<p>The cleanup pass writes suppressions too, with a comment about
+guarding against <em>"a stray suppression from a half-completed
+delete-last request"</em> — so the same mechanism makes a deletion stick
+rather than leaving the next extraction free to recreate what a user
+just removed.</p>
+<p><strong>And the retrieval eval has forbidden ids.</strong>
+<code>eval/fixtures/retrieval_golden.json</code> is a 32-query golden
+set where each query carries <code>expect_nodes</code> <em>and</em>
+<code>forbid_nodes</code>, with a spec asserting <em>"never returns a
+forbidden identity"</em>. The fixture's own description states the
+discipline: seed the corpus, run recall, score against expected and
+forbidden, <em>"Deterministic: no LLM, USE_VECTORS=false, so this
+measures the exact/alias + lexical half that carries the recall hot path
+today."</em> The first case is the one that shows the intent — the query
+"Universal Memory Engine" must return <code>n-uml</code> and must
+<strong>not</strong> return <code>n-uml-college</code>, a near-identical
+label that a careless matcher would confuse.</p>
+<p>Most negative evidence in this atlas is one unit test. This is a
+per-query forbidden set inside an eval harness, which is the form the <a
+href="../../benchmarks/">benchmarks page</a> argues for and almost never
+finds.</p>
+<p><strong>The weakness is narrower than usual and worth stating
+precisely.</strong> <code>events</code> has both
+<code>happened_at</code> and <code>created_at</code>, which is the shape
+of bi-temporal validity. The manual extraction path populates
+<code>happened_at</code> from the caller when supplied. The automatic
+gate does not — <code>gates.js</code> sets <code>happened_at: now</code>
+at both of its event-creation sites. So the column that would
+distinguish <em>when something happened</em> from <em>when the system
+learned it</em> is collapsed by the writer that produces most of the
+memories, and the atlas withholds the mark on that basis.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a node in a small typed graph, or something not
+yet allowed to be one</strong>.</p>
+<p>The candidate table is the interesting half. Before anything becomes
+a node it is a candidate with <code>label_guess</code>,
+<code>canonical_key</code>, <code>role_guess</code>,
+<code>cluster_guess</code>, <code>confidence</code>,
+<code>first_seen_at</code>, <code>last_seen_at</code>,
+<code>session_count</code>, <code>mention_count</code>,
+<code>evidence_json</code>, <code>possible_parent_id</code>,
+<code>possible_existing_node_id</code>, <code>reason</code> and
+<code>expires_at</code>. That is a proposal with its evidence, its
+history and its guesses about where it belongs, held separately from the
+store it wants to enter.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p>Extraction proposes objects. The gate in <code>gates.js</code>
+resolves each against three things: existing nodes, existing candidates
+by normalised label, and the active suppression set. Anything suppressed
+is rejected outright; anything resolvable is merged into what exists;
+anything genuinely new becomes a node or stays a candidate.</p>
+<p>Promotion is a person's decision through
+<code>/v1/candidates/{id}/promote</code>, and the candidate records
+<code>promoted_object_id</code>, <code>promoted_object_kind</code> and
+<code>reviewed_at</code> when it happens.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>Four ways, and they are unusually well separated.</p>
+<p><em>Reject</em> — <code>status = 'rejected'</code>. The candidate is
+out of the queue and nothing more is claimed.</p>
+<p><em>Suppress</em> — <code>status = 'suppressed'</code>
+<strong>plus</strong> a row in <code>memory_suppressions</code> keyed on
+the canonical label. This is the one that binds the future.</p>
+<p><em>Merge</em> — <code>mergeCandidate</code> is promotion with
+<code>action: "merge_with_existing"</code>, so a duplicate becomes part
+of an existing node rather than a second one.</p>
+<p><em>Cleanup</em> — a background pass that deletes and, where deletion
+must hold, writes a suppression so the next extraction cannot undo
+it.</p>
+<p>The distinction between <em>reject</em> and <em>suppress</em> is the
+design decision worth copying. "This particular guess was wrong" and
+"stop proposing this thing" are different statements, and almost every
+system in this atlas offers only the first.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — rejecting with suppress-similar writes a key the write gate checks at four points, so a delete sticks and the same canonical label cannot be re-admitted</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: rejecting with suppress-similar writes a key the write gate checks at four points, so a delete sticks and the same canonical label cannot be re-admitted
+stateDiagram-v2
+    [*] --&gt; Candidate: extraction proposes an object with evidence and guesses
+    Candidate --&gt; Node: a person promotes it through the review endpoint
+    Candidate --&gt; Merged: promoted with merge, folded into an existing node
+    Candidate --&gt; Rejected: this guess was wrong, and nothing more is claimed
+    Candidate --&gt; Suppressed: rejected with suppress_similar, keyed on the canonical label
+    Suppressed --&gt; Blocked: the write gate refuses anything matching the key
+    Node --&gt; Suppressed: cleanup writes a suppression so a delete sticks
+    Blocked --&gt; [*]
+    note right of Suppressed
+        memory_suppressions is checked at four
+        points in the gate. A match is rejected
+        as suppressed_blocked, never written.
+    end note</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Cloudflare all the way down: Workers for the API, D1 for relational
+storage, Durable Objects for coordination, an optional vector index that
+the eval deliberately runs without.</p>
+<p><strong>Eleven migrations, each with a dated header and a purpose
+comment.</strong> The sequence reads as a design history: receipts,
+memory pages, auth sessions and tokens, two auto-mode phases, candidate
+review, manual memory identity, a forward repair for it, manual search
+and communities, and memory rules.</p>
+<p><strong>Receipts are the write audit.</strong> One row per save
+attempt with
+<code>outcome ∈ {wrote, meaningful_no_write, llm_failed, db_write_failed}</code>
+and counts per object kind. The <code>meaningful_no_write</code> value
+is the one to notice: it distinguishes <em>the model decided nothing was
+worth keeping</em> from <em>the write failed</em>, which almost nothing
+in this atlas separates. A user looking at the Saves page can tell a
+quiet system from a broken one.</p>
+<p><strong>Memory rules are a user-authored policy.</strong> One row per
+user with <code>custom_instructions</code>, <code>includes_json</code>,
+<code>excludes_json</code>, <code>custom_categories_json</code>,
+<code>capture_default</code>, <code>auto_collect</code> and
+<code>retention_days</code> — what to collect, what to refuse, and
+whether to collect at all.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A Cloudflare account and <code>wrangler</code>. There is no server to
+run and no database to provision beyond D1, which is the lightest hosted
+deployment in this atlas — and correspondingly the least portable, since
+D1, Durable Objects and Workers are all platform-specific.</p>
+<p>The store is SQL and the dashboard exposes the candidate queue, so
+review is a page rather than a query.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Schema</strong> —
+<code>migrations/0001_init_schema.sql</code> (nodes, slices, events,
+edges), <code>0002_receipts.sql</code>,
+<code>0003_run_32_memory_pages.sql</code> (suppressions at
+<code>:61</code>, the lookup index at <code>:116</code>),
+<code>0007_candidate_review.sql</code>,
+<code>0011_memory_rules.sql</code>.</p>
+<p><strong>The gate</strong> — <code>src/pipeline/gates.js</code>:
+suppression load at <code>:270</code>, <code>isSuppressed</code> at
+<code>:276</code>, and the four checks at <code>:328</code>,
+<code>:336</code>, <code>:394</code>, <code>:485</code>.</p>
+<p><strong>Candidate lifecycle</strong> —
+<code>src/pipeline/candidates.js</code>: <code>promoteCandidate</code>,
+<code>rejectCandidate</code> (<code>:243</code>, with the suppression
+branch at <code>:247</code>), <code>mergeCandidate</code>
+(<code>:262</code>).</p>
+<p><strong>Suppression store</strong> — <code>src/lib/db.js</code>:
+<code>getActiveSuppressions</code> (<code>:90</code>),
+<code>addSuppression</code> (<code>:101</code>).</p>
+<p><strong>Cleanup</strong> — <code>src/pipeline/cleanup.js</code>:
+<code>suppressionStatement</code> (<code>:64</code>) and the delete-last
+guard at <code>:206</code>.</p>
+<p><strong>Routing</strong> — <code>src/index.js:705</code>
+(<code>/v1/candidates/{id}/{promote|reject|merge}</code>).</p>
+<p><strong>Eval</strong> —
+<code>eval/fixtures/retrieval_golden.json</code>,
+<code>eval/fixtures/extraction_golden.json</code>,
+<code>test/eval_retrieval.spec.js</code>,
+<code>test/eval_extraction.spec.js</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> carry a label, a <code>canonical_label</code>, a
+category, a role, a <code>state</code> from
+<code>active | paused | inactive | completed</code>, a summary,
+<code>mention_count</code>, <code>session_count</code>, a
+<code>heat_score</code> and a cluster. <code>slices</code> hold detail,
+<code>events</code> hold change with an <code>action</code> and an
+<code>importance</code>, <code>edges</code> hold typed relations.</p>
+<p><strong>Scope is <code>user_id</code> on every table and in every
+query</strong>, with per-tool API and MCP tokens layered above so a
+given assistant's access can be revoked independently.</p>
+<p><strong>Provenance is <code>evidence_json</code> on the
+candidate</strong> — the material that justified the proposal, carried
+until promotion. After promotion the node carries counts rather than
+evidence, so the trail thins at exactly the point the claim becomes
+durable.</p>
+<p><strong>Temporal modelling is the near-miss.</strong>
+<code>events.happened_at</code> beside <code>events.created_at</code> is
+the right schema; <code>manual_extract.js:349</code> reads a
+caller-supplied value and <code>manual_plan.js</code> sorts by
+<code>happened_at ?? created_at</code>, so the read side is ready for
+it. The automatic path is not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Exact and alias matching plus lexical recall, with the vector index
+optional. The golden set runs with <code>USE_VECTORS=false</code> and
+describes that as measuring <em>"the exact/alias + lexical half that
+carries the recall hot path today"</em> — an unusually honest statement
+about which half of a hybrid retriever is actually load-bearing.</p>
+<p>Aliases are first-class on the node, which is what makes the
+exact/alias lane work: "UML" and "Universal Memory Layer" resolve to the
+same node without embedding either.</p>
+<p>The failure mode the eval is built around is <strong>identity
+confusion</strong>, and the fixture names it: <code>n-uml</code> versus
+<code>n-uml-college</code>. Two nodes whose labels share most of their
+tokens are exactly what lexical recall gets wrong, and the forbidden
+lists are how the project pins that it does not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction proposes, the gate disposes. The gate is the whole write
+path and it does four things in order: load existing nodes, candidates
+and suppressions; resolve each proposed object against them; reject what
+is suppressed; and emit a plan of new nodes, updates and candidates.</p>
+<p>Emitting a <em>plan</em> rather than writing directly is the
+structural choice that makes the rest possible — every rejection has a
+reason (<code>plan.rejected.push({ kind, label, reason })</code>), so
+the receipt can report what was skipped and why.</p>
+<p>Deduplication happens by canonical label against both existing nodes
+and in-flight candidates, and within a batch by a <code>resolved</code>
+map so two mentions in one payload converge on one node.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP endpoint with per-user secrets — the server comment notes that
+Claude <em>"rejects static bearer headers and ?query= tokens"</em>, so
+the transport is shaped around a real client constraint — plus an HTTP
+API and per-tool tokens.</p>
+<p>The dashboard is the human half: the candidate queue with promote,
+reject and merge, and a Saves page driven by receipts. Together those
+are the two surfaces this atlas most often finds missing — a review
+queue <em>and</em> a record of what each write actually did.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The suppression list is the strongest correction mechanism in
+this atlas outside Verel and RainBox</strong>, and it is stronger than
+either in one respect: it is written from two places — an explicit human
+rejection and the cleanup pass — so "the user said no" and "the user
+deleted this" both bind the future through the same gate.</p>
+<p><strong>Trust states are real.</strong> A candidate is not a node;
+<code>pending</code> genuinely withholds, because retrieval reads nodes
+and slices, not the candidate queue. Promotion is a person's act and is
+stamped.</p>
+<p><strong>Receipts give the write path an audit</strong> with an
+outcome vocabulary that separates a deliberate no-write from a
+failure.</p>
+<p><strong>What is missing</strong> is provenance after promotion —
+<code>evidence_json</code> lives on the candidate, and once promoted the
+node keeps counts rather than the material — and validity time on the
+automatic path.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The eval is the reason this section is short and positive. Two golden
+fixtures with committed corpora, an extraction set and a
+<strong>32-query retrieval set with per-query <code>expect_nodes</code>
+and <code>forbid_nodes</code></strong>, run by
+<code>test/eval_retrieval.spec.js</code> and
+<code>test/eval_extraction.spec.js</code>, deterministic by construction
+with the LLM and vectors switched off.</p>
+<p>Beside them, unit specs for auth, candidates, cleanup, the dashboard
+and extraction.</p>
+<p>What would strengthen it: an assertion that a suppressed label stays
+blocked across a subsequent extraction run — the tombstone is checked in
+the gate and the gate is not covered by the golden set, so the mechanism
+this report leads with is the one without a committed test. I inspected
+these fixtures and specs; I did not run them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Separate "this guess was wrong" from "stop proposing
+this".</strong> Two verbs on the same review action —
+<code>reject</code> and <code>reject with suppress_similar</code> — cost
+one boolean and give the user the only correction that binds the
+future.</p>
+<p><strong>Key the suppression on a canonical form, and check it in the
+gate.</strong> Not at query time, not in the UI: at the one place every
+write passes through, with the rejection carrying a reason so the
+receipt can explain it.</p>
+<p><strong>Write a suppression when a delete must stick.</strong> The
+cleanup pass does this, and it is the answer to the re-derivation
+problem that half this atlas has — deleting a memory that an extractor
+can rebuild is not deletion.</p>
+<p><strong>Give your eval per-query forbidden ids.</strong>
+<code>expect_nodes</code> alone measures recall;
+<code>forbid_nodes</code> measures the thing that actually hurts, and
+the near-identical label pair in the fixture is the case worth designing
+around.</p>
+<p><strong>Give a no-write its own outcome value.</strong>
+<code>meaningful_no_write</code> beside <code>llm_failed</code> and
+<code>db_write_failed</code> means a quiet system and a broken one look
+different on the dashboard.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not put validity time in the schema and stamp it with
+<code>now</code> on the main path.</strong> A <code>happened_at</code>
+that equals <code>created_at</code> for every automatically extracted
+event is worse than no column, because the read side sorts by it and
+believes it.</p>
+<p><strong>Do not drop the evidence at promotion.</strong>
+<code>evidence_json</code> justifies the candidate and does not survive
+into the node, so the durable object is the one that cannot say why it
+exists.</p>
+<p><strong>Do not leave your best mechanism out of the eval.</strong>
+The suppression gate is the strongest thing here and the golden set does
+not exercise it.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who wants one memory layer shared across several
+assistants and is content to live on Cloudflare. The candidate queue
+assumes a person will look at it, which is the right assumption for a
+personal memory and the wrong one for an unattended pipeline — with
+<code>auto_collect</code> and <code>capture_default</code> in
+<code>memory_rules</code> there to move the balance.</p>
+<p>It is not portable. D1, Durable Objects and Workers are the substrate
+rather than an implementation detail, so adopting the design elsewhere
+means keeping the shapes — candidate table, suppression table, gate —
+and rewriting everything under them. Those shapes are the part worth
+having.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often does a suppression fire in practice, and does it
+over-block?</strong> The key is a normalised label, so suppressing a
+common word would silently block a legitimate node later; nothing in the
+fixtures explores that.</li>
+<li><strong>Is <code>suppressed_until</code> used?</strong> The column
+supports a time-boxed rejection, which is a more nuanced answer than
+permanent suppression, and no call site passing it was found.</li>
+<li><strong>Why does the automatic path stamp <code>happened_at</code>
+with <code>now</code>?</strong> The manual path reads a supplied value,
+so the intent exists on one side of the same schema.</li>
+<li><strong>What happens to a candidate that expires?</strong>
+<code>expires_at</code> is on the table; the sweep that acts on it was
+not located.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema</strong> —
+<code>migrations/0001_init_schema.sql</code>,
+<code>0002_receipts.sql</code>,
+<code>0003_run_32_memory_pages.sql</code>,
+<code>0007_candidate_review.sql</code>,
+<code>0011_memory_rules.sql</code>.</p>
+<p><strong>Write gate</strong> — <code>src/pipeline/gates.js</code>.</p>
+<p><strong>Candidates</strong> —
+<code>src/pipeline/candidates.js</code>,
+<code>src/index.js:705</code>.</p>
+<p><strong>Suppressions</strong> — <code>src/lib/db.js</code>
+(<code>getActiveSuppressions</code>, <code>addSuppression</code>),
+<code>src/pipeline/cleanup.js</code>.</p>
+<p><strong>Manual path</strong> —
+<code>src/pipeline/manual_extract.js</code>,
+<code>manual_plan.js</code>.</p>
+<p><strong>MCP</strong> — <code>src/mcp/server.js</code>.</p>
+<p><strong>Eval</strong> —
+<code>eval/fixtures/retrieval_golden.json</code>,
+<code>eval/fixtures/extraction_golden.json</code>,
+<code>test/eval_retrieval.spec.js</code>,
+<code>test/eval_extraction.spec.js</code>.</p>
+<p><strong>Licence</strong> — <code>LICENSE</code> (Apache-2.0).</p>
+<h2 id="history">History</h2>
+<p><strong>2026-07-31</strong> — <a
+href="https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb"><code class="commit-id" title="db98ef59999beb5c33d9aba190cb2c82bf9401cb">db98ef59…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An OpenClaw and Hermes memory
+plugin combining raw conversation evidence, structured records,
+scene/persona layers, and symbolic context offload.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TencentDB Agent
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="An OpenClaw and Hermes
+memory plugin combining raw conversation evidence, structured records,
+scene/persona layers, and symbolic context offload.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TencentDB Agent
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="An OpenClaw and Hermes
+memory plugin combining raw conversation evidence, structured records,
+scene/persona layers, and symbolic context offload.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TencentDB Agent Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TencentDB Agent Memory",
+      "description": "An OpenClaw and Hermes memory plugin combining raw conversation evidence, structured records, scene/persona layers, and symbolic context offload.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Layered symbolic memory</p>
+          <h1>TencentDB Agent Memory</h1>
+          <p class="document-deck">An OpenClaw and Hermes memory plugin
+combining raw conversation evidence, structured records, scene/persona
+layers, and symbolic context offload.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TencentCloud/tencentdb-agent-memory">
+              <span>Source</span>
+              <strong>TencentCloud/tencentdb-agent-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295" title="45e6e80ae2e63b65fad0d89f5e13171229c8f295">
+              <span>Analyzed revision</span>
+              <code>45e6e80a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-26</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TencentDB Agent Memory is an OpenClaw and Hermes-oriented memory
+plugin with two related systems:</p>
+<ul>
+<li>Long-term memory: raw conversations (<code>L0</code>), structured
+memory records (<code>L1</code>), scene documents (<code>L2</code>), and
+a persona (<code>L3</code>).</li>
+<li>Short-term symbolic offload: large tool outputs are stored as files,
+reduced to JSONL summaries, and organized into Mermaid maps that the
+agent can navigate and drill into.</li>
+</ul>
+<p>This layered, progressively disclosed context model is the
+repository's best idea. Dynamic L1 recall is kept separate from stable
+scene/persona context, and raw evidence remains available for
+drill-down.</p>
+<p>The weakest areas are consistency, trust, and substantiation. L1
+writes span JSONL and a vector store without a single atomic
+transaction. Deduplication fails open by storing every candidate when
+recall or LLM judgment fails. The plugin has no first-class
+correction/forget tool or claim-verification state, and the headline
+benchmark gains in the README are not backed by an evaluation harness or
+result artifacts in this repository.</p>
+<p>The inspected package version is <code>0.3.6</code> (2026-07-19).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The long-term hierarchy is:</p>
+<ul>
+<li><code>L0</code>: verbatim user and assistant messages in daily JSONL
+files.</li>
+<li><code>L1</code>: typed records for persona facts, episodes, and
+instructions.</li>
+<li><code>L2</code>: Markdown scene documents synthesized from related
+L1 records.</li>
+<li><code>L3</code>: a durable persona document synthesized from changed
+scenes.</li>
+</ul>
+<p>The short-term offload hierarchy is:</p>
+<ul>
+<li>Raw tool outputs in <code>refs/*.md</code>.</li>
+<li>Compact JSONL summaries.</li>
+<li>Active and historical Mermaid canvases.</li>
+<li>Node IDs that let the agent drill back to evidence.</li>
+</ul>
+<p>Typical long-term flow:</p>
+<pre class="text"><code>successful agent turn -&gt; L0 append -&gt; L1 extraction
+-&gt; recall candidates -&gt; LLM store/update/merge/skip
+-&gt; JSONL + SQLite/VectorDB
+-&gt; scene extraction -&gt; persona regeneration
+-&gt; before-prompt recall with a context budget</code></pre>
+<p>The system is better understood as a context compiler than a single
+database: it transforms conversational evidence into increasingly
+stable, compact files and records.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four layers from raw conversation to persona, with recall and the two markdown layers all feeding the same assembled prompt</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four layers from raw conversation to persona, with recall and the two markdown layers all feeding the same assembled prompt
+flowchart TD
+  OpenClaw[&quot;OpenClaw hooks&quot;] --&gt; Capture[&quot;Auto capture&quot;]
+  Hermes[&quot;Hermes gateway&quot;] --&gt; Capture
+  Capture --&gt; L0[&quot;L0 conversation&lt;br/&gt;JSONL&quot;]
+  L0 --&gt; Extract[&quot;L1 extractor +&lt;br/&gt;dedup judge&quot;]
+  Extract --&gt; JSONL[&quot;L1 JSONL&quot;]
+  Extract --&gt; Store[&quot;SQLite or&lt;br/&gt;Tencent VectorDB&quot;]
+  Store --&gt; Recall[&quot;FTS/vector/hybrid recall&quot;]
+  JSONL --&gt; Scene[&quot;L2 scene&lt;br/&gt;Markdown&quot;]
+  Scene --&gt; Persona[&quot;L3 persona&lt;br/&gt;Markdown&quot;]
+  Recall --&gt; Prompt[&quot;Dynamic&lt;br/&gt;prompt context&quot;]
+  Scene --&gt; Prompt
+  Persona --&gt; Prompt
+  Tools[&quot;Large&lt;br/&gt;tool output&quot;] --&gt; Offload[&quot;refs + summaries +&lt;br/&gt;Mermaid maps&quot;]
+  Offload --&gt; Prompt</code></pre></details></figure>
+<p>Storage is pluggable through <code>IMemoryStore</code>. SQLite uses
+WAL, FTS5, and <code>sqlite-vec</code>; Tencent Cloud VectorDB provides
+the remote alternative. JSONL and Markdown retain human-readable
+evidence and generated projections.</p>
+<p>The OpenClaw plugin registers capture/recall hooks and two search
+tools. The symbolic offload engine is activated only when the
+corresponding OpenClaw context-engine slot is assigned.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Long-term capture and storage:</p>
+<ul>
+<li><code>src/core/hooks/auto-capture.ts</code>: checkpointed capture
+and deferred work.</li>
+<li><code>src/core/conversation/l0-recorder.ts</code>: sanitized daily
+conversation JSONL.</li>
+<li><code>src/core/record/l1-extractor.ts</code>: LLM extraction of
+scenes and records.</li>
+<li><code>src/core/record/l1-dedup.ts</code>: candidate recall and LLM
+dedup decisions.</li>
+<li><code>src/core/record/l1-writer.ts</code>: JSONL and store
+writes.</li>
+<li><code>src/core/store/types.ts</code>: storage interface.</li>
+<li><code>src/core/store/sqlite.ts</code>: SQLite, FTS5, and vector
+implementation.</li>
+</ul>
+<p>Recall:</p>
+<ul>
+<li><code>src/core/hooks/auto-recall.ts</code>: L1/L2/L3 context
+assembly and budgets.</li>
+<li><code>src/core/tools/memory-search.ts</code>: memory search.</li>
+<li><code>src/core/tools/conversation-search.ts</code>: L0 conversation
+search.</li>
+</ul>
+<p>Higher layers:</p>
+<ul>
+<li><code>src/core/scene/scene-extractor.ts</code>: scene Markdown
+generation.</li>
+<li><code>src/core/persona/persona-generator.ts</code>: persona
+regeneration.</li>
+<li><code>src/core/persona/persona-trigger.ts</code>: threshold and
+recovery triggers.</li>
+</ul>
+<p>Symbolic offload:</p>
+<ul>
+<li><code>src/offload/index.ts</code>: context-engine state machine and
+compression.</li>
+<li><code>src/offload/storage.ts</code>: registries, refs, summaries,
+maps, and state.</li>
+<li><code>src/offload/reclaimer.ts</code>: retention and orphan
+cleanup.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An L1 <code>MemoryRecord</code> contains:</p>
+<ul>
+<li>Type: persona, episodic, or instruction.</li>
+<li>Content, priority, and scene name.</li>
+<li>Source message IDs.</li>
+<li>Metadata, timestamps, session key, and session ID.</li>
+</ul>
+<p>SQLite maintains:</p>
+<ul>
+<li>L1 records, vector rows, and FTS rows.</li>
+<li>L0 conversation records, vector rows, and FTS rows.</li>
+<li>Embedding provider, model, and dimension metadata.</li>
+</ul>
+<p>Embedding metadata is used to detect model changes and rebuild vector
+projections. The file layer retains L0 JSONL, L1 JSONL, scene Markdown,
+persona Markdown, and short-term offload artifacts.</p>
+<p>The repository describes JSONL as a backup/recovery source of truth
+in one path, while cleanup code treats the vector store as authoritative
+in another. That ambiguity matters because updates can touch both stores
+independently.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>L1 retrieval supports:</p>
+<ul>
+<li>FTS keyword search.</li>
+<li>Vector similarity.</li>
+<li>Hybrid search using reciprocal-rank fusion with
+<code>K=60</code>.</li>
+<li>Native Tencent VectorDB hybrid retrieval when configured.</li>
+<li>Metadata and session-related post-filters.</li>
+</ul>
+<p>L0 conversation search uses similar FTS/vector parallelism. Auto
+recall has a five-second timeout and a context budget, then
+combines:</p>
+<ul>
+<li>Dynamic L1 results inside a <code>&lt;relevant-memories&gt;</code>
+block.</li>
+<li>Stable scene-navigation context.</li>
+<li>Stable persona context.</li>
+</ul>
+<p>The split is valuable: frequently changing retrieval does not
+continually invalidate the stable system-context prefix.</p>
+<p>The short-term offload engine replaces bulky tool results with
+summaries and Mermaid nodes while retaining the raw reference files.
+Agents can use node IDs to retrieve detail. This is progressive
+disclosure applied to working context, not just long-term recall.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Auto capture uses a checkpoint lock. It writes L0 JSONL and
+searchable metadata immediately, then schedules embedding and
+higher-layer work. Registered background tasks are drained on
+shutdown.</p>
+<p>The L1 extractor asks an LLM for structured scene segments and memory
+records. Deduplication first recalls candidates, then asks an LLM to
+choose <code>store</code>, <code>update</code>, <code>merge</code>, or
+<code>skip</code>. If retrieval, parsing, or the judge fails, the policy
+is to store every proposed item. This preserves information but
+accumulates duplicates and contradictions.</p>
+<p>For an update or merge, the writer:</p>
+<ol type="1">
+<li>Deletes target IDs from the vector store.</li>
+<li>Appends the new record to JSONL.</li>
+<li>Attempts to upsert the new vector-store record.</li>
+</ol>
+<p>The last step is best-effort. A failure after deletion can
+temporarily remove both the old and replacement record from retrieval
+until repair or reindexing. Old JSONL rows remain until a cleaner
+reconciles them.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The OpenClaw plugin hooks:</p>
+<ul>
+<li><code>before_prompt_build</code> for automatic recall.</li>
+<li><code>before_message_write</code> to strip recalled context from
+stored transcripts.</li>
+<li><code>agent_end</code> for capture of successful turns.</li>
+</ul>
+<p>Only successful agent turns are promoted through the long-term
+capture path. That reduces noise, but can also discard useful failure
+evidence.</p>
+<p>Two agent tools expose memory and conversation search. The prompt
+instructs the agent to limit itself to three combined calls, but the
+source contains a TODO for a hard enforcement mechanism; this is
+currently guidance, not a runtime limit.</p>
+<p>The Hermes gateway provides another integration route. The short-term
+context engine depends more tightly on OpenClaw's patching and slot
+mechanism.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>SQLite WAL and local transactions protect individual SQLite
+projections.</li>
+<li>Vector dimensions and embedding identity are recorded.</li>
+<li>Capture checkpoints reduce duplicate processing.</li>
+<li>Background work is tracked and drained at shutdown.</li>
+<li>Raw evidence remains available behind summarized context.</li>
+<li>Recall has a timeout and bounded prompt budget.</li>
+<li>Offload reclamation preserves recent maps and cleans orphaned
+references.</li>
+<li>Recalled context is removed before transcript persistence.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>JSONL and vector-store mutations are not atomic together.</li>
+<li>The source-of-truth contract is inconsistent across code
+comments.</li>
+<li>Deduplication fails open to storing conflicts.</li>
+<li>Scene and persona generation gives an LLM file-writing
+capability.</li>
+<li>There is no explicit user-facing correct/forget tool.</li>
+<li>Memories have priority and provenance, but no verified/rejected
+state.</li>
+<li>Long-term search is broadly shared within the plugin data corpus;
+session fields are not a general tenant authorization boundary.</li>
+<li>A single persona file is a poor fit for unrelated users sharing one
+data directory.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>At the inspected revision, the repository has a small test set: four
+TypeScript test files around authentication/profile handling, no-think
+HTTP behavior, sanitization, and time handling, plus two Python tests
+for Hermes recovery and shutdown. No committed tests were found for the
+central L1/L2/L3 extraction, deduplication, retrieval, or cross-store
+write paths. The source tests were not run for this atlas review.</p>
+<p>The README reports gains on WideSearch, SWE-bench, AA-LCR, and
+PersonaMem, plus a <code>61.38%</code> token reduction. This repository
+does not include the corresponding evaluation harness, raw outputs, or
+reproducible result artifacts. Treat those numbers as project claims,
+not independently inspectable evidence.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li>Preserve raw evidence below every synthesized layer.</li>
+<li>Separate dynamic retrieval from stable scene/persona context.</li>
+<li>Use compact symbolic maps with IDs that drill back to raw tool
+output.</li>
+<li>Checkpoint capture and defer expensive embeddings.</li>
+<li>Record embedding model and dimensions for safe rebuilds.</li>
+<li>Strip recalled context before saving a transcript.</li>
+<li>Keep context assembly bounded by time and token budgets.</li>
+<li>Make generated scene and persona files human-readable and
+editable.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li>Calling both JSONL and a vector store authoritative in different
+paths.</li>
+<li>Delete-old then best-effort insert-new across non-transactional
+stores.</li>
+<li>Storing every candidate when deduplication fails.</li>
+<li>Relying on prompt wording to enforce a hard tool-call limit.</li>
+<li>Omitting core lifecycle tests while publishing precise benchmark
+gains.</li>
+<li>Giving synthesis models file writes without a review or validation
+state.</li>
+<li>Treating successful turns as the only source of durable
+lessons.</li>
+<li>Providing internal deletion primitives without a clear user
+correction path.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow the layered context design when the host is OpenClaw or Hermes
+and the goal is to compress long, tool-heavy work while retaining
+drill-down evidence. The SQLite backend is the easier operational
+choice; Tencent VectorDB is useful when managed remote retrieval is
+already a requirement.</p>
+<p>Before consequential use, define one authoritative record log, make
+projection updates replayable, add explicit correction and deletion
+tools, and introduce a review state for generated persona and
+instruction memories. A production adoption should also add tests for
+extraction, hybrid retrieval, cross-store failure, and recovery.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is JSONL or the configured memory store authoritative after
+divergence?</li>
+<li>How is a failed update repaired after old vector rows are
+deleted?</li>
+<li>Who can review or reject generated persona and instruction
+memories?</li>
+<li>How should memory be separated for multiple users or agents?</li>
+<li>Why are failed agent turns excluded from long-term learning?</li>
+<li>Can the published benchmark harness and raw results be
+released?</li>
+<li>Will the three-call recall limit become an enforced runtime
+budget?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/core/store/types.ts</code>: storage interface and
+capabilities.</li>
+<li><code>src/core/store/sqlite.ts</code>: SQLite, FTS5, and vector
+projections.</li>
+<li><code>src/core/conversation/l0-recorder.ts</code>: raw conversation
+evidence.</li>
+<li><code>src/core/record/l1-extractor.ts</code>: structured memory
+extraction.</li>
+<li><code>src/core/record/l1-dedup.ts</code>: store/update/merge/skip
+judgment.</li>
+<li><code>src/core/record/l1-writer.ts</code>: JSONL and store
+mutations.</li>
+<li><code>src/core/hooks/auto-capture.ts</code>: checkpointed
+capture.</li>
+<li><code>src/core/hooks/auto-recall.ts</code>: bounded L1/L2/L3
+context.</li>
+<li><code>src/core/tools/memory-search.ts</code>: long-term search
+tool.</li>
+<li><code>src/core/tools/conversation-search.ts</code>: L0 search
+tool.</li>
+<li><code>src/core/scene/scene-extractor.ts</code>: scene
+generation.</li>
+<li><code>src/core/persona/persona-generator.ts</code>: persona
+generation.</li>
+<li><code>src/core/persona/persona-trigger.ts</code>: persona
+scheduling.</li>
+<li><code>src/offload/index.ts</code>: symbolic context-engine state
+machine.</li>
+<li><code>src/offload/storage.ts</code>: offload artifacts and
+registry.</li>
+<li><code>src/offload/reclaimer.ts</code>: retention cleanup.</li>
+<li><code>index.ts</code>: OpenClaw plugin registration.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-07-26</strong> — <a
+href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295"><code class="commit-id" title="45e6e80ae2e63b65fad0d89f5e13171229c8f295">45e6e80a…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An actor's stated confidence is
+scored against whether their writes survived, and the Brier error
+attenuates every future claim they make.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Recall — Agent Memory Atlas">
+    <meta property="og:description" content="An actor's stated
+confidence is scored against whether their writes survived, and the
+Brier error attenuates every future claim they make.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Recall — Agent Memory Atlas">
+    <meta name="twitter:description" content="An actor's stated
+confidence is scored against whether their writes survived, and the
+Brier error attenuates every future claim they make.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Recall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Recall",
+      "description": "An actor's stated confidence is scored against whether their writes survived, and the Brier error attenuates every future claim they make.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Push memory with an integrity gate</p>
+          <h1>Recall</h1>
+          <p class="document-deck">An actor's stated confidence is
+scored against whether their writes survived, and the Brier error
+attenuates every future claim they make.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/H-XX-D/recall-memory-substrate">
+              <span>Source</span>
+              <strong>H-XX-D/recall-memory-substrate</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89" title="b448f24e85309d3a3adc56bc1ad1aaca5d920d89">
+              <span>Analyzed revision</span>
+              <code>b448f24e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-21</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Recall is a "push" memory substrate: it does not wait to be queried.
+It compiles what an agent needs into every turn through hooks, and — in
+its own description — "holds the turn open until memory was actually
+consulted or updated". Apache-2.0, about 13,200 lines of TypeScript
+across 40 source modules, each with a paired test file.</p>
+<p>The stated bet is against the extractor: facts "enter as typed,
+validated, confidence-calibrated cells at write time, written by the
+same model that did the work, with no extraction pipeline behind it". No
+second model, no memory service, "nothing for a human to curate".</p>
+<p><strong>The mechanism worth the report is per-actor Brier
+calibration.</strong> <code>src/calibration.ts</code> is 26 lines. It
+takes an actor's resolved write history — each entry a stated
+<code>confidence</code> and whether the claim was later
+<code>contradicted</code> — and computes the Brier score, the mean
+squared error between what the actor claimed and what turned out to be
+true. That score becomes a multiplier in <code>[0.5, 1]</code> applied
+to everything that actor writes afterwards, returning a neutral 1 until
+there are at least three outcomes to judge.</p>
+<p>This is a different answer to "how much should I believe this" from
+anything else in the atlas. Other systems weight by <em>what kind of
+source</em> a memory came from — user-stated beats LLM-extracted, a
+fixed multiplier per origin. Recall weights by <em>how well-calibrated
+that particular writer has been</em>, measured. An LLM that says 0.9 and
+is right 90% of the time is not discounted; one that says 0.9 and is
+right half the time is, automatically, by the arithmetic.</p>
+<p>The score legend makes the separation explicit: position 0 is
+<code>conf</code>, "the immutable stated anchor", position 4 is
+<code>actorCalibration</code>, and position 5 is <code>effective</code>,
+derived. What was claimed and what is believed are different numbers in
+different slots, and the claimed one never changes.</p>
+<p><strong>The gap is one flag.</strong>
+<code>Flags.requiresReview</code> is rendered in the compiled context,
+expands a cell's mini-index line, and produces a
+<code>review_required</code> marker. Searching the tree for anything
+setting it to <code>true</code> returns <strong>three test files and no
+production code</strong>. The bit exists, the display exists, and
+nothing can raise it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A cell is a typed claim from a ten-value vocabulary —
+<code>dec</code>ision, <code>obs</code>ervation, <code>bel</code>ief,
+<code>tsk</code>, <code>obj</code>ective, <code>rsk</code>,
+<code>ref</code>, <code>ver</code>ification, <code>hyp</code>othesis,
+<code>prg</code>ram — carrying:</p>
+<ul>
+<li>a <strong>ten-position score legend</strong> (<code>conf</code>,
+<code>uncertainty</code>, <code>concern</code>,
+<code>sourceQuality</code>, <code>actorCalibration</code>,
+<code>effective</code>, <code>currencyC0</code>, <code>currency</code>,
+<code>salienceSeed</code>, <code>salience</code>), with the stated
+anchor immutable and the live values decayed by a background
+operator;</li>
+<li><strong>signed directed edges</strong> with six relations —
+<code>supports</code> (+), <code>contradicts</code> (−),
+<code>concerns</code> (−0.5), <code>depends_on</code>,
+<code>supersedes</code>, <code>derived_from</code>;</li>
+<li><strong>provenance</strong> as <code>origin</code> ×
+<code>producedBy</code> × <code>verification</code> ×
+<code>signatureStatus</code>, where <code>producedBy</code> is "the
+actor id the calibration keys on; unspoofable once signed";</li>
+<li><strong>policy</strong> carrying <code>sensitivity</code>,
+<code>expiresAt</code> and <code>reverifyAfter</code>.</li>
+</ul>
+<p>Belief is not a state transition here; it is a computation over the
+graph. A cell's <code>effective</code> score folds its stated
+confidence, its actor's calibration, and the mass of supporting versus
+challenging neighbours.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — confidence is attenuated when nothing supports it and calibrated by the producer's own Brier factor, and each later contradiction or survival feeds back into that factor</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: confidence is attenuated when nothing supports it and calibrated by the producer&#39;s own Brier factor, and each later contradiction or survival feeds back into that factor
+flowchart TD
+    P[&quot;WriteProposal: kind, title, body, confidence&quot;] --&gt; V{&quot;validate — v5 schema&quot;}
+    V --&gt;|structural issue| REJ[&quot;rejected&quot;]
+    V --&gt; F{&quot;firewall: screenFindings&quot;}
+    F --&gt;|&quot;credential pattern matched&quot;| S[&quot;sensitivity forced to secret,&lt;br/&gt;public write downgraded&quot;]
+    F --&gt; A{&quot;attenuateConfidence&quot;}
+    A --&gt;|&quot;high confidence, no support evidence&quot;| CAP[&quot;capped&quot;]
+    A --&gt; B[&quot;buildCell — full cell scaffolded&quot;]
+    B --&gt; C[&quot;calibrate: effective *= brier factor for producedBy&quot;]
+    C --&gt; M[&quot;neighborMass: supports minus challenges&quot;]
+    M --&gt; CELL[&quot;cell admitted&quot;]
+    CELL --&gt; OUT{&quot;later resolution&quot;}
+    OUT --&gt;|&quot;contradicted by an edge&quot;| L0[&quot;ActorOutcome: confidence, contradicted = true&quot;]
+    OUT --&gt;|survived| L1[&quot;ActorOutcome: confidence, contradicted = false&quot;]
+    L0 --&gt; C
+    L1 --&gt; C</code></pre></details></figure>
+<p>The loop from outcome back to calibration is the design. Every claim
+an actor makes is eventually graded against reality, and the grade
+prices their next one.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite file per project, registered in a <code>projects</code>
+table keyed on <code>root_path</code> with a slug and a database path,
+under <code>~/.recall</code>. A separate home database holds
+cross-project material.</p>
+<p><code>src/federated-store.ts</code> is the read side of that: "a
+read-only union across home/project locals" where "each member keeps its
+local trust graph intact. The union only prefixes stable keys and edge
+endpoints with a graph slug so callers can traverse without accidentally
+mixing domains." Reads federate, writes route to exactly one local, and
+the error message says so.</p>
+<p>Node 22.13+, npm-installed, no service and no key. The integration is
+hooks rather than a server: a <code>PostToolUse</code> receipt hook
+attributes an accepted write to a session and turn marker, and a
+<code>Stop</code> hook verifies those ids against the routed store — the
+comment states the invariant that makes it work, "ambient/background
+writes never count".</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Admission</strong> — <code>src/admission.ts</code>, and the
+module header documents the sequence better than prose can:
+<code>validate</code> → <code>screenFindings</code> →
+<code>attenuateConfidence</code> → <code>buildCell</code> →
+<code>calibrate</code>, with a note that support and challenge masses
+are zero at this stage "because those come from a cell's graph
+neighbors".</p>
+<p><strong>Firewall</strong> — <code>src/firewall.ts</code>: eight
+precision-first secret patterns — OpenAI, AWS, GitHub, Slack, JWT,
+private-key blocks, bearer tokens, and a secret-named assignment regex —
+each "anchored with word boundaries to avoid tripping on bare UUIDs". A
+match forces <code>sensitivity: secret</code> and downgrades a public
+write. Beside it, <code>attenuateConfidence</code> caps a high stated
+confidence that carries no support evidence.</p>
+<p><strong>Calibration</strong> — <code>src/calibration.ts</code>:
+<code>brierScore</code> and <code>calibrationFactor</code>, "pure
+functions, no side effects", with an explicit throw on a confidence
+outside <code>[0, 1]</code>.</p>
+<p><strong>Compile and push</strong> — <code>src/compile.ts</code>
+builds the context block; <code>src/prompt-hook.ts</code> injects it;
+<code>src/receipt-hook.ts</code> records what was accepted.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four tables carry the model — <code>cells</code>, <code>edges</code>,
+<code>hyperedges</code>, <code>semantic_index</code> — plus
+<code>dag_overlays</code>, <code>program_runs</code>,
+<code>eval_runs</code> and <code>operator_runs</code>.</p>
+<p>The cell is stored as JSON with a handful of promoted columns
+(<code>key</code>, <code>handle</code>, <code>kind</code>,
+<code>content_key</code>, <code>status</code>), which is why the rich
+structure lives in the type rather than the schema. Three details are
+worth lifting:</p>
+<ul>
+<li><strong><code>lastSalientAt</code> is distinct from
+<code>updatedAt</code>.</strong> The comment gives the reason: the
+operator decays salience from the first and currency from the second,
+"so a read reinforces attention without refreshing freshness". Most
+systems in this atlas bump one timestamp on retrieval and thereby make a
+frequently-read stale fact look fresh. This one refuses to.</li>
+<li><strong><code>conf</code> is immutable.</strong> The stated anchor
+is never rewritten; everything downstream is derived. A reader can
+always recover what was originally claimed.</li>
+<li><strong><code>value</code> with supersede chains as a delta
+series.</strong> A numeric reading whose supersede chain forms its own
+time series — a small, unusual idea for measurements that change.</li>
+</ul>
+<p><code>hyperedges</code> with typed <code>members_json</code> gives
+n-ary relations, which few systems here model at all: a claim involving
+four entities is one hyperedge rather than six pairwise edges.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is compiled rather than queried.
+<code>src/compile.ts</code> assembles a context block ranked by evidence
+mass and graph structure and hands it to the prompt hook, so the agent
+receives memory whether or not it asks.</p>
+<p><code>src/mass.ts</code> computes support minus challenge from a
+cell's neighbours through the signed edges, which is what makes
+contradiction a ranking force rather than a flag: a cell with three
+<code>contradicts</code> edges pointing at it loses effective score
+without anything having to mark it wrong.</p>
+<p>Scope is a <code>{ project, tenant }</code> pair on every cell, and
+<code>project</code> is not decorative: it is a generated, indexed SQL
+column, <code>activeWhere</code> pushes <code>project = ?</code> into
+the query, <code>activeByProject</code> wraps it, and both
+<code>subgraphCells</code> and <code>getRecallPage</code> filter on it
+with committed tests. The MCP tools <code>recall_subgraph</code> and
+<code>recall_page</code> expose it to the agent as an optional
+argument.</p>
+<p><strong><code>scope_enforced</code> is withheld anyway, and the
+reason is which caller uses it.</strong> <code>src/compile.ts</code> —
+the path that assembles the context block and pushes it into every turn
+— contains no reference to <code>project</code> at all. So the read an
+agent performs deliberately can be scoped, and the read it receives
+whether it asked or not cannot be. Isolation in practice is the
+per-project database file plus the graph-slug prefixing in the federated
+union, which is the structural boundary <a href="../kage/">Kage</a> and
+<a href="../shodh-memory/">Shodh-Memory</a> also rely on. A predicate
+that exists, is indexed, is tested, and is absent from the default path
+is a sharper thing than a scope stored as a tag, and it is still not the
+mark.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, local, and pass the admission firewall. The
+two attenuation steps are the interesting half.</p>
+<p><code>screenFindings</code> treats a credential as a
+<em>sensitivity</em> problem rather than a rejection: the write proceeds
+with <code>sensitivity: secret</code> and any public exposure
+downgraded, so the fact is not lost and is not leaked. That is a
+different choice from <a href="../opensre/">OpenSRE</a>'s outright
+refusal and from <a href="../wenlan/">Wenlan</a>'s
+<code>CredentialLeak</code> rejection, and it is worth having all three
+in view — refuse, redact, or reclassify.</p>
+<p><code>attenuateConfidence</code> caps a high stated confidence when
+the proposal carries no support evidence. Combined with actor
+calibration, an overconfident model is discounted twice: once for this
+claim having no backing, and once for its own track record.</p>
+<p>Correction never deletes. Supersession appends to a
+<code>lineage</code> array kept newest-first, and contradiction is an
+edge with negative weight. The consequence is that nothing is keyed on a
+rejected value — the same claim written again enters as a new cell,
+gains its own <code>contradicts</code> edges, and loses on mass rather
+than being refused.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hooks for Claude Code and Codex, plus an MCP server and a CLI. The
+agent-integrity gate is the distinctive part: an opt-in
+<code>integrityGate</code> mode in admission that inspects the raw
+envelope before normalisation "so an explicit null is distinguishable
+from an omitted primitive", paired with the <code>PostToolUse</code>
+receipt and the <code>Stop</code> verification.</p>
+<p>The claim being enforced is that the turn does not end until the
+agent has either consulted or updated memory, and that only writes
+attributable to a real turn marker count. That is an unusual amount of
+machinery aimed at a real problem — an agent that has memory available
+and does not use it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> <code>verification</code> is
+a four-value field —
+<code>unverified | checked | tested | external</code> — set on the cell
+at build time from the proposal and raised to <code>checked</code> by
+adapters, analysis, import and programs. It is epistemic rather than
+lifecycle: it says how the claim was established. <code>status</code>
+(<code>active | superseded | annexed</code>) carries lifecycle
+separately, and <code>signatureStatus</code>
+(<code>unsigned | signed | verified</code>) carries attestation — three
+orthogonal axes where most systems have one.</p>
+<p><strong>Human review — withheld, and the near-miss is
+precise.</strong> <code>requiresReview</code> is declared in
+<code>Flags</code>, validated in the schema, rendered by
+<code>render.ts</code>, expanded by <code>compile.ts</code> and emitted
+as a <code>review_required</code> marker. No production code path sets
+it to <code>true</code> — only three test files do. The README says
+"nothing for a human to curate", so this may be deliberate; either way,
+the compiled context advertises a review state the system cannot
+enter.</p>
+<p><strong>Scope — withheld</strong>, for the reason in section 6.</p>
+<p><strong>Audit log — no.</strong> <code>program_runs</code>,
+<code>eval_runs</code> and <code>operator_runs</code> record background
+executions rather than mutations to memory. The receipt hook writes
+session state files rather than a durable store-level log.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>subgraph.test.ts</code> seeds a cell in <code>proj-a</code> and a
+newer, otherwise-matching cell in <code>proj-b</code>, filters on
+<code>proj-a</code>, and asserts the result set is exactly one cell and
+that it is the in-project one — the excluded cell exists, matches every
+other predicate and ranks higher by recency. <code>pages.test.ts</code>
+repeats the shape with <code>project</code> and <code>since</code>
+together, and asserts the SQL push-down and the app-side fallback return
+the same keys, so the exclusion is pinned on both implementations of the
+same read rather than on whichever one the index happens to enable. The
+assertion idiom is <code>assert.equal(results.length, 1)</code> plus the
+survivor's title rather than a <code>not.toContain</code>, which pins
+the result set more tightly than the usual form.</p>
+<p><strong>Tombstone, bitemporal — no.</strong> There is no
+rejected-value record and no validity axis distinct from
+<code>createdAt</code>/<code>updatedAt</code>.</p>
+<p><strong>A caution about calibration.</strong> The factor floors at
+0.5 and needs three outcomes before it engages, so a new actor is
+trusted at face value for its first three claims and the worst possible
+actor is only halved. Both are defensible defaults and both are worth
+knowing before relying on the mechanism.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> <code>CITATION.cff</code> is present and
+is software-citation metadata — title, authors, repository, abstract,
+Apache-2.0, version 0.1.0 — with no DOI and no publication, so a reader
+can tell an absent paper from an unread one. Brier scoring is standard
+and the implementation is checkable against the definition in twelve
+lines.</p>
+<p>Every source module has a paired <code>.test.ts</code> — 52 files,
+including <code>calibration.test.ts</code>,
+<code>admission.test.ts</code>, <code>firewall.test.ts</code> and
+<code>agent-integration.test.ts</code>. That one-to-one discipline is
+rare and it is the clearest signal of care in the repository. <strong>I
+did not run them</strong>; the screen flagged build-time execution in
+<code>package.json</code> and one unpinned dependency surface.</p>
+<p>There is an <code>evals.ts</code> module and an
+<code>eval_runs</code> table, so the system can record its own
+evaluation runs — and no committed result, dataset or baseline was found
+in the tree. No retrieval benchmark is claimed anywhere, which is
+consistent: the README's argument is about <em>when</em> memory arrives,
+not how well it ranks.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Score your writers, not just your sources.</strong> Brier
+error between stated confidence and realised outcome, folded into a
+<code>[0.5, 1]</code> multiplier, is 26 lines and it prices
+overconfidence automatically. A fixed per-origin weight cannot tell a
+well-calibrated model from a boastful one.</li>
+<li><strong>Keep the stated confidence immutable and derive everything
+else.</strong> <code>conf</code> at position 0 and
+<code>effective</code> at position 5 means you can always answer "what
+did it originally claim" after any amount of downstream adjustment.</li>
+<li><strong>Separate the salience clock from the freshness
+clock.</strong> <code>lastSalientAt</code> versus <code>updatedAt</code>
+— reading a memory should reinforce attention without making a stale
+fact look current. This is a one-field fix for a bug most systems in
+this atlas have.</li>
+<li><strong>Reclassify a credential instead of rejecting it.</strong>
+Forcing <code>sensitivity: secret</code> and downgrading public exposure
+keeps the fact and closes the leak.</li>
+<li><strong>Cap unsupported confidence at admission.</strong> A claim
+asserting 0.95 with no supporting evidence should not be allowed to
+assert 0.95.</li>
+<li><strong>Make contradiction a signed edge, not a flag.</strong>
+Negative-weight edges let challenge mass move a score continuously, so a
+contested claim degrades instead of flipping.</li>
+<li><strong>Prefix keys with a graph slug when you federate
+reads.</strong> It is what lets a union be traversable without mixing
+domains, and it is one string concat.</li>
+<li><strong>Distinguish an explicit null from an omitted field at the
+gate.</strong> The integrity mode inspects the raw envelope before
+normalisation precisely so "not applicable" and "forgot to fill it in"
+are different.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not render a state you cannot enter.</strong>
+<code>requiresReview</code> reaches the compiled context as
+<code>review_required</code>, and nothing outside tests sets it.</li>
+<li><strong>Do not rely on calibration before it engages.</strong> Under
+three outcomes the factor is exactly 1, so a brand-new actor writes at
+full weight.</li>
+<li><strong>Do not read <code>{ project, tenant }</code> on a cell as an
+enforced boundary.</strong> It is metadata; the database file is the
+wall.</li>
+<li><strong>Do not expect supersession to stop a re-assertion.</strong>
+The lineage array records the chain; nothing refuses a fresh cell
+carrying the same claim.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone running a single model that does its own memory
+work and who wants that memory pushed rather than queried — particularly
+if the failure they are fixing is an agent that has memory and forgets
+to look. The typed cell and the score legend are a lot of structure to
+accept, and they are the product.</p>
+<p><code>calibration.ts</code> and <code>firewall.ts</code> together are
+under 150 lines, have no dependencies, and are the two files worth
+reading whatever you are building.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Where do <code>ActorOutcome</code> records come
+from?</strong> Calibration consumes resolved outcomes; the path from a
+<code>contradicts</code> edge landing to an outcome row being written
+was not traced, and it is the loop the whole mechanism depends on.</li>
+<li><strong>Was <code>requiresReview</code> intended for a curation
+surface that was cut?</strong> The README's "nothing for a human to
+curate" suggests deliberate removal; the render path suggests it was
+once meant to fire.</li>
+<li><strong>What raises <code>verification</code> to <code>tested</code>
+or <code>external</code>?</strong> <code>checked</code> is set at four
+sites; the two stronger values were not found being written.</li>
+<li><strong>Does the Stop hook actually block?</strong> The integrity
+contract says the turn is held open; how a non-compliant turn is handled
+was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Calibration</strong> — <code>src/calibration.ts</code>
+(<code>calibrationFactor</code> at <code>:8</code>,
+<code>brierScore</code> <code>:15</code>), <code>src/actors.ts</code>,
+<code>src/calibration.test.ts</code></p>
+<p><strong>Admission and firewall</strong> —
+<code>src/admission.ts</code> (the documented sequence at
+<code>:1-11</code>, <code>integrityGate</code> <code>:29</code>),
+<code>src/firewall.ts</code> (the secret patterns at
+<code>:12-30</code>, <code>attenuateConfidence</code>),
+<code>src/schema.ts</code>, <code>src/template.ts</code>,
+<code>src/build.ts</code></p>
+<p><strong>The type contract</strong> — <code>src/types.ts</code>
+(<code>KINDS</code> <code>:4</code>, <code>RELATIONS</code>
+<code>:11</code>, <code>Scores</code> <code>:18</code>,
+<code>Flags</code> <code>:32</code>, <code>Provenance</code>
+<code>:109</code>, <code>Policy</code> <code>:128</code>,
+<code>Cell</code> <code>:134</code>, the <code>lastSalientAt</code>
+comment <code>:160-164</code>)</p>
+<p><strong>Storage and federation</strong> — <code>src/db.ts</code>,
+<code>src/store.ts</code>, <code>src/federated-store.ts</code>,
+<code>src/routing.ts:42</code> (the projects registry),
+<code>src/hyperedges.ts</code>, <code>src/secrets.ts</code></p>
+<p><strong>Push path</strong> — <code>src/compile.ts</code>,
+<code>src/prompt-hook.ts</code>, <code>src/receipt-hook.ts</code>,
+<code>src/render.ts</code>, <code>src/guidance.ts</code>,
+<code>src/cell-context.ts</code></p>
+<p><strong>Scoring</strong> — <code>src/scores.ts</code>,
+<code>src/mass.ts</code>, <code>src/operator.ts</code>,
+<code>src/analysis.ts</code></p>
+<p><strong>Integration</strong> —
+<code>src/claude-integration.ts</code>,
+<code>src/codex-integration.ts</code>, <code>src/mcp-server.ts</code>,
+<code>src/cli.ts</code>, <code>integrations/claude/hooks</code>,
+<code>integrations/codex/skill</code></p>
+<p><strong>Tests</strong> — one <code>.test.ts</code> beside every
+source module</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-21</strong> — <a
+href="https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89"><code class="commit-id" title="b448f24e85309d3a3adc56bc1ad1aaca5d920d89">b448f24e…</code></a>
+— second reading, at the same commit: <code>main</code> had not moved.
+Screened again first; the findings were unchanged apart from
+<code>package-lock.json</code> having aged past the cooldown, and
+nothing was installed or run. Two corrections.
+<code>negative_eval</code> is awarded on cross-project retrieval cases
+that were present at the first reading and not found, because the search
+was for <code>not.toContain</code> and <code>toHaveLength(0)</code>
+while this suite is <code>node:test</code> and writes
+<code>assert.equal(results.length, 1)</code>. And section 6's claim that
+no stored scope key reaches a read-path predicate was wrong:
+<code>project</code> is a generated indexed column,
+<code>activeWhere</code> pushes <code>project = ?</code> into SQL, and
+two read paths and two MCP tools use it — the accurate statement is that
+<code>compile.ts</code>, the path that pushes memory into every turn,
+never passes one, which is why the mark is still withheld.
+<code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>.</p>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89"><code class="commit-id" title="b448f24e85309d3a3adc56bc1ad1aaca5d920d89">b448f24e…</code></a>
+— first reading. Screened before reading: no auto-run surface,
+build-time execution declared in <code>package.json</code>, one unpinned
+dependency surface, <code>package-lock.json</code> present. The tree was
+read, never installed, and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

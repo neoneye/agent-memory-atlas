@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Treat the memory store as a
+document a person edits, not a database a person is shown.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memory as an Editing
+Surface — Agent Memory Atlas">
+    <meta property="og:description" content="Treat the memory store as a
+document a person edits, not a database a person is shown.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory as an Editing
+Surface — Agent Memory Atlas">
+    <meta name="twitter:description" content="Treat the memory store as
+a document a person edits, not a database a person is shown.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memory as an Editing Surface — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memory as an Editing Surface",
+      "description": "Treat the memory store as a document a person edits, not a database a person is shown.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Control</p>
+          <h1>Memory as an Editing Surface</h1>
+          <p class="document-deck">Treat the memory store as a document
+a person edits, not a database a person is shown.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-category-bound" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Mature in one category, unknown outside it</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Make the memory a user can <em>change</em> the same object the model
+reads. Not a viewer, not an export, not a support ticket — an editor
+whose writes are authoritative.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Every automatic memory system is wrong sometimes. Extraction misreads
+a joke as a preference, a summary drops the thing that mattered, a
+consolidation pass merges two people into one. The corpus in this atlas
+shows this is not rare, and shows something sharper: <strong>most
+systems have no path from a user noticing to the store
+changing.</strong> Correction, where it exists, means telling the model
+in conversation and hoping the next extraction pass agrees.</p>
+<p>The usual response is a memory dashboard. A dashboard that only
+displays is worse than none, because it shows the user a wrong fact they
+cannot fix and teaches them the memory is not theirs.</p>
+<p>There is a second, less obvious cost. A system whose memory cannot be
+edited must be <em>right</em>, so it accumulates machinery — trust
+scores, confidence thresholds, verification passes — to approximate a
+judgement a person could have made in one click.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Give the store an editor, and make every verb the automatic path has
+available to a person too:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the automatic path and the editor write to the same rows, so a person can edit, delete, pin, merge, regenerate or suppress what extraction produced</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the automatic path and the editor write to the same rows, so a person can edit, delete, pin, merge, regenerate or suppress what extraction produced
+flowchart TB
+    A[&quot;automatic path&lt;br/&gt;extract / summarise / score&quot;] --&gt; S[(&quot;the store&quot;)]
+    S --&gt; P[prompt]
+    S --&gt; E[&quot;editor over the same rows&quot;]
+    E --&gt;|edit text| S
+    E --&gt;|delete| S
+    E --&gt;|pin / protect| S
+    E --&gt;|merge| S
+    E --&gt;|&quot;regenerate, then accept or reject&quot;| S
+    E --&gt;|suppress without deleting| S</code></pre></details></figure>
+<p>Five verbs distinguish an editor from a viewer:</p>
+<ol type="1">
+<li><strong>Edit the text</strong> in place — the stored value, not a
+note attached to it.</li>
+<li><strong>Delete</strong>, and have the deletion hold against the next
+automatic pass.</li>
+<li><strong>Pin</strong>, so a unit is exempt from eviction, decay, or
+budget pressure.</li>
+<li><strong>Merge</strong>, because the automatic path over-splits.</li>
+<li><strong>Regenerate with a preview</strong> — run the model again on
+one unit and accept or reject the result <em>before</em> it replaces
+anything.</li>
+</ol>
+<p>The fifth is what separates a good editor from a dangerous one, and
+it generalises: any lossy rewrite a system performs automatically is
+safer as a previewed action a person triggers.</p>
+<p>A sixth verb is worth having where it fits: <strong>suppress without
+deleting</strong>, a third state between present and gone, for material
+you want kept and not surfaced.</p>
+<h2 id="why-it-works">Why it works</h2>
+<ul>
+<li>It is the cheapest correction mechanism that exists. One click beats
+a trust state machine at fixing one wrong fact, and needs no model.</li>
+<li>It puts the authority where the knowledge is. The user knows whether
+the fact is right; the extractor is guessing.</li>
+<li>It changes what the automatic path has to achieve. Recall can be
+aggressive if a person can prune, so the write path does not have to be
+conservative.</li>
+<li>It makes the store legible, which is how users come to trust it —
+and trust is why they tolerate an imperfect memory rather than
+switching.</li>
+</ul>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>It does not scale past what a person will maintain. This is the
+pattern's real boundary, and it is why systems that must <em>learn</em>
+cannot rely on it alone.</p>
+<p><strong>An edit with no history is a new failure mode.</strong>
+Overwriting in place loses what was there, and a deletion with no record
+can be re-derived by the next extraction pass from the same source
+material — so the editor appears to work and quietly does not. Pair it
+with the <a href="../rejected-value-tombstone/">rejected-value
+tombstone</a> or an <a href="../append-only-memory-audit/">append-only
+audit</a>; an editor over a store with neither is a correction that does
+not hold.</p>
+<p>Editing is a write path, and it needs the same scope checks as any
+other. A shared memory with an unauthenticated editor is worse than no
+editor.</p>
+<h2 id="in-the-analyzed-systems">In the analyzed systems</h2>
+<p><strong><a href="../../systems/sillytavern/">SillyTavern</a></strong>
+is the extreme case: the editor is the <em>only</em> write path. Nothing
+extracts, so there is no automatic path to correct — a person authors
+entries, keys and activation settings directly. It carries no rubric
+mechanism in this atlas and is plausibly the most-exercised memory
+implementation in existence, and those two facts are the same fact.
+Users tolerate hand-authoring because it means the memory is exactly
+what they decided.</p>
+<p><strong><a href="../../systems/risuai/">RisuAI</a></strong>'s HypaV3
+modal is the most complete editor over <em>machine-written</em> memory
+here, and carries all five verbs: edit text, delete-from-here, merge
+with a union of source ids, pin via <code>isImportant</code>, and bulk
+re-summarise <strong>with the result previewed before it is
+accepted</strong>. That last one is the same operation its 2023
+generation performed silently on a threshold, which is the clearest
+before-and-after of this pattern in the corpus.</p>
+<p><strong><a href="../../systems/soul-of-waifu/">Soul of
+Waifu</a></strong> is the cautionary version. The API is right —
+<code>restore_backup</code> even takes a backup of the current state
+before overwriting, so a restore is itself undoable — and
+<strong>nothing in the application calls it.</strong>
+<code>list_backups</code>, <code>list_topic_files</code> and
+<code>get_memory_stats</code> have no callers either. Five good backups
+sit on disk with no way to reach them, which shows this pattern is a
+product property rather than an architectural one: unreachable
+correctness is not correctness.</p>
+<p><strong><a href="../../systems/skales/">Skales</a></strong> shows
+partial adoption, which is worse than none. Two of its three stores
+delete correctly from the memory page; the third answers a delete
+request by telling the user to "ask in chat", and no such verb exists.
+One page, three stores, inconsistent authority.</p>
+<p><strong><a href="../../systems/logseq/">Logseq</a></strong> inverts
+the framing usefully: it is an editor that acquired an agent, rather
+than an agent that acquired an editor. Its conflict handling is
+last-write-wins by editing, which is what happens when the human path is
+assumed to be the only one.</p>
+<p>Elsewhere in the atlas, <code>human_review</code> is held by a
+minority of systems, and most of those are approval of a queue rather
+than editing of the store — a reviewer says yes or no to what the
+extractor proposed and cannot rewrite it.</p>
+<p><strong>One sighting outside the corpus takes the pattern to its
+limit: an editing surface with nothing behind it.</strong> Cline's
+<strong>Memory Bank</strong> — six markdown files in the user's own
+repository, read at the start of a session and rewritten at the end —
+carries every verb on this page for free. A person edits the file, and
+that edit <em>is</em> the memory; the model's write goes through the
+same file with the same tools; a diff shows what changed; a PR review
+catches a bad one; git holds the history. There is no store to fall out
+of sync with the editor because there is no store. It gets no report —
+<a href="../../compare/#known-limitations">recorded as an exclusion</a>
+— for the reason that makes it useful here: grepping the checkout for
+the mechanism returns two files and both are documentation, so what
+implements it is a prompt plus the agent's ordinary file tools.</p>
+<p>Read against the systems above, it isolates what the pattern is
+actually buying. SillyTavern is hand-authored and needs no correction
+path; RisuAI built a real editor over machine-written memory and it took
+a modal with five verbs; Soul of Waifu wrote the API and never wired it
+up. Memory Bank skips all of that by making the memory a document in the
+first place — and pays for it in the one place a document cannot help:
+<strong>nothing consults the file before a write.</strong> A deletion
+holds until the next update pass re-derives the same paragraph from the
+same conversation, because no record survives saying it was removed on
+purpose. That is the <a
+href="../rejected-value-tombstone/">rejected-value tombstone</a> gap,
+arrived at from the direction of having no database at all, and it is
+the argument that editability and negative memory are separate
+properties rather than two views of one.</p>
+<p><strong><a href="../../systems/windie-sandbox/">Windie Sandbox</a> is
+the pattern taken as far as it goes, and it shows the property this page
+has not been asking for: whether the editor keeps what it
+replaced.</strong> The whole product is an editing surface — the
+conversation is a SQLite tree of messages addressed by id, and a person
+can replace a message's text, splice one out, truncate a subtree, or
+fork a branch at any node. The model has no say in any of it. Two
+mechanisms here are worth lifting on their own: a mutation is
+<em>refused</em> while a <code>Running</code> or
+<code>WaitingForApproval</code> session depends on that message, with
+the error naming both; and any derived summary covering the edited
+history is deleted in the same transaction as the edit, so a stale
+summary cannot outlive its source.</p>
+<p>Then <code>replace_message</code> is
+<code>UPDATE messages SET content = ?</code>. The prior text is gone —
+no version row, no supersession pointer, no mutation event, and the
+message's only timestamp still says when it was <em>first</em> written.
+Forking, in the same store, is perfectly lossless: a branch is one
+insert and every ancestor stays put. So the system has a lossless
+history operation and a destructive one side by side, and the
+destructive one is the one called "edit".</p>
+<p>That splits this pattern's central question in two. Every system
+above is judged on whether a person <em>can</em> change machine-written
+memory; none of them is judged on whether the previous value is
+recoverable afterwards. Those are different guarantees, and a store that
+already keeps a tree of alternatives has no structural excuse for
+lacking the second — writing the edit as a sibling and moving the head
+would cost one insert. Editability, negative memory, and
+<strong>recoverable correction</strong> are three properties, not
+one.</p>
+<h2 id="tests-to-write-first">Tests to write first</h2>
+<ul>
+<li>Edit a unit, then run the automatic pass, and assert the edit
+survives.</li>
+<li>Delete a unit, re-feed the source material that produced it, and
+assert it does not come back. This distinguishes an editor from a
+suggestion box, and almost nothing in this atlas has it.</li>
+<li>Assert a pinned unit survives eviction, decay and budget
+pressure.</li>
+<li>Merge two units and assert provenance is the union, not the newer
+one.</li>
+<li>Reject a previewed regeneration and assert the store is
+byte-identical.</li>
+<li>Assert every editor verb is reachable from the shipped UI. A test
+that the function exists is not the same as a person being able to reach
+it — which is exactly the gap in Soul of Waifu.</li>
+<li>Edit a unit, then assert the previous value is still readable from
+somewhere — a version row, a mutation event, a sibling node. If nothing
+answers, the editor is a one-way door, and the user who wanted to
+compare two phrasings has lost the first one. Windie Sandbox passes
+every other test on this list and has no answer to this one.</li>
+</ul>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="../rejected-value-tombstone/">Rejected-value tombstone</a>
+— what makes a user's deletion hold against re-extraction.</li>
+<li><a href="../append-only-memory-audit/">Append-only memory audit</a>
+— what makes an edit recoverable.</li>
+<li><a href="../retrieval-hysteresis/">Retrieval hysteresis</a> — the
+per-unit knobs an editor usually exposes.</li>
+<li><a href="../trust-state-machine/">Trust-state machine</a> — the
+machinery this pattern partly substitutes for, and partly needs.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

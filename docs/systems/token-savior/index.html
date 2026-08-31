@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A LinUCB contextual bandit decides
+which memory to inject, trained on a ledger that records whether the
+agent acted on it, ignored it — or never saw it at all.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Token
+Savior — Agent Memory Atlas">
+    <meta property="og:description" content="A LinUCB contextual bandit
+decides which memory to inject, trained on a ledger that records whether
+the agent acted on it, ignored it — or never saw it at all.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Token
+Savior — Agent Memory Atlas">
+    <meta name="twitter:description" content="A LinUCB contextual bandit
+decides which memory to inject, trained on a ledger that records whether
+the agent acted on it, ignored it — or never saw it at all.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Token Savior — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Token Savior",
+      "description": "A LinUCB contextual bandit decides which memory to inject, trained on a ledger that records whether the agent acted on it, ignored it \u2014 or never saw it at all.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A learned injection ranker</p>
+          <h1>Token Savior</h1>
+          <p class="document-deck">A LinUCB contextual bandit decides
+which memory to inject, trained on a ledger that records whether the
+agent acted on it, ignored it — or never saw it at all.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Mibayy/token-savior">
+              <span>Source</span>
+              <strong>Mibayy/token-savior</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06" title="e41825f624d3513be7fdfb9146e35d265dbb1b06">
+              <span>Analyzed revision</span>
+              <code>e41825f6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Token Savior is one MCP server doing three jobs for coding agents:
+structural code navigation, persistent memory, and Bash output
+compaction. MIT, about 32,600 lines of Python, with the headline claim
+"97.9% on tsbench at −80% tokens".</p>
+<p>The memory subsystem is the part this atlas cares about, and it
+contains a mechanism almost nothing else here has: <strong>a learned
+ranker deciding what to inject.</strong></p>
+<p><code>src/token_savior/linucb_injector.py</code> implements LinUCB
+(Li et al. 2010) over a ten-dimensional feature vector —
+<code>type_score</code>, <code>age_score</code>,
+<code>access_score</code>, <code>semantic_sim</code>,
+<code>mode_match</code>, <code>tokens_used_pct</code>,
+<code>task_is_edit</code>, <code>task_is_debug</code>,
+<code>symbol_match</code>, <code>has_context</code>. It models expected
+reward as <code>r̂ = θᵀ·φ</code> with an exploration bonus of
+<code>α·√(φᵀA⁻¹φ)</code>, updates online, and persists the 10×10 matrix
+<code>A</code> and the vector <code>b</code> to
+<code>linucb_model.json</code> so the learned weights survive a restart.
+The linear algebra is pure Python — a Gauss–Jordan inverse, on the
+grounds that "10-dim is trivially fast" — so the whole thing has no
+numpy dependency.</p>
+<p><strong>The reward signal is what makes it work, and it is the
+transferable idea.</strong> <code>ledger_events</code> is an append-only
+table whose columns are outcomes rather than counts:
+<code>acted_on</code>, <code>prevented_error</code>,
+<code>ignored</code>, <code>block_justified</code>,
+<code>was_visible</code>, beside <code>cost_tokens</code> and
+<code>latency_ms</code>.</p>
+<p><code>was_visible</code> is the column to steal. Most feedback loops
+in this atlas cannot distinguish "the memory was injected and the agent
+ignored it" from "the memory was never injected". Those are opposite
+evidence about the ranker, and folding them together teaches it the
+wrong thing. One boolean separates them.</p>
+<p>The second mechanism worth naming is freshness by
+<code>git log</code>. <code>check_symbol_staleness</code> runs
+<code>git log -1 --format=%ct -S &lt;symbol&gt;</code> against the
+project and asks whether the symbol a memory mentions was modified after
+the memory was written. It is <a href="../kage/">Kage</a>'s idea —
+verify a claim about code against the code — reached independently and
+implemented with the tool already on every developer's machine, at a
+3-second timeout with silent failure.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An observation is typed, and the type vocabulary is a priority
+ordering rather than a taxonomy. <code>_TYPE_SCORES</code> runs
+<code>guardrail</code> 1.0, <code>ruled_out</code> 0.95,
+<code>convention</code> 0.9, <code>warning</code> 0.85,
+<code>decision</code> 0.8, <code>error_pattern</code> 0.75,
+<code>bugfix</code> 0.7, <code>infra</code> 0.6, <code>config</code>
+0.55, <code>command</code> 0.5, <code>research</code> 0.35,
+<code>note</code> 0.2, <code>idea</code> 0.15 — and the same vocabulary
+drives per-type decay horizons (<code>ruled_out</code> gets 180 days)
+and per-type ROI weights.</p>
+<p><code>ruled_out</code> as a first-class memory type deserves a note.
+It is negative knowledge — "we tried this and it does not work" — stored
+deliberately and ranked second only to a guardrail. Systems in this
+atlas store what is true; very few store what was eliminated, and for a
+coding agent the eliminated branch is the expensive thing to
+rediscover.</p>
+<p>Truth is a Beta distribution. <code>consistency_scores</code> keeps
+<code>validity_alpha</code> and <code>validity_beta</code> per
+observation; below 0.40 the observation is <strong>quarantined</strong>
+and excluded from the index, below 0.60 it is flagged
+<code>stale_suspected</code> and shown with a warning.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a Beta-distributed validity score decides whether an observation is quarantined, warned about, or eligible, and a bandit learns from outcomes — counting only what was actually visible</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a Beta-distributed validity score decides whether an observation is quarantined, warned about, or eligible, and a bandit learns from outcomes — counting only what was actually visible
+flowchart TD
+    C[&quot;tool trace / turn capture&quot;] --&gt; X[&quot;auto-extract, dedup, distil&quot;]
+    X --&gt; O[&quot;observation, typed, project-scoped&quot;]
+    O --&gt; Q{&quot;validity from Beta(alpha, beta)&quot;}
+    Q --&gt;|&quot;below 0.40&quot;| QU[&quot;quarantined — excluded from the index&quot;]
+    Q --&gt;|&quot;0.40 to 0.60&quot;| SS[&quot;stale_suspected — surfaced with a warning&quot;]
+    Q --&gt;|&quot;above 0.60&quot;| OK[&quot;eligible&quot;]
+    OK --&gt; S[&quot;FTS5 + sqlite-vec, fused by RRF k=60&quot;]
+    S --&gt; B[&quot;LinUCB ranks candidates for injection&quot;]
+    B --&gt; I{&quot;injected?&quot;}
+    I --&gt;|yes| L1[&quot;ledger: was_visible = 1&quot;]
+    I --&gt;|no| L0[&quot;ledger: was_visible = 0&quot;]
+    L1 --&gt; R{&quot;outcome&quot;}
+    R --&gt;|acted_on / prevented_error| POS[&quot;positive reward&quot;]
+    R --&gt;|ignored| NEG[&quot;negative reward&quot;]
+    L0 -.-&gt;|&quot;never counted against the memory&quot;| B
+    POS --&gt; B
+    NEG --&gt; B</code></pre></details></figure>
+<p>The dotted edge is the design: an observation that was never shown
+contributes nothing to its own score.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single MCP server over SQLite, with FTS5 for lexical search and
+<code>sqlite-vec</code> for vectors when available. Vector search
+degrades cleanly — if the extension is missing, the embedding fails, or
+the <code>obs_vectors</code> table is absent, the search returns FTS
+results "untouched — full backwards compatibility". The bandit model
+lives beside the database as a JSON file.</p>
+<p>The <code>memory/</code> subpackage is 38 modules and reads like a
+deliberate split rather than accretion: <code>observations</code>,
+<code>search</code>, <code>index</code>, <code>dedup</code>,
+<code>decay</code>, <code>distillation</code>, <code>consistency</code>,
+<code>ledger</code>, <code>roi</code>, <code>budget</code>,
+<code>preflight</code>, <code>sessions</code>, <code>summaries</code>,
+<code>rules</code>, plus paired <code>*_hook.py</code> files for the
+points where the memory system attaches to a tool call.</p>
+<p>There is no server to run and no key to hold; the operator cost is a
+Python install and a project directory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — <code>memory/tool_capture.py</code> and
+<code>turn_capture.py</code> → <code>auto_extract.py</code> →
+<code>dedup.py</code> → an observation row.</p>
+<p><strong>Search</strong> — <code>memory/search.py</code>: an FTS5
+query always, a k-NN query when vectors are available, fused with RRF at
+the reference constant <code>k = 60</code> (Cormack et al. 2009), with
+quarantine, type and <code>project_root</code> filters "centralised at
+one call-site in <code>observation_search</code>".</p>
+<p><strong>Injection ranking</strong> — <code>linucb_injector.py</code>:
+build <code>φ</code>, score with the UCB bonus, inject, then
+<code>update(obs, context, reward)</code>.</p>
+<p><strong>Consistency</strong> — <code>memory/consistency.py</code>:
+Beta validity, the two thresholds, and
+<code>check_symbol_staleness</code> shelling out to
+<code>git log</code>.</p>
+<p><strong>Ledger</strong> — <code>db_core.py:321</code> defines
+<code>ledger_events</code>; <code>memory/ledger.py</code> and
+<code>ledger_hook.py</code> write it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The observation row carries the type, the project root, tags,
+importance, timestamps and three columns worth naming:
+<code>decay_immune</code> (an explicit exemption from the decay pass),
+<code>is_global</code> (visible from every project), and
+<code>last_accessed_epoch</code>.</p>
+<p>Beside it:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>consistency_scores</code></td>
+<td><code>validity_alpha</code>, <code>validity_beta</code>,
+<code>last_checked_epoch</code>, <code>stale_suspected</code>,
+<code>quarantine</code>, indexed on quarantine</td>
+</tr>
+<tr>
+<td><code>ledger_events</code></td>
+<td>Append-only outcomes: <code>acted_on</code>,
+<code>prevented_error</code>, <code>ignored</code>,
+<code>block_justified</code>, <code>was_visible</code>, cost and
+latency</td>
+</tr>
+<tr>
+<td><code>adaptive_lattice</code></td>
+<td>The adaptive structure behind mode selection</td>
+</tr>
+<tr>
+<td><code>tool_latency</code></td>
+<td>Per-tool timing, created on first write with no migration</td>
+</tr>
+<tr>
+<td><code>obs_vectors</code></td>
+<td>Embeddings, optional</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>decay_immune</code> and <code>is_global</code> are the two
+flags that make the automatic machinery safe to run: one exempts a
+memory from forgetting, the other from project scoping, and both are
+explicit booleans rather than sentinel values.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 and vector k-NN fused by RRF, then the bandit. Three filters are
+applied at the single centralised call site: quarantine
+(<code>c.quarantine IS NULL OR c.quarantine = 0</code>), type, and
+scope.</p>
+<p>The scope predicate is
+<code>(o.project_root = ? OR o.is_global = 1)</code>, and the shape
+matters. Several systems in this atlas write the equivalent as
+<code>OR project IS NULL OR project = ''</code>, which makes every
+unclassified row globally visible by accident. Here the escape is a
+declared boolean column that something had to set on purpose. Same SQL
+shape, opposite failure mode.</p>
+<p>The index cache key is
+<code>f"{project_root}:{mode}:{include_quarantine}"</code>, so a
+quarantined-inclusive read cannot be served from a quarantined-exclusive
+cache — a small correctness detail that is easy to get wrong.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is automatic from tool traces and turns, with dedup and
+distillation before storage, so the agent does not decide what to
+remember.</p>
+<p>Correction is graded suppression rather than deletion. The Beta score
+moves with evidence, and crossing 0.40 removes the observation from the
+index — reversibly, since the score can move back. Nothing records that
+a value was quarantined in a way a future extraction would consult, so
+the same claim re-extracted from a later trace lands as a new
+observation with a fresh prior.</p>
+<p>Decay is per type in days (<code>memory/decay.py</code>), with
+<code>decay_immune</code> as the opt-out and <code>ruled_out</code>
+given a 180-day horizon — negative knowledge is kept longer than a
+<code>note</code> on purpose.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One MCP server exposing code navigation, memory and Bash compaction.
+The <code>*_hook.py</code> modules are the integration surface: a
+precondition hook that can block a tool call, a rules hook, a preflight
+hook and a ledger hook that records the outcome.</p>
+<p><code>block_justified</code> in the ledger is the column that closes
+that loop — when the precondition hook blocks a tool call on the
+strength of a memory, the ledger records whether the block turned out to
+be justified. A memory that blocks work wrongly is measurable.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded</strong>, for the reason in section 6: a
+stored key applied on the read path with a declared opt-out.</p>
+<p><strong>Audit log — awarded.</strong> <code>ledger_events</code> is
+append-only, indexed on <code>(event_type, ts_epoch)</code>, and records
+outcomes rather than counts. It is a usefulness ledger more than a
+mutation record — an edit to an observation does not necessarily appear
+— but it is an explicit append-only event record in the system's own
+store, and it is the mechanism the whole ranker depends on.</p>
+<p><strong>Trust state — withheld.</strong> <code>quarantine</code> and
+<code>stale_suspected</code> are two booleans derived from a continuous
+Beta score, not a discrete epistemic vocabulary. What exists instead is
+arguably more useful for this purpose — a posterior that moves with
+evidence and two thresholds — and it is not what the mark describes.</p>
+<p><strong>Tombstone, bitemporal, human review — no.</strong> Quarantine
+is reversible suppression keyed on the row; there is no validity axis;
+the dashboard displays and does not adjudicate.</p>
+<p><strong>Negative eval — no</strong>, among 173 test files.</p>
+<p><strong>Two operational cautions.</strong>
+<code>check_symbol_staleness</code> shells out to <code>git</code> with
+a 3-second timeout and silent failure, so a slow repository degrades to
+"not stale" rather than to an error — fail-open on a freshness check is
+a choice, and it is the permissive one. And the LinUCB weights persist
+across restarts in a plain JSON file with no versioning against the
+feature vector, so changing <code>FEATURE_NAMES</code> would silently
+reinterpret a trained model.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> The mechanisms cite literature in module
+headers — Li et al. 2010 for LinUCB, Cormack et al. 2009 for the RRF
+constant — which is enough to check the implementation against the
+source.</p>
+<p>173 test files. <strong>I did not run them</strong>; the screen
+flagged <code>server.json</code> as an auto-run manifest and two
+<code>conftest.py</code> files executing on collection.</p>
+<p><strong>The benchmark is a different repository.</strong>
+<code>tsbench</code> — "96 real coding tasks (Claude Opus 4.7)" with the
+reported 97.9% (188/192) at −80% tokens — lives at
+<code>Mibayy/tsbench</code>, with a project site for the results. None
+of it is in this tree and none of it is verified here. Splitting the
+harness out is defensible; the consequence is that the number on the
+README badge cannot be checked at this commit, which is the same caveat
+this atlas records for <a href="../vestige/">Vestige</a>'s branch-hosted
+benchmark.</p>
+<p>What is committed is the instrumentation that would let a user
+measure it themselves: the ledger records <code>cost_tokens</code> and
+<code>latency_ms</code> per event, and <code>memory/roi.py</code>
+computes return on investment per observation type.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Record <code>was_visible</code> on every feedback
+event.</strong> Distinguishing "shown and ignored" from "never shown" is
+one boolean and it is the difference between a ranker that learns and
+one that learns superstition.</li>
+<li><strong>Record whether a block was justified.</strong> If memory can
+stop an agent doing something, the ledger should say how often it was
+right to.</li>
+<li><strong>Learn the injection ranking, and keep it cheap.</strong> Ten
+features, a 10×10 matrix, a Gauss–Jordan inverse in pure Python,
+persisted as JSON. There is no reason a small bandit needs a
+dependency.</li>
+<li><strong>Make <code>ruled_out</code> a first-class memory type and
+decay it slowly.</strong> The eliminated branch is the expensive thing
+to rediscover, and 180 days is a deliberate answer to how long that
+stays true.</li>
+<li><strong>Use a declared <code>is_global</code> flag, not a null, for
+the scope escape.</strong> Identical SQL, opposite failure mode: the
+accidental case is invisible instead of universal.</li>
+<li><strong>Put the quarantine flag in the cache key.</strong> A filter
+that varies per request must vary the cache, and this is the kind of bug
+that only shows up under load.</li>
+<li><strong>Check a code memory against
+<code>git log -S</code>.</strong> Asking whether the symbol has been
+touched since the memory was written costs one subprocess and needs no
+index.</li>
+<li><strong>Score validity as a Beta posterior with two
+thresholds.</strong> One threshold to warn, one to withdraw, and a
+number that can move back.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not persist learned weights without versioning the
+feature vector.</strong> <code>linucb_model.json</code> holds
+<code>A</code> and <code>b</code>; nothing ties them to the
+<code>FEATURE_NAMES</code> tuple they were trained against.</li>
+<li><strong>Do not fail open on a freshness check silently.</strong> A
+3-second <code>git log</code> timeout returning "not stale" means a slow
+repository quietly disables the mechanism.</li>
+<li><strong>Do not quarantine without a record the write path
+consults.</strong> The score can fall below 0.40 and the same claim can
+be re-extracted tomorrow with a fresh prior.</li>
+<li><strong>Do not keep the benchmark in another repository if the
+number is on the badge.</strong> A reader at this commit cannot check
+the claim the project leads with.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for a solo developer or small team using a coding agent on a
+project they care about token spend on. The three-in-one framing —
+navigation, memory, compaction — means adopting the memory means
+adopting the rest.</p>
+<p>The bandit and the ledger are separable and are the reason to read
+it: about 300 lines between them, with no dependencies, and they solve a
+problem — which memory is worth its tokens right now — that most systems
+in this atlas answer with a fixed weight.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What is the reward function?</strong>
+<code>update(obs, context, reward)</code> takes a float; how
+<code>acted_on</code>, <code>prevented_error</code>,
+<code>ignored</code> and <code>block_justified</code> combine into it
+was not traced, and it is the whole learning signal.</li>
+<li><strong>How long until the bandit converges on a real
+store?</strong> The header cites <code>O(√T log T)</code>; no
+measurement of <code>T</code> in practice is committed.</li>
+<li><strong>Does anything reset the model when the corpus
+changes?</strong> A project whose memory turns over completely keeps the
+weights trained on the old one.</li>
+<li><strong>How often does quarantine fire, and does anything ever leave
+it?</strong> The score can recover in principle; no data on whether it
+does.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The bandit</strong> —
+<code>src/token_savior/linucb_injector.py</code> (the algorithm and its
+citation at <code>:1-14</code>, <code>FEATURE_NAMES</code>
+<code>:22</code>, <code>_TYPE_SCORES</code> <code>:34</code>,
+<code>update</code> <code>:244</code>)</p>
+<p><strong>The ledger</strong> —
+<code>src/token_savior/db_core.py:321</code>
+(<code>ledger_events</code>),
+<code>src/token_savior/memory/ledger.py</code>,
+<code>ledger_hook.py</code>,
+<code>src/token_savior/memory/roi.py</code></p>
+<p><strong>Consistency and quarantine</strong> —
+<code>src/token_savior/memory/consistency.py</code> (the thresholds at
+<code>:17-20</code>, <code>check_symbol_staleness</code>
+<code>:23</code>), <code>src/token_savior/db_core.py:303</code>
+(<code>consistency_scores</code>),
+<code>src/token_savior/memory/index.py:119-178</code> (the read-path
+filter and cache key)</p>
+<p><strong>Retrieval</strong> —
+<code>src/token_savior/memory/search.py</code> (RRF at <code>:24</code>,
+the scope predicate <code>:207</code>),
+<code>src/token_savior/memory/embeddings.py</code>,
+<code>symbol_embeddings.py</code>,
+<code>src/token_savior/query_api.py</code></p>
+<p><strong>Write path</strong> —
+<code>src/token_savior/memory/auto_extract.py</code>,
+<code>tool_capture.py</code>, <code>turn_capture.py</code>,
+<code>dedup.py</code>, <code>distillation.py</code>,
+<code>summaries.py</code>,
+<code>src/token_savior/memory/decay.py</code></p>
+<p><strong>Hooks</strong> —
+<code>src/token_savior/memory/precondition_hook.py</code>,
+<code>rules_hook.py</code>, <code>preflight_hook.py</code>,
+<code>ledger_hook.py</code></p>
+<p><strong>Schema</strong> — <code>src/token_savior/db_core.py</code>,
+<code>db_schema.py</code>, <code>src/token_savior/latency.py</code></p>
+<p><strong>Integration</strong> —
+<code>src/token_savior/server.py</code>,
+<code>src/token_savior/server_handlers/</code>,
+<code>src/token_savior/tool_schemas.py</code>,
+<code>src/token_savior/dashboard.py</code></p>
+<p><strong>Not in this tree</strong> — the <code>tsbench</code>
+benchmark lives at <code>Mibayy/tsbench</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06"><code class="commit-id" title="e41825f624d3513be7fdfb9146e35d265dbb1b06">e41825f6…</code></a>
+— first reading. Screened before reading: one auto-run surface
+(<code>server.json</code>), build-time execution in two
+<code>conftest.py</code> files, no dependency surface inside the
+cooldown, <code>uv.lock</code> present. The tree was read, never
+installed, and no test or benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

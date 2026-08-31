@@ -4,22 +4,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="Seven SQLite memory tables behind
-a LangChain BaseMemory adapter, where the layers are storage
-destinations rather than a lifecycle and nothing moves between them.">
+    <meta name="description" content="Seven cognitively-annotated memory
+types split across SQLite, five Chroma collections and an optional Neo4j
+graph, where recall fans out by embedding similarity and ranks by a
+constant chosen per store rather than by any score the search
+returned.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="7layermem — Agent Memory Atlas">
-    <meta property="og:description" content="Seven SQLite memory tables
-behind a LangChain BaseMemory adapter, where the layers are storage
-destinations rather than a lifecycle and nothing moves between them.">
+    <meta property="og:description" content="Seven cognitively-annotated
+memory types split across SQLite, five Chroma collections and an
+optional Neo4j graph, where recall fans out by embedding similarity and
+ranks by a constant chosen per store rather than by any score the search
+returned.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="7layermem — Agent Memory Atlas">
-    <meta name="twitter:description" content="Seven SQLite memory tables
-behind a LangChain BaseMemory adapter, where the layers are storage
-destinations rather than a lifecycle and nothing moves between them.">
+    <meta name="twitter:description" content="Seven
+cognitively-annotated memory types split across SQLite, five Chroma
+collections and an optional Neo4j graph, where recall fans out by
+embedding similarity and ranks by a constant chosen per store rather
+than by any score the search returned.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>7layermem — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -41,7 +47,7 @@ destinations rather than a lifecycle and nothing moves between them.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "7layermem",
-      "description": "Seven SQLite memory tables behind a LangChain BaseMemory adapter, where the layers are storage destinations rather than a lifecycle and nothing moves between them.",
+      "description": "Seven cognitively-annotated memory types split across SQLite, five Chroma collections and an optional Neo4j graph, where recall fans out by embedding similarity and ranks by a constant chosen per store rather than by any score the search returned.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -95,11 +101,13 @@ destinations rather than a lifecycle and nothing moves between them.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">Seven tables, one thread key</p>
+          <p class="eyebrow">Two tables, five collections, one graph</p>
           <h1>7layermem</h1>
-          <p class="document-deck">Seven SQLite memory tables behind a
-LangChain BaseMemory adapter, where the layers are storage destinations
-rather than a lifecycle and nothing moves between them.</p>
+          <p class="document-deck">Seven cognitively-annotated memory
+types split across SQLite, five Chroma collections and an optional Neo4j
+graph, where recall fans out by embedding similarity and ranks by a
+constant chosen per store rather than by any score the search
+returned.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/Prateek816/7layermem">
               <span>Source</span>
@@ -116,7 +124,7 @@ rather than a lifecycle and nothing moves between them.</p>
               <strong>2026-08-04</strong>
             </div>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -132,82 +140,136 @@ rather than a lifecycle and nothing moves between them.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>7layermem is a <strong>seven-table memory schema for a LangChain
-agent</strong>, 7,016 lines of Python. It is the smallest system
-reviewed here in some time, and the size is what makes it worth reading:
-the whole design is legible in an afternoon.</p>
-<p><strong>There is no licence file at this commit.</strong> The
-repository contains no <code>LICENSE</code>, <code>LICENCE</code> or
-<code>COPYING</code> — not a permissive grant or a restrictive one but
-the absence of any, which defaults to all rights reserved. The
-mechanisms are described below on the atlas's usual terms; a reader
-intending to copy any of it needs to resolve that first.</p>
-<p><strong>The idea is that memory types deserve separate tables rather
+<p>7layermem is a <strong>seven-type memory framework for a LangChain
+agent</strong>, 7,016 lines of Python, spread across three storage
+engines and presented behind two methods. The size is what makes it
+worth reading: the whole design is legible in an afternoon.</p>
+<p><strong>There is no licence file at this commit</strong>, and the
+README ends with a <code>## License</code> heading whose body is the
+single word <code>MIT</code>. The repository contains no
+<code>LICENSE</code>, <code>LICENCE</code> or <code>COPYING</code>, so
+the grant asserted in the README exists nowhere a court or a package
+manager would look, and the default is all rights reserved. This is the
+same shape as <a href="../membase/">membase</a> — an assertion with no
+file under it. The mechanisms are described below on the atlas's usual
+terms; a reader intending to copy any of it needs to resolve that
+first.</p>
+<p><strong>The idea is that memory types deserve separate stores rather
 than one table with a <code>type</code> column.</strong>
-<code>store_manager.py</code> opens with the seven, each annotated with
-the cognitive category it stands for:</p>
-<table>
+<code>store_manager.py</code> opens with seven constants, each annotated
+with the cognitive category it stands for, and they do not all name the
+same kind of thing:</p>
+<div class="table-wrap"><table>
 <thead>
 <tr>
-<th>Table</th>
+<th>Constant</th>
 <th>Annotated as</th>
+<th>What it actually names</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>CONVERSATIONAL_MEMORY</code></td>
 <td>episodic</td>
-</tr>
-<tr>
-<td><code>SEMANTIC_MEMORY</code></td>
-<td>semantic</td>
-</tr>
-<tr>
-<td><code>ENTITY_MEMORY</code></td>
-<td>semantic</td>
-</tr>
-<tr>
-<td><code>SUMMARY_MEMORY</code></td>
-<td>semantic</td>
-</tr>
-<tr>
-<td><code>WORKFLOW_MEMORY</code></td>
-<td>procedural</td>
-</tr>
-<tr>
-<td><code>TOOLBOX_MEMORY</code></td>
-<td>procedural</td>
+<td>a SQLite table</td>
 </tr>
 <tr>
 <td><code>TOOL_LOG_MEMORY</code></td>
 <td>tool execution logs</td>
+<td>a SQLite table</td>
+</tr>
+<tr>
+<td><code>SEMANTIC_MEMORY</code></td>
+<td>semantic</td>
+<td>a Chroma collection</td>
+</tr>
+<tr>
+<td><code>ENTITY_MEMORY</code></td>
+<td>semantic</td>
+<td>a Chroma collection, or Neo4j</td>
+</tr>
+<tr>
+<td><code>SUMMARY_MEMORY</code></td>
+<td>semantic</td>
+<td>a Chroma collection</td>
+</tr>
+<tr>
+<td><code>WORKFLOW_MEMORY</code></td>
+<td>procedural</td>
+<td>a Chroma collection</td>
+</tr>
+<tr>
+<td><code>TOOLBOX_MEMORY</code></td>
+<td>procedural</td>
+<td>a Chroma collection</td>
 </tr>
 </tbody>
-</table>
-<p>Separating them at the schema means a query for a workflow cannot
-accidentally match a conversation, and each type gets its own columns
-instead of a JSON blob doing seven jobs. That is a defensible choice and
-the reason to look.</p>
+</table></div>
+<p>Two of the seven are relational rows read by key; five are embedded
+documents read by cosine similarity against
+<code>all-MiniLM-L6-v2</code> (<code>store_manager.py:22</code>).
+Separating them means a query for a workflow cannot match a
+conversation, and each type gets its own retrieval semantics rather than
+a JSON blob doing seven jobs. That is a defensible choice and the reason
+to look.</p>
 <p><strong>The name is the weakness.</strong> <em>Layer</em> implies a
 hierarchy with movement between levels, and there is none. Nothing
 promotes a conversation into a summary, expires an entity, or demotes a
 workflow that stopped working. The seven are <strong>destinations chosen
-at write time by the caller</strong>, not stages a memory passes
-through. The word the code supports is <em>categories</em>.</p>
-<p>The second weakness follows from the first: <strong>correction has
-almost nowhere to happen.</strong> Searching the source for
-<code>tombstone</code>, <code>supersede</code>, <code>retract</code> or
-<code>forget</code> returns nothing; the only lifecycle vocabulary
-present is two occurrences of <code>decay</code>, neither a mechanism.
-<code>memory_manager</code> exposes <code>delete_conversation</code> and
-<code>delete_thread_conversations</code>, and the single
-<code>UPDATE</code> in the codebase sets <code>summary_id</code>.
-<strong>Six of the seven tables have no delete path at all</strong>, so
-a wrong entity, a stale workflow or a superseded tool definition stays
-until someone opens the database by hand.</p>
+at write time</strong>, not stages a memory passes through. The word the
+code supports is <em>categories</em>.</p>
+<p><strong>The interesting failure is in the ranking.</strong>
+<code>AgentMemory.recall</code> searches four Chroma collections and the
+conversational table, then assigns each result a score from a constant
+chosen by which store it came from — 0.9 knowledge, 0.85 entity, 0.75
+summary, 0.7 workflow, 0.6 conversation
+(<code>agent_memory.py:390</code>, <code>:397</code>, <code>:404</code>,
+<code>:411</code>, <code>:425</code>) — decayed by result position,
+never by anything the similarity search reported.
+<code>similarity_search</code> returns documents without scores, so the
+ranking that reaches the agent is a fixed preference order over stores
+plus each store's internal order. A perfect match in workflow loses to a
+weak match in knowledge, always.</p>
+<p><strong>Correction has a delete surface and no vocabulary above
+it.</strong> Searching the source for <code>tombstone</code>,
+<code>supersede</code>, <code>retract</code> or <code>forget</code>
+returns nothing; the only occurrences of <code>decay</code> are the two
+ranking comments above. Removal exists on every store —
+<code>delete_conversation</code> (<code>:298</code>),
+<code>delete_thread_conversations</code> (<code>:306</code>),
+<code>delete_tool_log</code> (<code>:411</code>), the generic
+<code>delete_from_store(store_name, ids)</code> covering all five
+collections (<code>:652</code>), <code>delete_entity_graph</code>
+(<code>:607</code>) and <code>delete_entities_by_thread</code>
+(<code>:700</code>), with <code>delete_collection</code> and
+<code>reset_database</code> under them — but nothing records that a
+value was removed or rejected, so a corrected fact and one that was
+never written are the same state.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<p>A memory is a <strong>row in the table its type belongs to</strong>,
-and the type is decided by which manager method the caller invokes.</p>
+<p>A memory is <strong>whatever the store it was routed to
+holds</strong>: a row, an embedded document, or a graph node. The
+routing is the first epistemic decision the system makes, and a regex
+makes it. <code>_detect_type</code> (<code>agent_memory.py:66</code>)
+classifies free text with two patterns — under 200 characters containing
+a linking verb
+(<code>is|are|was|were|has|works|lives|likes|knows|created|built</code>)
+becomes an <strong>entity</strong>; anything containing
+<code>first|then|next|finally|step \d|after that</code> becomes a
+<strong>workflow</strong>; everything else becomes
+<strong>knowledge</strong>. No model is consulted, and the branches are
+ordered, so "Alice is a developer, first onboard her then assign a
+mentor" is an entity because the length test ran first.</p>
+<p>Chroma writes upsert on a SHA-256 hash of the text
+(<code>memory_manager.py:177</code>), so identical text written twice is
+one document and near-identical text is two. That is the whole
+deduplication story on five of the seven stores: byte equality.</p>
+<p>There is <strong>no status, confidence or provenance field
+anywhere</strong>. Nothing records where a fact came from, whether it
+was verified, or whether anything has contradicted it. The single
+<code>status</code> column in the tree is on
+<code>TOOL_LOG_MEMORY</code> and defaults to <code>'success'</code> — it
+records whether a tool call worked, which cannot turn out to be false,
+and nothing filters on it.</p>
 <p>The conversational table is the one with structure worth reading:</p>
 <pre class="sql"><code>CREATE TABLE CONVERSATIONAL_MEMORY (
     id TEXT PRIMARY KEY,
@@ -220,242 +282,562 @@ and the type is decided by which manager method the caller invokes.</p>
     summary_id TEXT DEFAULT NULL
 )</code></pre>
 <p><code>thread_id</code> is indexed and is the only grouping key in the
-system. <code>summary_id</code> is the one link between layers — a
-conversation row can point at the summary covering it, set after the
-fact by <code>update_conversation_summary_id</code>. That is the entire
-inter-layer relationship: one nullable foreign key, in one direction,
-between two of the seven.</p>
-<p>There is <strong>no status, confidence or provenance column on any
-table</strong>. Nothing records where a fact came from, whether it was
-verified, or whether anything has contradicted it.</p>
+system. <code>summary_id</code> is the one declared link between types —
+a conversation row can point at the summary covering it, set by
+<code>update_conversation_summary_id</code>
+(<code>memory_manager.py:286</code>), whose <code>UPDATE</code>
+(<code>:294</code>) is the only one in the codebase. <strong>Nothing
+calls it.</strong> The symbol appears in
+<code>memory_manager.py</code>'s own class docstring and in one test,
+and on no path an agent or a user reaches, so the column is always
+<code>NULL</code> in practice and the inter-type relationship is a
+declared one. <code>TOOLBOX_MEMORY</code> is in the same condition from
+the other end: <code>write_toolbox</code> and
+<code>search_toolbox</code> exist on <code>MemoryManager</code> and
+nothing in <code>AgentMemory</code>, <code>agent.py</code> or the
+LangChain adapters routes to them, so one of the seven types is
+unreachable through every published entry point.</p>
 <h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
 thing becomes a belief, and how it stops being one</h3>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the caller picks the table; only conversational rows have a delete path, and deleting them leaves the summary that was derived from them behind</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the caller picks the table; only conversational rows have a delete path, and deleting them leaves the summary that was derived from them behind
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a regex picks the store on write; recall fans out to five of the seven and re-scores every hit by a constant belonging to its store, so cross-store rank is a fixed preference order</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a regex picks the store on write; recall fans out to five of the seven and re-scores every hit by a constant belonging to its store, so cross-store rank is a fixed preference order
 flowchart TD
-    C[&quot;caller picks the memory type&quot;] --&gt; W[&quot;insert into that table&quot;]
-    W --&gt; CONV[&quot;CONVERSATIONAL&quot;]
-    W --&gt; OTH[&quot;SEMANTIC · ENTITY · SUMMARY&lt;br/&gt;WORKFLOW · TOOLBOX · TOOL_LOG&quot;]
-    CONV --&gt;|&quot;summarised later&quot;| S[&quot;summary_id set —&lt;br/&gt;the only link between tables&quot;]
-    CONV --&gt;|&quot;delete_conversation(id)&quot;| D[[&quot;removed&quot;]]
-    CONV --&gt;|&quot;delete_thread_conversations(thread_id)&quot;| D
-    D -.-&gt;|&quot;the summary survives&lt;br/&gt;its own sources&quot;| S
-    OTH -.-&gt;|&quot;no delete path exists&quot;| OTH
+    R[&quot;remember(text)&quot;] --&gt; RT{&quot;role? type?&lt;br/&gt;else _detect_type regex&quot;}
+    RT --&gt;|&quot;role=user/assistant&quot;| CONV[(&quot;CONVERSATIONAL_MEMORY&lt;br/&gt;SQLite&quot;)]
+    RT --&gt;|&quot;role=tool&quot;| TL[(&quot;TOOL_LOG_MEMORY&lt;br/&gt;SQLite&quot;)]
+    RT --&gt;|&quot;linking verb, under 200 chars&quot;| ENT{&quot;graph_memory set?&quot;}
+    RT --&gt;|&quot;first / then / step N&quot;| WF[(&quot;WORKFLOW_MEMORY&lt;br/&gt;Chroma&quot;)]
+    RT --&gt;|&quot;otherwise&quot;| KB[(&quot;SEMANTIC_MEMORY&lt;br/&gt;Chroma&quot;)]
+    RT --&gt;|&quot;type=summary only&quot;| SUM[(&quot;SUMMARY_MEMORY&lt;br/&gt;Chroma&quot;)]
+    ENT --&gt;|&quot;no&quot;| EC[(&quot;ENTITY_MEMORY&lt;br/&gt;Chroma&quot;)]
+    ENT --&gt;|&quot;yes&quot;| NEO[(&quot;Neo4j — MERGE on name,&lt;br/&gt;which is always entity_0&quot;)]
+    TB[(&quot;TOOLBOX_MEMORY — no route&lt;br/&gt;from any entry point&quot;)]
 
-    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
-<p>Two dashed edges, and both are the finding. Six of the seven tables
-are write-and-read only: a row enters and no code path removes or
-changes it. And the one inter-layer link is also the one place a delete
-propagates wrongly — deleting a thread's turns leaves the summary
-derived from them in place, with nothing recording that its sources are
-gone.</p>
+    Q[&quot;recall(query)&quot;] --&gt; KB
+    Q --&gt; EC
+    Q --&gt; WF
+    Q --&gt; SUM
+    Q --&gt; CONV
+    KB --&gt;|&quot;similarity_search&quot;| S[&quot;re-scored by store:&lt;br/&gt;0.9 / 0.85 / 0.75 / 0.7 / 0.6&quot;]
+    EC --&gt;|&quot;similarity_search&quot;| S
+    WF --&gt;|&quot;similarity_search&quot;| S
+    SUM --&gt;|&quot;similarity_search&quot;| S
+    CONV --&gt;|&quot;WHERE thread_id = ?&quot;| S
+    S --&gt; OUT[&quot;dedupe on first 100 chars,&lt;br/&gt;sort, take k&quot;]
+
+    style TB fill:#f4e2bd,stroke:#b8860b
+    style NEO fill:#f4e2bd,stroke:#b8860b
+    style S fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>Three shaded boxes and each is a finding. <code>TOOLBOX_MEMORY</code>
+has no producer on any reachable path. The Neo4j branch collapses
+(section 7). And the re-scoring step throws away the only evidence about
+relevance the retrieval produced.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>One SQLite file, seven tables, created on demand by
-<code>store_manager</code>. A separate RAG subsystem under
-<code>src/RAG/</code> carries its own persistence —
-<code>context_store.py</code> creates <code>retrieved_contexts</code>
-and <code>search_contexts</code> — and a hybrid retriever combining a
-BM25 layer and a vector layer.</p>
-<p>An operator needs Python, SQLite, and whatever the vector layer's
-embedding backend requires. There is no server and no scheduler.</p>
+<p>Three engines, stood up by one import. <code>store_manager.py</code>
+runs at module scope: it instantiates <code>HuggingFaceEmbeddings</code>
+(<code>:22</code>), creates <code>./data</code>, opens two SQLite files
+— <code>conversational_memory.db</code> and
+<code>tool_log_memory.db</code> (<code>:289</code>) — issues the two
+<code>CREATE TABLE</code> statements, and builds a global
+<code>StoreManager</code> (<code>:302</code>) that opens a
+<code>chromadb.PersistentClient</code> on <code>./data</code>
+(<code>:186</code>) and five <code>Chroma</code> collections over it
+(<code>:195</code>–<code>:228</code>).
+<code>src/memory/__init__.py</code> imports it transitively, so
+<code>from src.memory import AgentMemory</code> downloads a
+sentence-transformers model and touches disk before the caller has
+configured anything.</p>
+<p>Neo4j is optional and injected: <code>AgentMemory.from_config</code>
+builds an <code>EntityGraphMemory</code> only when both
+<code>neo4j_uri</code> and <code>neo4j_password</code> are passed,
+inside a bare <code>except Exception: pass</code>
+(<code>agent_memory.py:174</code>) that falls back to Chroma without a
+log line. <code>EntityGraphMemory</code> opens a
+<code>Neo4jGraph</code>, creates a uniqueness constraint on
+<code>Entity.name</code> (<code>entity_graph_memory.py:114</code>) and
+constructs a <code>ChatGroq(model="openai/gpt-oss-120b")</code>
+(<code>:105</code>) — so the graph path requires a
+<code>GROQ_API_KEY</code> and a network round trip, and
+<code>.env.example</code> contains that key and nothing else.</p>
+<p>A separate RAG subsystem under <code>src/RAG/</code> carries its own
+persistence: <code>context_store.py</code> creates
+<code>retrieved_contexts</code> (<code>:65</code>) and
+<code>search_contexts</code> (<code>:80</code>), and
+<code>hybrid_retriever.py</code> combines a BM25 layer and a vector
+layer.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
-<p>The absence of a migration path is the operational cost. Table
-existence is checked with a <code>sqlite_master</code> query and then
-<code>CREATE TABLE</code> is issued directly, so a schema change means
-editing the create statement and reconciling existing databases by hand.
-At seven tables and no versioning, the first schema change is a manual
-migration.</p>
+<p><code>requirements.txt</code> lists <code>sqlite3</code> and
+<code>hashlib</code> — standard-library modules, not distributions — so
+the documented <code>pip install -r requirements.txt</code> does not
+resolve as written. The README's data-directory listing
+(<code>conversations.db</code>, <code>tool_logs.db</code>,
+<code>chroma/</code>, <code>embeddings/</code>) does not match what the
+code creates, and the <code>examples/</code> directory it documents is
+not in the tree.</p>
+<p>Nothing runs in the background and there is no server. Fully local
+operation works for six of the seven types; the graph path needs a Neo4j
+instance and a hosted LLM, and it is the only path with an API key on
+it.</p>
+<p>The absence of a migration path is the operational cost that outlasts
+the rest. Table existence is checked with a <code>sqlite_master</code>
+query and then <code>CREATE TABLE</code> is issued directly, and Chroma
+collections are opened by name with no schema version anywhere, so a
+change to either means reconciling existing stores by hand. The SQLite
+half is human-readable and repairable with a shell; the Chroma half is
+not.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
-<li><strong>Schema:</strong> <code>src/memory/store_manager.py</code> —
-the seven table names with their cognitive annotations, and the create
-statements.</li>
-<li><strong>Write and read:</strong>
-<code>src/memory/memory_manager.py</code> — per-type methods,
+<li><strong>Schema and store construction:</strong>
+<code>src/memory/store_manager.py</code> — the seven constants with
+their cognitive annotations,
+<code>create_conversational_history_table</code> (<code>:40</code>),
+<code>create_tool_log_table</code> (<code>:93</code>), the
+<code>StoreManager</code> class and its five Chroma collections
+(<code>:195</code>–<code>:228</code>), <code>delete_collection</code>
+(<code>:265</code>), <code>reset_database</code>
+(<code>:271</code>).</li>
+<li><strong>Write path:</strong>
+<code>src/memory/memory_manager.py</code> — <code>_write_to_store</code>
+(<code>:162</code>), which hashes content into an id (<code>:177</code>)
+and calls <code>add_documents</code> (<code>:183</code>); the per-type
+<code>write_*</code> wrappers; <code>write_conversation</code> and
+<code>write_tool_log</code>.</li>
+<li><strong>Read path:</strong> <code>_search_store</code>
+(<code>:186</code>) wrapping <code>store.similarity_search</code>
+(<code>:197</code>); <code>read_conversations</code> and
+<code>read_tool_logs</code>, both filtering
+<code>WHERE thread_id = ?</code>.</li>
+<li><strong>Routing and fan-out:</strong>
+<code>src/memory/agent_memory.py</code> — <code>_detect_type</code>
+(<code>:66</code>), the <code>remember</code> router, and
+<code>recall</code>'s five-store fan-out with its per-store base scores
+(<code>:390</code>–<code>:425</code>), dedupe (<code>:433</code>, keyed
+on the first 100 characters) and top-<code>k</code>.</li>
+<li><strong>Update/delete/forget:</strong>
 <code>update_conversation_summary_id</code> (<code>:286</code>),
 <code>delete_conversation</code> (<code>:298</code>),
-<code>delete_thread_conversations</code> (<code>:306</code>).</li>
-<li><strong>Agent surface:</strong>
-<code>src/memory/agent_memory.py</code>, <code>agent.py</code>.</li>
+<code>delete_thread_conversations</code> (<code>:306</code>),
+<code>delete_tool_log</code> (<code>:411</code>),
+<code>delete_from_store</code> (<code>:652</code>) with its entity
+re-route to the graph (<code>:663</code>),
+<code>delete_entity_graph</code> (<code>:607</code>),
+<code>delete_entities_by_thread</code> (<code>:700</code>).</li>
+<li><strong>Extraction:</strong>
+<code>src/graphDB/entity_graph_memory.py</code> —
+<code>ENTITY_EXTRACTION_PROMPT</code> (<code>:35</code>),
+<code>extract_entities</code> (<code>:125</code>),
+<code>write_entities_from_text</code> (<code>:232</code>), reached
+through <code>MemoryManager.write_entities_from_text</code>
+(<code>:564</code>).</li>
 <li><strong>LangChain adapters:</strong>
 <code>src/langchain_extension/memory.py</code>
-(<code>SevenLayerMemory(BaseMemory)</code>),
-<code>src/langchain_extension/store.py</code>
-(<code>SevenLayerStore(BaseStore[str, str])</code>).</li>
+(<code>SevenLayerMemory(BaseMemory)</code>), <code>store.py</code>
+(<code>SevenLayerStore(BaseStore[str, str])</code>),
+<code>chat_message_history.py</code>
+(<code>SevenLayerChatMessageHistory</code>).</li>
 <li><strong>Corpus retrieval:</strong>
 <code>src/RAG/hybrid_retriever.py</code>, <code>vector_layer.py</code>,
-<code>ingestor.py</code>, <code>context_store.py</code>.</li>
+<code>bm25_layer.py</code>, <code>ingestor.py</code>,
+<code>context_store.py</code>.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
-<p>Seven tables, one grouping key. <code>thread_id</code> scopes
-conversations; the other six have no equivalent, so entities, workflows
-and tool definitions are global to the database.</p>
-<p>The absence of a <code>user_id</code> or <code>project_id</code>
-anywhere is why the scope mark is withheld, and it is a design
-consequence rather than an oversight: a single-agent, single-database
-deployment does not need one, and this is built as one.</p>
+<p>Two SQL schemas, five untyped document collections, and one
+graph.</p>
+<p>The SQL side carries columns: <code>CONVERSATIONAL_MEMORY</code> as
+quoted above, and <code>TOOL_LOG_MEMORY</code> with
+<code>tool_call_id</code>, <code>tool_name</code>,
+<code>tool_args</code>, <code>result</code>,
+<code>result_preview</code>, <code>status</code>,
+<code>error_message</code>, <code>metadata</code> and two timestamps.
+Both tables set <code>timestamp</code> and <code>created_at</code> from
+the same <code>_now()</code> call in the same <code>INSERT</code>, so
+the two columns are one value written twice — record time exists,
+validity time does not.</p>
+<p>The Chroma side has no schema. A document is text plus a free-form
+metadata dict, and the only key any code depends on is <code>key</code>,
+written by <code>SevenLayerStore.mset</code> and read back as a filter
+by <code>mget</code> (<code>store.py:56</code>). Graph nodes get
+<code>created_at</code> on <code>MERGE</code>-create and
+<code>updated_at</code> on every write, and <code>updated_at</code>
+overwrites.</p>
+<p><strong>Scoping is one key applied in two places and stamped in a
+third that ignores it.</strong> <code>thread_id</code> filters
+<code>read_conversations</code> and <code>read_tool_logs</code>, and
+<code>AgentMemory._write_entity</code> writes
+<code>meta["thread_id"] = thread_id</code> into the entity document's
+Chroma metadata (<code>agent_memory.py:282</code>). No read path passes
+a <code>thread_id</code> filter to any <code>search_*</code> method:
+<code>recall</code> accepts a <code>thread_id</code> argument and
+forwards it only to the conversational read. The graph side is the same
+shape from the other direction —
+<code>EntityGraphMemory.search_entity</code> accepts a
+<code>thread_id</code> and adds <code>e.thread_id = $thread_id</code> to
+the <code>WHERE</code> clause (<code>:319</code>), and
+<code>search_entity_documents</code> extracts it from a
+<code>filter</code> dict that the fan-out never supplies. There is no
+<code>user_id</code>, <code>project_id</code> or tenant key
+anywhere.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p>Two unrelated retrieval systems live in this repository, and the
-distinction matters more than either.</p>
-<p>Memory reads are direct SQL keyed on <code>thread_id</code> or row id
-— no ranking, no recency weighting, no scoring. The RAG subsystem is
-separate and more developed: <code>hybrid_retriever</code> runs a BM25
-layer and a vector layer, takes <code>k * 2</code> from each, and fuses
-them.</p>
-<p><strong>The two do not meet.</strong> The hybrid retriever searches
-an ingested document corpus; the seven memory tables are read by key. A
-memory written through <code>memory_manager</code> is not reachable
-through the hybrid retriever. The <code>bm25_layer</code> and
-<code>vector_layer</code> named in that subsystem are also unrelated to
-the seven memory layers despite sharing the word, which makes "layer"
+<p>Three retrieval mechanisms, and the distinctions between them matter
+more than any one of them.</p>
+<p><strong>Vector similarity over the memory stores.</strong> Five of
+the seven types are read by
+<code>store.similarity_search(query, k)</code> against their own Chroma
+collection, optionally with a metadata filter. This is the primary read
+path and the one <code>recall</code> exercises.</p>
+<p><strong>SQL by key over the two tables.</strong>
+<code>read_conversations</code> and <code>read_tool_logs</code> select
+on <code>thread_id</code>, order by <code>timestamp DESC</code>, take
+<code>limit</code>, then reverse into chronological order.
+<code>read_conversations</code> also accepts
+<code>before_timestamp</code> for paging backwards. No ranking, and none
+is wanted.</p>
+<p><strong>Graph traversal, when Neo4j is configured.</strong>
+<code>search_entity</code> matches
+<code>toLower(e.name) CONTAINS toLower($query)</code> — a substring test
+on the name, not a similarity search — and
+<code>search_entity_documents</code> then walks each hit's relationships
+to depth 1 and renders them into the document text.</p>
+<p><strong>The fusion on top of all three is where relevance is
+lost.</strong> <code>AgentMemory.recall</code> queries knowledge,
+entity, workflow and summary, reads the conversational table, and
+assigns every result <code>base_score * (1.0 - i * 0.05)</code> where
+<code>base_score</code> is the constant for its store
+(<code>agent_memory.py:455</code>). Conversation rows get
+<code>0.6 * (1.0 - i * 0.1)</code> (<code>:425</code>). Nothing consults
+a distance: <code>similarity_search</code> returns bare
+<code>Document</code>s, and the
+<code>similarity_search_with_score</code> variant that would return one
+is not called anywhere. So the cross-store order is fixed — every
+knowledge hit outranks every entity hit outranks every summary hit — and
+within a store the order is whatever Chroma returned, re-labelled with a
+number that looks like a relevance score and is not one. Results are
+then deduplicated on their first 100 lowercased characters
+(<code>:469</code>), which merges two documents sharing a prefix.</p>
+<p>Each of the five searches is wrapped in
+<code>try/except Exception: pass</code>, so a store that fails
+contributes nothing and says nothing, and a <code>recall</code> against
+a broken Chroma client is indistinguishable from one that found no
+matches.</p>
+<p><strong>The RAG subsystem never meets any of this.</strong>
+<code>hybrid_retriever</code> runs a BM25 layer and a vector layer,
+takes <code>k * 2</code> from each (<code>:160</code>,
+<code>:165</code>), normalizes and fuses with configurable weights. Its
+vector layer is also Chroma with the same <code>all-MiniLM-L6-v2</code>
+embeddings — but a different persist directory
+(<code>./data/vector_store</code>) and a different collection
+(<code>hybrid_rag</code>, <code>config.py:25</code>), so a memory
+written through <code>memory_manager</code> is not reachable through the
+hybrid retriever and nothing bridges them.
+<code>RAGConfig.rerank_threshold = 0.7</code>
+(<code>config.py:34</code>) is read by nothing outside
+<code>to_dict</code>. The <code>bm25_layer</code> and
+<code>vector_layer</code> in that subsystem are also unrelated to the
+seven memory layers despite sharing the word, which makes "layer"
 ambiguous inside a single 7,000-line repository.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
-<p>Writes are synchronous inserts. The caller chooses the table by
-choosing the method; nothing classifies, routes or gates. There is no
-extraction step, so nothing decides what is worth remembering — the
-agent code decides by calling or not calling, which is a legitimate
-design and puts the whole write policy in the caller.</p>
-<p><strong>No background pass exists.</strong> No scheduler, no
-consolidation worker, no decay job, so nothing rewrites the store and
-the lag between writing a memory and it being retrievable is a single
-insert.</p>
+<p>Writes are synchronous, and on six of the seven paths they are cheap:
+an <code>INSERT</code> or an <code>add_documents</code> call whose only
+cost is embedding the text locally. The seventh is not. When Neo4j is
+configured, <code>MemoryManager.write_entity</code> routes to the graph
+(<code>:504</code>), and <code>write_entities_from_text</code>
+(<code>:564</code>) calls an LLM — <code>ENTITY_EXTRACTION_PROMPT</code>
+asks a Groq-hosted model for a JSON object of entities and relationships
+(<code>entity_graph_memory.py:35</code>), and a <code>json.loads</code>
+failure returns <code>{"entities": [], "relationships": []}</code> with
+no log and no retry. That is the only extraction step in the system, it
+is on the hot path, and it is reachable only by calling
+<code>MemoryManager</code> directly — <code>AgentMemory</code> exposes
+no route to it.</p>
+<p><strong>Enabling Neo4j breaks entity memory through the simple
+API.</strong> <code>AgentMemory._write_entity</code> passes metadata
+containing only <code>thread_id</code>;
+<code>MemoryManager.write_entity</code> forwards to
+<code>EntityGraphMemory.write_entity_documents</code>, which names each
+node <code>metadata.get("name", f"entity_{i}")</code>
+(<code>entity_graph_memory.py:446</code>) — and <code>i</code> is
+<code>0</code> for the single-text call the simple API always makes.
+Every entity written through <code>remember(..., type="entity")</code>
+therefore <code>MERGE</code>s onto one node named <code>entity_0</code>
+(<code>:181</code>), overwriting the previous <code>description</code>
+on match. The Chroma fallback has no such collision, because
+content-hash ids give distinct text distinct documents. Configuring the
+richer backend replaces per-fact entity storage with a single mutable
+slot, and then searches it by substring on a name that is always
+<code>entity_0</code>.</p>
+<p><strong>Nothing gates a write.</strong> No classifier beyond the
+regex, no threshold, no conflict check, no filter on noisy or
+adversarial input. Text arriving from a user reaches an embedding and a
+store unexamined, and on the graph path reaches an LLM prompt as
+<code>{text}</code> with no delimiting.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path blocks the agent for one local embedding on the Chroma
+types and for one hosted LLM call on the graph type. There is no
+deferred queue, so the lag between writing a memory and it being
+retrievable is a single insert. <strong>No background pass
+exists</strong> — no scheduler, no consolidation worker, no expiry job —
+so nothing rewrites the store and the token bill is exactly the writes
+and reads performed. On the read path, <code>recall</code> injects at
+most <code>k</code> results (default 5) truncated by the caller;
+<code>SevenLayerMemory.load_memory_variables</code> joins them into one
+string under the <code>history</code> key, which sits wherever the chain
+puts its memory variable.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>The LangChain adapters are the intended surface:
-<code>SevenLayerMemory</code> implements <code>BaseMemory</code> and
-<code>SevenLayerStore</code> implements
-<code>BaseStore[str, str]</code>, so the tables can be mounted where
-LangChain expects a memory or a key-value store. <code>agent.py</code>
-is a standalone entry point. There is no MCP server and no HTTP API.</p>
-<p>The <code>BaseStore[str, str]</code> typing is worth noting: a store
-constrained to string values flattens the typed tables at the boundary,
-so a consumer arriving through the LangChain path loses the schema
-separation that is the design's main idea.</p>
+<p><code>AgentMemory</code> is the intended surface and is genuinely two
+methods: <code>remember</code> and <code>recall</code>, with
+<code>clear_thread</code> beside them. <code>agent.py</code> wraps it in
+an interactive REPL with <code>/remember</code>, <code>/entity</code>,
+<code>/workflow</code>, <code>/recall</code>, <code>/history</code> and
+<code>/stats</code> commands, and every command also writes a tool-log
+row, so the tool log is populated by the demo agent even though nothing
+reads it back except <code>/stats</code>.</p>
+<p>Three LangChain adapters sit above <code>AgentMemory</code>:
+<code>SevenLayerMemory</code> implements <code>BaseMemory</code>
+(<code>save_context</code> writes the turn,
+<code>load_memory_variables</code> calls <code>recall</code>),
+<code>SevenLayerChatMessageHistory</code> implements
+<code>BaseChatMessageHistory</code> over the conversational table alone,
+and <code>SevenLayerStore</code> implements
+<code>BaseStore[str, str]</code> over four of the five collections.
+There is no MCP server and no HTTP API.</p>
+<p>Two things are worth naming about that boundary. The
+<code>BaseStore[str, str]</code> typing flattens the typed stores to
+string values, so a consumer arriving through the key-value path loses
+the type separation that is the design's main idea. And
+<code>SevenLayerStore.yield_keys</code> enumerates by running
+<code>search_store(query="", k=100)</code> (<code>store.py:90</code>) —
+a similarity search against an empty string, capped at 100, presented as
+key iteration, which the docstring concedes is O(n) while understating
+that it is also lossy above 100 keys.</p>
+<p>The model has no agency over memory beyond what the application
+grants it: there are no memory tools, no prompt affordances, and no
+automatic injection except the one <code>SevenLayerMemory</code>
+performs per chain turn.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>No capability marks are earned, and the reasons differ per
-column.</strong></p>
+<p><strong>One capability mark is earned, and the reasons for the other
+six differ.</strong></p>
 <ul>
-<li><strong>Tombstone, trust state, bi-temporal:</strong> absent, with
-no near-miss. No status field, no validity interval, no record of a
-rejected value.</li>
-<li><strong>Scope:</strong> <code>thread_id</code> is a real indexed key
-applied on conversational reads, but it groups a conversation rather
-than isolating a principal, and six of the seven tables have no key at
-all. The mark wants a stored scope key applied as a filter on the read
-path across the memory the system holds; this covers one table of
-seven.</li>
-<li><strong>Audit log:</strong> no mutation record.
-<code>TOOL_LOG_MEMORY</code> logs tool <em>executions</em> — what the
-agent did, not what the memory did — and nothing writes an entry when a
-row is deleted.</li>
-<li><strong>Human review:</strong> no surface.</li>
-<li><strong>Negative evals:</strong> the tests create tables and
-exercise the manager; no committed case asserts that particular material
-must not be retrieved.</li>
+<li><strong>Negative retrieval assertion — earned.</strong>
+<code>tests/test_memory_manager.py:276</code> writes one row into
+<code>t1</code> and one into <code>t2</code>, reads each thread, and
+asserts both that the result length is 1 and that the content is the
+right one, so the other thread's row is provably absent from a populated
+result. <code>:320</code> writes two rows into <code>t1</code> and one
+into <code>t2</code>, deletes <code>t1</code>, and asserts
+<code>len(rows_t1) == 0</code> alongside <code>len(rows_t2) == 1</code>
+— the surviving control is what makes the empty assertion non-vacuous.
+Both are about a read path. Neither says anything about the five vector
+stores.</li>
+<li><strong>Scope enforced — withheld, and the near-miss is
+precise.</strong> <code>thread_id</code> is a real indexed key applied
+as a SQL filter on both table reads, but it groups a conversation rather
+than isolating a principal, and the primary recall path applies no
+filter at all. The sharper half is that
+<code>AgentMemory._write_entity</code> <em>stores</em>
+<code>thread_id</code> on every entity document and no read consults it
+— a scope written as a tag and never applied, which is exactly what the
+rubric excludes.</li>
+<li><strong>Tombstone, trust state, bi-temporal — absent, with no
+near-miss.</strong> No rejected-value record, no epistemic status field,
+and <code>timestamp</code>/<code>created_at</code> written from one
+<code>_now()</code> call in one statement.</li>
+<li><strong>Audit log — no mutation record.</strong>
+<code>TOOL_LOG_MEMORY</code> logs tool <em>executions</em>, which is a
+record of what happened rather than of what the memory came to believe,
+and nothing writes an entry when a row or a document is deleted.</li>
+<li><strong>Human review — no surface.</strong> Nothing inspects,
+approves or adjudicates.</li>
 </ul>
-<p><strong>The deletion asymmetry is the risk worth naming.</strong>
-<code>delete_thread_conversations</code> removes a whole thread's turns
-and any summary derived from that thread survives it.
-<code>summary_id</code> points from conversation to summary, so after
-the delete the summary remains with no back-reference intact and nothing
-recording that its sources are gone. This is the failure the <a
-href="../../benchmarks/">benchmarks page</a> calls step 9 — a deleted
-memory surviving in derived form — in its simplest possible instance,
-two tables and one foreign key.</p>
+<p><strong>The deletion asymmetries are the risks worth naming, and
+there are two.</strong> <code>delete_thread_conversations</code> removes
+a whole thread's turns from <code>CONVERSATIONAL_MEMORY</code> and
+touches nothing else, so a summary derived from that thread survives in
+<code>SUMMARY_MEMORY</code> — and because
+<code>update_conversation_summary_id</code> is called by no reachable
+path, <code>summary_id</code> is <code>NULL</code>, so there is not even
+a stored pointer from which the orphaned summary could be found and
+removed. This is the failure the <a href="../../benchmarks/">benchmarks
+page</a> calls step 9 — a deleted memory surviving in derived form — in
+its simplest instance. The second is the graph:
+<code>delete_entities_by_thread</code> exists on both
+<code>MemoryManager</code> (<code>:700</code>) and
+<code>EntityGraphMemory</code> (<code>:531</code>) and has no caller
+anywhere in the tree, including the tests, so the one cross-store
+thread-delete that would reach entities is written and unwired.</p>
+<p>Nothing defends against prompt-injected memories. Text from a user is
+routed by regex, embedded, and on the graph path interpolated into an
+extraction prompt; the resulting entities are <code>MERGE</code>d into a
+store the next <code>recall</code> reads back into the model's
+context.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>tests/</code> contains <code>test_memory_manager.py</code> and
-<code>testing.py</code>. The test file builds the conversational and
-tool-log tables <strong>with its own <code>CREATE TABLE</code>
-statements</strong> rather than calling <code>store_manager</code>, so
-the schema exists twice in the repository as two separate strings that
-can drift, and nothing compares them. A column added to the
-implementation and not to the test leaves the suite green and testing a
-schema the system no longer has.</p>
-<p>No benchmark, no committed retrieval numbers, and no evaluation of
-the hybrid retriever. I did not run the suite.</p>
+<p><code>tests/</code> holds six files:
+<code>test_memory_manager.py</code> (824 lines),
+<code>test_agent_memory.py</code> (304),
+<code>test_langchain_chat_history.py</code> (127),
+<code>test_langchain_memory.py</code> (112),
+<code>test_langchain_store.py</code> (110) and a script-style
+<code>testing.py</code> (275). Coverage is real on shape and behaviour —
+routing, ordering, thread filtering, deletion, the LangChain adapter
+contracts — and the two thread-boundary cases in section 9 are the
+strongest thing in it.</p>
+<p>Two limits matter. <code>test_memory_manager.py</code> builds the
+conversational and tool-log tables <strong>with its own
+<code>CREATE TABLE</code> statements</strong> (<code>:52</code>,
+<code>:73</code>) rather than calling <code>store_manager</code>, so the
+schema exists twice in the repository as two strings that can drift with
+nothing comparing them; a column added to the implementation and not to
+the test leaves the suite green against a schema the system does not
+have. And every Chroma and Neo4j interaction is a
+<code>MagicMock</code>, so no committed test exercises an embedding, a
+similarity search, or a Cypher query — which is why the
+<code>entity_0</code> collision above survives a green suite: the mock
+records the call and never <code>MERGE</code>s anything.</p>
+<p>No benchmark, no committed retrieval numbers, no evaluation of the
+hybrid retriever, and no paper — the README cites none and the tree
+contains no <code>CITATION.cff</code>, <code>bibtex</code> or
+<code>arxiv</code> reference. I did not run the suite.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
-<li><strong>Separate tables per memory type, annotated with the
-cognitive category.</strong> Seven <code>CREATE TABLE</code> statements
-and a comment each. It costs nothing at this scale and makes "which kind
-of memory is this" a schema question rather than a runtime one.</li>
-<li><strong>The <code>summary_id</code> back-link.</strong> Pointing a
-raw row at the derived artifact covering it is the cheap half of <a
-href="../../patterns/evidence-before-belief/">evidence before belief</a>
-— you can always get from a summary back to what it summarised, provided
-you also handle the delete.</li>
+<li><strong>Separate stores per memory type, annotated with the
+cognitive category.</strong> Seven constants and a comment each. It
+costs nothing at this scale and makes "which kind of memory is this" a
+store question rather than a runtime one — and it lets episodic memory
+be a table read by key while semantic memory is a vector collection read
+by similarity, which is the right answer for both.</li>
+<li><strong>Content-hash ids for upserted documents.</strong> Deriving a
+document id from a SHA-256 of its text makes re-ingestion idempotent for
+free and is four lines. Know what it does not buy you: near-duplicates
+are distinct documents.</li>
+<li><strong>A two-method public API over a many-method internal
+one.</strong> <code>remember</code>/<code>recall</code> over a 32-method
+manager is a good split, and the manager stays available for callers who
+need the graph or the toolbox.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Calling them layers.</strong> They are categories. A reader
-expecting promotion, expiry or demotion will look for machinery that
-does not exist, and the design is more defensible under its accurate
-name.</li>
-<li><strong>A delete path on one table of seven.</strong> The types a
-user is most likely to want removed — a wrong entity, a stale workflow —
-are the ones with no removal code.</li>
+<li><strong>Scoring a fused result by which store it came from.</strong>
+A constant per source is a preference order wearing a score's clothes:
+it cannot express that this workflow matches better than that fact, and
+it silently discards the distance the vector store computed. If you fan
+out across stores, carry the real scores through —
+<code>similarity_search_with_score</code> exists — and normalize them,
+or admit the ordering is a policy and do not print it as a number.</li>
+<li><strong>A regex as the classifier on the write path.</strong>
+Ordered patterns over raw text put the type decision somewhere it cannot
+be inspected, corrected or tested against intent, and the first branch
+to match wins on input that belongs in two places.</li>
+<li><strong>Silent fallback between backends with different
+semantics.</strong> Catching every exception around backend construction
+and continuing on the other one means an operator who configured a graph
+and got a vector store finds out from the results. Two backends behind
+one interface need the same identity and search semantics, or they are
+two systems with one name.</li>
 <li><strong>Duplicating the schema in the tests.</strong> Two
 <code>CREATE TABLE</code> strings for one table is a drift the suite
 cannot detect.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits <strong>reading, not adopting</strong>. It is a clear,
-small worked example of typed memory tables behind a LangChain adapter,
-and at 7,016 lines a developer can hold all of it at once — genuinely
-rare in this corpus and the reason it is here. It is not a fit for
-production: no licence grant, no migrations, no scope beyond a thread,
-no correction, and two retrieval systems that never meet.</p>
+small worked example of typed memory stores behind a two-method API, and
+at 7,016 lines a developer can hold all of it at once — genuinely rare
+in this corpus and the reason it is here. The thing to read it for is
+the fusion problem: it is the smallest complete illustration of what
+happens when a system retrieves from several stores and has no
+principled way to compare the results, which is a problem every
+multi-store memory design has and most hide behind a reranker. It is not
+a fit for production: no licence grant, no migrations, no scope beyond a
+thread, no correction vocabulary, an install file that does not install,
+and a graph backend that degrades the type it upgrades.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>Is the hybrid retriever ever pointed at the memory
-tables?</strong> It searches an ingested corpus, and no code path was
-found connecting the two. If that connection is intended, it is the
-missing half of the design.</li>
-<li><strong>What decides that a thread should be summarised?</strong>
-The <code>summary_id</code> link exists and its write side was traced;
-the trigger was not.</li>
-<li><strong>Is the licence absence deliberate?</strong> The README makes
-no licence claim, so unlike <a href="../membase/">membase</a> there is
-no assertion contradicted by a missing file — there is simply
-nothing.</li>
+<li><strong>Is the hybrid retriever meant to be pointed at the memory
+collections?</strong> Both are Chroma with the same embedding model, and
+only a persist directory and a collection name separate them. If the
+connection is intended, it is a configuration change rather than a
+design one — which makes its absence harder to read as deliberate.</li>
+<li><strong>What is supposed to call
+<code>update_conversation_summary_id</code>?</strong> The column, the
+method and its test exist; the summarizer that would produce a
+<code>summary_id</code> does not appear in the tree.</li>
+<li><strong>Is the <code>entity_0</code> naming a stub or a
+defect?</strong> <code>write_entity_documents</code> accepts a
+<code>name</code> in metadata, and <code>usage_example.py</code>
+supplies real names when it calls the graph directly. Only the
+<code>AgentMemory</code> route omits it.</li>
+<li><strong>Is the licence discrepancy deliberate?</strong> The README
+asserts MIT and no file carries it. Unlike a repository that simply says
+nothing, this is an assertion with nothing under it.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Storage and schema</strong></p>
 <ul>
-<li><code>src/memory/store_manager.py</code> — the seven tables and
-their annotations</li>
+<li><code>src/memory/store_manager.py</code> — the seven constants, the
+two <code>CREATE TABLE</code> functions, the five Chroma collections,
+<code>delete_collection</code>, <code>reset_database</code></li>
 <li><code>src/RAG/context_store.py</code> — the RAG subsystem's own two
 tables</li>
 </ul>
 <p><strong>Write and read path</strong></p>
 <ul>
-<li><code>src/memory/memory_manager.py</code> — per-type methods, the
-one update, the two deletes</li>
-<li><code>src/memory/agent_memory.py</code> — the agent-facing
-wrapper</li>
+<li><code>src/memory/memory_manager.py</code> — SQL and Chroma helpers,
+the per-type methods, the one update, the delete surface, the graph
+delegation</li>
+<li><code>src/memory/agent_memory.py</code> — <code>_detect_type</code>,
+<code>remember</code>, <code>recall</code> and its scoring</li>
 </ul>
-<p><strong>Retrieval</strong></p>
+<p><strong>Extraction and graph</strong></p>
+<ul>
+<li><code>src/graphDB/entity_graph_memory.py</code> — the extraction
+prompt, Cypher writes and reads, <code>DETACH DELETE</code></li>
+<li><code>src/graphDB/usage_example.py</code></li>
+</ul>
+<p><strong>Retrieval (corpus)</strong></p>
 <ul>
 <li><code>src/RAG/hybrid_retriever.py</code>,
-<code>vector_layer.py</code>, <code>ingestor.py</code></li>
+<code>vector_layer.py</code>, <code>bm25_layer.py</code>,
+<code>ingestor.py</code>, <code>config.py</code></li>
 </ul>
 <p><strong>Integration</strong></p>
 <ul>
 <li><code>src/langchain_extension/memory.py</code>,
-<code>store.py</code> — <code>BaseMemory</code> and
-<code>BaseStore</code></li>
+<code>store.py</code>, <code>chat_message_history.py</code> —
+<code>BaseMemory</code>, <code>BaseStore</code> and
+<code>BaseChatMessageHistory</code></li>
 <li><code>agent.py</code> — standalone entry point</li>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>
 <li><code>tests/test_memory_manager.py</code>,
-<code>tests/testing.py</code></li>
+<code>test_agent_memory.py</code>,
+<code>test_langchain_memory.py</code>,
+<code>test_langchain_store.py</code>,
+<code>test_langchain_chat_history.py</code>,
+<code>testing.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code class="commit-id" title="d3500bfd74b380585e8220f6c6f235c825bc803e">d3500bfd…</code></a>
+— same pin, re-read against the source. The architectural spine
+published for this commit was wrong in one direction: it described seven
+SQLite tables read by direct SQL with a delete path on one of them.
+<code>store_manager</code> creates two SQLite tables; the other five
+constants name Chroma collections embedded with
+<code>all-MiniLM-L6-v2</code> and read by
+<code>similarity_search</code>, the optional Neo4j entity graph in
+<code>src/graphDB/</code> went undescribed, and deletion reaches every
+store. <code>negative_eval</code> is earned on the two thread-boundary
+cases in <code>tests/test_memory_manager.py</code>; the other six marks
+stay withheld, <code>scope_enforced</code> on the sharper ground that
+entity documents carry a <code>thread_id</code> no read path consults.
+Also corrected: the README asserts MIT with no licence file under it,
+<code>update_conversation_summary_id</code> and
+<code>delete_entities_by_thread</code> have no caller outside tests, and
+<code>TOOLBOX_MEMORY</code> has no route from any entry point.</p>
 <p><strong>2026-08-04</strong> — <a
-href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code>d3500bfd74b380585e8220f6c6f235c825bc803e</code></a>
+href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code class="commit-id" title="d3500bfd74b380585e8220f6c6f235c825bc803e">d3500bfd…</code></a>
 — first reading.</p>
         </article>
       </div>

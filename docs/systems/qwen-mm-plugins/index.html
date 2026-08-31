@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A plugin suite whose video-memory
+capability builds a four-level graph over hours of footage and retrieves
+from it by dense-plus-BM25 fusion — memory that is built once, read many
+times, and never corrected.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Qwen MM
+Plugins — Agent Memory Atlas">
+    <meta property="og:description" content="A plugin suite whose
+video-memory capability builds a four-level graph over hours of footage
+and retrieves from it by dense-plus-BM25 fusion — memory that is built
+once, read many times, and never corrected.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Qwen MM
+Plugins — Agent Memory Atlas">
+    <meta name="twitter:description" content="A plugin suite whose
+video-memory capability builds a four-level graph over hours of footage
+and retrieves from it by dense-plus-BM25 fusion — memory that is built
+once, read many times, and never corrected.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Qwen MM Plugins — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Qwen MM Plugins",
+      "description": "A plugin suite whose video-memory capability builds a four-level graph over hours of footage and retrieves from it by dense-plus-BM25 fusion \u2014 memory that is built once, read many times, and never corrected.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory of what was seen</p>
+          <h1>Qwen MM Plugins</h1>
+          <p class="document-deck">A plugin suite whose video-memory
+capability builds a four-level graph over hours of footage and retrieves
+from it by dense-plus-BM25 fusion — memory that is built once, read many
+times, and never corrected.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/QwenLM/Qwen-MM-Plugins">
+              <span>Source</span>
+              <strong>QwenLM/Qwen-MM-Plugins</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af" title="f4e02952a059f3a0a23081f72e5faa7956d1b3af">
+              <span>Analyzed revision</span>
+              <code>f4e02952…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-10</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Qwen-MM-Plugins is an Apache-2.0 plugin suite — "make any agent
+harness multimodal-native" — that ships eight capabilities behind one
+MCP framework: <code>blender</code>, <code>freecad</code>,
+<code>omni-av</code>, <code>video-edit</code>, <code>edu-agent</code>,
+<code>example</code>, <code>core</code>, and <code>video-memory</code>.
+Seven of them are tool bundles. The eighth is a memory system, and it is
+the only part of the repository this report covers.</p>
+<p><code>video-memory</code> is about 5,600 lines of Python that turn a
+long video into a persistent, queryable graph and then hand an agent
+nine MCP tools to explore it. The memory outlives the session that built
+it — it is two files sitting beside the video on disk — and it is
+addressed by path, so a second session pointed at the same file gets the
+same memory back.</p>
+<p>What makes it worth a report is that it is a memory of
+<strong>perception rather than conversation</strong>. Almost everything
+in this atlas remembers what someone said or what an agent concluded.
+This remembers what was on screen: typed entities, timestamped actions,
+on-screen text, and relations between them, arranged in a four-level
+hierarchy so an agent can start at a story arc and descend to a
+three-minute segment.</p>
+<p>The retrieval is the strongest part and it is properly built.
+<code>embeddings.py</code> maintains a dense index and a sparse BM25
+index over the same nodes and fuses them with reciprocal rank fusion —
+the docstring is exactly <em>"Hybrid search: dense cosine + sparse BM25,
+fused with RRF"</em>. It also carries
+<code>check_dimension_compatibility</code>, which detects a stored index
+built by a different embedding model than the one now answering queries
+and says so, rather than returning confident nonsense from mismatched
+vectors.</p>
+<p>The weakest part is stated plainly by the design rather than hidden:
+<strong>nothing can be corrected</strong>. There is no delete, forget,
+update, supersede or tombstone surface anywhere in the capability. A
+mis-extracted entity, a wrong causal edge or a hallucinated event is in
+the graph until somebody rebuilds the whole thing from the video. The
+skill's own instructions compensate at the prompt level, and the
+compensation is honest: after locating a segment through memory, the
+agent <em>must</em> re-read the video at a narrow time range, "because
+memory is always coarse and maybe inaccurate."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a node in a tree over one video's
+timeline</strong>, and every node is derived, never asserted. Nothing a
+user says enters this store.</p>
+<p>The tree has four levels:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>What it holds</th>
+<th>Ids</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Root</td>
+<td>Title, description, themes, key entities, emotional tone</td>
+<td>—</td>
+</tr>
+<tr>
+<td>SuperEvent</td>
+<td>A narrative arc with a time range</td>
+<td><code>super_01</code> …</td>
+</tr>
+<tr>
+<td>MacroEvent</td>
+<td>A three-to-eight-minute segment with a summary, key entities, OCR
+text, a dense description and the ASR transcript</td>
+<td><code>macro_0001</code> …</td>
+</tr>
+<tr>
+<td>Subgraph</td>
+<td>The leaf: <code>Entity</code>, <code>MicroEvent</code>,
+<code>OnScreenText</code> and <code>Edge</code> records</td>
+<td><code>macro_0001:ent_001</code> …</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>Edge.relation_type</code> is drawn from <code>SEMANTIC</code>,
+<code>CAUSAL</code>, <code>TEMPORAL</code>, <code>HIERARCHICAL</code>,
+<code>SPATIAL</code> and <code>IDENTITY</code> — a richer relation
+vocabulary than most graph memories in this atlas commit to, and one
+that is produced by a model in a single pass with nothing checking it
+afterwards.</p>
+<p>The state machine is the shortest in this atlas: a memory is
+<strong>built</strong>, and then it is <strong>read</strong>. There is
+no candidate state, no verification, no supersession, no expiry and no
+deletion. The only transition after creation is one that operates on the
+whole store — <code>merge_memories.py</code> concatenates several
+videos' graphs into one, prefixing every id with a short per-video
+key.</p>
+<p>Which means the interesting epistemic question is not how a thing
+becomes a belief, because everything in the store has identical standing
+the moment it is written. It is what the <em>reader</em> is told to do
+about that, and here the design does something unusual: it puts the
+correction outside the memory entirely.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — retrieval selects a narrow time range and the answer is grounded by re-reading the video frames rather than by the graph, which has no delete, update, supersede or tombstone</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: retrieval selects a narrow time range and the answer is grounded by re-reading the video frames rather than by the graph, which has no delete, update, supersede or tombstone
+flowchart TB
+    V[&quot;long video, 30+ min&quot;] --&gt; P1[&quot;phase 1: segment into MacroEvents&lt;br/&gt;JSONL checkpoint per macro&quot;]
+    P1 --&gt; P2[&quot;phase 2: workers build Subgraphs&lt;br/&gt;entities, micro-events, OCR, edges&quot;]
+    P2 --&gt; G[(&quot;graph_memory.json&lt;br/&gt;+ embeddings.npz&quot;)]
+    P1 -. &quot;resume: read checkpoint,&lt;br/&gt;check producer PID + done marker&quot; .-&gt; P2
+
+    G --&gt; Q{&quot;agent query&quot;}
+    Q --&gt; HY[&quot;dense cosine + BM25&lt;br/&gt;fused by RRF&quot;]
+    Q --&gt; EX[&quot;exact: time range,&lt;br/&gt;ASR / OCR substring&quot;]
+    HY --&gt; SEG[&quot;a candidate segment&quot;]
+    EX --&gt; SEG
+    SEG --&gt; RV[&quot;read_video at narrow&lt;br/&gt;start_time / end_time&quot;]
+    RV --&gt; ANS[&quot;answer grounded in frames,&lt;br/&gt;not in memory&quot;]
+
+    G -.-&gt; NC[&quot;no delete, no update,&lt;br/&gt;no supersede, no tombstone&quot;]
+
+    style NC fill:#f4e2bd,stroke:#b8860b
+    style RV fill:#d8ecd8,stroke:#4a7c4a</code></pre></details></figure>
+<p>The green box is the design's answer to the amber one. Memory is not
+trusted to be right; it is trusted to be <em>approximately where to
+look</em>, and the authoritative read is always a fresh look at the
+source. That is a coherent position for a store nobody can correct, and
+it is worth separating from the more common position in this atlas,
+which is to treat retrieved memory as fact and have no recovery path
+when it is wrong.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A <strong>library of MCP servers</strong>, not a service.
+<code>src/mcp_framework.py</code> is the shared harness; each capability
+ships <code>.claude-plugin/</code>, <code>.codex-plugin/</code>,
+<code>.qoder-plugin/</code> and <code>.mcp.json</code> manifests so the
+same Python package mounts in several harnesses.
+<code>video-memory</code> runs as one stdio MCP server exposing nine
+tools.</p>
+<p>The store is two files in a directory, and <code>loader.py</code>
+resolves them in a fixed order: an explicit path, then a directory-level
+merged <code>graph_memory.json</code>, then the per-video
+<code>&lt;video_path&gt;.memory/graph_memory.json</code>.
+<code>embeddings.npz</code> sits beside the graph. There is no
+database.</p>
+<p>Build is a separate offline program —
+<code>skill/script/build_memory/</code>, invoked through
+<code>build_memory.sh</code>, not through the MCP server. It is
+two-phase: <code>pipeline_worker.py</code> reads completed macro events
+from a JSONL checkpoint, checks whether the phase-one producer is still
+alive with <code>_p1_alive(pid)</code>, and consults a done marker to
+distinguish "producer finished" from "producer died". That is a real
+resume, at the level of individual macro events, and it belongs with the
+<a href="../../patterns/recoverable-background-work/">recoverable
+background work</a> pattern.</p>
+<p><code>time_system.py</code> is a pluggable adapter for the time axis:
+a <code>TimeSystem</code> base class converting between seconds and
+display strings and patching time ranges in place, with a
+<code>DefaultTimeSystem</code> and an <code>EgoLifeTimeSystem</code>
+that applies per-day offsets and detects whether
+<code>merge_memories.py</code> already applied them. The presence of a
+named research-dataset adapter is the clearest signal of what this was
+tuned against.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Building requires a <strong>DashScope API key</strong> and a
+vision-language model — <code>build_memory.sh</code> defaults to
+<code>qwen3.7-plus</code> and reads <code>$DASHSCOPE_API_KEY</code>. So
+unlike most file-based memories in this atlas, you cannot store anything
+here without a paid model call, and the cost scales with video length
+rather than with usage.</p>
+<p>Querying is cheaper but not free: <code>search_nodes</code> embeds
+the query, so the same API is on the read path unless the embedding
+backend is local.</p>
+<p>Nothing has to be running. The store is a JSON file, so it is
+readable and hand-editable, and a person who disagrees with an extracted
+event can open it in an editor — which, given section 7, is the only
+correction mechanism there is.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Build.</strong> <code>build_memory.sh</code> parses
+<code>--model</code>, <code>--video-dir</code>,
+<code>--output-dir</code>, <code>--api-key</code> and
+<code>--p2-workers</code>, then runs the two phases. Phase one segments
+the video into <code>MacroEvent</code> records and appends them to a
+JSONL checkpoint. Phase two fans out across workers, calling the model
+per macro event to produce the <code>Subgraph</code> — entities,
+micro-events, on-screen text and edges — with <code>prompts.py</code>
+holding the extraction prompts and <code>llm_client.py</code> the
+transport. <code>build_graph.py</code> assembles the tree and
+<code>schema.py</code> defines every record as a
+<code>@dataclass</code>.</p>
+<p><strong>Embedding.</strong> <code>embeddings.py</code> builds both
+indexes over the node texts. <code>_embed_via_dashscope_native</code>
+batches at 256 with retries; <code>build()</code> parallelises across
+workers and vstacks the result into a float32 array;
+<code>_build_sparse_index</code> and <code>_tokenize</code> construct
+the BM25 side.</p>
+<p><strong>Retrieval.</strong> <code>search()</code> runs dense cosine
+over L2-normalised vectors and sparse BM25 over the same nodes, then
+fuses by RRF. <code>check_dimension_compatibility</code> compares the
+stored matrix's width against the current backend and raises with a
+message naming the likely cause — a memory "built with a different model
+than the current query backend".</p>
+<p><strong>The nine tools.</strong> <code>search_nodes</code> (embedding
+similarity over entity and event nodes, returning top-k with scores and
+ego-graph context), <code>search_asr_text</code>,
+<code>search_ocr_text</code>, <code>search_by_time</code>,
+<code>get_subgraph</code>, <code>get_macro_events</code>,
+<code>get_super_events</code>, <code>get_summary</code>,
+<code>enumerate_events</code>.</p>
+<p><code>search_nodes</code>'s tool description is worth quoting because
+it is teaching query formulation in the schema itself: the embedding
+"matches event descriptions, not questions", with a worked good example
+— <em>"A player scores with an alley-oop dunk"</em> — against a bad one,
+<em>"Which player scored the alley-oop?"</em>, marked "question format,
+poor match with event descriptions". Most tool descriptions in this
+atlas describe parameters. This one describes the failure mode of the
+retriever it fronts.</p>
+<p><strong>Merge.</strong> <code>merge_memories.py</code> scans a
+directory for <code>*.mp4.memory/graph_memory.json</code>, prefixes ids
+with a short video key, concatenates the graphs, and merges the
+<code>.npz</code> files — "rebuilds corrupt ones", per its own
+docstring.</p>
+<p><strong>Correction.</strong> There is no path. A grep of the
+capability for <code>def delete</code>, <code>def remove</code>,
+<code>def forget</code>, <code>def update</code>, <code>tombstone</code>
+and <code>correct</code> returns nothing.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Seven dataclasses in <code>schema.py</code>, all plain and all
+derived:</p>
+<ul>
+<li><code>MicroEvent</code> — <code>event_id</code>,
+<code>event_type</code>, <code>time_range</code>, <code>subject</code>,
+<code>object</code>, <code>action</code>, <code>description</code>,
+<code>macro_id</code>.</li>
+<li><code>Entity</code> — <code>entity_id</code>, <code>name</code>,
+<code>entity_type</code>, <code>attributes</code>,
+<code>description</code>, <code>visual_grounding</code>,
+<code>macro_id</code>.</li>
+<li><code>Edge</code> — <code>source_id</code>, <code>target_id</code>,
+<code>relation_label</code>, <code>relation_type</code>,
+<code>description</code>.</li>
+<li><code>OnScreenText</code> — <code>text_id</code>, <code>text</code>,
+<code>time_range</code>, <code>description</code>,
+<code>macro_id</code>.</li>
+<li><code>Subgraph</code>, <code>MacroEvent</code>,
+<code>SuperEvent</code> — the containers.</li>
+</ul>
+<p><strong>Temporal fields are content time, not record time.</strong>
+<code>time_range</code> says when something happened <em>in the
+video</em>. Nothing records when the memory was written, by which model,
+at which version, or from which build run. That is the absence worth
+naming: this is a store whose every row is a model's opinion, and no row
+carries the provenance that would let a later reader decide how much to
+trust it or which build to blame.</p>
+<p><strong>Scope is the filesystem path.</strong> There is no user id,
+tenant id, agent id or session id in any record. Two people querying the
+same file get the same memory, which is correct for the use case and
+means the store has no boundary of its own.</p>
+<p>There is no separation of episodic from semantic memory because
+everything is episodic: the entire store is one video's events.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three retrieval modes, and they are genuinely different rather than
+three names for a vector search.</p>
+<p><strong>Hybrid semantic.</strong> <code>search_nodes</code> embeds
+the query and runs dense cosine and BM25 in parallel over the node set,
+fusing with RRF. This is the <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
+fusion</a> pattern implemented the way that page argues for — two arms
+whose failure modes differ, combined by rank rather than by a tuned
+score blend, so neither arm's score distribution has to be calibrated
+against the other's.</p>
+<p><strong>Exact lexical.</strong> <code>search_asr_text</code> and
+<code>search_ocr_text</code> search the transcript and the on-screen
+text directly. These matter more than they look: a name, a score, a
+caption or a slide title is exactly the material dense embeddings blur,
+and OCR text as a first-class searchable field is something no other
+system in this atlas has, because no other system is reading a
+screen.</p>
+<p><strong>Structural.</strong> <code>search_by_time</code>,
+<code>get_subgraph</code>, <code>get_macro_events</code>,
+<code>get_super_events</code> and <code>enumerate_events</code> walk the
+tree rather than searching it, which is what makes the hierarchy pay: an
+agent can bound a query to a time range or a story arc and then search
+within it.</p>
+<p>Token budgeting is by level. Starting at <code>get_summary</code> or
+<code>get_super_events</code> returns tens of records; descending
+returns more. Nothing enforces a budget, and nothing bounds the size of
+an <code>enumerate_events</code> result.</p>
+<p>The failure modes follow from the build being a single model pass.
+<strong>Under-recall is bounded by whatever the extractor
+noticed</strong> — an event the vision model did not describe is not in
+the graph and no query will find it, which the routing rule implicitly
+concedes by requiring a frame-level re-read. <strong>Over-recall and
+false recall are unbounded and unmarked</strong>: a hallucinated entity
+is indistinguishable from a real one, since neither carries a
+confidence, a source frame reference beyond
+<code>visual_grounding</code>, or a verification state.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen <strong>once, offline, in batch</strong>, and never
+during a session. That is unusual enough in this atlas to be the
+defining property: there is no capture path, no hot-path extraction, no
+consolidation pass and no background worker running alongside the agent.
+The agent that queries the memory cannot write to it.</p>
+<p>Deduplication is not attempted within a video. Across videos,
+<code>merge_memories.py</code> avoids collisions by prefixing ids rather
+than by resolving that two videos mention the same person — so a
+<code>PERSON</code> entity appearing in ten videos becomes ten unrelated
+nodes, and the <code>IDENTITY</code> relation type that could express
+the link is only ever populated inside one video's subgraph.</p>
+<p><strong>Delete, update and forget do not exist.</strong> Neither does
+conflict handling, because nothing ever writes twice.</p>
+<p>Noisy or adversarial input is worth stating precisely: the input is a
+video, and the extractor is a vision-language model reading it.
+On-screen text is captured verbatim into <code>OnScreenText.text</code>
+and is searchable and returnable to the agent. Nothing marks that text
+as untrusted, so instructions rendered on screen in a video arrive in
+the agent's context as memory content. No system in this atlas has a
+clean answer to that, but most of them are not reading arbitrary
+footage.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the agent, because nothing is written while it runs.
+The build's cost is one vision-model pass over the whole video plus an
+embedding pass over every node, paid once per video before any query is
+possible — and the routing rule says a thirty-minute video is the
+<em>lower</em> bound for using this at all.</p>
+<p>The lag between an event happening and it being retrievable is the
+whole build, which is the correct answer for recorded footage and the
+wrong one for anything live.</p>
+<p>No pass ever re-reads or rewrites the store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Nine MCP tools plus <code>skill/SKILL.md</code>, and the skill is the
+more interesting half. It opens with a section headed <strong>"ROUTING
+RULE — Read This First"</strong> that tells the agent when <em>not</em>
+to use its own default: for a video over thirty minutes the agent must
+use this skill instead of <code>read_video</code>, because
+<code>read_video</code> "samples too few frames once, which is
+ineffective and always misses important content."</p>
+<p>Then a four-step workflow: check whether
+<code>&lt;video_path&gt;.memory/</code> exists, query it if so, build it
+if not, and — step four — after locating a segment, go back to
+<code>read_video</code> with a narrow window.</p>
+<p>Two things are worth taking from that. A memory skill that documents
+the condition under which it is the wrong tool is rare, and a memory
+skill that ends by handing control back to the primary tool is rarer.
+The memory is positioned as an <em>index over a source that is still
+available</em>, not as a replacement for it.</p>
+<p>The model has no agency over memory content: it can read, it cannot
+write, and there is no tool that would let it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is thin.</strong> <code>visual_grounding</code> on
+an entity is the only link back to the footage, and nothing records the
+model, the build run or the timestamp of extraction.</p>
+<p><strong>There is no trust state and no uncertainty
+representation.</strong> Every node reads as equally true. The design's
+answer is procedural rather than structural — the skill tells the agent
+memory is "coarse and maybe inaccurate" and mandates a frame-level
+confirmation — which works exactly as well as the agent's compliance
+with a prompt, and not at all when a tool result is consumed by
+something that did not read the skill.</p>
+<p><strong>The dimension check is the one real integrity
+mechanism.</strong> <code>check_dimension_compatibility</code> catches
+the specific silent failure where a store embedded by one model is
+queried by another, and its error text names the cause instead of
+surfacing a shape mismatch. That failure is easy to hit here, because
+the store is a loose <code>.npz</code> beside a JSON file with nothing
+binding either to a model identifier.</p>
+<p><strong>Recovery is by rebuild.</strong> The resumable checkpoint
+makes an interrupted build cheap to finish, which is the right mechanism
+for the failure this design actually has — a multi-hour model pass dying
+halfway.</p>
+<p><strong>No multi-tenancy, and none claimed.</strong> Anyone who can
+read the video directory can read the memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> There is no <code>CITATION.cff</code>, and
+no <code>arxiv</code>, <code>doi</code> or bibtex block in the README or
+the docs directories. The <code>EgoLifeTimeSystem</code> adapter names a
+published long-video benchmark, and that is the only research anchor in
+the tree — an adapter for a dataset's time convention is evidence the
+code was run against it, not a result.</p>
+<p><strong>No committed benchmark, no eval harness, and no accuracy
+number</strong> anywhere in the repository. For a retrieval system this
+specific — hierarchical graph, hybrid fusion, four-level descent — the
+absence of a single committed retrieval measurement is the gap that
+matters most, because every design decision here is a retrieval-quality
+decision.</p>
+<p>The suite is 21 test files for the whole repository, and for this
+capability the split is lopsided in the wrong direction.
+<code>tests/test_build_memory.py</code> carries 26 test functions over
+the build pipeline. <code>tests/test_video_memory.py</code> carries
+<strong>two</strong>: <code>test_vm_server_lists_tools</code> and
+<code>test_vm_server_graceful_without_memory</code> — the server
+advertises its tools, and it degrades gracefully when no memory exists.
+Neither touches retrieval. The hybrid search, the RRF fusion, the
+dimension check and all nine tools are uncovered.</p>
+<p><strong>I did not run them.</strong> The screen flagged
+<code>pyproject.toml</code> as changed the same day, inside the
+seven-day cooldown, so nothing was installed, and
+<code>tests/conftest.py</code> executes at pytest collection.</p>
+<p>Before trusting this: a retrieval test with a known-answer fixture;
+an assertion that RRF beats either arm alone on that fixture, since
+fusion is the design's central claim; a case exercising
+<code>check_dimension_compatibility</code> from both sides; and a merge
+test asserting that two videos' ids cannot collide.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Write the retriever's failure mode into the tool
+description.</strong> <code>search_nodes</code> tells the model that the
+index matches event descriptions rather than questions, and gives a good
+query and a bad one side by side. The model reads that string every time
+it considers the tool, which is the one place guidance is guaranteed to
+be in context — better than a README nobody loads and better than a
+system prompt competing with everything else.</p>
+<p><strong>Check that the index and the query backend agree before
+searching.</strong> A stored embedding matrix and a live embedding model
+are two artifacts that can drift apart with no error, and the result is
+not a crash but plausible, confidently ranked garbage. One width
+comparison and a message naming the cause converts the worst class of
+silent failure into a startup error.</p>
+<p><strong>Give a hierarchy real entry points at every level.</strong>
+The four-level tree is only useful because there is a tool for each
+level, so an agent can start broad and descend. A hierarchy that can
+only be entered at the leaves is a flat store with extra fields.</p>
+<p><strong>Say when your memory is the wrong tool.</strong> The routing
+rule names a threshold — thirty minutes — below which the agent should
+not use this at all, and step four sends it back to the primary tool for
+the authoritative read. A memory that positions itself as an index over
+a source that still exists is a much weaker claim than "remember this",
+and much easier to keep true.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Shipping a retriever with no retrieval test.</strong> Hybrid
+fusion, hierarchical descent and an embedding index are three
+independent things that can each be subtly wrong while the server still
+lists its tools and returns results. Twenty-six tests on the build and
+two on the query is coverage pointed at the half that fails loudly.</p>
+<p><strong>Treating text extracted from untrusted media as ordinary
+memory content.</strong> On-screen text is captured verbatim, stored,
+searched and returned. Whatever your source medium is, text that came
+out of it and text a user typed should not arrive in a prompt with the
+same standing.</p>
+<p><strong>Deferring correction to the reader.</strong> Telling the
+agent that memory is coarse and must be re-verified is honest, and it is
+not a mechanism: it holds only while the reader follows the instruction,
+and it does nothing about the wrong record, which stays in the graph and
+will be retrieved again tomorrow. If a store cannot be corrected, that
+is a design constraint to state in the schema — a build id, a
+confidence, something a later pass can act on — not a paragraph in a
+skill file.</p>
+<h3 id="fit">Fit</h3>
+<p>Right for exactly what it says: an agent that must answer questions
+about hours of recorded footage it cannot hold in context. In that job
+the offline build, the lack of a write path and the absence of
+correction are all defensible, because the source of truth is the video
+file, it is still there, and the memory's only job is to point at the
+right minute.</p>
+<p>Wrong as a template for anything an agent accumulates over time.
+Every property that makes it fit its job — build once, never update, no
+provenance, no scope key, no deletion — is a property you would have to
+remove to use it for memory about a person, a project or a codebase.
+Read it for the retrieval layer and the routing rule, which transfer
+cleanly, and leave the lifecycle behind.</p>
+<p>The maintenance budget is low and the running cost is not: a
+DashScope key and a vision-model pass over every hour of video, before
+the first question can be asked.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What retrieval accuracy does the hierarchy plus RRF actually
+achieve? Nothing in the repository measures it, and the design makes
+several strong claims that a fixture would settle.</li>
+<li>Does RRF beat dense alone on this content? Fusion is the central
+retrieval decision and the code contains no comparison.</li>
+<li>Is <code>EgoLifeTimeSystem</code> evidence of a published evaluation
+held elsewhere? The adapter implies a benchmark run this tree does not
+contain.</li>
+<li>How does the build behave when the vision model returns a malformed
+subgraph for one macro event — is that macro dropped, retried, or
+written partial? The checkpoint resumes at macro granularity, but the
+partial-failure semantics were not traced.</li>
+<li>What happens to <code>IDENTITY</code> edges across a merge? Ids are
+prefixed per video, so the same person in two videos becomes two nodes;
+whether anything downstream reconciles them was not found.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and store</strong></p>
+<ul>
+<li><code>src/capabilities/video-memory/skill/script/build_memory/schema.py</code>
+— the seven dataclasses</li>
+<li><code>.../qwen_mm_plugins_video_memory/loader.py</code> — three-step
+resolution of <code>graph_memory.json</code> and
+<code>embeddings.npz</code></li>
+<li><code>.../qwen_mm_plugins_video_memory/schema.py</code> — the
+query-side view of the same tree</li>
+</ul>
+<p><strong>Build path</strong></p>
+<ul>
+<li><code>.../build_memory/build_memory.sh</code> — entry point, model
+and worker flags</li>
+<li><code>.../build_memory/pipeline_worker.py</code> — JSONL checkpoint,
+<code>_p1_alive</code>, done marker</li>
+<li><code>.../build_memory/build_graph.py</code>,
+<code>prompts.py</code>, <code>llm_client.py</code></li>
+<li><code>.../build_memory/merge_memories.py</code> — cross-video
+concatenation with id prefixing</li>
+</ul>
+<p><strong>Retrieval path</strong></p>
+<ul>
+<li><code>.../qwen_mm_plugins_video_memory/embeddings.py</code> — dense
++ BM25 + RRF, <code>check_dimension_compatibility</code></li>
+<li><code>.../tools/search_nodes.py</code>,
+<code>search_asr_text.py</code>, <code>search_ocr_text.py</code>,
+<code>search_by_time.py</code></li>
+<li><code>.../tools/get_subgraph.py</code>,
+<code>get_macro_events.py</code>, <code>get_super_events.py</code>,
+<code>get_summary.py</code>, <code>enumerate_events.py</code></li>
+</ul>
+<p><strong>Time</strong></p>
+<ul>
+<li><code>.../qwen_mm_plugins_video_memory/time_system.py</code> —
+<code>TimeSystem</code>, <code>DefaultTimeSystem</code>,
+<code>EgoLifeTimeSystem</code>, <code>detect_time_system</code></li>
+</ul>
+<p><strong>Integration</strong></p>
+<ul>
+<li><code>src/mcp_framework.py</code> — the shared MCP harness</li>
+<li><code>src/capabilities/video-memory/skill/SKILL.md</code> — the
+routing rule and workflow</li>
+<li><code>.../.claude-plugin/plugin.json</code>,
+<code>.codex-plugin/plugin.json</code>,
+<code>.qoder-plugin/plugin.json</code>, <code>.mcp.json</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_build_memory.py</code> — 26 functions over the
+build</li>
+<li><code>tests/test_video_memory.py</code> — two functions over the
+server</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-10</strong> — <a
+href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af"><code class="commit-id" title="f4e02952a059f3a0a23081f72e5faa7956d1b3af">f4e02952…</code></a>
+— first reading, covering the <code>video-memory</code> capability only;
+the other seven capabilities are tool bundles and were not traced.
+Screened before reading: 0 auto-run surfaces, 1 build-time exec
+(<code>tests/conftest.py</code>, which executes at pytest collection), 1
+unpinned manifest, and <code>pyproject.toml</code> changed the same day
+— inside the seven-day cooldown, so nothing was installed and nothing
+was executed. <code>AGENTS.md</code> and <code>CLAUDE.md</code> are
+present and were read as data.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

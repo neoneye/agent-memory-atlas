@@ -147,9 +147,10 @@ does, recovered from what they actually did.</p>
 rule in 40 words or fewer, a set of facets it fires within, the
 corrections that taught it, the officers who supported it and the
 officers who acted against it, firing counters, and a status.
-Apache-2.0, 92 commits, and 116,582 source lines in
-<code>smart-app-service</code> alone against 27,105 lines of tests there
-and 1,679 test functions across the tree.</p>
+Apache-2.0, 92 commits, and 116,582 lines of Python and TypeScript in
+<code>smart-app-service</code> alone — of which 27,105 are the Python
+test suite under <code>tests/</code>, leaving 89,477 lines of everything
+else. 1,688 Python test functions across the tree.</p>
 <p><strong>The status is the reason to read it.</strong> Ten values
 exist and three of them fire:</p>
 <pre class="python"><code>LIVE_STATUSES = (&quot;active&quot;, &quot;candidate&quot;, &quot;dissented&quot;)
@@ -249,8 +250,9 @@ flowchart TB
     style PROV fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The memory lives in one service. <code>smart-app-service</code> is
-116,582 source lines across 239 files, and the clause machinery is a
-small, legible part of it:</p>
+239 Python and TypeScript files totalling 116,582 lines, 111 of those
+files and 27,105 of those lines being the test suite, and the clause
+machinery is a small, legible part of it:</p>
 <ul>
 <li><code>clause_store.py</code> (1,314 lines) — the collection, the
 statuses, the read query, the transitions and the ranking.</li>
@@ -318,16 +320,45 @@ array:</p>
     &quot;version&quot;: doc.get(&quot;version&quot;), &quot;text&quot;: doc.get(&quot;text&quot;),
     &quot;scope_facets&quot;: doc.get(&quot;scope_facets&quot;), &quot;status&quot;: doc.get(&quot;status&quot;),
     &quot;changed_by&quot;: actor or &quot;system&quot;, &quot;cause&quot;: cause, &quot;at&quot;: now}}</code></pre>
-<p>No <code>$pop</code>, no <code>$pull</code> on history, no
-<code>$slice</code> anywhere in the service — the array only grows.</p>
-<p><code>record_dissent</code> is the exception. When an officer's
-dissent share crosses <code>DISSENT_RATIO</code>, it flips
-<code>status</code> to <code>dissented</code> with a bare
-<code>$set</code> and no history push. So the one transition that stops
-a clause being presented as a rule — the one caused by officers
-disagreeing in the field rather than by a curator or a monitor — is the
-one transition the trail does not record. Every other status writer in
-the file routes through <code>set_status</code>.</p>
+<p><code>clause_store.py</code> contains no <code>$pop</code>, no
+<code>$pull</code> and no <code>$slice</code> at all, and it is the only
+writer of <code>smartapp_clauses</code> inside the service —
+<code>main.py</code> and <code>memory_export.py</code> only read it — so
+nothing trims <code>history</code>; the array only grows.</p>
+<p>The service does cap arrays elsewhere, which is the comparison that
+gives the clause store its shape. <code>entity_links.py:210</code>
+pushes each new reference with
+<code>{"$each": [ref], "$slice": -_MAX_REFS}</code> at
+<code>_MAX_REFS = 200</code> while <code>$inc</code>-ing a separate
+<code>ref_count</code>, and <code>fraud_checks.py:1495</code> does the
+same at <code>-50</code>; four further <code>$slice</code> uses
+(<code>fraud_checks.py:1003,1542,1568</code>,
+<code>entity_links.py:215</code>) are read-time projections that fetch
+only the last few refs rather than drag a hot entity's whole history
+over the wire. Those are evidence pointers on high-cardinality
+fingerprint and entity documents, and dropping the oldest is the right
+call there. The clause history is the one array the project chose not to
+bound.</p>
+<p><code>record_dissent</code> is the exception to
+<code>set_status</code>. When an officer's dissent share crosses
+<code>DISSENT_RATIO</code>, it flips <code>status</code> to
+<code>dissented</code> with a bare <code>$set</code> and no history
+push. So the one transition that stops a clause being presented as a
+rule — the one caused by officers disagreeing in the field rather than
+by a curator or a monitor — is the one transition the trail does not
+record. Every other status writer in the file routes through
+<code>set_status</code>.</p>
+<p>Outside the service there is a second bypass, and it is the one the
+published run used.
+<code>demo-data/tenants/acme-bank/scripts/memory_ab_dsa.py:134</code>
+toggles the seeded clause between arms with
+<code>update_one({...}, {"$set": {"status": status}})</code> straight
+onto the collection, and <code>memory_ab.py:55</code> does the same with
+<code>update_many</code> across the whole app. They are harness scripts
+rather than product code, but they demonstrate that the audited path is
+a convention of <code>clause_store.py</code> and not a property of the
+store: anything holding the Mongo URI can change a clause's status and
+leave no history entry.</p>
 <h3
 id="retirement-and-why-the-same-lesson-comes-back-consolidationpy513">Retirement,
 and why the same lesson comes back
@@ -417,7 +448,7 @@ written cause.</li>
 <li>An append-only per-clause history carrying actor and cause.</li>
 <li>A regression test for a privilege-escalation hole in the governance
 path.</li>
-<li>A published null result. Apache-2.0, nine CI workflows, 1,679 test
+<li>A published null result. Apache-2.0, nine CI workflows, 1,688 test
 functions.</li>
 </ul>
 <p>Gaps:</p>
@@ -434,19 +465,20 @@ so the paraphrase of a rule three officers taught is LLM-written even
 though the policy it encodes is not — mitigated by
 <code>match_tokens</code> and by never rewriting, not removed.</li>
 <li><strong>Nine days old.</strong> The first commit is 16 August 2026
-and the pinned commit is 25 August; 92 commits carry 116,582 source
-lines in one service, so most of this tree arrived in bulk rather than
-accreting in the open, and the lockfiles predate the repository's own
-first commit.</li>
+and the pinned commit is 25 August; 92 commits carry 116,582 lines in
+one service, so most of this tree arrived in bulk rather than accreting
+in the open, and the lockfiles predate the repository's own first
+commit.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,679 test functions across 169 files, with 85 in
+<p>1,688 Python test functions across 166 files, with 85 in
 <code>test_clause_store.py</code> and 24 in
-<code>test_judgement_hierarchy.py</code> covering the memory directly.
-The suites were not run: eight dependency surfaces sat inside the
-seven-day freshness cooldown at this pin, so nothing here was installed
-or executed.</p>
+<code>test_judgement_hierarchy.py</code> covering the memory directly —
+1,137 of the 1,688 sit in <code>smart-app-service</code>. The suites
+were not run: eight dependency surfaces sat inside the seven-day
+freshness cooldown at this pin, so nothing here was installed or
+executed.</p>
 <p>The negative cases are the good ones.
 <code>test_judgement_hierarchy.py:462-486</code> creates a clause,
 asserts it exists with <code>sop_conflict</code> status, asserts
@@ -471,7 +503,7 @@ employment verified with the employer directly — the submitted document
 set is not enough."</em> Nineteen DSA-sourced applications were run
 twice with identical inputs, the only difference being whether
 <code>C-002</code> was active, plus a control arm of non-DSA files.</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Reported</th>
@@ -496,7 +528,7 @@ twice with identical inputs, the only difference being whether
 <td>sign test over 15 discordant pairs</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>The statistic recomputes. A one-sided sign test with 15 discordant
 pairs and at most one against gives
 <code>(1 + 15) / 2¹⁵ = 0.000488</code>, which is the reported
@@ -593,7 +625,40 @@ the same retention rules as the case data?</li>
 </ul>
 <h2 id="history">History</h2>
 <p><strong>2026-08-31</strong> — <a
-href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6"><code>3106ce5f122d00fe63b8ec9d445da771170fdcd6</code></a>
+href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6"><code class="commit-id" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">3106ce5f…</code></a>
+— same pin, three corrections. Section 4 and the <code>audit_log</code>
+evidence record asserted <em>"No <code>$pop</code>, no
+<code>$pull</code> on history, no <code>$slice</code> anywhere in the
+service"</em>. <code>$slice</code> appears six times —
+<code>fraud_checks.py:1003,1495,1542,1568</code> and
+<code>entity_links.py:210,215</code> — so the evidence was false as
+written even though the conclusion was not: none of the six touches the
+clause <code>history</code> array, <code>clause_store.py</code> carries
+no <code>$pop</code>, <code>$pull</code> or <code>$slice</code> at all,
+and it is the only writer of <code>smartapp_clauses</code> in the
+service. The claim is re-scoped to the store, and the capped
+<code>refs</code> arrays elsewhere (200 per entity link, 50 per
+fingerprint, with <code>ref_count</code> incrementing past the trim) are
+described as the contrast they are. Verifying that also turned up a
+second audit bypass beside <code>record_dissent</code>:
+<code>demo-data/tenants/acme-bank/scripts/memory_ab_dsa.py:134</code>
+and <code>memory_ab.py:55</code> set <code>status</code> directly on the
+collection, which is how the published A/B run toggled
+<code>C-002</code>. <code>audit_log</code> was re-checked in both
+directions and holds — the mark rests on a named append-only mutation
+record in the system's own store, which <code>set_status</code> and
+<code>reconcile_scope_families</code> provide; no mark moved. Second,
+section 1 read <em>"116,582 source lines in
+<code>smart-app-service</code> alone against 27,105 lines of tests
+there"</em>: both figures are correct but nested, not disjoint — the
+116,582 counts all 239
+<code>.py</code>/<code>.ts</code>/<code>.tsx</code> files including the
+111 test files, leaving 89,477 lines outside <code>tests/</code>. Third,
+the test-function count was 1,679 across 169 files; an independent
+recount at this pin gives <strong>1,688 <code>def test_</code> across
+166 files</strong>, 1,137 of them in <code>smart-app-service</code>.</p>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6"><code class="commit-id" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">3106ce5f…</code></a>
 — first reading, at 92 commits and nine days of public history. Screened
 before reading: no auto-run surface, eight build-time execution
 surfaces, twenty-seven unpinned surfaces and <strong>eight dependency

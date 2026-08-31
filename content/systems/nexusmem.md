@@ -464,7 +464,7 @@ pre-commit warning prints and asks nothing either.
 **The review surface is the CLI, and only the CLI.** `nexusmem review <nodeId>
 --verify` / `--reject` (`src/cli/commands/review.ts`, wired at
 `src/cli/index.ts:283-297`, which refuses unless exactly one of the two flags is
-passed) resolves the node, rejects an id belonging to another project, and writes
+passed) resolves the node, refuses an id belonging to another project, and writes
 the person's verdict to `trust_state` through `store.setTrustState`. Beside it
 `nexusmem stale --dismiss <nodeId>` records the other kind of verdict — that a
 contradiction the local model proposed is wrong — by setting `dismissed = 1` on

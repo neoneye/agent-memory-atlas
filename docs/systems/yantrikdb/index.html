@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Four published benchmark
+conclusions withdrawn in a CORRECTIONS file, because the condition
+labelled 'structured memory' had been a 120-line simulator — and a
+deletion story with restore-no-resurrect that says which parts are not
+wired yet.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="YantrikDB — Agent Memory Atlas">
+    <meta property="og:description" content="Four published benchmark
+conclusions withdrawn in a CORRECTIONS file, because the condition
+labelled 'structured memory' had been a 120-line simulator — and a
+deletion story with restore-no-resurrect that says which parts are not
+wired yet.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="YantrikDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="Four published benchmark
+conclusions withdrawn in a CORRECTIONS file, because the condition
+labelled 'structured memory' had been a 120-line simulator — and a
+deletion story with restore-no-resurrect that says which parts are not
+wired yet.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>YantrikDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "YantrikDB",
+      "description": "Four published benchmark conclusions withdrawn in a CORRECTIONS file, because the condition labelled 'structured memory' had been a 120-line simulator \u2014 and a deletion story with restore-no-resurrect that says which parts are not wired yet.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory database that corrects itself</p>
+          <h1>YantrikDB</h1>
+          <p class="document-deck">Four published benchmark conclusions
+withdrawn in a CORRECTIONS file, because the condition labelled
+'structured memory' had been a 120-line simulator — and a deletion story
+with restore-no-resurrect that says which parts are not wired yet.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrikdb-server">
+              <span>Source</span>
+              <strong>yantrikos/yantrikdb-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773" title="f8378f98bb0d25128f473ab4e7c5cac829c22773">
+              <span>Analyzed revision</span>
+              <code>f8378f98…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>YantrikDB is a memory database in Rust — about 63,000 lines across
+six crates, AGPL-3.0 — that positions itself against vector databases on
+lifecycle rather than retrieval: "Vector databases store memories. They
+don't manage them." It ships as an embeddable crate, a server, an MCP
+endpoint, a Python client and a WASM build.</p>
+<p><strong>The first thing to read is <code>CORRECTIONS.md</code>, and
+it is why this report exists.</strong></p>
+<p>On 2026-04-19 the project withdrew four published conclusions from
+its own Phase 3 benchmarks. The reason, stated in the file: the
+condition labelled <code>C_structured</code> / "structured memory" had
+been implemented by a "~120-line Python module that stored memories as a
+list of <code>(key, value, session)</code> tuples with Dice word-overlap
+retrieval". The file then enumerates what that simulator lacked — no
+embeddings, no <code>think()</code> loop, no multi-signal scoring, no
+knowledge graph, no conflict detection, no temporal validity — and
+concludes that the benchmarks measured "'stripped-down key/value dict vs
+markdown' — not 'yantrikdb vs markdown'".</p>
+<p>Four named conclusions are listed as withdrawn, including "40%
+stale-rate shows structured memory can't handle supersession" and "Null
+result on RFC 006 temporal substrate". The section on how it was caught
+quotes the maintainer's own words from a consultation — <em>"the core
+functionality did not run at all"</em> — followed by four words:
+<strong>"Correct observation. No defense."</strong></p>
+<p>The rerun is committed as <code>docs/phase3e/</code> with raw harness
+logs, and the preliminary numbers move substantially in the project's
+favour. That is the part worth noticing: the correction was published
+<em>before</em> the favourable rerun was complete, and the withdrawn
+conclusions were ones that made the project look worse. The file's own
+justification is the sentence this atlas would write: "Preserved
+publicly because the audit trail matters more than a clean-looking
+repo."</p>
+<p><strong>The second thing is the deletion design.</strong>
+<code>commit/retention.rs</code> implements what RFC 011 calls
+<strong>restore-no-resurrect</strong>: "a memory that was tombstoned and
+whose tombstone has propagated to all replicas must not [come back]",
+enforced by keeping tombstone entries in the log "at least until every
+[replica has seen them]" and gating watermark advancement on it. Beside
+it, <code>forget/crypto_shred.rs</code> destroys a tenant's
+data-encryption key so that "every encrypted blob (live + backup)
+becomes ciphertext nobody can decrypt".</p>
+<p>And that module's header says, under a heading of its own, exactly
+what is not built: wiring the shredder into the tenant-delete path, the
+encryption layer that would produce the blobs needing that key, and the
+admin <code>DELETE</code> endpoint that would call it. "RFC 011 PR-4
+substrate is just the destruction orchestrator."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory carries text, <code>certainty</code>,
+<code>importance</code>, <code>valence</code>, <code>domain</code>,
+<code>source</code> and an <code>emotional_state</code>. It lives in a
+namespace inside a tenant.</p>
+<p>The lifecycle verb set is unusually explicit: <code>remember</code>,
+<code>recall</code>, <code>forget</code>, <code>relate</code>,
+<code>correct</code>, and <code>think</code>. The last is the
+distinguishing one — an operator-invoked consolidation and conflict-scan
+pass rather than a background daemon, so a caller decides when the
+database thinks about what it holds.</p>
+<p><code>correct</code> is the interesting mutation. It does not edit in
+place: the original is tombstoned, a new version is created, "entity
+relationships are transferred to the new memory", and an optional
+<code>correction_note</code> records why.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it
+flowchart TD
+    R[&quot;remember / correct / forget / relate&quot;] --&gt; CL[&quot;commit substrate — one mutation grammar,&lt;br/&gt;idempotent on op_id, per-tenant log_index&quot;]
+    CL --&gt; AP[&quot;applier → storage + HNSW index&quot;]
+    CL --&gt; IB[&quot;invalidation bus&quot;]
+    IB --&gt; TD[&quot;time-decay index drops the tombstoned rid&quot;]
+    CO[&quot;correct(rid, new_text)&quot;] --&gt; T1[&quot;original tombstoned&quot;]
+    CO --&gt; T2[&quot;corrected version created,&lt;br/&gt;entity relations transferred&quot;]
+    T1 --&gt; RET[&quot;retention: tombstone kept in the log until&lt;br/&gt;every replica watermark has passed it&quot;]
+    RET --&gt; RNR[&quot;restore cannot resurrect it&quot;]
+    T1 -.-&gt;|&quot;snapshots already shipped to S3&quot;| CS[&quot;crypto-shred: destroy the tenant DEK&quot;]
+    CS -.-&gt;|&quot;no caller, no encryption layer — stated in the header&quot;| GAP[&quot;not wired at this commit&quot;]</code></pre></details></figure>
+<p>The dotted path is the one the module documents as incomplete, drawn
+where its own header puts it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six crates: <code>yantrikdb-server</code> (59,700 lines) holds
+everything, with <code>yantrikdb-protocol</code>, <code>yql</code> (a
+query language), <code>yantrikdb-witness</code>,
+<code>yantrikdb-wasm</code> and <code>yantrikdb-ml</code> around it.</p>
+<p>The server is organised by concern in a way that reads like a
+database rather than a memory library: <code>admission</code> (with a
+circuit breaker), <code>auth</code>, <code>backup</code>,
+<code>cluster</code>, <code>commit</code>, <code>forget</code>,
+<code>index</code>, <code>jobs</code>, <code>key_provider</code>,
+<code>migrations</code>, <code>pack_store</code>, <code>restore</code>,
+<code>retrieval</code>, <code>security</code>, <code>tenant_pool</code>,
+<code>yrp</code> (the consensus/replication path) and
+<code>socratic</code> (the conflict layer).</p>
+<p><code>commit/mod.rs</code> is the spine and its design contract is
+worth quoting because it is the discipline most memory systems in this
+atlas lack: every write "flows through this module instead of mutating
+storage directly", producing "a single canonical mutation grammar, a
+single durable log shape, and a single trait that the API handlers
+call". Commits are idempotent on <code>op_id</code> so clients can
+retry, and <code>log_index</code> is monotonic <strong>per
+tenant</strong> — multi-tenant servers "do NOT share log indices (avoids
+cross-tenant leakage…)".</p>
+<p><code>LocalSqliteCommitter</code> is the single-node implementation
+and an openraft-backed <code>RaftCommitter</code> is named as the
+cluster one, both behind the same trait, so "the API handlers don't
+change between modes".</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — API handler →
+<code>MutationCommitter::commit</code> → <code>memory_commit_log</code>
+→ <code>applier</code> → storage, HNSW index, and the invalidation
+bus.</p>
+<p><strong>Correct</strong> — <code>memory_correct</code>
+(<code>src/yantrikdb/mcp/tools.py:264</code>) → <code>db.correct</code>
+→ tombstone plus new version plus relation transfer.</p>
+<p><strong>Forget</strong> — <code>memory_forget</code> →
+<code>db.forget</code> → a tombstone mutation, an
+<code>InvalidationEvent::Tombstoned { tenant_id, rid }</code> on the
+bus, and the time-decay index dropping the row
+(<code>retrieval/time_decay.rs:332</code>).</p>
+<p><strong>Retention</strong> — <code>commit/retention.rs</code>
+reconciles four watermarks (source log, backup manifest, tombstone,
+replica) before archiving or truncating.</p>
+<p><strong>Think</strong> — <code>/v1/think</code> runs consolidation
+and the conflict scan; <code>socratic/</code> holds the evidence and
+operator layer behind it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The memory row is small and the interesting fields are affective and
+epistemic rather than structural: <code>certainty</code> (a float),
+<code>importance</code>, <code>valence</code> (−1 to 1),
+<code>emotional_state</code>, <code>domain</code>,
+<code>source</code>.</p>
+<p>Around it sit the database's own structures — the commit log with
+<code>op_id</code> and per-tenant <code>log_index</code>, the pack
+store, the HNSW index, and the time-decay index which "materializes that
+sort" per <code>(tenant_id, namespace)</code> so the most-decayed-first
+query does not scan.</p>
+<p>There is no status field, no validity interval and no supersession
+pointer on the row. Correction is expressed as a <em>pair of mutations
+in the log</em> — tombstone the old, insert the new — rather than as
+state on the record. That is a database's answer rather than a memory
+system's, and it has a real consequence: the history lives in the log
+and the row shows only the present.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Multi-signal scoring over an HNSW vector index, blending similarity,
+temporal decay, importance and graph structure, with namespace-scoped
+recall.</p>
+<p>The time-decay index is the piece worth naming. Rather than computing
+decay at query time across the corpus, it materialises the decayed
+ordering per <code>(tenant_id, namespace)</code> and keeps it in sync
+with commit-log mutations by subscribing to the invalidation bus. A
+tombstone published on the bus removes the row from the index; the
+comment notes the coarse-grained approach is acceptable because
+"tombstones are rare and per-tenant scoping [bounds the cost]".</p>
+<p>Scope is <code>tenant_id</code> plus <code>namespace</code>
+throughout, reinforced by the per-tenant log and the tenant pool. The
+rerun harness in <code>docs/phase3e/</code> uses "namespace-scoped
+recall for per-experiment isolation", which is the same mechanism used
+as an experimental control.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The single-committer design is the strongest architectural choice
+here. Because every mutation — including tenant config changes — goes
+through one grammar and one log, the questions this atlas usually has to
+answer by tracing several subsystems ("does forget also update the
+index?", "can a background pass undo a correction?") reduce to "what
+does the applier do with this mutation".</p>
+<p>Idempotency on <code>op_id</code> means a retried write returns the
+original receipt rather than duplicating, which is the correctness
+property most memory systems here leave to chance.</p>
+<p><strong>No rejected-value record exists.</strong> The tombstone is
+keyed on <code>rid</code>. Its guarantees are about durability and
+replication — that a delete survives a restore, that it propagates
+before the log truncates — not about refusing a re-assertion of the same
+content. <code>correct</code> produces a new memory whose text is
+whatever the caller supplied; nothing compares it against previously
+tombstoned values.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with <code>memory_remember</code>,
+<code>memory_recall</code>, <code>memory_forget</code>,
+<code>memory_correct</code>, <code>memory_relate</code>,
+<code>memory_think</code> and a stats tool reporting "counts of active,
+consolidated, tombstoned, and archived memories" — exposing the
+lifecycle state distribution to the agent, which is a small good
+idea.</p>
+<p>Also an HTTP API (<code>/v1/remember</code>, <code>/v1/recall</code>,
+<code>/v1/think</code>), a Python client, an embeddable crate and a WASM
+build. Client-side embeddings are supported and used in the rerun
+harness.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> <code>tenant_id</code> and
+<code>namespace</code> reach the storage layer, the time-decay index,
+the invalidation bus and the commit log, and the log's design contract
+names cross-tenant leakage as the thing per-tenant indices prevent.</p>
+<p><strong>Audit log — awarded.</strong> <code>memory_commit_log</code>
+is the durable record of every mutation, append-only, idempotent on
+<code>op_id</code>, with retention gated on watermarks rather than time
+alone. It is a database write-ahead log doing double duty as the memory
+audit trail, which is a legitimate and unusually rigorous way to get
+one.</p>
+<p><strong>Tombstone — withheld</strong>, for the reason in section 7.
+What YantrikDB has instead is the best <em>deletion durability</em>
+story in this atlas, and it is a different axis: restore-no-resurrect,
+tombstone propagation watermarks, and a crypto-shred design for
+backups.</p>
+<p><strong>Trust state — no.</strong> <code>certainty</code> is a float;
+conflict detection is a scan.</p>
+<p><strong>Bitemporal, human review, negative eval — no.</strong>
+<code>ShredPlan</code> is the nearest thing to a review surface — it is
+"returned by <code>prepare()</code> before any destructive op runs, so
+operators (or the admin API) can preview + confirm" — and it belongs to
+an unwired path.</p>
+<p><strong>The candour is the safety property.</strong> Two modules in
+this tree state their own incompleteness in their headers: crypto-shred
+lists three missing pieces under "What's NOT here (deferred)", and the
+commit module names which implementation lands in which PR. A reader can
+tell what runs from what is planned without reading the code, which is
+the opposite of the situation in several other reports here.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, and an unusual amount of committed
+methodology: <code>DESIGN.md</code>, <code>CONCURRENCY.md</code>,
+<code>ROADMAP.md</code>, <code>MCP_REDESIGN.md</code>, numbered RFCs
+referenced throughout the code, and <code>docs/phase3*/</code> holding
+the benchmark work.</p>
+<p><strong>I did not run anything.</strong> The screen flagged ten
+dependency manifests inside the seven-day cooldown including
+<code>Cargo.lock</code> and <code>uv.lock</code>; the tree was read.</p>
+<p>The benchmark story is the report. Phases 3A–3D are published, then
+withdrawn in part; Phase 3E is the rerun against the real engine over
+HTTP with client-side MiniLM-L6-v2 embeddings, <code>/v1/think</code>
+after each session, and namespace isolation per experiment. Raw harness
+logs are committed (<code>harness_3c_full_pipeline_log.txt</code>,
+<code>harness_3c_rerun_freshdb_log.txt</code>).</p>
+<p>The preliminary rerun at n=2 moves overall score 0.584 → 0.850,
+supersession accuracy 0.500 → 0.800 and stale-error rate 0.400 → 0.200.
+<strong>n=2 is two runs</strong>, the file says "preliminary", and this
+report repeats neither the old numbers nor the new ones as findings.
+What is checkable is the process: the withdrawal names its own errors,
+the rerun is committed with logs, and the README carries the correction
+notice at the top rather than in a changelog.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Publish the correction, and publish it before the favourable
+rerun.</strong> <code>CORRECTIONS.md</code> names four withdrawn
+conclusions, the file that produced them, and what that file lacked.
+"Preserved publicly because the audit trail matters more than a
+clean-looking repo" is the whole argument.</li>
+<li><strong>Route every mutation through one committer.</strong> One
+grammar, one log, one trait, idempotent on <code>op_id</code>, and
+suddenly "does forget update the index" has a single answer instead of
+six.</li>
+<li><strong>Give each tenant its own log index.</strong> Sharing a
+monotonic counter across tenants leaks ordering information and couples
+their retention; separating them costs nothing.</li>
+<li><strong>Keep a tombstone in the log until every replica has seen
+it.</strong> Restore-no-resurrect is the property every backup story
+needs and almost none states, and it is a watermark comparison.</li>
+<li><strong>Reconcile watermarks before truncating.</strong> Source log,
+backup manifest, tombstone and follower position — truncate on the
+minimum, not on age.</li>
+<li><strong>Materialise the decayed ordering per scope and maintain it
+from the mutation bus.</strong> Computing decay at query time over the
+whole corpus is the common design and it does not survive scale.</li>
+<li><strong>Say what is not wired, in the header, with a list.</strong>
+Two modules here do it; it turns a gap from a defect a reader discovers
+into a decision the author recorded.</li>
+<li><strong>Return a plan before a destructive operation.</strong>
+<code>ShredPlan</code> previews what is about to be destroyed so an
+operator can confirm, and <code>ShredOutcome</code> records what
+actually happened including the idempotent already-gone case.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not benchmark your own condition with a proxy.</strong> A
+120-line dict with Dice overlap standing in for the engine invalidated
+four conclusions across four experiment phases. If the condition is your
+product, run your product.</li>
+<li><strong>Do not read the crypto-shred as shipped erasure.</strong>
+The orchestrator exists; the encryption layer, the caller and the
+endpoint do not, and the header says so.</li>
+<li><strong>Do not expect a correction to prevent re-assertion.</strong>
+<code>correct</code> tombstones the original and inserts whatever text
+the caller supplies; the log records both and refuses neither.</li>
+<li><strong>Do not read n=2 preliminary numbers as a result.</strong>
+The project labels them; a reader skimming the table is the risk.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants agent memory with database properties —
+a commit log, tenancy, replication, retention, backup and restore — and
+is willing to run a Rust server and accept AGPL-3.0. It is the most
+operationally serious system in this batch and the least opinionated
+about cognition: <code>certainty</code> and <code>valence</code> are
+fields, not mechanisms.</p>
+<p>Anyone building a memory <em>store</em> rather than a memory
+<em>layer</em> should read <code>commit/mod.rs</code> and
+<code>commit/retention.rs</code>. They are the clearest statement in
+this atlas of what deletion has to mean once replicas and backups
+exist.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the Phase 3E rerun finished?</strong> The README promised
+"full corrected findings post coming 2026-04-20"; what is committed is
+preliminary at n=2.</li>
+<li><strong>Has crypto-shred been wired since?</strong> Three pieces are
+listed as deferred; a later commit may have landed them, and at this one
+the erasure claim rests on logical tombstones only.</li>
+<li><strong>What does the <code>think</code> loop do with a detected
+conflict?</strong> <code>socratic/</code> holds evidence and an
+operator; whether a conflict resolves automatically, surfaces, or waits
+was not traced.</li>
+<li><strong>Is <code>RaftCommitter</code> implemented?</strong> The
+header names it as landing in PR-4; which committer a real deployment
+runs decides whether restore-no-resurrect is exercised at all.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The correction</strong> — <code>CORRECTIONS.md</code> (what
+was wrong <code>:9</code>, where it was cited <code>:35</code>, how it
+was caught <code>:45</code>, the rerun <code>:53</code>), the README
+notice <code>:3-9</code>, <code>docs/phase3e/</code>
+(<code>FINDINGS_POST_DRAFT.md</code>, the raw harness logs)</p>
+<p><strong>Commit substrate</strong> —
+<code>crates/yantrikdb-server/src/commit/mod.rs</code> (the design
+contract <code>:16-25</code>), <code>local.rs</code>,
+<code>applier.rs</code>, <code>mutation.rs</code>,
+<code>submitter.rs</code>, <code>trait_def.rs</code>,
+<code>tenant_pool.rs</code></p>
+<p><strong>Deletion</strong> —
+<code>crates/yantrikdb-server/src/commit/retention.rs</code>
+(restore-no-resurrect <code>:45-50</code>),
+<code>crates/yantrikdb-server/src/forget/crypto_shred.rs</code> (the
+rationale <code>:16-23</code>, the deferred list <code>:25-33</code>),
+<code>crates/yantrikdb-server/src/restore/</code>,
+<code>backup/</code></p>
+<p><strong>Correction and forget</strong> —
+<code>src/yantrikdb/mcp/tools.py:248</code>
+(<code>memory_forget</code>), <code>:264</code>
+(<code>memory_correct</code>), <code>src/yantrikdb/cli.py:59</code></p>
+<p><strong>Retrieval</strong> —
+<code>crates/yantrikdb-server/src/retrieval/time_decay.rs</code> (the
+materialised index <code>:13</code>, the invalidation subscriber
+<code>:314-340</code>), <code>crates/yantrikdb-server/src/index/</code>,
+<code>crates/yql/</code></p>
+<p><strong>Conflict</strong> —
+<code>crates/yantrikdb-server/src/socratic/</code>
+(<code>evidence.rs</code>, <code>operator.rs</code>)</p>
+<p><strong>Operations</strong> —
+<code>crates/yantrikdb-server/src/admission/circuit_breaker.rs</code>,
+<code>jobs/</code>, <code>yrp/</code> (consensus, with fail-stop on
+persistence uncertainty), <code>key_provider/</code>,
+<code>security/</code>, <code>pack_store.rs</code>,
+<code>pack_reconciler.rs</code></p>
+<p><strong>Documentation</strong> — <code>DESIGN.md</code>,
+<code>CONCURRENCY.md</code>, <code>ROADMAP.md</code>,
+<code>MCP_REDESIGN.md</code>, <code>SERVER_README.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773"><code class="commit-id" title="f8378f98bb0d25128f473ab4e7c5cac829c22773">f8378f98…</code></a>
+— first reading. Screened before reading: no auto-run surface, no
+build-time execution, ten dependency manifests inside the seven-day
+cooldown including <code>Cargo.lock</code> and <code>uv.lock</code>. The
+tree was read, never built, and no test or benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

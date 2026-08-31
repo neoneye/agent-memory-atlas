@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Combine semantic similarity,
+lexical exactness, metadata filters, and bounded reranking instead of
+trusting one retrieval signal.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hybrid Retrieval
+Fusion — Agent Memory Atlas">
+    <meta property="og:description" content="Combine semantic
+similarity, lexical exactness, metadata filters, and bounded reranking
+instead of trusting one retrieval signal.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hybrid Retrieval
+Fusion — Agent Memory Atlas">
+    <meta name="twitter:description" content="Combine semantic
+similarity, lexical exactness, metadata filters, and bounded reranking
+instead of trusting one retrieval signal.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hybrid Retrieval Fusion — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hybrid Retrieval Fusion",
+      "description": "Combine semantic similarity, lexical exactness, metadata filters, and bounded reranking instead of trusting one retrieval signal.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Retrieval</p>
+          <h1>Hybrid Retrieval Fusion</h1>
+          <p class="document-deck">Combine semantic similarity, lexical
+exactness, metadata filters, and bounded reranking instead of trusting
+one retrieval signal.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Reporting an established practice</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Retrieve both conceptually related memory and exact facts, while
+enforcing scope and lifecycle constraints before results reach the
+agent.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Vector search is good at paraphrase and topical similarity but weak
+on exact names, identifiers, dates, paths, and negation. Lexical search
+catches exact strings but misses paraphrase. Either signal alone
+produces avoidable blind spots.</p>
+<p>The size of that blind spot is measurable. On LIMIT, a benchmark
+built to expose single-vector retrieval, BM25 reaches Recall@20 of
+0.9490 where Contriever reaches 0.0265 (<a
+href="https://arxiv.org/abs/2605.29384">Clavié et al., <em>Latent
+Terms</em>, arXiv:2605.29384</a>, 28 May 2026). That paper also shows
+some of the gap is recoverable from the dense model — but recovering it
+is a second index, not a better read of the first. It trains a new
+sparse autoencoder on the retriever's frozen final-layer
+<strong>token</strong> activations and scores the resulting features
+with BM25 over an inverted index; the pooled embedding is never
+rescored. The recovery is partial (Contriever 0.0265 → 0.5100, still
+0.44 short of BM25) and it does not hold everywhere — on a multi-vector
+model it loses ground on both LIMIT and BEIR. Read it as evidence that
+lexical structure exists in token-level activations and needs its own
+scoring machinery to be usable, which is an argument for keeping a
+lexical arm rather than for expecting an embedding to grow one.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Apply hard filters first, retrieve candidates through independent
+channels, normalize or rank their outputs, then fuse and cap the final
+context:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — hard filters run before any candidate is scored, three arms then produce candidates that are fused, optionally reranked, and cut to a token budget</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: hard filters run before any candidate is scored, three arms then produce candidates that are fused, optionally reranked, and cut to a token budget
+flowchart TD
+    Q[&quot;Query&quot;] --&gt; F[&quot;Hard scope, lifecycle,&lt;br/&gt;sensitivity filters&quot;]
+    F --&gt; V[&quot;Vector&lt;br/&gt;candidates&quot;]
+    F --&gt; L[&quot;BM25 / FTS&lt;br/&gt;candidates&quot;]
+    F --&gt; E[&quot;Entity or&lt;br/&gt;exact-key candidates&quot;]
+    V --&gt; R[&quot;Rank fusion&quot;]
+    L --&gt; R
+    E --&gt; R
+    R --&gt; X[&quot;Optional reranker&quot;]
+    X --&gt; B[&quot;Diversity +&lt;br/&gt;token budget&quot;]</code></pre></details></figure>
+<p>Reciprocal-rank fusion is a useful baseline because it combines
+rankings without pretending incomparable scores share a calibrated scale
+— the property its authors claim for it, "without regard to the
+arbitrary scores returned by particular ranking methods" (<a
+href="https://dl.acm.org/doi/10.1145/1571941.1572114">Cormack, Clarke
+and Büttcher, SIGIR '09</a>). Weighted score fusion can work when every
+component has measured, bounded behavior.</p>
+<p><strong>The constant is a default, not a measurement.</strong>
+<code>k = 60</code> was fixed in a pilot that fused <em>thirty</em>
+configurations of a single search engine, over a curve flat from 30 to
+100; the paper's own words are that 60 "was near-optimal, but that the
+choice was not critical", and 80 scored fractionally higher in the table
+it comes from.</p>
+<p>What <code>k</code> controls is how much of an arm's rank ordering
+survives fusion. Within one arm, <code>k = 60</code> compresses the
+whole top 60 into a factor of 1.967× — so a first-place hit is worth
+barely more than a sixtieth-place one, and cross-arm agreement dominates
+rank position. How much agreement is worth is <em>not</em> a fixed
+factor: a document at rank <code>a</code> in one arm gains
+<code>1 + (k+a)/(k+b)</code> by also appearing at rank <code>b</code> in
+the other, which reaches 2× only when the two ranks coincide and falls
+to 1.06× for <code>a = 1, b = 1000</code>. Two more things the
+arithmetic alone will not tell you: how deep each arm's candidate list
+runs, since a document missing from an arm's top-<em>k</em> has no
+defined rank and is usually approximated over the union of the lists;
+and how correlated the arms are, since agreement between two views of
+the same corpus is much weaker evidence than agreement among many
+independently built systems.</p>
+<p>Fusing rank-only also discards the score distribution, and the
+literature has measured what that costs. <a
+href="https://arxiv.org/abs/2210.11934">Bruch, Gai and Ingber, <em>An
+Analysis of Fusion Functions for Hybrid Retrieval</em>, TOIS 2023
+(arXiv:2210.11934)</a> sweeps a separate constant per arm over 1–100
+across nine datasets, and finds NDCG "swings wildly" with them. Their
+reframing is worth the detour: allow one constant per arm and RRF has
+<em>m</em> parameters against a convex combination's <em>m</em>−1, so
+the fusion usually chosen for being parameter-free has one parameter
+more than the one it is chosen over. Three results worth carrying:</p>
+<ul>
+<li>A <strong>convex combination</strong> of normalized scores, with one
+tuned weight, beat RRF <code>(60,60)</code> on NDCG on <strong>all
+nine</strong> datasets, in-domain and zero-shot, and needs only a small
+tuning sample. Normalization choice barely mattered.</li>
+<li><strong>Symmetrically lowering the constant transferred.</strong>
+RRF <code>(5,5)</code> matched or beat <code>(60,60)</code> on all
+nine.</li>
+<li><strong>Asymmetric tuning did not transfer.</strong>
+<code>(10,4)</code>, tuned in-domain, improved MS MARCO 0.425 → 0.451
+and then cost HotpotQA 0.675 → 0.621 and FEVER 0.721 → 0.649. In-domain
+the tuning discounts the lexical arm; out-of-domain that reverses.</li>
+</ul>
+<p><a href="https://arxiv.org/abs/2604.01733">Akarsu et al.
+(arXiv:2604.01733)</a>, 2 April 2026, agrees in one domain on two arms:
+convex combination at α = 0.5 reaches Recall@5 0.726, RRF
+<code>k = 10</code> 0.716, RRF <code>k = 60</code> 0.695.</p>
+<p>So: keep 60 if you have nothing to tune against, and do not defend it
+as measured. If you can normalize scores and tune one weight on a small
+in-domain sample, that is the better-evidenced fusion. And if you tune
+per-arm constants, tune them on your own traffic and expect them not to
+survive a domain change.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>The channels fail differently. Semantic search recalls meaning;
+lexical search protects exactness; metadata enforces boundaries; entity
+or key lookup handles structured identity. A reranker can resolve close
+candidates after cheaper retrieval has narrowed the set.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li>More channels add latency and operational complexity.</li>
+<li>Ad hoc score normalization makes rankings hard to explain.</li>
+<li>Heuristic bonuses can dominate if they are not bounded.</li>
+<li>Reranking without evaluation adds cost without known benefit.</li>
+<li>The final result and token limit must be enforced after fusion.</li>
+</ul>
+<p>Do not call retrieval “hybrid” merely because two backends exist. The
+important behavior is intentional candidate fusion under one measured
+cutoff.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> a second retrieval arm, a fusion step, and a
+way to inspect which arm contributed each result. RRF is a dozen lines;
+the inspection is what makes it maintainable.</p>
+<p><strong>Forces elsewhere:</strong> each arm needs its own index kept
+in sync with writes, and a backend that silently lacks one of them
+degrades to single-arm search while still reporting itself as hybrid — a
+failure this atlas has found more than once.</p>
+<p><strong>Ongoing:</strong> fusion weights are tuning surface, and
+nothing tells you they have drifted except a benchmark you probably do
+not have.</p>
+<p><strong>Skip it if</strong> your corpus is small enough that exact
+search alone answers well. Boring FTS over a few thousand records
+outperforms an untuned hybrid stack.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/gini-agent/">Gini</a> is the most legible
+implementation, because it documents its channels and their provenance
+in a header comment: semantic cosine, BM25 over FTS5, graph spreading
+activation seeded from the top semantic hits with decay δ=0.5, and a
+temporal range match — fused with reciprocal rank fusion and reranked.
+The temporal arm <strong>only participates when the query contains a
+temporal expression</strong>, which is a small idea worth copying: a
+channel that cannot contribute should not dilute the fusion.</p>
+<p><a href="../../systems/hipporag/">HippoRAG</a> is the instructive
+alternative — it does not fuse at all. It seeds a personalization vector
+from query-linked entities plus a weak dense prior (passage nodes at
+0.05) and reads relevance off a Personalized PageRank diffusion.
+Multi-hop association becomes a property of the diffusion rather than of
+a traversal policy or a weighted sum.</p>
+<p><a href="../../systems/llamaindex/">LlamaIndex</a> composes instead
+of fusing: each memory block contributes independently under its own
+share of a token budget, and each truncates itself when over. The
+assembled context is easier to reason about than a single fused ranking,
+because every contributor's share is separately visible.</p>
+<p><a href="../../systems/hindsight/">Hindsight</a> runs four arms with
+task-specific fusion and cross-encoder reranking; <a
+href="../../systems/mempalace/">MemPalace</a> contributes the reusable
+rule that extracted indexes <em>boost</em> drawer ranking but never gate
+direct evidence retrieval; <a href="../../systems/mem0/">mem0</a>, <a
+href="../../systems/honcho/">Honcho</a>, <a
+href="../../systems/basic-memory/">Basic Memory</a>, <a
+href="../../systems/agentmemory/">agentmemory</a>, <a
+href="../../systems/cowagent/">CowAgent</a>, <a
+href="../../systems/magic-context/">Magic Context</a>, and <a
+href="../../systems/openviking/">OpenViking</a> all fuse lexical and
+semantic signals.</p>
+<p>Two cautions have strengthened with evidence. <strong>Naming is not
+fusing</strong> — <a href="../../systems/claude-mem/">Claude-Mem</a>'s
+ordinary text search selects semantic rather than combining it with FTS,
+and <a href="../../systems/a-mem/">A-MEM</a>'s "hybrid" path is
+vector-only. And <strong>silent degradation is worse than no
+fusion</strong>: <a href="../../systems/holographic/">Holographic</a>
+redistributes its weights to lexical-only when NumPy is missing while
+<code>is_available()</code> still returns <code>True</code>, where <a
+href="../../systems/moltis/">Moltis</a> makes the same situation
+explicit with a <code>keyword_only()</code> constructor and a
+<code>has_embeddings()</code> predicate callers can branch on.</p>
+<p>Nobody has shown their weights are right. <a
+href="../../systems/metaclaw/">MetaClaw</a> is the only system in the
+atlas that could — it replays candidate policies against past turns and
+promotes one only on non-regression across eight metrics. Everyone else,
+including <a href="../../systems/generative-agents/">Generative
+Agents</a> with its hand-tuned <code>gw = [0.5, 3, 2]</code>, ships
+constants nobody has defended — starting with the fusion constant
+itself, which no report in this atlas records a system sweeping.</p>
+<p><a href="../../systems/helm/">Helm</a> is the smallest correct
+instance — both arms and the fusion are about sixty lines of JavaScript
+over rows already in memory, with no FTS extension and no vector store —
+and it is the clearest place in the atlas to see that <strong>fusion
+quality is bounded by candidate generation, not by the fusion
+rule.</strong> Its RRF is textbook (k=60, no score normalization, which
+is the right refusal when you have no relevance data to calibrate
+against), and its belief weight is applied as a multiplier rather than a
+filter so a low-confidence row is penalized instead of excluded. Then
+every arm runs over
+<code>SELECT … WHERE expired_at IS NULL ORDER BY updated DESC LIMIT 500</code>
+— a hard window ordered by <strong>recency</strong>. Past a few hundred
+active facts, the memories that stop being candidates are the ones
+nothing has touched lately, which is precisely the set of long-lived
+preferences the store worked hardest to establish. A perfect ranker over
+the wrong 500 rows is still wrong, and no amount of fusion tuning
+recovers a candidate that was never scored.</p>
+<p>Helm is also the atlas's plainest example of <strong>silent tier
+degradation</strong>. The semantic arm is a cached MiniLM embedding if
+the model is on disk, TF-IDF cosine if it is not, and nothing at all if
+the import throws — three materially different retrieval qualities
+behind one output shape, one <code>catch {}</code>, and no signal to the
+caller. If a channel can degrade, the result should say which channel
+ran.</p>
+<p><strong><a href="../../systems/qwen-mm-plugins/">Qwen MM Plugins</a>
+closes a failure mode this page has otherwise only described in its
+degradation form: the two arms can also disagree about <em>what the
+vectors mean</em>.</strong> Its dense arm reads an
+<code>embeddings.npz</code> written at build time, its sparse arm is a
+BM25 index built over the same nodes, and both are fused by RRF in the
+usual way. What is uncommon is
+<code>check_dimension_compatibility</code>, which compares the stored
+matrix's width against the embedding backend now answering queries and
+raises with a message naming the likely cause — a memory "built with a
+different model than the current query backend". Every system on this
+page persists an index and embeds queries at read time, and in every one
+of them those are two artifacts that can drift apart with no exception,
+no crash and no empty result: the dense arm keeps returning neighbours,
+they are simply neighbours in a space the query never entered, and RRF
+dutifully fuses that garbage with a sparse arm that is working
+correctly. Fusion makes this <em>harder</em> to notice than a single-arm
+retriever would, because the lexical hits keep the result list looking
+plausible. A width comparison at load is a one-line check against the
+highest-cost silent failure in the pattern.</p>
+<p>The same system also shows why fusion earns its keep on content
+nobody wrote prose for. Its two arms are searched over a video's
+extracted events, and the lexical side reaches material the dense side
+systematically blurs — a name, a score, a caption, a slide title,
+captured verbatim into an <code>OnScreenText</code> record. The argument
+for hybrid here is not that one arm is better tuned; it is that proper
+nouns and short strings on screen have no useful embedding neighbourhood
+at all.</p>
+<p><a href="../../systems/muninn/">Muninn</a> contributes the placement
+question this page has not asked: <strong>where does the access filter
+go?</strong> Its fusion is one Postgres statement — an FTS CTE ranked by
+<code>ts_rank</code>, a vector CTE ranked by
+<code>embedding &lt;=&gt; $3</code>, each <code>LIMIT 30</code>, joined
+<code>FULL OUTER</code> on id and scored
+<code>1.0/(60 + f.rank) + 1.0/(60 + v.rank)</code> — and the scope
+predicate
+<code>bot_name = $5 AND ((scope = 'personal' AND user_id = $1) OR scope = 'shared')</code>
+is written into <strong>both</strong> CTEs rather than wrapped around
+the join.</p>
+<p>The difference is not correctness, it is recall, and it falls on the
+caller with the fewest permissions. Filter after the fusion and each arm
+still spends its 30 candidate slots on whatever ranks highest globally,
+including rows the caller may not see; the survivors are whatever is
+left. Filter inside each arm and both budgets are spent within the
+boundary. A reader comparing two systems cannot see this in a benchmark
+— the post-filtered version returns fewer, worse results only for the
+narrowest-scoped users, which is exactly the population least likely to
+be in the golden set.</p>
+<p>Muninn also shows the degradation worth having: the vector CTE
+carries <code>embedding IS NOT NULL</code>, so a row saved when the
+embedding model was unavailable is excluded from that arm and stays
+reachable through FTS, with <code>getMemoriesWithoutEmbeddings</code>
+available to backfill it. One arm failing costs one arm, not the
+query.</p>
+<p><a href="../../systems/repowise/">repowise</a> supplies the failure
+this page's degradation advice exists to prevent, measured. Its vector
+leg was bounded at a hardcoded 8-second timeout <strong>inside
+<code>contextlib.suppress</code></strong>, while a cold index costs
+<em>"6.3s + 13.4s ... where a warm query takes 0.19s"</em> — so, in the
+fix's own words, <em>"the first query of every process expired, the leg
+returned <code>[]</code>, and search silently degraded to full-text with
+nothing logged and <code>embedder_degraded</code> still false."</em></p>
+<p>Three things compose into an unobservable outage, and each is worth
+checking separately in any fused retriever. The budget was set from
+warm-path timings, so it could never clear a cold start. The suppression
+made the expiry indistinguishable from an empty result set — a fused
+query cannot tell "the vector arm found nothing" from "the vector arm
+never ran". And the health flag that exists to report exactly this
+stayed <code>false</code> throughout, so the one field an operator would
+query to detect the degradation reported health. The remedy is the shape
+to copy as much as the number: one shared budget rather than a constant
+at each call site, an override for slow disks, and an unusable override
+that warns and keeps the default <em>"rather than disabling the
+leg"</em>.</p>
+<p><strong>Test that an arm's failure is distinguishable from an arm's
+empty result.</strong> No fused implementation in this atlas has that
+fixture, and it is the difference between a retriever that degrades and
+one that degrades silently.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Exact identifiers, paraphrases, dates, negation, and typo
+cases.</li>
+<li>Scope leakage and lifecycle filtering before ranking.</li>
+<li>Ablations for each retrieval channel.</li>
+<li>A sweep of the fusion constant on <em>your</em> corpus and arm
+count, not the paper's — and a check that whatever you pick still holds
+on data you did not tune against, because per-arm tuning is the setting
+that has been measured failing to transfer.</li>
+<li>Hard assertions that <code>@k</code> evaluates exactly the first
+<code>k</code> results.</li>
+<li>Token-volume and latency reporting.</li>
+<li>Stable tie-breaking and bounded heuristic contributions.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+<li><a href="../source-diverse-context/">Source-diverse context</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

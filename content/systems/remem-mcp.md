@@ -216,7 +216,9 @@ that says so. With it, `storage.delete(id)` runs `DELETE FROM atoms WHERE
 capture_id = ?`, a `LIKE` sweep over `scenarios`, `DELETE FROM captures`, and
 `DELETE FROM captures_vec`, with FTS5 cleaned by the `captures_ad` trigger.
 Deletion reaches every copy, which is more than several systems in this atlas
-manage. Nothing records that the value was rejected.
+manage — and leaves nothing behind, which is the difference between `forget` and
+`reject`: the first destroys the row, the second keeps it as the record of a
+refusal.
 
 **Audit.** `security/audit.ts` writes one `audit_log` row per tool call: `ts`,
 `tool`, `args_hash`, `result_len`, `quota_hit`, `redacted`.
@@ -264,7 +266,7 @@ distributions — the property the
 [hybrid retrieval fusion](../../patterns/hybrid-retrieval-fusion/) page argues
 for.
 
-Two failure modes are worth naming.
+Two properties of the fusion are worth naming, and only the first is a failure.
 
 **The vector arm degrades silently.** If `embedder.embed` throws, the handler
 logs to stderr and continues with `queryEmbedding = null`, which yields
@@ -469,10 +471,10 @@ plain argument the refused caller can set. Wrong too as a base for a memory
 records that a tool ran and hashes its arguments, so "was `forget` called at
 14:02" is answerable and "what did it delete" is not.
 
-Weigh the age honestly. Seventeen commits on the day of first publication is not
-a maturity signal in either direction — the code is better structured than most
-first-week repositories, and none of it has been exercised by anyone but its
-author.
+Weigh the age honestly. The repository went from seventeen commits on its first
+day to ~22,600 lines at this pin, which is fast growth rather than a maturity
+signal in either direction — the code is better structured than most repositories
+of its age, and none of it has been exercised by anyone but its author.
 
 ## 12. Open Questions
 

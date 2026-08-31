@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Almost every memory system has
+tiers. Far fewer can say what moves a memory up one — and a tier
+boundary with no stated rule is a place where memory quietly stops
+improving.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Promotion Between
+Tiers — Agent Memory Atlas">
+    <meta property="og:description" content="Almost every memory system
+has tiers. Far fewer can say what moves a memory up one — and a tier
+boundary with no stated rule is a place where memory quietly stops
+improving.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Promotion Between
+Tiers — Agent Memory Atlas">
+    <meta name="twitter:description" content="Almost every memory system
+has tiers. Far fewer can say what moves a memory up one — and a tier
+boundary with no stated rule is a place where memory quietly stops
+improving.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Promotion Between Tiers — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Promotion Between Tiers",
+      "description": "Almost every memory system has tiers. Far fewer can say what moves a memory up one \u2014 and a tier boundary with no stated rule is a place where memory quietly stops improving.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Lifecycle</p>
+          <h1>Promotion Between Tiers</h1>
+          <p class="document-deck">Almost every memory system has tiers.
+Far fewer can say what moves a memory up one — and a tier boundary with
+no stated rule is a place where memory quietly stops improving.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Reporting an established practice</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>If memory has tiers, name the rule that promotes between them, make
+it computable, and be able to say why any given record is in the tier it
+is in.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Tiering is the most common structure in agent memory: short-term and
+long-term, hot and archival, working and durable, core and recall. It is
+close to universal and almost free to describe, which is why nearly
+every system has it.</p>
+<p>What is not universal is an answer to <strong>what moves a memory
+up</strong>. The usual shapes:</p>
+<ul>
+<li><strong>No rule at all.</strong> A summarizer runs every <em>N</em>
+turns and whatever it emits is now long-term. The tier boundary is a
+schedule, not a judgement.</li>
+<li><strong>A rule inside a prompt.</strong> An LLM is asked to decide
+what is worth keeping, with the criteria in prose that nobody reviews as
+policy.</li>
+<li><strong>A rule nobody validated.</strong> A formula with named
+coefficients, shipped at their defaults, with no ablation.</li>
+</ul>
+<p>All three produce the same failure, and it is quiet: <strong>the
+long-term store fills with whatever the promotion path happened to
+favour</strong>, and because the path is unstated nobody can say what
+that was. Memory does not break; it slowly stops being about the right
+things, and the only symptom is answers getting less useful in ways
+nobody can attribute.</p>
+<p>A second failure follows from the first. If promotion is unexplained,
+so is its inverse — a record that never promotes is invisible, and
+<em>not</em> promoting is the decision with no error message.</p>
+<h2 id="the-pattern">The pattern</h2>
+<pre class="text"><code>tier boundary
+   │
+   ├─ a written rule, computable from stored fields
+   ├─ inputs that are separately meaningful, not one blended score
+   ├─ a ceiling: what a record&#39;s provenance forbids, regardless of use
+   └─ a record of why this one promoted, queryable later</code></pre>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — promotion runs on a written rule over separable stored inputs, capped by provenance and recorded with its reasons; blending the inputs into one score is what makes a promotion unattributable</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: promotion runs on a written rule over separable stored inputs, capped by provenance and recorded with its reasons; blending the inputs into one score is what makes a promotion unattributable
+flowchart TD
+    Rec[&quot;record in the lower tier&quot;] --&gt; Rule[&quot;written rule, computed from stored fields&quot;]
+    In[&quot;separable inputs:&lt;br/&gt;frequency · recency · importance · corroboration&quot;] --&gt; Rule
+    Rule --&gt; Cap{&quot;does provenance justify the climb?&quot;}
+    Cap -- &quot;no&quot; --&gt; Stay[&quot;stays — capped by its source,&lt;br/&gt;however often it is used&quot;]
+    Cap -- &quot;yes&quot; --&gt; Up[&quot;promoted to the upper tier&quot;]
+    Up --&gt; Why[&quot;decision recorded: inputs, rule, actor&quot;]
+    In -. &quot;blended into one score&quot; .-&gt; Opaque[&quot;cannot attribute&lt;br/&gt;the promotion&quot;]</code></pre></details></figure>
+<p>Four requirements:</p>
+<ol type="1">
+<li><strong>Write the rule down</strong>, as something a program
+computes rather than a sentence a model interprets. A formula with named
+coefficients can be ablated; a prompt cannot.</li>
+<li><strong>Keep the inputs separable.</strong> Frequency, recency,
+importance and corroboration answer different questions, and a single
+blended scalar cannot say which one promoted a record.</li>
+<li><strong>Give provenance a veto.</strong> Use should be able to raise
+a record's standing and never past what its source justifies — otherwise
+a guess that got popular becomes canon.</li>
+<li><strong>Record the decision</strong>, so "why is this in long-term
+memory" is a lookup.</li>
+</ol>
+<h2 id="why-it-works">Why it works</h2>
+<p>It converts a boundary that everything crosses into a decision that
+can be examined. Once the rule is computable you can ablate it, once the
+inputs are separable you can attribute a promotion, and once provenance
+caps the ladder the worst failure — a popular error becoming permanent —
+is structurally unavailable rather than merely unlikely.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li><strong>A written rule invites false confidence.</strong> A formula
+looks principled at a glance; unvalidated coefficients are a prompt with
+extra steps.</li>
+<li><strong>Separable inputs cost schema.</strong> Four fields where one
+would do, each needing a definition and a writer.</li>
+<li><strong>A ceiling can be wrong.</strong> If provenance is asserted
+rather than verified, the cap inherits the honesty of whatever set
+it.</li>
+<li><strong>Promotion is one-way in most implementations.</strong>
+Demotion is rarer and harder, and a monotonic ladder means an early
+mistake is permanent unless correction lives on a different axis.</li>
+</ul>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> the fields the rule reads, the rule itself,
+and a place to record why a promotion happened.</p>
+<p><strong>Forces elsewhere:</strong> retrieval must respect tiers or
+they are decoration, and the background pass that promotes needs the
+same recoverability as any other — a promotion pass that dies halfway
+leaves the boundary in an undefined state.</p>
+<p><strong>Ongoing:</strong> the coefficients are a tuning surface with
+no natural feedback. If nothing measures promotion quality, the rule is
+frozen at whatever its author guessed.</p>
+<p><strong>Skip it if</strong> you have one tier. Two tiers with no rule
+is worse than one tier, because it implies a judgement that is not being
+made.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p>Tiering is everywhere; the rule is not.</p>
+<p><a href="../../systems/memoryos/">MemoryOS</a> writes the rule down,
+which is the right instinct and shows the trap:
+<code>alpha·N_visit + beta·L_interaction + gamma·R_recency</code> with
+all three coefficients left at 1 and no ablation. Because the terms are
+summed, <code>L_interaction</code> means <strong>a long conversation
+scores like a frequently-revisited one</strong> — verbosity is
+indistinguishable from importance, and long-term memory is built from
+what wins. It also keeps a <em>second</em> access counter for LFU
+eviction, so the number that decides what is hot and the number that
+decides what is deleted can disagree about the same segment.</p>
+<p><a href="../../systems/core-memory/">Core Memory</a> has the most
+developed answer, and it is a ceiling rather than a score. Grounding —
+<code>observed</code>, <code>extracted</code>, <code>inferred</code>,
+<code>speculative</code> — caps how far a record can climb: a
+speculative bead "cannot reach canonical status", explicitly "not via
+recall, not even via promotion". Use raises standing; it cannot raise it
+past what the source justifies. The class is also monotonic, with
+correction handled on a separate axis, so superseding a class-A claim
+preserves the record of how carefully it was established.</p>
+<p><a href="../../systems/nooa-memory/">NOOA Memory</a> separates the
+inputs properly — <code>importance</code>, <code>salience</code>,
+<code>confidence</code> and a spaced-repetition <code>strength</code>,
+where retrieval moves only the last. Its paper adds the detail that
+closes the loop: "injected memories are not reinforced, so what the
+harness surfaces does not distort the usage signal."</p>
+<p><a href="../../systems/mercury-agent/">Mercury</a> grades confidence,
+importance and durability separately and keeps a subconscious tier below
+active recall. <a href="../../systems/redis-agent-memory-server/">Redis
+Agent Memory Server</a> has the inverse — the atlas's most developed
+<em>demotion</em> policy, combining TTL, inactivity, pinning, per-type
+allowlists and budget pruning.</p>
+<p>The larger group tiers without a stated rule: <a
+href="../../systems/letta/">Letta</a>'s core, archival and recall; <a
+href="../../systems/memos/">MemOS</a>, whose promotion varies by cube;
+<a href="../../systems/loongflow/">LoongFlow</a>'s stm/mtm/ltm with
+auto-compress. The tiers are real; what crosses them is a schedule.</p>
+<p><a href="../../systems/cambium/">Cambium</a> states the gate as a
+prohibition rather than a mechanism, which is the cleanest formulation
+of it in the atlas. Its status standard says <em>"File existence, a
+resolvable wiki link, the existence of an external checklist item, or a
+large page word count MUST NOT automatically change any status"</em>,
+and <em>"A status MUST NOT be upgraded directly because the file exists,
+its length reaches a threshold, or automated checks pass."</em> Its
+twelve deterministic scripts emit exactly two outcomes,
+<code>fail</code> and <code>candidate</code>, and the freshness check
+spells out the consequence: candidates <em>"only feed the
+maintenance-run candidate list and never change any status axis of a
+page."</em> So the tooling can block a batch and nominate work, and has
+no outcome that promotes.</p>
+<p>Worth separating from the systems above: the usual failure is a
+promotion gate whose criterion is cheap — an age, a hit count, a
+threshold — and Cambium's contribution is naming those exact signals as
+the ones that must <em>not</em> qualify. Its evidence ladder
+(<code>signal → single-source → corroborated → validated</code>) is
+climbed by judgement only. The cost is the honest one: nothing in the
+repository enforces the prohibition, because the component that would
+enforce it is the one being prohibited.</p>
+<p>The measured warning comes from NOOA Memory's paper, and it applies
+to whatever promotion produces: reflection records are "22% of rows yet
+~1% of both read channels". A fifth of that store is distilled material
+that retrieval essentially never surfaces. Promotion succeeded;
+usefulness did not follow.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>State the rule, then compute it by hand for ten promoted records and
+ten that were not. If you cannot, it is not a rule.</li>
+<li>Ablate each term. If removing one does not change which records
+promote, it is not doing work.</li>
+<li>Feed the system a long, low-value exchange and a short, decisive
+one, and check which promotes.</li>
+<li>Assert a low-provenance record cannot reach the top tier by any
+amount of retrieval.</li>
+<li>Measure what fraction of promoted records are ever read back. If the
+top tier is not being retrieved, promotion is a cost with no
+return.</li>
+<li>Kill the promotion pass halfway and assert the tier boundary is
+still well-defined.</li>
+<li>Check that retrieval actually respects the tiers, rather than
+ranking across all of them and rendering the boundary decorative.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../decay-and-reinforcement/">Decay and
+reinforcement</a></li>
+<li><a href="../trust-state-machine/">Trust-state machine</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../gate-the-expensive-path/">Gate the expensive
+path</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

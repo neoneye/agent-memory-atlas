@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Let reachability weaken or
+strengthen over time without silently turning use, age, or popularity
+into truth.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Decay and
+Reinforcement — Agent Memory Atlas">
+    <meta property="og:description" content="Let reachability weaken or
+strengthen over time without silently turning use, age, or popularity
+into truth.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Decay and
+Reinforcement — Agent Memory Atlas">
+    <meta name="twitter:description" content="Let reachability weaken or
+strengthen over time without silently turning use, age, or popularity
+into truth.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Decay and Reinforcement — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Decay and Reinforcement",
+      "description": "Let reachability weaken or strengthen over time without silently turning use, age, or popularity into truth.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Lifecycle</p>
+          <h1>Decay and Reinforcement</h1>
+          <p class="document-deck">Let reachability weaken or strengthen
+over time without silently turning use, age, or popularity into
+truth.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Reporting an established practice</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Keep stale or low-value memory from dominating recall while allowing
+useful memory to remain reachable through repeated, evidenced use.</p>
+<h2 id="the-problem">The problem</h2>
+<p>An append-only memory corpus grows without bound. Pure recency
+ranking buries durable facts; pure similarity keeps obsolete facts
+permanently competitive; hard TTL deletes knowledge on an arbitrary
+date. Naive reinforcement creates a different failure: frequently
+retrieved errors become stronger merely because the system keeps seeing
+them.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Separate lifecycle strength from truth and relevance:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three quantities kept apart — epistemic confidence, retrieval strength and retention policy — with time and use moving only the second</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three quantities kept apart — epistemic confidence, retrieval strength and retention policy — with time and use moving only the second
+flowchart LR
+    A[&quot;Memory + evidence&quot;] --&gt; B[&quot;Epistemic confidence / trust&quot;]
+    A --&gt; C[&quot;Retrieval strength&quot;]
+    A --&gt; D[&quot;Validity and retention policy&quot;]
+    E[&quot;Time passes&quot;] --&gt; C
+    F[&quot;Useful evidenced recall&quot;] --&gt; C
+    G[&quot;Correction or supersession&quot;] --&gt; B
+    G --&gt; D
+    B --&gt; H[&quot;Recall policy&quot;]
+    C --&gt; H
+    D --&gt; H</code></pre></details></figure>
+<p>Decay only the dimension it is meant to control:</p>
+<ul>
+<li><strong>Retrieval-strength decay</strong> lowers default
+reachability.</li>
+<li><strong>Validity expiry</strong> marks a fact stale or out of
+date.</li>
+<li><strong>Retention expiry</strong> authorizes deletion after policy
+checks.</li>
+<li><strong>Epistemic confidence</strong> changes only when evidence
+changes.</li>
+</ul>
+<p>Reinforcement should require a meaningful signal: successful task
+use, independent corroboration, explicit pinning, or operator feedback.
+Mere retrieval is at most a usefulness signal.</p>
+<p>Protect verified, pinned, legally retained, and correction/tombstone
+records from ordinary pruning. Keep a reactivation path and enough audit
+history to explain why strength changed.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>The corpus can forget operationally without pretending old means
+false. Durable truths remain recoverable, temporary details fade, and
+popularity cannot silently promote a claim into verified knowledge. The
+separate dimensions also make ranking and deletion policies
+testable.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Decay rates are domain policy, not universal constants. A short
+half-life is useful for transient tool state and harmful for stable
+preferences or safety constraints. Reinforcement creates feedback loops
+if the same ranker controls both exposure and strength. Soft decay still
+consumes storage; hard pruning loses reversibility and may violate audit
+or correction requirements.</p>
+<p>For small bounded corpora, explicit archive and review may be simpler
+and safer than continuous scoring.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> a strength field separate from confidence, a
+decay function, and bounded reinforcement with a recorded reason.</p>
+<p><strong>Forces elsewhere:</strong> ranking becomes time-dependent, so
+results are no longer reproducible across runs and any benchmark must
+pin a clock. Reinforcement driven by retrieval creates a feedback loop
+that needs an explicit damper.</p>
+<p><strong>Ongoing:</strong> decay rates are per memory kind, and
+getting them wrong is invisible — memory that faded too fast produces no
+error, just a worse answer.</p>
+<p><strong>Skip it if</strong> your store is small. Decay solves a
+crowding problem you may not have.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong><a href="../../systems/mnemopi/">Mnemopi</a> has the most
+considered forgetting model here, and the reason is a second
+parameter.</strong> Every other decaying system on this page picks a
+rate: an exponential half-life, an Ebbinghaus curve, a decay constant.
+Mnemopi gives each of fourteen memory types a Weibull <code>k</code>
+(shape) and <code>eta</code> (scale, in hours) — <code>profile</code> at
+k=0.3/eta=8760, <code>relationship</code> at 0.35/8760,
+<code>preference</code> at 0.4/4380, <code>fact</code> at 0.8/720,
+<code>context</code> at 0.85/360, <code>observation</code> at 0.9/480 —
+with a comment stating the intent: higher eta is slower decay, lower k
+is more long-term retention.</p>
+<p>The shape is what a single rate cannot express. A <code>k</code>
+below 1 gives a heavy tail: a profile fact fades slowly <em>and keeps
+fading slowly</em>, so it never quite leaves, while
+<code>observation</code> at k=0.9 approaches memoryless and is gone on
+schedule. That is the difference between "how fast" and "how
+stubbornly", and it is the instrument the <a
+href="../../systems/helm/">Helm</a> report is asking for when it says a
+preference should not fall down the ranking for being old while an event
+should, and that one ranking function for both is usually an unexamined
+decision.</p>
+<p>The cost is twenty-eight hand-set parameters with no committed
+derivation, and one of them is wrong in a way the model itself reveals:
+<code>commitment</code> is given k=1.0, exactly exponential, so an
+outstanding obligation decays memorylessly rather than persisting until
+it is discharged.</p>
+<p>Three systems added since this page was written show what the pattern
+looks like done carefully, and one shows the failure it warns about.</p>
+<p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> has the most developed retention policy in the atlas.
+<code>select_ids_for_forgetting</code> combines TTL and inactivity so a
+recently-used memory survives its nominal age <strong>unless</strong> it
+exceeds a hard-age multiple (default 12×), honours pinning and per-type
+allowlists, and prunes to a budget using a recency composite with
+<strong>two half-lives</strong> — 7 days on last access, 30 on creation.
+Separating "recently used" decay from "recently learned" decay is the
+refinement most systems miss.</p>
+<p><a href="../../systems/mercury-agent/">Mercury</a> makes the same
+distinction in the schema rather than the policy:
+<code>confidence</code>, <code>importance</code>, and
+<code>durability</code> are three independent fields. How much a memory
+matters and how long it should last are different questions, and one
+column cannot answer both. Mercury also keeps a
+<code>subconscious</code> tier — retained but below active recall — so
+demotion is available where most systems only have deletion.</p>
+<p><a href="../../systems/daimon/">Daimon</a> contributes the inversion
+this page has been missing. Its weight is
+<code>importance/10 × tiered recency × per-type linear decay</code>, and
+one type is exempt from the usual conclusion: an open question past a
+fourteen-day expected lifespan gets an <strong>escalating</strong>
+boost, <code>age**1.5 / 100</code>, capped so a fresh item still
+outranks an escalated one. For an open loop, staleness means
+<em>unresolved</em>, not <em>irrelevant</em>, and burying it is exactly
+wrong. Any system with a per-type decay table should ask which of its
+types this applies to; most have at least one.</p>
+<p>Two smaller guards in the same file generalize. A
+<code>first_seen</code> stamp further in the future than ordinary clock
+skew explains is treated as <em>neutral</em> rather than maximally
+fresh, so a teammate's mis-stamped item cannot outrank genuine local
+work — a bug that only exists once memory crosses machines. And decay is
+floored rather than allowed to reach zero, so ordering may bury an item
+but arithmetic never erases it.</p>
+<p><a href="../../systems/openviking/">OpenViking</a> computes hotness
+as
+<code>sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)</code>
+and states plainly that it blends into <em>search ranking</em>. It never
+touches correctness — the right side of the line. Its remaining risk is
+the one this pattern names: <code>active_count</code> increments on
+retrieval, so frequency is self-reinforcing, and a uniform 7-day
+half-life applies to every memory kind.</p>
+<p><a href="../../systems/holographic/">Holographic</a> is the
+counterexample, and it is worth studying because each piece looks
+reasonable alone. <code>fact_feedback</code> moves a single
+<code>trust_score</code> by +0.05 or −0.10; that same score is
+multiplied into relevance <em>and</em> gates retrieval at a
+<code>min_trust</code> floor of 0.3. From a default of 0.5, three
+unhelpful ratings put a fact below every default retrieval path —
+permanently, with no tombstone and no record that suppression occurred.
+Reinforcement became deletion because reachability and belief were the
+same number.</p>
+<p><a href="../../systems/helix-agi/">Helix AGI</a> is the only system
+here that documents finding this loop in its own running store and
+cutting it. A belief's mass originally included its relation count;
+related beliefs get co-injected, and co-injection creates more
+relations, so the comment in <code>memory/belief_store.py</code> records
+the cycle it produced — <em>"relations → mass ↑ → gravity ↑ →
+co-injection → more relations"</em> — and the fix, which is to leave
+cluster gravity to emerge from spatial density instead of inflating an
+individual score. The general lesson is narrow and reusable: <strong>a
+reinforcement signal that is itself caused by reachability is a feedback
+loop, not a measurement</strong>, and the way to find one is to ask
+which of your inputs the previous ranking already decided.</p>
+<p><a href="../../systems/verel/">Verel</a> remains the reference for
+the separation itself. <a href="../../systems/atomic-agent/">Atomic
+Agent</a> suggests the safest implementation shape: keep votes as
+append-only events and derive the score, so a reinforcement rule can be
+changed or recomputed rather than baked irreversibly into a column.</p>
+<p><a href="../../systems/memora/">Memora</a> sits on the correct side
+of the line and still shows the hazard:
+<code>calculate_importance(created_at, base_importance, access_count)</code>
+is a ranking signal rather than a confidence, but retrieval increments
+<code>access_count</code>, which raises the score, which makes future
+retrieval more likely — the self-amplifying loop with no counterweight
+visible.</p>
+<p><a href="../../systems/loongflow/">LoongFlow</a> is the one system
+here that answers reinforcement collapse structurally rather than by
+tuning a rate. Its evolutionary memory samples from a Boltzmann
+distribution over scores at a temperature raised when the population's
+measured diversity falls, so a store converging on the same few items
+automatically loosens selection until variety returns. It is a narrow
+instance — recall there feeds a search loop, not belief — but it is
+worth noting that the usual fix for reinforcement runaway is a decay
+constant, and this one is a feedback controller.</p>
+<p><a href="../../systems/nooa-memory/">NOOA Memory</a> is the only
+system here that closes the reinforcement loop rather than noting it.
+Retrieval bumps a <code>strength</code> counter that slows Ebbinghaus
+decay and leaves <code>confidence</code> untouched — rehearsal is not
+belief — and its paper adds the part that matters: "<strong>injected
+memories are not reinforced, so what the harness surfaces does not
+distort the usage signal</strong>". Spontaneous injection runs at a
+fixed cadence of about one per turn and does not count as use. A system
+whose ranker reinforces whatever the ranker chose to show is measuring
+its own decisions and calling it usage; separating deliberate reads from
+injections is the cheap fix, and it is a one-line distinction at the
+call site.</p>
+<p><a href="../../systems/helm/">Helm</a> keeps the two signals apart
+correctly and then damages a third. Retrieval cannot raise confidence —
+it only slows loss: <code>log1p(access_count)</code> is subtracted from
+the count of stale weeks before the <code>0.9^weeks</code> multiplier
+applies, so a fact the agent keeps reaching for holds what it has and
+gains nothing. Only never-corroborated rows decay at all, and rows
+sourced from the persona document are exempt outright. That is the
+separation this page asks for, at the cost of one logarithm.</p>
+<p>The flaw is in the bookkeeping. The same pass advances
+<code>last_seen</code> by the stale weeks it just consumed, purely so
+the next nightly run does not re-apply an identical step. It works, and
+it means <code>last_seen</code> no longer records when the fact was last
+seen — including for the <code>unsure</code> query that orders the
+weakly-evidenced list by exactly that column. If a decay pass needs to
+remember what it has already done, give it <code>last_decayed</code> and
+leave the observation timestamp alone.</p>
+<p>Helm also shows the reinforcement signal being collected where nobody
+would look for it: <code>access_count</code> is incremented inside the
+recall verb, so the background loop that calls recall to score whether
+its own thought is worth interrupting the owner about reinforces every
+fact it touches on the way past. A read that writes should be documented
+as one — Helm's tool registry declares
+<code>"side_effects": "none"</code> for it.</p>
+<p><a href="../../systems/graphify/">Graphify</a> uses decay for
+something most instances here do not: <strong>deciding a
+contradiction.</strong> Each outcome contributes
+<code>sign × weight</code> where the sign is <code>+1</code> for
+<code>useful</code> and <code>−1</code> for <code>dead_end</code> or
+<code>corrected</code>, and the weight halves every 30 days. A source
+carrying both signs is classified <code>contested</code> by the presence
+of both — the classification is not a vote — and only then does the
+accumulated score decide whether it reads as "useful", "dead end" or
+"even". So a fresh dead end outweighs a months-old success without any
+conflict-resolution logic existing at all: the half-life <em>is</em> the
+resolution rule.</p>
+<p>The reason it stays honest is that decay here never touches epistemic
+standing. A decayed score cannot demote <code>preferred</code> to
+<code>tentative</code>, because that classification comes from a count
+of distinct results, not from the score. Age changes which contested
+source sorts first; it cannot make a corroborated source uncorroborated.
+That is the separation this pattern keeps asking for, achieved by
+computing the two things from different columns rather than by
+discipline.</p>
+<p>One implementation detail worth stealing outright: the score is
+rounded to nine digits before comparison, with a comment explaining that
+C's <code>pow</code> can differ in the last ULP across platforms and
+that the rounding is what keeps sort order and the contested verdict
+stable. A decay function whose output feeds a <em>classification</em>
+needs to be deterministic across machines in a way one that only feeds a
+ranking does not.</p>
+<p><a href="../../systems/memory-lancedb-pro/">memory-lancedb-pro</a>
+adds the signal this pattern usually lacks: a <em>negative</em> one that
+is not just the absence of a positive. <code>computeTier1Patch</code>
+counts injections that were never confirmed as used; three of them
+suppress the memory from auto-recall for thirty minutes, and twenty-four
+hours without an injection resets the counter on the stated reasoning
+that "this memory is being needed again". The threshold is deliberately
+not configurable and the comment explains the distinction — three
+strikes is "a behavioral design choice that should hold across
+deployments" while the windows around it are operational tuning. Only
+the automatic injection path feeds the counters, so a memory the user
+fetches deliberately never accrues strikes.</p>
+<p><a href="../../systems/clawmem/">ClawMem</a> is the cautionary
+instance, and the measurement is committed. Its composite score blended
+recency decay, content-type half-lives, co-activation reinforcement,
+confidence, quality and revision count — and an offline eval against
+hand-labelled gold found raw cosine ranking 16 of 19 judged targets
+first (MRR 0.912) where the composite managed 1 of 19 (0.307), with the
+composite's own <code>minScore</code> filtering 14 of 19 out. The
+project's response was to demote every metadata signal to an
+exact-tie-break on the direct routes. The generalisable argument is in
+the file header: a decay-and-reinforcement blend is only safe where its
+terms are smaller than the margin separating a right answer from a wrong
+one.</p>
+<p><strong>The mirror of that rule is a decay signal, and it comes from
+a paper rather than a repository.</strong> <em>Weighted Memory Tree</em>
+(<a href="https://arxiv.org/abs/2608.20631">arXiv:2608.20631</a>, 21
+August 2026) revises a node's retention score from two events. One is
+the recorded execution outcome of an action,
+<code>ω ∈ {success, failure}</code> — outcome, not similarity. The other
+is <strong>selection-based decay</strong>: a memory that was
+<em>eligible for the prompt and not chosen</em> decays, while a chosen
+one has its missed-selection count reset.</p>
+<p>Set that beside NOOA's rule above and the selection event becomes
+two-sided. NOOA says do not let the ranker reinforce what the ranker
+chose to show. This says the ranker's <em>rejections</em> are the signal
+you were missing — a memory that kept being considered and passed over
+has been measured against its competition on live queries, which is a
+stronger statement about its worth than any decay constant fitted to the
+clock. Wall-clock decay asks how old a memory is; missed-selection decay
+asks how often it lost.</p>
+<p>Two caveats belong with it. The signal is only as good as the
+candidate set: a memory that never becomes eligible never decays by this
+route, so it needs a floor from somewhere else. And it inherits the
+failure NOOA names in the other direction — if the eligibility filter is
+itself the ranker, the system is again grading its own decisions, and
+<em>not-selected</em> has to mean <em>lost a comparison</em> rather than
+<em>was never a candidate</em>.</p>
+<p><strong>This is a design to borrow, not a result to cite.</strong>
+The paper releases no code and no data, so nothing here was checked
+against an implementation; its reported gains are recorded on the <a
+href="../../benchmarks/">benchmarks page</a> as unverifiable. Its
+folding is worth the same note: completed branches fold into summaries
+while the system retains <em>"access to folded context"</em>, and
+resumed branches reopen, so the compaction is reversible by construction
+— the property the corpus usually finds missing on the <em>other</em>
+side of a fold.</p>
+<h2 id="implementation-checklist">Implementation checklist</h2>
+<ul>
+<li>Store retrieval strength separately from confidence and trust.</li>
+<li>Assign decay policy by memory kind, scope, and validity, not one
+global rate.</li>
+<li>Record the reason and actor for every reinforcement.</li>
+<li>Do not reinforce a memory the system itself chose to inject.</li>
+<li>Consider decaying one that was eligible and repeatedly not chosen,
+and be sure <em>not chosen</em> means it lost a comparison rather than
+never entering one.</li>
+<li>Bound reinforcement and prevent one retrieval loop from
+self-amplifying.</li>
+<li>Protect rejected-value tombstones and correction history from
+decay.</li>
+<li>Mark stale before deleting when reversibility matters.</li>
+<li>Expose last-evaluated time and effective strength to operators.</li>
+</ul>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Stable facts remain reachable after long simulated time.</li>
+<li>Expired transient state stops entering normal context.</li>
+<li>Repeated retrieval cannot increase epistemic confidence.</li>
+<li>Reinforcement saturates and cannot form an unbounded feedback
+loop.</li>
+<li>Pinned, verified, rejected, and audit records survive ordinary
+pruning.</li>
+<li>Clock jumps, backfills, and timestamp errors fail safely.</li>
+<li>Rebuilds reproduce effective strength from durable state or audit
+events.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../trust-state-machine/">Trust-state machine</a></li>
+<li><a href="../bi-temporal-fact-validity/">Bi-temporal fact
+validity</a></li>
+<li><a href="../rejected-value-tombstone/">Rejected-value
+tombstone</a></li>
+<li><a href="../append-only-memory-audit/">Append-only memory
+audit</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

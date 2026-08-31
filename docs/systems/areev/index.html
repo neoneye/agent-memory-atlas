@@ -535,10 +535,10 @@ evidence. <code>tombstone</code> — the content hash is not consulted on
 re-add. <code>trust_state</code> — the status is a ranking term.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>2,522 test functions</strong>, a fuzz target, a
-<code>deny.toml</code>, and a dedicated conformance crate — and the
-conformance kit is the artifact worth describing, because it is doing
-something most test suites here do not.</p>
+<p><strong>2,525 test functions</strong> across the seventeen crates, a
+fuzz target, a <code>deny.toml</code>, and a dedicated conformance crate
+— and the conformance kit is the artifact worth describing, because it
+is doing something most test suites here do not.</p>
 <p>Its cases take <code>b: &amp;dyn Backend</code> and report
 <code>b.name()</code> in every assertion message, so the same case runs
 against the real store, the Postgres backend and the in-memory reference
@@ -730,7 +730,23 @@ export's quality label and loss weight.</li>
 </ul>
 <h2 id="history">History</h2>
 <p><strong>2026-08-31</strong> — <a
-href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code>663caa8b0897f82a59a29dba0a7232639c55bc1f</code></a>
+href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
+— count audit at the same pin, alongside the <code>retract</code>
+reading below. Two figures were low. The <code>audit_log</code> evidence
+record said the oplog row is inserted at six sites; <code>grep</code>
+for <code>INSERT INTO oplog</code> in
+<code>crates/areev-store/src/lib.rs</code> returns seven — 5127, 5290,
+5932, 6153, 8090, 8838, 9358 — and the record's citation list carried
+only four of them. Section 10's test-function count was 2,522; counting
+<code>#[test]</code> and <code>#[tokio::test]</code> across
+<code>crates/</code> on the same scope as the 181,665-line figure gives
+2,525. Tree-wide, including <code>areev-sandbox/</code>,
+<code>fuzz/</code> and <code>examples/</code>, it is 2,547. "Never
+updated or deleted" holds: no <code>UPDATE oplog</code> or
+<code>DELETE FROM oplog</code> exists anywhere. No finding or mark
+changed.</p>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
 — second reading at the same commit, correcting one claim about
 <code>retract</code>. The first reading traced the verb to the
 <code>OmsSubstrate</code> trait doc and the in-memory reference
@@ -757,7 +773,7 @@ diverge. The re-add finding is unchanged and sharpened — the store names
 the forget-then-re-add scenario at three sites and solves the
 concurrency half at each.</p>
 <p><strong>2026-08-30</strong> — <a
-href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code>663caa8b0897f82a59a29dba0a7232639c55bc1f</code></a>
+href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
 — first reading, at 242 commits. Screened before reading: no auto-run
 surface, two build-time execution surfaces, three unpinned surfaces, and
 <strong>fourteen dependency surfaces inside the seven-day freshness

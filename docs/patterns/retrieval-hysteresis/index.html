@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Give a memory unit its own
+activation state so it neither repeats every turn nor vanishes
+mid-thread.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Retrieval
+Hysteresis — Agent Memory Atlas">
+    <meta property="og:description" content="Give a memory unit its own
+activation state so it neither repeats every turn nor vanishes
+mid-thread.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Retrieval
+Hysteresis — Agent Memory Atlas">
+    <meta name="twitter:description" content="Give a memory unit its own
+activation state so it neither repeats every turn nor vanishes
+mid-thread.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Retrieval Hysteresis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Retrieval Hysteresis",
+      "description": "Give a memory unit its own activation state so it neither repeats every turn nor vanishes mid-thread.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Retrieval</p>
+          <h1>Retrieval Hysteresis</h1>
+          <p class="document-deck">Give a memory unit its own activation
+state so it neither repeats every turn nor vanishes mid-thread.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-category-bound" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Mature in one category, unknown outside it</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Stop a relevance function from being the only thing that decides
+whether a memory is in the prompt. Give the unit a small amount of state
+about its own recent activation, so surfacing it once changes whether it
+surfaces again.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Ranking is stateless. A retriever asked the same question on
+consecutive turns returns the same top hit, and the model says the same
+thing again — which reads as obsession to a user and, worse, feeds the
+model its own last output as fresh context. The inverse failure is just
+as common: a thread the conversation is still working on drops out of
+the window the moment a slightly better match appears.</p>
+<p>Neither is a scoring bug. Both are the consequence of computing
+relevance from the query alone and nothing from what was already
+said.</p>
+<p>Most systems in this atlas notice the first half and treat it as a
+tuning problem — raise the threshold, lower <code>k</code>, add a dedup
+pass over the returned set. Those act on one turn at a time and cannot
+express "not again for a while."</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Attach activation state to the unit, and let firing mutate it:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four gates between a keyword match and an injection — delay, cooldown, suppression — and firing sets the sticky and cooldown counters that gate the next turn</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four gates between a keyword match and an injection — delay, cooldown, suppression — and firing sets the sticky and cooldown counters that gate the next turn
+flowchart TB
+    Q[turn] --&gt; M{&quot;relevance /&lt;br/&gt;keyword match&quot;}
+    M --&gt;|no| SKIP[not injected]
+    M --&gt;|yes| D{&quot;delay elapsed?&quot;}
+    D --&gt;|no| SKIP
+    D --&gt;|yes| C{&quot;cooling down?&quot;}
+    C --&gt;|yes| SKIP
+    C --&gt;|no| S{&quot;suppressed?&quot;}
+    S --&gt;|yes| SKIP
+    S --&gt;|no| FIRE[injected]
+    FIRE --&gt; SET[&quot;set sticky N — stays active for N turns&lt;br/&gt;set cooldown M — cannot fire for M turns&quot;]
+    SET -.-&gt; D</code></pre></details></figure>
+<p>Four independent knobs, each one integer or one flag per unit:</p>
+<ul>
+<li><strong>Sticky</strong> — having fired, remain active for the next N
+turns regardless of match. Keeps a thread alive.</li>
+<li><strong>Cooldown</strong> — having fired, refuse to fire for M
+turns. This is the anti-repetition half, and it is the one nothing else
+replaces.</li>
+<li><strong>Delay</strong> — refuse to fire until the conversation is N
+turns old, so background material does not arrive before it makes
+sense.</li>
+<li><strong>Suppression</strong> — a flag or a durable directive that
+withholds the unit irrespective of match.</li>
+</ul>
+<p>Sticky and cooldown together are the hysteresis: the condition for
+staying in is not the condition for getting in.</p>
+<h2 id="why-it-works">Why it works</h2>
+<ul>
+<li>Repetition becomes expressible. "Relevant, but I just said it" is a
+state, not a threshold to tune.</li>
+<li>It closes a feedback loop cheaply. When the agent's own prior output
+contributes to the next query, a fired-recently marker stops the loop
+without any model call.</li>
+<li>It is authorable. An integer per entry can be set by a person who
+noticed the character repeating itself, which no embedding parameter can
+be.</li>
+<li>It costs nothing at query time — a comparison against a
+counter.</li>
+</ul>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Activation stops being a pure function of the query, so the same
+conversation state can produce different context depending on history.
+That is the point, and it makes behaviour harder to reproduce in a test
+— which is exactly why the implementations below have almost no
+tests.</p>
+<p>Cross-turn state has to live somewhere. If it is held in memory
+rather than persisted, a reload silently resets every cooldown.</p>
+<p>Four interacting knobs plus recursion and a budget is a lot of
+surface. In <a href="../../systems/sillytavern/">SillyTavern</a> it is
+seven interacting mechanisms with no fixture asserting what fires, which
+is the predictable end state.</p>
+<p><strong>And there is a result from a neighbouring field arguing that
+some of the flipping this page damps is worth keeping.</strong> <em>The
+Phenomenon of Policy Churn</em>, Schaul, Barreto, Quan and Ostrovski, <a
+href="https://arxiv.org/abs/2206.00730">arXiv:2206.00730</a>, v1 1 June
+2022, is about value-based reinforcement learning and not about memory:
+it finds that the greedy policy — the argmax over a learned value
+function — changes its chosen action in a large fraction of states
+within <em>a handful of gradient updates</em>, and concludes that this
+churn is <em>"a beneficial but overlooked form of implicit
+exploration"</em>, with ε-noise playing <em>"a much smaller role than
+expected"</em>.</p>
+<p>The mapping to retrieval is an analogy, and worth stating as one: a
+top-<em>k</em> over near-tied similarity scores is also an argmax over a
+learned function, and it also flips when that function moves — a
+re-embedding, a new model version, one more stored item. The
+transferable part is not a mechanism but a question this page does not
+otherwise ask. <strong>How stable is your ranking under changes you did
+not intend?</strong> Nobody in this atlas measures it, and it is cheap
+to measure: re-run the same queries after a re-index and count how many
+top-<em>k</em> sets changed. The churn paper's uncomfortable half is
+that the answer being "a lot" may not be a defect where recall feeds
+exploration — see <a
+href="../../compare/#sample-instead-of-rank-when-recall-feeds-exploration">sample
+instead of rank</a> — while it plainly is one where recall feeds an
+answer about a person. Sticky and cooldown damp the flip either way, and
+a system that adopts them should know which of those two it is.</p>
+<h2 id="in-the-analyzed-systems">In the analyzed systems</h2>
+<p><strong><a href="../../systems/sillytavern/">SillyTavern</a></strong>
+is the complete version. <code>WorldInfoTimedEffects</code> tracks
+sticky, cooldown and delay per entry across chat messages;
+<code>@@dont_activate</code> supplies suppression; and
+<code>NOT_ANY</code>/<code>NOT_ALL</code> key logic lets an entry
+declare conditions under which it must not fire at all. It is the only
+implementation in the atlas with all four.</p>
+<p><strong><a href="../../systems/neko/">Project N.E.K.O.</a></strong>
+arrives at suppression from the correction side rather than the
+authoring side: a ban-topic directive keyed on
+<code>(kind, term.casefold())</code> withholds a term from recall, and a
+hard filter drops disputed entries before the rerank. Its anti-repeat
+module attacks the same repetition problem from the generation end, with
+a BM25 corpus over the agent's own prior output.</p>
+<p><strong><a href="../../systems/z-waif/">Z-Waif</a></strong> shows the
+mechanism as a fossil, which is instructive. A commented-out
+<code>lorebook_check</code> implements a real cross-turn lockout — fire,
+set the counter to 9, decrement per turn — and the live
+<code>lorebook_gather</code> resets every counter at the start of each
+call, leaving the field as a within-pass dedup flag. The cooldown was
+implemented and then neutered. Separately, its retrieval caps the
+character's own words at two of six query terms and weights them
+<code>0.97</code>, which is the feedback loop closed by weighting rather
+than by state.</p>
+<p><strong><a href="../../systems/risuai/">RisuAI</a></strong> reserves
+a random band of its token budget so old material resurfaces at some
+rate — the opposite intervention, aimed at the same failure of
+recency-plus-similarity being the only signal.</p>
+<p>Absent everywhere else. No extraction-based system in this atlas
+carries per-unit activation state, and several describe the repetition
+it prevents as a known annoyance.</p>
+<h2 id="tests-to-write-first">Tests to write first</h2>
+<ul>
+<li>Fire an entry, advance one turn, assert it does not fire again while
+cooling.</li>
+<li>Fire a sticky entry, then present a turn it does not match, and
+assert it is still injected.</li>
+<li>Assert a delayed entry cannot fire before its turn threshold.</li>
+<li>Assert suppression beats a positive match, including a
+forced-activation path if one exists.</li>
+<li>Set sticky and cooldown on the same unit and assert the documented
+precedence — no implementation in this atlas states which wins.</li>
+<li>Reload the session and assert cooldowns survive, or document that
+they do not.</li>
+</ul>
+<p>The last two are where these implementations are actually weak, and
+both are cheap fixtures.</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="../decay-and-reinforcement/">Decay and reinforcement</a>
+moves a <em>score</em> over time; this moves <em>activation</em> and is
+orthogonal — a unit can be highly reinforced and still cooling
+down.</li>
+<li><a href="../rejected-value-tombstone/">Rejected-value tombstone</a>
+is durable suppression keyed on a value rather than a timed flag on a
+unit.</li>
+<li><a href="../memory-as-an-editing-surface/">Memory as an editing
+surface</a> is where these integers usually get set, because a person
+noticed the behaviour.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

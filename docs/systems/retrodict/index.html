@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An ARC-AGI-3 agent whose entire
+durable memory is one model-authored markdown file, governed by a prompt
+that ranks the raw log above it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Retrodict — Agent Memory Atlas">
+    <meta property="og:description" content="An ARC-AGI-3 agent whose
+entire durable memory is one model-authored markdown file, governed by a
+prompt that ranks the raw log above it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Retrodict — Agent Memory Atlas">
+    <meta name="twitter:description" content="An ARC-AGI-3 agent whose
+entire durable memory is one model-authored markdown file, governed by a
+prompt that ranks the raw log above it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Retrodict — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Retrodict",
+      "description": "An ARC-AGI-3 agent whose entire durable memory is one model-authored markdown file, governed by a prompt that ranks the raw log above it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A briefing for the successor</p>
+          <h1>Retrodict</h1>
+          <p class="document-deck">An ARC-AGI-3 agent whose entire
+durable memory is one model-authored markdown file, governed by a prompt
+that ranks the raw log above it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ryanbbrown/Retrodict">
+              <span>Source</span>
+              <strong>ryanbbrown/Retrodict</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89" title="71672e8e5adb008360f52a61ef9e2adf91a62d89">
+              <span>Analyzed revision</span>
+              <code>71672e8e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-27</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Retrodict is an ARC-AGI-3 agent — 3,888 lines of Python, 46 commits
+since 5 July 2026 — that reports solving every level of all 25 public
+games at 99.86% mean RHAE for $654 of API list price, on a published
+scorecard.</p>
+<p>The memory design is one file. <em>"What it establishes about a game
+is curated into a playbook memory file that outlives its context
+window."</em> The agent's context is dropped periodically to control
+cost; a fresh session resumes with the workspace and no recollection,
+reads <code>playbook.md</code>, and continues.</p>
+<p><strong>No marks</strong>, and the report exists because the
+<em>contract</em> around that file is the most carefully written
+statement of the summarise-for-your-successor problem in this corpus —
+and because none of it is machinery. Everything below is a prompt
+instruction addressed to a model that may or may not comply, with
+nothing in code checking that it did.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The prompt states the problem before the solution, which is why it is
+worth quoting at length:</p>
+<blockquote>
+<p><em>"To control cost, your in-context conversation is periodically
+dropped and you resume in a fresh session with no memory of your own
+reasoning — only your workspace files survive. log.txt survives but is
+large and raw: it records every board and action, not the conclusions
+you drew from them, so a fresh session relying on log.txt alone
+re-derives and re-tests rules you already settled, wasting actions and
+cost. Prevent this by maintaining playbook.md, a curated briefing for
+the successor who wakes up with your files but none of your
+memory."</em></p>
+</blockquote>
+<p>That is the clearest articulation of why a raw log is not memory that
+this atlas has read. The log is complete and useless at scale; the
+playbook is lossy and load-bearing; the successor needs the second and
+can check it against the first.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — everything durable is two files, and every rule about how they relate is prose in a system prompt rather than code</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: everything durable is two files, and every rule about how they relate is prose in a system prompt rather than code
+    M[&quot;model session&quot;] --&gt; ACT[&quot;proposes a plan queue&lt;br/&gt;each move carries predicted cells&quot;]
+    ACT --&gt; RUN[&quot;runner plays the queue&quot;]
+    RUN --&gt;|&quot;prediction miss&lt;br/&gt;or queue exhausted&quot;| M
+    RUN --&gt; LOG[(&quot;log.txt&lt;br/&gt;every board, action, plan&quot;)]
+
+    M --&gt;|&quot;write · edit&lt;br/&gt;generic file tools&quot;| PB[(&quot;playbook.md&lt;br/&gt;working model + working memory&quot;)]
+
+    LOG -.-&gt;|&quot;replay a hypothesis&lt;br/&gt;over past frames — free&quot;| M
+    DROP[&quot;context dropped&lt;br/&gt;to control cost&quot;] --&gt; SUCC[&quot;successor session&quot;]
+    PB --&gt; SUCC
+    LOG --&gt; SUCC
+    SUCC -.-&gt;|&quot;prompt: raw log is ground truth&quot;| PB
+
+    PB -.-&gt;|&quot;points marked&lt;br/&gt;checked vs assumed&lt;br/&gt;(prose convention only)&quot;| PLAN[&quot;no multi-step plan&lt;br/&gt;on an assumed point&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Hypotheses are tested against the record before they cost
+anything.</strong> The agent writes Python that replays a candidate rule
+over past frames in <code>log.txt</code>, <em>"where being wrong costs
+nothing."</em> Only a hypothesis that survives the log earns real
+actions. That is a verification step, and it is the reason the playbook
+can carry a <em>checked</em> marking at all.</p>
+<p><strong>The plan queue makes a wrong belief cheap to detect.</strong>
+A committed queue carries, per move, the exact cells the agent predicts
+the board will show. The runner plays it out and returns to the model
+only when the queue is exhausted or a prediction misses — with the diff.
+A falsified model announces itself.</p>
+<p><strong>The playbook is written with generic tools.</strong>
+<code>write</code> creates or overwrites <em>"a fresh, compacted
+playbook.md"</em>; <code>edit</code> replaces a string for <em>"cheap
+incremental updates."</em> Grepping the harness for
+<code>playbook</code> finds it in <code>prompts.py</code> and nowhere
+else — not in <code>runner.py</code>, not in <code>tools.py</code>. The
+file is a convention between the prompt and the model, and the code
+neither creates, validates, parses nor backs it up.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is none. <code>playbook.md</code> is markdown with a two-part
+structure the prompt asks for — a <em>working model</em> and a
+<em>working memory</em> — and no parser.</p>
+<p>The trust convention is the part worth recording, because it is a
+good design that stops one step short of being a mechanism:</p>
+<blockquote>
+<p><em>"Mark each point by how well the log supports it (checked against
+the log vs. still assumed), and do not build multi-step plans on
+merely-assumed points. The moment the log contradicts a point — or a
+plan built on it turns out impossible — [revise it]."</em></p>
+</blockquote>
+<p>Two epistemic states, a rule about what may be built on each, and a
+trigger for revision. As a specification of <code>trust_state</code> it
+is better than several implementations in this corpus. As an
+implementation it is a sentence in a prompt: nothing extracts the
+marking, nothing refuses a plan built on an assumed point, and nothing
+detects a point that was marked <em>checked</em> without being checked.
+The mark is withheld for that reason and not for the design's
+quality.</p>
+<p>The same is true of precedence. <em>"The raw log is the ground
+truth"</em> and <em>"nothing here is permanent"</em> are exactly the
+right rules for a lossy summary over a complete record — and they are
+enforced by the model choosing to obey them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The successor reads <code>playbook.md</code> first, then works over
+<code>log.txt</code> with code rather than by looking at frames. There
+is no index, no embedding and no ranking; retrieval is the model
+deciding what to grep. For a single-game workspace of one agent's own
+making, that is a defensible answer and it does not generalise past
+it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Compaction is a full rewrite: the model lays down a fresh playbook
+when the old one has drifted. Nothing records what the rewrite dropped.
+If a point was falsified and the compaction removed both the point and
+the note that it was falsified, the successor's only path back is the
+log — which is exactly what the playbook exists to avoid re-reading.</p>
+<p>That is the design's central risk and it is inherent rather than an
+oversight: a curated briefing that is cheaper than the record is also
+lossier than the record, and there is no diff.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>ThinHarness, gpt-5.6-sol at <code>max</code> reasoning effort, one
+workspace per game with <code>arclog.py</code> and a
+<code>scratch/</code> package seeded from
+<code>workspace_template/</code>. The log-as-context and plan-queue
+foundation is credited to RGB-Agent.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The honest summary: this is a system whose memory guarantees are
+entirely prompt-level, in a setting where that is close to reasonable.
+One agent, one game, one workspace, no other principal, no adversary,
+and a raw log that can adjudicate any dispute. There is no scope to
+enforce, no audit consumer, and no second party to review.</p>
+<p>What the corpus should take from it is the contract, not the
+architecture. The questions the prompt answers explicitly — why is the
+raw record not enough, what is the summary <em>for</em>, which parts of
+it may be planned on, what triggers a revision — are questions most
+memory systems in this atlas never write down at all.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,435 lines of tests across eight files, and none of them touches the
+playbook. The suite covers the log writer, the plan parser, the live
+cache, the prompt assembly and the tool sandbox — including
+<code>assert not result.ok, f"{module} must not be importable by the agent"</code>,
+a real must-not assertion, but about import isolation rather than memory
+retrieval. <code>negative_eval</code> is withheld on that: no committed
+case asserts that particular material stays out of a recall or out of
+the playbook.</p>
+<p>The public result is unusually well qualified for a self-report. The
+README gives 99.86% mean RHAE at $654 against a linked official
+scorecard, names <a href="../tycho/">Tycho</a> as scoring higher at
+100.00% and an estimated $2,986, and sends the reader to a comparison
+methodology document with the warning that <em>"cost methods and
+run-selection rules differ."</em> A comparison that names the system
+beating it, and links the qualifications, is rarer than the number.</p>
+<p>The scorecard is worth reading rather than the headline, because the
+headline undersells what happened. <a
+href="https://arcprize.org/scorecards/9c403765-db5b-40b1-beab-6fa3f40119b0">the
+official scorecard</a> records <strong>183/183 levels and 25/25
+environments, every one <code>WIN</code></strong>, in 7,703 actions.
+RHAE is relative human action efficiency, not a completion rate: 23 of
+the 25 games score 100.00 and the mean falls to 99.86 on two —
+<code>sk48-d8078629</code> at 98.64 and <code>sp80-589a99af</code> at
+97.77 — where the agent took roughly double Tycho's actions on those
+same two games. The 25 per-environment scores average to 99.8564, so the
+published figure recomputes from the table.</p>
+<p>Stated that way the comparison changes shape. Both harnesses solved
+every level of every public game; the 0.14-point difference is action
+efficiency on two of twenty-five, and this one did it for $654 against
+$2,986 — 4.6× less for the same 183 levels. The README's own framing,
+that Tycho <em>"scores higher"</em>, is accurate and reads as a larger
+gap than the scorecards support.</p>
+<p>The listing is publication, not verification: the ARC Prize community
+leaderboard states that only ARC-AGI-1 and ARC-AGI-2 semi-private
+results are run and verified, and that <em>"everything else is scored on
+a public set and self-reported."</em> The per-environment table under
+each entry is what makes a self-reported score checkable, and this one
+checks.</p>
+<p>Nothing was run for this review.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Write down why the summary exists.</strong> The paragraph
+explaining that a raw log makes a successor re-derive settled rules is
+the reason a curated file earns its cost. Most systems here have the
+file and not the argument.</p>
+<p><strong>If you ask a model to mark confidence, read the
+marking.</strong> Two states and a rule about what may be planned on
+each is a good design; it becomes a mechanism the moment something
+parses the mark and refuses the plan.</p>
+<p><strong>Record what a compaction dropped.</strong> A full-rewrite
+briefing with no diff can silently lose the note that a belief was
+falsified, and the only recovery is the record the briefing exists to
+avoid reading.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>Does anything survive between games?</strong> The playbook is
+per-game. Whether a lesson learned in game 3 can reach game 17 — the
+thing that would make this a memory system rather than a per-run
+scratchpad — was not found in the tree.</p>
+<p><strong>What does a compaction actually keep?</strong> No committed
+artifact shows a before-and-after playbook, so the compaction's loss
+rate is unmeasured.</p>
+<p><strong>Is the checked/assumed marking honoured?</strong> The blog
+post may report on it; the repository does not, and no test asserts
+it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/arc3/prompts.py</code></td>
+<td>The playbook contract, the checked/assumed rule, the tool
+descriptions</td>
+</tr>
+<tr>
+<td><code>src/arc3/runner.py</code></td>
+<td>The plan queue and the return-on-mismatch loop</td>
+</tr>
+<tr>
+<td><code>src/arc3/tools.py</code></td>
+<td><code>write</code> and <code>edit</code>, the only path to the
+playbook</td>
+</tr>
+<tr>
+<td><code>src/arc3/logwriter.py</code></td>
+<td><code>log.txt</code>, the ground truth the playbook is checked
+against</td>
+</tr>
+<tr>
+<td><code>workspace_template/</code></td>
+<td>The seeded per-game workspace</td>
+</tr>
+<tr>
+<td><code>docs/arc-agi-3-harness-comparison.md</code></td>
+<td>The cost and run-selection qualifications</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-28</strong> — <a
+href="https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89"><code class="commit-id" title="71672e8e5adb008360f52a61ef9e2adf91a62d89">71672e8e…</code></a>
+— same commit, second reading, covering the published scorecard. It
+records 183/183 levels and 25/25 environments, every one
+<code>WIN</code>, in 7,703 actions, and the 25 per-environment scores
+average to the published 99.8564. That reframes the README's own
+comparison: this harness and <a href="../tycho/">Tycho</a> solved
+exactly the same levels, the 0.14-point gap is action efficiency on two
+games out of twenty-five, and this one cost $654 against $2,986. Section
+10 says so. Marks unchanged at none.</p>
+<p><strong>2026-08-27</strong> — <a
+href="https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89"><code class="commit-id" title="71672e8e5adb008360f52a61ef9e2adf91a62d89">71672e8e…</code></a>
+— first reading, 3,888 lines of Python, 46 commits since 5 July 2026.
+Screened before reading: no auto-run surface, no unpinned surface, and
+one execution surface — <code>tests/conftest.py</code>, which runs on
+pytest collection before any test does. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to a reading agent and were treated
+as data. Nothing was installed and nothing was run. No marks. The
+durable memory is one model-authored <code>playbook.md</code> written
+through generic <code>write</code> and <code>edit</code> tools; grepping
+the harness finds <code>playbook</code> only in <code>prompts.py</code>,
+so no code creates, parses, validates or backs up the file.
+<code>trust_state</code> is withheld although the prompt specifies two
+epistemic states — a point <em>checked against the log</em> versus
+<em>still assumed</em>, with a rule against building multi-step plans on
+the second — because nothing reads the marking; it is a convention
+addressed to the model. <code>tombstone</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>human_review</code> are absent. <code>negative_eval</code> is
+withheld: the suite's must-not assertions are about module import
+isolation, not about material staying out of a recall. The reading
+covers the prompts, the runner, the tools and the tests; the ThinHarness
+dependency and the linked comparison methodology were not traced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

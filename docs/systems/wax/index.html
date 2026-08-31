@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A harness that forks a child,
+kills it at a named point in the commit sequence, reopens the file and
+asserts the exact frame count — and fails if the child did not crash.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Wax — Agent Memory Atlas">
+    <meta property="og:description" content="A harness that forks a
+child, kills it at a named point in the commit sequence, reopens the
+file and asserts the exact frame count — and fails if the child did not
+crash.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wax — Agent Memory Atlas">
+    <meta name="twitter:description" content="A harness that forks a
+child, kills it at a named point in the commit sequence, reopens the
+file and asserts the exact frame count — and fails if the child did not
+crash.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Wax — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Wax",
+      "description": "A harness that forks a child, kills it at a named point in the commit sequence, reopens the file and asserts the exact frame count \u2014 and fails if the child did not crash.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">SIGKILL the writer, then count the
+frames</p>
+          <h1>Wax</h1>
+          <p class="document-deck">A harness that forks a child, kills
+it at a named point in the commit sequence, reopens the file and asserts
+the exact frame count — and fails if the child did not crash.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/christopherkarani/Wax">
+              <span>Source</span>
+              <strong>christopherkarani/Wax</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66" title="93cbf51f76f7db4f837c744f84d26554f7fc9f66">
+              <span>Analyzed revision</span>
+              <code>93cbf51f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Wax is a Swift-native memory engine — 97,000 lines, Apache 2.0, iOS
+and macOS — that keeps documents, embeddings and structured knowledge in
+a <strong>single <code>.wax</code> file</strong>: "No servers. No API
+keys. No Docker. Just one file you can AirDrop, sync, or back up like
+any other document."</p>
+<p><strong>The mechanism worth the report is
+<code>Sources/WaxCrashHarness/main.swift</code>.</strong></p>
+<p>It is a real crash-injection test. The parent seeds a store with one
+frame, forks itself as a child with
+<code>WAX_CRASH_INJECT_CHECKPOINT</code> set to a named point inside the
+commit sequence, and waits. Three scenarios:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>scenario</th>
+<th>checkpoint</th>
+<th>frames expected after recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>toc</code></td>
+<td><code>after_toc_write_before_footer</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>footer</code></td>
+<td><code>after_footer_fsync_before_header</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>header</code></td>
+<td><code>after_header_write_before_final_fsync</code></td>
+<td>2</td>
+</tr>
+</tbody>
+</table></div>
+<p>The child is expected to die by <code>SIGKILL</code>. If it does not,
+that is a failure —
+<code>HarnessError.childDidNotCrash(status:reason:)</code> — and the
+child's own fall-through path writes "child path returned without
+injected crash" and exits 33. <strong>The test fails closed at both
+ends.</strong></p>
+<p>Then the parent reopens the file and asserts three things: the frame
+count is exactly what that checkpoint should have committed, the seed
+frame's bytes are still <code>"seed"</code>, and where two frames are
+expected, the second frame's bytes are
+<code>"payload-&lt;scenario&gt;"</code>.</p>
+<p>Not "the file opens". Not "no error was thrown". The exact durability
+boundary of each fsync, asserted by content.</p>
+<p>Almost every system in this atlas claims durability by using SQLite
+and moving on. This one wrote its own single-file format —
+double-buffered header pages, a TOC, a footer, a WAL ring — and then
+wrote the thing that proves the format's commit protocol survives a kill
+at each step.</p>
+<p><strong>The second mechanism is promotion as a proposal.</strong>
+<code>memory_promote</code> computes a
+<code>BrokerPromotionProposal</code> — suggested type, suggested
+durability, confidence, <code>recall_count</code>,
+<code>unique_query_count</code>, <code>last_retrieved_at_ms</code>,
+<code>average_relevance_score</code>, <code>should_write</code>, a list
+of <code>reasons</code>, and <code>duplicate_matches</code> with
+similarity scores — and returns it <strong>without writing</strong>,
+because <code>approve</code> defaults to <code>false</code>. A session
+event records <code>.promotionReviewed</code>. Only when a caller passes
+<code>approve: true</code> and the proposal itself says
+<code>shouldWrite</code> does the memory get written, and the event
+becomes <code>.promotionWritten</code>.</p>
+<p><strong>And the hazard is fifteen lines away.</strong>
+<code>promote</code> — the shorter alias on the same command surface —
+sets <code>approve</code> to <code>true</code> when the caller omits it,
+and delegates to <code>memory_promote</code>. The same operation, two
+names, opposite defaults.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Session memory is the scratch tier. Long-term memory is the durable
+tier. Moving between them is <code>promote</code>, and promotion is
+where the review lives.</p>
+<p>Every memory carries a <code>MemoryType</code> (note, task_state,
+user_preference, decision, lesson, handoff, constraint, fact) and a
+<code>MemoryDurability</code> (ephemeral, working, durable, locked).
+Retrieval reranks on those, and on whether the memory belongs to the
+repo or project you are currently in.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the tool's default is to propose rather than write, the alias's default is to write, and only a durable or locked promotion is screened for secrets</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the tool&#39;s default is to propose rather than write, the alias&#39;s default is to write, and only a durable or locked promotion is screened for secrets
+flowchart TD
+    S[&quot;session memory&quot;] --&gt;|&quot;memory_promote&quot;| P[&quot;BrokerPromotionProposal:&lt;br/&gt;type, durability, confidence,&lt;br/&gt;recall_count, unique_query_count,&lt;br/&gt;reasons[], duplicate_matches[]&quot;]
+    P --&gt; AP{&quot;approve?&quot;}
+    AP --&gt;|&quot;false — the default for memory_promote&quot;| RV[&quot;session event .promotionReviewed&lt;br/&gt;nothing written&quot;]
+    AP --&gt;|&quot;true — the default for the alias &#39;promote&#39;&quot;| SEC{&quot;durable or locked?&quot;}
+    SEC --&gt;|yes| SC{&quot;SecretHeuristics: private key,&lt;br/&gt;AKIA…, github_pat_…, sk-…, xox[pbar]-…&quot;}
+    SC --&gt;|&quot;detected&quot;| REF[&quot;throw: refusing to store durable&lt;br/&gt;memory containing secret-like content&quot;]
+    SC --&gt;|clean| WR[&quot;remember + flush&quot;]
+    SEC --&gt;|&quot;ephemeral or working&quot;| WR
+    WR --&gt; EV[&quot;session event .promotionWritten&quot;]
+    Q[&quot;query&quot;] --&gt; H[&quot;hybrid text + vector search&quot;]
+    H --&gt; RR[&quot;semanticMemoryRerank&quot;]
+    RR --&gt; EXP{&quot;expired?&quot;}
+    EXP --&gt;|&quot;adjustment = −10, guard drops it&quot;| GONE[&quot;not returned&quot;]
+    EXP --&gt;|no| BOOST[&quot;+0.9 same repo, +0.7 same project,&lt;br/&gt;+0.50 preference, +0.45 decision…&lt;br/&gt;reasons attached as explanations&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Thirteen Swift targets. <code>WaxCore</code> holds the file format
+and the <code>Wax</code> actor — "the file descriptor, lock, header,
+TOC, and in-memory index state. All mutable state is isolated within
+this actor for thread safety." <code>Wax</code> is the memory layer
+above it (Broker, Orchestrator, UnifiedSearch, Temporal, Maintenance,
+PhotoRAG, VideoRAG). <code>WaxTextSearch</code> and
+<code>WaxVectorSearch</code> are the two retrieval halves, with
+<code>WaxVectorSearchArctic</code> and
+<code>WaxVectorSearchMiniLM</code> shipping CoreML models and
+<code>WaxBertTokenizer</code> beside them. <code>WaxCLI</code>,
+<code>WaxRepo</code>, <code>WaxMCPServer</code>, and
+<code>WaxCrashHarness</code> are the executables.</p>
+<p>The <code>Wax</code> actor's stored properties are worth skimming for
+what they say about the format: <code>header</code> and
+<code>selectedHeaderPageIndex</code> (double-buffered headers),
+<code>toc</code>, <code>wal: WALRingWriter</code>,
+<code>pendingMutations</code>, <code>generation</code>,
+<code>dataEnd</code>, staged lexical and vector indexes each with their
+own stamp, and three <code>walProactiveCommit*</code> thresholds. This
+is a storage engine, not a wrapper.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Crash</strong> —
+<code>Sources/WaxCrashHarness/main.swift</code>
+(<code>CrashScenario</code>, <code>runScenario</code>,
+<code>seedStore</code>, <code>runChildProcess</code>);
+<code>Sources/WaxCore/Wax.swift</code>
+<code>CrashInjectionCheckpoint</code>.</p>
+<p><strong>Promote</strong> —
+<code>Sources/Wax/Broker/AgentBrokerService.swift</code>
+<code>memoryPromote</code> (<code>:555</code>, <code>:621-651</code>)
+and <code>promote</code> (<code>:657-663</code>);
+<code>Sources/Wax/Broker/BrokerMemoryInsights.swift</code> for the
+proposal.</p>
+<p><strong>Refuse</strong> —
+<code>AgentBrokerService.validateDurableWriteContent</code>
+(<code>:2504</code>);
+<code>MemorySemantics.SecretHeuristics.detectSecretLikeContent</code>.</p>
+<p><strong>Rank</strong> —
+<code>Sources/Wax/MemorySemantics.swift</code>
+<code>rankingReasons</code> (<code>:236</code>);
+<code>Sources/Wax/UnifiedSearch/UnifiedSearch.swift</code>
+<code>semanticMemoryRerank</code> (<code>:600</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Metadata is string keys under a <code>wax.</code> prefix, enumerated
+in <code>MemoryMetadataKeys</code>: <code>memory_type</code>,
+<code>durability</code>, <code>project</code>, <code>repo</code>,
+<code>created_at_ms</code>, <code>expires_at_ms</code>,
+<code>confidence</code>, <code>reviewed</code>,
+<code>promoted_from_session</code>, <code>promoted_from_frame</code>,
+<code>duplicate_of_frame</code>, and six <code>source_*</code> keys
+including <code>source_hash</code> and <code>source_managed</code>.</p>
+<p><code>promoted_from_frame</code> and <code>duplicate_of_frame</code>
+are the two provenance links that matter: a durable memory can say which
+session frame it came from, and which existing frame it duplicates.</p>
+<p><code>MemoryDurability</code> — ephemeral, working, durable, locked —
+is a <strong>retention</strong> tier, not an epistemic one, and this
+report treats it as such. <code>confidence</code> is a
+<code>Float</code>. <code>reviewed</code> is a <code>Bool</code> that
+the write surface accepts and <code>rankingReasons</code> never reads: a
+memory marked reviewed ranks identically to one that is not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid text and vector search, then <code>semanticMemoryRerank</code>
+over a capped window.</p>
+<p><strong>Expiry is a read-path exclusion, implemented as a
+sentinel.</strong> <code>rankingReasons</code> returns
+<code>(-10, ["expired memory"])</code> for an expired memory, and the
+rerank drops anything whose adjustment fails <code>&gt; -9.5</code>. It
+works, and there is a committed test proving it (section 10). It is
+still a filter smuggled through the scoring channel, where a future
+contributor adding a large boost has no signal that −10 is
+load-bearing.</p>
+<p><strong>Scope is a boost, not a filter.</strong> <code>+0.9</code>
+for the same repo, <code>+0.7</code> for the same project, with
+<code>"same repo"</code> and <code>"same project"</code> appended to the
+result's <code>explanations</code>. Nothing removes an out-of-scope
+memory. That is a legitimate design for a single-user local file — there
+is no other tenant to leak to — and it means the
+<code>scope_enforced</code> mark is not earned here: the key changes
+ordering, not visibility.</p>
+<p>The <code>explanations</code> array is a small pleasure: every result
+carries the reasons it ranked where it did, in the same terms the code
+uses.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>put</code> then <code>commit</code> through the actor, with the
+WAL ring and a proactive-commit policy driven by three byte
+thresholds.</p>
+<p><strong><code>validateDurableWriteContent</code> is the guard worth
+copying.</strong> It parses the semantics, returns immediately unless
+the durability is <code>durable</code> or <code>locked</code>, and then
+refuses the write if <code>SecretHeuristics</code> finds a private-key
+header, an <code>AKIA…</code> AWS key, a <code>github_pat_…</code>
+token, an <code>sk-…</code> OpenAI-style key or an
+<code>xox[pbar]-…</code> Slack token — naming the kind in the thrown
+message.</p>
+<p>The graded application is the interesting part: the check runs on the
+tier that persists, not on scratch memory. The consequence is also worth
+stating plainly — an ephemeral or working memory containing an API key
+is written without complaint, and heuristics of this shape miss anything
+not on the list.</p>
+<p>Correction is by TTL and by the maintenance live-set rewrite. There
+is no supersession pointer, no tombstone, and no record of a rejected
+value: a secret refused at write time leaves nothing behind, so the same
+content re-offered as <code>working</code> durability is stored.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with a broker command surface —
+<code>memory_append</code>/<code>remember</code>,
+<code>memory_promote</code>/<code>promote</code>,
+<code>knowledge_capture</code>, <code>session_start</code>, handoff and
+checkpoint — plus a CLI and a Swift package API. Sessions are explicit
+objects with a manifest, an agent ID, a run ID and an event log.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Audit log — awarded.</strong> <code>BrokerSessionEvent</code>
+is a JSONL record appended by
+<code>BrokerSessionPersistence.appendEvent</code> — encode, newline,
+<code>seekToEnd</code>, write — carrying session ID, agent ID, run ID
+and a millisecond timestamp. Its kinds cover mutations
+(<code>remembered</code>, <code>promotionWritten</code>,
+<code>handoff</code>, <code>checkpoint</code>) as well as retrieval
+(<code>retrievalHit</code>), and the promotion events record
+<code>approved</code> and <code>written</code> as separate booleans, so
+a reviewed-but-not-written promotion is distinguishable from an approved
+one.</p>
+<p><strong>Human review — awarded.</strong> <code>approve</code>
+defaults to <code>false</code> on <code>memory_promote</code>, the
+proposal is rendered for a person with its reasons and duplicate
+matches, and the decision is logged either way. This is a real
+adjudication surface, and it is the <em>right</em> place for one: at
+promotion from scratch to durable.</p>
+<p><strong>And the alias undoes it by default.</strong>
+<code>promote</code> sets <code>approve</code> to <code>true</code> when
+absent. An agent reading the command list sees both names with the same
+parameters; one asks and one acts. The mark stands because the reviewed
+path exists and works, but a reader adopting this should change that
+default.</p>
+<p><strong>Negative eval — awarded</strong>, section 10.</p>
+<p><strong>Scope — withheld</strong>, per section 6: a ranking boost,
+never an exclusion.</p>
+<p><strong>Trust state — withheld.</strong> Durability is retention,
+<code>confidence</code> is a float, and <code>reviewed</code> is written
+but not read at retrieval.</p>
+<p><strong>Bitemporal — no.</strong> <code>created_at_ms</code>,
+<code>expires_at_ms</code> and a <code>source_date</code>, but no
+separation of when a fact was true from when Wax recorded it. The
+<code>Temporal</code> module resolves natural-language dates into a
+<code>SearchTimeRange</code>, which is query parsing rather than a
+validity model.</p>
+<p><strong>Tombstone — no.</strong></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> 173 Swift test files across six suites
+(<code>WaxCoreTests</code>, <code>WaxTests</code>,
+<code>WaxIntegrationTests</code>, <code>WaxCLITests</code>,
+<code>WaxMCPServerTests</code>, <code>WaxArcticTests</code>), plus the
+crash harness as its own executable target.</p>
+<p><code>Tests/WaxIntegrationTests/UnifiedSearchTests.swift</code>
+contains <code>expiredMemoriesAreExcludedFromUnifiedSearch</code>, which
+writes two frames — one with <code>wax.expires_at_ms</code> one second
+in the past, one current — indexes both, searches, and asserts the
+active frame is present <strong>and the expired frame is not</strong>. A
+committed case asserting that particular material must not be retrieved:
+the <code>negative_eval</code> mark, in its plainest form.</p>
+<p>The crash harness is the more unusual artifact and does not fit that
+mark (durability, not retrieval), but it is the better piece of
+engineering.</p>
+<p><strong>One gap.</strong> <code>CrashInjectionCheckpoint</code>
+declares four checkpoints — <code>afterTocWriteBeforeFooter</code>,
+<code>afterFooterWriteBeforeFsync</code>,
+<code>afterFooterFsyncBeforeHeader</code>,
+<code>afterHeaderWriteBeforeFinalFsync</code> — and
+<code>CrashScenario</code> exercises three.
+<code>after_footer_write_before_fsync</code> is defined and never killed
+at.</p>
+<p>No retrieval benchmark and no committed latency numbers were found;
+the README's speed claims are prose.</p>
+<p><strong>I ran nothing.</strong> This is macOS Swift and the tree was
+read, not built.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Kill the writer at named points in your commit
+sequence.</strong> Not "does it reopen" — fork a child, SIGKILL it after
+the TOC write, after the footer fsync, after the header write, then
+assert the exact number of committed records <em>and their bytes</em>.
+If you wrote your own storage format, this is the test that earns
+it.</li>
+<li><strong>Fail when the crash does not happen.</strong>
+<code>childDidNotCrash</code> as an error, and an exit code on the
+child's fall-through path. A crash test that silently passes when
+injection breaks is worse than no crash test.</li>
+<li><strong>Make promotion a proposal.</strong> Return suggested type,
+suggested durability, confidence, recall count, unique query count, the
+reasons, and the duplicate matches with similarity scores — and write
+nothing until someone says yes.</li>
+<li><strong>Log the review as well as the write.</strong>
+<code>.promotionReviewed</code> versus <code>.promotionWritten</code>,
+with <code>approved</code> and <code>written</code> as separate
+booleans, means the log distinguishes "a person looked and declined"
+from "nothing happened".</li>
+<li><strong>Grade the secret check by durability tier.</strong> Refusing
+private keys, AWS keys, GitHub PATs, OpenAI-style keys and Slack tokens
+on the durable path, and naming which one was detected in the error, is
+a cheap guard at exactly the boundary that matters.</li>
+<li><strong>Attach the ranking reasons to the result.</strong>
+<code>"same repo"</code>, <code>"decision memory"</code>,
+<code>"recent task state"</code>, <code>"expired memory"</code> — the
+explanation is the same string the scoring code used, so it cannot drift
+from the behaviour.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not ship two names for one call with opposite approval
+defaults.</strong> <code>memory_promote</code> asks;
+<code>promote</code> acts. Whichever you keep, make the safe default the
+only default.</li>
+<li><strong>Do not express a hard exclusion as a magic score.</strong>
+<code>-10</code> against a <code>&gt; -9.5</code> guard is a filter
+wearing a ranking's clothes. Filter first, then rank.</li>
+<li><strong>Do not accept a <code>reviewed</code> flag you never
+read.</strong> If a human's approval does not change retrieval, the flag
+is documentation.</li>
+<li><strong>Do not let the scratch tier be the hole in your secret
+check.</strong> Ephemeral and working memories skip
+<code>validateDurableWriteContent</code> entirely, and session memory is
+still on disk.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice if you are shipping an Apple-platform agent and want
+memory that is a document — one file, no daemon, CoreML embeddings on
+device. The single-file format with a proven commit protocol is a real
+asset for a mobile app where the process can be killed by the OS at any
+moment, which is precisely the scenario the harness models.</p>
+<p>Wrong choice if you need multi-tenant isolation: scope here changes
+ranking, not visibility, and the design assumes one person's file.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Why is <code>after_footer_write_before_fsync</code> not
+exercised?</strong> It is the one checkpoint declared and unused, and it
+is the one where a lost fsync is most interesting.</li>
+<li><strong>Does anything read <code>wax.reviewed</code>?</strong> No
+consumer was found in ranking or retrieval.</li>
+<li><strong>What does the maintenance live-set rewrite do to expired
+frames?</strong> <code>LiveSetRewriteOptions</code> and
+<code>LiveSetRewriteReport</code> exist; whether compaction removes
+expired content or only reclaims space was not traced.</li>
+<li><strong>Is the promotion proposal's <code>shouldWrite</code>
+overridable?</strong> The write requires
+<code>approve &amp;&amp; proposal.shouldWrite</code>; whether a caller
+can force past a <code>shouldWrite: false</code> was not
+established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Crash harness</strong> —
+<code>Sources/WaxCrashHarness/main.swift</code>
+(<code>HarnessError</code> <code>:4-23</code>,
+<code>CrashScenario</code> with checkpoints and expected frame counts
+<code>:25-47</code>, <code>runScenario</code> <code>:95-129</code>,
+<code>seedStore</code> <code>:131-141</code>,
+<code>runChildProcess</code> <code>:143</code>),
+<code>Sources/WaxCore/Wax.swift</code>
+(<code>CrashInjectionCheckpoint</code> <code>:151-158</code>, the
+actor's stored state <code>:160-190</code>)</p>
+<p><strong>Promotion and review</strong> —
+<code>Sources/Wax/Broker/AgentBrokerService.swift</code>
+(<code>memoryPromote</code> approve parsing <code>:555</code>, the write
+gate <code>:621-631</code>, the session event <code>:633-646</code>, the
+response <code>:648-654</code>, the <code>promote</code> alias
+<code>:657-663</code>, <code>renderPromotionProposal</code>
+<code>:2512</code>, <code>validateDurableWriteContent</code>
+<code>:2504-2511</code>, <code>appendSessionEvent</code>
+<code>:1489-1508</code>),
+<code>Sources/Wax/Broker/BrokerMemoryInsights.swift</code> (duplicates
+and reasons <code>:100-135</code>),
+<code>Sources/Wax/Broker/AgentBrokerCommandSurface.swift</code>,
+<code>Sources/Wax/Broker/BrokerSessionPersistence.swift</code>
+(<code>BrokerSessionEvent.Kind</code> <code>:70-79</code>,
+<code>appendEvent</code> <code>:173-183</code>)</p>
+<p><strong>Semantics and ranking</strong> —
+<code>Sources/Wax/MemorySemantics.swift</code> (<code>MemoryType</code>
+<code>:3-12</code>, <code>MemoryDurability</code> <code>:14-19</code>,
+<code>MemoryScopeContext</code> <code>:21-38</code>,
+<code>MemoryMetadataKeys</code> <code>:82-104</code>,
+<code>SecretHeuristics</code> <code>:106+</code>,
+<code>rankingReasons</code> <code>:236-290</code>),
+<code>Sources/Wax/UnifiedSearch/UnifiedSearch.swift</code>
+(<code>semanticMemoryRerank</code> <code>:600-653</code>,
+<code>baseExplanations</code> <code>:655</code>)</p>
+<p><strong>Temporal</strong> —
+<code>Sources/Wax/Temporal/TemporalResolution.swift</code>,
+<code>TemporalNormalizer.swift</code></p>
+<p><strong>Tests</strong> —
+<code>Tests/WaxIntegrationTests/UnifiedSearchTests.swift</code>
+(<code>expiredMemoriesAreExcludedFromUnifiedSearch</code>
+<code>:1157-1190</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66"><code class="commit-id" title="93cbf51f76f7db4f837c744f84d26554f7fc9f66">93cbf51f…</code></a>
+— first reading. Screened before reading; the tree was read, never
+built, and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

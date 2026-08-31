@@ -189,7 +189,7 @@ twelve-replacement sanitiser that strips <code>'</code>. Names come from
 LLM extraction over user text.</p>
 <p>Three marks. BUSL-1.1, 426 commits since 19 October 2025, pinned at
 <a
-href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code>b434f92a10d5b95aceab3f845d54472212672a10</code></a>
+href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
 (27 August 2026), with 585 test cases across 17,404 lines.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a triple, and the design's one real idea is what sits in
@@ -412,8 +412,9 @@ to fix first.</strong></p>
 <pre class="python"><code>MATCH (a:{&quot;:&quot;.join(self._clean_labels(subject.labels))}) WHERE a[&#39;name&#39;] = &#39;{subject.name}&#39;
 MATCH (b:{&quot;:&quot;.join(self._clean_labels(object.labels))}) WHERE b[&#39;name&#39;] = &#39;{object.name}&#39;</code></pre>
 <p><code>_clean_labels</code> replaces spaces, hyphens, dots, commas,
-colons, semicolons, brackets, braces and single quotes — twelve
-substitutions, including the quote that matters. It is applied to the
+colons, semicolons, brackets, braces and single quotes — thirteen
+chained <code>replace()</code> calls, one for the space and twelve for
+punctuation, including the quote that matters. It is applied to the
 labels and not to the names, on the same two lines. Node names are
 produced by an LLM reading user-supplied text, so a name containing an
 apostrophe breaks the query and a crafted one is injection against a
@@ -480,9 +481,18 @@ console displays the graph rather than gating it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><strong>585 cases across 17,404 lines in 73 files</strong>, against
-45,741 lines of source. Fourteen skips, and every one is a
-<code>skipUnless</code> on an unavailable service — Postgres, NetworkX
-dependencies — rather than a behaviour quietly excused.</p>
+45,741 lines of source. Fourteen skips, and every one is gated on the
+environment rather than excusing a behaviour. Four are decorators —
+three <code>skipUnless</code> and one <code>skipIf</code> — on an
+unavailable service or dependency (Postgres, the PostgreSQL/NetworkX
+imports). The other ten are inline <code>self.skipTest</code> calls for
+material that is not in the tree: three for absent local benchmark
+artifacts and stored ESCI evals, four for frozen search datasets and
+smoke fixtures, three for optional search and recsys plugins that are
+not installed. So most of the skipping is the benchmark corpus being
+absent, not a service being down — which matters for reading section
+10's numbers, since the suite that runs by default is smaller than 585
+by whatever those ten cover.</p>
 <p><code>tests/test_event_hub_invalidation.py</code> is the best test in
 the repository and is the whole basis of the <code>negative_eval</code>
 mark. Three cases over one fake graph adapter: a functional attribute
@@ -713,8 +723,23 @@ brain resolution, validation and the per-brain PAT.</li>
 supersession cases.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
+— count audit at the same pin. Two figures were wrong.
+<code>_clean_labels</code>
+(<code>src/lib/neo4j/client.py:156-176</code>) chains thirteen
+<code>replace()</code> calls, not twelve — one for the space and twelve
+for punctuation; the injection finding it supports is verbatim-correct
+and unchanged. Section 10 said all fourteen skips are
+<code>skipUnless</code> on an unavailable service; only four are
+decorators (three <code>skipUnless</code>, one <code>skipIf</code>) and
+ten are inline <code>self.skipTest</code> calls for absent benchmark
+artifacts, frozen datasets and uninstalled optional plugins. Every skip
+is still environment-gated and no behaviour is excused, but the
+default-run suite is correspondingly smaller than 585. No finding or
+mark changed.</p>
 <p><strong>2026-08-30</strong> — <a
-href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code>b434f92a10d5b95aceab3f845d54472212672a10</code></a>
+href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
 — first reading, at 426 commits. Screened before reading: no auto-run
 surface, three build-time execution surfaces (a <code>Makefile</code>,
 <code>tests/conftest.py</code>, and a <code>prepublishOnly</code> script

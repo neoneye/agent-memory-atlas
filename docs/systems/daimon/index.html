@@ -160,7 +160,7 @@ falsified before it is stored.</p>
 Quote verification certifies <em>transcription</em>, not truth: the
 model can conclude "the tests pass", be wrong, and the transcript will
 faithfully record it saying so. <code>ground_outcomes</code>
-(<code>serializer.py:1331</code>) narrows that gap by lexicon — if an
+(<code>serializer.py:1380</code>) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green)
 and the item cites no tool-result message as evidence, the item is
 downgraded to <code>inferred</code> even though its quote verified. The
@@ -189,7 +189,7 @@ less proven.</p>
 <p>A memory is a <strong>checkpoint item</strong>: a sentence of working
 state, classified into one of six fields, with a trust class and a
 provenance trail.</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Field</th>
@@ -230,7 +230,7 @@ provenance trail.</p>
 bare string</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>Three of six carry, and the column is not decoration:
 <code>carries</code> is the last field of <code>ItemField</code> in
 <code>schema.py:42-48</code>, and <code>carry.merge</code> reads it
@@ -296,9 +296,9 @@ could not break it.</p>
 append-only in practice — <code>last_verified</code> is stamped in
 exactly one place and the docstring forbids any other writer — and
 liveness is a <strong>fold over an event log at read time</strong>
-(<code>store.resolutions</code>, <code>store.py:2087</code>;
-<code>store.is_resolved</code>, <code>store.py:2128</code>):</p>
-<table>
+(<code>store.resolutions</code>, <code>store.py:2110</code>;
+<code>store.is_resolved</code>, <code>store.py:2151</code>):</p>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Latest event for an id</th>
@@ -329,25 +329,25 @@ index</strong></td>
 <td>resolved, withheld</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>Statuses are free-form by design and readers prefix-match, so an
 unknown status resolves rather than vanishes — the writer bothered to
 record a lifecycle fact. Same-second ties break on event
 <em>content</em>, never file order, so a reordered log folds identically
-(<code>_tie_wins</code>, <code>store.py:1960</code>).</p>
+(<code>_tie_wins</code>, <code>store.py:2098</code>).</p>
 <p>Three actors can move an item, and the code is explicit about which
 is which. <strong>Code</strong> downgrades trust classes and emits
 supersede <em>candidates</em>. <strong>The model</strong> proposes items
 and typed <code>supersedes</code> links but never writes the code-owned
 fields — <code>strip_code_owned_keys</code>
-(<code>serializer.py:1904</code>) deletes any the model emits. <strong>A
+(<code>serializer.py:2029</code>) deletes any the model emits. <strong>A
 human</strong> resolves, forgets, and re-opens — and re-opening a
 resolved item requires evidence: either the item's code anchor still
 checks out live, or an explicit <code>--evidence</code> string.
 <code>_cmd_reverify</code> refuses otherwise, with the reason stated in
 the source: <em>"re-stamping without evidence would mark an unchecked
 claim verified — the one thing this tool must never do to its own audit
-trail"</em> (<code>cli/lifecycle.py:713</code>).</p>
+trail"</em> (<code>cli/lifecycle.py:749</code>).</p>
 <p>The system therefore treats memory as <strong>attested transcription
 plus explicitly labelled inference</strong>, never as ground truth. The
 briefing's own top section is called
@@ -484,7 +484,7 @@ violation pattern with an expiry condition: the scar retires when
 <code>listing</code> grows a <em>required</em> polarity parameter,
 making an unscoped call impossible to write.</p>
 <h3 id="a-third-store-and-a-fourth">A third store and a fourth</h3>
-<p><code>relations.py</code> (578 lines) is a project-scoped
+<p><code>relations.py</code> (637 lines) is a project-scoped
 <strong>typed relation ledger</strong> — <code>revision-of</code>,
 <code>answers</code>, <code>supersedes</code>,
 <code>reclassified-from</code> — folded from
@@ -610,7 +610,7 @@ rows carrying only <code>tool_result</code> blocks are surfaced as
 <code>role: "tool"</code> with a capped payload, which is what makes
 outcome grounding possible on that host and nowhere else.</p>
 <p><strong>Extraction.</strong> <code>serializer.serialize_strict</code>
-(<code>serializer.py:2049</code>) gates on <code>min_messages</code> (10
+(<code>serializer.py:2174</code>) gates on <code>min_messages</code> (10
 by default; tool rows do not count), renders the transcript, and chunks
 it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
 through the D-016 prompt, each cached by content hash under
@@ -640,7 +640,7 @@ merging.</p>
 first, retrying OR-joined when AND matches nothing, ordered by
 <code>superseded_by IS NOT NULL</code>, then bm25, then a silent
 <code>frontier</code> recency tiebreak. <code>recall.suggest</code>
-(<code>recall.py:1053</code>) is the proactive path behind
+(<code>recall.py:1099</code>) is the proactive path behind
 <code>UserPromptSubmit</code>, gated hard toward silence: unknown
 project, fewer than two salient terms, or fewer than two distinct shared
 terms with a matched session all return <code>[]</code>.</p>
@@ -661,8 +661,9 @@ product claim — exposing four read-only tools
 (<code>daimon_recall</code>, <code>daimon_brief</code>,
 <code>daimon_projects</code>, <code>daimon_status</code>) through thin
 shims in <code>mcp_tools.py</code>.</p>
-<p><strong>Tests.</strong> 1,974 test functions across ~29,700 lines
-under <code>plugin/tests/</code>, against ~15,200 lines of source.</p>
+<p><strong>Tests.</strong> 3,929 test functions across ~62,300 lines
+under <code>plugin/tests/</code>, against ~30,800 lines of source in
+<code>plugin/daimon_briefing/</code>.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The checkpoint is a single JSON document:</p>
 <pre class="json"><code>{
@@ -715,7 +716,7 @@ Only immutable per-author files sync — no mutable pointer ever lands in
 the sidecar — which makes the git merges conflict-free by construction.
 Teammates' items are attributed and never merged into yours.</p>
 <p><strong>Staleness</strong> has a dedicated read-time signal.
-<code>briefing.stale_carried</code> (<code>briefing.py:505</code>) flags
+<code>briefing.stale_carried</code> (<code>briefing.py:602</code>) flags
 carried items whose effective last-verified age exceeds seven days, and
 the docstring states the reasoning precisely: a fresh checkpoint
 restating a carried item <strong>is not corroboration</strong>, because
@@ -932,7 +933,7 @@ pass.</p>
 <p><strong><code>worldcheck</code> is where a stored claim is checked
 against the world</strong>, and it covers five claim classes
 (<code>worldcheck.py:89-99</code>):</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Class</th>
@@ -967,7 +968,7 @@ against the world</strong>, and it covers five claim classes
 <td>no</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>Four of the five are pure disk reads, so the majority of the pass
 works with no <code>gh</code> on <code>PATH</code>, no GitHub remote and
 no network — which matters because it makes verification available to a
@@ -997,12 +998,12 @@ dropped; nothing the pass learns is persisted.</p>
 <p>The local probes read like code written by someone bitten by each of
 these cases, and the reasoning sits beside the mechanism:</p>
 <ul>
-<li><code>_probe_branch</code> (<code>:332</code>) consults <strong>both
+<li><code>_probe_branch</code> (<code>:433</code>) consults <strong>both
 halves of git's ref storage</strong> — a loose
 <code>refs/heads/&lt;name&gt;</code> file <em>and</em>
 <code>packed-refs</code> — because <em>"every fresh clone packs its
 refs, so missing this would contradict on sight."</em></li>
-<li><code>_git_common_dir</code> (<code>:308</code>) follows the
+<li><code>_git_common_dir</code> (<code>:409</code>) follows the
 linked-<strong>worktree</strong> indirection, <code>.git</code> as a
 file to <code>gitdir:</code> to <code>commondir</code>, absolute or
 relative, because reading the worktree dir instead <em>"would report
@@ -1010,12 +1011,12 @@ every branch gone for anyone working out of a worktree."</em> Absent
 <code>refs/heads</code> returns <code>None</code> — a skip — rather than
 <code>MISSING</code>, since <em>"answering MISSING there would fabricate
 a contradiction for every claim."</em></li>
-<li><code>_probe_path</code> (<code>:296</code>) resolves the target and
+<li><code>_probe_path</code> (<code>:397</code>) resolves the target and
 <strong>refuses when it escapes the project root</strong>, on the
 grounds that a symlink out of the tree <em>"answers about ANOTHER
 checkout"</em> — the same stance as the cross-repo refusal that keeps
 <code>owner/repo#12</code> out of the <code>gh</code> path.</li>
-<li><code>_MANIFESTS</code> (<code>:354</code>) is ordered
+<li><code>_MANIFESTS</code> (<code>:455</code>) is ordered
 lockfiles-first because a lock records a resolved version and a manifest
 usually records a range, and consulting both <em>"would leave every real
 project with two conflicting answers and nothing to say."</em></li>
@@ -1118,24 +1119,38 @@ never raise, candidates never mark, typed links never guess),
 <code>test_redact_leak_gaps.py</code>, <code>test_receipts.py</code>,
 <code>test_isolation.py</code> (every path escapes the real
 <code>$HOME</code> under test). I did not run the suite.</p>
-<p><strong>The refutation ledger carries 106 of those across four files,
-and they are adversarial rather than illustrative.</strong>
-<code>test_refutation_authority.py</code> asserts the properties the
-channel table exists for — <code>test_agent_cannot_self_ratify</code>,
-<code>test_tampered_agent_ratification_flag_cannot_activate</code> (a
-hand-edited <code>ratified: true</code> on an agent row folds to
-candidate anyway, because the fold re-derives authority from the channel
-rather than trusting the flag), and
-<code>test_agent_overturn_proposal_does_not_disable_active_guard</code>.
-<code>test_refutations.py</code> covers the fold's determinism under
-reorder (<code>test_malformed_order_does_not_sink_the_ledger</code>),
-identity
-(<code>test_a_revision_cannot_take_over_another_records_identity</code>),
-and guard precision
-(<code>test_guard_fires_on_exact_issue_anchor_not_broad_topic</code> — a
-negative retrieval case in the strict sense, asserting that a broad
-topical query must <em>not</em> surface an active guard).
-<code>test_forget_refutations.py</code> and
+<p><strong>The refutation ledger carries 106 of those across four files
+— 51 in <code>test_refutations.py</code>, 33 in
+<code>test_forget_refutations.py</code>, 15 in
+<code>test_refutation_privacy.py</code>, 7 in
+<code>test_refutation_authority.py</code> — and they are adversarial
+rather than illustrative.</strong> The seven in
+<code>test_refutation_authority.py</code> are all about the CLI's own
+write boundary: <code>test_by_human_is_not_an_accepted_choice</code>,
+<code>test_non_interactive_caller_cannot_claim_the_human_channel</code>,
+<code>test_cli_cannot_mint_the_ui_or_signed_channels</code> and
+<code>test_every_lifecycle_row_records_a_channel</code>.</p>
+<p>The properties the channel table exists for are asserted one layer
+down, against <code>fold</code> itself, in
+<code>test_refutations.py</code>:
+<code>test_agent_cannot_self_ratify</code> (<code>:70</code>),
+<code>test_agent_overturn_proposal_does_not_disable_active_guard</code>
+(<code>:96</code>), and
+<code>test_tampered_agent_ratification_flag_cannot_activate</code>
+(<code>:155</code>) — a hand-edited <code>ratified: True</code> on a
+<code>cli-agent</code> row folds to <code>candidate</code> anyway,
+because the fold re-derives authority from the channel rather than
+trusting the flag. That is the sharper placement: it holds for a row
+written by anything, not only for one the CLI would have refused to
+write. The same file covers the fold's determinism under reorder
+(<code>test_malformed_order_does_not_sink_the_ledger</code>,
+<code>:144</code>), identity
+(<code>test_a_revision_cannot_take_over_another_records_identity</code>,
+<code>:397</code>), and guard precision
+(<code>test_guard_fires_on_exact_issue_anchor_not_broad_topic</code>,
+<code>:113</code> — a negative retrieval case in the strict sense,
+asserting that a broad topical query must <em>not</em> surface an active
+guard). <code>test_forget_refutations.py</code> and
 <code>test_refutation_privacy.py</code> bind the second store to the
 deletion contract, and <code>test_log_text_privacy.py</code> covers the
 downgrade lines that must log a hash rather than the item's text.</p>
@@ -1159,7 +1174,7 @@ code removed and the comment left in place. Scar 0053 is the polarity
 inversion above, whose test mirrored the caller's unfiltered call.</p>
 <p>Both were exposed by mutation testing rather than by review reading,
 which is the same lesson one level up from the suite: a test that cannot
-be shown to fail is a claim nobody has checked, and 3,679 of them do not
+be shown to fail is a claim nobody has checked, and 3,929 of them do not
 change that for any individual one.</p>
 <p><strong>The benchmark is the notable part.</strong>
 <code>benchmark/</code> runs LongMemEval-S through the <em>real</em>
@@ -1172,7 +1187,7 @@ without its backend, and report the trade rather than only the win.
 the run config records it — a real limitation surfaced rather than
 hidden.</p>
 <p>Two result files are committed:</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Run</th>
@@ -1193,20 +1208,22 @@ hidden.</p>
 <tr>
 <td><code>interim-317-baseline-first54.json</code> (Haiku 4.5, scene
 off)</td>
-<td>52 scored</td>
-<td><strong>0.58</strong></td>
-<td>0.67</td>
-<td>0.59</td>
+<td>54 questions</td>
+<td><strong>0.60</strong></td>
+<td>0.69</td>
+<td>0.61</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>The published five-question run costs 3,337 seconds of wall clock and
 192 serialize calls. The 54-question interim file commits per-question
 rows but no aggregate block — it is an A/B baseline awaiting its paired
-arm — so the second row is my own arithmetic over the committed rows,
-not a figure the project publishes. It is the more meaningful of the
-two, and it is a modest number: roughly a third of questions never
-surface a gold session in the top five.</p>
+arm — so the second row is the unweighted mean over all 54 committed
+rows, two of which carry <code>abstention: true</code>, not a figure the
+project publishes. Dropping those two moves it to 0.58 / 0.67 / 0.59.
+Either way it is the more meaningful of the two, and it is a modest
+number: roughly a third of questions never surface a gold session in the
+top five.</p>
 <p><strong>The deletion claim is tested end to end</strong>, and the
 test is the most complete of its kind in this atlas.
 <code>plugin/tests/test_deletion_durability_protocol.py</code> walks a
@@ -1275,13 +1292,17 @@ the one that cannot be bound a declaration instead of a leak.</p>
 <p><strong>A refutation is subject to the same contract.</strong>
 <code>refutations.jsonl</code> is a second plaintext store, so
 <code>forget</code> was extended to reach it:
-<code>forget_content_key</code> matches <strong>every subject the record
-has ever carried, not only the folded one</strong>, because a revision
-rewrites the subject and <em>"matching only the current subject would
-leave exactly the text <code>forget</code> exists to reach
-unreachable."</em> <code>_cmd_forget</code> also stops bailing when no
-checkpoint exists, since a value can live in the ledger with no
-checkpoint at all.</p>
+<code>forget_content_key</code> matches on <strong>every plaintext field
+rather than the subject alone</strong>, and removes <strong>every row of
+a matched record, not only the row that matched</strong> — because a
+revision rewrites the subject, so an earlier row can hold an older
+subject the folded record no longer renders, and <em>"keeping it would
+leave forgotten text on disk in a row nothing displays."</em> The match
+is whole-value equality after canonicalization, never substring
+containment, so <em>"a record goes when a field IS the forgotten value,
+never when one mentions it."</em> <code>_cmd_forget</code> also stops
+bailing when no checkpoint exists, since a value can live in the ledger
+with no checkpoint at all.</p>
 <p><strong>The deletion protocol is also structurally cheap here, and
 the reason generalizes.</strong> Step 8 asserts absence from "recall's
 SQLite rows", and that is the <em>whole</em> index — there is no
@@ -1407,11 +1428,20 @@ deletion key, and daimon's own docstring says so.</li>
 Everything not carried forward depends on a lexical index to be findable
 again. That is a defensible trade for a briefing product, but it is a
 trade, and it should be stated where users can see it.</li>
-<li><strong>An English-only lexicon as a correctness gate.</strong>
-<code>ground_outcomes</code> matches outcome verbs with a regex, so a
-Spanish session — a language the project otherwise supports throughout —
-is never grounded. The code chooses the honest no-op over a guess, which
-is right, but the coverage gap is invisible from outside.</li>
+<li><strong>A hand-curated lexicon as a correctness gate, when the gate
+fails silent.</strong> <code>ground_outcomes</code> decides whether an
+item asserts a completed outcome by matching curated verb regexes. A
+language nobody enumerated does not produce a warning; it produces an
+item that is never downgraded, which is indistinguishable from an item
+that passed. Daimon's own <code>_OUTCOME_ES_RE</code> is the worked
+example and the comment states the incident behind it: the gate was
+English-only, so a Spanish <em>"los tests pasan"</em> sailed through
+ungrounded <em>"while its English twin was downgraded"</em> (#401). The
+fix was a second hand-written lexicon plus a mirrored
+<code>_HEDGE_ES_RE</code> — two languages instead of one, by the same
+method, so the n+1 language remains an invisible no-op. If your gate can
+only ever be extended by enumeration, count the enumeration as the
+contract and say what is outside it.</li>
 <li><strong>Trusting a benchmark's headline sample size.</strong> Five
 questions is not a result. The repo is more honest about this than most;
 readers still have to look at the config stamp.</li>
@@ -1548,7 +1578,7 @@ scar-candidate drafting</li>
 </ul>
 <p><strong>Tests and evals</strong></p>
 <ul>
-<li><code>plugin/tests/</code> — 3,679 tests across 129 files</li>
+<li><code>plugin/tests/</code> — 3,929 tests across 135 files</li>
 <li><code>benchmark/</code> — LongMemEval-S harness, reporting policy,
 committed results</li>
 <li><code>research/experiments/recall-replay-ab/</code> — the replay A/B
@@ -1559,8 +1589,55 @@ decision and negative-knowledge trail, including
 shipped feature</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code class="commit-id" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">90dc82ea…</code></a>
+— audited at the same pin; no mark moved and no matrix field changed.
+Six claims were wrong at this commit rather than overtaken by it.</p>
+<p>The one with teeth was a <em>criticism</em>, which is the direction
+this atlas keeps finding stale. Section 11 faulted
+<code>ground_outcomes</code> for an English-only lexicon that leaves a
+Spanish session ungrounded. <code>serializer.py</code> carries
+<code>_OUTCOME_ES_RE</code> and a mirrored <code>_HEDGE_ES_RE</code>
+(#401), <code>_asserts_outcome</code> is documented "English + Spanish",
+and the comment records that this exact hole — a Spanish "los tests
+pasan" sailing through while its English twin was downgraded — is
+closed. The bullet now faults the shape the fix preserves: a gate
+extended only by enumeration, failing silent on the language nobody
+enumerated.</p>
+<p>Three counts in the body disagreed with the counts in section 10 and
+the History: section 4 said 1,974 test functions over ~29,700 lines
+against ~15,200 of source and the appendix said 3,679 tests across 129
+files, against a measured <strong>3,929 <code>def test</code> across 135
+files, ~62,300 test lines against ~30,800 source lines</strong> in
+<code>plugin/daimon_briefing/</code>. <code>relations.py</code> is 637
+lines, not 578.</p>
+<p><code>test_agent_cannot_self_ratify</code>,
+<code>test_tampered_agent_ratification_flag_cannot_activate</code> and
+<code>test_agent_overturn_proposal_does_not_disable_active_guard</code>
+live in <code>test_refutations.py</code>, not
+<code>test_refutation_authority.py</code> — they assert against
+<code>fold</code> directly rather than through the CLI, which is the
+stronger placement and is now stated as such. The 106-across-four-files
+count was right: 51 + 33 + 15 + 7.</p>
+<p>The quoted clause <em>"matching only the current subject would leave
+exactly the text <code>forget</code> exists to reach unreachable"</em>
+is in no file; <code>forget_content_key</code>'s real docstring matches
+every plaintext field rather than the subject alone and removes every
+row of a matched record, on whole-value equality after canonicalization.
+The mechanism was right and the quotation was not.</p>
+<p>The interim-317 aggregates were computed over 52 of the 54 committed
+rows with the filter unstated; over all 54 they are 0.60 / 0.69 / 0.61,
+and the two excluded rows are the ones carrying
+<code>abstention: true</code>.</p>
+<p>Eight line citations had drifted: <code>ground_outcomes</code> 1380,
+<code>strip_code_owned_keys</code> 2029, <code>serialize_strict</code>
+2174, <code>resolutions</code> 2110, <code>is_resolved</code> 2151,
+<code>_tie_wins</code> 2098, <code>suggest</code> 1099,
+<code>stale_carried</code> 602, the reverify refusal at
+<code>cli/lifecycle.py:749</code>, and the four
+<code>worldcheck.py</code> probe cites uniformly +101.</p>
 <p><strong>2026-08-26</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code>90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code class="commit-id" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">90dc82ea…</code></a>
 — re-pinned 23 commits on, through releases 0.32.0, 0.32.1 and 0.33.0.
 Screened again before reading: three auto-run surfaces, three build-time
 execution paths, one unpinned surface and two files inside the seven-day
@@ -1602,7 +1679,7 @@ rule not evaluated."</em> The re-run exists because an earlier status
 had predicted the joinable population would accrue forward, and it did
 not.</p>
 <p><strong>2026-08-16</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code>7f2f16eb74f226a61e726171e11c8274dcd86b04</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/7f2f16eb74f226a61e726171e11c8274dcd86b04"><code class="commit-id" title="7f2f16eb74f226a61e726171e11c8274dcd86b04">7f2f16eb…</code></a>
 — 32 commits on. Screened first: 0 auto-run surfaces, 3 build-time
 execution paths (a third <code>conftest.py</code> under
 <code>research/experiments/multicycle/</code>), 1 unpinned surface, and
@@ -1653,7 +1730,7 @@ tests across 129 files.</p>
 and <code>cli.py:1558</code> no longer exists — the reverify refusal is
 at <code>cli/lifecycle.py:713</code>.</p>
 <p><strong>2026-08-10</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d"><code>214fa7c4b90c529c59aee96cc2b53e34fb53a79d</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d"><code class="commit-id" title="214fa7c4b90c529c59aee96cc2b53e34fb53a79d">214fa7c4…</code></a>
 — 20 commits on. Screened first: 0 auto-run surfaces, 2 build-time
 execution paths, 1 unpinned surface, and
 <code>plugin/pyproject.toml</code> and <code>plugin/uv.lock</code> both
@@ -1684,7 +1761,7 @@ record a content key instead of the item's text, closing a plaintext
 residue in a shape the surface registry had already declared
 <code>exempt-no-plaintext</code>.</p>
 <p><strong>2026-08-07</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851"><code>4222243e40352691b957d6e3242b5aed25e8c851</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851"><code class="commit-id" title="4222243e40352691b957d6e3242b5aed25e8c851">4222243e…</code></a>
 — 42 commits on, and the deletion contract is where nearly all of them
 landed. Screened first: 0 auto-run surfaces, 2 build-time execution
 paths, 1 unpinned surface, and <code>plugin/pyproject.toml</code> and
@@ -1709,7 +1786,7 @@ auditor — residue tests must not enumerate through the scrubber's own
 walk — which is the same failure this atlas records as a search scoped
 to the place the answer ought to be.</p>
 <p><strong>2026-08-03</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf"><code>3025ee3edecd1958e9e9181fe607a5b1a30309bf</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf"><code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code></a>
 — 41 commits on. The mechanism did not move — the eleven-step
 deletion-durability protocol and its three sibling tests are
 byte-identical, and no capability mark changed. One published claim was
@@ -1723,17 +1800,17 @@ What is new is not a memory mechanism but a measuring instrument: a
 replay A/B harness with a placebo arm, self-verification, and committed
 refutations including one of a shipped feature.</p>
 <p><strong>2026-07-30</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0"><code>3f79a952cf8e7f96b7fbcaa322147a7236dd47d0</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0"><code class="commit-id" title="3f79a952cf8e7f96b7fbcaa322147a7236dd47d0">3f79a952…</code></a>
 — 29 commits on. Three published claims were no longer true — the
 tombstone key is canonical rather than literal text, a re-assertion test
 exists, and committed negative-retrieval cases exist. Two of the three
 were <em>criticisms</em>, faulting gaps the project had since closed.
 Marks moved from five of seven to six.</p>
 <p><strong>2026-07-30</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a"><code>ecb7fafefa817f0726f46b221ddd4c7f4400a30a</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a"><code class="commit-id" title="ecb7fafefa817f0726f46b221ddd4c7f4400a30a">ecb7fafe…</code></a>
 — Re-pinned. World-verification had stopped requiring GitHub.</p>
 <p><strong>2026-07-29</strong> — <a
-href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b"><code>522a217bba088fa4f65324b0b79ad90b50e6df5b</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b"><code class="commit-id" title="522a217bba088fa4f65324b0b79ad90b50e6df5b">522a217b…</code></a>
 — First reading.</p>
         </article>
       </div>

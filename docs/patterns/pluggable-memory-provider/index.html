@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Let a host runtime mount swappable
+memory backends behind one interface, and decide who owns trust,
+correction, and deletion before the first plugin ships.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Pluggable Memory
+Provider — Agent Memory Atlas">
+    <meta property="og:description" content="Let a host runtime mount
+swappable memory backends behind one interface, and decide who owns
+trust, correction, and deletion before the first plugin ships.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pluggable Memory
+Provider — Agent Memory Atlas">
+    <meta name="twitter:description" content="Let a host runtime mount
+swappable memory backends behind one interface, and decide who owns
+trust, correction, and deletion before the first plugin ships.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Pluggable Memory Provider — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Pluggable Memory Provider",
+      "description": "Let a host runtime mount swappable memory backends behind one interface, and decide who owns trust, correction, and deletion before the first plugin ships.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Federation</p>
+          <h1>Pluggable Memory Provider</h1>
+          <p class="document-deck">Let a host runtime mount swappable
+memory backends behind one interface, and decide who owns trust,
+correction, and deletion before the first plugin ships.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Reporting an established practice</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Let an agent runtime treat memory as a replaceable component: one
+interface, many backends, chosen by configuration. Then answer the
+question the interface makes urgent — when memory lives in someone
+else's store, who is responsible for forgetting?</p>
+<h2 id="the-problem">The problem</h2>
+<p>A host runtime that hard-codes its memory model forces every user
+into one set of trade-offs. A local Markdown store cannot do
+cross-session user modelling; a hosted graph service is overkill for a
+single developer's laptop. So mature runtimes make memory pluggable.</p>
+<p>The moment they do, memory stops being one system and becomes two:
+the <strong>host</strong>, which owns the conversation, the prompt, the
+user relationship, and any built-in memory of its own; and the
+<strong>provider</strong>, which owns durable storage, extraction, and
+retrieval.</p>
+<p>Responsibilities that were implicit in a single system now have to
+cross a boundary:</p>
+<ul>
+<li>The user tells the host to forget something. Does that reach the
+provider?</li>
+<li>The provider extracts a claim the host never reviewed. Whose trust
+model applies?</li>
+<li>The host has its own built-in memory <em>and</em> a provider is
+mounted. Which wins, and are they deduplicated?</li>
+<li>The host wraps messages in scaffolding. Does the provider know to
+strip it?</li>
+<li>The host is multi-tenant. Does the interface even carry a
+scope?</li>
+</ul>
+<p>Interfaces built around the happy path — write, read, prefetch —
+answer none of these.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Define a lifecycle contract the host calls at known points, and make
+the ownership questions explicit parts of it rather than leaving them to
+each plugin.</p>
+<p>A workable contract has four groups:</p>
+<pre class="text"><code>Lifecycle    initialize / shutdown / on_session_start / on_session_end
+Read         prefetch(query, scope) -&gt; context block
+             system_prompt_block() -&gt; static text
+Write        sync_turn(user, assistant, scope)
+             on_memory_write(action, target, content)   # mirror host writes
+Governance   forget(scope | id) -&gt; result               # &lt;-- usually missing
+             scope on EVERY call                        # &lt;-- usually missing
+             capabilities() -&gt; what this provider actually supports</code></pre>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the interface is where deletion is lost — a host with no delete hook stops the request at the boundary, and a mirrored write with no reconciliation leaves two stores disagreeing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the interface is where deletion is lost — a host with no delete hook stops the request at the boundary, and a mirrored write with no reconciliation leaves two stores disagreeing
+flowchart TD
+    User[&quot;User: forget me&quot;] --&gt; Host[&quot;Host runtime&quot;]
+    Host --&gt; Built[&quot;Built-in memory&quot;]
+    Host --&gt; Iface[&quot;MemoryProvider&lt;br/&gt;interface&quot;]
+    Iface --&gt; P1[&quot;Local plugin&quot;]
+    Iface --&gt; P2[&quot;Hosted service&quot;]
+    Iface --&gt; P3[&quot;Graph backend&quot;]
+    Host -.-&gt;|&quot;no delete hook&lt;br/&gt;= request stops here&quot;| Iface
+    Built -.-&gt;|&quot;mirrored write,&lt;br/&gt;no reconciliation&quot;| P1</code></pre></details></figure>
+<p>The dotted edges are where real implementations break.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>A narrow interface at a real seam lets the host own conversation,
+prompt assembly, and policy while the provider owns storage and
+retrieval. Users pick a backend matching their privacy and scale needs
+without the host reimplementing five memory architectures. Providers
+reach many hosts by implementing one contract.</p>
+<p>It also concentrates governance in one place: if the interface
+requires scope on every call and defines a deletion path, every backend
+inherits those properties whether or not its author thought about
+them.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li><strong>Deletion is the hard one.</strong> Without a
+<code>forget</code> hook, a host-level erasure request has nowhere to
+go. The host can delete its own copy and still leave the content in a
+hosted provider indefinitely.</li>
+<li><strong>Trust state does not survive the boundary.</strong> A host
+with candidate/verified semantics cannot express them to a provider that
+stores flat facts, and vice versa.</li>
+<li><strong>Mirroring creates duplicates.</strong> Copying host writes
+into the provider is the obvious way to keep them in sync, and it
+silently creates two records with independent lifecycles unless removals
+mirror too.</li>
+<li><strong>Capabilities vary wildly.</strong> One provider does hybrid
+retrieval and bi-temporal validity; another does vector-only lookup. If
+the interface cannot report capabilities, the host must assume the
+weakest.</li>
+<li><strong>One provider at a time</strong> is the usual limit, chosen
+to avoid tool-schema bloat and conflicting backends — which means no
+composition, and switching backends usually means abandoning accumulated
+memory.</li>
+<li><strong>The host's scaffolding leaks.</strong> Providers receive
+whatever text the host passes; if that includes context markers, reply
+headers, or compaction summaries, it becomes memory.</li>
+</ul>
+<p>Do not adopt this pattern to postpone deciding on a memory model. It
+relocates the decision; it does not remove it.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> an interface, a lifecycle for mounting
+providers, and — the part most implementations skip — scope and deletion
+in the contract itself.</p>
+<p><strong>Forces elsewhere:</strong> the contract is the ceiling on
+every backend's capabilities. Anything absent from it (deletion, scope,
+trust state) is unreachable no matter what the backend supports, and
+widening a published contract breaks implementers.</p>
+<p><strong>Ongoing:</strong> every provider needs its own tests, and
+cross-cutting concerns like retry and metrics belong in decorators
+rather than in each backend.</p>
+<p><strong>Skip it if</strong> you will only ever run one backend. An
+interface with one implementation is a guess about the future.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/hermes-agent/">Hermes Agent</a> has the most
+explicit contract: a <code>MemoryProvider</code> ABC with roughly
+seventeen lifecycle members covering initialization, prompt blocks,
+prefetch, per-turn sync, tool schemas and dispatch, session end and
+switch, pre-compression extraction, delegation observation, config, and
+backup paths, with a <code>MemoryManager</code> that mounts exactly one
+external provider. First-party adapters ship in-tree for Honcho, Mem0,
+Hindsight, Supermemory, OpenViking, ByteRover, RetainDB, and the
+built-in Holographic plugin — so the adapters are reviewable even when a
+backing service is not. The contract has <strong>no deletion hook and no
+scope parameter</strong>.</p>
+<p><a href="../../systems/openclaw/">OpenClaw</a> reaches the same shape
+from the other direction: <code>memory-core</code> defines the plugin
+contract and CLI while <code>memory-lancedb</code> is merely the
+reference backend, with third-party Redis, Mem0, and Supermemory plugins
+implementing the same surface. Its store layer shows the discipline the
+interface itself lacks — <code>scopedPredicate</code> composes agent
+scope and user filter into one predicate "so scope cannot be lost", and
+deletes are scoped too.</p>
+<p><a href="../../systems/holographic/">Holographic</a> demonstrates the
+mirroring hazard concretely. Its <code>on_memory_write</code> copies the
+host's built-in memory additions into its own SQLite store, but
+implements only the <code>add</code> action — so removing an entry from
+the host's <code>MEMORY.md</code> leaves the mirrored fact in place,
+with no reconciliation path.</p>
+<p><a href="../../systems/pi/">Pi</a> is the strongest form of the
+argument, because it has no memory contract at all. Its
+<code>ExtensionAPI</code> exposes more than twenty lifecycle events —
+<code>session_start</code>, <code>session_before_fork</code>,
+<code>session_before_compact</code>, <code>context</code> with a result
+type, and more — which is ample <em>mechanism</em>, and none of it is
+memory-shaped. A plugin can capture, inject, and consolidate; it cannot
+be handed a scope or told to forget, because nothing in the host knows
+memory exists. <a href="../../systems/magic-context/">Magic Context</a>
+consequently rebuilds message indexing, FTS, embeddings, and scope from
+scratch on top of those events, and has to decide for itself what a
+forked session inherits.</p>
+<p><a href="../../systems/tencentdb-agent-memory/">TencentDB Agent
+Memory</a> is the atlas's other plugin-shaped system, targeting both
+OpenClaw and Hermes, and it also lacks a first-class user-facing forget
+operation — the same gap arriving from the provider side rather than the
+host side.</p>
+<p><a href="../../systems/mateclaw/">MateClaw</a> is the counterexample
+that shows the gap is a choice, not an inevitability. Its
+<code>MemoryProvider</code> SPI declares paired overloads —
+<code>prefetch(agentId, query)</code> and
+<code>prefetch(agentId, query, ownerKey)</code>,
+<code>syncTurn(...)</code> with and without <code>ownerKey</code> — so
+scope crosses the boundary. It also handles the resilience question the
+other contracts leave to each plugin: <code>spi/decorator/</code> wraps
+any provider in <code>MetricsMemoryProvider</code> and
+<code>RetryableMemoryProvider</code>, so retry and instrumentation are
+solved once for every backend rather than reimplemented per plugin.
+Default interface methods give implicit capability negotiation — a
+provider implements what it supports.</p>
+<p>MateClaw still has <strong>no deletion hook</strong>, so it closes
+half the governance gap and leaves the other half open.</p>
+<p><strong>The count on this page and the one in the comparative report
+were counting different sets, and both are restated here.</strong> Nine
+contracts have now been read — Hermes, OpenClaw, Pi (which has none),
+MateClaw, ADK, AutoGen, Agno's <code>LearningStore</code>, Microsoft's
+<code>ContextProvider</code>, and the Pydantic AI Harness's
+<code>MemoryStore</code>, with CAMEL's <code>AgentMemory</code> a tenth
+if you count <code>clear</code> as removal. Two declare scope: ADK by
+required keyword argument, MateClaw by paired overloads. <strong>One
+declares targeted deletion, and only one</strong> — the Pydantic AI
+Harness, whose Protocol is <code>read</code>,
+<code>get_operation</code>, <code>write</code>, <code>delete</code>,
+<code>list_paths</code>. Everything else offers <code>clear()</code>, or
+nothing.</p>
+<p><a href="../../systems/agno/">Agno</a> is the fifth, and it separates
+two things the other four conflate. Its <code>LearningStore</code>
+Protocol declares six methods — <code>recall</code>,
+<code>process</code>, <code>build_context</code>,
+<code>instructions</code>, <code>get_tools</code>,
+<code>learning_type</code> — and every one of them takes
+<code>**kwargs</code>. So the contract expresses <strong>neither scope
+nor deletion</strong>, and both exist anyway:
+<code>recall(user_id)</code> returns <code>None</code> when the key is
+missing, <code>retire_fact</code> keeps a superseded row,
+<code>forget</code> archives an entity. The reason is that Agno writes
+the contract <em>and</em> six implementations behind it, so what the
+interface fails to require, the same team supplies. That is worth naming
+because it inverts the finding above — the contract is the limiting
+factor when the contract author is not the implementer, and a permissive
+interface is survivable exactly when they are the same people. It is
+also fragile in the predictable way: a third-party store satisfying that
+Protocol can ignore <code>user_id</code> entirely and nothing detects
+it. Agno's own <code>_filter_store_kwargs</code> exists to keep narrow
+third-party stores working when the framework adds context kwargs, which
+is thoughtful, and which also means a store that quietly drops the scope
+key is indistinguishable from one that never wanted it.</p>
+<p><strong><a href="../../systems/cosmonapse/">Cosmonapse</a>'s
+<code>Engram</code> is the only contract here with a failure vocabulary,
+and the omission is glaring once you have seen one.</strong> Every other
+interface on this page models the happy path: write, read, prefetch.
+This one ships five typed errors — <code>EngramTimeout</code> for an
+elapsed deadline, <code>EngramCancelled</code> for a task killed
+mid-call, <code>EngramNotBound</code> for storage nobody wired, and
+<code>EngramOverloaded</code> for a backend that <strong>shed
+load</strong> — and two methods that follow from taking failure
+seriously. <code>can_serve(query) -&gt; bool</code> lets a backend
+decline (the docstring's example is a BM25 engram asked for vector
+search, and the hosting Dendrite then skips responding), which is the
+only place in this atlas where "retrieval can return nothing" is a
+capability the contract can express. <code>compensate(trace_id)</code>
+reverses every journaled write for a trace, replaying inverses LIFO so
+nested overwrites unwind, with <code>commit(trace_id)</code> discarding
+the journal at the workflow's commit point.</p>
+<p>Two limits are documented rather than left to be found, which is the
+right way to ship a rollback: compensation is best-effort, so a failing
+inverse is logged and the rest still run, and only Engram state is
+reversed — external side effects are explicitly out of scope. The limit
+that is <em>not</em> documented is where the journal lives:
+<code>self._saga_journal</code> is a dictionary on the instance, so in a
+protocol whose transports include NATS and Kafka precisely because
+workers are disposable, the rollback guarantee lasts exactly as long as
+the process. It also carries <strong>no scope parameter</strong>, which
+makes four contracts on this page with that gap.</p>
+<p><a href="https://github.com/wanxingai/LightAgent">LightAgent</a>
+shows the pattern at its smallest — a 196-line
+<code>shared_memory.py</code> with swappable adapters shipped as
+examples (<code>clawmem_memory_adapter.py</code>,
+<code>vector_memory_adapter.py</code>). The shape survives the scale
+reduction; so does the missing deletion path.</p>
+<p><strong><a href="../../systems/smythos-sre/">SmythOS SRE</a> is the
+degenerate case, and it is deliberately not counted in the tally
+above.</strong> <code>LLMMemoryConnector</code> is an abstract class
+extending the runtime's secure-connector base, declaring one method —
+<code>load(messages)</code> — and it is exported from the package index
+at <code>packages/core/src/index.ts</code>. There is no subclass
+anywhere in the tree, no registration in the connector service, and no
+call site. Nothing mounts it, so it is not a provider contract that
+anyone has had to satisfy; it is the seam without the socket. It earns a
+mention here because the failure it illustrates is cheap to reach: the
+same repository ships a working connector pattern for cache, storage,
+vector search, LLM providers and accounts, each with real
+implementations behind it, and a reader encountering
+<code>MemoryManager</code> reasonably assumes memory has one too. An
+exported abstract class is a promise the type system will not keep, and
+the distance between "we defined the interface" and "a provider exists"
+is the entire pattern.</p>
+<p>Two providers in this ecosystem — <a
+href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> and <a href="../../systems/openviking/">OpenViking</a> — have
+far richer internal scope and lifecycle models than the interfaces
+mounting them can express, which is the clearest evidence that the
+contract, not the backend, is the limiting factor.</p>
+<h3 id="the-vendor-neutral-contract-nobody-signed-up-for">The
+vendor-neutral contract nobody signed up for</h3>
+<p>Every interface above is a host's, and each was designed by people
+who had to make one runtime work. There is now one that is not:
+OpenTelemetry's <a
+href="https://github.com/open-telemetry/semantic-conventions-genai">GenAI
+semantic conventions</a> define, at
+<code class="commit-id" title="46d43c8949afb53765a202e89f4534eeb75ca3fa">46d43c89…</code>, a
+<code>gen_ai.operation.name</code> enum containing seven memory
+operations — <code>create_memory</code>, <code>search_memory</code>,
+<code>update_memory</code>, <code>upsert_memory</code>,
+<code>delete_memory</code>, <code>create_memory_store</code>,
+<code>delete_memory_store</code> — all at development stability. It
+stores nothing and is not a memory system, so it gets no report here; it
+is an observability vocabulary, which makes it the closest thing the
+field has to an agreed answer about what operations memory
+<em>has</em>.</p>
+<p>Read against this page's own tally, two things stand out.</p>
+<p><strong>It names deletion, twice, and at both granularities.</strong>
+Of the ten host contracts read here, exactly one declares targeted
+deletion. The vocabulary written by nobody's runtime declares
+<code>delete_memory</code> for records and
+<code>delete_memory_store</code> for the whole store, and gives
+<code>gen_ai.memory.record.count</code> an explicit meaning for a delete
+— <em>"the number of memory records the operation attempted to
+delete"</em>. It also names <code>upsert_memory</code> separately from
+create and update, defined as create-or-update <em>"without the caller
+choosing which"</em>, which is the operation most of these systems
+actually implement and almost none of them name.</p>
+<p><strong>It declares no scope at all.</strong> There is no tenant,
+user, project or agent attribute on a memory operation — only
+<code>gen_ai.memory.store.id</code>, with the note that each component
+<em>"SHOULD document what <code>gen_ai.memory.store.id</code> maps
+to"</em>. Isolation is left as an implementation detail of the store id,
+which is the same gap four host contracts on this page have, arriving
+from a fifth direction.</p>
+<p>The record schema is the sharper version of the same point.
+<code>model/gen-ai/gen-ai-memory-records.json</code> defines a
+<code>MemoryRecord</code> as <code>content</code> (the only required
+field), <code>id</code>, <code>score</code>, and an opaque
+<code>metadata</code> object. No validity interval, no trust state, no
+provenance, no supersession pointer — every mechanism the <a
+href="../rejected-value-tombstone/">tombstone</a>, <a
+href="../bi-temporal-fact-validity/">bi-temporal validity</a> and <a
+href="../trust-state-machine/">trust state machine</a> pages are about
+falls into <code>metadata</code>, where it is by construction not
+comparable across implementations. That is not a criticism of a
+development-stage spec, which is right to standardise the common shape
+first. It is a statement about what the common shape currently is:
+<strong>a scored string with an id</strong>.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Delete a memory through the host and prove it is gone from the
+mounted provider, not just from the host's own store.</li>
+<li>Mirror a host write into a provider, remove it at the host, and
+assert the mirrored copy is removed or explicitly marked orphaned.</li>
+<li>Switch providers and verify the host does not silently serve stale
+context from the previous backend.</li>
+<li>Issue a request under one scope and assert no provider call can
+return another scope's memory.</li>
+<li>Feed the provider a message carrying the host's own envelope markers
+or compaction summaries and assert none of it becomes durable
+memory.</li>
+<li>Mount a provider that fails or times out, and assert the agent
+degrades rather than blocking or losing the turn.</li>
+<li>Fork or branch a session and assert the memory each branch sees is
+what you intended — an untested question wherever the host supports
+branching.</li>
+<li>Wrap a deliberately failing provider in the host's resilience layer
+and assert the turn degrades rather than stalling — and that the failure
+is visible in metrics, not just logged.</li>
+<li>Assert that a provider advertising a capability it lacks is detected
+— for example, one reporting "hybrid" retrieval while running
+vector-only.</li>
+<li>Run the host's built-in memory and a provider together, and assert
+the same fact is not injected twice.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../explicit-write-destination/">Explicit write
+destination</a></li>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+<li><a href="../rejected-value-tombstone/">Rejected-value
+tombstone</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

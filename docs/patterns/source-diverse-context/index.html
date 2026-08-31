@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Select context across sessions,
+documents, or sources so one dense neighborhood does not crowd out the
+rest of memory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Source-Diverse
+Context — Agent Memory Atlas">
+    <meta property="og:description" content="Select context across
+sessions, documents, or sources so one dense neighborhood does not crowd
+out the rest of memory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Source-Diverse
+Context — Agent Memory Atlas">
+    <meta name="twitter:description" content="Select context across
+sessions, documents, or sources so one dense neighborhood does not crowd
+out the rest of memory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Source-Diverse Context — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Source-Diverse Context",
+      "description": "Select context across sessions, documents, or sources so one dense neighborhood does not crowd out the rest of memory.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Pattern · Context assembly</p>
+          <h1>Source-Diverse Context</h1>
+          <p class="document-deck">Select context across sessions,
+documents, or sources so one dense neighborhood does not crowd out the
+rest of memory.</p>
+                              <div class="document-meta">
+            <a class="meta-pill stance-pill stance-mixed" href="../../patterns/#how-established-is-any-of-this">
+              <span>Epistemic status</span>
+              <strong>Reporting, with one advocacy claim</strong>
+            </a>
+          </div>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Return a useful spread of evidence when top-ranked chunks are
+dominated by adjacent passages or repeated material from one source.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Chunk retrieval often returns several near-duplicates from the same
+document or session. Those chunks may all score well while consuming the
+entire context budget. The agent receives depth on one source but misses
+corroborating, contradicting, or more recent evidence elsewhere.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Rank candidates normally, then apply a source-aware selection
+policy:</p>
+<ol type="1">
+<li>Group by stable source identity.</li>
+<li>Select the best candidate from each source.</li>
+<li>Allocate the remaining budget to additional chunks where depth is
+justified.</li>
+<li>Preserve global ranking as much as possible.</li>
+<li>Enforce both result and token caps.</li>
+</ol>
+<p>Maximal marginal relevance, per-source quotas, or a simple two-pass
+selector can implement the pattern. The result should expose source
+labels so the agent can distinguish independent evidence from repeated
+chunks.</p>
+<pre class="text"><code>select_diverse(candidates, k, per_source_cap):
+    ranked = sort_by_score_desc(candidates)
+    picked, taken = [], {}
+    for c in ranked:                       # pass 1 — one per source, best first
+        if taken.get(c.source, 0) == 0:
+            picked.append(c); taken[c.source] = 1
+        if len(picked) == k: return picked
+    for c in ranked:                       # pass 2 — spend the rest on depth
+        if c in picked: continue
+        if taken[c.source] &lt; per_source_cap:
+            picked.append(c); taken[c.source] += 1
+        if len(picked) == k: return picked
+    return picked</code></pre>
+<p>Two passes, global ranking preserved inside each.
+<code>per_source_cap</code> is the only tuning constant, and every
+returned item keeps its source label so the agent can tell independent
+evidence from one document repeated.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one pass takes the best chunk from each source before a second fills the remaining budget under a per-source cap, so five adjacent chunks of one file cannot crowd out the rest</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one pass takes the best chunk from each source before a second fills the remaining budget under a per-source cap, so five adjacent chunks of one file cannot crowd out the rest
+flowchart TD
+    C[&quot;ranked candidates&quot;] --&gt; P1[&quot;pass 1: best chunk per source&quot;]
+    P1 --&gt; P2[&quot;pass 2: fill remaining budget, capped per source&quot;]
+    P2 --&gt; Cap[&quot;enforce result and token caps&quot;]
+    Cap --&gt; Out[&quot;context, each item labelled with its source&quot;]
+    C -. &quot;without this, 5 adjacent&lt;br/&gt;chunks of one file&quot; .-&gt; Crowd[&quot;crowding&quot;]</code></pre></details></figure>
+<h2 id="why-it-works">Why it works</h2>
+<p>Diversity increases coverage and reduces the illusion of
+corroboration created by adjacent chunks. It is especially useful for
+questions spanning sessions, documents, people, or time periods.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Some questions genuinely need several neighboring chunks from one
+source. A rigid one-per-source rule destroys local context. Weak source
+identity can over-diversify or collapse unrelated material. Diversity is
+not correctness; ten different sources can repeat the same wrong
+claim.</p>
+<p>Use a bounded escape hatch: reserve part of the context for source
+coverage and part for globally best evidence or neighbor expansion.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> a per-source cap or MMR-style diversity step
+after ranking, and a notion of what "source" means for your corpus.</p>
+<p><strong>Forces elsewhere:</strong> it makes retrieval non-monotonic —
+the best result set is no longer simply the top <em>k</em> by score — so
+caching and pagination get harder, and a genuinely single-source
+question now returns weaker material.</p>
+<p><strong>Ongoing:</strong> the cap is a tuning constant that nothing
+validates.</p>
+<p><strong>Skip it if</strong> your memories are already
+one-fact-per-record. Diversity control matters most when chunking can
+produce many near-identical neighbours.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/swafra/">Swafra</a> remains the compact
+illustration — best chunk per source title, so one document cannot fill
+the context.</p>
+<p>Two later systems generalize the idea beyond source documents.</p>
+<p><a href="../../systems/openviking/">OpenViking</a>'s
+<code>type_quota_recall.py</code> (519 lines) enforces per-memory-type
+quotas in the result set, so a prolific memory <em>kind</em> cannot
+crowd out every other kind of context. Diversity keyed on type rather
+than document is the right generalization once a system has several
+memory kinds.</p>
+<p><a href="../../systems/llamaindex/">LlamaIndex</a> achieves it by
+construction: each memory block gets its own share of the long-term
+token budget and truncates itself to fit. Static content, retrieved
+vectors, and extracted facts each keep a guaranteed slice, and no single
+contributor can consume the whole budget by ranking well.</p>
+<p><a href="../../systems/open-cowork/">open-cowork</a> separates core
+memory from experience memory at the <em>extractor</em> level, with
+independent stores — which makes budget separation between them a
+natural next step rather than a special case.</p>
+<p><a href="../../systems/agentmemory/">agentmemory</a> applies
+per-session diversity within weighted RRF, and <a
+href="../../systems/hindsight/">Hindsight</a> balances four retrieval
+arms through task-specific fusion.</p>
+<p>The tradeoff sharpens with these examples: a quota guarantees breadth
+and forfeits depth. When a question genuinely needs three passages from
+one document, or four facts of one kind, a strict quota is the mechanism
+standing in the way — which is why every implementation here needs an
+escape hatch, and why <a
+href="../../systems/llamaindex/">LlamaIndex</a>'s per-block
+<code>atruncate</code> returning <code>Optional</code> is a good shape:
+a block may decline to shrink and be dropped whole rather than emit
+something misleading.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Repeated adjacent chunks from one source.</li>
+<li>Queries that require multi-source corroboration.</li>
+<li>Queries that require several chunks from one source.</li>
+<li>Stable source identity across reingestion and renaming.</li>
+<li>Hard result and token limits after diversification.</li>
+<li>Diversity metrics reported beside relevance, not instead of it.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../hybrid-retrieval-fusion/">Hybrid retrieval
+fusion</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

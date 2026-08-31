@@ -248,9 +248,33 @@ concepts, files read and modified, model fields, timestamps, and content
 hash.</li>
 <li><code>session_summaries</code>: request, investigation, learning,
 completion, next steps, notes, and timestamps.</li>
-<li><code>observation_feedback</code>: user feedback over derived
-observations.</li>
 </ul>
+<p>Those five, plus <code>schema_versions</code> and the
+<code>user_prompts_fts</code> virtual table, are what
+<code>SessionStore.ts</code> creates. <code>initializeSchema</code>
+(<code>:922-991</code>) lays down <code>sdk_sessions</code>,
+<code>observations</code> and <code>session_summaries</code>; the
+constructor then runs thirty-two idempotent migration steps in order
+(<code>:91-122</code>), each guarded by a <code>PRAGMA table_info</code>
+or <code>PRAGMA index_list</code> check rather than by the
+<code>schema_versions</code> row it writes —
+<code>createUserPromptsTable</code> and
+<code>createPendingMessagesTable</code> are the two that add tables, and
+the rest add columns, rebuild tables into <code>_new</code> copies, or
+fix indexes and foreign keys. Six further <code>sync_*</code> tables
+belong to the cloud replication path. <code>observations_fts</code> and
+<code>session_summaries_fts</code> are created lazily by
+<code>SessionSearch.ts:78,116</code>, not by the store.</p>
+<p>Worth one sentence because it is the kind of thing a reader will
+trust from a document: <code>docs/architecture-overview.md:125</code>
+lists an <code>observation_feedback</code> table
+(<code>observation_id, signal_type</code>, "Usage tracking") as the
+sixth row of a table whose other five exist, and
+<code>CHANGELOG.md:1730</code> announced it under v11.0.0 as "a new
+<code>observation_feedback</code> table for future Thompson Sampling
+optimization". No migration creates it, nothing reads or writes it, and
+the identifier does not appear anywhere under <code>src/</code>. The
+docs describe a table the schema does not have.</p>
 <p>SQLite foreign keys link observations and summaries to memory
 sessions. Content hashes deduplicate near-simultaneous reprocessing. The
 code derives file write evidence from actual tool payloads and
@@ -454,8 +478,30 @@ repair.</li>
 boundary.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe"><code class="commit-id" title="132b46343e60ecf4057c427736c57b08f7615dfe">132b4634…</code></a>
+— same pin, one correction, in the direction of crediting the system
+with a table it does not have. Section 5 listed
+<code>observation_feedback</code> as part of the active local model. The
+identifier appears nowhere under <code>src/</code> at this commit — no
+<code>CREATE TABLE</code>, no migration step, no read, no write — only
+in <code>CHANGELOG.md:1730</code>, where a v11.0.0 release note
+announced it, and in <code>docs/architecture-overview.md:125</code>,
+which lists it beside the five tables that do exist. It was taken from
+documentation rather than from the schema, which the rubric forbids. The
+divergence itself is the finding and section 5 states it, over a
+migration chain verified in its place: <code>initializeSchema</code> at
+<code>SessionStore.ts:922-991</code> plus thirty-two PRAGMA-guarded
+steps at <code>:91-122</code>, of which
+<code>createUserPromptsTable</code> and
+<code>createPendingMessagesTable</code> are the only two that add
+tables, and <code>observations_fts</code> /
+<code>session_summaries_fts</code> come from
+<code>SessionSearch.ts:78,116</code> instead. No mark moved;
+<code>human_review</code> was re-checked in the other direction and no
+approval surface over observation content exists at this pin.</p>
 <p><strong>2026-07-27</strong> — <a
-href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe"><code>132b46343e60ecf4057c427736c57b08f7615dfe</code></a>
+href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe"><code class="commit-id" title="132b46343e60ecf4057c427736c57b08f7615dfe">132b4634…</code></a>
 — first reading.</p>
         </article>
       </div>

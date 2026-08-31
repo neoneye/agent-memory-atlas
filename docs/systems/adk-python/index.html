@@ -268,11 +268,16 @@ Paths</h2>
 <p><strong>The contract.</strong>
 <code>src/google/adk/memory/base_memory_service.py</code> — four
 methods, of which two are <code>@abstractmethod</code>
-(<code>add_session_to_memory</code>, <code>search_memory</code>), one is
-concrete with a default (<code>add_events_to_memory</code>), and one
-raises <code>NotImplementedError</code> by default
-(<code>add_memory</code>, line 97, with a message pointing the caller at
-the event-based paths).</p>
+(<code>add_session_to_memory</code>, <code>search_memory</code>) and two
+are non-abstract but <strong>raise <code>NotImplementedError</code> in
+the base class</strong>: <code>add_events_to_memory</code> at line 92
+("This memory service does not support adding event deltas. Call
+add_session_to_memory(session) to ingest the full session.") and
+<code>add_memory</code> at line 117, with a message pointing the caller
+back at the event-based paths. There is no working default behind either
+— an implementation that wants them overrides them, and one that does
+not leaves a caller with an exception. Only
+<code>add_session_to_memory</code> is guaranteed to be implemented.</p>
 <p><strong>The schema.</strong> <code>memory/memory_entry.py</code>, 45
 lines including licence header. <code>content</code>,
 <code>custom_metadata</code>, <code>id</code>, <code>author</code>,
@@ -349,8 +354,9 @@ rather than by a query.</p>
 <code>search_memory(app_name, user_id, query) -&gt; SearchMemoryResponse</code>.
 No <code>k</code>, no filters, no time range, no metadata predicate, no
 ranking hints, and no scores on the way back —
-<code>SearchMemoryResponse</code> is a bare
-<code>list[MemoryEntry]</code>.</p>
+<code>SearchMemoryResponse</code> is a pydantic model with exactly one
+field, <code>memories: list[MemoryEntry]</code>, and nothing alongside
+it to rank on.</p>
 <p>The default implementation is a word-set intersection, honestly
 labelled. The Memory Bank implementation delegates to hosted similarity
 search whose ranking, thresholds and chunking are not visible in this
@@ -366,18 +372,27 @@ promises is gone.</p>
 it exists on the Vertex implementation and not on the base, so an
 application using it is bound to Vertex.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
-<p>Three entry points, deliberately layered:</p>
+<p>Three entry points, deliberately layered, but only the first is
+required of an implementation:</p>
 <ul>
-<li><code>add_session_to_memory(session)</code> — the coarse one. Hands
-the whole session over and lets the service decide.</li>
+<li><code>add_session_to_memory(session)</code> — the coarse one, and
+the only abstract write. Hands the whole session over and lets the
+service decide.</li>
 <li><code>add_events_to_memory(app_name, user_id, events, session_id, custom_metadata)</code>
 — the same thing with explicit scope, for callers not holding a
-<code>Session</code>.</li>
+<code>Session</code>. Optional, raising a helpful
+<code>NotImplementedError</code> that redirects the caller to
+<code>add_session_to_memory</code> on services that do not support event
+deltas.</li>
 <li><code>add_memory(app_name, user_id, memories, custom_metadata)</code>
 — direct writes, optional, raising a helpful
 <code>NotImplementedError</code> on services that do not support
 them.</li>
 </ul>
+<p>So the layering is a convention rather than a guarantee. A caller
+holding only a <code>BaseMemoryService</code> can rely on one write
+path; the other two are a question answered by the concrete service, and
+answered at runtime.</p>
 <p>Writes are <strong>application-triggered and synchronous at the call
 site</strong>; no hook captures automatically at a turn or compaction
 boundary. What Memory Bank does afterwards —
@@ -592,8 +607,22 @@ including <code>delete_session</code></li>
 <li><code>tests/unittests/tools/test_load_memory_tool.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e"><code class="commit-id" title="6bab08fc803d26853417c4d6e71704b1a72e035e">6bab08fc…</code></a>
+— count and citation audit at the same pin. Two claims were wrong, both
+understating how thin the contract is. §4 called
+<code>add_events_to_memory</code> concrete with a working default; it
+raises <code>NotImplementedError</code> at
+<code>base_memory_service.py:92</code> exactly as
+<code>add_memory</code> does at :117, so
+<code>add_session_to_memory</code> is the only guaranteed write — §7's
+layering is corrected to match. And <code>SearchMemoryResponse</code>
+was described as a bare <code>list[MemoryEntry]</code>; it is a pydantic
+model with a single <code>memories</code> field. The substance of both,
+that no scores come back and that the required methods are two, is
+unchanged. No capability mark changed.</p>
 <p><strong>2026-07-29</strong> — <a
-href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e"><code>6bab08fc803d26853417c4d6e71704b1a72e035e</code></a>
+href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e"><code class="commit-id" title="6bab08fc803d26853417c4d6e71704b1a72e035e">6bab08fc…</code></a>
 — first reading.</p>
         </article>
       </div>
