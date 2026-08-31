@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 350 reports.</strong></p>
+<p><strong>This page covers all 351 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -12007,6 +12007,72 @@ search over it and no lifecycle; the engines are specified rather than
 shipped on the stated grounds that every corpus differs, and the
 acceptance conditions name the exact probes that must improve rather
 than an average.</li>
+</ul>
+<h3 id="ai-workflow"><a
+href="../systems/ai-workflow/"><code>ai-workflow</code></a></h3>
+<ul>
+<li>Best idea: <strong>the router returns a next step, not a result
+set.</strong> <code>brief.ps1</code> classifies a query by regex — error
+signature, module, route, symbol, ambiguous — consults two compiled
+caches and the brain in a fixed order, and ends with a line addressed to
+the agent: <em>"next: hot-cache hit found. Apply documented fix. Skip
+traversal."</em> Spending the routing decision deterministically is
+cheaper than spending it in the model, and it makes the decision
+reviewable.</li>
+<li>Second idea: <strong>the task-completion gate acts on the handoff
+rather than on the memory.</strong> <code>complete-task.ps1</code>
+throws when <code>.ai/HANDOFF.md</code> exceeds thirty lines or is
+missing a required field, before anything reaches the brain. Refusing to
+record an under-specified episode acts on the property that decides
+whether the entry is usable later, and it needs no judgement to
+enforce.</li>
+<li>Third idea: <strong>hash-validate a derived index row before routing
+on it</strong> — <em>"brief must not trust stale index rows (Req
+5)"</em> — and the duplicate-id handling in capture and recall, each
+with a comment saying which real defect it exists for: the sequence is
+taken from the maximum because <em>"counting rows would keep generating
+collisions"</em>, and recall matches a reconstructed full header so a
+duplicate id <em>"still recalls its own lesson without rewriting
+history."</em></li>
+<li>Biggest risk: <strong>two clocks, and only one is checked.</strong>
+<code>check-staleness.ps1</code> hashes every source file against
+<code>index-state.json</code> and reports fresh, modified, missing and
+new — and excludes <code>ai-workspace</code> by name. So the derived
+code index has a freshness contract and the memories, which cannot be
+regenerated, have none. The field that would carry one exists: every
+compiled cache row is written <code>status = 'resolved'</code> as a
+literal at the single construction site, and grepping the read scripts
+for <code>status</code> returns git status and HTTP status codes and
+nothing else.</li>
+<li>Second risk: <strong>the highest-consequence read is the least
+guarded.</strong> The hot-cache gate is
+<code>$score -ge 2 -or ($score -ge 1 -and $terms.Count -eq 1)</code> —
+two shared keywords — and it breaks at the first row over threshold
+rather than taking the best, so file order decides ties. Nothing asks
+whether the matched fix is still correct, and the verdict on a hit is to
+apply it and stop investigating. The symbol branch two lines earlier
+does validate its row.</li>
+<li>Third risk: <strong>nothing is stored and nothing is
+tested.</strong> <code>brain.md</code> says <em>"(No entries yet)"</em>,
+<code>hot-cache.jsonl</code> is one byte, <code>last-session.md</code>
+still carries <code>YYYY-MM-DD</code> placeholders, and there is no test
+file, probe set or committed run anywhere. The README argues the whole
+workflow from token cost — deterministic scripts against <em>"thousands
+of tokens per turn"</em> of searching — and no measurement of that
+appears in the tree.</li>
+<li>Maturity impression: 6 commits since 20 August 2026, 2,411 lines of
+PowerShell across fourteen scripts, a Markdown workspace and four lane
+prompts. <strong>No licence file and no licence claim.</strong> No
+marks: every write is an append, nothing revises or removes, and the one
+status field is unreachable. Every script assumes Windows path
+separators while the README presents the workflow as
+agent-agnostic.</li>
+<li>Study when: you want the shape of a memory read that answers with an
+action, or a completion gate that gets enforced without judgement.</li>
+<li>Do not copy when: your memories will outlive the code they describe.
+There is no correction path, no expiry and no way to mark an entry
+wrong, so the store's value decays with the codebase while the router's
+confidence in it does not.</li>
 </ul>
         </article>
       </div>

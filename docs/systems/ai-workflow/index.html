@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A token-efficient agent workflow
+whose three memory surfaces meet at one deterministic router — which
+knows when its code index is stale and has no notion of a stale
+memory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AI Workflow
+Workspace — Agent Memory Atlas">
+    <meta property="og:description" content="A token-efficient agent
+workflow whose three memory surfaces meet at one deterministic router —
+which knows when its code index is stale and has no notion of a stale
+memory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Workflow
+Workspace — Agent Memory Atlas">
+    <meta name="twitter:description" content="A token-efficient agent
+workflow whose three memory surfaces meet at one deterministic router —
+which knows when its code index is stale and has no notion of a stale
+memory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AI Workflow Workspace — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AI Workflow Workspace",
+      "description": "A token-efficient agent workflow whose three memory surfaces meet at one deterministic router \u2014 which knows when its code index is stale and has no notion of a stale memory.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two clocks, and only one is checked</p>
+          <h1>AI Workflow Workspace</h1>
+          <p class="document-deck">A token-efficient agent workflow
+whose three memory surfaces meet at one deterministic router — which
+knows when its code index is stale and has no notion of a stale
+memory.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Taki7980/Ai-workflow">
+              <span>Source</span>
+              <strong>Taki7980/Ai-workflow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2" title="c1686a372398fd58d2abd77372d8638af8212ab2">
+              <span>Analyzed revision</span>
+              <code>c1686a37…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-30</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (48%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>A file-based agent workflow built around one idea: move codebase
+mapping off the model and into deterministic local scripts, so a turn
+spends tokens on reasoning rather than on searching. Fourteen PowerShell
+scripts, a Markdown workspace, four lane prompts and an
+<code>AGENTS.md</code> that is declared the single source of truth. 6
+commits since 20 August 2026, and <strong>no licence file</strong> — no
+<code>LICENSE</code>, and no licence claim in the README — so a reader
+has no grant to rely on.</p>
+<p>Three things make it worth reading.</p>
+<p><strong>One router over three stores, and it returns an instruction
+rather than results.</strong> There is a brain
+(<code>brain-capture.ps1</code> writes, <code>brain-recall.ps1</code>
+reads), a lessons file compiled into an error-signature cache, and an
+Obsidian incident vault compiled into a second cache.
+<code>brief.ps1</code> classifies the query by regex — error signature,
+module, route, symbol, ambiguous — consults the caches and the brain in
+a fixed order, and ends with a line addressed to the agent: <em>"next:
+hot-cache hit found. Apply documented fix. Skip traversal."</em> Most
+memory systems in this atlas return a ranked list and leave the decision
+to the model; this one spends the decision itself, deterministically,
+for free.</p>
+<p><strong>And that is the least guarded read in the system.</strong>
+The hot-cache gate is
+<code>$score -ge 2 -or ($score -ge 1 -and $terms.Count -eq 1)</code> —
+two matching keywords, or one if the query is a single term. Nothing
+checks that the matched fix is still correct, and the recommendation on
+a hit is to apply it and stop looking. A false positive there does not
+degrade a ranking; it ends the investigation.</p>
+<p><strong>The system has two clocks and checks one of them.</strong>
+<code>check-staleness.ps1</code> hashes every source file against
+<code>index-state.json</code> and reports fresh, modified, missing and
+new; <code>brief.ps1</code> hash-validates an index row before it will
+classify on it, under a comment saying <em>"brief must not trust stale
+index rows"</em>. That machinery is genuinely careful and it excludes
+<code>ai-workspace</code> by name — so the derived code index has a
+freshness contract and the memories have none. The field that would
+carry one exists: every compiled cache row is written with
+<code>status = 'resolved'</code>, hardcoded at the single write site,
+and no script anywhere reads it.</p>
+<p><strong>Nothing is stored yet.</strong> <code>brain.md</code> says
+<em>"(No entries yet)"</em>, <code>brain-index.md</code> is an empty
+table, <code>hot-cache.jsonl</code> is one byte,
+<code>incident-cache.jsonl</code> is three, and
+<code>last-session.md</code> still carries its <code>YYYY-MM-DD</code>
+placeholders. There are no tests, no sample corpus and no probes, so no
+retrieval claim here can be checked against anything — which is the
+honest frame for everything above: this is a design read from its
+scripts, not a system observed working.</p>
+<p>No capability marks. Every write is an append, nothing revises or
+removes, and the one status field is unreachable.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an episode of debugging. The capture signature says so
+directly: <code>-Type</code> from
+<code>bug-fix | feature | pattern | decision | optimization | refactor</code>,
+then <code>-Problem</code>, <code>-Solution</code>, and optionally
+<code>-RootCause</code>, <code>-FailedApproaches</code>,
+<code>-FilesChanged</code> and <code>-Lesson</code>.</p>
+<p><code>-FailedApproaches</code> is the field worth noticing —
+<em>"Failed approaches (skip next time)"</em> — because it is the one
+place in the design that records what did <strong>not</strong> work. It
+is keyed on the episode rather than on the value, and nothing consults
+it as a gate: it is prose inside an entry a keyword search may or may
+not surface. So it is a near miss for the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> rather than an instance of it, and it is the field a
+tombstone would be built from.</p>
+<p><strong>A memory has one state: written.</strong> There is no
+candidate, no verified, no superseded, no archived. Both brain files are
+append-only in practice — every write is <code>Add-Content</code> — and
+no script updates or deletes an entry, so correcting a memory means
+opening the Markdown and editing it, and the design has no opinion about
+that happening.</p>
+<p>The interesting epistemic event is therefore not how a thing becomes
+a belief but <strong>what the router does with one</strong>.
+<code>brief.ps1</code> decides, before the model sees anything, whether
+the workspace already knows the answer — and its highest confidence
+verdict, the hot-cache hit, instructs the agent to stop investigating.
+That is the decision the rest of this report is about.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same query reaches two stores with different freshness contracts — an index row is hash-validated before it is routed on, and a cached fix is admitted on two keyword matches with nothing checking it is still true</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same query reaches two stores with different freshness contracts — an index row is hash-validated before it is routed on, and a cached fix is admitted on two keyword matches with nothing checking it is still true
+flowchart TD
+    Q[&quot;a question or an error trace&quot;] --&gt; C{&quot;brief.ps1 classifies by regex&quot;}
+    C -- &quot;error signature&quot; --&gt; HC{&quot;hot-cache + incident-cache&lt;br/&gt;score ≥ 2 terms, or 1 if the query is one term&quot;}
+    HC -- hit --&gt; STOP[&quot;next: Apply documented fix. Skip traversal.&quot;]
+    HC -- miss --&gt; BR[&quot;brain_hits, then quick-fix,&lt;br/&gt;then root-cause analysis&quot;]
+    C -- &quot;symbol / module / route&quot; --&gt; IX{&quot;symbol_index / endpoint_index&quot;}
+    IX --&gt; HV{&quot;hash-validate the row&lt;br/&gt;against index-state.json&quot;}
+    HV -- stale --&gt; AMB[&quot;fall through to ambiguous&quot;]
+    HV -- fresh --&gt; ROUTE[&quot;next: open only the routed files&quot;]
+    subgraph W[&quot;written by&quot;]
+      CAP[&quot;brain-capture.ps1 · complete-task.ps1&quot;] --&gt; BRAIN[(&quot;brain.md + brain-index.md&lt;br/&gt;append-only&quot;)]
+      LL[&quot;the agent, by prose protocol&quot;] --&gt; LES[(&quot;lessons-learned.md&quot;)]
+      LES --&gt;|&quot;compile-hot-cache.ps1&quot;| CACHE[(&quot;hot-cache.jsonl&lt;br/&gt;status = &#39;resolved&#39;, hardcoded&quot;)]
+    end
+    BRAIN --&gt; BR
+    CACHE --&gt; HC
+    CHK[&quot;check-staleness.ps1&lt;br/&gt;hashes every source file&quot;] -.-&gt;|&quot;excludes ai-workspace by name&quot;| BRAIN
+    CHK --&gt; IX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Files and PowerShell. Nothing runs as a service, nothing is indexed
+into a database, and there are no dependencies beyond a shell.</p>
+<ul>
+<li><strong><code>ai-workspace/agents/brain/</code></strong> —
+<code>brain.md</code> (full entries, newest at the bottom) and
+<code>brain-index.md</code> (a Markdown table of id, date, type,
+keywords).</li>
+<li><strong><code>ai-workspace/agents/lessons-learned.md</code></strong>
+— a protocol plus an entry template, appended by the agent, compiled by
+<code>compile-hot-cache.ps1</code>.</li>
+<li><strong><code>ai-workspace/Obsidian/</code></strong> — a vault with
+an incident template, compiled by
+<code>compile-incident-cache.ps1</code>.</li>
+<li><strong><code>ai-workspace/generated/</code></strong> —
+<code>hot-cache.jsonl</code>, <code>incident-cache.jsonl</code>,
+<code>last-session.md</code>.</li>
+<li><strong><code>ai-workspace/agents/references/</code></strong> —
+<code>symbol_index.md</code>, <code>endpoint_index.md</code>, built by
+<code>generate-index.ps1</code> and hash-tracked by
+<code>index-state.ps1</code>.</li>
+<li><strong><code>ai-workspace/scripts/</code></strong> — fourteen
+scripts, 2,411 lines. <code>brief.ps1</code> is the largest at 375 and
+is the entry point.</li>
+<li><strong><code>.agents/workflows/</code></strong> — four lane prompts
+(plan, build, review, small); <code>AGENTS.md</code> at the root is the
+canonical rulebook.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Copy the directory and run <code>setup.ps1</code>. The store is
+Markdown a person reads and edits, which is the right shape for a
+workspace whose whole argument is that a human and an agent share
+it.</p>
+<p><strong>The platform assumption is not stated and it is
+total.</strong> Every script is PowerShell with Windows path separators
+— <code>Join-Path $workspace 'ai-workspace\agents\brain'</code>
+throughout — so this runs on Windows, or on a machine with PowerShell
+Core and a tolerance for backslash joins. The README describes the
+workflow as agent-agnostic; it is not host-agnostic, and nothing says
+so.</p>
+<p><strong>The screen saw one file.</strong> No package manifest, no
+lockfile and no hook file exist, so <code>screen_repo.py</code> scanned
+only <code>AGENTS.md</code> and flagged it as agent-directed. The
+execution surface is the fourteen <code>.ps1</code> files, which the
+screen does not parse. Read by hand: they append to Markdown, write
+JSONL into <code>generated/</code>, shell out to <code>git</code> for
+HEADs and dirty state, and hash files with <code>SHA256</code>. Nothing
+reaches the network. They were not run — this report reads them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — <code>brain-capture.ps1</code>. Six
+required parameters behind a <code>ValidateSet</code> on type, an id of
+<code>YYYYMMDD-NNN</code> derived from the highest existing sequence, an
+index row appended, then the full entry appended to
+<code>brain.md</code>. Two comments record real defects handled rather
+than assumed away: the sequence is taken from the maximum because
+<em>"Historical files may contain duplicate IDs; counting rows would
+keep generating collisions"</em>, and the single-writer assumption is
+stated rather than implied — <em>"workflow has one writer; add a file
+lock only if concurrent capture is introduced."</em></p>
+<p><strong>Recall</strong> — <code>brain-recall.ps1</code>. Query split
+on whitespace, terms of three characters or more, each index row scored
+by how many terms it contains, top <em>N</em> by score. The full entry
+is then pulled out of <code>brain.md</code> by reconstructing the header
+from the index row's own cells and matching it as a regex — again for a
+stated reason: <em>"Historical entries reused IDs. Match the full
+indexed header so each duplicate ID still recalls its own lesson without
+rewriting history."</em> Output carries
+<code>relevance_score: N/M</code>, so the caller sees how much of the
+query matched.</p>
+<p><strong>Compilation</strong> — <code>compile-hot-cache.ps1</code>
+parses the lessons file into JSONL rows carrying
+<code>error_signature</code>, an <code>error_signature_hash</code> of
+<code>sha256(lowercased symptom)[:16]</code>, a keyword array, root
+cause, fix summary, and <code>status = 'resolved'</code>.</p>
+<p><strong>The router</strong> — <code>brief.ps1</code>. Classification
+is a regex cascade: stack-trace markers, exception names, HTTP 4xx/5xx,
+<code>file.go:123</code> patterns, <code>nil pointer</code>, Postgres
+SQLSTATEs like <code>42P01</code> and <code>23502</code>. An error
+signature goes to the caches; a capitalised token or a
+<code>useSomething</code> goes to the symbol index; a path goes to the
+endpoint index; everything else is ambiguous.</p>
+<p><strong>Write-back at task end</strong> —
+<code>complete-task.ps1</code> reads <code>.ai/HANDOFF.md</code>, throws
+if it exceeds thirty lines, throws if any required field is missing, and
+only then captures to the brain. A task cannot be completed on an
+incomplete handoff, which is a real gate and the only one in the
+system.</p>
+<p><strong>Freshness</strong> — <code>index-state.ps1</code> stores a
+<code>sha256</code> per indexed file plus backend and frontend git
+HEADs; <code>check-staleness.ps1</code> recomputes and reports counts;
+<code>validate-handoff.ps1</code> compares stored HEADs against current
+ones and emits
+<code>INDEX_WARN: … is stale -- run generate-index.ps1 before traversal</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two shapes, and neither carries a field about belief.</p>
+<p>A <strong>brain entry</strong> is a Markdown section headed
+<code>## [id] date | type | keywords</code> with
+<code>**Problem**</code>, <code>**Solution**</code> and four optional
+blocks. Its index row is <code>| id | date | type | keywords |</code>.
+The keywords are the entire searchable surface, and the script says so —
+<em>"keywords are the searchable surface - keep them dense"</em> — which
+makes findability a write-time property decided by whoever types the
+capture command.</p>
+<p>A <strong>hot-cache row</strong> is JSON with <code>id</code>,
+<code>kind</code>, <code>status</code>, <code>title</code>,
+<code>severity</code>, <code>repo</code>, <code>error_signature</code>,
+<code>error_signature_hash</code>, <code>keywords</code>,
+<code>root_cause</code>, <code>fix_summary</code>,
+<code>source</code>.</p>
+<p><strong><code>status</code> is the near miss, and it is unwired in
+both directions.</strong> It is written as the literal
+<code>'resolved'</code> at the one construction site, so no other value
+can occur; and grepping the read scripts for <code>status</code> returns
+git status and HTTP status codes and nothing else. A memory whose fix
+stopped working has a field to say so and no way to say it, and no
+reader if it could. <code>trust_state</code> is withheld on exactly
+that.</p>
+<p><strong><code>error_signature_hash</code> is a content key with no
+gate behind it.</strong> A SHA-256 of the normalised symptom is
+precisely the key a rejected-value tombstone needs, and it is used as an
+identifier rather than consulted before a write. <code>tombstone</code>
+is withheld with the mechanism already half-built.</p>
+<p><strong>One temporal field.</strong> An entry has a date; the index
+row has a date. Nothing records when a fact was true as distinct from
+when it was written, so <code>bitemporal</code> is an absence rather
+than a near miss. <strong>No scope key of any kind</strong> — one
+workspace, one brain, and <code>--root</code>-style directory selection
+is not offered — so <code>scope_enforced</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword overlap, twice, with different thresholds and very different
+consequences.</p>
+<p><code>brain-recall.ps1</code> scores every index row by how many
+query terms appear in it and returns the top five with their scores. It
+searches the <strong>index only</strong> — the full entries in
+<code>brain.md</code> are fetched by id after ranking, never scanned —
+so a term that appears in an entry's body but not in its keyword row
+cannot be found. That is a deliberate and defensible design for a token
+budget, and it means the keyword line is the whole retrieval
+surface.</p>
+<p><code>brief.ps1</code>'s hot-cache lookup is the same scoring with an
+admission rule:</p>
+<pre class="powershell"><code>if ($score -ge 2 -or ($score -ge 1 -and $terms.Count -eq 1)) { $hotCacheHit = $line; break }</code></pre>
+<p>Two properties follow. It takes the <strong>first</strong> row over
+threshold rather than the best, since it breaks immediately — so
+ordering in the cache file decides ties. And two shared keywords is the
+entire evidence for a verdict whose stated action is <em>"Apply
+documented fix. Skip traversal."</em> On a cache compiled from bug
+write-ups, common terms like <code>null</code>, <code>timeout</code>,
+<code>user</code> or <code>500</code> will co-occur across unrelated
+incidents.</p>
+<p><strong>The symbol path is guarded and the memory path is
+not</strong>, in the same file. The symbol branch resolves candidates
+against the index and then hash-validates the row before classifying on
+it, under the comment <em>"brief must not trust stale index rows (Req
+5)"</em>. The cache branch does no equivalent check: it does not ask
+whether the lesson still applies, whether the files it names still
+exist, or whether the index it was written against has moved. The
+system's care is concentrated on the store that can be regenerated and
+absent from the store that cannot.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an append and the write path is synchronous with no
+model in it — capture is a command, so a memory is retrievable the
+moment the script returns. Nothing runs in the background; compilation
+is something a person or an agent invokes.</p>
+<p><strong>There is no update or delete anywhere.</strong> No script
+rewrites an entry, marks one superseded, or removes one, so the brain
+grows monotonically and the same bug captured twice produces two entries
+that both match the same query. The duplicate-id handling in capture and
+recall shows the author has already met the consequence of an
+append-only history; the missing half is a way to say that an earlier
+entry has been replaced.</p>
+<p><strong>The one write gate is at task completion</strong>, and it is
+real: <code>complete-task.ps1</code> throws when the handoff exceeds
+thirty lines or is missing a required field, before anything reaches the
+brain. A gate that refuses to record an under-specified episode is worth
+more than most confidence thresholds in this corpus, because it acts on
+the property that actually determines whether the entry will be usable
+later.</p>
+<p><strong>The lessons path has no gate at all.</strong>
+<code>AGENTS.md</code> instructs the agent to append novel bug cause and
+fix to <code>lessons-learned.md</code>, and the file's own protocol says
+<em>"DO NOT skip this step — this is permanent AI memory"</em> —
+enforcement by instruction, with a compiler downstream that will parse
+whatever shape it finds.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Close to zero, which is the point: no embeddings, no model calls on
+either path, and the token cost of a recall is the size of the returned
+entries. The cost that is not counted is the compile step — hot cache
+and incident cache are only as current as the last time someone ran the
+compiler, and nothing in <code>brief.ps1</code> checks when that was,
+though the same file checks index freshness two branches earlier.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>AGENTS.md</code> is declared the single source of truth and the
+README asks vendor files to stay thin <em>"to prevent rule drift"</em> —
+the right instinct, and the repository follows it: there is one
+<code>AGENTS.md</code>, not a family of near-copies.</p>
+<p>The integration is shelling out. An agent runs <code>brief.ps1</code>
+at the start of a task and reads a compact capsule; runs
+<code>traverse.ps1</code> for an error or a symbol; runs
+<code>complete-task.ps1</code> at the end. The four lane prompts under
+<code>.agents/workflows/</code> tell it which path to take.</p>
+<p><strong>Agency over memory is total and unassisted.</strong> The
+agent chooses the keywords that become the entire retrieval surface,
+chooses whether to log a lesson at all, and chooses whether to believe a
+hot-cache hit. There is no tool it must call and no policy that refuses
+a write, apart from the handoff gate.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No provenance beyond a source filename, no verification, no
+uncertainty.</strong> A compiled row records that it came from
+<code>lessons-learned.md</code>; nothing records who wrote the lesson,
+against which commit, or whether it was ever confirmed to work a second
+time.</p>
+<p><strong>Prompt injection is unaddressed.</strong> The brain and the
+lessons file are Markdown an agent writes and later reads back into its
+own context, and nothing fences or neutralises recalled text. For a
+single-developer workspace that is a reasonable posture; the design does
+not say where it stops being one.</p>
+<p><strong>Concurrency is stated rather than handled</strong>, which is
+the honest form: <em>"workflow has one writer; add a file lock only if
+concurrent capture is introduced."</em> Two agents capturing at once
+would race on the index sequence, and the comment says what to do about
+it.</p>
+<p><strong>The failure mode that matters is a confident wrong
+recall.</strong> Every other read path here degrades gracefully — a
+missed symbol falls through to ambiguous, a stale index warns — but a
+hot-cache hit terminates the search with an instruction. Nothing in the
+system can express that a stored fix has expired, and
+<code>check-staleness.ps1</code> excludes the directory the fixes live
+in.</p>
+<p><strong>Marks, and why each is refused.</strong>
+<code>trust_state</code> — <code>status</code> is hardcoded and unread.
+<code>tombstone</code> — the content hash exists as an id and gates
+nothing. <code>bitemporal</code> — one date. <code>scope_enforced</code>
+— no key. <code>audit_log</code> — the brain is append-only, but it is
+the memory itself rather than a record of mutations to it, which is a
+different property. <code>human_review</code> — no surface presents a
+memory to a person for a decision. <code>negative_eval</code> — there
+are no tests in the repository at all.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There are none.</strong> No test file, no probe set, no
+fixture, no acceptance script, and no committed output from any run.
+<code>check-workflow.ps1</code> (174 lines) validates that the
+workspace's own files are present and well-formed — a structural
+self-check, not a test of retrieval.</p>
+<p>That leaves nothing in this repository that could come back red, and
+it means none of the design's claims can be checked here. The README's
+central argument is about token cost — that deterministic scripts
+replace <em>"thousands of tokens per turn"</em> of file searching — and
+no measurement of that appears anywhere: no before-and-after token
+count, no comparison against a grep-based baseline, no record of a
+session where the hot cache hit.</p>
+<p><strong>The store is empty</strong>, which compounds it. Every
+artifact that would carry evidence is scaffolding: <code>brain.md</code>
+and <code>brain-index.md</code> announce that entries are added by the
+scripts, <code>hot-cache.jsonl</code> is a single byte,
+<code>incident-cache.jsonl</code> is three, and
+<code>last-session.md</code> still reads
+<code>generated: YYYY-MM-DD HH:MM:SS</code>. So the recall path has
+never been exercised against content in anything committed here.</p>
+<p><strong>What I would want before trusting it.</strong> A corpus of
+ten real brain entries and ten questions with known answers, so the
+two-keyword hot-cache threshold can be measured against false positives
+— that threshold is the one number in the design whose error is
+expensive. A case where a lesson names a file that no longer exists. And
+a token comparison against the baseline the README argues with, since
+that is the claim the whole workflow is built on.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Return a next step, not a result set.</strong>
+<code>brief.ps1</code> ends with a line addressed to the agent — apply
+the documented fix and skip traversal, or check the brain hits and then
+do root-cause analysis. Spending the routing decision deterministically
+is cheaper than spending it in the model, and it makes the decision
+reviewable.</li>
+<li><strong>Gate task completion on the handoff, not on the
+memory.</strong> Refusing to close a task whose handoff is missing a
+field or runs past thirty lines acts on the property that decides
+whether the record is usable later, and it is enforceable without
+judgement.</li>
+<li><strong>Hash-validate a derived index row before you route on
+it.</strong> <em>"brief must not trust stale index rows"</em> is the
+right rule, and the same file shows what it is worth by not applying it
+one branch over.</li>
+<li><strong>Write the assumption down where it will bite.</strong>
+<em>"workflow has one writer; add a file lock only if concurrent capture
+is introduced"</em> tells the next reader exactly what changes when the
+assumption does.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Concentrating your freshness machinery on the store you can
+rebuild.</strong> Source files are hashed, HEADs are compared, an index
+row is validated before use — and <code>ai-workspace</code> is on the
+exclusion list, so the memories that cannot be regenerated are the ones
+with no freshness contract at all.</li>
+<li><strong>A status field with one producer and no reader.</strong>
+<code>status = 'resolved'</code> is written as a literal at the only
+construction site and consulted nowhere. Either a memory can expire, in
+which case something must write and read the field, or it cannot, in
+which case the field is a promise the schema does not keep.</li>
+<li><strong>A confident verdict on a cheap threshold.</strong> Two
+shared keywords is a reasonable bar for <em>"here are some entries you
+might want"</em> and a thin one for <em>"apply this fix and stop
+looking."</em> Match the evidence to the consequence of the action the
+answer triggers.</li>
+<li><strong>Taking the first match over threshold and breaking.</strong>
+The hot-cache loop stops at the first row that scores, so the order of a
+generated file decides which fix the agent applies. Score them all and
+take the best, or say that ties are resolved by file order.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer, on Windows, working across a backend and a
+frontend they own, who wants an agent to stop grepping. Read that way
+the design is coherent and several pieces of it are better than their
+equivalents elsewhere in this atlas — the router that answers with an
+action, the handoff gate, the duplicate-id handling that survives a
+history it did not control.</p>
+<p>Who should walk away: anyone whose memories will outlive the code
+they describe. There is no correction path, no expiry, and no way to
+mark an entry wrong, so the store's value decays with the codebase while
+the router's confidence in it does not. And anyone not on PowerShell,
+since every script assumes it and the README does not.</p>
+<p>The honest summary is that this is a design rather than a result.
+Nothing here has been measured, nothing has been stored, and the
+token-efficiency argument the whole workflow rests on is asserted rather
+than shown — which is worth saying plainly about a repository whose
+ideas are otherwise worth borrowing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Has the hot-cache threshold been tried against a real
+cache?</strong> Two shared keywords on a corpus of bug write-ups is the
+number most likely to misfire, and the store is empty.</li>
+<li><strong>What was meant to write a <code>status</code> other than
+<code>'resolved'</code>?</strong> The field is shaped for a lifecycle
+nothing implements.</li>
+<li><strong>Is the PowerShell dependency intentional or
+incidental?</strong> The workflow is presented as agent-agnostic and is
+host-specific.</li>
+<li><strong>What refreshes the compiled caches?</strong>
+<code>complete-task.ps1</code> invokes the incident compiler; nothing in
+<code>brief.ps1</code> checks how old either cache is, though it checks
+index freshness in the same pass.</li>
+<li><strong>What happens to a lesson whose files no longer
+exist?</strong> <code>check-staleness.ps1</code> would answer it for
+source files and is scoped away from the workspace.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Store</strong></p>
+<ul>
+<li><code>ai-workspace/agents/brain/brain.md</code>,
+<code>brain-index.md</code> — the two-file brain, both empty at this
+commit.</li>
+<li><code>ai-workspace/agents/lessons-learned.md</code> — protocol and
+template.</li>
+<li><code>ai-workspace/generated/hot-cache.jsonl</code>,
+<code>incident-cache.jsonl</code>, <code>last-session.md</code> — 1, 3
+and 172 bytes.</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>ai-workspace/scripts/brain-capture.ps1</code> — the id rule,
+the two appends, the single-writer comment.</li>
+<li><code>ai-workspace/scripts/complete-task.ps1:18-27</code> — the
+handoff gate.</li>
+<li><code>ai-workspace/scripts/compile-hot-cache.ps1:55-80</code> — the
+signature hash and the hardcoded <code>status</code>.</li>
+</ul>
+<p><strong>Read path</strong></p>
+<ul>
+<li><code>ai-workspace/scripts/brain-recall.ps1</code> — index scoring,
+header reconstruction.</li>
+<li><code>ai-workspace/scripts/brief.ps1:95-135</code> — classification
+and the hot-cache admission rule; <code>:311-330</code> — the routing
+advice.</li>
+<li><code>ai-workspace/scripts/traverse.ps1</code> — the error and
+symbol lookups.</li>
+</ul>
+<p><strong>Freshness</strong></p>
+<ul>
+<li><code>ai-workspace/scripts/check-staleness.ps1</code> — the hash
+comparison and the <code>ai-workspace</code> exclusion.</li>
+<li><code>ai-workspace/scripts/index-state.ps1</code>,
+<code>generate-index.ps1</code>, <code>validate-handoff.ps1</code>.</li>
+</ul>
+<p><strong>Instructions</strong></p>
+<ul>
+<li><code>AGENTS.md</code>,
+<code>.agents/workflows/{plan,build,review,small}.md</code>,
+<code>ai-workspace/agents/conventions.md</code>,
+<code>navigation.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2"><code class="commit-id" title="c1686a372398fd58d2abd77372d8638af8212ab2">c1686a37…</code></a>
+— first reading, at the sixth commit. The screen scanned one file: there
+is no manifest, lockfile or hook in the tree, so it saw only
+<code>AGENTS.md</code> and flagged it as agent-directed, which was read
+as data. The execution surface is fourteen PowerShell scripts the screen
+does not parse; they were read by hand — appends to Markdown, JSONL
+writes under <code>generated/</code>, <code>git</code> invocations for
+HEADs and dirty state, SHA-256 hashing, no network — and not run, so
+every claim in this report comes from reading them rather than from
+executing them. No marks. The report is organised around the router in
+<code>brief.ps1</code>, because that is where the design's care and its
+gap sit two branches apart: an index row is hash-validated before it is
+trusted, and a cached fix is admitted on two keyword matches and
+answered with an instruction to stop investigating.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

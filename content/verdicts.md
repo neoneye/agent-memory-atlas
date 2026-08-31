@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 350 reports.**
+**This page covers all 351 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3122,3 +3122,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Read `docs/AUDIT.md`: it separates mechanical checks from model reviews, reports the reviews by reproduction rate (a local model 12 claimed / 0 reproducible; Codex 5 / 5, all fixed), and verifies each regression test **by re-introducing the bug** — the negative control this atlas asks of every checker, done by hand.
 - Study when: you want the write-side idea, or a worked example of a benchmark that reports its boundary instead of its hit rate.
 - Do not copy when: you need memory to be corrected rather than edited today. What you adopt at this pin is a folder of notes with a good search over it and no lifecycle; the engines are specified rather than shipped on the stated grounds that every corpus differs, and the acceptance conditions name the exact probes that must improve rather than an average.
+
+### [`ai-workflow`](../systems/ai-workflow/)
+
+- Best idea: **the router returns a next step, not a result set.** `brief.ps1` classifies a query by regex — error signature, module, route, symbol, ambiguous — consults two compiled caches and the brain in a fixed order, and ends with a line addressed to the agent: *"next: hot-cache hit found. Apply documented fix. Skip traversal."* Spending the routing decision deterministically is cheaper than spending it in the model, and it makes the decision reviewable.
+- Second idea: **the task-completion gate acts on the handoff rather than on the memory.** `complete-task.ps1` throws when `.ai/HANDOFF.md` exceeds thirty lines or is missing a required field, before anything reaches the brain. Refusing to record an under-specified episode acts on the property that decides whether the entry is usable later, and it needs no judgement to enforce.
+- Third idea: **hash-validate a derived index row before routing on it** — *"brief must not trust stale index rows (Req 5)"* — and the duplicate-id handling in capture and recall, each with a comment saying which real defect it exists for: the sequence is taken from the maximum because *"counting rows would keep generating collisions"*, and recall matches a reconstructed full header so a duplicate id *"still recalls its own lesson without rewriting history."*
+- Biggest risk: **two clocks, and only one is checked.** `check-staleness.ps1` hashes every source file against `index-state.json` and reports fresh, modified, missing and new — and excludes `ai-workspace` by name. So the derived code index has a freshness contract and the memories, which cannot be regenerated, have none. The field that would carry one exists: every compiled cache row is written `status = 'resolved'` as a literal at the single construction site, and grepping the read scripts for `status` returns git status and HTTP status codes and nothing else.
+- Second risk: **the highest-consequence read is the least guarded.** The hot-cache gate is `$score -ge 2 -or ($score -ge 1 -and $terms.Count -eq 1)` — two shared keywords — and it breaks at the first row over threshold rather than taking the best, so file order decides ties. Nothing asks whether the matched fix is still correct, and the verdict on a hit is to apply it and stop investigating. The symbol branch two lines earlier does validate its row.
+- Third risk: **nothing is stored and nothing is tested.** `brain.md` says *"(No entries yet)"*, `hot-cache.jsonl` is one byte, `last-session.md` still carries `YYYY-MM-DD` placeholders, and there is no test file, probe set or committed run anywhere. The README argues the whole workflow from token cost — deterministic scripts against *"thousands of tokens per turn"* of searching — and no measurement of that appears in the tree.
+- Maturity impression: 6 commits since 20 August 2026, 2,411 lines of PowerShell across fourteen scripts, a Markdown workspace and four lane prompts. **No licence file and no licence claim.** No marks: every write is an append, nothing revises or removes, and the one status field is unreachable. Every script assumes Windows path separators while the README presents the workflow as agent-agnostic.
+- Study when: you want the shape of a memory read that answers with an action, or a completion gate that gets enforced without judgement.
+- Do not copy when: your memories will outlive the code they describe. There is no correction path, no expiry and no way to mark an entry wrong, so the store's value decays with the codebase while the router's confidence in it does not.
