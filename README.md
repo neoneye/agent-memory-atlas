@@ -25,7 +25,7 @@ Questions, corrections, and systems worth adding are welcome on Discord: [neoney
 - `AGENTS.md` — the entry point for an AI agent: what to read to build memory for a product, in what order, and what not to read.
 - `.agents/protocol/` — the machine-readable half: portable acceptance tests with stable ids, and the build-brief, closure-report and lock-file formats.
 - `.agents/skills/use-the-atlas/` — designing memory for another product from the atlas: profile, brief, approval, then code.
-- `.agents/skills/screen-repository/` — the security screen every checkout passes before it is read or run.
+- `.agents/skills/screen-repository/` — the security screen to run on a checkout before it is read or run, required for new and re-pinned work. What has actually been screened, and against which pin, is recorded in `notes/screening/screening.json` and reported by `scripts/check_screening_ledger.py`; a large share of the older corpus predates the ledger and is unscreened.
 - `.agents/skills/add-memory-system/` — the repeatable workflow for researching and integrating another memory system.
 
 ## Contribute

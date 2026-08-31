@@ -222,9 +222,10 @@ the `cites_quote` predicate that the same file already defines. A pass means the
 instruction was dropped; a failure means it was not. The harness has the probe,
 the oracle and the reset, and never joins them.
 
-MemoryAgentBench is the one worth being precise about. Two surveys describe its
-fourth competency as **selective forgetting**, and at least one secondary source
-calls it the gold standard for agent-level forgetting evaluation. In the
+MemoryAgentBench is the one worth being precise about. Its own paper names the
+fourth competency **selective forgetting**, two surveys repeat the label, and at
+least one secondary source calls it the gold standard for agent-level forgetting
+evaluation. In the
 repository that competency is named `Conflict_Resolution`, and its dataset is
 `FactConsolidation`. Reading what it actually asks:
 
@@ -241,8 +242,9 @@ repository that competency is named `Conflict_Resolution`, and its dataset is
 So nothing is deleted, both values remain in the store, the recency rule is
 supplied rather than inferred, and the score is answer-time preference. That is
 the same shape as LongMemEval's knowledge-update category, at greater length.
-The competency is named accurately in the code and inaccurately in the
-literature that cites it, and the difference matters exactly here: a reader
+The competency is named accurately in the code and inaccurately in the paper
+that ships it, a divergence the citing literature then inherits, and the
+difference matters exactly here: a reader
 looking for a forgetting benchmark will be sent to this one and will not find
 one.
 
@@ -3054,7 +3056,7 @@ not publish, is still the right order to do these things in.
   available — that a specification is a contribution and an unrun harness is a
   liability — is one FiFA and AOEP could make with equal force. What separates
   them, if anything separates them, is that the sequence below is written as an
-  adapter contract with six named methods rather than as a claim about results,
+  adapter contract with seven named methods rather than as a claim about results,
   and that this page states it has produced no numbers rather than publishing
   some. That is a difference in kind, not a defence of the gap. Until the
   sequence exists as something a reader can run against their own store, the

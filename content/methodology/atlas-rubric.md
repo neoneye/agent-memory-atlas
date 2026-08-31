@@ -310,7 +310,7 @@ fixed yet.
   one record per mark, `subsystem | file | symbol | test` — and
   `scripts/check_capability_evidence.py` validates its shape, refuses to let
   coverage fall, and prints every report whose marks name more than one
-  subsystem. Four reports are migrated: DeepCode, [Aeris](../../systems/aeris/),
+  subsystem. The first four migrated were DeepCode, [Aeris](../../systems/aeris/),
   [Prime Agent](../../systems/prime-agent/) and
   [Microsoft Agent Framework](../../systems/agent-framework/). The three carrying
   more than one mark all came out **split**, which is the point: Aeris earns
@@ -322,11 +322,12 @@ fixed yet.
   the framework contract the report is named for has no scope at all. Every one
   of those facts was already in the prose. None of it was in the data.
 
-  **Ten of 269 marks are covered**, so the number to watch is coverage, not the
-  four. `test: unknown` appears in six of the ten and is written rather than
-  guessed: the report named the mechanism and did not name a test for it, and
-  inventing one here would repeat the fabrication this atlas has already caught
-  itself at. The remaining 259 need a re-read each.
+  The number to watch is **coverage**, not the roster, and it is not restated
+  here: `check_capability_evidence.py` prints it on every build, against a floor
+  that may only rise. An `unknown` in a record's test field is written rather
+  than guessed — the report named the mechanism and did not name a test for it,
+  and inventing one here would repeat the fabrication this atlas has already
+  caught itself at. Every mark with no record still needs a re-read.
 - **~~The admission rule and the corpus disagree at the edges.~~ Resolved,
   2026-08-08 — the rule moved, not the corpus.** [AutoGen](../../systems/autogen/),
   [Sovereign](../../systems/sovereign/) and [Google ADK](../../systems/adk-python/)

@@ -10,10 +10,13 @@ The [comparative report](../compare/) says what each system does. This page
 answers the other question — **which systems actually have X** — for the seven
 mechanisms whose absence causes a failure the system cannot detect.
 
-Marks come from each report's frontmatter, so this table cannot drift from the
-reviews. A tick means the mechanism was found in code at that report's pinned
-commit; a dash means it was not found, which is different from impossible,
-planned, or badly built. The definitions, the evidence threshold, and why these
+Marks come from each report's frontmatter, so this table cannot disagree with
+what a report *declares*. It cannot independently confirm what a report
+declares: the frontmatter is the reviewer's assertion, and while a growing share
+of marks carry an evidence record naming the file and symbol they rest on, the
+rest are checked for shape rather than re-derived from the tree. A tick means
+the mechanism was found in code at that report's pinned commit; a dash means it
+was not found, which is different from impossible, planned, or badly built. The definitions, the evidence threshold, and why these
 seven rather than others are on [the atlas rubric](../methodology/atlas-rubric/).
 
 **Read the `of 7` column as a shape, not a score.** Around half of the systems

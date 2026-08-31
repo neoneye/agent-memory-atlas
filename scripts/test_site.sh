@@ -102,6 +102,18 @@ if ! python3 "$project_dir/scripts/check_verdict_marks.py" "$project_dir"; then
   exit 1
 fi
 
+# The same failure one level in: `capabilities:` and the prose on top of it are
+# edited at different times, so a re-score can award a mark and leave the section
+# that argued against it standing. Four reports were in that state when this
+# shipped, and each published two answers to the same question.
+if ! python3 "$project_dir/scripts/check_mark_agreement.py" --self-test; then
+  echo "check_mark_agreement.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_mark_agreement.py" "$project_dir"; then
+  exit 1
+fi
+
 # A superlative scoped to the corpus asserts something about every report at
 # once, and nothing in this build can verify one. This is a ratchet, not a gate:
 # 535 had accrued with nothing watching, and two of them were disproved by one

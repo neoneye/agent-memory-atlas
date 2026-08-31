@@ -16,7 +16,7 @@ capability_evidence:
   scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
   negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
   bitemporal: "the node store — a record-time read beside the event time already on the row | src/store/schema.ts:26-36, src/store/search.ts:79 | a node carries `ts`/`ts_epoch`, *\"kept verbatim from the source event\"*, and a separate `created_at` for when the row was written; `--as-of` adds `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm and its equivalent to the vector arm, so a query can ask what the store held at a past moment while the event's own time stays untouched. The commit that added it names it: *bi-temporal read over created_at* | tests/"
-  human_review: "one node at a time, from the CLI | src/cli/commands/review.ts, src/cli/index.ts:284-286, src/cli/commands/stale.ts:49-52 | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
+  human_review: "one node at a time, from the CLI | src/cli/commands/review.ts, src/cli/index.ts:283-297, src/cli/commands/stale.ts:48-56 | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -113,18 +113,20 @@ for why a tombstone should not store what it tombstones.
 ## 2. Mental Model
 
 An event happens on the machine. A collector notices it, redacts it, scores it a
-prior, and writes it once under a content-derived id. It is never revised. It is
-retrieved by fusing two indexes, re-ordered by two priors that are bounded in how
-far they may overturn the query, cut to a token budget, and handed over as the
-text that was stored — or, on the pre-commit path, selected by the names of the
-files you staged and printed without any of that.
+prior, and writes it once under a content-derived id. No collector ever revises
+it. It is retrieved by fusing two indexes, re-ordered by two priors that are
+bounded in how far they may overturn the query, cut to a token budget, and handed
+over as the text that was stored — or, on the pre-commit path, selected by the
+names of the files you staged and printed without any of that.
 
 The epistemic content of that loop is thin by design, and the honest way to draw
-it is to show where the loop does not close: nothing reads a node back to change
-it, and the only arrows out of the store are wholesale.
+it is to show what closes it and what does not. One arrow runs backwards into the
+store and it is a person's: `nexusmem review` sets `trust_state` on a node the
+collectors are forbidden to overwrite. Everything else leaving the store is
+wholesale.
 
 ```mermaid
-%% caption: two ways out — a ranked, budgeted answer to a query, and a pre-commit warning nobody asked for — and one way back in, because removal is keyed on the source, the source file survives, and the next full sync re-derives what was pruned
+%% caption: two ways out — a ranked, budgeted answer to a query and a pre-commit warning nobody asked for — one human verdict written back onto a node no collector may overwrite, and one way back in, because a source-keyed removal leaves the source file on disk and the next full sync re-derives what was pruned
 flowchart TD
     HOOK["Shell hook<br/>appends command, cwd, exit code"] --> LOG[("hook log JSONL<br/>append-only, never pruned")]
     LOG --> COLL
@@ -132,7 +134,8 @@ flowchart TD
     GIT["git log and patches"] --> COLL
     DOCS["project docs"] --> COLL
     CONV["assistant transcripts (opt-in)"] --> COLL
-    COLL["Collector<br/>redact, score a signal prior, derive id"] --> N[("nodes<br/>write-once, no status field")]
+    COLL["Collector<br/>redact, score a signal prior, derive id"] --> N[("nodes<br/>write-once by collectors<br/>trust_state kept out of upsert")]
+    REVIEW["nexusmem review &lt;id&gt;<br/>--verify / --reject"] -->|"sets trust_state"| N
     N --> FTS["FTS5 BM25"]
     N --> VEC["sqlite-vec cosine"]
     FTS --> FUSE["fuse"]
@@ -235,11 +238,14 @@ integer milliseconds *"so range scans and ordering never parse strings"*, and
 forward unchanged through a project-id migration, so ingest time survives a
 repository rename.
 
-**That is close to bi-temporal and the mark is withheld, because nothing queries
-the second axis.** Event time drives ranking; record time is preserved but no
-read path accepts an as-of parameter, so the store cannot answer "what did you
-hold last Tuesday" — only "what happened last Tuesday". The columns are there and
-one of them is inert on the read path.
+**Both axes are queried, which is what makes the pair bi-temporal rather than
+decorative.** Event time drives ranking; record time is what `--as-of` filters
+on, adding `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm in
+`src/store/search.ts` and its equivalent to the vector arm. So "what did you hold
+last Tuesday" and "what happened last Tuesday" are different questions here, and
+`tests/store.test.ts:468` pins the distinction in its case title — *"asOfEpoch
+excludes a node recorded after the cutoff, even though it happened before"*.
+Section 9b has the one path on which that separation is still lossy.
 
 Two schema columns carry the epistemics. `provenance` is a four-tier ordering —
 `observed`, `authored`, `recorded`, `derived` — backfilled by kind on migration
@@ -426,17 +432,19 @@ fifteen siblings ahead of the first genuinely newer node across ten real
 candidates, so every candidate silently got zero suggestions regardless of the
 model.
 
-**It is suggest-only, and there is nowhere to say no.** The only write is the
-memoized judgment; `supersedes` is never set by the checker. A suggestion is
-counted as open while `contradicts = 1` and the candidate is not yet superseded,
-so **accepting it closes it and declining it does nothing**. There is no
-dismissed column, no reviewed-by, no expiry. A person who reads a suggestion and
-judges the model wrong has nowhere to record that, and the memoization that makes
-re-runs free is exactly what makes the disagreement permanent: the pair is never
-re-asked, so the same rejected suggestion is re-printed on every `sync` and every
-`status` forever. The store remembers what the model decided and nothing about
-what the human decided — which is this corpus's most repeated shape, arriving
-here one layer up, at the review surface rather than the write path.
+**It is suggest-only, and both answers are recordable.** The checker's only write
+is the memoized judgment; `supersedes` is never set by it, so accepting a
+suggestion means a person typing `mark-stale`. Declining one is the other write:
+`nexusmem stale --dismiss <candidateId>` sets `dismissed = 1` on the memo row
+through a statement scoped by the same `nodes.project_id` join the listing uses,
+and both open-suggestion queries carry `c.dismissed = 0`, so a suggestion the
+reviewer judged wrong stops resurfacing without anyone marking the candidate
+stale to silence it. That column earns its place precisely because the
+memoization makes re-runs free: a judged pair is never re-asked, so without a
+dismissal the same rejected suggestion would print on every `sync` and every
+`status` forever. What it does not carry is *who* dismissed it or *when* — the
+memo holds the verdict and not its provenance, so the store can say a suggestion
+was declined and cannot say by whom.
 
 `nexusmem status` closes half of the gap that leaves: it calls
 `listOtherProjectIds` and `countProjectNodes` and prints how many nodes prior
@@ -450,9 +458,21 @@ still unretrievable.
 
 Four MCP tools, none of which writes a memory: `search_memory`, `sync_project`,
 `get_status`, `list_recent_memory`. The VS Code extension is a panel — search,
-refresh, sync — and by the rubric's own line, viewing is not reviewing, so
-`human_review` is withheld. The pre-commit warning does not change that: it
-prints and asks nothing, and no verdict of the reader's is recorded anywhere.
+refresh, sync — and by the rubric's own line, viewing is not reviewing; the
+pre-commit warning prints and asks nothing either.
+
+**The review surface is the CLI, and only the CLI.** `nexusmem review <nodeId>
+--verify` / `--reject` (`src/cli/commands/review.ts`, wired at
+`src/cli/index.ts:283-297`, which refuses unless exactly one of the two flags is
+passed) resolves the node, rejects an id belonging to another project, and writes
+the person's verdict to `trust_state` through `store.setTrustState`. Beside it
+`nexusmem stale --dismiss <nodeId>` records the other kind of verdict — that a
+contradiction the local model proposed is wrong — by setting `dismissed = 1` on
+the memo row, which both open-suggestion queries filter on. Either way a human's
+judgement lands in the store as a row a later read consults, which is the
+distinction the mark draws. That none of it is reachable from the agent-facing
+surfaces is a fact about who the reviewer has to be, not about whether the review
+happens.
 
 Two components run without being asked. The shell hook writes to its own JSONL
 rather than to the database. The git pre-commit hook reads.
@@ -846,19 +866,24 @@ is append-only in practice. It is small, dependency-light, genuinely local, and
 the ingest side is more carefully reasoned than most stores twice its size.
 
 Walk away if you need staleness *handled* rather than surfaced. A local model
-will tell you which older node a newer one refutes, and it will keep telling you:
-the write is still a person typing `mark-stale`, a wrong document stays in the
-corpus at full weight until they do, and a suggestion you disagree with cannot be
-dismissed. The deletion story, by contrast, is one of the more complete in this
+will tell you which older node a newer one refutes, and the write is still a
+person typing `mark-stale` or `stale --dismiss`; until one of those is typed, a
+wrong document sits in the corpus at full weight. Review is a CLI verb, so the
+person doing it has to be at a terminal in the repository — an agent holding the
+four MCP tools cannot reach it and the VS Code panel only displays. The deletion
+story, by contrast, is one of the more complete in this
 atlas for the *value*-keyed case, and thin for the source-keyed one: a prune
 leaves no record that it happened.
 
 ## 12. Open Questions
 
-- Where does a rejected suggestion go? `contradiction_checks` has room for the
-  answer — one nullable column and the open-suggestion query already has the
-  join it would need — and the absence is what turns a helpful prompt into a
-  permanent one.
+- `dismissed` is a boolean with no reviewer and no timestamp beside it. A
+  dismissal is a human judgement the store keeps and cannot attribute or date,
+  which is the one property `mutation_audit` supplies for the other human-driven
+  write in the tree.
+- Review is reachable only from the CLI. What would a reviewed verdict look like
+  as an MCP tool — one an agent may *propose* and a person confirms — without
+  becoming the model grading its own memory?
 - The four tiers are ordered and the ratios are declared judgment calls. What
   would a committed evaluation over this repository's own corpus say about the
   ordering, which is the part the code actually claims?
@@ -943,6 +968,11 @@ leaves no record that it happened.
 
 ## History
 
+**2026-08-31** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — two marks resolved in favour of the frontmatter, at the same pin, and in both cases the section arguing the other way was reasoning from the wrong surface.
+
+**`human_review` holds.** `src/cli/commands/review.ts:41` calls `store.setTrustState` after refusing an id that belongs to another project, and `src/cli/index.ts:283-297` requires exactly one of `--verify` / `--reject`. `src/store/contradictions.ts:102-111` is the second verdict, flipping `dismissed = 1` on a memo row through a statement scoped by the same `nodes.project_id` join `listContradictionSuggestions` uses, with both open-suggestion queries carrying `c.dismissed = 0`. Section 8 had weighed the four MCP tools and the VS Code panel — where viewing is indeed not reviewing — and drawn the conclusion for the whole system; the review surface is a CLI verb neither of those reaches. Section 7's account of the contradiction checker, the *Fit* paragraph and one open question followed from the same reading and state what the two verdicts write instead.
+
+**`bitemporal` holds.** `src/store/search.ts` puts `AND (? IS NULL OR n.created_at <= ?)` on the lexical arm and its equivalent on the vector arm, and `tests/store.test.ts:468` — *"asOfEpoch excludes a node recorded after the cutoff, even though it happened before"* — pins the separation. Section 5 had described the record-time column as inert on the read path, which section 9b's account of the surviving `--as-of` overfetch contradicted three sections later in the same report.
 
 **2026-08-30** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — same commit, a second reading covering three things the first pass left open, and it corrected a published claim.
 

@@ -29,7 +29,7 @@ matrix:
 
 ## 1. Executive Summary
 
-Holographic is the first-party memory provider shipped inside Hermes Agent at `plugins/memory/holographic/`. It is the only system in this atlas built on a **vector-symbolic architecture**: facts are encoded as Holographic Reduced Representation (HRR) phase vectors, and retrieval uses algebraic `bind`/`unbind`/`bundle` operations rather than a learned embedding model.
+Holographic is the first-party memory provider shipped inside [Hermes Agent](../hermes-agent/) at `plugins/memory/holographic/`, whose own built-in memory — what the agent has when no provider is mounted — is reported separately. It is the only system in this atlas built on a **vector-symbolic architecture**: facts are encoded as Holographic Reduced Representation (HRR) phase vectors, and retrieval uses algebraic `bind`/`unbind`/`bundle` operations rather than a learned embedding model.
 
 The whole plugin is roughly 2,000 lines across four files. That compactness is a feature: unlike most systems here, the entire memory model can be read in an afternoon.
 

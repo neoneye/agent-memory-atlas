@@ -11,28 +11,28 @@ revision_url: https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2e
 analyzed_at: 2026-08-29
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "memory_rejection_tombstones, consulted before an assert on both object kinds | src/modules/db2/c/schema.sql:111-128, src/modules/db2/c/fact_mutation.c:78-104,:748,:1390, src/modules/db2/c/memory_score_fields.c:631, scripts/memory-governance-pg-test.sql:32-49 | a table keyed on the value and nothing else: `(source, relation, target)` for a fact and `(memory_key, memory_content, scope_type, scope_value)` for an episodic row, each under a partial unique index restricted to `active=1`, so one live refusal per value. `fm_tombstone_blocks` runs before the mutation seam admits anything, and the memory side has its own consult. `active`, `restored_at` and `restored_by` make the refusal reversible by a named actor rather than permanent, and the shipped Postgres check refuses to start when the runtime role can erase the record — *\\\"memory tombstone runtime privileges permit erasure or prevent review\\\"* fires if the role holds DELETE or TRUNCATE, or lacks SELECT, INSERT and UPDATE. Underneath it the typed-fact seam carries the same property structurally: `fm_load_exact` looks up the triple *without* filtering lifecycle, so a re-assertion finds the dead row, and revival requires `actor->rank >= exact.authority_rank` — a model-authority extractor cannot raise what a user-authority actor invalidated, and a blocked revival lands as a quarantined candidate rather than as a live fact | scripts/memory-governance-pg-test.sql, src/tests/test_fact_lifecycle.c:443"
-  human_review: "the rejection and restore surface over stored memory | src/kb/kb_service_memory.c:975-1000, src/kb/http/kb_http_console.c, src/modules/db2/c/schema.sql:111-128 | `kb_handle_memory_reject` takes a memory id and a reason and writes a tombstone carrying `reason` and `rejected_by`; the row it refuses is *\\\"preserved for review\\\"* rather than deleted, and `idx_memory_rejection_review` orders the queue by `(active, object_kind, rejected_at DESC)`. `kb_handle_memory_restore` is the other half and is gated on identity: it resolves `db2_fact_actor_from_request` and refuses unless `actor.authenticated`, then records `restored_by`. A person adjudicates content the extractor produced, the verdict is durable, and it gates what the write path will admit next — which is the distinction between a review surface and a dashboard | scripts/memory-governance-pg-test.sql"
-  trust_state: "entity_edges lifecycle columns, read by every typed-fact recall query | src/modules/db2/c/fact_recall.c:48,:179, src/modules/db2/c/fact_lifecycle.c:88-113,:122-125, src/modules/db2/c/memory_lifecycle.h:16-24, src/modules/memory/memory_core_search_c.c:804-837 | two independent state machines, both discrete and both held apart from the confidence float beside them. Typed facts carry `superseded_at`, `invalidated_at`, `suppressed` and a `lifecycle_state` over `provisional` / `persistent` / `promoted`; every recall query in `fact_recall.c` opens with `AND superseded_at = '' AND invalidated_at = '' AND suppressed = 0`, unconditionally and behind no flag, so a retracted fact is withheld from the prompt while its row survives for audit. Episodic `memories` carry a second vocabulary — `active`, `pending`, `fulfilled`, `superseded`, `archived` — with an `archive_reason` beside it; the recall path drops archived candidates before rerank and records the reason (`memory_recall_trace_reject(id, \\\"candidate\\\", \\\"lifecycle_archived\\\")`), while `memory_get()` keeps returning them, which is the correct split between withheld and deleted. The episodic half of that is gated on two config flags that both default to 0; the typed-fact exclusion is not | src/tests/test_fact_recall.c:110-114 asserts a below-floor row is absent while its neighbours are present"
-  bitemporal: "memories.valid_from/valid_until against created_at/updated_at, read by db2_memory_valid_at | src/modules/db2/c/schema.sql:103, src/modules/db2/c/memory_lifecycle.h:77-93, src/cli_v1_routes_e.c:332-352 | the `memories` row carries `valid_from` and `valid_until` as a separate pair from `created_at` and `updated_at`, and the header states the axis distinction rather than leaving it implied: *\\\"lifecycle_state answers 'is this true now' and nothing else\\\"* — a superseded row carries no record of when it stopped being true, so the query reads the `valid_from`/`valid_until` interval instead `db2_memory_valid_at(memory_id, as_of)` answers the event-time question and is reachable as `aimee memory get <id> --as-of <timestamp>`; `memory_relations` carries the same axis as `valid_at` / `invalid_at`. Absent bounds are treated as open in both directions, with the reason written down — a row predating the stamping of `valid_until` reads as current because *\\\"inventing a boundary would be worse than admitting the interval is open\\\"* | not directly tested at this pin"
-  scope_enforced: "memory_filter_scope on the recall path, plus Postgres row-level security on the membership graph | src/modules/memory/memory_core_search_b.c:1027-1055, src/modules/memory/memory_core_search_c.c:802, src/modules/db2/c/schema.sql (kb_team, kb_project, kb_team_membership, kb_project_membership, kb_admin_grant) | `memory_filter_scope` runs on the candidate array before rerank, drops every row that fails `memory_scope_matches(id, scope_type, scope_value)`, and records the reason `scope_boundary` — a filter, not a weight, and behind no feature flag. It is a no-op when the caller passes an empty scope, so the boundary is only as good as the callers. Separately, `aimee-kb` puts `ENABLE` plus `FORCE ROW LEVEL SECURITY` on the five membership and grant tables, with the reasoning stated: *\\\"FORCE RLS so even the table owner cannot bypass the predicate; the runtime role is non-owner + NOBYPASSRLS … missing_ok=true on current_setting so an unset GUC yields NULL -> no rows (fail-closed), never an error.\\\"* No `CREATE POLICY` names a memory table, and the content policies over `kb_documents` and `kb_file_index` ship disabled behind an explicit `kb_content_scope_enable()` act | src/tests/test_content_scope_pg.c, 917 lines"
-  audit_log: "the WORM audit store and its Postgres twin | src/modules/audit/audit_worm.c, src/modules/db2/c/schema.sql:109-121, src/kb/kb_vault_rewrap.c, src/server/obs_bus_adapter.c, src/modules/guardrails/guardrails_action_audit.c | 710 lines around an `audit_event(seq, ts, actor_role, actor_principal, action, subject, verdict, detail, key_id, prev_hash, row_hash)` table with `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM: audit_event is append-only'`, a single-writer mutex so the chain is total-ordered and `seq` gap-free, and an HMAC-SHA256 row hash over a length-prefixed injective encoding that deliberately excludes `ts`. The comment names the limit of each layer: the triggers *\\\"are NOT the adversarial guarantee (a process with file write access can drop them) — that is the hash-chain.\\\"* The Postgres twin adds a second independent enforcement: a writer role granted only INSERT and SELECT at provisioning, *\\\"validated: REVOKE UPDATE/DELETE blocks mutation.\\\"* Confirmed producers are vault rewrap, guardrail actions, management operations and the durable observability sink. Alongside it, `memory_provenance(memory_id, session_id, action, details, created_at)` records per-memory mutations and is exposed as a `memory_provenance` MCP tool | src/tests/test_memory_advanced.c:367 reads back provenance rows by action"
-  negative_eval: "test_fact_recall.c, four exclusion cases each paired with a positive on the same buffer | src/tests/test_fact_recall.c:60-114 | committed cases asserting that particular material must not reach the prompt: a PII-sensitive fact is absent when the turn does not request sensitive information and present when it does; an over-long row is skipped rather than truncated in; a below-floor confidence row is withheld. Every negative sits beside a positive assertion over the same buffer, so an empty result fails the test rather than passing it — the vacuity trap this atlas keeps finding, avoided by construction. The confidence case goes further and says why it is shaped that way: *\\\"a gate that read one row's confidence for all of them would agree with all of the above,\\\"* so the fixture is built to distinguish per-row evaluation from whole-block evaluation | this is the test"
+  tombstone: "memory_rejection_tombstones, consulted before an assert on both object kinds and backstopped by a database trigger | src/modules/db2/c/schema.sql:138-156,:187-199,:1897-1908, src/modules/db2/c/fact_mutation.c:82-98,:753,:1395, src/modules/db2/c/memory_score_fields.c:613-642,:666, src/modules/memory/memory_core_crud.c:312, scripts/memory-governance-pg-test.sql:32-49 | a table keyed on the value and nothing else: `(source, relation, target)` for a fact and `(memory_key, memory_content, scope_type, scope_value)` for an episodic row, each under a partial unique index restricted to `active=1`, so one live refusal per value. `fm_tombstone_blocks` runs at the head of `db2_fact_mutation_assert` before any write and returns `FACT_MUTATION_TOMBSTONED`, and again on the review-approve arm; `db2_memory_rejection_blocks` is the episodic consult, called from both the row insert and `memory_core_crud.c`. Beneath the C seam two triggers repeat the test in the database — `fact_rejection_tombstone_guard` on `entity_edges` and `memory_rejection_tombstone_guard` on `memories`, each raising on a live refusal — described in the schema as a *\\\"Database backstop for writers that do not use the C mutation seam\\\"*. `active`, `restored_at` and `restored_by` make the refusal reversible by a named actor rather than permanent, and the shipped Postgres check refuses to start when the runtime role can erase the record — *\\\"memory tombstone runtime privileges permit erasure or prevent review\\\"* fires if the role holds DELETE or TRUNCATE, or lacks SELECT, INSERT and UPDATE. Underneath it the typed-fact seam carries the same property structurally: `fm_load_exact` looks up the triple *without* filtering lifecycle, so a re-assertion finds the dead row, and revival requires `actor->rank >= exact.authority_rank` — a model-authority extractor cannot raise what a user-authority actor invalidated, and a blocked revival lands as a quarantined candidate rather than as a live fact | src/tests/test_fact_lifecycle.c:442-448 asserts a re-extraction returns `FACT_MUTATION_TOMBSTONED`, that the keyed row is live, and that an operator undo re-admits the value; scripts/memory-governance-pg-test.sql:53-63,:107-117 drives both trigger backstops"
+  human_review: "the review-list, rejection and restore surface over stored memory | src/kb/kb_service_memory.c:975-1013, src/kb/kb_service.c:1262-1264, src/modules/db2/c/memory_query.c:1770-1821,:1877-1890, src/kb/http/kb_http_console.c:302, src/modules/db2/c/schema.sql:138-156 | `memory.review_list`, `memory.reject` and `memory.restore` are three RPCs over one queue. `db2_memory_review_list` reads `memories` filtered by `lifecycle_state` and ordered `updated_at DESC`, and `kb_http_console.c` renders it. `db2_memory_reject` runs one transaction that writes the value-keyed tombstone carrying `reason` and `rejected_by`, then sets `lifecycle_state='rejected'`, `confidence=0` and `archive_reason` on the row itself — the shipped governance script states the intent as *\\\"Rejecting preserves the row for review and installs a value-keyed refusal\\\"* — and `idx_memory_rejection_review` orders the queue by `(active, object_kind, rejected_at DESC)`. `kb_handle_memory_restore` is the other half and is gated on identity: it resolves `db2_fact_actor_from_request` and refuses unless `actor.authenticated`, then records `restored_by` and clears `active`. A person adjudicates content the extractor produced, the verdict is durable, and it gates what the write path will admit next — which is the distinction between a review surface and a dashboard | scripts/memory-governance-pg-test.sql:45-70 rejects a row, asserts the re-assertion is refused, then restores and asserts the retained row becomes recallable without a second copy"
+  trust_state: "entity_edges lifecycle columns, read by every typed-fact recall query | src/modules/db2/c/fact_recall.c:48,:179, src/modules/db2/c/fact_lifecycle.c:88-113,:122-125, src/modules/db2/c/memory_lifecycle.h:16-24, src/modules/db2/c/memory_scope_query.h:32-38, src/modules/memory/memory_core_search_c.c:825-862 | two independent state machines, both discrete and both held apart from the confidence float beside them. Typed facts carry `superseded_at`, `invalidated_at`, `suppressed` and a `lifecycle_state` over `provisional` / `persistent` / `promoted`; every recall query in `fact_recall.c` opens with `AND superseded_at = '' AND invalidated_at = '' AND suppressed = 0`, unconditionally and behind no flag, so a retracted fact is withheld from the prompt while its row survives for audit. Episodic `memories` carry a second vocabulary — `active`, `pending`, `fulfilled`, `superseded`, `archived`, `rejected` — with an `archive_reason` beside it, and the exclusion runs at two levels. `DB2_MEMORY_RECALL_FILTER_SQL` requires `lifecycle_state='active' AND activation_suppressed=0` inside every candidate-producing query, under a header comment stating the rule as *\\\"Lifecycle visibility is not feature-gated: rejected, archived, pending, fulfilled, and superseded rows never enter an answer candidate set\\\"*; the pipeline then batch-probes the surviving candidate array and drops any archived, superseded or activation-suppressed row before rerank, recording the reason `memory_recall_trace_reject(id, \\\"candidate\\\", \\\"withheld_state\\\")`. `memory_get()` keeps returning them, which is the correct split between withheld and deleted | src/tests/test_fact_recall.c:108-112 asserts a below-floor row is absent while its neighbours are present"
+  bitemporal: "memories.valid_from/valid_until against created_at/updated_at, read by db2_memory_valid_at | src/modules/db2/c/schema.sql:129, src/modules/db2/c/memory_lifecycle.h:79-96, src/cli_v1_routes_e.c:333-348 | the `memories` row carries `valid_from` and `valid_until` as a separate pair from `created_at` and `updated_at`, and the header states the axis distinction rather than leaving it implied: *\\\"lifecycle_state answers 'is this true now' and nothing else\\\"* — a superseded row carries no record of when it stopped being true, so the query reads the `valid_from`/`valid_until` interval instead `db2_memory_valid_at(memory_id, as_of)` answers the event-time question and is reachable as `aimee memory get <id> --as-of <timestamp>`; `memory_relations` carries the same axis as `valid_at` / `invalid_at`. Absent bounds are treated as open in both directions, with the reason written down — a row predating the stamping of `valid_until` reads as current because *\\\"inventing a boundary would be worse than admitting the interval is open\\\"* | not directly tested at this pin"
+  scope_enforced: "memory_filter_scope on the recall path, a scope predicate in the recall SQL, and Postgres row-level security over both the memory rows and the membership graph | src/modules/memory/memory_core_search_b.c:1025-1054, src/modules/memory/memory_core_search_c.c:825, src/modules/db2/c/memory_scope_query.h:16-38, src/modules/db2/c/schema.sql:158-182,:2659-2672 | `memory_filter_scope` runs on the candidate array before rerank, drops every row that fails `memory_scope_matches(id, scope_type, scope_value)`, and records the reason `scope_boundary` — a filter, not a weight, and behind no feature flag. It is a no-op when the caller passes an empty scope, so the boundary is only as good as the callers. `DB2_MEMORY_SCOPE_FILTER_SQL` wraps the same rank expression as a `WHERE` predicate inside every recall query, with the same two escapes. Beneath both, `memories` and `memory_rejection_tombstones` carry `ENABLE ROW LEVEL SECURITY` and a policy — `p_memories_row_scope` and `p_memory_rejections_row_scope`, `USING` and `WITH CHECK` over `memory_row_scope_visible(scope_type, scope_value)`, so the predicate governs writes as well as reads; the schema states the intent as *\\\"Scope is enforced on the memory row itself. An unset request context sees only global rows; project/workspace rows fail closed\\\"*. Separately, `aimee-kb` puts `ENABLE` plus `FORCE ROW LEVEL SECURITY` on the five membership and grant tables, with the reasoning stated: *\\\"FORCE RLS so even the table owner cannot bypass the predicate; the runtime role is non-owner + NOBYPASSRLS … missing_ok=true on current_setting so an unset GUC yields NULL -> no rows (fail-closed), never an error.\\\"* The memory tables take `ENABLE` without `FORCE`, and the content policies over `kb_documents` and `kb_file_index` ship disabled behind an explicit `kb_content_scope_enable()` act | src/tests/test_content_scope_pg.c, 971 lines; scripts/memory-governance-pg-test.sql:37-42 asserts a runtime role scoped to one project sees its own and shared rows and not another project's"
+  audit_log: "the WORM audit store, the Postgres intent queue that feeds it, and the trigger that puts memory mutations into it | src/modules/audit/audit_worm.c:22-55, src/modules/db2/c/schema.sql:211-255,:7500-7508,:16178-16184,:16271-16286, src/modules/db2/c/schema_grants.sql:97-109,:305-307, src/modules/db2/c/kb_audit_worm.c, src/kb/kb_vault_rewrap.c, src/server/obs_bus_adapter.c, src/modules/guardrails/guardrails_action_audit.c | 949 lines around an `audit_event` table — `seq`, `ts`, `hash_version`, actor role/principal/issuer/subject, `transport_cn`, `action`, `subject`, `verdict`, `detail`, `key_id`, `event_id`, `prev_hash`, `row_hash` — with `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM: audit_event is append-only'`, a single-writer mutex so the chain is total-ordered and `seq` gap-free, and an HMAC-SHA256 row hash over a length-prefixed injective encoding that deliberately excludes `ts`. The comment names the limit of each layer: the triggers *\\\"are NOT the adversarial guarantee (a process with file write access can drop them) — that is the hash-chain …\\\"*. Memory mutations reach it by trigger rather than by call site: `evidence_memories` fires `memory_mutation_worm_append`, a `SECURITY DEFINER` wrapper over `kb_audit_worm_append` → `kb_audit_worm_submit`, in the same transaction as the row change — *\\\"a WORM failure aborts the memory mutation\\\"* — landing `memory.assert` / `memory.reject` / `memory.invalidate` / `memory.restore` intents in `kb_audit_outbox`, which carries its own `BEFORE UPDATE`, `BEFORE DELETE` and `BEFORE TRUNCATE` WORM triggers; a separately credentialed worker claims them and appends the SQLite chain. Provisioning is stricter than a writer grant: the runtime role is `REVOKE ALL` on the queue and delivery tables and re-granted `SELECT` only, holds EXECUTE on `kb_audit_worm_submit` and `kb_audit_worm_pending` and not on `kb_audit_worm_append` — *\\\"runtime can submit immutable intents through the definer and inspect queue state, but cannot write the queue or delivery ledger\\\"*. Alongside it, `memory_provenance(memory_id, session_id, action, details, created_at)` records per-memory mutations and is exposed as a `memory_provenance` MCP tool | src/tests/test_memory_advanced.c:621-632 reads back a `dedupe_merge` provenance row and asserts it names the canonical; scripts/memory-governance-pg-test.sql:120-131 asserts the memory governance flow left at least five `memory.*` rows in `kb_audit_outbox` and the rejected row retained"
+  negative_eval: "test_fact_recall.c, four exclusion cases each paired with a positive on the same buffer | src/tests/test_fact_recall.c:60-114 | committed cases asserting that particular material must not reach the prompt: a PII-sensitive fact is absent when the turn does not request sensitive information and present when it does; an over-long row is skipped rather than truncated in; a below-floor confidence row is withheld. Every negative sits beside a positive assertion over the same buffer, so an empty result fails the test rather than passing it — the vacuity trap this atlas keeps finding, avoided by construction. The confidence case goes further and says why it is shaped that way: *\\\"a gate that read one row's confidence for all of them would agree with all of the above\\\"* — so the fixture is built to distinguish per-row evaluation from whole-block evaluation | this is the test"
 stack_storage: "postgres, sqlite"
 stack_retrieval: "vector, lexical, graph"
 stack_source: "reviewed"
 matrix:
   memory_unit: "Two: a typed fact — a (source, relation, target) edge in `entity_edges` with a confidence class, an authority rank and lifecycle stamps — and an episodic `memories` row with a tier, a key, content, validity bounds and a lifecycle state"
-  storage: "Postgres with pgvector for both services, plus a SQLite audit store on the single-user side; 243 CREATE TABLE statements in one schema file"
+  storage: "Postgres with pgvector for both services, plus a SQLite audit store the WORM worker owns; 244 CREATE TABLE statements in one schema file"
   retrieval: "Dense vector recall over memory rows, lexical fallback, and relation-token matching over the fact graph; typed facts are assembled into a separate recall block gated on confidence and sensitivity"
   write: "Turn-time retraction is synchronous and LLM-free; fact extraction is offline only, on a `memory_facts` drain running pattern matching and an LLM"
   update_delete: "`facts.retract` keyed on the triple rather than a row id, capped by the caller's authenticated authority; retraction stamps `invalidated_at` and retains the row; entity merges return an id that makes the merge reversible"
-  scoping: "A scope predicate and a scope rank applied together in the same queries — the filter in the `WHERE`, the rank in the `ORDER BY` — on both the lexical and dense paths, plus a candidate-array filter before rerank and Postgres row-level security forced on the membership and grant tables"
+  scoping: "A scope predicate and a scope rank applied together in the same queries — the filter in the `WHERE`, the rank in the `ORDER BY` — on both the lexical and dense paths, plus a candidate-array filter before rerank, a row-level-security policy on `memories` itself whose predicate governs writes as well as reads, and RLS forced on the membership and grant tables"
   integration: "An MCP server, a CLI, a Go control plane, and a two-service split — `aimee-server` for one human, `aimee-kb` for a team corpus"
   background: "A pending-TTL sweep into archived, a facts drain, ingest workers, and a contradiction detector that files rows into `memory_conflicts`"
   trust: "A four-class fact ladder — user-stated Class A down to novel Class C — with a confidence floor at 0.4, an authority that caps rather than falls back, and immutable relations only a user authority may retract"
-  strengths: "Every typed-fact recall query excludes retracted and suppressed rows unconditionally; the audit store enforces append-only twice by independent means and says which layer is the adversarial one; and the project has run this atlas's own producer audit on itself and published the count of inert toggles"
-  risks: "Nothing consults the invalidated set before a later extraction re-asserts the same triple; the episodic archived-hiding is behind two flags that default off; no `CREATE POLICY` covers a memory table; and at over a million lines the traced fraction is small"
+  strengths: "A refused value gets its own keyed row, consulted at the head of the mutation seam and repeated as a database trigger for writers that never reach it; every typed-fact recall query excludes retracted and suppressed rows unconditionally; the audit store enforces append-only twice by independent means, says which layer is the adversarial one, and takes memory mutations from a trigger in the same transaction as the row change; and the project has run this atlas's own producer audit on itself and published the count of inert toggles"
+  risks: "The refusal record is keyed one level less canonically than the row it refuses — `entity_edges` carries a normalized `identity_key`, `memory_rejection_tombstones` does not, so both the C consult and the database trigger compare the raw triple and a re-extraction with a different surface form walks past them; the candidate-array scope filter is a no-op when the caller passes no scope, and the SQL predicate short-circuits on an inactive context or `include_all`; row-level security on the memory tables is `ENABLE` without `FORCE`, so the table owner is not bound by it; and at over a million lines the traced fraction is small"
 ---
 
 ## 1. Executive Summary
@@ -52,13 +52,20 @@ columns. They are written by different paths, read by different queries, and
 corrected by different verbs. Most of what this report finds worth reading sits
 in the second one.
 
-Five marks. The typed-fact layer excludes superseded, invalidated and suppressed
-rows from every recall query it has, unconditionally and behind no flag. The
-episodic row carries event-time validity bounds separate from its transaction
-timestamps, with a function that answers *was this in force on 12 June*. The
-recall path filters candidates by scope and records why it dropped each one. The
-audit store is append-only by two independent mechanisms and says out loud which
-of them an attacker can remove. And the recall tests are built so that an empty
+Seven marks. A refused value gets its own keyed row in
+`memory_rejection_tombstones`, consulted at the head of the mutation seam and
+repeated as a database trigger underneath it, so a later extraction that
+re-asserts the value is declined rather than admitted. The typed-fact layer
+excludes superseded, invalidated and suppressed rows from every recall query it
+has, unconditionally and behind no flag. The episodic row carries event-time
+validity bounds separate from its transaction timestamps, with a function that
+answers *was this in force on 12 June*. The recall path filters candidates by
+scope and records why it dropped each one, with row-level security under it. A
+person rejects and restores memories through three RPCs over one queue, and the
+verdict gates what the write path will admit next. The audit store is
+append-only by two independent mechanisms, says out loud which of them an
+attacker can remove, and receives memory mutations from a trigger in the same
+transaction as the row change. And the recall tests are built so that an empty
 result fails them.
 
 What the report cannot claim is coverage. At over a million lines this is the
@@ -84,24 +91,36 @@ deliberately narrow:
 assert(fact_authority_from_provenance("user_stated") == FACT_AUTHORITY_USER);
 assert(fact_authority_from_provenance("agent_message") == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance("web") == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance("document") == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance("tool") == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance("delegate") == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance("synthesis") == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance("User_Stated") == FACT_AUTHORITY_MODEL); /* exact match */
 assert(fact_authority_from_provenance("") == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance(NULL) == FACT_AUTHORITY_MODEL);
 ```
 
-Every failure mode — wrong case, empty, null — lands on model authority. That is
-the fail-closed direction, and the test asserts it in all six forms.
+One string maps to user authority and nine do not. Every failure mode — wrong
+case, empty, null — lands on model authority, which is the fail-closed
+direction, and `test_fact_lifecycle.c:166-175` asserts it in all ten forms.
 
 ## 3. Architecture
 
 ```mermaid
 flowchart TD
-%% caption: a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction and audit run down the write side
+%% caption: a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction, the value-keyed refusal it can install, and the audit trigger run down the write side
     TURN["turn text"] --> RET{"retraction turn?<br/>scan provider"}
     RET -->|"no answer"| SKIP["log; do NOT retract"]
     RET -->|"yes + attribute"| CAP["authority CAPS the actor<br/>model authority cannot<br/>touch Class A or immutable"]
     CAP --> INV["invalidated_at stamped<br/>row retained"]
+    INV --> TOMB["memory_rejection_tombstones<br/>keyed on the value, active=1"]
     INV --> WORM
+
+    EXTRACT["offline facts drain<br/>re-asserts the same triple"] --> TSCHECK{"fm_tombstone_blocks<br/>+ DB trigger backstop"}
+    TSCHECK -->|"live refusal"| REFUSE["FACT_MUTATION_TOMBSTONED<br/>nothing written"]
+    TSCHECK -->|"none"| ADMIT["assert proceeds"]
+    TOMB -.->|"consulted"| TSCHECK
+    ADMIT --> WORM
 
     TURN --> FR["typed-fact recall block"]
     FR --> EX["AND superseded_at = ''<br/>AND invalidated_at = ''<br/>AND suppressed = 0"]
@@ -111,13 +130,13 @@ flowchart TD
     PII -->|"no"| DROP2["withheld"]
     PII -->|"yes"| BLOCK["fact lines into the envelope"]
 
-    TURN --> VEC["dense recall over memories"]
+    TURN --> VEC["dense recall over memories<br/>WHERE lifecycle_state='active'"]
     VEC --> SCOPE["memory_filter_scope<br/>reject reason: scope_boundary"]
-    SCOPE --> LIFE["archived drop<br/>reject reason: lifecycle_archived<br/>(two flags, both default 0)"]
+    SCOPE --> LIFE["archived / superseded /<br/>suppressed drop before rerank<br/>reject reason: withheld_state"]
     LIFE --> RERANK["rerank"]
     RERANK --> BLOCK
 
-    WORM[("audit_event<br/>prev_hash / row_hash chain<br/>BEFORE UPDATE/DELETE triggers<br/>+ INSERT-only role grant")]
+    WORM[("audit_event<br/>prev_hash / row_hash chain<br/>BEFORE UPDATE/DELETE triggers<br/>fed by kb_audit_outbox intents")]
 ```
 
 The two recall paths converge on the same prompt envelope but share no gate. A
@@ -137,7 +156,21 @@ stays synchronous because it is a cheap Postgres write with no model in it.
 normalises the relation, looks up its `correction_behavior` on the seeded
 relation type, refuses when that behaviour is `CORR_IMMUTABLE` and the caller is
 not a user authority, and otherwise calls `db2_fact_mutation_invalidate`. The
-key is the triple. There is no row id anywhere in the call.
+key is the triple. There is no row id anywhere in the call. Per invalidated row
+that function does two things rather than one: it stamps `invalidated_at` and
+bumps `version`, and it calls `fm_tombstone_add_assertion(conn, id, actor,
+"explicit fact invalidation")`, which copies the row's `(source, relation,
+target)` into `memory_rejection_tombstones` under the actor's rank. A retraction
+therefore leaves both a dead row and a keyed refusal.
+
+**Admission.** `db2_fact_mutation_assert` opens a transaction, backfills
+identity, and calls `fm_tombstone_blocks(conn, in->source, in->relation,
+in->target)` before it reads or writes anything else; a live refusal aborts the
+transaction and returns `FACT_MUTATION_TOMBSTONED`. The same call guards the
+approve arm of `db2_fact_mutation_review`. On the episodic side
+`db2_memory_rejection_blocks(key, content)` scopes the same test by the thread's
+current scope context and is called from both `db2_memory_row_insert_epistemic_ex`
+and `memory_core_crud.c`.
 
 **Recall exclusion.** Every query in `fact_recall.c` that assembles the fact
 block carries the same predicate. `db2_fact_current_count` shows the full
@@ -155,13 +188,24 @@ optional.
 
 ## 5. Memory Data Model
 
-The `memories` row carries thirty columns. The ones that matter here are
-`lifecycle_state` (defaulting to `active`, with `archive_reason` and `ttl_at`
-beside it), `valid_from` and `valid_until` held apart from `created_at` and
-`updated_at`, `contradiction_group` and `merged_into`, and a `negation_tokens`
-column for negative-polarity recall. `confidence`, `evidence_strength`,
-`salience` and `surprise` are floats and are not the trust state; the state is
-the enum.
+The `memories` row carries forty-five stored columns once the schema's own
+`ALTER TABLE` additions have run, plus three generated full-text columns. The
+ones that matter here are `lifecycle_state` (defaulting to `active`, with
+`archive_reason` and `ttl_at` beside it), `activation_suppressed`, `valid_from`
+and `valid_until` held apart from `created_at` and `updated_at`,
+`contradiction_group` and `merged_into`, and a `negation_tokens` column for
+negative-polarity recall. `confidence`, `evidence_strength`, `salience` and
+`surprise` are floats and are not the trust state; the state is the enum.
+`confidence_ceiling` is a fourth float and a different kind of thing — a
+provenance cap the row carries rather than a score, so model-authored material
+cannot climb by being merged or re-exposed.
+
+`memory_rejection_tombstones` is the negative half of the model: `object_kind`
+over `('fact','memory')`, the fact tuple and the episodic tuple in the same row
+shape, `authority_rank`, `reason`, `rejected_by`, `active`, `rejected_at`,
+`restored_at`, `restored_by`. Two partial unique indexes — one per object kind,
+each restricted to `active=1` — make one live refusal per value the schema's
+own constraint rather than the caller's discipline.
 
 `memory_provenance` records `(memory_id, session_id, action, details,
 created_at)`. `memory_conflicts` pairs two memory ids with a detection time, a
@@ -181,21 +225,41 @@ around a hit.
 Two filters run before rerank. `memory_filter_scope` drops candidates whose
 scope does not match, calling `memory_scope_matches`, which returns 1 when no
 scope was requested — so the boundary holds only when the caller supplies one.
-Then, when both `memory_lifecycle_enabled` and `memory_lifecycle_hide_archived`
-are set, archived candidates are batch-probed and dropped. Both accessors read
-a config number into a variable initialised to 0 and ignore the read's return
-code, so an unset key is off.
+Then the surviving candidate ids are batch-probed through
+`db2_memory_filter_archived_ids`, whose predicate is `lifecycle_state IN
+('archived','superseded') OR activation_suppressed<>0`, and any hit is dropped
+with the reject reason `withheld_state`. That block sits under a comment stating
+the rule — *"Negative retrieval is unconditional: corrected, archived and
+explicitly suppressed memories must not re-enter through lexical, dense or
+graph-fused candidates. memory_get() remains an audit/read-by-id surface."* —
+and it is guarded by nothing but a non-empty candidate array.
 
-Scope reaches the SQL as two macros that are easy to confuse and are used
-together. `DB2_MEMORY_SCOPE_RANK_SQL` is an ordering expression — active
-project 3, active workspace 2, shared or global including legacy untagged rows
-1, everything else 0 — placed before the caller's own relevance ordering and
-`LIMIT`. `DB2_MEMORY_SCOPE_FILTER_SQL` wraps the same expression as a `WHERE`
-predicate, `AND (?101 = 0 OR ?102 = 1 OR (rank) > 0)`, and it is the one doing
-the excluding. Both the lexical readers in `memory_briefing.c` and
-`memory_relations.c` and the dense path in `pgvec_transport.c` apply the filter
-in the `WHERE` and the rank in the `ORDER BY`, so a row outside the caller's
-scope is dropped rather than merely sorted last.
+Scope and lifecycle reach the SQL as three macros in `memory_scope_query.h` that
+are easy to confuse and are composed into one another.
+`DB2_MEMORY_SCOPE_RANK_SQL` is an ordering expression — an exactly matching
+`(scope_type, scope_value)` 4, active project 3, active workspace 2, shared or
+global including legacy untagged rows 1, everything else 0 — placed before the
+caller's own relevance ordering and `LIMIT`. `DB2_MEMORY_SCOPE_FILTER_SQL` wraps
+the same expression as a `WHERE` predicate, `AND (?101 = 0 OR ?102 = 1 OR (rank)
+> 0)`, and it is the one doing the excluding. `DB2_MEMORY_RECALL_FILTER_SQL`
+wraps *that* in an `EXISTS` requiring `lifecycle_state='active' AND
+activation_suppressed=0`, under a header comment that fixes the policy in place:
+*"Normal recall is deliberately stricter than scope-only history/review queries.
+Lifecycle visibility is not feature-gated: rejected, archived, pending,
+fulfilled, and superseded rows never enter an answer candidate set."* The recall
+filter is what the candidate-producing readers use — `memory_briefing.c`,
+`memory_relations.c`, `memory_query.c`, `memory_score_fields.c` and the dense
+path through `pgvec_scope_query.h` — while the bare scope filter is left to the
+history, review and by-id surfaces that are supposed to see more. A row outside
+the caller's scope is dropped rather than merely sorted last, and a row outside
+the active lifecycle never reaches the array the drop above re-checks.
+
+The pair of flags that does exist, `memory_lifecycle_enabled` and
+`memory_lifecycle_hide_archived`, gates `memory_list` — the un-filtered listing
+path — and not recall. Both accessors read a config number into a variable
+initialised to 0 and ignore the read's return code, so an unset key is off, and
+`docs/validation/flag-rollout-readiness.md` tracks the pair against its
+six-point flip gate.
 
 The two escapes in that predicate are worth reading. `?101 = 0` is an inactive
 scope context and `?102 = 1` is `include_all`; either short-circuits the check
@@ -252,10 +316,21 @@ must not do is stay silent."*
 relation, target)` for a typed fact, `(memory_key, memory_content, scope_type,
 scope_value)` for an episodic row — each under a partial unique index restricted
 to `active = 1`, so a value has at most one live refusal. `fm_tombstone_blocks`
-consults it before the mutation seam admits anything, and the episodic side has
-its own consult in `memory_score_fields.c`.
+consults it before the mutation seam admits anything, and
+`db2_memory_rejection_blocks` is the episodic side's consult.
 
-Three properties make it more than a deny-list.
+Four properties make it more than a deny-list.
+
+**The database repeats the check the C seam makes.**
+`fact_rejection_tombstone_guard` on `entity_edges` and
+`memory_rejection_tombstone_guard` on `memories` are `BEFORE INSERT OR UPDATE`
+triggers that raise when a row would become live while a matching `active=1`
+refusal exists. The schema says what they are for — a *"Database backstop for
+writers that do not use the C mutation seam"* — and states the failure they
+close: *"A rejected episodic value cannot become recallable merely because
+another extractor or maintenance script found a different path to the table."*
+A consult in the application is where the good error message lives; a trigger is
+what holds when the next writer is a migration.
 
 **It is reversible, and the reversal is attributed.** `active`, `restored_at`
 and `restored_by` mean a refusal can be lifted by a named actor rather than
@@ -321,14 +396,55 @@ The audit store is the strongest implementation of this shape in the corpus.
 a length-prefixed injective encoding of the record and the previous hash, a
 single-writer mutex keeps `seq` gap-free and totally ordered, and `ts` is
 deliberately excluded from the hashed material. Triggers block `UPDATE` and
-`DELETE`. The Postgres twin adds triggers of its own plus a writer role granted
-only `INSERT` and `SELECT`.
+`DELETE`. It is 949 lines.
 
 What earns the description is the comment distinguishing the layers: the
 triggers *"are NOT the adversarial guarantee (a process with file write access
-can drop them) — that is the hash-chain."* Most audit implementations in this
+can drop them) — that is the hash-chain …"*. Most audit implementations in this
 corpus assert their own tamper-resistance. This one names which half of it an
 attacker can remove.
+
+**The Postgres side is a queue, not a second chain, and the distinction is
+worth stating precisely because it is easy to describe wrongly.** The KB
+transaction writes an immutable outbox intent and nothing else; the file that
+owns the seam says so — *"The KB transaction owns only an immutable PostgreSQL
+outbox intent. The separately credentialed aimee-kb-worm process claims
+committed intents and appends them through modules/audit/audit_worm.c … No
+PostgreSQL chain builder lives here."* `kb_audit_outbox` and
+`kb_audit_delivery` carry `BEFORE UPDATE`, `BEFORE DELETE` and `BEFORE TRUNCATE`
+triggers raising `'WORM: % is append-only'`.
+
+The provisioning half is a grant argument rather than a chain argument, and
+`schema_grants.sql` is stricter than the design note that preceded it. The
+runtime role is `REVOKE ALL` on both queue tables and re-granted `SELECT` only;
+it holds `EXECUTE` on `kb_audit_worm_submit` and `kb_audit_worm_pending` and is
+deliberately not granted `kb_audit_worm_append`, which is `REVOKE`d from
+`PUBLIC` and granted to `aimee_kb_owner` — *"kb_audit_worm_append is
+intentionally NOT granted to runtime (only the owner-run definer mutations call
+it) so runtime cannot forge audit rows."* The wording a reader might expect here
+— a writer role granted `INSERT, SELECT` only with `REVOKE UPDATE, DELETE` —
+belongs to `docs/proposals/done/auditable-worm-audit-store.md:159` and describes
+an intent, not the shipped grants: the runtime never receives `INSERT` on an
+audit table at all, so the shipped provisioning is the stronger of the two and
+the proposal's phrasing should not be read as a description of it.
+
+**Memory mutations reach that queue from a trigger rather than from a call
+site.** `evidence_object_mutation`, the `AFTER INSERT OR UPDATE OR DELETE`
+function behind the ten `evidence_*` triggers, carries an arm specific to one
+table: when `TG_TABLE_NAME='memories'` it calls
+`public.memory_mutation_worm_append(authority, actor, action, id, detail)`, a
+`SECURITY DEFINER` wrapper over `kb_audit_worm_append`, choosing
+`memory.reject` when the lifecycle crossed into `rejected` and `memory.<op>`
+otherwise. Two properties are stated in the comment beside it and are the reason
+this is worth more than a log line: *"Same transaction as the row mutation: a
+WORM failure aborts the memory mutation. Detail is intentionally content-free."*
+Application code cannot forget to call it, and an audit that cannot be written
+takes the write down with it. `scripts/memory-governance-pg-test.sql` asserts the
+consequence directly, requiring at least five `memory.assert` / `memory.reject` /
+`memory.invalidate` / `memory.restore` rows in `kb_audit_outbox` after the
+governance flow, with the caveat written down: *"The request process proves
+durable submission here. Chain construction is intentionally asynchronous and
+is covered by run-worm-worker-pg-test.sh."*
 
 **A poison gate sits at every boundary where untrusted text becomes prompt
 context, and the memory write path is one of them.** `src/headers/integrity.h`
@@ -345,9 +461,10 @@ states the rule as *"never auto-reject user input"*, which keeps a person able
 to say a sentence that looks like an attack.
 
 `integrity_ingress_decide` is the materialization boundary, and it is wired at
-nine reachable call sites across five named boundaries: `document` for KB ingest
+eight reachable call sites across five named boundaries: `document` for KB ingest
 and PDF chunks, `retrieval` on pre-injection, `learning` on the learning router,
-`recall` in the KB client, and `memory` three times. The memory sites carry the
+`recall` in the KB client, and `memory` three times — twice in
+`memory_core_crud.c` and once in `memory_advanced.c`. The memory sites carry the
 argument for why memory is treated as hostile by default:
 
 > Durable memory becomes future prompt context, so treat it as agent-message
@@ -362,20 +479,47 @@ wrote is rejected. That a gate also runs on `recall` is the half most systems
 omit: a value that got in before the gate existed is still checked on the way
 out.
 
-Retention moved off inline SQL in the same window. `db2_memory_health` now calls
+Retention runs server-side rather than as inline SQL. `db2_memory_health` calls
 `kb_memory_retention_reap(days)` and `kb_memory_sensitivity_retention_reap`,
-server-side functions returning the number of rows reaped, rather than issuing a
+functions returning the number of rows reaped, rather than issuing a
 `DELETE ... WHERE created_at < pg_now_text(?)` from C.
 
-Row-level security on `aimee-kb` is enabled and `FORCE`d on `kb_team`,
+**Row-level security reaches the memory tables, and reaches them differently
+from the membership graph.** `memories` and `memory_rejection_tombstones` each
+take `ENABLE ROW LEVEL SECURITY` and one policy — `p_memories_row_scope` and
+`p_memory_rejections_row_scope` — both `USING` and `WITH CHECK` over
+`memory_row_scope_visible(scope_type, scope_value)`, so the same predicate
+governs what a query returns and what a write may land. The function admits a
+row when it is `('global','_global')` or `('workspace','_shared')`, when the
+request's `aimee.memory_scope_type` / `_value` GUCs match it exactly, when its
+workspace or project matches the corresponding GUC, or when
+`aimee.memory_scope_all` is `'1'`. The schema states the default it is aiming
+for: *"An unset request context sees only global rows; project/workspace rows
+fail closed."* The tombstone policy exempts `object_kind='fact'` from the scope
+test, which is correct — a typed-fact refusal has no scope tuple to test — and
+means fact refusals are visible to every scope, which is also what a value-keyed
+refusal wants.
+
+Two things temper it. These two tables take `ENABLE` without `FORCE`, unlike the
+five membership and grant tables, so the table owner is not bound by the
+predicate and the protection rests on the runtime role being a non-owner. And
+`aimee.memory_scope_all` is a session GUC the runtime can set, so the policy
+bounds a mis-scoped query rather than a compromised process.
+
+Sitting between them is the case a policy cannot express: the two tombstone
+guard triggers in section 7, which are not scope rules but value rules, and
+which run on the same tables for the same reason — that the next writer may not
+be the application.
+
+On `aimee-kb`, row-level security is enabled and `FORCE`d on `kb_team`,
 `kb_project`, `kb_team_membership`, `kb_project_membership` and `kb_admin_grant`
 — the policy data itself. The content policies over `kb_documents` and
 `kb_file_index` exist, use `kb_content_project_visible(project)`, and ship
 disabled: enabling them is described as an act rather than a migration, to be
 performed after rows have been attributed to projects. Shipping a control off
 with the enabling step named is a defensible choice and an unusual one; the
-consequence for a reader is that project visibility on documents is not on until
-someone turns it on. No `CREATE POLICY` names a memory table at this pin.
+consequence for a reader is that project visibility on documents waits on
+someone turning it on.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -416,13 +560,37 @@ blocked on measurement rather than code — and **INERT TOGGLE**, where *"the
 inert toggles, no fully-dead features.
 
 That is this atlas's producer check, run by a project on itself, with the
-negative result written down rather than quietly fixed. The archived-hiding flag
-this report describes appears in that table, marked as not yet cleared and
-awaiting a recall-with-archival A/B.
+negative result written down rather than quietly fixed. The
+`memory_lifecycle_enabled` / `_hide_archived` pair from section 6 appears in that
+table with no tests recorded against it and a recall-with-archival A/B named as
+what would clear it — a useful thing for a reader to check against, since the
+recall path's own exclusion does not depend on that pair.
+
+`scripts/memory-governance-pg-test.sql` is the other suite worth reading and is
+the one that drives the tombstone. It runs as `aimee_kb_runtime` against a real
+Postgres, asserts the runtime privilege shape on the tombstone table, asserts a
+project-scoped role sees its own and shared memory rows and not another
+project's, rejects a row and asserts the re-insert is refused by the trigger,
+restores it and asserts the retained row becomes recallable *without creating a
+second copy*, repeats the refusal test on the typed-fact side, and finishes by
+counting `memory.*` rows in the audit outbox. Every assertion drives the
+production path rather than a harness reimplementation of it, which the
+project's own proposal names as the discipline that matters: *"A harness that
+reimplements its caller certifies the storage layer and takes the wiring on
+faith, and the wiring is where these bugs live."*
 
 ## 11. For Your Own Build
 
-Four things here transfer.
+Five things here transfer.
+
+**Put the refusal check in the chokepoint, then repeat it in the database.** The
+C seam consults `memory_rejection_tombstones` before any assert, and a trigger on
+the table repeats the test for writers that never go through the seam — a
+maintenance script, a second extractor, a migration. The two together are worth
+more than either, because the first is where the good error message lives and the
+second is what holds when someone finds a different path to the table. The same
+argument applies to the grant: a refusal the runtime can `DELETE` is a
+convention, and asserting the privilege shape at startup is one query.
 
 **Make the declared authority a cap, not a default.** The bug aimee measured —
 a model-composed string inheriting an authenticated human's rank because the
@@ -450,36 +618,44 @@ Three, and the first is the honest limit of this reading.
 **Coverage.** This is a tree of over a million lines. The trace here covers the
 typed-fact layer, the episodic recall path, the audit store and the scope
 plumbing. It does not cover the Go control plane, the Python tooling, the
-ingest workers, or the great majority of the 243 tables in the schema. Absence
+ingest workers, or the great majority of the 244 tables in the schema. Absence
 of a mechanism from this report is not evidence of its absence from the tree.
 
-**Which of the two ledgers a given mutation reaches.** There are two, and they
-are not the same mechanism. The WORM `audit_event` store described in section 9
-has confirmed producers in vault rewrap, guardrail actions, management
-operations and the durable observability sink; no path from a memory RPC to
-`audit_worm_append` was traced. Memory mutations reach the *other* one:
-`memory_evidence_events`, written by `AFTER INSERT OR UPDATE OR DELETE`
-triggers on `memories`, `docs`, `document_versions`, `entity_registry`,
-`entity_aliases`, `rel_types`, `derived_memory_registry`, `memory_scopes` and
-`memory_links`, plus `evidence_change_item_event()` on the fact-graph commit
-path. Each row carries `authenticated_actor`, `transport_identity`,
+**What an auditor does with two ledgers.** A memory mutation writes to both, by
+two different triggers on the same table. `memory_evidence_events` is the
+detailed one, written by the ten `evidence_*` triggers on `memories`, `docs`,
+`document_versions`, `entity_registry`, `entity_aliases`, `rel_types`,
+`derived_memory_registry`, `memory_scopes`, `memory_links` and
+`ontology_packages`, plus `evidence_change_item_event()` on the fact-graph
+commit path; each row carries `authenticated_actor`, `transport_identity`,
 `effective_authority`, a `changeset_id`, before and after refs and the source
-span and hash, under `CHECK` constraints over a fourteen-value object kind and
-a twelve-value operation. Putting the producer in a trigger is the stronger
-choice — application code cannot forget to call it — and it means the coverage
-question is which tables carry the trigger, not which call sites remember. The
-open part is whether the two ledgers are meant to converge, and what an auditor
-is supposed to do with a subject whose history is split across them.
+span and hash, under `CHECK` constraints over a fourteen-value object kind and a
+twelve-value operation. The WORM chain is the tamper-evident one and gets a
+content-free row for the same mutation through `memory_mutation_worm_append`.
+Putting both producers in triggers is the stronger choice — application code
+cannot forget to call either — and it means the coverage question is which
+tables carry the trigger, not which call sites remember. The open part is what
+an auditor is supposed to reconcile: one ledger holds the detail and is an
+ordinary table, the other holds the proof and is content-free, and nothing read
+here joins a `changeset_id` to a chain `seq`.
 
-**Whether a retracted triple can be re-asserted.** Retraction stamps
-`invalidated_at` and keys on `(source, relation, target)`, which is the right
-key. But nothing found in the offline extraction path consults the invalidated
-set before asserting, so a later drain that re-extracts the same triple from new
-text appears able to re-establish it. This is why the `tombstone` mark is not
-awarded: the retention is there, the value-keying is there, and the consultation
-that would make a refusal durable was not found. A single predicate in the
-assert path — refuse a triple whose invalidated twin outranks the incoming
-authority — would close it.
+**Whether the refusal survives a rephrasing.** The mechanism holds against a
+literal re-assertion and the tests drive it. What it is keyed on is narrower
+than what `entity_edges` is keyed on: that table carries `identity_key`, a
+normalized `(source, relation, target)` joined on U+001F after case folding,
+whitespace collapse and relation normalization, and `fm_load_exact` prefers it
+over the literal columns. `memory_rejection_tombstones` has no such column, so
+`fm_tombstone_blocks` and `fact_rejection_tombstone_guard` both compare the raw
+triple. An extractor emitting the same claim with a different surface form on
+the next pass computes a different literal triple and is not refused by the
+tombstone — though `fm_load_exact` would still find the dead row by
+`identity_key` and apply the rank gate to it, so the two mechanisms disagree
+about what counts as the same fact. The episodic side is keyed on exact
+`memory_content` and has no second mechanism behind it. Adding `identity_key` to
+the refusal row, and computing it on both the write and the consult, is the
+shape that would close the gap; the project's own
+`correction-completeness-and-bounded-reachability.md` names the same hole and
+attributes it to the extractor rather than to an adversary.
 
 ## Appendix: File Index
 
@@ -488,21 +664,34 @@ authority — would close it.
 | `src/modules/db2/c/fact_recall.c` | Every typed-fact recall query, each opening with the exclusion predicate |
 | `src/modules/db2/c/fact_lifecycle.c` | `db2_fact_retract`, the immutable-relation guard, the current-count query |
 | `src/modules/db2/c/fact_ingest.c` | Turn-time retraction, and the three corrections quoted in section 7 |
+| `src/modules/db2/c/fact_mutation.c` | `fm_tombstone_blocks`, `fm_tombstone_add_assertion`, `fm_load_exact` and the commit seal |
 | `src/modules/db2/c/memory_lifecycle.h` | The five-state episodic vocabulary and `db2_memory_valid_at` |
-| `src/modules/db2/c/memory_scope_query.h` | `DB2_MEMORY_SCOPE_RANK_SQL` — the ordering expression, not a filter |
+| `src/modules/db2/c/memory_scope_query.h` | The rank expression, the scope filter built on it, and the recall filter built on that |
+| `src/modules/db2/c/memory_score_fields.c` | `db2_memory_rejection_blocks` and the epistemic row insert that consults it |
+| `src/modules/db2/c/memory_query.c` | `db2_memory_reject`, `db2_memory_restore`, `db2_memory_review_list`, `db2_memory_filter_archived_ids` |
 | `src/modules/memory/memory_core_search_b.c` | `memory_filter_scope` and `memory_scope_matches` |
-| `src/modules/memory/memory_core_search_c.c` | The recall pipeline: scope filter, lifecycle drop, rerank |
-| `src/modules/audit/audit_worm.c` | The hash-chained append-only store, 710 lines |
-| `src/modules/db2/c/schema.sql` | 243 tables, the RLS block, and the Postgres audit twin |
+| `src/modules/memory/memory_core_search_c.c` | The recall pipeline: scope filter, withheld-state drop, rerank |
+| `src/modules/audit/audit_worm.c` | The hash-chained append-only store, 949 lines |
+| `src/modules/db2/c/kb_audit_worm.c` | The outbox-intent producer seam, and the note that no Postgres chain builder exists |
+| `src/modules/db2/c/schema.sql` | 244 tables, the memory RLS policies, the two tombstone trigger backstops, the audit outbox and `memory_mutation_worm_append` |
+| `src/modules/db2/c/schema_grants.sql` | The WORM grant split — runtime submits through a definer and never holds the appender |
 | `src/server/server_facts.c` | The `facts.retract` boundary and its authority resolution |
 | `src/tests/test_fact_recall.c` | The paired positive/negative exclusion cases |
+| `src/tests/test_fact_lifecycle.c` | The provenance-to-authority table and the tombstoned re-extraction case |
+| `scripts/memory-governance-pg-test.sql` | The privilege check, both trigger backstops, and the audit-row count |
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
 
+**2026-08-31** — [`eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8`](https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8) — same pin, re-read to settle a report that disagreed with itself. The 2026-08-26 entry below promoted `tombstone` and `human_review` to seven of seven and the frontmatter carried the promotion; the body did not. Section 1 opened *"Five marks"*, section 12 argued the `tombstone` mark was withheld because *"the consultation that would make a refusal durable was not found"*, and the `matrix.risks` field — which the compare page publishes verbatim — led with *"Nothing consults the invalidated set before a later extraction re-asserts the same triple."* All three are wrong at this pin and in the same direction: `fm_tombstone_blocks` runs at the head of `db2_fact_mutation_assert` and again on the review-approve arm, `db2_memory_rejection_blocks` is the episodic consult, and two database triggers repeat the test underneath both. All three are corrected; the risks field names the real remaining gap, which is that the refusal is keyed on the raw triple while `entity_edges` is keyed on a normalized `identity_key`.
+
+Two quotations attributed to the tree were not in it and are removed. *"preserved for review"* was cited for `human_review`; the mechanism is real — `db2_memory_reject` writes the tombstone and sets `lifecycle_state='rejected'` with `confidence=0` while keeping the row — and the record now quotes text that exists, `scripts/memory-governance-pg-test.sql`'s *"Rejecting preserves the row for review and installs a value-keyed refusal."* *"validated: REVOKE UPDATE/DELETE blocks mutation."* was cited for `audit_log` as the Postgres provisioning; the nearest real text is `docs/proposals/done/auditable-worm-audit-store.md:159`, a design note rather than shipped provisioning, and the shipped grants take a stricter route the report now states — runtime holds `SELECT` on the queue tables and `EXECUTE` on the submit definer, and never `kb_audit_worm_append`. The mark stands and does not rest on that clause: memory mutations reach the chain through `memory_mutation_worm_append`, called from the `evidence_memories` trigger in the same transaction as the row change, which also retires the open question in section 12 that said no path from a memory RPC to the WORM store had been traced.
+
+Six factual corrections beside those. `audit_worm.c` is 949 lines, not 710, in three places. The archived drop before rerank records `withheld_state`, not `lifecycle_archived`, in the diagram and the evidence record. That drop, and the `lifecycle_state='active'` predicate in `DB2_MEMORY_RECALL_FILTER_SQL` above it, are not behind the `memory_lifecycle_enabled` / `_hide_archived` pair — the header says *"Lifecycle visibility is not feature-gated"* and the flags gate `memory_list` instead, so section 6, the diagram and the risks field were describing a gate that is not on that path. `integrity_ingress_decide` has eight reachable call sites, not nine. The schema holds 244 `CREATE TABLE` statements, the `memories` row 45 stored columns rather than thirty, `test_content_scope_pg.c` 971 lines rather than 917, and the `evidence_*` triggers cover ten tables rather than nine. Section 9's claim that no `CREATE POLICY` names a memory table was false: `p_memories_row_scope` and `p_memory_rejections_row_scope` both exist, `USING` and `WITH CHECK`, though under `ENABLE` without `FORCE`. The `fact_authority_from_provenance` block is quoted whole rather than eliding four asserts silently, and several line cites moved.
+
 **2026-08-29** — [`eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8`](https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8) — re-pinned 42 commits on, still on `testing`, 416 files and roughly 76,500 added lines in two days — most of it release blockers, Windows and macOS build work, CI ratchets and a static-analysis baseline. All seven marks re-verified and none moved.
 
-One change reaches the memory path and it is described in section 9: the deterministic poison gate declared in `src/headers/integrity.h` is now called from `memory_core_crud.c` at two sites and from `memory_advanced.c` at a third, joining `document`, `retrieval`, `learning` and `recall` for nine reachable call sites. The comment at the memory site states the reasoning — durable memory becomes future prompt context, so it is treated as agent-message authority and ambiguous provenance fails closed — and the authority-aware site picks `USER_STATED` over `AGENT_MESSAGE` from the memory's own authority, which is the difference between quarantining a user's odd sentence and rejecting an agent's. Retention also moved from inline `DELETE` statements to the server-side `kb_memory_retention_reap` and `kb_memory_sensitivity_retention_reap` functions, each returning a reaped count.
+One change reaches the memory path and it is described in section 9: the deterministic poison gate declared in `src/headers/integrity.h` is now called from `memory_core_crud.c` at two sites and from `memory_advanced.c` at a third, joining `document`, `retrieval`, `learning` and `recall` for eight reachable call sites. The comment at the memory site states the reasoning — durable memory becomes future prompt context, so it is treated as agent-message authority and ambiguous provenance fails closed — and the authority-aware site picks `USER_STATED` over `AGENT_MESSAGE` from the memory's own authority, which is the difference between quarantining a user's odd sentence and rejecting an agent's. Retention also moved from inline `DELETE` statements to the server-side `kb_memory_retention_reap` and `kb_memory_sensitivity_retention_reap` functions, each returning a reaped count.
 
 Screened before reading: one auto-run surface (`.claude/hooks/`), one build-time execution surface, three unpinned surfaces and five files inside the seven-day cooldown; nothing was installed and nothing was run.
 

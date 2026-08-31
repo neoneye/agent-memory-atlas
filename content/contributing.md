@@ -82,7 +82,9 @@ workflow is in the repository as an agent skill —
 before you start.
 
 **Screen the checkout before reading a file of it.** This is a precondition, not
-a suggestion, and it is the one step no contribution skips:
+a suggestion, and no contribution should skip it — though a good deal of the
+existing corpus predates the screening ledger and carries no record, which
+`scripts/check_screening_ledger.py` counts rather than hides:
 
 ```sh
 python3 scripts/screen_repo.py /absolute/path/to/source-repository

@@ -582,11 +582,12 @@ live-status tuple in the <code>$in</code>, and the
 <code>$setIsSubset</code> facet predicate — plus the provenance
 refusal.</li>
 <li>Maturity impression: Apache-2.0, 92 commits, first commit 16 August
-2026, 116,582 source lines in <code>smart-app-service</code> against
-27,105 test lines there and 1,679 test functions across 169 files, nine
-CI workflows. Five of seven capability marks. Most of the tree arrived
-in bulk rather than accreting in the open, and the lockfiles predate the
-repository's first commit.</li>
+2026, 116,582 lines across 239 files in <code>smart-app-service</code>,
+of which 111 files and 27,105 lines are its test suite, carrying 1,688
+test functions across 166 files corpus-wide, nine CI workflows. Five of
+seven capability marks. Most of the tree arrived in bulk rather than
+accreting in the open, and the lockfiles predate the repository's first
+commit.</li>
 <li>On the reported run: <code>p = 0.0005</code> recomputes exactly as a
 one-sided sign test over 15 discordant pairs, and the paired test is the
 right one for two arms over the same nineteen files. The write-up
@@ -1668,7 +1669,7 @@ table that reads authority off the write channel the process observed
 instead of a <code>--by</code> flag the caller sets, with the strongest
 channels unreachable from the CLI so an agent cannot shell out to
 one.</li>
-<li>Maturity impression: 24,700 lines of source under 50,800 lines of
+<li>Maturity impression: ~30,800 lines of source under ~62,300 lines of
 tests, a research logbook, a scar file per landmine, a benchmark
 reporting policy stricter than most vendors', and a replay A/B rig with
 a placebo arm that has been used to refute three of the project's own
@@ -2447,9 +2448,11 @@ loop.</li>
 <li>Most reusable component: the rooted-view boundary test, and
 <code>match_reasons</code> on a result so a rank can say why it
 happened.</li>
-<li>Maturity impression: 147 test functions across seven files, 63 of
+<li>Maturity impression: 147 test functions across five files, 63 of
 them in <code>test_memory_root_scope.py</code> alone, driving scoping
-through recall, listing, nesting and path normalisation.</li>
+through recall, listing, nesting and path normalisation — beside a
+<code>test_concurrent_storage.py</code> that is twelve lines of
+module-level skip with no test function in it.</li>
 <li>Study when: your problem is organisational — several agents, several
 teams, one store, and a need for one agent's memories not to reach
 another's prompt.</li>
@@ -2768,10 +2771,10 @@ bare <code>str = Field(default="")</code>.</li>
 <h3 id="memobase"><a
 href="../systems/memobase/"><code>memobase</code></a></h3>
 <ul>
-<li>Best idea: scope made structural. Every primary key is
-<code>(id, project_id)</code> and every foreign key is composite, so a
-cross-tenant query is a schema error rather than a review failure — the
-best scoping in this atlas.</li>
+<li>Best idea: scope made structural. Every memory table's primary key
+is <code>(id, project_id)</code> and every foreign key is composite, so
+a cross-tenant query is a schema error rather than a review failure —
+the best scoping in this atlas.</li>
 <li>Biggest risk: the source transcript is deleted after extraction, so
 the evidence behind a profile line is gone and correction is a rewrite
 of the only copy.</li>
@@ -4257,10 +4260,11 @@ href="../systems/mnemosyne/"><code>mnemosyne</code></a></h3>
 predicate and object, and the dedup lookup before every fact write
 matches that triple without excluding superseded rows — so a
 re-extracted rejected value lands on the tombstoned row and stays
-rejected. The atlas's eighth value-keyed refusal, and one of two that
-appear to be a side effect — <a href="../systems/nova-ai/">Nova AI</a>
-reaches the same property by the same missing filter, in another
-language on another data model.</li>
+rejected. One of two value-keyed refusals in this corpus that read as a
+side effect rather than a design — <a href="../systems/nova-ai/">Nova
+AI</a> reached the same property by the same missing filter, in another
+language on another data model, until its author replaced the accident
+with an explicit check.</li>
 <li>Biggest risk: provenance is recorded twice and acted on wrongly both
 times. <code>veracity</code> weights <code>unknown</code> at 0.8, above
 <code>tool</code> at 0.5, so labelling an origin honestly costs a memory
@@ -5721,11 +5725,11 @@ citation file is what automated tooling reads.</li>
 integer counting how many distinct domains a memory has been useful in,
 which separates a narrow fact from a general principle better than an
 importance score does.</li>
-<li>Maturity impression: 53,000 lines with 70 test files including a
-named storage-parity suite, an SBOM workflow and a security-scanning
-workflow — and a committed design spec arguing against its own
-append-only log because "the data structure is fighting the biological
-model", still marked Proposed.</li>
+<li>Maturity impression: roughly 45,000 lines with 70 test files
+including a named storage-parity suite, an SBOM workflow and a
+security-scanning workflow — and a committed design spec arguing against
+its own append-only log because "the data structure is fighting the
+biological model", still marked Proposed.</li>
 <li>Study when: you want the log-versus-directory argument made
 concretely, by a project that hit the sync failure that motivates
 it.</li>
@@ -6636,15 +6640,19 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></h3>
 <ul>
 <li>Best idea: decay is deliberately kept out of the ranking formula,
 because "multiplying cosine by strength would penalise old-but-valid
-memories below newer irrelevant ones". Ranking is
-<code>0.4 × bm25_norm + 0.6 × cosine</code>; decay drives a 24-hour
-prune and the graph node scores instead, with the rate set per claim
-type —
+memories below newer irrelevant ones". Ranking is an even
+<code>0.5 × bm25_norm + 0.5 × cosine</code> plus a <code>+0.25</code>
+temporal boost — the <code>0.4/0.6</code> split lives in the benchmark
+document and in both committed harnesses, not in the service; decay
+drives a 24-hour prune and the graph node scores instead, with the rate
+set per claim type —
 <code>fact=0.16, strategy=0.10, assumption=0.20, failure=0.35</code>.</li>
-<li>Biggest risk: the <code>replace</code> branch overwrites in place.
-The system detects that the incoming statement contradicts the stored
-one — the hard part — and then destroys the old value, leaving no
-supersession record and nothing to stop it returning.</li>
+<li>Biggest risk: the dedup <code>replace</code> branch overwrites in
+place, bypassing the <code>memory_history</code> supersession log the
+explicit update routes do write. The system detects that the incoming
+statement contradicts the stored one — the hard part — and then destroys
+the old value on the one path that keeps no record of it, and nothing
+stops the value returning.</li>
 <li>Most reusable component: <code>audit.py</code> — a hash-chained log
 of reads, writes, deletes and admin actions that stores memory
 <em>ids</em>, counts and query <em>length</em> and never content or
@@ -6659,8 +6667,9 @@ labelled "NOT a SOC 2 attestation… Prepared by: Automated codebase
 assessment" on line 2.</li>
 <li>Study when: your ranking multiplies relevance by a decay term and
 old correct answers keep losing to new irrelevant ones.</li>
-<li>Do not copy when: you need to know what a correction replaced — five
-test files also carry three benchmark suites.</li>
+<li>Do not copy when: you need to know what a correction made through
+the dedup path replaced, or you need anything to read the supersession
+log back — nothing does.</li>
 </ul>
 <h3 id="cortex-engine"><a
 href="../systems/cortex-engine/"><code>cortex-engine</code></a></h3>
@@ -9125,7 +9134,7 @@ submitted with no <code>created_at</code> is silently dated to ingestion
 time, "which corrupts fact validity timelines and invalidation ordering
 on backfills".</li>
 <li>Most reusable component: <code>AliasCanonicalizer</code>.
-Pre-ingestion entity-name rewriting with a 150-word risky-words
+Pre-ingestion entity-name rewriting with a 146-word risky-words
 deny-list, URL and code-span protection, punctuation-safe boundaries
 instead of <code>\b</code>, and per-alias replacement counts surfaced in
 a preview that makes no API calls. Six anticipated failure modes in 227
@@ -9135,8 +9144,8 @@ loop.</li>
 integration packages across Python, TypeScript and Go, about 4,900 lines
 of well-tested ingestion library with roughly thirty test modules, and
 fifty committed benchmark runs. The Community Edition is deprecated in
-<code>legacy/</code>, and the MCP server has thirteen documented tools
-and no source in this tree.</li>
+<code>legacy/</code>, and the MCP server is a separate Go module
+registering thirteen tools, all of them reads.</li>
 <li>Study when: you are choosing a retrieval budget and want to know
 where the knee is. 20/20 to 30/30 costs 45% more context tokens for 0.26
 points of accuracy — inside one standard deviation — while
@@ -11982,7 +11991,7 @@ merge on the write path.</li>
 <code>deprecate_relationship</code> builds
 <code>WHERE a['name'] = '{subject.name}'</code> by f-string on the same
 two lines where it passes the <em>labels</em> through a
-twelve-replacement sanitiser that strips the single quote. Names come
+thirteen-replacement sanitiser that strips the single quote. Names come
 from LLM extraction over user text, and fourteen other methods in the
 same file parameterise properly.</li>
 <li>Maturity impression: BUSL-1.1 with <strong>Additional Use Grant:
@@ -11990,9 +11999,10 @@ None</strong> and a Change Date of 2030-08-13, so no production use is
 granted before then. 426 commits since 19 October 2025, 45,741 lines of
 Python under <code>src/</code> against 17,404 lines of tests in 585
 cases, six datastores, an MCP server, a React console and a TUI
-installer. Three marks. Fourteen test skips, every one a
-<code>skipUnless</code> on an unavailable service rather than a
-behaviour excused.</li>
+installer. Three marks. Fourteen test skips — four decorators on
+unavailable services, ten inline <code>skipTest</code> calls for absent
+benchmark artifacts, frozen datasets and uninstalled optional plugins —
+all environment-gated, no behaviour excused.</li>
 <li>Study when: you are building a graph whose facts get superseded and
 want the event-versus-attribute distinction done properly, or you want a
 worked example of committing benchmark artifacts a reader can actually
@@ -12216,7 +12226,7 @@ under a row lock, so the case is anticipated carefully and the question
 of whether the re-assertion should be allowed is never put.
 <code>tombstone</code> withheld one lookup short.</li>
 <li>Maturity impression: MIT OR Apache-2.0, 181,665 lines of Rust across
-seventeen crates, 242 commits since 16 August 2026, 2,522 test
+seventeen crates, 242 commits since 16 August 2026, 2,525 test
 functions, a fuzz target and a <code>deny.toml</code>. Five marks. The
 conformance kit is the artifact to copy: every case takes
 <code>b: &amp;dyn Backend</code> and reports <code>b.name()</code>, so

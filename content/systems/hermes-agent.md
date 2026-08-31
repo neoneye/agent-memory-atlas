@@ -32,7 +32,7 @@ matrix:
 
 ## 1. Executive Summary
 
-This report covers Hermes Agent's **own built-in memory**, not the third-party providers it can mount. The [Holographic](../holographic/) report covers the first-party HRR plugin shipped in the same repository at the same commit; this one covers the memory the agent has when no provider is configured at all.
+This report covers Hermes Agent's **own built-in memory**, not the third-party providers it can mount. The [Holographic](../holographic/) report covers the first-party HRR plugin shipped in the same repository, read at an earlier pin than this one; this one covers the memory the agent has when no provider is configured at all.
 
 Hermes takes a position almost nothing else in this atlas takes: **memory is hard-bounded and frozen, because the prompt cache matters more than completeness.**
 

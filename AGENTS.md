@@ -72,7 +72,11 @@ you are borrowing.
 - **Counts are generated.** Anything of the form "9 of 238" comes from report
   frontmatter. Do not hand-copy a count into new prose; link to the
   [capability index](content/capabilities.md) instead. If you copy one anyway,
-  `scripts/check_claim_counts.py` will catch it when it goes stale.
+  `scripts/check_claim_counts.py` catches it when it goes stale *only* if the
+  sentence binds — a number beside a rubric mechanism and an atlas noun. A
+  free-form restatement binds to nothing and drifts silently, which is how a pair
+  of tombstone counts sat ten behind the corpus; the script's `--list` output
+  shows what bound and what did not.
 
 ---
 

@@ -289,7 +289,7 @@ Two things separate it from the three above. Its key is a *normalized token
 subset* rather than an exact string or a canonicalised value, so a later record
 that restates the erased term inside different surrounding text is still caught —
 the round-9 lesson on this page, that normalization is where the work is, taken
-further than Daimon's exact-text hash takes it, at the cost of a false-positive
+further than Daimon's canonical key takes it, at the cost of a false-positive
 surface nobody has measured. And it is **tenant-scoped**, so an erasure for one
 customer cannot silently censor another — the only instance here that treats the
 scope of a rejection as part of its identity.
@@ -879,7 +879,7 @@ implementations here also leave open.
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
   in the atlas that carries this mechanism should have this test; Daimon, which
-  has 3,679 others, does not, and neither does Mnemosyne, with 51,407 lines of
+  has 3,929 others, does not, and neither does Mnemosyne, with 51,407 lines of
   them. Both hold the property by accident. Nova AI is the counter-case and the
   cheapest one to copy: `tests/test_tombstone.py` is 246 lines, isolates a store
   in a temporary directory, and asserts that a re-asserted rejected definition

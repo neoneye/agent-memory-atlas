@@ -176,6 +176,25 @@ is a gap the project has since closed, which is the failure direction least
 likely to be reported by a reader. Re-check every capability mark, in both
 directions.
 
+**Re-run every absence claim, and treat an unsearchable one as a defect.** The
+criticisms that go stale are overwhelmingly of the form *no X / only Y / nothing
+does Z*, and `add-memory-system` requires the search that grounds one to be
+recorded in the appendix's command list. A re-read's cheapest high-yield pass is
+to execute that list against the new checkout before reading anything else: a
+Spanish outcome lexicon added upstream turned *"an English-only lexicon as a
+correctness gate"* into a criticism of code that no longer existed, and the
+report kept publishing it through a later pin because nothing re-ran the grep
+behind it. Collect the report's absence claims with:
+
+```sh
+sed '/^## History$/q' content/systems/<slug>.md \
+  | rg -n -i '\bno\b.{0,40}(exists?|found|committed|implemented|anywhere)|\bnothing\b|\bnever\b|\bonly a\b|is not in this (tree|repository)'
+```
+
+Each hit needs a command that still returns nothing at the new commit. A hit
+whose grounding search is not in the appendix is a claim nobody can re-verify —
+rewrite it as a scoped claim you can run, or delete it.
+
 **The mechanism is unchanged and the context is not.** The report's findings
 hold and something else has appeared — a second entry point, a new mode, a
 subsystem that bypasses the mechanism. Extend the report where the new material

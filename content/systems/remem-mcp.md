@@ -24,11 +24,11 @@ matrix:
   retrieval: "Hybrid — FTS5 BM25 and vector distance fused by reciprocal rank fusion at k=60, with keyword-only and vector-only modes selectable per call"
   write: "Synchronous through the `capture` tool, redacted before storage, deduplicated by content hash. The distillation pipeline is a documented no-op"
   update_delete: "`forget` refused unless `confirm` is true; `reject(id, reason)` sets `trust_state` to rejected with a `rejection_reason`, stamps `deleted_at`, and drops the vector row and atoms while keeping the capture row — which is the tombstone the capture path then consults by content hash. `superseded_by` carries corrections"
-  scoping: "`session_key` defaulting to `sha256(cwd)`, applied as `session_key = ?` on the BM25 and vector arms alike, and now defaulted by the recall handler itself rather than passed through as undefined; beside it `agent_id`, `team_id`, `user_id` and `task_id`, with an `org` scope that deliberately drops the agent filter for cross-agent handoff"
+  scoping: "`session_key` defaulting to `sha256(cwd)`, applied as `session_key = ?` on the BM25 and vector arms alike, substituted by each read handler before the storage layer sees the argument; beside it `agent_id`, `team_id`, `user_id` and `task_id`, with an `org` scope that deliberately drops the agent filter for cross-agent handoff"
   integration: "Six MCP tools — recall, capture, search, forget, handoff, adr — plus SessionStart and Stop hooks it writes into Claude Code and Devin CLI config"
   background: "None. No consolidation, extraction or maintenance pass exists; the only pipeline stage implemented is `NoopPipeline`"
   trust: "A `trust_state` column carrying `candidate` and `rejected`, filtered out of every read path, beside a `rejection_reason` and a `superseded_by` pointer. The `atoms.confidence` column is still populated by nothing"
-  strengths: "A rejected-value tombstone the write path consults by content hash before every capture, refusing with the stored reason and an explicit override; the scope default now applied by the shipping handler and pinned by a test against that handler rather than a helper; secret redaction before hashing and storage"
+  strengths: "A rejected-value tombstone the write path consults by content hash before every capture, refusing with the stored reason and an explicit override; a scope default applied by every shipping read handler and pinned by a test that enters through one rather than through a helper; secret redaction before hashing and storage"
   risks: "The tombstone is scoped to `(content_hash, session_key, agent_id)`, so the same rejected value re-asserted under a different agent id or project is not refused; the audit log records tool calls to a file rather than mutations to the store; and `override_rejection` is a plain tool argument the model can set for itself"
 ---
 
@@ -92,43 +92,47 @@ level:
 | L1 | `atoms` — `fact`, `confidence` | table created, never written |
 | L2 | `scenarios` — `atom_ids`, `summary`, `persona_tags` | table created, never written |
 
-So the epistemic state machine is one state wide. A memory is captured and it
-exists; it is retrieved by search; it is destroyed by `forget` with a confirm.
-There is no candidate state, no verification, no supersession and no expiry, and
-the one field that would carry doubt — `atoms.confidence` — sits on a table
-nothing populates.
+The epistemic state machine is two states wide, and the second state is the
+report. A capture arrives as `candidate`; `reject(id, reason)` moves it to
+`rejected`, which every read path filters out and the *write* path looks up by
+content hash; `superseded_by` points a correction at what it replaced and is
+excluded from retrieval the same way; `forget` with a confirm destroys the row
+outright. Nothing verifies a capture and nothing expires one, so `candidate` is
+where almost everything stays.
 
-The interesting question in a store this flat is not how something becomes
-believed, since everything is equally believed the moment it is written. It is
-**which memories a query can reach**, and that is decided entirely by whether the
-caller named a scope.
+Two questions then decide what a query can reach, and neither is about ranking.
+The first is which session the caller is in, answered by a default the handler
+supplies rather than by the caller. The second is whether the value was ever
+refused.
 
 ```mermaid
-%% caption: capture defaults the session key to a hash of the working directory and recall does not, so the shipped recall path searches every project — and the pipeline that would write the atom tables returns empty
+%% caption: the write path looks its own content hash up among the rejected rows, so a refused value cannot re-enter — and each read handler substitutes the project's key before the storage layer's `if (sessionKey)` guard is reached, so no shipped path arrives there with undefined
 flowchart TB
     A["agent calls capture"] --> RD["redactor: 11 secret patterns<br/>plus entropy detector"]
-    RD --> DH{"content_hash<br/>already present<br/>in this session?"}
+    RD --> RJ{"content_hash among<br/>rejected rows for this<br/>session and agent?"}
+    RJ -- yes --> REF["refused, with the stored<br/>rejection_reason<br/>unless override_rejection"]
+    RJ -- no --> DH{"content_hash<br/>already present<br/>in this session?"}
     DH -- yes --> SKIP["skipped as duplicate"]
-    DH -- no --> W["INSERT captures<br/>session_key = args ?? sha256 of cwd"]
+    DH -- no --> W["INSERT captures<br/>session_key = args ?? sha256 of cwd<br/>trust_state = candidate"]
     W --> FTS["FTS5 row via trigger"]
     W --> VEC["captures_vec row, 384-dim"]
-    W --> NP["NoopPipeline.process<br/><i>returns empty</i>"]
-    NP -.-> L12["atoms / scenarios<br/>tables never written"]
 
-    R["agent calls recall"] --> RK["sessionKey = args.session_key<br/><i>no default applied</i>"]
-    RK --> Q{"sessionKey<br/>defined?"}
-    Q -- "yes, caller named one" --> SC["WHERE session_key = ?<br/>on both arms"]
-    Q -- "no, the shipped path" --> ALL["no WHERE clause —<br/>every project searched"]
+    RJC["reject id, reason"] --> T[("row survives, marked:<br/>trust_state = rejected<br/>deleted_at stamped<br/>vector row and atoms dropped")]
+    T -. "partial index on content_hash<br/>WHERE trust_state = rejected" .-> RJ
+
+    R["agent calls recall or search"] --> RK["sessionKey = args.session_key<br/>?? defaultSessionKey"]
+    RK --> SC["WHERE session_key = ?<br/>on the BM25 and vector arms alike,<br/>beside trust_state != rejected"]
     SC --> F["BM25 and vector,<br/>fused by RRF k=60"]
-    ALL --> F
 
-    style L12 fill:#f4e2bd,stroke:#b8860b
-    style ALL fill:#f4c9c9,stroke:#a33
+    style REF fill:#cfe3cf,stroke:#3a7a3a
+    style T fill:#f4e2bd,stroke:#b8860b
 ```
 
-The two shaded boxes are the report. One is a schema promising a mechanism that
-does not exist; the other is a mechanism that exists and is bypassed by the only
-caller that ships.
+The two shaded boxes are one mechanism seen from both ends. `reject` does not
+remove the row: it marks it, stamps `deleted_at`, and drops its vector and its
+atoms, so retrieval cannot reach it while its `content_hash` stays on disk as the
+thing the next `capture` looks itself up in. The scope key runs the other loop,
+and the storage layer never learns whether the caller named one.
 
 ## 3. Architecture
 
@@ -141,14 +145,9 @@ run time — `LocalEmbedder` loads all-MiniLM-L6-v2 through
 `NoopPipeline`, `AuditLogger`, then `createServer` over
 `StdioServerTransport`. `src/server.ts` holds every tool handler.
 
-There is a **second, unwired copy of the tool layer**. `src/tools/recall.ts`,
-`capture.ts`, `search.ts`, `forget.ts` and `format.ts` each register handlers
-against an MCP server, and nothing in `src/index.ts` or `src/sdk.ts` imports
-them; the live handlers are the `handle*` functions in `src/server.ts`. Both
-copies exist, both are plausible, and they can drift. On the finding in section 4
-they happen to agree — `src/tools/recall.ts` also passes `args.session_key`
-through without a default — which is worth stating because it means the defect is
-not an artifact of reading the wrong file.
+`src/tools/` holds a single file, `format.ts`. Every tool's behaviour is decided
+in the `handle*` functions of `src/server.ts`, so there is one file to read to
+find out what a tool does and no second copy to drift against it.
 
 Alongside the server: `hooks.ts` writes `SessionStart` and `Stop` entries into
 `~/.claude/settings.json` and `~/.config/devin/config.json`, each running
@@ -192,25 +191,25 @@ leak from a backup, an export or a future query.
 list, scores `1 / (60 + rank)`, and sums — a textbook RRF, credited to TencentDB
 Agent Memory in its header.
 
-**The gap.** `handleRecall`:
+**The read-side default.** `handleRecall`, at `src/server.ts:1403`:
 
 ```ts
-const query = args.query as string;
-const sessionKey = args.session_key as string | undefined;
+const sessionKey = (args.session_key as string) ?? defaultSessionKey();
 ```
 
-and then `storage.search(args.query, queryEmbedding, { sessionKey, ... })`. There
-is no `?? defaultSessionKey()`, and `sqlite.ts` treats `undefined` as *no
-filter*, not as *this project*. The tool schema advertised to the model says the
-default is `hash(cwd)`. The write path applies that default; the read path
-documents it and does not.
+`handleSearch` (`:1908`) and `handleExplainRecall` (`:2236`) repeat the line
+verbatim, so every read entry point substitutes `sha256(cwd).slice(0, 16)` before
+`storage.search` sees the argument. That is what makes the filter unconditional
+in practice: `sqlite.ts` appends its predicate under `if (sessionKey)` and treats
+`undefined` as *no filter* rather than as *this project*, and no shipped caller
+gives that branch a way to fire. The tool schema advertised to the model says the
+default is `hash(cwd)`, and both sides of the store implement what it says.
 
-Three consequences follow, and they differ in severity. A model that omits
-`session_key` — the obvious call, since the parameter is optional and the
-description implies a sensible default — retrieves decisions and learnings from
-every repository the user has ever run the server in. `search` shares the
-handler shape. And the failure is silent in the direction that matters: extra
-results look like good recall.
+Two environment variables move the boundary deliberately rather than by omission.
+`REMEM_SESSION_KEY` replaces the hash outright. `REMEM_GLOBAL_SESSION_KEY` adds a
+second key searched alongside the project's own, and only where the caller passed
+no `session_key` of its own — a widening any caller can decline by naming a
+scope.
 
 **Deletion.** `handleForget` refuses without `confirm: true`, returning an error
 that says so. With it, `storage.delete(id)` runs `DELETE FROM atoms WHERE
@@ -225,9 +224,13 @@ manage. Nothing records that the value was rejected.
 ## 5. Memory Data Model
 
 `captures` is the whole live model: `id` (ULID), `session_key`, `agent_id`,
-`type`, `content`, `content_hash`, `tags`, `created_at`, `metadata`. Indexes on
-`(session_key, created_at DESC)`, `(agent_id, created_at DESC)` and
-`content_hash`.
+`type`, `content`, `content_hash`, `tags`, `created_at`, `metadata`, the
+`team_id` / `user_id` / `task_id` tenancy columns, `deleted_at`, `trust_state`,
+`rejection_reason`, `superseded_by`, and a v7 group of access and correction
+counters. Indexes on `(session_key, created_at DESC)`,
+`(agent_id, created_at DESC)` and `content_hash`, plus a partial index on
+`content_hash WHERE trust_state = 'rejected'` whose only job is to make the write
+path's refusal lookup cheap.
 
 **Two scope keys are stored and both are honoured on read when supplied**, which
 is more scope machinery than most single-user tools carry. `session_key`
@@ -235,9 +238,12 @@ partitions by project directory; `agent_id` records which agent wrote the row an
 is filterable through `filters.agent_id`. Neither is a security boundary —
 everything is one file readable by one user — and neither is presented as one.
 
-**Temporal fields are `created_at` only.** No validity interval, no updated-at,
-no supersession pointer. A correction is a new capture plus a `forget`, and
-nothing links the two.
+**Temporal fields are `created_at` and `deleted_at`.** No validity interval and
+no updated-at, so the store records when it learned something and never when that
+something was true — which is why `bitemporal` is withheld. What links a
+correction to what it corrects is `superseded_by`, a self-reference both read
+arms exclude on (`AND c.superseded_by IS NULL`), so a corrected capture leaves
+retrieval without leaving the file.
 
 **Provenance is the capturing agent and nothing else.** There is no record of the
 prompt, the turn or the reason.
@@ -267,11 +273,14 @@ out. This is the same shape the fusion pattern page records for Helm, and the
 same fix applies: if a channel can degrade, the result should say which channel
 ran.
 
-**Over-recall is the default.** Section 4's finding is a retrieval failure before
-it is anything else. Without a session filter, `limit` is applied to a candidate
-set drawn from every project, so a query about "the auth decision" ranks this
-project's answer against every other project's, and RRF has no signal that would
-prefer the local one — no recency weighting, no scope boost, nothing.
+**The fusion carries no scope signal of its own, which is why the filter has to
+run underneath it.** RRF scores on rank position alone — no recency weighting, no
+scope boost, nothing that would prefer this project's answer to another's. Were
+the candidate set drawn from every project, `limit` would be applied to that pool
+and a query about "the auth decision" would rank the local answer against every
+other repository's on relevance alone, with nothing in the fusion able to break
+the tie the right way. The session predicate is what stops that pool forming,
+which is a stronger reason to push the default below the handler than tidiness.
 
 Token budgeting is real and bounded: `enforceQuota` estimates tokens, truncates
 at `max_tokens` (default 4,000, capped at 8,000) and appends a hint, and the
@@ -305,9 +314,10 @@ and a local embedding of the query string.
 
 No pass ever re-reads or rewrites the store. The context cost is bounded by
 `max_tokens` per recall, and the `SessionStart` hook injects recent memory at the
-top of a session — which is the placement most likely to be prefix-cache friendly
-and also the placement that makes an unscoped default most damaging, since the
-injection happens before the model has said anything.
+top of a session — the placement most likely to be prefix-cache friendly, and the
+one where the scope key matters most, since the injection happens before the
+model has said anything. `hook-handlers.ts` derives that key from the working
+directory the same way the server does, and its comment says so.
 
 ## 8. Agent Integration
 
@@ -339,18 +349,18 @@ with no version table at all.
 
 Against those:
 
-**The scope default is the defect and it is a quiet one.** Nothing errors,
-nothing warns, and the symptom is more results rather than fewer. A user running
-this across several client repositories would find one project's decisions
-answering another project's questions, and would most likely read that as the
-memory being unhelpful rather than as a bug.
+**A rejected value cannot be re-captured**, because the refusal is keyed on the
+hash of the redacted content rather than on the row. Its edges are where a reader
+has to be careful: the lookup is scoped to
+`(content_hash, session_key, agent_id)`, so the identical value asserted under a
+different agent id or in another project is not refused, and `override_rejection`
+is an ordinary tool argument the model that was just refused can set for itself.
 
-**No trust state, and a `confidence` column stranded on an unwritten table.**
-
-**No tombstone.** `forget` removes rows and nothing prevents the same content
-being captured again, though with no extraction pass the re-assertion would have
-to come from the agent rather than from a background job — a materially smaller
-hole than in systems that re-extract from retained transcripts.
+**A two-value trust state that both read arms honour.** `candidate` on insert,
+`rejected` after `reject(id, reason)`, with `AND c.trust_state != 'rejected'` on
+the BM25 and vector arms alike, beside `AND c.superseded_by IS NULL`. It is a
+state used for filtering rather than a score used for ranking, which is the
+distinction the mark turns on.
 
 **The audit log records that a tool ran, not what changed.** `args_hash` is a
 hash, so the log answers "was `forget` called at 14:02" and cannot answer "what
@@ -363,46 +373,36 @@ the append-only audit mark is withheld here.
 
 **No paper**, no `CITATION.cff`, and none implied.
 
-21 test files — 4 unit, 8 integration, 1 smoke, and the rest fixtures — covering
+30 `.test.ts` files, 5 unit and 24 integration — covering
 tokenisation, quota, RRF fusion, redaction (both directions, including *"does not
 redact normal text"* and *"does not redact normal long text"*), the ADR tool,
 export/import, artifact handling, and database detection and migration.
 **I did not run them.** Both manifests changed the same day, inside the seven-day
 cooldown, so nothing was installed.
 
-`tests/integration/full-flow.test.ts` carries the case that earns this report's
-only mark: **`isolates memory by session key`** captures a decision to
-`project-a` and another to `project-b`, recalls each, and asserts exactly one
-result apiece whose content names only that project. That is a committed
-assertion that particular material must *not* be retrieved, and it is the right
-test to have written.
+Three committed cases assert that one project's material must not be retrieved
+from another's, and they are layered rather than repeated.
+`tests/integration/atlas-fixes.test.ts` carries *"recall without session_key does
+not leak across projects"* and the same for `search`.
+`tests/integration/full-flow.test.ts:325` carries the one that decides the mark —
+**"recall without session_key does NOT leak across projects (real handler)"** —
+which builds the server through `createServer`, reaches into `_requestHandlers`
+for the live `recall` handler, captures to `project-a` and to `project-b`, and
+calls that handler with no `session_key` at all.
 
-**It also cannot catch the defect, and the reason is structural.** The test does
-not call `handleRecall`. The file defines its own `recall` helper, and that
-helper reads:
+**Its comment names what it is guarding against, and that is the transferable
+part.** A helper filling in `sessionKey ?? "test-session"` applies a default of
+its own, so a suite built on one exercises `SQLiteBackend.search` with a key
+always present and certifies the wiring by implication — and the wiring is where
+a scope default goes missing. `full-flow.test.ts` keeps *"isolates memory by
+session key"* beside it as the storage-layer version, so the two layers are
+pinned separately rather than one standing in for the other: **integration tests
+should enter through the same door as production.**
 
-```ts
-sessionKey: args.sessionKey ?? "test-session",
-```
-
-It applies a default the shipped handler does not. So the suite exercises
-`SQLiteBackend.search` with a session key always present — the branch that works
-— and never exercises the branch the MCP tool actually takes. A test harness that
-reimplements its caller tests the storage layer and certifies the wiring by
-implication; here the wiring is where the bug is. That is the transferable lesson
-and it is worth more than the finding itself: **integration tests should enter
-through the same door as production.**
-
-The `scope_enforced` mark is withheld on the same reasoning. The filter is real,
-indexed and tested, and it is conditional on an argument the only shipped caller
-never supplies — so on the path that runs, no scope filter is applied at all.
-The mark measures the read path as callers reach it, and this one is reached with
-`undefined`.
-
-Before trusting this: a test that calls the server's own `recall` handler with no
-`session_key` and asserts another session's content is absent; an assertion that
-a degraded vector arm is visible in the response; and a `forget`-then-recapture
-case, so the absence of a tombstone is at least characterised.
+Before trusting this: an assertion that a degraded vector arm is visible in the
+response; a case that the refusal survives a `forget` of the row `reject`
+marked, since the two operate on the same row from opposite ends; and one that
+pins what `override_rejection` is allowed to override.
 
 ## 11. For Your Own Build
 
@@ -430,18 +430,16 @@ compare it against.
 
 ### Avoid
 
-**Documenting a default in the schema and applying it in only one handler.** The
-tool description that reaches the model says the session key defaults to
-`hash(cwd)`; the write path implements that and the read path does not. Where a
-default decides which data a query can see, it belongs below both handlers — in
-the storage layer, or in one helper both call — not typed twice at the edge where
-one copy can be forgotten.
-
 **Treating a missing scope argument as "no filter" rather than "the default
-scope".** `if (sessionKey)` is the line that turns an omitted parameter into a
-cross-tenant read. A store that has a scope key should require one, or supply
-one; interpreting absence as *everything* is the widest possible reading of an
-argument the caller simply did not type.
+scope".** `if (sessionKey)` in `sqlite.ts` is the line that would turn an omitted
+parameter into a cross-tenant read. What keeps it unreachable is three handlers
+each typing `?? defaultSessionKey()` at their own edge — a default maintained in
+as many copies as there are entry points, and from which a fourth entry point
+would inherit nothing. Where a default decides which data a query can see, it
+belongs below the handlers: in the storage layer, or in one helper they all call.
+A store that has a scope key should require one or supply one; reading absence as
+*everything* is the widest possible interpretation of an argument the caller
+simply did not type.
 
 **Writing integration tests against a reimplementation of your own caller.** A
 helper that fills in a default the real handler omits will pass forever and prove
@@ -457,17 +455,19 @@ are planned, the comment saying "phase 2" is right and the tables can wait.
 ### Fit
 
 Right for one developer who wants durable decisions and learnings across sessions
-of a coding agent, on one machine, with no account and no key — and who will pass
-`session_key` explicitly, or work in one repository, until the read-path default
-is fixed. In that shape the redaction, the confirm-gated delete, the local
-embeddings and the SQLite file are a sound and unusually complete package for the
-size.
+of a coding agent, on one machine, with no account and no key — including across
+several clients' repositories at once, which is the case the session key was
+designed for and which holds because the key is derived from the working
+directory rather than asked for. The redaction, the confirm-gated delete, the
+local embeddings, the hash-keyed refusal and the SQLite file are a sound and
+unusually complete package for the size.
 
-Wrong for anyone consulting across several clients' repositories from one
-machine, which is the exact case the session key was designed for and the exact
-case the default breaks. Wrong too as a base for a memory *product*: there is no
-distillation, no trust state, no correction that survives, and the audit log
-records calls rather than changes.
+Wrong wherever a refusal has to hold across agents or across projects: it is
+keyed on `(content_hash, session_key, agent_id)`, and `override_rejection` is a
+plain argument the refused caller can set. Wrong too as a base for a memory
+*product*, and the reason is the audit rather than the store — `AuditLogger`
+records that a tool ran and hashes its arguments, so "was `forget` called at
+14:02" is answerable and "what did it delete" is not.
 
 Weigh the age honestly. Seventeen commits on the day of first publication is not
 a maturity signal in either direction — the code is better structured than most
@@ -476,11 +476,12 @@ author.
 
 ## 12. Open Questions
 
-- Is the missing `?? defaultSessionKey()` in `handleRecall` intentional — an
-  opt-in to cross-project search — or an omission? The tool description argues
-  for the second, and nothing in the repository argues for the first.
-- Which tool layer is meant to survive, `src/server.ts` or `src/tools/`? Both
-  implement the same six tools and only one is wired.
+- Three handlers each type `?? defaultSessionKey()` at their own edge while
+  `sqlite.ts` still reads `if (sessionKey)`. What is the next read entry point,
+  and what makes it inherit the default rather than the guard?
+- Is `override_rejection` meant to be the model's decision? It is an ordinary
+  tool argument, so the caller a refusal was aimed at is the caller that can
+  lift it.
 - What is `detectAgentId()` reading, and what does it return when no agent is
   identifiable? The value is stored on every row and filterable on every query.
 - Is the L1/L2 pipeline in progress somewhere, or is the schema aspirational?
@@ -492,14 +493,14 @@ author.
 ## Appendix: File Index
 
 **Schema and storage**
-- `src/storage/schema.sql` — captures, atoms, scenarios, audit_log, FTS5 and vec0 virtual tables, three sync triggers
-- `src/storage/sqlite.ts` — `search`, `bm25Search`, `vectorSearch`, `delete`, `deleteByFilter`, `findByContentHash`
+- `src/storage/schema.sql` — captures with `trust_state`, `rejection_reason` and `superseded_by`, the partial index on `content_hash WHERE trust_state = 'rejected'`, atoms, scenarios, audit_log, FTS5 and vec0 virtual tables, three sync triggers
+- `src/storage/sqlite.ts` — `search`, `bm25Search`, `vectorSearch`, `reject`, `setTrustState`, `delete`, `deleteByFilter`, `findByContentHash`, `findRejectedByContentHash`
 - `src/storage/types.ts`
 
 **Server and tools**
-- `src/server.ts` — the six live handlers, `defaultSessionKey`, `handleCapture`, `handleRecall`, `handleForget`
+- `src/server.ts` — every live handler, `defaultSessionKey` and `globalSessionKey`, `handleCapture` with its rejected-hash lookup, `handleRecall`, `handleSearch`, `handleForget`
 - `src/index.ts` — wiring
-- `src/tools/recall.ts`, `capture.ts`, `search.ts`, `forget.ts`, `format.ts` — the unwired second copy
+- `src/tools/format.ts` — result rendering, the only file left in that directory
 
 **Retrieval**
 - `src/utils/rrf.ts` — `rrfMerge`, k=60
@@ -517,11 +518,16 @@ author.
 - `skills/remem-mcp/SKILL.md`
 
 **Tests**
-- `tests/integration/full-flow.test.ts` — `isolates memory by session key`, and the helper that supplies the default
+- `tests/integration/full-flow.test.ts:325` — `recall without session_key does NOT leak across projects (real handler)`, entered through `createServer`, with `isolates memory by session key` beside it at the storage layer
+- `tests/integration/atlas-fixes.test.ts` — the same property asserted for `recall` and for `search`
 - `tests/unit/redactor.test.ts`, `rrf.test.ts`, `quota.test.ts`, `tokenize.test.ts`
 - `tests/integration/db-detection.test.ts` — migration and backup paths
 
 ## History
+
+**2026-08-31** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — `scope_enforced` resolved in favour of the mark, at the same pin, and the sections arguing the other way were describing an earlier shape of the handler. `src/server.ts:1403` reads `const sessionKey = (args.session_key as string) ?? defaultSessionKey();`; `handleSearch` at `:1908` and `handleExplainRecall` at `:2236` repeat it verbatim, so `sqlite.ts`'s `if (sessionKey)` guard — which does treat `undefined` as no filter — has no shipped caller that reaches it. `tests/integration/full-flow.test.ts:325` asserts the property through `createServer` and the live `_requestHandlers` entry rather than through a helper.
+
+Sections 2, 4, 6, 7, 9, 10, 11 and 12 carried the earlier reading and state the mechanism instead. Two adjacent claims went with them, both of which the frontmatter already contradicted: `captures` carries `trust_state`, `rejection_reason` and `superseded_by`, all three consulted on the read arms, and the write path's `findRejectedByContentHash` lookup is what `tombstone` rests on. `src/tools/` holds `format.ts` alone, so the second, unwired tool layer described in section 3 is not in the tree.
 
 **2026-08-16** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — 203 commits on, and three of this report's findings are closed. Screened first: 1 auto-run surface (`server.json`, an MCP manifest declaring a start command), 2 build-time execution paths — an npm `postinstall` running `scripts/postinstall.js` and a `prepublishOnly` — and 2 manifests inside the seven-day cooldown; nothing was installed, built or run. Marks moved from one to four.
 

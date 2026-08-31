@@ -109,6 +109,42 @@ Start broad, then trace concrete state transitions:
 
 A paper is a third category beside product claims and code claims, and it is the one most likely to be missing rather than wrong: scoping an absence claim to the artifact ("no result is committed to this repository") is correct where an unscoped one ("no ablation exists") is a claim about work that was probably done elsewhere.
 
+**Ground every absence claim with a search, and write the search down.** This is
+the failure mode this atlas produces most reliably. A sweep re-reading
+twenty-six reports against their pinned commits found the positive claims
+almost exact — quoted comments, constants, per-file line counts, a fifty-run
+benchmark table recomputed from its raw run files — and the *absence* claims
+wrong over and over: an MCP server called "documented here and not implemented
+here" over a complete Go server in the tree, "no LoCoMo harness or result is
+committed" over a committed harness and four result files, "no supersession
+record" over a table two write paths populate, "no `CREATE POLICY` names a
+memory table" over two of them, "no `$slice` anywhere in the service" over six
+occurrences.
+
+The asymmetry is structural, not careless. A positive claim is grounded by
+construction — the finding is what produced the sentence. A negative claim is
+the residue of a search that failed, and if the search is not recorded it cannot
+be re-run, reviewed, or noticed going stale. Every capability mark this atlas
+withholds rests on one of these.
+
+So, mechanically, before writing any sentence of the form *no X / only Y /
+nothing does Z / X is not in this tree*:
+
+1. Run the search at the tree root, not inside the directory whose name matched.
+   Search the identifier, not the prose: `rg -n 'CREATE POLICY'`, not "policy".
+2. Search the plausible synonyms and the plausible other language. A Python
+   project's delete may be a Go handler; a table may be a collection.
+3. Prefer the scoped claim you can support to the sweeping one you cannot.
+   "`clause_store.py` contains no `$slice`" survives; "no `$slice` anywhere in
+   the service" did not, and the conclusion drawn from it was the same either
+   way — which is the point: the weaker sentence cost nothing and would have
+   been true.
+4. Keep the command. Put it in the appendix's command list, so the next reading
+   re-runs it instead of re-deriving it.
+
+A negative claim you were not willing to run a command for is one to delete
+rather than publish.
+
 Prefer code, schemas, tests, and committed artifacts over marketing language. Cite repository-relative file paths and key functions, classes, types, or endpoints. Label inferences and unknowns. Do not imply that a benchmark was rerun when only its code or committed output was inspected.
 
 Use focused searches rather than reading every file. Useful search concepts include:

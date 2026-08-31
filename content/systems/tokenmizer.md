@@ -227,10 +227,11 @@ rather than at being a library another agent embeds.
 
 ## 9. Reliability, Safety, and Trust
 
-**`trust_state` is earned comfortably** — eight discrete statuses, three of which
-withhold a node from retrieval, one of which (`INVALIDATED`) means "known wrong,
-kept as a warning", and one of which (`CONTESTED`) exists specifically to avoid
-asserting something the evidence does not support.
+**`trust_state` is earned comfortably** — nine discrete statuses, four of them
+named in the `INACTIVE_STATUSES` frozenset that withholds a node from retrieval,
+one of which (`INVALIDATED`) means "known wrong, kept as a warning", and one of
+which (`CONTESTED`) exists specifically to avoid asserting something the evidence
+does not support.
 
 **`audit_log` is earned on `decision_transitions`** — a named, separately-stored
 record of every supersession carrying its trigger, its reason, its evidence and a
@@ -246,14 +247,29 @@ re-extraction of the same wrong decision produces a fresh node rather than
 meeting the warning. The material is all present; nothing consults it on the
 write path.
 
-**`negative_eval` is withheld, and the near-miss is precise.** `test_security.py`
-asserts that `redact_node` and `redact_messages` strip Anthropic keys, OpenAI
-keys, AWS keys, Slack and Stripe tokens, emails and passwords — but they are unit
-tests of the redaction functions in isolation. Nothing asserts a secret fails to
-reach `to_context_block()`, and nothing asserts a `SUPERSEDED` or `INVALIDATED`
-node is absent from a rendered resume, even though `query()` is documented as
-excluding them and a comment records a bug caused by that exclusion. Two
-one-line assertions would earn the column.
+**`negative_eval` is earned before retrieval rather than on it, and the boundary
+is worth stating exactly.** Two committed cases assert that particular material
+must not come back. `tests/unit/test_graph.py::test_secrets_redacted_in_nodes`
+drives an Anthropic-shaped key through the real `extract_from_messages` path and
+asserts `sk-ant` appears in no node's label or summary — an assertion about what
+reaches the graph, not about what a query returns.
+`tests/unit/test_contested_decisions.py::test_different_purpose_same_topic_does_not_supersede`
+is the closer one: it calls `find_contradicting_decisions` with a decision about
+a different purpose inside the same topic bucket and asserts the older node's id
+is **not** among the hits, with the reason written into the assertion message.
+Below both sits `test_security.py`, asserting that `redact_node` and
+`redact_messages` strip Anthropic keys, OpenAI keys, AWS keys, Slack and Stripe
+tokens, emails and passwords — unit tests of the redaction functions in
+isolation, which on their own would not reach the bar.
+
+What no case covers is the layer above. Nothing asserts a secret fails to reach
+`to_context_block()`, and nothing asserts a `SUPERSEDED` or `INVALIDATED` node is
+absent from a rendered resume, even though `query()` excludes `INACTIVE_STATUSES`
+and a comment records a bug caused by that exclusion.
+`test_contested_decisions.py::test_context_block_surfaces_the_conflict` asserts
+the resume shows a `CONTESTED` pair, which is the positive half of that pair of
+claims and the only half committed. Two one-line assertions would cover the
+renderer the model actually reads.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -342,12 +358,14 @@ session history.
 | `tokenmizer/graph_memory/validator.py` | 380 | Ontology validation |
 | `tokenmizer/graph_memory/persistence.py` | 362 | Schema, `persist_transition`, prune survival |
 | `tokenmizer/graph_memory/reasoning.py` | 255 | Graph reasoning |
-| `tokenmizer/graph_memory/types.py` | — | Fourteen node types, eight statuses, eight edge types |
+| `tokenmizer/graph_memory/types.py` | — | Fourteen node types, nine statuses and the `INACTIVE_STATUSES` frozenset, eight edge types |
 | `tests/memory_accuracy/test_retention.py` | — | Ground-truth recall thresholds |
 | `tests/unit/test_contested_decisions.py` | — | Eight cases on the ambiguity rule |
 | `tests/chaos/test_recovery.py` | — | Storage corruption |
 
 ## History
+
+**2026-08-31** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — `negative_eval` resolved in favour of the mark, at the same pin. Two committed cases assert that particular material must not come back: `tests/unit/test_graph.py::test_secrets_redacted_in_nodes` (line 180) puts `sk-ant-api03-…` through the real `extract_from_messages` path and asserts `sk-ant` is in no node's label or summary, and `tests/unit/test_contested_decisions.py::test_different_purpose_same_topic_does_not_supersede` (line 35) asserts the older node's id is absent from `find_contradicting_decisions` hits when the two decisions serve different purposes in one topic bucket. Section 9 had reasoned only from `test_security.py`'s isolated redactor units, which alone would not reach the bar; the near-miss survives narrowed, since nothing asserts about `to_context_block()`'s output and nothing asserts an `INACTIVE_STATUSES` node is absent from a rendered resume. Section 9's status count is corrected to the nine `NodeStatus` members and the four in `INACTIVE_STATUSES`.
 
 **2026-08-19** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — re-read at the same commit: `HEAD` is the pinned revision, so nothing upstream moved and this entry is about what a second reading of the same tree found. Four corrections and one added mark, all of them the atlas's own errors rather than the project's.
 

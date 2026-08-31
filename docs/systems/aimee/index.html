@@ -151,15 +151,23 @@ carrying a confidence class, an authority rank and its own lifecycle
 columns. They are written by different paths, read by different queries,
 and corrected by different verbs. Most of what this report finds worth
 reading sits in the second one.</p>
-<p>Five marks. The typed-fact layer excludes superseded, invalidated and
+<p>Seven marks. A refused value gets its own keyed row in
+<code>memory_rejection_tombstones</code>, consulted at the head of the
+mutation seam and repeated as a database trigger underneath it, so a
+later extraction that re-asserts the value is declined rather than
+admitted. The typed-fact layer excludes superseded, invalidated and
 suppressed rows from every recall query it has, unconditionally and
 behind no flag. The episodic row carries event-time validity bounds
 separate from its transaction timestamps, with a function that answers
 <em>was this in force on 12 June</em>. The recall path filters
-candidates by scope and records why it dropped each one. The audit store
-is append-only by two independent mechanisms and says out loud which of
-them an attacker can remove. And the recall tests are built so that an
-empty result fails them.</p>
+candidates by scope and records why it dropped each one, with row-level
+security under it. A person rejects and restores memories through three
+RPCs over one queue, and the verdict gates what the write path will
+admit next. The audit store is append-only by two independent
+mechanisms, says out loud which of them an attacker can remove, and
+receives memory mutations from a trigger in the same transaction as the
+row change. And the recall tests are built so that an empty result fails
+them.</p>
 <p>What the report cannot claim is coverage. At over a million lines
 this is the largest tree in the corpus by an order of magnitude, and the
 sections below state where the trace stops.</p>
@@ -179,20 +187,32 @@ is deliberately narrow:</p>
 <pre class="c"><code>assert(fact_authority_from_provenance(&quot;user_stated&quot;) == FACT_AUTHORITY_USER);
 assert(fact_authority_from_provenance(&quot;agent_message&quot;) == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance(&quot;web&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;document&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;tool&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;delegate&quot;) == FACT_AUTHORITY_MODEL);
+assert(fact_authority_from_provenance(&quot;synthesis&quot;) == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance(&quot;User_Stated&quot;) == FACT_AUTHORITY_MODEL); /* exact match */
 assert(fact_authority_from_provenance(&quot;&quot;) == FACT_AUTHORITY_MODEL);
 assert(fact_authority_from_provenance(NULL) == FACT_AUTHORITY_MODEL);</code></pre>
-<p>Every failure mode — wrong case, empty, null — lands on model
-authority. That is the fail-closed direction, and the test asserts it in
-all six forms.</p>
+<p>One string maps to user authority and nine do not. Every failure mode
+— wrong case, empty, null — lands on model authority, which is the
+fail-closed direction, and <code>test_fact_lifecycle.c:166-175</code>
+asserts it in all ten forms.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction and audit run down the write side</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-%% caption: a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction and audit run down the write side
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction, the value-keyed refusal it can install, and the audit trigger run down the write side</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: a turn takes two recall paths that gate differently — the typed-fact block on per-row confidence and PII sensitivity, the episodic path on scope then lifecycle — while retraction, the value-keyed refusal it can install, and the audit trigger run down the write side
     TURN[&quot;turn text&quot;] --&gt; RET{&quot;retraction turn?&lt;br/&gt;scan provider&quot;}
     RET --&gt;|&quot;no answer&quot;| SKIP[&quot;log; do NOT retract&quot;]
     RET --&gt;|&quot;yes + attribute&quot;| CAP[&quot;authority CAPS the actor&lt;br/&gt;model authority cannot&lt;br/&gt;touch Class A or immutable&quot;]
     CAP --&gt; INV[&quot;invalidated_at stamped&lt;br/&gt;row retained&quot;]
+    INV --&gt; TOMB[&quot;memory_rejection_tombstones&lt;br/&gt;keyed on the value, active=1&quot;]
     INV --&gt; WORM
+
+    EXTRACT[&quot;offline facts drain&lt;br/&gt;re-asserts the same triple&quot;] --&gt; TSCHECK{&quot;fm_tombstone_blocks&lt;br/&gt;+ DB trigger backstop&quot;}
+    TSCHECK --&gt;|&quot;live refusal&quot;| REFUSE[&quot;FACT_MUTATION_TOMBSTONED&lt;br/&gt;nothing written&quot;]
+    TSCHECK --&gt;|&quot;none&quot;| ADMIT[&quot;assert proceeds&quot;]
+    TOMB -.-&gt;|&quot;consulted&quot;| TSCHECK
+    ADMIT --&gt; WORM
 
     TURN --&gt; FR[&quot;typed-fact recall block&quot;]
     FR --&gt; EX[&quot;AND superseded_at = &#39;&#39;&lt;br/&gt;AND invalidated_at = &#39;&#39;&lt;br/&gt;AND suppressed = 0&quot;]
@@ -202,13 +222,13 @@ all six forms.</p>
     PII --&gt;|&quot;no&quot;| DROP2[&quot;withheld&quot;]
     PII --&gt;|&quot;yes&quot;| BLOCK[&quot;fact lines into the envelope&quot;]
 
-    TURN --&gt; VEC[&quot;dense recall over memories&quot;]
+    TURN --&gt; VEC[&quot;dense recall over memories&lt;br/&gt;WHERE lifecycle_state=&#39;active&#39;&quot;]
     VEC --&gt; SCOPE[&quot;memory_filter_scope&lt;br/&gt;reject reason: scope_boundary&quot;]
-    SCOPE --&gt; LIFE[&quot;archived drop&lt;br/&gt;reject reason: lifecycle_archived&lt;br/&gt;(two flags, both default 0)&quot;]
+    SCOPE --&gt; LIFE[&quot;archived / superseded /&lt;br/&gt;suppressed drop before rerank&lt;br/&gt;reject reason: withheld_state&quot;]
     LIFE --&gt; RERANK[&quot;rerank&quot;]
     RERANK --&gt; BLOCK
 
-    WORM[(&quot;audit_event&lt;br/&gt;prev_hash / row_hash chain&lt;br/&gt;BEFORE UPDATE/DELETE triggers&lt;br/&gt;+ INSERT-only role grant&quot;)]</code></pre></details></figure>
+    WORM[(&quot;audit_event&lt;br/&gt;prev_hash / row_hash chain&lt;br/&gt;BEFORE UPDATE/DELETE triggers&lt;br/&gt;fed by kb_audit_outbox intents&quot;)]</code></pre></details></figure>
 <p>The two recall paths converge on the same prompt envelope but share
 no gate. A fact withheld for low confidence and a memory withheld for
 scope are refused by different code, and neither refusal is silent —
@@ -229,7 +249,23 @@ normalises the relation, looks up its <code>correction_behavior</code>
 on the seeded relation type, refuses when that behaviour is
 <code>CORR_IMMUTABLE</code> and the caller is not a user authority, and
 otherwise calls <code>db2_fact_mutation_invalidate</code>. The key is
-the triple. There is no row id anywhere in the call.</p>
+the triple. There is no row id anywhere in the call. Per invalidated row
+that function does two things rather than one: it stamps
+<code>invalidated_at</code> and bumps <code>version</code>, and it calls
+<code>fm_tombstone_add_assertion(conn, id, actor, "explicit fact invalidation")</code>,
+which copies the row's <code>(source, relation, target)</code> into
+<code>memory_rejection_tombstones</code> under the actor's rank. A
+retraction therefore leaves both a dead row and a keyed refusal.</p>
+<p><strong>Admission.</strong> <code>db2_fact_mutation_assert</code>
+opens a transaction, backfills identity, and calls
+<code>fm_tombstone_blocks(conn, in-&gt;source, in-&gt;relation, in-&gt;target)</code>
+before it reads or writes anything else; a live refusal aborts the
+transaction and returns <code>FACT_MUTATION_TOMBSTONED</code>. The same
+call guards the approve arm of <code>db2_fact_mutation_review</code>. On
+the episodic side <code>db2_memory_rejection_blocks(key, content)</code>
+scopes the same test by the thread's current scope context and is called
+from both <code>db2_memory_row_insert_epistemic_ex</code> and
+<code>memory_core_crud.c</code>.</p>
 <p><strong>Recall exclusion.</strong> Every query in
 <code>fact_recall.c</code> that assembles the fact block carries the
 same predicate. <code>db2_fact_current_count</code> shows the full
@@ -241,17 +277,31 @@ shape:</p>
 <p>Four separate ways for a fact to be excluded, all read together, none
 of them optional.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
-<p>The <code>memories</code> row carries thirty columns. The ones that
-matter here are <code>lifecycle_state</code> (defaulting to
-<code>active</code>, with <code>archive_reason</code> and
-<code>ttl_at</code> beside it), <code>valid_from</code> and
+<p>The <code>memories</code> row carries forty-five stored columns once
+the schema's own <code>ALTER TABLE</code> additions have run, plus three
+generated full-text columns. The ones that matter here are
+<code>lifecycle_state</code> (defaulting to <code>active</code>, with
+<code>archive_reason</code> and <code>ttl_at</code> beside it),
+<code>activation_suppressed</code>, <code>valid_from</code> and
 <code>valid_until</code> held apart from <code>created_at</code> and
 <code>updated_at</code>, <code>contradiction_group</code> and
 <code>merged_into</code>, and a <code>negation_tokens</code> column for
 negative-polarity recall. <code>confidence</code>,
 <code>evidence_strength</code>, <code>salience</code> and
 <code>surprise</code> are floats and are not the trust state; the state
-is the enum.</p>
+is the enum. <code>confidence_ceiling</code> is a fourth float and a
+different kind of thing — a provenance cap the row carries rather than a
+score, so model-authored material cannot climb by being merged or
+re-exposed.</p>
+<p><code>memory_rejection_tombstones</code> is the negative half of the
+model: <code>object_kind</code> over <code>('fact','memory')</code>, the
+fact tuple and the episodic tuple in the same row shape,
+<code>authority_rank</code>, <code>reason</code>,
+<code>rejected_by</code>, <code>active</code>, <code>rejected_at</code>,
+<code>restored_at</code>, <code>restored_by</code>. Two partial unique
+indexes — one per object kind, each restricted to <code>active=1</code>
+— make one live refusal per value the schema's own constraint rather
+than the caller's discipline.</p>
 <p><code>memory_provenance</code> records
 <code>(memory_id, session_id, action, details, created_at)</code>.
 <code>memory_conflicts</code> pairs two memory ids with a detection
@@ -270,25 +320,43 @@ session-window expansion in both directions around a hit.</p>
 candidates whose scope does not match, calling
 <code>memory_scope_matches</code>, which returns 1 when no scope was
 requested — so the boundary holds only when the caller supplies one.
-Then, when both <code>memory_lifecycle_enabled</code> and
-<code>memory_lifecycle_hide_archived</code> are set, archived candidates
-are batch-probed and dropped. Both accessors read a config number into a
-variable initialised to 0 and ignore the read's return code, so an unset
-key is off.</p>
-<p>Scope reaches the SQL as two macros that are easy to confuse and are
-used together. <code>DB2_MEMORY_SCOPE_RANK_SQL</code> is an ordering
-expression — active project 3, active workspace 2, shared or global
-including legacy untagged rows 1, everything else 0 — placed before the
-caller's own relevance ordering and <code>LIMIT</code>.
-<code>DB2_MEMORY_SCOPE_FILTER_SQL</code> wraps the same expression as a
-<code>WHERE</code> predicate,
-<code>AND (?101 = 0 OR ?102 = 1 OR (rank) &gt; 0)</code>, and it is the
-one doing the excluding. Both the lexical readers in
-<code>memory_briefing.c</code> and <code>memory_relations.c</code> and
-the dense path in <code>pgvec_transport.c</code> apply the filter in the
-<code>WHERE</code> and the rank in the <code>ORDER BY</code>, so a row
-outside the caller's scope is dropped rather than merely sorted
-last.</p>
+Then the surviving candidate ids are batch-probed through
+<code>db2_memory_filter_archived_ids</code>, whose predicate is
+<code>lifecycle_state IN ('archived','superseded') OR activation_suppressed&lt;&gt;0</code>,
+and any hit is dropped with the reject reason
+<code>withheld_state</code>. That block sits under a comment stating the
+rule — <em>"Negative retrieval is unconditional: corrected, archived and
+explicitly suppressed memories must not re-enter through lexical, dense
+or graph-fused candidates. memory_get() remains an audit/read-by-id
+surface."</em> — and it is guarded by nothing but a non-empty candidate
+array.</p>
+<p>Scope and lifecycle reach the SQL as three macros in
+<code>memory_scope_query.h</code> that are easy to confuse and are
+composed into one another. <code>DB2_MEMORY_SCOPE_RANK_SQL</code> is an
+ordering expression — an exactly matching
+<code>(scope_type, scope_value)</code> 4, active project 3, active
+workspace 2, shared or global including legacy untagged rows 1,
+everything else 0 — placed before the caller's own relevance ordering
+and <code>LIMIT</code>. <code>DB2_MEMORY_SCOPE_FILTER_SQL</code> wraps
+the same expression as a <code>WHERE</code> predicate, `AND (?101 = 0 OR
+?102 = 1 OR (rank)</p>
+<blockquote>
+<p>0)<code>, and it is the one doing the excluding. </code>DB2_MEMORY_RECALL_FILTER_SQL<code>wraps *that* in an</code>EXISTS<code>requiring</code>lifecycle_state='active'
+AND
+activation_suppressed=0<code>, under a header comment that fixes the policy in place: *"Normal recall is deliberately stricter than scope-only history/review queries. Lifecycle visibility is not feature-gated: rejected, archived, pending, fulfilled, and superseded rows never enter an answer candidate set."* The recall filter is what the candidate-producing readers use — </code>memory_briefing.c<code>, </code>memory_relations.c<code>, </code>memory_query.c<code>, </code>memory_score_fields.c<code>and the dense path through</code>pgvec_scope_query.h`
+— while the bare scope filter is left to the history, review and by-id
+surfaces that are supposed to see more. A row outside the caller's scope
+is dropped rather than merely sorted last, and a row outside the active
+lifecycle never reaches the array the drop above re-checks.</p>
+</blockquote>
+<p>The pair of flags that does exist,
+<code>memory_lifecycle_enabled</code> and
+<code>memory_lifecycle_hide_archived</code>, gates
+<code>memory_list</code> — the un-filtered listing path — and not
+recall. Both accessors read a config number into a variable initialised
+to 0 and ignore the read's return code, so an unset key is off, and
+<code>docs/validation/flag-rollout-readiness.md</code> tracks the pair
+against its six-point flip gate.</p>
 <p>The two escapes in that predicate are worth reading.
 <code>?101 = 0</code> is an inactive scope context and
 <code>?102 = 1</code> is <code>include_all</code>; either short-circuits
@@ -347,9 +415,21 @@ typed fact,
 an episodic row — each under a partial unique index restricted to
 <code>active = 1</code>, so a value has at most one live refusal.
 <code>fm_tombstone_blocks</code> consults it before the mutation seam
-admits anything, and the episodic side has its own consult in
-<code>memory_score_fields.c</code>.</p>
-<p>Three properties make it more than a deny-list.</p>
+admits anything, and <code>db2_memory_rejection_blocks</code> is the
+episodic side's consult.</p>
+<p>Four properties make it more than a deny-list.</p>
+<p><strong>The database repeats the check the C seam makes.</strong>
+<code>fact_rejection_tombstone_guard</code> on <code>entity_edges</code>
+and <code>memory_rejection_tombstone_guard</code> on
+<code>memories</code> are <code>BEFORE INSERT OR UPDATE</code> triggers
+that raise when a row would become live while a matching
+<code>active=1</code> refusal exists. The schema says what they are for
+— a <em>"Database backstop for writers that do not use the C mutation
+seam"</em> — and states the failure they close: <em>"A rejected episodic
+value cannot become recallable merely because another extractor or
+maintenance script found a different path to the table."</em> A consult
+in the application is where the good error message lives; a trigger is
+what holds when the next writer is a migration.</p>
 <p><strong>It is reversible, and the reversal is attributed.</strong>
 <code>active</code>, <code>restored_at</code> and
 <code>restored_by</code> mean a refusal can be lifted by a named actor
@@ -408,14 +488,64 @@ corpus. <code>audit_worm.c</code> builds a hash chain: each row's
 encoding of the record and the previous hash, a single-writer mutex
 keeps <code>seq</code> gap-free and totally ordered, and <code>ts</code>
 is deliberately excluded from the hashed material. Triggers block
-<code>UPDATE</code> and <code>DELETE</code>. The Postgres twin adds
-triggers of its own plus a writer role granted only <code>INSERT</code>
-and <code>SELECT</code>.</p>
+<code>UPDATE</code> and <code>DELETE</code>. It is 949 lines.</p>
 <p>What earns the description is the comment distinguishing the layers:
 the triggers <em>"are NOT the adversarial guarantee (a process with file
-write access can drop them) — that is the hash-chain."</em> Most audit
+write access can drop them) — that is the hash-chain …"</em>. Most audit
 implementations in this corpus assert their own tamper-resistance. This
 one names which half of it an attacker can remove.</p>
+<p><strong>The Postgres side is a queue, not a second chain, and the
+distinction is worth stating precisely because it is easy to describe
+wrongly.</strong> The KB transaction writes an immutable outbox intent
+and nothing else; the file that owns the seam says so — <em>"The KB
+transaction owns only an immutable PostgreSQL outbox intent. The
+separately credentialed aimee-kb-worm process claims committed intents
+and appends them through modules/audit/audit_worm.c … No PostgreSQL
+chain builder lives here."</em> <code>kb_audit_outbox</code> and
+<code>kb_audit_delivery</code> carry <code>BEFORE UPDATE</code>,
+<code>BEFORE DELETE</code> and <code>BEFORE TRUNCATE</code> triggers
+raising <code>'WORM: % is append-only'</code>.</p>
+<p>The provisioning half is a grant argument rather than a chain
+argument, and <code>schema_grants.sql</code> is stricter than the design
+note that preceded it. The runtime role is <code>REVOKE ALL</code> on
+both queue tables and re-granted <code>SELECT</code> only; it holds
+<code>EXECUTE</code> on <code>kb_audit_worm_submit</code> and
+<code>kb_audit_worm_pending</code> and is deliberately not granted
+<code>kb_audit_worm_append</code>, which is <code>REVOKE</code>d from
+<code>PUBLIC</code> and granted to <code>aimee_kb_owner</code> —
+<em>"kb_audit_worm_append is intentionally NOT granted to runtime (only
+the owner-run definer mutations call it) so runtime cannot forge audit
+rows."</em> The wording a reader might expect here — a writer role
+granted <code>INSERT, SELECT</code> only with
+<code>REVOKE UPDATE, DELETE</code> — belongs to
+<code>docs/proposals/done/auditable-worm-audit-store.md:159</code> and
+describes an intent, not the shipped grants: the runtime never receives
+<code>INSERT</code> on an audit table at all, so the shipped
+provisioning is the stronger of the two and the proposal's phrasing
+should not be read as a description of it.</p>
+<p><strong>Memory mutations reach that queue from a trigger rather than
+from a call site.</strong> <code>evidence_object_mutation</code>, the
+<code>AFTER INSERT OR UPDATE OR DELETE</code> function behind the ten
+<code>evidence_*</code> triggers, carries an arm specific to one table:
+when <code>TG_TABLE_NAME='memories'</code> it calls
+<code>public.memory_mutation_worm_append(authority, actor, action, id, detail)</code>,
+a <code>SECURITY DEFINER</code> wrapper over
+<code>kb_audit_worm_append</code>, choosing <code>memory.reject</code>
+when the lifecycle crossed into <code>rejected</code> and
+<code>memory.&lt;op&gt;</code> otherwise. Two properties are stated in
+the comment beside it and are the reason this is worth more than a log
+line: <em>"Same transaction as the row mutation: a WORM failure aborts
+the memory mutation. Detail is intentionally content-free."</em>
+Application code cannot forget to call it, and an audit that cannot be
+written takes the write down with it.
+<code>scripts/memory-governance-pg-test.sql</code> asserts the
+consequence directly, requiring at least five <code>memory.assert</code>
+/ <code>memory.reject</code> / <code>memory.invalidate</code> /
+<code>memory.restore</code> rows in <code>kb_audit_outbox</code> after
+the governance flow, with the caveat written down: <em>"The request
+process proves durable submission here. Chain construction is
+intentionally asynchronous and is covered by
+run-worm-worker-pg-test.sh."</em></p>
 <p><strong>A poison gate sits at every boundary where untrusted text
 becomes prompt context, and the memory write path is one of
 them.</strong> <code>src/headers/integrity.h</code> declares a
@@ -434,11 +564,13 @@ is the user — the header states the rule as <em>"never auto-reject user
 input"</em>, which keeps a person able to say a sentence that looks like
 an attack.</p>
 <p><code>integrity_ingress_decide</code> is the materialization
-boundary, and it is wired at nine reachable call sites across five named
-boundaries: <code>document</code> for KB ingest and PDF chunks,
+boundary, and it is wired at eight reachable call sites across five
+named boundaries: <code>document</code> for KB ingest and PDF chunks,
 <code>retrieval</code> on pre-injection, <code>learning</code> on the
 learning router, <code>recall</code> in the KB client, and
-<code>memory</code> three times. The memory sites carry the argument for
+<code>memory</code> three times — twice in
+<code>memory_core_crud.c</code> and once in
+<code>memory_advanced.c</code>. The memory sites carry the argument for
 why memory is treated as hostile by default:</p>
 <blockquote>
 <p>Durable memory becomes future prompt context, so treat it as
@@ -453,13 +585,44 @@ set only for the non-user case — so a memory the user stated is
 quarantined where one the agent wrote is rejected. That a gate also runs
 on <code>recall</code> is the half most systems omit: a value that got
 in before the gate existed is still checked on the way out.</p>
-<p>Retention moved off inline SQL in the same window.
-<code>db2_memory_health</code> now calls
+<p>Retention runs server-side rather than as inline SQL.
+<code>db2_memory_health</code> calls
 <code>kb_memory_retention_reap(days)</code> and
-<code>kb_memory_sensitivity_retention_reap</code>, server-side functions
-returning the number of rows reaped, rather than issuing a
+<code>kb_memory_sensitivity_retention_reap</code>, functions returning
+the number of rows reaped, rather than issuing a
 <code>DELETE ... WHERE created_at &lt; pg_now_text(?)</code> from C.</p>
-<p>Row-level security on <code>aimee-kb</code> is enabled and
+<p><strong>Row-level security reaches the memory tables, and reaches
+them differently from the membership graph.</strong>
+<code>memories</code> and <code>memory_rejection_tombstones</code> each
+take <code>ENABLE ROW LEVEL SECURITY</code> and one policy —
+<code>p_memories_row_scope</code> and
+<code>p_memory_rejections_row_scope</code> — both <code>USING</code> and
+<code>WITH CHECK</code> over
+<code>memory_row_scope_visible(scope_type, scope_value)</code>, so the
+same predicate governs what a query returns and what a write may land.
+The function admits a row when it is <code>('global','_global')</code>
+or <code>('workspace','_shared')</code>, when the request's
+<code>aimee.memory_scope_type</code> / <code>_value</code> GUCs match it
+exactly, when its workspace or project matches the corresponding GUC, or
+when <code>aimee.memory_scope_all</code> is <code>'1'</code>. The schema
+states the default it is aiming for: <em>"An unset request context sees
+only global rows; project/workspace rows fail closed."</em> The
+tombstone policy exempts <code>object_kind='fact'</code> from the scope
+test, which is correct — a typed-fact refusal has no scope tuple to test
+— and means fact refusals are visible to every scope, which is also what
+a value-keyed refusal wants.</p>
+<p>Two things temper it. These two tables take <code>ENABLE</code>
+without <code>FORCE</code>, unlike the five membership and grant tables,
+so the table owner is not bound by the predicate and the protection
+rests on the runtime role being a non-owner. And
+<code>aimee.memory_scope_all</code> is a session GUC the runtime can
+set, so the policy bounds a mis-scoped query rather than a compromised
+process.</p>
+<p>Sitting between them is the case a policy cannot express: the two
+tombstone guard triggers in section 7, which are not scope rules but
+value rules, and which run on the same tables for the same reason — that
+the next writer may not be the application.</p>
+<p>On <code>aimee-kb</code>, row-level security is enabled and
 <code>FORCE</code>d on <code>kb_team</code>, <code>kb_project</code>,
 <code>kb_team_membership</code>, <code>kb_project_membership</code> and
 <code>kb_admin_grant</code> — the policy data itself. The content
@@ -469,8 +632,7 @@ disabled: enabling them is described as an act rather than a migration,
 to be performed after rows have been attributed to projects. Shipping a
 control off with the enabling step named is a defensible choice and an
 unusual one; the consequence for a reader is that project visibility on
-documents is not on until someone turns it on. No
-<code>CREATE POLICY</code> names a memory table at this pin.</p>
+documents waits on someone turning it on.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><code>test_fact_recall.c</code> is 210 lines and is the
@@ -508,10 +670,37 @@ rather than code — and <strong>INERT TOGGLE</strong>, where <em>"the
 count is published: five inert toggles, no fully-dead features.</p>
 <p>That is this atlas's producer check, run by a project on itself, with
 the negative result written down rather than quietly fixed. The
-archived-hiding flag this report describes appears in that table, marked
-as not yet cleared and awaiting a recall-with-archival A/B.</p>
+<code>memory_lifecycle_enabled</code> / <code>_hide_archived</code> pair
+from section 6 appears in that table with no tests recorded against it
+and a recall-with-archival A/B named as what would clear it — a useful
+thing for a reader to check against, since the recall path's own
+exclusion does not depend on that pair.</p>
+<p><code>scripts/memory-governance-pg-test.sql</code> is the other suite
+worth reading and is the one that drives the tombstone. It runs as
+<code>aimee_kb_runtime</code> against a real Postgres, asserts the
+runtime privilege shape on the tombstone table, asserts a project-scoped
+role sees its own and shared memory rows and not another project's,
+rejects a row and asserts the re-insert is refused by the trigger,
+restores it and asserts the retained row becomes recallable <em>without
+creating a second copy</em>, repeats the refusal test on the typed-fact
+side, and finishes by counting <code>memory.*</code> rows in the audit
+outbox. Every assertion drives the production path rather than a harness
+reimplementation of it, which the project's own proposal names as the
+discipline that matters: <em>"A harness that reimplements its caller
+certifies the storage layer and takes the wiring on faith, and the
+wiring is where these bugs live."</em></p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
-<p>Four things here transfer.</p>
+<p>Five things here transfer.</p>
+<p><strong>Put the refusal check in the chokepoint, then repeat it in
+the database.</strong> The C seam consults
+<code>memory_rejection_tombstones</code> before any assert, and a
+trigger on the table repeats the test for writers that never go through
+the seam — a maintenance script, a second extractor, a migration. The
+two together are worth more than either, because the first is where the
+good error message lives and the second is what holds when someone finds
+a different path to the table. The same argument applies to the grant: a
+refusal the runtime can <code>DELETE</code> is a convention, and
+asserting the privilege shape at startup is one query.</p>
 <p><strong>Make the declared authority a cap, not a default.</strong>
 The bug aimee measured — a model-composed string inheriting an
 authenticated human's rank because the request context existed — is
@@ -535,45 +724,55 @@ Naming the difference in the file is worth more than either.</p>
 The trace here covers the typed-fact layer, the episodic recall path,
 the audit store and the scope plumbing. It does not cover the Go control
 plane, the Python tooling, the ingest workers, or the great majority of
-the 243 tables in the schema. Absence of a mechanism from this report is
+the 244 tables in the schema. Absence of a mechanism from this report is
 not evidence of its absence from the tree.</p>
-<p><strong>Which of the two ledgers a given mutation reaches.</strong>
-There are two, and they are not the same mechanism. The WORM
-<code>audit_event</code> store described in section 9 has confirmed
-producers in vault rewrap, guardrail actions, management operations and
-the durable observability sink; no path from a memory RPC to
-<code>audit_worm_append</code> was traced. Memory mutations reach the
-<em>other</em> one: <code>memory_evidence_events</code>, written by
-<code>AFTER INSERT OR UPDATE OR DELETE</code> triggers on
-<code>memories</code>, <code>docs</code>,
-<code>document_versions</code>, <code>entity_registry</code>,
-<code>entity_aliases</code>, <code>rel_types</code>,
-<code>derived_memory_registry</code>, <code>memory_scopes</code> and
-<code>memory_links</code>, plus
-<code>evidence_change_item_event()</code> on the fact-graph commit path.
-Each row carries <code>authenticated_actor</code>,
+<p><strong>What an auditor does with two ledgers.</strong> A memory
+mutation writes to both, by two different triggers on the same table.
+<code>memory_evidence_events</code> is the detailed one, written by the
+ten <code>evidence_*</code> triggers on <code>memories</code>,
+<code>docs</code>, <code>document_versions</code>,
+<code>entity_registry</code>, <code>entity_aliases</code>,
+<code>rel_types</code>, <code>derived_memory_registry</code>,
+<code>memory_scopes</code>, <code>memory_links</code> and
+<code>ontology_packages</code>, plus
+<code>evidence_change_item_event()</code> on the fact-graph commit path;
+each row carries <code>authenticated_actor</code>,
 <code>transport_identity</code>, <code>effective_authority</code>, a
 <code>changeset_id</code>, before and after refs and the source span and
 hash, under <code>CHECK</code> constraints over a fourteen-value object
-kind and a twelve-value operation. Putting the producer in a trigger is
-the stronger choice — application code cannot forget to call it — and it
-means the coverage question is which tables carry the trigger, not which
-call sites remember. The open part is whether the two ledgers are meant
-to converge, and what an auditor is supposed to do with a subject whose
-history is split across them.</p>
-<p><strong>Whether a retracted triple can be re-asserted.</strong>
-Retraction stamps <code>invalidated_at</code> and keys on
-<code>(source, relation, target)</code>, which is the right key. But
-nothing found in the offline extraction path consults the invalidated
-set before asserting, so a later drain that re-extracts the same triple
-from new text appears able to re-establish it. This is why the
-<code>tombstone</code> mark is not awarded: the retention is there, the
-value-keying is there, and the consultation that would make a refusal
-durable was not found. A single predicate in the assert path — refuse a
-triple whose invalidated twin outranks the incoming authority — would
-close it.</p>
+kind and a twelve-value operation. The WORM chain is the tamper-evident
+one and gets a content-free row for the same mutation through
+<code>memory_mutation_worm_append</code>. Putting both producers in
+triggers is the stronger choice — application code cannot forget to call
+either — and it means the coverage question is which tables carry the
+trigger, not which call sites remember. The open part is what an auditor
+is supposed to reconcile: one ledger holds the detail and is an ordinary
+table, the other holds the proof and is content-free, and nothing read
+here joins a <code>changeset_id</code> to a chain <code>seq</code>.</p>
+<p><strong>Whether the refusal survives a rephrasing.</strong> The
+mechanism holds against a literal re-assertion and the tests drive it.
+What it is keyed on is narrower than what <code>entity_edges</code> is
+keyed on: that table carries <code>identity_key</code>, a normalized
+<code>(source, relation, target)</code> joined on U+001F after case
+folding, whitespace collapse and relation normalization, and
+<code>fm_load_exact</code> prefers it over the literal columns.
+<code>memory_rejection_tombstones</code> has no such column, so
+<code>fm_tombstone_blocks</code> and
+<code>fact_rejection_tombstone_guard</code> both compare the raw triple.
+An extractor emitting the same claim with a different surface form on
+the next pass computes a different literal triple and is not refused by
+the tombstone — though <code>fm_load_exact</code> would still find the
+dead row by <code>identity_key</code> and apply the rank gate to it, so
+the two mechanisms disagree about what counts as the same fact. The
+episodic side is keyed on exact <code>memory_content</code> and has no
+second mechanism behind it. Adding <code>identity_key</code> to the
+refusal row, and computing it on both the write and the consult, is the
+shape that would close the gap; the project's own
+<code>correction-completeness-and-bounded-reachability.md</code> names
+the same hole and attributes it to the extractor rather than to an
+adversary.</p>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
-<div class="table-wrap"><table>
+<table>
 <thead>
 <tr>
 <th>Path</th>
@@ -597,14 +796,31 @@ current-count query</td>
 7</td>
 </tr>
 <tr>
+<td><code>src/modules/db2/c/fact_mutation.c</code></td>
+<td><code>fm_tombstone_blocks</code>,
+<code>fm_tombstone_add_assertion</code>, <code>fm_load_exact</code> and
+the commit seal</td>
+</tr>
+<tr>
 <td><code>src/modules/db2/c/memory_lifecycle.h</code></td>
 <td>The five-state episodic vocabulary and
 <code>db2_memory_valid_at</code></td>
 </tr>
 <tr>
 <td><code>src/modules/db2/c/memory_scope_query.h</code></td>
-<td><code>DB2_MEMORY_SCOPE_RANK_SQL</code> — the ordering expression,
-not a filter</td>
+<td>The rank expression, the scope filter built on it, and the recall
+filter built on that</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/memory_score_fields.c</code></td>
+<td><code>db2_memory_rejection_blocks</code> and the epistemic row
+insert that consults it</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/memory_query.c</code></td>
+<td><code>db2_memory_reject</code>, <code>db2_memory_restore</code>,
+<code>db2_memory_review_list</code>,
+<code>db2_memory_filter_archived_ids</code></td>
 </tr>
 <tr>
 <td><code>src/modules/memory/memory_core_search_b.c</code></td>
@@ -613,15 +829,27 @@ not a filter</td>
 </tr>
 <tr>
 <td><code>src/modules/memory/memory_core_search_c.c</code></td>
-<td>The recall pipeline: scope filter, lifecycle drop, rerank</td>
+<td>The recall pipeline: scope filter, withheld-state drop, rerank</td>
 </tr>
 <tr>
 <td><code>src/modules/audit/audit_worm.c</code></td>
-<td>The hash-chained append-only store, 710 lines</td>
+<td>The hash-chained append-only store, 949 lines</td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/kb_audit_worm.c</code></td>
+<td>The outbox-intent producer seam, and the note that no Postgres chain
+builder exists</td>
 </tr>
 <tr>
 <td><code>src/modules/db2/c/schema.sql</code></td>
-<td>243 tables, the RLS block, and the Postgres audit twin</td>
+<td>244 tables, the memory RLS policies, the two tombstone trigger
+backstops, the audit outbox and
+<code>memory_mutation_worm_append</code></td>
+</tr>
+<tr>
+<td><code>src/modules/db2/c/schema_grants.sql</code></td>
+<td>The WORM grant split — runtime submits through a definer and never
+holds the appender</td>
 </tr>
 <tr>
 <td><code>src/server/server_facts.c</code></td>
@@ -633,14 +861,86 @@ resolution</td>
 <td>The paired positive/negative exclusion cases</td>
 </tr>
 <tr>
+<td><code>src/tests/test_fact_lifecycle.c</code></td>
+<td>The provenance-to-authority table and the tombstoned re-extraction
+case</td>
+</tr>
+<tr>
+<td><code>scripts/memory-governance-pg-test.sql</code></td>
+<td>The privilege check, both trigger backstops, and the audit-row
+count</td>
+</tr>
+<tr>
 <td><code>docs/validation/flag-rollout-readiness.md</code></td>
 <td>The six-point flip gate and the WIRED / INERT TOGGLE audit</td>
 </tr>
 </tbody>
-</table></div>
+</table>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code>eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8</code></a>
+— same pin, re-read to settle a report that disagreed with itself. The
+2026-08-26 entry below promoted <code>tombstone</code> and
+<code>human_review</code> to seven of seven and the frontmatter carried
+the promotion; the body did not. Section 1 opened <em>"Five marks"</em>,
+section 12 argued the <code>tombstone</code> mark was withheld because
+<em>"the consultation that would make a refusal durable was not
+found"</em>, and the <code>matrix.risks</code> field — which the compare
+page publishes verbatim — led with <em>"Nothing consults the invalidated
+set before a later extraction re-asserts the same triple."</em> All
+three are wrong at this pin and in the same direction:
+<code>fm_tombstone_blocks</code> runs at the head of
+<code>db2_fact_mutation_assert</code> and again on the review-approve
+arm, <code>db2_memory_rejection_blocks</code> is the episodic consult,
+and two database triggers repeat the test underneath both. All three are
+corrected; the risks field names the real remaining gap, which is that
+the refusal is keyed on the raw triple while <code>entity_edges</code>
+is keyed on a normalized <code>identity_key</code>.</p>
+<p>Two quotations attributed to the tree were not in it and are removed.
+<em>"preserved for review"</em> was cited for <code>human_review</code>;
+the mechanism is real — <code>db2_memory_reject</code> writes the
+tombstone and sets <code>lifecycle_state='rejected'</code> with
+<code>confidence=0</code> while keeping the row — and the record now
+quotes text that exists,
+<code>scripts/memory-governance-pg-test.sql</code>'s <em>"Rejecting
+preserves the row for review and installs a value-keyed refusal."</em>
+<em>"validated: REVOKE UPDATE/DELETE blocks mutation."</em> was cited
+for <code>audit_log</code> as the Postgres provisioning; the nearest
+real text is
+<code>docs/proposals/done/auditable-worm-audit-store.md:159</code>, a
+design note rather than shipped provisioning, and the shipped grants
+take a stricter route the report now states — runtime holds
+<code>SELECT</code> on the queue tables and <code>EXECUTE</code> on the
+submit definer, and never <code>kb_audit_worm_append</code>. The mark
+stands and does not rest on that clause: memory mutations reach the
+chain through <code>memory_mutation_worm_append</code>, called from the
+<code>evidence_memories</code> trigger in the same transaction as the
+row change, which also retires the open question in section 12 that said
+no path from a memory RPC to the WORM store had been traced.</p>
+<p>Six factual corrections beside those. <code>audit_worm.c</code> is
+949 lines, not 710, in three places. The archived drop before rerank
+records <code>withheld_state</code>, not
+<code>lifecycle_archived</code>, in the diagram and the evidence record.
+That drop, and the <code>lifecycle_state='active'</code> predicate in
+<code>DB2_MEMORY_RECALL_FILTER_SQL</code> above it, are not behind the
+<code>memory_lifecycle_enabled</code> / <code>_hide_archived</code> pair
+— the header says <em>"Lifecycle visibility is not feature-gated"</em>
+and the flags gate <code>memory_list</code> instead, so section 6, the
+diagram and the risks field were describing a gate that is not on that
+path. <code>integrity_ingress_decide</code> has eight reachable call
+sites, not nine. The schema holds 244 <code>CREATE TABLE</code>
+statements, the <code>memories</code> row 45 stored columns rather than
+thirty, <code>test_content_scope_pg.c</code> 971 lines rather than 917,
+and the <code>evidence_*</code> triggers cover ten tables rather than
+nine. Section 9's claim that no <code>CREATE POLICY</code> names a
+memory table was false: <code>p_memories_row_scope</code> and
+<code>p_memory_rejections_row_scope</code> both exist,
+<code>USING</code> and <code>WITH CHECK</code>, though under
+<code>ENABLE</code> without <code>FORCE</code>. The
+<code>fact_authority_from_provenance</code> block is quoted whole rather
+than eliding four asserts silently, and several line cites moved.</p>
 <p><strong>2026-08-29</strong> — <a
-href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code class="commit-id" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">eb86dda7…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code>eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8</code></a>
 — re-pinned 42 commits on, still on <code>testing</code>, 416 files and
 roughly 76,500 added lines in two days — most of it release blockers,
 Windows and macOS build work, CI ratchets and a static-analysis
@@ -651,7 +951,7 @@ the deterministic poison gate declared in
 <code>memory_core_crud.c</code> at two sites and from
 <code>memory_advanced.c</code> at a third, joining
 <code>document</code>, <code>retrieval</code>, <code>learning</code> and
-<code>recall</code> for nine reachable call sites. The comment at the
+<code>recall</code> for eight reachable call sites. The comment at the
 memory site states the reasoning — durable memory becomes future prompt
 context, so it is treated as agent-message authority and ambiguous
 provenance fails closed — and the authority-aware site picks
@@ -667,7 +967,7 @@ returning a reaped count.</p>
 unpinned surfaces and five files inside the seven-day cooldown; nothing
 was installed and nothing was run.</p>
 <p><strong>2026-08-27</strong> — <a
-href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code class="commit-id" title="bdf19051cd0541f1e9f3e008a570998c37f77774">bdf19051…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code>bdf19051cd0541f1e9f3e008a570998c37f77774</code></a>
 — re-pinned 47 commits on, still on <code>testing</code>. Screened
 again: one auto-run surface, one build-time execution surface, three
 unpinned surfaces, two files inside the seven-day cooldown; nothing was
@@ -697,7 +997,7 @@ state moved to Postgres with the SQLite WORM store isolated, and
 candidate ranking collapsed from one statement per candidate to one
 statement.</p>
 <p><strong>2026-08-26</strong> — <a
-href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code class="commit-id" title="6a1b61a99c9cac5273ccf6c26d2a6a185a6985bd">6a1b61a9…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code>6a1b61a99c9cac5273ccf6c26d2a6a185a6985bd</code></a>
 — re-pinned 231 commits on. <strong>The branch needs stating, because
 its name misleads.</strong> <code>origin/HEAD</code> points at
 <code>testing</code>: it is the repository's default branch and its
@@ -784,7 +1084,7 @@ written by <code>AFTER INSERT OR UPDATE OR DELETE</code> triggers on
 nine tables including <code>memories</code>. Section 6, section 12 and
 the <code>scoping</code> row are corrected. The marks are unchanged.</p>
 <p><strong>2026-08-25</strong> — <a
-href="https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5"><code class="commit-id" title="958af1c59f2db825d348d19209fb339615ed9ae5">958af1c5…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/958af1c59f2db825d348d19209fb339615ed9ae5"><code>958af1c59f2db825d348d19209fb339615ed9ae5</code></a>
 — first reading, roughly 796,000 lines of C and 87,000 of headers plus
 142,000 of Go and 109,000 of Python, 7,281 commits since 3 June 2026,
 AGPL-3.0. Screened before anything was read: one auto-run surface, one
