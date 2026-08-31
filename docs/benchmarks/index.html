@@ -2064,6 +2064,53 @@ makes, evaluated rather than asserted, with probes embedded in a benign
 harness rather than as a separate adversarial suite.</p>
 <p>What no artifact here recomputes is the published means: the
 generator and harness ship, the run records do not.</p>
+<h3 id="an-accumulation-curve-and-a-repository-that-is-not-there">An
+accumulation curve, and a repository that is not there</h3>
+<p><em>PILOT in the Loop: Live Self-Improvement for Long-Horizon
+Agents</em> (<a
+href="https://arxiv.org/abs/2608.26530">arXiv:2608.26530</a>, 27 August
+2026; Xiao, Sun, Wu and seven others) is a harness rather than a memory
+system, but what it persists is memory in this atlas's sense — a skill
+library and a notes file that outlive the episode, at
+<code>~/.pilot/skills</code> and an <code>AGENTS.md</code>, with every
+worker spawned after an update loading the new harness.</p>
+<p>Its claim is about <strong>timing</strong>. Existing self-improvement
+runs after the episode ends, so <em>"newly extracted knowledge cannot
+help the run that produced it"</em>. PILOT extracts during execution,
+before the verifier outcome is available, and a supervisor can redirect
+or abort the live worker. That is the consolidation-timing question
+several systems here answer by cron, asked as a research question.</p>
+<p>Two numbers are worth having. Over <strong>20 self-improvement
+iterations</strong> the pass rate moves 66.3% → 80.9% with GLM-5.1
+(+14.6 points) and 68.5% → 80.9% with Kimi-K2.6 (+12.4), while mean
+output tokens fall 42.9% and 47.4%. An accumulation curve over a fixed
+task set is rare on this page — most memory evaluations report one point
+— and the token figure matters because it is the one place a memory
+claim can be checked against a cost that moves in the opposite direction
+from the score.</p>
+<p><strong>The headline claims recompute.</strong> <em>"First in five of
+six configurations"</em> is exact: PILOT leads every model-by-benchmark
+cell except SWE-bench Multilingual with Kimi-K2.6, where Pi leads 75.9
+to 73.7. <em>"As much as 9.8 percentage points"</em> on Terminal-Bench
+2.0 is the average column against Terminus-2, the weakest of four
+baselines (71.6 − 61.8); against the strongest, Pi, the same column
+gives 5.3. Every average in the table reproduces from its two model
+columns.</p>
+<p>One thing a skimmer would get wrong, and it is a formatting
+convention rather than a claim: in the SWE-bench Multilingual average
+column, PILOT's <strong>72.7</strong> is bolded and Pi's 72.9 is not.
+Recomputing from the cells gives PILOT 72.65 and Pi 72.85 — the bold
+marks the authors' own row, and in that one column the row it marks is
+second. The prose does not overstate this; it says five of six.</p>
+<p><strong>The repository the paper names does not exist.</strong> The
+manuscript cites <code>github.com/XiaoYang66/Pilot</code>. That URL
+returns 404, as do the obvious case variants; the GitHub account is real
+and public with three other repositories, none of them this one. So the
+skill library, the extraction prompts and the excluded-task lists the
+paper promises are not inspectable, and none of the numbers above can be
+reproduced from an artifact. That is the difference between a result on
+this page and a report in this atlas: the systems here are read at a
+commit, and this one has no commit to read.</p>
 <h3
 id="a-memory-the-system-can-route-around-is-one-nobody-ever-exercises">A
 memory the system can route around is one nobody ever exercises</h3>
@@ -2795,6 +2842,171 @@ numbers without committed artifacts" is a named antipattern here with
 several instances among the systems; this is the same antipattern in the
 evaluation literature, and it was caught the same way — by reading past
 the abstract.</p>
+<h3 id="the-measured-version-of-a-line-this-atlas-draws-by-hand">The
+measured version of a line this atlas draws by hand</h3>
+<p>Every capability judgement on this site turns on one distinction,
+stated in the rubric as <em>"a confidence number answers 'how sure' and
+gets used for ranking; a state answers 'may this be acted on' and gets
+used for filtering."</em> It is applied from code inspection, and it has
+cost systems a mark — most recently <a
+href="../systems/nexusmem/">NexusMem</a>, whose <code>rejected</code>
+status is spent as a <code>0.3</code> score multiplier, and <a
+href="../systems/areev/">Areev</a>, whose retraction is
+<code>-0.3</code> on a clamped priority. A reasonable objection to both
+rulings is that the difference is a matter of degree: a large enough
+penalty is a filter.</p>
+<p><em>Safety Does Not Compose: Non-Decaying Loop State for Autonomous
+LLM Agents</em> (<a
+href="https://arxiv.org/abs/2608.27141">arXiv:2608.27141</a>, 27 August
+2026, revised 28 August; Wu, Jia, Liu and eleven others) measures it, on
+a different problem, and the answer is that it is not a matter of
+degree.</p>
+<p>The paper is about agent safety rather than agent memory, and its
+subject — LoopHarness — is a monitor, not a store. It is on this page
+for two results that transfer intact.</p>
+<p><strong>The separation.</strong> Proposition 2: for any
+<code>s ≥ 2</code>, any <code>s</code>-fragmented attack and any
+trajectory-scoped monitor, <em>"the probability that M alarms on an
+attack iteration equals the probability that it alarms on a benign
+iteration."</em> True positive rate equals false positive rate — the
+monitor is a coin. No amount of expressiveness repairs it, because the
+evidence is not in the window the monitor sees. Restated for this atlas:
+<strong>state that resets at the session boundary cannot be made
+sufficient by making it smarter.</strong> Every system here whose trust
+or safety state is per-session inherits that bound.</p>
+<p><strong>The decay result is the one worth pinning.</strong> The
+obvious repair is to carry the risk score forward with a geometric
+discount instead of resetting it. Proposition 3 shows the gate reopens
+at <code>k* = ⌊log(ρ/θ)/log(1/γ)⌋ + 1</code> — <em>"a constant
+independent of N"</em>. A patient adversary waits a fixed number of
+iterations no matter how long the horizon, so decay <em>"buys the
+defender k</em>−1 iterations and nothing at all"*.</p>
+<p>Table 3 runs it. Matched episodes at <code>N=10</code>, discount
+<code>γ = 0.7</code>, everything else held fixed; <code>d</code> is how
+many iterations the adversary waits, <code>Ξ̄pre</code> the risk cumulant
+at the gate, ASR the attack success rate, CleanGC goal completion on
+clean episodes:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Config</th>
+<th>d</th>
+<th><code>Ξ̄pre</code></th>
+<th>Block %</th>
+<th>ASR %</th>
+<th>CleanGC %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XRC-off</td>
+<td>1</td>
+<td>0.100</td>
+<td>0.0</td>
+<td>97.5</td>
+<td>97.5</td>
+</tr>
+<tr>
+<td>XRC-off</td>
+<td>2</td>
+<td>0.098</td>
+<td>0.0</td>
+<td>95.5</td>
+<td>95.5</td>
+</tr>
+<tr>
+<td>XRC-off</td>
+<td>4</td>
+<td>0.099</td>
+<td>0.0</td>
+<td>97.5</td>
+<td>97.5</td>
+</tr>
+<tr>
+<td>XRC-decay</td>
+<td>1</td>
+<td>0.560</td>
+<td>100.0</td>
+<td>0.0</td>
+<td>97.5</td>
+</tr>
+<tr>
+<td>XRC-decay</td>
+<td>2</td>
+<td>0.392</td>
+<td>0.0</td>
+<td>97.0</td>
+<td>97.0</td>
+</tr>
+<tr>
+<td>XRC-decay</td>
+<td>4</td>
+<td>0.193</td>
+<td>0.0</td>
+<td>97.5</td>
+<td>97.5</td>
+</tr>
+<tr>
+<td>XRC-latch</td>
+<td>1</td>
+<td>0.800</td>
+<td>100.0</td>
+<td>0.0</td>
+<td>97.5</td>
+</tr>
+<tr>
+<td>XRC-latch</td>
+<td>2</td>
+<td>0.800</td>
+<td>100.0</td>
+<td>0.0</td>
+<td>97.0</td>
+</tr>
+<tr>
+<td>XRC-latch</td>
+<td>4</td>
+<td>0.800</td>
+<td>100.0</td>
+<td>0.0</td>
+<td>97.5</td>
+</tr>
+</tbody>
+</table></div>
+<p>Read the decay rows in order. At <code>d=1</code> the cumulant is
+still 0.560, the gate blocks, and the attack never lands. At
+<code>d=2</code> it has fallen to 0.392, the gate opens, and
+<strong>97.0%</strong> of attacks succeed. One extra iteration of
+patience moves the number from 0 to 97. The latched state holds 0.800 at
+every delay and holds ASR at 0.0.</p>
+<p>The control that makes it an argument rather than an anecdote is the
+last column. CleanGC stays between 97.0 and 97.5 in every row, latch
+included. <strong>The strong version costs nothing in benign
+performance</strong> — so the usual defence of a soft penalty, that hard
+exclusion would be too blunt and lose good material, is not what is
+happening here. The decaying score is not a gentler filter. It is not a
+filter.</p>
+<p>What this does and does not license. It is one paper, on one attack
+family, with a threshold and a discount the authors chose, and a
+decaying score with a different <code>γ</code> and <code>θ</code> would
+move the crossing point — the point is that a crossing point exists and
+a patient adversary finds it. It is a safety monitor, so nothing here
+says a memory system with a <code>0.3</code> multiplier is
+<em>unsafe</em>. What it says is narrower and sufficient: a score that
+decays and a state that latches are different kinds of object, the
+difference is not a tuning parameter, and there is now a number on it.
+The atlas's rulings on NexusMem and Areev rest on that difference, and
+this is the closest thing to outside evidence for them.</p>
+<p>Two smaller things from the same paper. The state LoopHarness refuses
+to reset is listed as a risk cumulant, commit counters, a degradation
+level, an integrity-protected memory log, <strong>a rejection
+ledger</strong> and lineage ledgers, of which <em>"None is
+re-initialized between iterations"</em> — a rejection ledger is a
+tombstone with a different name, arriving from the safety literature
+rather than the memory one. And the headline configuration reports 0.1%
+ASR at 96.9% CleanGC against a 97.6% ASR baseline, with per-family
+removals costing 96.0–97.5 percentage points, which is a well-shaped
+ablation: every component is removed individually and the number
+moves.</p>
 <h3 id="the-failure-nobody-measures">The failure nobody measures</h3>
 <p>Deletion in these systems is usually a statement about the present
 that the next background pass is free to undo. <a

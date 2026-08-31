@@ -72,6 +72,19 @@ believe it".
 
 **Why:** it is the difference between a store of claims and a store of beliefs.
 
+The reasonable objection is that this is a matter of degree — that a large enough
+penalty is a filter. Outside evidence says otherwise, on a different problem.
+*Safety Does Not Compose*
+([arXiv:2608.27141](https://arxiv.org/abs/2608.27141)) proves that a risk state
+carried forward with a geometric discount reopens its gate after a number of
+iterations that does not grow with the horizon, and measures it: with the score
+decaying, an adversary waiting one iteration is stopped and one waiting two
+succeeds **97.0%** of the time, while a latched state holds at **0.0%** across
+every delay — at identical clean-task completion, so the strong version buys the
+exclusion for free. A decaying score is not a stricter filter with a softer
+setting; it is a different kind of object. The [benchmarks page](../../benchmarks/)
+carries the table.
+
 ### Bi-temporal validity
 
 **Present when:** when a fact was true is tracked separately from when the system
