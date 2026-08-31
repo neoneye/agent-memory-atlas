@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A content-addressed grain store
+with world and knowledge time selectable at query time, a hash-chained
+review record carrying a mandatory reason, and a retraction that ranks
+rather than withholds.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Areev — Agent Memory Atlas">
+    <meta property="og:description" content="A content-addressed grain
+store with world and knowledge time selectable at query time, a
+hash-chained review record carrying a mandatory reason, and a retraction
+that ranks rather than withholds.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Areev — Agent Memory Atlas">
+    <meta name="twitter:description" content="A content-addressed grain
+store with world and knowledge time selectable at query time, a
+hash-chained review record carrying a mandatory reason, and a retraction
+that ranks rather than withholds.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Areev — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Areev",
+      "description": "A content-addressed grain store with world and knowledge time selectable at query time, a hash-chained review record carrying a mandatory reason, and a retraction that ranks rather than withholds.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two axes, and one of them is a penalty</p>
+          <h1>Areev</h1>
+          <p class="document-deck">A content-addressed grain store with
+world and knowledge time selectable at query time, a hash-chained review
+record carrying a mandatory reason, and a retraction that ranks rather
+than withholds.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AreevAI/areev">
+              <span>Source</span>
+              <strong>AreevAI/areev</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">
+              <span>Analyzed revision</span>
+              <code>663caa8b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-30</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>A content-addressed store of typed grains, one query language over
+it, and a governed learning loop on top. 181,665 lines of Rust across
+seventeen crates, dual-licensed MIT or Apache-2.0, 242 commits since 16
+August 2026.</p>
+<p>The README states the problem in the terms this atlas uses: an agent
+that rewrites its own memory unsupervised <em>"fails every security
+review on the same four questions: what changed, on what evidence, on
+whose authority, and can we take it back?"</em> Three of the four are
+answered mechanically here, and the fourth is answered better than
+almost anything in this corpus.</p>
+<p><strong>Two temporal axes, and the caller picks one.</strong>
+<code>entity_at</code> takes an <code>Axis</code>: <code>World</code> is
+<em>"What was true in the world at T"</em> over
+<code>valid_from</code>/<code>valid_to</code>; <code>Knowledge</code> is
+<em>"What did the agent know at T"</em>, walking the supersession chain.
+Both parse from the wire in every binding. Most bi-temporal systems here
+store two timestamps and query one; this one makes the question a
+parameter.</p>
+<p><strong>The review record is the strongest in the corpus.</strong>
+Every recommendation transition writes an immutable Observation grain,
+hash-chained to its predecessor, carrying the from and to status, a
+host-asserted actor like <code>user:alice</code>, an observer type, and
+a <strong>mandatory</strong> written reason capped at 500 characters.
+The transition table is enforced rather than advisory, and the one path
+that skips a person is named in a comment as it is allowed:
+<code>Pending → Applied</code> requires <code>by_policy</code>, <em>"the
+auto-apply actor, the only one permitted the reasonless pending →
+applied jump."</em></p>
+<p><strong>Deletion is done properly, and the code says what that
+means.</strong> <code>forget</code> erases the row, clears the free-text
+index — <em>"a tombstone that leaves the text findable is not a
+tombstone"</em> — reclaims the content-addressed attachment bytes —
+<em>"a tombstone that leaves the attachment bytes on disk is not a
+tombstone"</em> — cleans the namespace registry, and writes an op-log
+tombstone that <code>import_bundle</code> replays, so an erasure reaches
+replicas instead of diverging them.</p>
+<p><strong>Two marks are withheld and they are the findings.</strong>
+<code>verification_status</code> is a four-value discrete status —
+unverified, verified, contested, retracted — held apart from a
+<code>confidence</code> float, written by the rollback path, and applied
+on the read path as <code>-0.3</code> added to a priority score that is
+then clamped. A retracted grain ranks lower and still surfaces. And the
+content hash that a value-level tombstone would key on is not consulted
+on write: <code>forget</code>'s own comment anticipates <em>"a forget +
+re-add of identical content"</em> and handles the race rather than
+refusing the re-assertion.</p>
+<p>Five marks. The project states three limits itself, and they are
+accurate: it improves <em>"memory, never model weights"</em>,
+<em>"nothing applies itself"</em> without an explicit host grant, and
+there is <em>"no daemon"</em>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>grain</strong>: one of thirteen types under a
+versioned spec the code calls OMS, content-addressed, and carrying more
+lifecycle metadata than anything else in this atlas. <code>Fact</code>,
+<code>Event</code>, <code>State</code>, <code>Workflow</code>,
+<code>Tool</code>, <code>Observation</code>, <code>Goal</code>,
+<code>Reasoning</code>, <code>Consensus</code>, <code>Consent</code>,
+<code>Skill</code>, <code>Recommendation</code>, <code>Trigger</code> —
+and the enum carries its own migration hazard as a comment, because
+<code>areev-store</code> indexes the type column as the ordinal:
+<em>"inserting a variant mid-enum would silently renumber every stored
+row and break type-filtered recall in every existing file."</em> New
+variants are appended, and the reason is written down.</p>
+<p><strong>Two axes describe a grain's standing and they are kept
+apart.</strong> <code>verification_status</code> is
+<code>unverified | verified | contested | retracted</code>, and the
+comment records that it <em>"replaces deprecated
+<code>contradicted</code> boolean"</em> — a project that widened a
+boolean into a status because the boolean could not express contested.
+Beside it sits <code>confidence: f64</code>. That separation is the
+thing this atlas asks for in every report.</p>
+<p><strong>Correction has three distinct moves, and the vocabulary
+distinguishes them.</strong> <em>Supersede</em> writes a successor, sets
+<code>superseded_by</code>, closes the record-time interval, and carries
+a <code>supersession_justification</code> and a
+<code>supersession_auth</code> list — correction is an authorised act,
+not an overwrite. <em>Retract</em> marks
+<code>verification_status = retracted</code> without destroying anything
+— the loop uses it as the inverse of an applied ADD during rollback.
+<em>Forget</em> erases. Three verbs for three different situations is
+rarer here than it should be.</p>
+<p><strong>And the loop above it is a proposal lifecycle.</strong> An
+analyzer proposes a <code>Recommendation</code> citing evidence by hash;
+a person approves or rejects with a reason; an apply stores its inverse;
+a later re-measurement can propose its own revert.
+<code>RecStatus</code> moves
+<code>Pending → Approved → Applied → RolledBack</code>, with
+<code>Expired</code> computed from <code>valid_to</code>.</p>
+<p>The one thing the state machine does not do is stop a retracted grain
+being recalled, which is the gap the diagram draws.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three correction verbs with three different read-path consequences — supersession is filtered out by `superseded_by IS NULL`, a forget is erased and replicated, and a retraction is a −0.3 priority penalty that still lets the grain surface</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three correction verbs with three different read-path consequences — supersession is filtered out by `superseded_by IS NULL`, a forget is erased and replicated, and a retraction is a −0.3 priority penalty that still lets the grain surface
+flowchart TD
+    A[&quot;analyzer proposes a Recommendation&lt;br/&gt;evidence cited by hash&quot;] --&gt; P{&quot;RecStatus, transition table enforced&quot;}
+    P -- &quot;by_policy only&quot; --&gt; AP[&quot;Applied&quot;]
+    P -- &quot;a person, with a mandatory BECAUSE&quot; --&gt; AR[&quot;Approved&quot;] --&gt; AP
+    P -- &quot;a person&quot; --&gt; RJ[&quot;Rejected&quot;]
+    AP --&gt; AUD[(&quot;Observation grain per transition&lt;br/&gt;actor · observer_type · because&lt;br/&gt;hash-chained to the previous one&quot;)]
+    AP --&gt; INV[&quot;every apply stores its inverse&quot;]
+    INV --&gt;|rollback| RET[&quot;retract: verification_status = retracted&quot;]
+    G[(&quot;grain: two validity intervals,&lt;br/&gt;confidence, verification_status,&lt;br/&gt;superseded_by&quot;)] --&gt; SUP[&quot;supersede&lt;br/&gt;justification + auth list&quot;]
+    G --&gt; FRG[&quot;forget&quot;]
+    G --&gt; RET
+    SUP --&gt; Q1[&quot;read: AND superseded_by IS NULL&lt;br/&gt;— withheld&quot;]
+    FRG --&gt; Q2[&quot;row erased, FTS text cleared, CAS bytes reclaimed,&lt;br/&gt;OP_FORGET replayed on replicas — gone&quot;]
+    RET --&gt; Q3[&quot;read: priority += -0.3, then clamp&lt;br/&gt;— ranked down, still returned&quot;]
+    Q3 -.-&gt;|&quot;and the training export keeps it&lt;br/&gt;at loss_weight 0.0&quot;| Q3</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Seventeen crates, and the shape is a store with surfaces rather than
+a service.</p>
+<ul>
+<li><strong><code>areev-cal</code></strong> (54,396 lines) — the query
+language. The largest crate, which says where the design's weight
+sits.</li>
+<li><strong><code>areev-store</code></strong> (22,185) — the
+content-addressed store over SQLite or Postgres: grains, triples, an OSP
+index for inbound traversal, <code>entity_latest</code> materialisation,
+an op log with a hybrid logical clock, a CAS for attachments.</li>
+<li><strong><code>areev-core</code></strong> (17,516) — the grain types,
+the OMS wire format, authz primitives, pseudonymisation.</li>
+<li><strong><code>areev-loop</code></strong> (12,095) — analyzers,
+recommendations, the audit record, and a substrate trait third parties
+can implement.</li>
+<li><strong><code>areev-context</code></strong> (5,236) — budget-shaped
+context assembly and the priority model.</li>
+<li>Surfaces: <strong><code>areev-cli</code></strong>,
+<strong><code>areev-mcp</code></strong>,
+<strong><code>areev-server</code></strong>,
+<strong><code>areev-js</code></strong>,
+<strong><code>areev-py</code></strong>, plus
+<strong><code>areev-conformance</code></strong>,
+<strong><code>areev-bench</code></strong> and a
+<strong><code>fuzz</code></strong> target.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><em>"No daemon — everything runs when you run it."</em> A memory is a
+file; the CLI, the MCP server and the bindings all open it. That is a
+genuinely low floor for a system with this much machinery, and it is the
+reason the single-user path never meets the authorisation model at all —
+the owner session is <em>"a local open with no principal asserted"</em>,
+the implicit superuser.</p>
+<p>Postgres is the alternative backend and is exercised by the
+conformance kit (<code>crates/areev-conformance/tests/pg.rs</code>), so
+the store's contract is tested against two engines rather than asserted
+to hold for both.</p>
+<p><strong>Nothing here was built or run.</strong> Fourteen dependency
+surfaces sit inside the seven-day freshness cooldown at this commit,
+<code>Cargo.lock</code> among them, so the tree was read rather than
+compiled and every number in this report comes from the source.
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as data.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — a grain is serialised to the OMS format,
+hashed, and inserted with its namespace, subject, predicate, object,
+both validity intervals, and its supersession pointers, with
+<code>INSERT INTO oplog(op_seq,hlc,op,hash)</code> recording the
+mutation.</p>
+<p><strong>Supersede</strong> —
+<code>UPDATE grains SET superseded_by=?1, svt=?2 WHERE seq=?3</code>.
+One statement closes the record-time interval and points at the
+successor, so the two cannot drift apart.</p>
+<p><strong>Forget</strong> —
+<code>crates/areev-store/src/lib.rs:5170-5300</code>. The
+pre-transaction read takes only the <code>(ns, s, p)</code> key and
+deliberately not the sequence, because <em>"a concurrent forget + re-add
+can move this hash to a new seq"</em>; the sequence is re-resolved under
+the row lock so <em>"two racing forgets must produce one success and one
+NotFound"</em>. Then the row goes, the FTS text goes, the namespace
+registry entry goes, the CAS attachments are reclaimed, and
+<code>OP_FORGET</code> is written.</p>
+<p><strong>Read</strong> — CAL over hybrid recall: a vector query
+filtered by namespace and optionally subject and predicate, a BM25 leg,
+and graph traversal by relation with an <code>In</code> direction served
+from the OSP index. Latest-materialisation filters
+<code>AND superseded_by IS NULL</code>.</p>
+<p><strong>Time travel</strong> —
+<code>entity_at(entity, t, axis)</code>. <code>World</code> filters the
+validity interval; <code>Knowledge</code> walks the supersession chain
+to what was current at <code>t</code>.</p>
+<p><strong>The loop</strong> — an analyzer emits a
+<code>Recommendation</code> with a <code>dedup_key</code> computed from
+the analyzer family, target and action kind, <em>"never
+author-chosen"</em>, a deterministic template-rendered summary —
+<em>"never analyzer prose"</em> — a <code>metric_snapshot</code>
+carrying <em>"the measurable claim the recommendation rests on, for
+outcome review"</em>, and an <code>evidence_query</code> in CAL that
+regenerates the full evidence set when the cited subset was truncated. A
+transition then writes the audit Observation.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>GrainCommon</code> is the widest common record in this atlas:
+namespace, user id, tags, confidence, source type, importance, temporal
+type, four timestamps, content and embedding refs, a provenance chain,
+related-to links, author and origin DIDs, origin namespace,
+<code>derived_from</code>, consolidation level, success and failure
+counts, <code>superseded_by</code>, <code>verification_status</code>, an
+invalidation policy, a supersession justification, a supersession auth
+list, and <code>created_at</code>.</p>
+<p><strong>Bi-temporality is complete and queryable</strong>, per
+section 1 — two intervals, two named axes, and both spellings parseable
+from every binding.</p>
+<p><strong><code>verification_status</code> is the near miss, and it is
+a near miss for a specific reason.</strong> The field is right: four
+values, discrete, separate from <code>confidence</code>, widened from a
+boolean because the boolean could not say <em>contested</em>. The
+producer is right: <code>retract()</code> is documented as <em>"the
+inverse of an applied ADD, used by rollback"</em>. What is missing is
+the consequence. In
+<code>crates/areev-context/src/render.rs:237-241</code> the read path
+does:</p>
+<pre class="rust"><code>let verification_penalty = match grain.get_str(&quot;verification_status&quot;) {
+    Some(&quot;retracted&quot;) =&gt; -0.3,
+    Some(&quot;contested&quot;) =&gt; -0.15,
+    _ =&gt; 0.0,
+};
+(base + score_boost + confidence_boost + verification_penalty).clamp(0.0, 1.0)</code></pre>
+<p>A retracted grain is a lower-priority grain, not an excluded one. The
+mark asks for <em>"at least one state that withholds a memory from being
+treated as true"</em> and draws the line at usage: a score gets ranked,
+a state gets filtered. The one place the status does bite is the corpus
+export, where <code>crates/areev-cli/src/corpus.rs:208-217</code> maps
+<code>retracted</code> to <code>("rejected", 0.0)</code> — but that
+emits the record with
+<code>"quality": "rejected", "loss_weight": 0.0</code> rather than
+dropping it, and it is a training artifact rather than the recall path.
+Stated so a reader can disagree on the evidence: the field is real, the
+rollback that writes it is real, and no query in the tree excludes on
+it.</p>
+<p><strong>The tombstone is the other near miss, and it is closer than
+most.</strong> The store is content-addressed, so the hash <em>is</em> a
+function of the content — precisely the key a rejected-value tombstone
+needs, already computed and already in the op log. What is absent is the
+consult. <code>forget</code>'s comment anticipates the case in as many
+words: <em>"a forget + re-add of identical content can move this hash to
+a new seq"</em>. The system is built to handle the value coming back
+rather than to refuse it. One lookup against the forgotten set on the
+write path is the whole difference.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One language over three arms. CAL compiles to a namespace-scoped
+vector query, a BM25 leg, and graph traversal with <code>Out</code>,
+<code>In</code> or <code>Both</code> — where <code>In</code> is served
+from a dedicated OSP index and the doc notes the consequence, that it
+<em>"only sees entity-valued relations"</em>.</p>
+<p><strong>Scope is applied as a predicate, before ranking</strong>, on
+every arm — the vector query's documented shape is
+<code>WHERE g.ns = ? [AND g.s = ?] [AND g.p = ?] ORDER BY &lt;distance&gt; LIMIT k</code>,
+so the filter is in the SQL rather than over the results.</p>
+<p><strong>Context assembly is budget-shaped and pseudonymised.</strong>
+<code>areev-context</code> builds a priority per candidate from a base
+by grain type, a score boost, a confidence boost above 0.5, and the
+verification penalty above, then fills a token budget. Grain-type
+overrides are policy.</p>
+<p><strong>The failure mode is the one section 5 names.</strong>
+Everything the read path can withhold, it withholds by a predicate — a
+superseded grain by <code>superseded_by IS NULL</code>, a foreign
+namespace by <code>ns = ?</code>, a forgotten grain by not existing. The
+one axis that is a judgement about truth is the one applied as
+arithmetic.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and no model sits on the path — a grain is
+retrievable when the transaction commits. There is no background pass,
+and the project says so rather than leaving it to be discovered.</p>
+<p><strong>Supersession is authorised, not merely recorded.</strong>
+<code>supersession_justification</code> and
+<code>supersession_auth</code> sit on the grain, so a correction carries
+who permitted it and why, in the record rather than in a log beside
+it.</p>
+<p><strong>The loop's write discipline is worth naming.</strong> A
+recommendation's <code>dedup_key</code> is computed rather than chosen;
+its summary is template-rendered and explicitly <em>"never analyzer
+prose"</em>, so the text a reviewer reads cannot be argued into being
+persuasive; its <code>metric_snapshot</code> is <em>"the measurable
+claim the recommendation rests on, for outcome review"</em>, which is
+what makes a later re-measurement possible; and its
+<code>evidence_query</code> regenerates the full evidence set when the
+citation was truncated, so a reviewer is never stuck with a sample.</p>
+<p><strong>Every apply stores its inverse</strong>, which is what makes
+the rollback path real rather than aspirational — and
+<code>retract</code> is that inverse for an ADD, which is why the
+retraction status matters more here than the penalty treats it as.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No embedding pass on write unless the caller supplies one —
+<code>EmbeddingRef</code> points at an external vector store rather than
+owning one. No nightly consolidation. The cost is the analyzers, which
+run when invoked, and the LLM calls in <code>areev-llm</code> for the
+context that is assembled. Nothing scales with corpus size on a
+schedule.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server, JS and Python bindings, an HTTP server, and a
+substrate trait with a conformance kit — <em>"it doubles as the
+conformance kit for third-party substrates"</em>, and the reference
+substrate exists so <em>"engine CI runs the full suite against it with
+zero Areev, so the portability claim stays testable"</em>. A portability
+claim with a test behind it is unusual.</p>
+<p><strong>Agency is bounded by the grant model.</strong> Policy is
+grant grains in the file, credentials are host-side and hold no policy
+and no raw secrets, and the default is refusal. The single-user path
+never meets it: a local open with no principal asserted is the implicit
+superuser, which is the right default and worth knowing before reading
+the authorisation code as though it always applies.</p>
+<p><strong>The capability gates in the substrate trait are the other
+half.</strong> <code>put_blob</code> and <code>get_blob</code> default
+to refusing — <em>"CAPABILITY-GATED: the default refuses, so a loop can
+only carry code on substrates that explicitly opt in"</em> — and
+<code>retract</code> defaults to unsupported so substrates opt in. A
+trait whose dangerous methods fail closed by default is a design
+decision most trait-based seams in this atlas do not make.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is a chain, not a field</strong>:
+<code>provenance_chain</code>, <code>author_did</code>,
+<code>origin_did</code>, <code>origin_namespace</code>,
+<code>derived_from</code>. Recommendations cite evidence by hash and
+carry a CAL query that regenerates it.</p>
+<p><strong>The audit is two records and both are append-only.</strong>
+The op log is one row per mutation with a hybrid logical clock, replayed
+by <code>import_bundle</code> so replicas converge including on
+erasures. The loop's audit is one immutable Observation per transition,
+hash-chained, with a mandatory reason — so the sequence of decisions
+about a recommendation is tamper-evident in the same store as the memory
+it changed.</p>
+<p><strong>Erasure is treated as a security property rather than a
+bookkeeping one.</strong> The comments make the standard explicit twice,
+on text and on attachment bytes, and the file-level path is named as the
+strong one: <em>"File-level crypto-erasure remains the strong
+path."</em></p>
+<p><strong>Uncertainty can be represented and is not enforced.</strong>
+<code>contested</code> exists as a state and costs a grain 0.15 of
+priority. A system that can say <em>I have this on record and do not
+believe it</em> and then ranks it down is one predicate away from acting
+on it.</p>
+<p><strong>Two marks withheld</strong>, both in section 5 with their
+evidence. <code>tombstone</code> — the content hash is not consulted on
+re-add. <code>trust_state</code> — the status is a ranking term.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>2,522 test functions</strong>, a fuzz target, a
+<code>deny.toml</code>, and a dedicated conformance crate — and the
+conformance kit is the artifact worth describing, because it is doing
+something most test suites here do not.</p>
+<p>Its cases take <code>b: &amp;dyn Backend</code> and report
+<code>b.name()</code> in every assertion message, so the same case runs
+against the real store, the Postgres backend and the in-memory reference
+substrate. A contract tested against more than one implementation is a
+contract; tested against one it is a description.</p>
+<p>The negative cases are non-vacuous by construction.
+<code>forget_clears_head_row</code> asserts the head exists before
+forgetting and then asserts four different absences.
+<code>forget_new_head_does_not_resurrect_old</code> forgets the newer
+version and checks the older one stays superseded — <em>"the superseded
+old version stays superseded — no silent resurrection"</em> — while
+asserting <code>get(&amp;h1)</code> still succeeds, <em>"old blob is
+still readable, just not live"</em>. That last pair is the
+withheld-versus-deleted distinction this atlas spends whole reports
+drawing, asserted in two lines.</p>
+<p><code>ns_scope</code> covers the leak directly: after seeding a value
+in another namespace,
+<code>assert!(!hits.iter().any(|o| o == "personal-value"), "BM25 leg leaked outside the scope")</code>.
+It also asserts that a malformed pattern <em>refuses</em> while an
+unknown prefix answers empty — the distinction between an error and an
+absence, tested.</p>
+<p>And <code>crates/areev-conformance/tests/pg.rs:192</code> asserts
+<code>telemetry_access_stats(...).is_empty()</code> under the message
+<em>"scrubbed on forget"</em>, so the erasure standard is checked
+against telemetry too.</p>
+<p><strong>What is not tested is the gap this report names.</strong> No
+case asserts that a retracted grain is excluded from a recall, because
+none is — the assertion would fail. No case asserts that re-adding
+forgotten content is refused, for the same reason. Both absences are
+consistent with the code rather than oversights, which is worth saying
+plainly: this suite tests what the system does.</p>
+<p><strong>Benchmarks exist and their results do not ship.</strong>
+<code>areev-bench</code> is 10,141 lines and the pinned commit is a
+benchmark merge (<code>bench/2x2-llm-isolation</code>), but no committed
+result file, leaderboard or run artifact appears in the tree, so no
+performance claim here can be checked against anything.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the temporal axis a query parameter.</strong>
+<code>entity_at(entity, t, axis)</code> with <code>world</code> and
+<code>knowledge</code> spelled out in the wire protocol turns "what was
+true" and "what did we believe" into two answerable questions instead of
+one ambiguous one. It costs a parameter and a documented enum.</li>
+<li><strong>Require the reason in the type.</strong>
+<code>AuditRecord.because</code> is a <code>String</code>, not an
+<code>Option&lt;String&gt;</code>, capped at 500 characters and
+described as <em>"the review statement's BECAUSE"</em>. A reason that
+cannot be omitted is worth more than a policy saying it should not
+be.</li>
+<li><strong>Hash-chain the decisions, not just the data.</strong> One
+immutable Observation per transition, each pointing at its predecessor,
+gives you a tamper-evident record of <em>who decided what and why</em>
+in the same store as the thing they decided about.</li>
+<li><strong>Write down what a tombstone has to clear.</strong> <em>"A
+tombstone that leaves the text findable is not a tombstone"</em> and
+<em>"a tombstone that leaves the attachment bytes on disk is not a
+tombstone"</em> are the two failure modes this atlas finds most often,
+named in the code that avoids them.</li>
+<li><strong>Make the dangerous trait methods fail closed.</strong>
+<code>put_blob</code> and <code>retract</code> default to refusing, so a
+capability arrives by opting in rather than by forgetting to opt
+out.</li>
+<li><strong>Ship the conformance kit with the trait.</strong> A
+substrate seam whose test suite runs against a reference implementation
+keeps the portability claim honest without anyone re-deriving it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Spending a status as a score.</strong> Four discrete values,
+a rollback path that writes the strongest one, and a read path that
+turns it into <code>-0.3</code> before a clamp. If a state cannot
+exclude, it is a confidence number with words for values — and the whole
+reason to have both axes was that they answer different questions.</li>
+<li><strong>Computing the key a refusal needs and not consulting
+it.</strong> A content-addressed store already knows whether the exact
+value coming in is one that was thrown out. Not asking is a choice; here
+it is made in a comment that anticipates the re-add and handles the race
+instead.</li>
+<li><strong>Letting a training export and a recall path disagree about
+what counts.</strong> A retracted grain is weight 0.0 in the corpus
+builder and a ranked candidate at recall. Whichever is right, they
+should not be different.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a more complete correction model than most systems here
+carry, in one of the larger implementations, and the two are related:
+bi-temporality, authorised supersession, replicating erasure, a
+hash-chained review record and a capability-gated substrate seam are
+each a few thousand lines, and they only add up because the store
+underneath them is content-addressed and typed.</p>
+<p>Who should read it: anyone building a memory that has to survive a
+security review, and anyone who has written <code>superseded_by</code>
+into a schema and not yet decided what a <em>retraction</em> is as
+distinct from it. The three-verb vocabulary — supersede, retract, forget
+— is worth taking on its own.</p>
+<p>Who should be careful: adopters who read the marks as a summary. Five
+is high for this corpus and the two that are missing are the two about
+<em>belief</em>. What Areev governs extremely well is the
+<strong>process</strong> by which memory changes — who proposed, who
+approved, on what evidence, how to undo. What it does not yet do is stop
+a memory a person retracted from reaching the model on the next
+turn.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the retraction penalty deliberate?</strong> A
+<code>-0.3</code> on a clamped priority is a designed number, not an
+oversight, so the question is whether recall is meant to surface
+retracted grains in some circumstance — and if so, whether the caller
+can tell.</li>
+<li><strong>Why does the corpus export weight what recall
+ranks?</strong> The two consumers make different decisions about the
+same field.</li>
+<li><strong>Would the forgotten set be consulted on write if it were
+cheap?</strong> It is: the op log already holds every
+<code>OP_FORGET</code> hash.</li>
+<li><strong>What do the benchmarks show?</strong>
+<code>areev-bench</code> is 10,141 lines and the pinned commit is a
+benchmark merge; no result artifact is committed.</li>
+<li><strong>How much of the authorisation model is exercised in the
+single-user path?</strong> The owner session is the implicit superuser,
+so the grant machinery may be reached mostly by tests.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Types and format</strong></p>
+<ul>
+<li><code>crates/areev-core/src/types/grain.rs:12-33</code> — the
+thirteen grain types and the ordinal-stability comment;
+<code>:58-64</code> — <code>TemporalType</code>; <code>:160-200</code> —
+<code>GrainCommon</code>, including <code>verification_status</code> and
+the supersession fields.</li>
+<li><code>crates/areev-core/src/types/recommendation.rs</code> — the
+recommendation grain.</li>
+<li><code>crates/areev-core/src/authz.rs:1-16</code> — the grant model
+and the fail-closed default.</li>
+</ul>
+<p><strong>Store</strong></p>
+<ul>
+<li><code>crates/areev-store/src/lib.rs:40-49</code> —
+<code>OP_FORGET</code> and the <code>Axis</code> enum;
+<code>:85-93</code> — the axis wire spellings; <code>:1217</code> — the
+op-log schema; <code>:4617,:4744</code> —
+<code>superseded_by IS NULL</code>; <code>:5080</code> — the
+supersession update; <code>:5170-5300</code> — <code>forget</code> and
+its tombstone standard.</li>
+</ul>
+<p><strong>Loop</strong></p>
+<ul>
+<li><code>crates/areev-loop/src/recommendation.rs:230-271</code> — the
+recommendation; <code>:336-375</code> — <code>RecStatus</code> and
+<code>can_transition_to</code>; <code>:385-435</code> —
+<code>AuditRecord</code> and the mandatory <code>because</code>.</li>
+<li><code>crates/areev-loop/src/substrate.rs:168-200</code> —
+<code>retract</code>, <code>put_blob</code> and the capability
+gates.</li>
+<li><code>crates/areev-loop/src/reference.rs:1-12</code> — the reference
+substrate.</li>
+</ul>
+<p><strong>Read path</strong></p>
+<ul>
+<li><code>crates/areev-context/src/render.rs:232-243</code> —
+<code>adjusted_priority</code> and the verification penalty.</li>
+<li><code>crates/areev-cli/src/corpus.rs:208-217,:251-260</code> — the
+export's quality label and loss weight.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>crates/areev-conformance/src/cases/supersede_forget.rs</code>,
+<code>ns_scope.rs</code>, <code>heads_forks.rs</code>,
+<code>blobs_hybrid.rs</code>; <code>tests/pg.rs</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
+— first reading, at 242 commits. Screened before reading: no auto-run
+surface, two build-time execution surfaces, three unpinned surfaces, and
+<strong>fourteen dependency surfaces inside the seven-day freshness
+cooldown</strong> including <code>Cargo.lock</code>, so nothing was
+built and nothing was run; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were read as data. Five marks. The report is
+organised around the three correction verbs, because supersede, forget
+and retract have three different read-path consequences here and only
+two of them withhold — which is also why the two missing marks are the
+two about belief rather than about process.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
