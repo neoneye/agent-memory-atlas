@@ -226,11 +226,12 @@ property twice by independent means, and says which of the two an
 attacker can remove.</strong> Its <code>audit_event</code> table has
 <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers
 raising <code>'WORM: audit_event is append-only'</code>, and its
-Postgres twin adds a writer role granted only <code>INSERT</code> and
-<code>SELECT</code> at provisioning. Neither is presented as the
-guarantee. The comment in <code>audit_worm.c</code> is explicit that the
-triggers <em>"are NOT the adversarial guarantee (a process with file
-write access can drop them) — that is the hash-chain."</em> Naming the
+Postgres twin puts the runtime role on <code>SELECT</code> alone at
+provisioning, with writes reaching the queue only through a
+<code>SECURITY DEFINER</code> submit function. Neither is presented as
+the guarantee. The comment in <code>audit_worm.c</code> is explicit that
+the triggers <em>"are NOT the adversarial guarantee (a process with file
+write access can drop them) — that is the hash-chain…"</em> Naming the
 threat model is the part to copy: a trigger stops a bug and a hash chain
 stops an editor, and a page that lists both without distinguishing them
 has told a reader less than it appears to.</p>

@@ -112,14 +112,14 @@ implementations disagree about what it means.</p>
               <strong>AreevAI/areev</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">
+            <a class="meta-pill revision-pill" href="https://github.com/AreevAI/areev/commit/e31adeb23c28c207e1802a4927ca2f1ba86ff2db" title="e31adeb23c28c207e1802a4927ca2f1ba86ff2db">
               <span>Analyzed revision</span>
-              <code>663caa8b…</code>
+              <code>e31adeb2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-31</strong>
+              <strong>2026-09-01</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -139,8 +139,8 @@ implementations disagree about what it means.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>A content-addressed store of typed grains, one query language over
-it, and a governed learning loop on top. 181,665 lines of Rust across
-seventeen crates, dual-licensed MIT or Apache-2.0, 242 commits since 16
+it, and a governed learning loop on top. 184,611 lines of Rust across
+seventeen crates, dual-licensed MIT or Apache-2.0, 259 commits since 16
 August 2026.</p>
 <p>The README states the problem in the terms this atlas uses: an agent
 that rewrites its own memory unsupervised <em>"fails every security
@@ -165,7 +165,13 @@ The transition table is enforced rather than advisory, and the one path
 that skips a person is named in a comment as it is allowed:
 <code>Pending → Applied</code> requires <code>by_policy</code>, <em>"the
 auto-apply actor, the only one permitted the reasonless pending →
-applied jump."</em></p>
+applied jump."</em> A model may propose into that lifecycle and cannot
+shorten it: an LLM draft is stamped with an analyzer id that carries no
+manifest family, so the auto-apply policy has nothing to grant it, and a
+proposed rewrite of an executable tool is refused an apply without the
+run id of an evaluation that executed the evalset <strong>the tool
+itself declared</strong> — read from that run's journal rather than from
+the arguments of the apply.</p>
 <p><strong>Deletion is done properly, and the code says what that
 means.</strong> <code>forget</code> erases the row, clears the free-text
 index — <em>"a tombstone that leaves the text findable is not a
@@ -254,6 +260,7 @@ along with the fork in what <code>retract</code> means.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — rollback's `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is only ever a priority penalty that still lets the grain surface</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: rollback&#39;s `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is only ever a priority penalty that still lets the grain surface
 flowchart TD
     A[&quot;analyzer proposes a Recommendation&lt;br/&gt;evidence cited by hash&quot;] --&gt; P{&quot;RecStatus, transition table enforced&quot;}
+    L[&quot;optional model leg: DISCOVER&lt;br/&gt;closed proposal vocabulary&lt;br/&gt;separate GROUND, separate VERIFY&quot;] --&gt;|&quot;origin = llm — no manifest family,&lt;br/&gt;so auto-apply can grant it nothing&quot;| P
     P -- &quot;by_policy only&quot; --&gt; AP[&quot;Applied&quot;]
     P -- &quot;a person, with a mandatory BECAUSE&quot; --&gt; AR[&quot;Approved&quot;] --&gt; AP
     P -- &quot;a person&quot; --&gt; RJ[&quot;Rejected&quot;]
@@ -284,18 +291,25 @@ index for inbound traversal, <code>entity_latest</code> materialisation,
 an op log with a hybrid logical clock, a CAS for attachments.</li>
 <li><strong><code>areev-core</code></strong> (17,516) — the grain types,
 the OMS wire format, authz primitives, pseudonymisation.</li>
-<li><strong><code>areev-loop</code></strong> (12,095) — analyzers,
-recommendations, the audit record, and a substrate trait third parties
-can implement.</li>
+<li><strong><code>areev-loop</code></strong> (13,633) — analyzers,
+recommendations, the audit record, the optional model proposer, and a
+substrate trait third parties can implement.</li>
 <li><strong><code>areev-context</code></strong> (5,236) — budget-shaped
 context assembly and the priority model.</li>
-<li>Surfaces: <strong><code>areev-cli</code></strong>,
+<li><strong><code>areev-loop-adapter</code></strong> (2,506) — the
+loop's substrate trait implemented over the real store. Small, and where
+the two definitions of <code>retract</code> meet.</li>
+<li>Surfaces and runtime: <strong><code>areev-cli</code></strong>,
 <strong><code>areev-mcp</code></strong>,
 <strong><code>areev-server</code></strong>,
 <strong><code>areev-js</code></strong>,
-<strong><code>areev-py</code></strong>, plus
+<strong><code>areev-py</code></strong>,
+<strong><code>areev-llm</code></strong>,
+<strong><code>areev-run</code></strong>,
+<strong><code>areev-run-core</code></strong>,
+<strong><code>areev-trigger</code></strong>, plus
 <strong><code>areev-conformance</code></strong>,
-<strong><code>areev-bench</code></strong> and a
+<strong><code>areev-bench</code></strong> (11,132) and a
 <strong><code>fuzz</code></strong> target.</li>
 </ul>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
@@ -309,11 +323,13 @@ the implicit superuser.</p>
 conformance kit (<code>crates/areev-conformance/tests/pg.rs</code>), so
 the store's contract is tested against two engines rather than asserted
 to hold for both.</p>
-<p><strong>Nothing here was built or run.</strong> Fourteen dependency
+<p><strong>Nothing here was built or run.</strong> Twenty dependency
 surfaces sit inside the seven-day freshness cooldown at this commit,
 <code>Cargo.lock</code> among them, so the tree was read rather than
-compiled and every number in this report comes from the source.
-<code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as data.</p>
+compiled and every number this report derives comes from the source.
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as data. The
+benchmark figures quoted in section 10 are the project's own, taken from
+files it commits.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Write</strong> — a grain is serialised to the OMS format,
@@ -352,6 +368,20 @@ carrying <em>"the measurable claim the recommendation rests on, for
 outcome review"</em>, and an <code>evidence_query</code> in CAL that
 regenerates the full evidence set when the cited subset was truncated. A
 transition then writes the audit Observation.</p>
+<p><strong>The model leg</strong> — optional, and additive by
+construction: with no backend attached the stages are the identity
+function, so the deterministic output stays <em>"a pure function of
+<code>(store, params, now)</code>"</em>. With one,
+<code>ANALYZE → DISCOVER → ENRICH → VALIDATE+DEDUP → STORE</code> gains
+a proposer, and a separate GROUND call and a separate VERIFY call —
+<em>"proposer ≠ grounder"</em>, and the adversarial pass is <em>"an
+independent adversarial pass (a separate call from the proposer — the
+anti-Goodhart rule)"</em>. A garbled response yields no drafts rather
+than failing the run; a garbled GROUND or VERIFY response yields no
+results, which drops every draft. What survives is written through the
+ordinary candidate path as a <code>Recommendation</code> grain — so a
+model does put a grain in the store — but the change that grain
+<em>proposes</em> is never applied without a person.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>GrainCommon</code> is the widest common record in this atlas:
 namespace, user id, tags, confidence, source type, importance, temporal
@@ -370,15 +400,15 @@ values, discrete, separate from <code>confidence</code>, widened from a
 boolean because the boolean could not say <em>contested</em>. What is
 missing is a producer and a consequence.</p>
 <p>The producer first, because it is not what the trait says it is.
-<code>crates/areev-loop/src/substrate.rs:174-181</code> documents
+<code>crates/areev-loop/src/substrate.rs:210-217</code> documents
 <code>retract</code> as <em>"Index-layer retraction
 (<code>verification_status = retracted</code>) — the inverse of an
 applied ADD, used by rollback. Not destructive"</em>, and
-<code>crates/areev-loop/src/reference.rs:174-186</code> — the in-memory
+<code>crates/areev-loop/src/reference.rs:245-258</code> — the in-memory
 double — implements it, setting
 <code>superseded_by = "retracted"</code>, the status field and a
-<code>retract_reason</code>. The adapter over the real store
-declines:</p>
+<code>retract_reason</code>. The adapter over the real store declines
+(<code>crates/areev-loop-adapter/src/substrate.rs:645-650</code>):</p>
 <pre class="rust"><code>fn retract_op(f: &amp;AreevFacade, hash: &amp;str) -&gt; WResult&lt;()&gt; {
     // No index-only retraction primitive exists; the honest mapping for undoing
     // an engine-created ADD is a tombstone of that grain.
@@ -388,7 +418,7 @@ declines:</p>
 <p>So <code>Engine::rollback</code> calling
 <code>sub.retract(h, …)</code> erases on the real store and demotes in
 tests, and the only automatic writer of <code>"retracted"</code> in the
-tree is the test double at <code>reference.rs:182</code>. On a real
+tree is the test double at <code>reference.rs:253</code>. On a real
 deployment the status is caller-authored — the Python and JS bindings
 let a user set it — rather than engine-written.</p>
 <p>That makes the read-path treatment the whole of the consequence. In
@@ -407,9 +437,15 @@ export, where <code>crates/areev-cli/src/corpus.rs:208-217</code> maps
 <code>retracted</code> to <code>("rejected", 0.0)</code> — but that
 emits the record with
 <code>"quality": "rejected", "loss_weight": 0.0</code> rather than
-dropping it, and it is a training artifact rather than the recall path.
-Stated so a reader can disagree on the evidence: the field is real, and
-no query in the tree excludes on it.</p>
+dropping it, and it is a training artifact rather than the recall
+path.</p>
+<p>Stated so a reader can disagree on the evidence: the field is real,
+CAL can express a predicate over it — a committed test writes
+<code>RECALL facts WHERE verification_status = "unverified"</code> — and
+the system's own recall and assembly paths do not. The capability to
+filter exists and is left to the caller, which is the narrower and more
+interesting version of the finding: the store can be asked to withhold a
+retracted grain, and nothing that assembles a prompt asks.</p>
 <p><strong>The divergence is untested.</strong>
 <code>crates/areev-conformance/src/cases/</code> holds ten case modules
 and not one mentions <code>retract</code>. Every other correction verb
@@ -458,9 +494,11 @@ namespace by <code>ns = ?</code>, a forgotten grain by not existing. The
 one axis that is a judgement about truth is the one applied as
 arithmetic.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
-<p>Writes are synchronous and no model sits on the path — a grain is
-retrievable when the transaction commits. There is no background pass,
-and the project says so rather than leaving it to be discovered.</p>
+<p>Writes are synchronous and no model sits on the grain-write path — a
+grain is retrievable when the transaction commits. There is no
+background pass, and the project says so rather than leaving it to be
+discovered. A model reaches the store only through the loop, and only as
+a proposal.</p>
 <p><strong>Supersession is authorised, not merely recorded.</strong>
 <code>supersession_justification</code> and
 <code>supersession_auth</code> sit on the grain, so a correction carries
@@ -475,6 +513,37 @@ claim the recommendation rests on, for outcome review"</em>, which is
 what makes a later re-measurement possible; and its
 <code>evidence_query</code> regenerates the full evidence set when the
 citation was truncated, so a reviewer is never stuck with a sample.</p>
+<p><strong>What a model is allowed to propose is a closed enum, and the
+bounds are structural rather than advisory.</strong>
+<code>DraftProposal</code> has five variants — a lesson, a fact under a
+model-chosen relation, a rewrite of a saved CAL query, field-level edits
+to a workflow plan, and new source for a tool — and the constraint worth
+copying is what each variant <em>cannot carry</em>: <em>"the subject of
+a <code>Fact</code>, the name of a <code>QueryRevision</code>, the hash
+of a <code>PlanRevision</code> and the tool of a
+<code>CodeRevision</code> all come from the draft's <code>target</code>,
+and the evalset a <code>CodeRevision</code> is gated against comes from
+the substrate — so the model names the change but never names its own
+scope or its own grader."</em></p>
+<p>Three of those bounds are enforced in code rather than in a prompt.
+<code>plan_edit_allowed</code> matches only
+<code>edges.&lt;i&gt;.cond</code>,
+<code>edges.&lt;i&gt;.max_cycles</code> and
+<code>retries.&lt;node&gt;</code>, so <code>nodes</code>, edge endpoints
+and <code>bindings</code> <em>"are simply not matchable here"</em> — a
+topology change is not expressible by any proposal the model can write,
+and each edit carries a <code>from</code> that must equal the live
+value, which is the staleness check. <code>safe_definition_body</code>
+rejects a query body containing a brace or the tokens
+<code>FORGET</code>, <code>PURGE</code>, <code>DROP</code> or
+<code>DEFINE</code>, so a rewrite cannot close its own block or carry a
+destruction. And a definition rewrite is refused on the auto-apply path
+outright, in a comment that says why: <em>"it changes what every future
+context contains, so it requires a human APPROVE + APPLY with
+BECAUSE."</em> An unparseable proposal degrades the draft to advisory
+instead of falling back to whatever else it carried — <em>"applying an
+<code>ADD fact</code> when the model asked for something we could not
+read is doing something it never proposed."</em></p>
 <p><strong>Every apply stores its inverse</strong>, which is what makes
 the rollback path real rather than aspirational — and on the real store
 that inverse for an ADD is a <code>forget</code>, so an undone
@@ -535,7 +604,7 @@ evidence. <code>tombstone</code> — the content hash is not consulted on
 re-add. <code>trust_state</code> — the status is a ranking term.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>2,525 test functions</strong> across the seventeen crates, a
+<p><strong>2,564 test functions</strong> across the seventeen crates, a
 fuzz target, a <code>deny.toml</code>, and a dedicated conformance crate
 — and the conformance kit is the artifact worth describing, because it
 is doing something most test suites here do not.</p>
@@ -577,11 +646,40 @@ adapter, a status demotion in the reference substrate the kit also runs
 against. A case that called <code>retract</code> and asserted the same
 post-condition on both backends would fail today, and that is the point
 of owning a conformance kit.</p>
-<p><strong>Benchmarks exist and their results do not ship.</strong>
-<code>areev-bench</code> is 10,141 lines and the pinned commit is a
-benchmark merge (<code>bench/2x2-llm-isolation</code>), but no committed
-result file, leaderboard or run artifact appears in the tree, so no
-performance claim here can be checked against anything.</p>
+<p><strong>The benchmark results ship, with their receipts, and that is
+the unusual part.</strong> <code>areev-bench</code> is 11,132 lines and
+<code>crates/areev-bench/results/</code> carries the runs behind
+<code>RESULTS.md</code>: a LoCoMo run over 1,982 QAs reporting 54.2%
+answer accuracy and 74.5%/81.6% hit@10/hit@20, and three
+<code>selfimprove_aba</code> A/B/A/B directories. What is committed
+beside each number is not a table. It is
+<code>*.transcripts*.jsonl</code> — one row per question or per model
+call, carrying the question, the gold answer, the model's answer and the
+judge's verdict — under a stated reason: <em>"the category has a history
+of unreproducible claims; we publish the receipts."</em></p>
+<p>Each run directory carries a <code>MANIFEST.md</code> generated by
+<code>scripts/verify_run.py --write-manifest</code>, recording the exact
+command, the git rev, and a SHA-256 of every file, and the script's own
+docstring says what the check is for: it has caught an overwrite of
+published evidence in this repository before, <em>"when the single-seed
+pilot's transcripts were renamed and overwritten by the three-seed
+run."</em></p>
+<p><strong>And a published run can declare itself no longer
+comparable.</strong> The manifest body is compared byte-for-byte on
+regeneration with one exception — a blockquote under the title is
+carried through instead of being deleted — and all three
+self-improvement manifests use it to say that the environment gained
+three silent rules after they ran, that the task prompts and pools are
+byte-identical across that change but <em>"what moved is the
+SCORER"</em>, that the pinned digests in
+<code>tests/golden/reproducibility.txt</code> no longer match, and that
+<em>"the run stands as published; it is a measurement of a different
+environment."</em> The note is prose and never a number, because
+<em>"every file is still checksummed, so a note cannot make a changed
+transcript verify."</em> A benchmark that dates its own numbers against
+the instrument that produced them is rare enough to be worth naming.</p>
+<p>The figures above are the project's, read from files it commits
+rather than reproduced here.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -612,6 +710,22 @@ out.</li>
 <li><strong>Ship the conformance kit with the trait.</strong> A
 substrate seam whose test suite runs against a reference implementation
 keeps the portability claim honest without anyone re-deriving it.</li>
+<li><strong>Never let the proposer name its own scope or its own
+grader.</strong> A model here says <em>what</em> to change; the subject,
+the target and the evalset that will grade it are all resolved from the
+store. That is one design rule and it removes a whole class of
+Goodharting without a prompt asking nicely.</li>
+<li><strong>Make the dangerous edits unmatchable rather than
+disallowed.</strong> A plan revision can only touch
+<code>edges.&lt;i&gt;.cond</code>,
+<code>edges.&lt;i&gt;.max_cycles</code> and
+<code>retries.&lt;node&gt;</code>, so rewiring a graph is not a rejected
+proposal — it is a proposal the vocabulary cannot express.</li>
+<li><strong>Checksum the evidence under the number, and let a run say it
+is stale.</strong> Every transcript is hashed in a generated manifest,
+and a hand-written note under the title survives regeneration so a
+published run can record that the scorer moved beneath it. A benchmark
+result with an expiry is worth more than one without.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -673,9 +787,18 @@ same field.</li>
 <li><strong>Would the forgotten set be consulted on write if it were
 cheap?</strong> It is: the op log already holds every
 <code>OP_FORGET</code> hash.</li>
-<li><strong>What do the benchmarks show?</strong>
-<code>areev-bench</code> is 10,141 lines and the pinned commit is a
-benchmark merge; no result artifact is committed.</li>
+<li><strong>Do the self-improvement numbers survive the scorer that
+replaced theirs?</strong> Three published runs carry a note saying they
+were measured against a six-rule environment that has since gained three
+silent rules, and no run against the current scorer is committed. The
+honest position is the one the manifests take; the open question is what
+the re-run says.</li>
+<li><strong>Would a model proposal survive a reviewer who is not the
+author of the fixture?</strong> The two model-proposing examples run
+keyless in CI against a committed draft, which the project says
+<em>"proves the governed path and deliberately claims nothing about what
+a model would propose."</em> That is the right disclaimer and it leaves
+the interesting number unmeasured.</li>
 <li><strong>How much of the authorisation model is exercised in the
 single-user path?</strong> The owner session is the implicit superuser,
 so the grant machinery may be reached mostly by tests.</li>
@@ -705,15 +828,40 @@ its tombstone standard.</li>
 </ul>
 <p><strong>Loop</strong></p>
 <ul>
-<li><code>crates/areev-loop/src/recommendation.rs:230-271</code> — the
-recommendation; <code>:336-375</code> — <code>RecStatus</code> and
-<code>can_transition_to</code>; <code>:385-435</code> —
-<code>AuditRecord</code> and the mandatory <code>because</code>.</li>
-<li><code>crates/areev-loop/src/substrate.rs:168-200</code> —
-<code>retract</code>, <code>put_blob</code> and the capability
-gates.</li>
+<li><code>crates/areev-loop/src/recommendation.rs:236-271</code> —
+<code>Proposal</code> and <code>RecDraft</code>; <code>:345-383</code> —
+<code>RecStatus</code> and <code>can_transition_to</code>;
+<code>:394-418</code> — <code>AuditRecord</code> and the mandatory
+<code>because</code>; <code>:92-101</code> — the summary templates,
+including the four for the model proposal vocabulary.</li>
+<li><code>crates/areev-loop/src/model.rs:169-206</code> —
+<code>ActionKind</code>, including <code>Record</code>
+(<code>:189</code>) and <code>Revise</code> (<code>:194</code>) and the
+note that a revision <em>"changes every future run"</em>.</li>
+<li><code>crates/areev-loop/src/substrate.rs:210-233</code> —
+<code>retract</code>, <code>put_blob</code> and the capability gates;
+<code>:161-191</code> — <code>validate_plan</code> and
+<code>tool_evalset</code>, both defaulting to refuse;
+<code>:23-31</code> — the <code>plans</code> and <code>code</code>
+capability flags.</li>
+<li><code>crates/areev-loop/src/llm.rs:164-207</code> —
+<code>DraftProposal</code>, the closed vocabulary and what each variant
+does not carry; <code>:39-55</code> — the caps; <code>:209-226</code> —
+<code>parsed_proposal</code> and the advisory degradation.</li>
+<li><code>crates/areev-loop/src/engine.rs:2233-2244</code> —
+<code>safe_definition_body</code>; <code>:2290-2306</code> —
+<code>plan_edit_allowed</code> and the structural exclusion of topology;
+<code>:2598-2680</code> — stamping a draft as
+<code>Origin::Llm</code>.</li>
 <li><code>crates/areev-loop/src/reference.rs:1-12</code> — the reference
-substrate.</li>
+substrate; <code>:245-258</code> — <code>retract</code> as a
+demotion.</li>
+<li><code>crates/areev-loop-adapter/src/substrate.rs:645-650</code> —
+<code>retract_op</code> mapping it to <code>forget</code>;
+<code>:312-324</code> — <code>validate_plan</code> over the runtime's
+own <code>PlanGraph::build</code>; <code>:405-425</code> —
+<code>tool_evalset</code>, the pin read from the tool's live
+definition.</li>
 </ul>
 <p><strong>Read path</strong></p>
 <ul>
@@ -722,13 +870,116 @@ substrate.</li>
 <li><code>crates/areev-cli/src/corpus.rs:208-217,:251-260</code> — the
 export's quality label and loss weight.</li>
 </ul>
-<p><strong>Tests</strong></p>
+<p><strong>Tests and published evidence</strong></p>
 <ul>
 <li><code>crates/areev-conformance/src/cases/supersede_forget.rs</code>,
 <code>ns_scope.rs</code>, <code>heads_forks.rs</code>,
 <code>blobs_hybrid.rs</code>; <code>tests/pg.rs</code>.</li>
+<li><code>crates/areev-loop-adapter/tests/proposal_substrate.rs</code> —
+the plan validator and the evalset pin, asserted in the refusal
+direction: <code>an_unreachable_node_is_refused</code>,
+<code>an_unbounded_cycle_is_refused</code>,
+<code>a_malformed_edge_fails_instead_of_being_skipped</code>,
+<code>an_execution_record_never_supplies_the_pin</code>,
+<code>a_session_without_the_grant_resolves_no_pin</code>.</li>
+<li><code>crates/areev-loop/src/integration.rs:2536-2572</code> — an
+apply with no gating edge, a wrong pin and a failing run all refused
+before a clean one applies.</li>
+<li><code>crates/areev-bench/RESULTS.md</code>,
+<code>crates/areev-bench/results/README.md</code>, and the three
+<code>results/selfimprove-*/MANIFEST.md</code> files carrying the
+checksums and the comparability note;
+<code>crates/areev-bench/scripts/verify_run.py</code>.</li>
 </ul>
+<p><strong>Absence claims, and the commands behind them</strong></p>
+<p>Run from the checkout root. Each returns nothing at this commit.</p>
+<pre class="sh"><code># &quot;the op log is never updated or deleted&quot;
+rg -n &#39;UPDATE oplog|DELETE FROM oplog&#39; .
+
+# &quot;no conformance case covers the fork&quot;
+rg -n retract crates/areev-conformance/
+ls crates/areev-conformance/src/cases/*.rs        # ten case modules plus mod.rs</code></pre>
+<p>These return the counts the report states:</p>
+<pre class="sh"><code># the seven op-log insert sites
+rg -n &#39;INSERT INTO oplog&#39; crates/areev-store/src/lib.rs
+
+# &quot;never analyzer prose&quot; / &quot;never author-chosen&quot;
+rg -n &#39;never analyzer prose|never author-chosen&#39; crates/
+
+# 2,564 test functions across crates/, 2,586 tree-wide
+rg -n --no-heading &#39;^\s*#\[(test|tokio::test)&#39; crates/ -g &#39;*.rs&#39; | wc -l</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-01</strong> — <a
+href="https://github.com/AreevAI/areev/commit/e31adeb23c28c207e1802a4927ca2f1ba86ff2db"><code class="commit-id" title="e31adeb23c28c207e1802a4927ca2f1ba86ff2db">e31adeb2…</code></a>
+— re-pinned 17 commits on. Screened before reading: <strong>no auto-run
+surface</strong>, two build-time execution surfaces
+(<code>crates/areev-js/build.rs</code>,
+<code>crates/areev-py/build.rs</code>), three unpinned surfaces, and
+<strong>twenty dependency surfaces inside the seven-day
+cooldown</strong> — up from fourteen, and all but one at zero days,
+because a release landed the day before. Nothing was built and nothing
+was run; <code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as
+data.</p>
+<p>One published claim was <strong>wrong when it was written</strong>,
+not overtaken. Section 10 said <code>areev-bench</code> ships no
+committed result file, leaderboard or run artifact and that no
+performance claim could be checked.
+<code>crates/areev-bench/results/</code> held a LoCoMo run with
+per-question transcripts and three <code>selfimprove_aba</code> run
+directories at the previous pin as well as this one, each with a
+<code>MANIFEST.md</code> carrying a SHA-256 of every file — a
+benchmark-evidence discipline stricter than anything else this reading
+has compared it against, missed by a reading that took the crate's size
+for its output. Section 10 and the corresponding open question are
+rewritten. The error direction is the one that matters: a criticism of
+an absence that was not absent.</p>
+<p>The mechanism the report is about did not move.
+<code>crates/areev-store/src/lib.rs</code>,
+<code>crates/areev-context/src/render.rs</code>,
+<code>crates/areev-cli/src/corpus.rs</code>,
+<code>crates/areev-mcp/src/lib.rs</code>,
+<code>crates/areev-core/src/types/grain.rs</code>,
+<code>crates/areev-core/src/authz.rs</code> and every file under
+<code>crates/areev-conformance/</code> are byte-identical between the
+two commits, so both sharp findings stand unchanged and re-verified:
+<code>retract</code> still means a non-destructive demotion in the trait
+doc (<code>substrate.rs:210-217</code>) and the reference substrate
+(<code>reference.rs:245-258</code>) and an erasure in the adapter
+(<code>loop-adapter/src/substrate.rs:645-650</code>), and
+<code>rg -n retract crates/areev-conformance/</code> still returns
+nothing across ten case modules. The read path still spends the status
+as <code>-0.3</code>.
+<code>rg -n 'UPDATE oplog|DELETE FROM oplog'</code> still returns
+nothing; <code>INSERT INTO oplog</code> still returns the same seven
+sites.</p>
+<p>What moved is the loop. An optional model leg gained a <strong>closed
+proposal vocabulary</strong> — lesson, fact, query revision, plan
+revision, code revision — with the bounds enforced structurally rather
+than by prompt: the subject, target and grading evalset are all resolved
+from the store rather than named by the model;
+<code>plan_edit_allowed</code> matches only three threshold paths so a
+topology change is inexpressible; <code>safe_definition_body</code>
+refuses a brace or a
+<code>FORGET</code>/<code>PURGE</code>/<code>DROP</code>/<code>DEFINE</code>
+token; a definition rewrite is refused on the auto-apply path outright;
+and a code revision is refused an apply without the run id of an
+evaluation against the tool's own declared evalset. Sections 4, 7 and 11
+carry it, and the diagram gains the model leg entering the same gate.
+<code>crates/areev-loop-adapter/tests/proposal_substrate.rs</code> is
+new and asserts five of those refusals by name.</p>
+<p>Five marks, unchanged in both directions. <code>human_review</code>
+is better evidenced than it was — the new paths are categorically
+excluded from auto-apply — and nothing bears on <code>tombstone</code>
+or <code>trust_state</code>, whose evidence files did not change. One
+claim was tightened rather than corrected: the report said no query in
+the tree excludes on <code>verification_status</code>; CAL can express
+the predicate and a committed test writes it, so the claim is now scoped
+to the system's own recall and assembly paths, which is both runnable
+and the sharper version. Counts: 184,611 Rust lines across seventeen
+crates (was 181,665), 259 commits (242), 2,564 test functions in
+<code>crates/</code> (2,525) and 2,586 tree-wide (2,547),
+<code>areev-loop</code> 13,633 (12,095) and <code>areev-bench</code>
+11,132 (10,141). No paper, no <code>CITATION.cff</code>.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
 — count audit at the same pin, alongside the <code>retract</code>

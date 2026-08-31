@@ -226,16 +226,19 @@ The lexical lane is two queries rather than one. `db2_memory_find_facts_fts`
 joins `memories_fts` to `memories` through `rowid` and is tried first;
 `db2_memory_find_facts_like`, an unindexed `LOWER(...) LIKE '%…%'` scan over key,
 content and use-cases, runs only when the indexed query returns nothing — kept
-because *"FTS is word based"* and substring recall would otherwise be lost. What
-matters for this report is that both carry `DB2_MEMORY_RECALL_FILTER_SQL` and
-`DB2_MEMORY_SCOPE_RANK_SQL` in the same statement, so the lifecycle exclusion and
-the scope rank travel with the lane rather than being reapplied around it, and
-the substring fallback cannot admit what the indexed path would have excluded.
+because *"FTS is word based"* and substring recall would otherwise be lost. Both
+carry `DB2_MEMORY_RECALL_FILTER_SQL` and `DB2_MEMORY_SCOPE_RANK_SQL` in the same
+statement, so the lifecycle exclusion and the scope rank travel with the lane
+rather than being reapplied around it, and the substring fallback cannot admit
+what the indexed path would have excluded.
 
 Sub-query expansion feeds the same array from its own lists. Both decomposition
-stages — the heuristic one in `memory_generate_candidates` and the LLM one in
-`memory_find_facts_scoped_impl` — collect each fragment into a private buffer and
-merge with `memory_candidates_merge_interleaved`, taking rank 0 from every list
+stages — the heuristic one in `memory_generate_candidates`, which reads a config
+key seeded to 1 under an `AIMEE_MEMORY_DECOMPOSE_HEURISTIC` override so a
+benchmark run can ablate it without writing to the operator's config, and the
+LLM one in `memory_find_facts_scoped_impl` — collect each fragment into a
+private buffer and merge with
+`memory_candidates_merge_interleaved`, taking rank 0 from every list
 before any list's rank 1, on the stated ground that appending whole lists in turn
 let the first fragment *"spend the remaining pool capacity and evict what the
 later sub-questions found."* The lane-membership globals are saved and restored
@@ -729,7 +732,7 @@ attributes it to the extractor rather than to an adversary.
 
 **2026-09-01** — [`a75892e0ba335e23e1f54e85aa53795dae4abc47`](https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47) — re-pinned 230 commits on, still on `testing`, 321 files and roughly 13,000 added lines against 3,200 removed. Screened before reading: one auto-run surface (`.claude/hooks/`, four files, byte-identical to the previous pin and registered by no `settings.json`), one build-time execution surface (`src/Makefile`), three unpinned surfaces and five files inside the seven-day cooldown — one more than last time, because the four Go module files and the frontend lockfile all moved four days ago. No new `RUNS` finding. Nothing was installed, nothing was built and nothing was run. All seven marks re-verified and none moved; every file the marks rest on is byte-identical at this pin except for the line shifts recorded below.
 
-**The branch caveat this report has carried since 26 August no longer describes the repository.** `main` was 2,719 commits behind `testing` then; it is three behind now, having merged `testing` in PR #2937 on 31 August. `origin/HEAD` still designates `testing`, and the pin is still on it.
+**`main` has caught up with `testing`.** It was 2,719 commits behind at the 26 August pin and is three behind here, having merged `testing` in PR #2937 on 31 August. `origin/HEAD` still designates `testing`, and the pin is on it.
 
 One published claim was wrong in the withholding direction and is corrected: the `bitemporal` evidence record said the mechanism was *"not directly tested at this pin"*, and `src/tests/test_integration.sh` has driven `memory.get` over the real wire with and without `as_of` since before the previous pin, asserting that the event-time verdict comes back for the first request and is absent from the second. The test's own comment says why it is an integration case rather than a unit one — the flag was once *"marshalled, sent, and dropped"* between client, `aimee-server` and `aimee-kb` while every unit test at each end passed against a hand-written payload that already contained the field. Separately, section 7's `reactivate` block was fenced as C but was a paraphrase; it now carries the `strcmp` form the tree actually holds.
 

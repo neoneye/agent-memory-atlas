@@ -113,11 +113,12 @@ cannot be emitted — and not on the others.
 **[aimee](../../systems/aimee/) enforces the same property twice by independent
 means, and says which of the two an attacker can remove.** Its `audit_event`
 table has `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM:
-audit_event is append-only'`, and its Postgres twin adds a writer role granted
-only `INSERT` and `SELECT` at provisioning. Neither is presented as the
+audit_event is append-only'`, and its Postgres twin puts the runtime role on
+`SELECT` alone at provisioning, with writes reaching the queue only through a
+`SECURITY DEFINER` submit function. Neither is presented as the
 guarantee. The comment in `audit_worm.c` is explicit that the triggers *"are NOT
 the adversarial guarantee (a process with file write access can drop them) —
-that is the hash-chain."* Naming the threat model is the part to copy: a trigger
+that is the hash-chain…"* Naming the threat model is the part to copy: a trigger
 stops a bug and a hash chain stops an editor, and a page that lists both without
 distinguishing them has told a reader less than it appears to.
 

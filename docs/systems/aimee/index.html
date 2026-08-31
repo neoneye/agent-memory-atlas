@@ -110,14 +110,14 @@ append-only store.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47" title="a75892e0ba335e23e1f54e85aa53795dae4abc47">
               <span>Analyzed revision</span>
-              <code>eb86dda7…</code>
+              <code>a75892e0…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-29</strong>
+              <strong>2026-09-01</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -137,9 +137,9 @@ append-only store.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>aimee is a personal-assistant runtime written mostly in C — roughly
-796,000 lines of C and 87,000 lines of headers, with 142,000 lines of
-Go, 109,000 of Python and a small TypeScript frontend beside them,
-across 7,281 commits since 3 June 2026. It is AGPL-3.0. The tree ships
+819,000 lines of C and 89,000 lines of headers, with 149,000 lines of
+Go, 113,000 of Python and a small TypeScript frontend beside them,
+across 7,831 commits since 3 June 2026. It is AGPL-3.0. The tree ships
 two services: <code>aimee-server</code>, which holds the memory of one
 human, and <code>aimee-kb</code>, which holds a corpus and a team's
 membership graph.</p>
@@ -313,9 +313,36 @@ time, a <code>resolved</code> flag and a free-text
 or opposing citation is a row, not a score adjustment.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Dense recall routes through pgvector; the direct SQL collector was
-removed and the header says where it went. Around it sit a lexical
-fallback, relation-token matching over the fact graph, and
-session-window expansion in both directions around a hit.</p>
+removed and the header says where it went. Around it sit a lexical lane,
+relation-token matching over the fact graph, and session-window
+expansion in both directions around a hit.</p>
+<p>The lexical lane is two queries rather than one.
+<code>db2_memory_find_facts_fts</code> joins <code>memories_fts</code>
+to <code>memories</code> through <code>rowid</code> and is tried first;
+<code>db2_memory_find_facts_like</code>, an unindexed
+<code>LOWER(...) LIKE '%…%'</code> scan over key, content and use-cases,
+runs only when the indexed query returns nothing — kept because <em>"FTS
+is word based"</em> and substring recall would otherwise be lost. Both
+carry <code>DB2_MEMORY_RECALL_FILTER_SQL</code> and
+<code>DB2_MEMORY_SCOPE_RANK_SQL</code> in the same statement, so the
+lifecycle exclusion and the scope rank travel with the lane rather than
+being reapplied around it, and the substring fallback cannot admit what
+the indexed path would have excluded.</p>
+<p>Sub-query expansion feeds the same array from its own lists. Both
+decomposition stages — the heuristic one in
+<code>memory_generate_candidates</code>, which reads a config key seeded
+to 1 under an <code>AIMEE_MEMORY_DECOMPOSE_HEURISTIC</code> override so
+a benchmark run can ablate it without writing to the operator's config,
+and the LLM one in <code>memory_find_facts_scoped_impl</code> — collect
+each fragment into a private buffer and merge with
+<code>memory_candidates_merge_interleaved</code>, taking rank 0 from
+every list before any list's rank 1, on the stated ground that appending
+whole lists in turn let the first fragment <em>"spend the remaining pool
+capacity and evict what the later sub-questions found."</em> The
+lane-membership globals are saved and restored around the fragment
+passes, because a floor built from a fragment is not the floor the
+caller asked for. The scope filter runs after the merge, on
+everything.</p>
 <p>Two filters run before rerank. <code>memory_filter_scope</code> drops
 candidates whose scope does not match, calling
 <code>memory_scope_matches</code>, which returns 1 when no scope was
@@ -407,6 +434,32 @@ assertion watching for it.</p>
 distinctly, and treats neither as an error, on the stated ground that
 refusals are legitimate outcomes — <em>"What it must not do is stay
 silent."</em></p>
+<p><strong>A fourth silent failure of the same family sits on the store
+rather than on the retraction.</strong>
+<code>memory_insert_epistemic_ex</code> copied the caller's content
+through a fixed <code>char safe_content[2048]</code>, so <em>"a 3000-
+and a 5000-byte value both landed in DB2 as content_len=2047, with
+nothing logged and success returned"</em> — and the exact-key merge path
+repeated it through <code>preserved_content[2048]</code>, shortening a
+long row that was merely being re-stored under the same key. The
+classification went with the bytes: <code>memory_scan_content</code>
+<em>"only ever saw the first 2047 bytes, so it classified a long note
+from a fragment,"</em> which makes the stored sensitivity label a
+description of less than the caller asked to keep. Both buffers are
+sized to the content, and
+<code>test_long_content_survives_store_and_merge</code> asserts the
+stored length at 2047, 2048, 4096 and 40,000 bytes on both the store and
+the merge path — reading <code>length(content)</code> out of Postgres
+rather than through <code>memory_t</code>, because
+<code>memory_t.content</code> is itself a fixed <code>char[2048]</code>
+and <em>"a read back through the struct caps at 2047 no matter what the
+row holds, and would hide exactly the defect under test."</em> That
+struct cap is the half still standing: it bounds every working-set read,
+and <code>db2_kb_service_memory_get_json</code> escapes it only for
+read-by-id, fetching the content in a second statement carrying the same
+<code>DB2_MEMORY_SCOPE_FILTER_SQL</code> predicate, on the ground that
+<em>"a read-by-id response is an audit surface and must return the row
+verbatim."</em></p>
 <p><strong>Correction is a table, and refusing to admit a value is its
 own record.</strong> <code>memory_rejection_tombstones</code> holds one
 row per refused value — <code>(source, relation, target)</code> for a
@@ -453,8 +506,9 @@ the table existed.</strong> <code>fm_load_exact</code> looks up an
 incoming triple <em>without</em> filtering by lifecycle, so a
 re-assertion finds the invalidated row rather than missing it, and
 revival is gated on rank:</p>
-<pre class="c"><code>int reactivate = (exact.lifecycle == INVALIDATED || exact.lifecycle == SUPERSEDED)
-                 &amp;&amp; (int)actor-&gt;rank &gt;= exact.authority_rank;</code></pre>
+<pre class="c"><code>int reactivate = (strcmp(exact.lifecycle, FACT_LIFECYCLE_INVALIDATED) == 0 ||
+                  strcmp(exact.lifecycle, FACT_LIFECYCLE_SUPERSEDED) == 0) &amp;&amp;
+                 (int)actor-&gt;rank &gt;= exact.authority_rank;</code></pre>
 <p>A model-authority extractor cannot raise what a user-authority actor
 invalidated. When the gate refuses, or when any surviving incumbent
 outranks the actor on a functional relation, the value lands as a
@@ -866,6 +920,16 @@ resolution</td>
 case</td>
 </tr>
 <tr>
+<td><code>src/tests/test_memory_advanced.c</code></td>
+<td>The <code>dedupe_merge</code> provenance assertion and the
+long-content store/merge case</td>
+</tr>
+<tr>
+<td><code>src/tests/test_integration.sh</code></td>
+<td>The over-the-wire <code>memory.get --as-of</code> assertions,
+present and absent</td>
+</tr>
+<tr>
 <td><code>scripts/memory-governance-pg-test.sql</code></td>
 <td>The privilege check, both trigger backstops, and the audit-row
 count</td>
@@ -877,6 +941,83 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-01</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47"><code class="commit-id" title="a75892e0ba335e23e1f54e85aa53795dae4abc47">a75892e0…</code></a>
+— re-pinned 230 commits on, still on <code>testing</code>, 321 files and
+roughly 13,000 added lines against 3,200 removed. Screened before
+reading: one auto-run surface (<code>.claude/hooks/</code>, four files,
+byte-identical to the previous pin and registered by no
+<code>settings.json</code>), one build-time execution surface
+(<code>src/Makefile</code>), three unpinned surfaces and five files
+inside the seven-day cooldown — one more than last time, because the
+four Go module files and the frontend lockfile all moved four days ago.
+No new <code>RUNS</code> finding. Nothing was installed, nothing was
+built and nothing was run. All seven marks re-verified and none moved;
+every file the marks rest on is byte-identical at this pin except for
+the line shifts recorded below.</p>
+<p><strong><code>main</code> has caught up with
+<code>testing</code>.</strong> It was 2,719 commits behind at the 26
+August pin and is three behind here, having merged <code>testing</code>
+in PR #2937 on 31 August. <code>origin/HEAD</code> still designates
+<code>testing</code>, and the pin is on it.</p>
+<p>One published claim was wrong in the withholding direction and is
+corrected: the <code>bitemporal</code> evidence record said the
+mechanism was <em>"not directly tested at this pin"</em>, and
+<code>src/tests/test_integration.sh</code> has driven
+<code>memory.get</code> over the real wire with and without
+<code>as_of</code> since before the previous pin, asserting that the
+event-time verdict comes back for the first request and is absent from
+the second. The test's own comment says why it is an integration case
+rather than a unit one — the flag was once <em>"marshalled, sent, and
+dropped"</em> between client, <code>aimee-server</code> and
+<code>aimee-kb</code> while every unit test at each end passed against a
+hand-written payload that already contained the field. Separately,
+section 7's <code>reactivate</code> block was fenced as C but was a
+paraphrase; it now carries the <code>strcmp</code> form the tree
+actually holds.</p>
+<p>The lexical lane changed shape and is described in section 6.
+<code>db2_memory_find_facts_fts</code> joins <code>memories_fts</code>
+through <code>rowid</code> and is tried first, with the former
+unconditional <code>LOWER(...) LIKE '%…%'</code> table scan kept only as
+a fallback when the indexed query returns nothing; both statements carry
+<code>DB2_MEMORY_RECALL_FILTER_SQL</code> and
+<code>DB2_MEMORY_SCOPE_RANK_SQL</code>, so the lifecycle exclusion and
+the scope rank travel with the lane. Both sub-query decomposition stages
+now collect each fragment into a private buffer and merge with
+<code>memory_candidates_merge_interleaved</code> instead of appending
+whole lists into the shared pool, and <code>memory_filter_scope</code>
+still runs after the merge on everything. Per-lane candidate and served
+counters were added and the comment states they are measurement rather
+than control.</p>
+<p>Section 7 gains a fourth silent failure, this one on the store rather
+than on retraction: <code>memory_insert_epistemic_ex</code> copied
+content through a fixed <code>char safe_content[2048]</code>, and the
+exact-key merge path through <code>preserved_content[2048]</code>, so
+long values were clipped with success returned and the sensitivity label
+was computed from the first 2047 bytes. Both buffers are sized to the
+content and <code>test_long_content_survives_store_and_merge</code>
+asserts the stored length at 2047, 2048, 4096 and 40,000 bytes on both
+paths. The read side keeps the cap in <code>memory_t.content</code>;
+<code>db2_kb_service_memory_get_json</code> escapes it for read-by-id
+through a second scope-filtered statement.</p>
+<p>Six line citations moved with the diff and are re-verified:
+<code>memory_score_fields.c:626-655,:679</code>,
+<code>memory_core_crud.c:340</code>,
+<code>memory_core_search_b.c:1142-1171</code>,
+<code>memory_core_search_c.c:1003-1040</code>,
+<code>memory_query.c:1816-1867,:1923-1936</code> and
+<code>test_memory_advanced.c:687-699</code>. The schema range for the
+<code>FORCE ROW LEVEL SECURITY</code> block is tightened to
+<code>:2660-2672</code>. Counts re-run at this pin and unchanged:
+<code>audit_worm.c</code> 949 lines, <code>test_fact_recall.c</code>
+210, <code>test_content_scope_pg.c</code> 971, 244
+<code>CREATE TABLE</code> statements, ten <code>evidence_*</code>
+triggers, eight reachable <code>integrity_ingress_decide</code> call
+sites, five inert toggles. Counts that moved: roughly 819,000 lines of
+C, 89,000 of headers, 149,000 of Go and 113,000 of Python, across 7,831
+commits. <code>memory_rejection_tombstones</code> still carries no
+<code>identity_key</code>, so the open question in section 12 stands. No
+paper, no <code>CITATION.cff</code>; still AGPL-3.0.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8"><code class="commit-id" title="eb86dda7f94b7dc3f2ecaf7c981dee6d43eae3e8">eb86dda7…</code></a>
 — same pin, re-read to settle a report that disagreed with itself. The

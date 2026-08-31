@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 353 reports.</strong></p>
+<p><strong>This page covers all 354 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -5233,11 +5233,12 @@ keyed on the raw triple while <code>entity_edges</code> carries a
 normalized <code>identity_key</code>, so a re-extraction in a different
 surface form walks past both the C consult and the trigger
 backstop.</li>
-<li>Maturity impression: AGPL-3.0, ~796,000 lines of C plus 142,000 of
-Go and 109,000 of Python, two services and 244 tables in one schema,
+<li>Maturity impression: AGPL-3.0, ~819,000 lines of C plus 149,000 of
+Go and 113,000 of Python, two services and 244 tables in one schema,
 read on <code>testing</code> — the repository's default branch, with
-<code>main</code> 2,719 commits behind it. Seven marks of seven, the
-sixth system in the corpus to carry all of them.</li>
+<code>main</code> three commits behind it after merging
+<code>testing</code> on 31 August 2026. Seven marks of seven, the sixth
+system in the corpus to carry all of them.</li>
 <li>Study when: you want the best-constructed negative retrieval test in
 this corpus — every exclusion asserted beside a positive over the same
 buffer, and a confidence case built specifically to fail a whole-block
@@ -12228,10 +12229,11 @@ from a <code>confidence</code> float and widened from a boolean because
 the boolean could not say <em>contested</em> — and the read path adds
 <code>-0.3</code> for retracted, <code>-0.15</code> for contested, then
 clamps. Since the only automatic writer of <code>"retracted"</code> is
-the test double, the status is caller-authored in practice, it ranks
-rather than filters, and no query in the tree excludes on it.
-<code>trust_state</code> is withheld on exactly that, and the distance
-to the mark is one predicate.</li>
+the test double, the status is caller-authored in practice. CAL can
+express a predicate over the field and a committed test writes one; the
+system's own recall and assembly paths do not. <code>trust_state</code>
+is withheld on exactly that, and the distance to the mark is one
+predicate nothing issues.</li>
 <li>Third risk: <strong>the key a refusal needs is computed and not
 consulted.</strong> The store is content-addressed, so the hash is a
 function of the content and every <code>OP_FORGET</code> row already
@@ -12241,15 +12243,22 @@ hash to a NEW seq"</em> — and each solves the concurrency half of it
 under a row lock, so the case is anticipated carefully and the question
 of whether the re-assertion should be allowed is never put.
 <code>tombstone</code> withheld one lookup short.</li>
-<li>Maturity impression: MIT OR Apache-2.0, 181,665 lines of Rust across
-seventeen crates, 242 commits since 16 August 2026, 2,525 test
-functions, a fuzz target and a <code>deny.toml</code>. Five marks. The
-conformance kit is the artifact to copy: every case takes
+<li>Maturity impression: MIT OR Apache-2.0, 184,611 lines of Rust across
+seventeen crates, 259 commits since 16 August 2026, 2,564 test
+functions, a fuzz target and a <code>deny.toml</code>. Five marks. Two
+artifacts are the ones to copy. The conformance kit: every case takes
 <code>b: &amp;dyn Backend</code> and reports <code>b.name()</code>, so
 the same assertions run against the real store, Postgres and an
 in-memory reference substrate — <em>"engine CI runs the full suite
 against it with zero Areev, so the portability claim stays
-testable."</em></li>
+testable."</em> And the committed benchmark evidence:
+<code>crates/areev-bench/results/</code> publishes per-question
+transcripts under every headline number because <em>"the category has a
+history of unreproducible claims; we publish the receipts"</em>, each
+run directory carrying a manifest with the command, the git rev and a
+SHA-256 of every file — and a hand-written note, preserved across
+regeneration, in which three published runs declare themselves not
+comparable to a re-run because the scorer moved after they ran.</li>
 <li>The negative cases are non-vacuous by construction:
 <code>forget_clears_head_row</code> asserts the head exists
 <strong>before</strong> the forget and then four different absences
@@ -12269,6 +12278,50 @@ extremely well is the <em>process</em> by which memory changes — who
 proposed, who approved, on what evidence, how to undo. The two missing
 marks are the two about belief, and the gap is that nothing stops a
 retracted memory reaching the model on the next turn.</li>
+</ul>
+<h3 id="hatchdoor"><a
+href="../systems/hatchdoor/"><code>hatchdoor</code></a></h3>
+<ul>
+<li>Best idea: make the atomic exchange the commit point.
+<code>atomic_write_inner</code> writes and <code>fsync</code>s a temp
+file, then <code>renameat2(RENAME_EXCHANGE)</code>s it into place and
+verifies the <em>displaced</em> file's hash at its own private name —
+swapping back on a mismatch — so the check-then-write race is closed by
+construction rather than narrowed, with <code>O_NOFOLLOW</code>
+descriptor-relative I/O and a compensating <code>MutationJournal</code>
+around it.</li>
+<li>Biggest risk: two stated guarantees have no mechanism.
+<code>WATCH_MAX_DEBOUNCE = 5 s</code> is <code>pub</code>, carries a
+comment saying a debounce must not let a busy editor defer cache
+freshness forever, and is read by nothing in the tree, so a vault under
+continuous change never reindexes; and ADR-15 makes an eval run against
+<code>eval/</code> a merge gate for every retrieval change, where
+<code>eval/queries.jsonl</code> holds two queries. Beside them, delete
+never deletes — <code>.hatchdoor-trash/</code> has no purge, no restore
+and no cap — and it strips every wikilink to the note, alias text
+included, from every other note.</li>
+<li>Most reusable component: <code>src/vault/write/fs_ops.rs</code> —
+the exchange-as-commit-point primitive, the move gate, and the journal
+that records a step as completed when its effect landed even if its
+cleanup errored.</li>
+<li>Maturity impression: AGPL-3.0, v2.5.0, 69,867 lines of Rust with 835
+test functions across 73 files and 45,799 more under
+<code>frontend/src/</code>, sixteen ADRs and a 2,520-line module map
+with per-boundary invariants. Two of seven marks,
+<code>scope_enforced</code> and <code>negative_eval</code>. All four
+headline metrics in all thirty-six committed eval runs recompute exactly
+from their own per-query tables — and the harness that produced them
+published its 125 private queries, several of them medical or political
+and one naming a person, into a tracked file its own README warns
+against.</li>
+<li>Study when: you are building over a Markdown vault a person also
+edits, need a conditional write that cannot lose a concurrent save, or
+want a worked example of choosing retrieval by measurement and writing
+the rejected alternatives down.</li>
+<li>Do not copy when: you need memory that decides what to keep, more
+than one principal (one token covers the whole collection), deletion
+that means erasure, provenance separating an agent's writing from a
+person's, or a deployment on anything but Linux.</li>
 </ul>
         </article>
       </div>
