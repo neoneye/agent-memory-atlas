@@ -210,7 +210,7 @@ implements one level:</p>
 <tr>
 <td>L1</td>
 <td><code>atoms</code> — <code>fact</code>, <code>confidence</code></td>
-<td>table created, never written</td>
+<td>written by the rule-based extractor the default config selects</td>
 </tr>
 <tr>
 <td>L2</td>
@@ -588,13 +588,24 @@ own caller.</strong> A helper that fills in a default the real handler
 omits will pass forever and prove nothing about the code that ships.
 Enter through the same entry point production uses, even when it is more
 awkward to set up — especially then.</p>
-<p><strong>Shipping a schema for layers you have not built.</strong>
-<code>atoms</code> and <code>scenarios</code> exist with types, indexes
-and a <code>confidence</code> column, and nothing writes them. A reader
-who checks the schema concludes there is a distillation pipeline; a
-reader who checks <code>PipelineStage</code> implementations finds
-<code>NoopPipeline</code>. If the layers are planned, the comment saying
-"phase 2" is right and the tables can wait.</p>
+<p><strong>Shipping a schema for a layer you have not built.</strong>
+<code>scenarios</code> exists with types, indexes and an
+<code>atom_ids</code> column, and <code>putScenario</code> has no caller
+in <code>src/</code> — a reader who checks the schema concludes there is
+a summarisation stage, and there is not. If it is planned, the comment
+saying "phase 2" is right and the table can wait.</p>
+<p>The layer below it inverts the same problem, and the naming is what
+hides it. <code>config.pipeline</code> defaults to the string
+<code>"noop"</code> (<code>src/config.ts:129</code>), which reads as
+<em>do nothing</em> — but <code>src/index.ts:1399-1403</code> maps that
+value to <code>RuleBasedAtomPipeline</code>, which extracts
+current-state facts and calls <code>storage.putAtom</code> with a
+per-fact <code>confidence</code> (<code>src/pipeline/atom.ts:33</code>,
+<code>:99</code>, written through at
+<code>src/storage/sqlite.ts:1499</code>). The class actually called
+<code>NoopPipeline</code> is unreachable under the default. So L1 is
+populated on the path almost everyone runs, and the name of the setting
+says the opposite.</p>
 <h3 id="fit">Fit</h3>
 <p>Right for one developer who wants durable decisions and learnings
 across sessions of a coding agent, on one machine, with no account and
@@ -718,9 +729,17 @@ caller that reaches it.
 property through <code>createServer</code> and the live
 <code>_requestHandlers</code> entry rather than through a helper.</p>
 <p>Sections 2, 4, 6, 7, 9, 10, 11 and 12 carried the earlier reading and
-state the mechanism instead. Two adjacent claims went with them, both of
-which the frontmatter already contradicted: <code>captures</code>
-carries <code>trust_state</code>, <code>rejection_reason</code> and
+state the mechanism instead. A separate absence claim was wrong in the
+other direction: <code>atoms</code> was described as a table nothing
+writes, in the matrix, the level table and section 11.
+<code>config.pipeline</code> defaults to <code>"noop"</code> and
+<code>src/index.ts:1399-1403</code> maps that value to
+<code>RuleBasedAtomPipeline</code>, so the default path writes an atom
+per extracted fact with a confidence; <code>scenarios</code> is the
+layer with no writer, and <code>NoopPipeline</code> is the class the
+default never reaches. Two adjacent claims went with them, both of which
+the frontmatter already contradicted: <code>captures</code> carries
+<code>trust_state</code>, <code>rejection_reason</code> and
 <code>superseded_by</code>, all three consulted on the read arms, and
 the write path's <code>findRejectedByContentHash</code> lookup is what
 <code>tombstone</code> rests on. <code>src/tools/</code> holds

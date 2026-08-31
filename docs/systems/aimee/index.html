@@ -997,7 +997,7 @@ state moved to Postgres with the SQLite WORM store isolated, and
 candidate ranking collapsed from one statement per candidate to one
 statement.</p>
 <p><strong>2026-08-26</strong> — <a
-href="https://github.com/RakuenSoftware/aimee/commit/bdf19051cd0541f1e9f3e008a570998c37f77774"><code class="commit-id" title="6a1b61a99c9cac5273ccf6c26d2a6a185a6985bd">6a1b61a9…</code></a>
+href="https://github.com/RakuenSoftware/aimee/commit/6a1b61a99c9cac5273ccf6c26d2a6a185a6985bd"><code class="commit-id" title="6a1b61a99c9cac5273ccf6c26d2a6a185a6985bd">6a1b61a9…</code></a>
 — re-pinned 231 commits on. <strong>The branch needs stating, because
 its name misleads.</strong> <code>origin/HEAD</code> points at
 <code>testing</code>: it is the repository's default branch and its
@@ -1052,11 +1052,14 @@ orders <code>(active, object_kind, rejected_at DESC)</code>; and
 recording <code>restored_by</code>. The verdict is durable and gates
 what the write path admits next.</p>
 <p>Also in range and not mark-bearing: the external vector database
-subsystem was removed outright, memory vector search routes through DB3
-with a transport that <em>"refuses to route a memory search whose scope
-the wire cannot carry"</em>, memory row scope is enforced outside RLS,
-and the WORM chain writer moved to a sidecar. One correction to the
-record above rather than to the code: the project's own
+subsystem was removed outright, memory vector search routes through DB3,
+whose wire encoder refuses a relation label longer than
+<code>relTypeMax</code> rather than truncating it — <em>"a length past
+the bound is a malformed request, not a long fact"</em>
+(<code>server-go/modules/memory/memory.go:169</code>) — memory row scope
+is enforced outside RLS, and the WORM chain writer moved to a sidecar.
+One correction to the record above rather than to the code: the
+project's own
 <code>correction-completeness-and-bounded-reachability.md</code> opens
 its §1.2 with <em>"No negative retrieval assertion — the substrate has
 suppression, invalidation, quarantine, erasure, scope filtering and

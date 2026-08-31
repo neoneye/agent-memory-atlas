@@ -1741,26 +1741,35 @@ reworded one — or when you want a small dependency.</li>
 <h3 id="7layermem"><a
 href="../systems/7layermem/"><code>7layermem</code></a></h3>
 <ul>
-<li>Best idea: seven memory types separated at the schema rather than by
-a type column, each table annotated with the cognitive category it
-stands for, so "which kind of memory is this" is answered by the table
-name.</li>
-<li>Biggest risk: the layers are destinations rather than a lifecycle.
-Nothing promotes, expires or demotes between them, six of the seven have
-no delete path, and deleting a conversation thread leaves its summary
-behind.</li>
-<li>Most reusable component: the seven <code>CREATE TABLE</code>
-statements with their annotations — a legible taxonomy that costs
-nothing at this scale.</li>
-<li>Maturity impression: 7,016 lines, no licence file at this commit, no
-migrations, and a test suite that re-declares the schema with its own
-<code>CREATE TABLE</code> strings rather than calling the store
+<li>Best idea: seven memory types separated by store rather than by a
+type column, each annotated with the cognitive category it stands for —
+episodic turns are a SQLite table read by key while semantic knowledge
+is a Chroma collection read by similarity, which is the right answer for
+both.</li>
+<li>Biggest risk: <code>recall</code> re-scores every hit by a constant
+belonging to its store — 0.9 knowledge, 0.85 entity, 0.75 summary, 0.7
+workflow, 0.6 conversation — and never reads the distance the vector
+search computed, so cross-store ranking is a fixed preference order
+wearing a score's clothes. Beside it, configuring the optional Neo4j
+backend collapses every entity written through the simple API onto one
+node named <code>entity_0</code>.</li>
+<li>Most reusable component: content-hash document ids, four lines that
+make re-ingestion idempotent, under a two-method
+<code>remember</code>/<code>recall</code> API over a thirty-two-method
 manager.</li>
-<li>Study when: you want to hold an entire typed-memory design in your
-head at once, or you are deciding whether to split memory types across
-tables.</li>
-<li>Do not copy when: you need any correction path, a scope beyond one
-conversation thread, or a licence.</li>
+<li>Maturity impression: 7,016 lines across SQLite, Chroma and an
+optional Neo4j graph; one of seven capability marks,
+<code>negative_eval</code>, on two thread-boundary cases. A README
+asserting MIT with no licence file under it, a
+<code>requirements.txt</code> listing <code>sqlite3</code> and
+<code>hashlib</code>, no migrations, a suite that re-declares the SQL
+schema with its own <code>CREATE TABLE</code> strings, and every Chroma
+and Neo4j call mocked.</li>
+<li>Study when: you want the smallest complete illustration of what
+happens when a system retrieves from several stores and has no
+principled way to compare the results.</li>
+<li>Do not copy when: you need a correction vocabulary, a scope beyond
+one conversation thread, or a licence.</li>
 </ul>
 <h3 id="cognicore"><a
 href="../systems/cognicore/"><code>cognicore</code></a></h3>
@@ -5178,17 +5187,20 @@ keys on the <code>(source, relation, target)</code> triple rather than a
 row id, and the row survives for audit. Beside it a four-class ladder —
 user-stated Class A at 1.0 down to novel Class C at 0.4, which is also
 the floor — where the provenance-to-authority map fails closed on wrong
-case, empty and null, all six asserted.</li>
+case, empty and null, all ten asserted.</li>
 <li>Third idea: <strong>the audit store names which half of its
 tamper-resistance an attacker can remove.</strong> An HMAC-SHA256 hash
 chain over a length-prefixed injective encoding, a single-writer mutex
 keeping <code>seq</code> gap-free,
 <code>BEFORE UPDATE</code>/<code>BEFORE DELETE</code> triggers, and a
-Postgres twin whose writer role is granted only INSERT and SELECT. The
-comment: the triggers <em>"are NOT the adversarial guarantee (a process
-with file write access can drop them) — that is the hash-chain."</em>
-Most audit implementations in this corpus assert their own integrity;
-this one states its threat model.</li>
+Postgres twin that is an outbox queue carrying its own
+<code>BEFORE UPDATE</code>/<code>DELETE</code>/<code>TRUNCATE</code>
+WORM triggers, where the runtime role holds <code>SELECT</code> on the
+queue plus <code>EXECUTE</code> on the submit definer and never on the
+appender. The comment: the triggers <em>"are NOT the adversarial
+guarantee (a process with file write access can drop them) — that is the
+hash-chain…"</em> Most audit implementations in this corpus assert their
+own integrity; this one states its threat model.</li>
 <li>Fourth idea: <strong>the project ran this atlas's producer check on
 itself and published the negative result.</strong>
 <code>docs/validation/flag-rollout-readiness.md</code> grepped every
@@ -5215,12 +5227,14 @@ convention; this one asserts the grant.</li>
 is the largest checkout in the corpus and the reading covers the
 typed-fact layer, the episodic recall path, the rejection tombstone, the
 audit stores and the scope plumbing — not the Go control plane, the
-Python tooling, the ingest workers, or most of the 243 tables. Section
-12 says so rather than implying coverage. Beside it: the episodic
-archived-hiding sits behind two flags that both default to 0, and no
-<code>CREATE POLICY</code> covers a memory table.</li>
+Python tooling, the ingest workers, or most of the 244 tables. Section
+12 says so rather than implying coverage. Beside it: the refusal is
+keyed on the raw triple while <code>entity_edges</code> carries a
+normalized <code>identity_key</code>, so a re-extraction in a different
+surface form walks past both the C consult and the trigger
+backstop.</li>
 <li>Maturity impression: AGPL-3.0, ~796,000 lines of C plus 142,000 of
-Go and 109,000 of Python, two services and 243 tables in one schema,
+Go and 109,000 of Python, two services and 244 tables in one schema,
 read on <code>testing</code> — the repository's default branch, with
 <code>main</code> 2,719 commits behind it. Seven marks of seven, the
 sixth system in the corpus to carry all of them.</li>
@@ -5228,10 +5242,12 @@ sixth system in the corpus to carry all of them.</li>
 this corpus — every exclusion asserted beside a positive over the same
 buffer, and a confidence case built specifically to fail a whole-block
 implementation that would satisfy all the earlier assertions.</li>
-<li>Do not copy when: you need scope separation on memory rows
-themselves rather than on the documents and membership graph beside
-them, or you cannot afford to read a million-line tree to check what you
-are adopting.</li>
+<li>Do not copy when: you need row-level scope you cannot bypass —
+<code>p_memories_row_scope</code> governs the memory rows themselves,
+but it is <code>ENABLE</code> without <code>FORCE</code> and
+<code>aimee.memory_scope_all</code> is a session GUC the runtime can set
+— or you cannot afford to read a million-line tree to check what you are
+adopting.</li>
 </ul>
 <h3 id="wenlan"><a
 href="../systems/wenlan/"><code>wenlan</code></a></h3>
@@ -7814,8 +7830,9 @@ the write — or you want to see what closing a scope hole looks like when
 the test that missed it is fixed alongside the code.</li>
 <li>Do not copy when: you need the refusal to bind an agent that can set
 its own override, to hold across projects, or to leave a mutation
-record. And note <code>atoms.confidence</code> is still populated by
-nothing.</li>
+record. And note the <code>scenarios</code> table has no writer at all,
+while the setting that selects the atom extractor is spelled
+<code>noop</code>.</li>
 </ul>
 <h3 id="windie-sandbox"><a
 href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></h3>
@@ -9975,12 +9992,11 @@ one, and staleness is entirely manual.</strong>
 <code>pruneSourceNodes</code> wipes a whole source and writes neither a
 tombstone nor a <code>mutation_audit</code> row, whose only producer is
 <code>forget</code> — so the removal history covers the fine-grained
-case and not the blunt one. Separately, nothing detects a contradiction:
-<code>mark-stale</code> is a command a person runs, and
-<code>stale</code> only lists <code>inferred</code> nodes older than 45
-days that nothing supersedes, its own header refusing the stronger claim
-as <em>"a heuristic surfacing list, not contradiction detection."</em> A
-wrong document sits at full weight until someone notices.</li>
+case and not the blunt one. Separately, staleness itself is a command a
+person runs: <code>stale</code> lists non-<code>observed</code> nodes
+old enough that nothing supersedes them, and only escalates to
+<code>checkContradictions</code> when asked for it. A wrong document
+sits at full weight until someone runs the pass.</li>
 <li>Most reusable component: <code>src/conversation/redact.ts</code>,
 for the distinction rather than the rules. Shape rules (private-key
 blocks, <code>AKIA</code>, <code>gh[pousr]_</code>, JWTs) match strings
@@ -9995,7 +10011,7 @@ rewards rarity only within the corpus it runs against — a measured false
 positive scored −9.685, stronger than two real links at −5.899 and
 −6.559.</li>
 <li>Maturity impression: MIT, v0.4.0 at 118 commits, ~10,850 lines of
-TypeScript, 619 tests across 47 files, CI, an npm package, a four-tool
+TypeScript, 835 tests across 57 files, CI, an npm package, a four-tool
 MCP server, a VS Code panel and an opt-in git pre-commit hook. Six
 capability marks after the 29 August re-pin — <code>tombstone</code>,
 <code>audit_log</code>, <code>scope_enforced</code>
