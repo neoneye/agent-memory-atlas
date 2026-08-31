@@ -20,7 +20,7 @@ matrix:
   write: "Asynchronous end to end — submit returns a task id, wait() returns before the fact is searchable, and a poll helper absorbs the rest"
   update_delete: "invalid_at closes a fact's validity interval; the ingestion library has no delete path at all"
   scoping: "Destination requires exactly one of graph_id or user_id, and every read carries it"
-  integration: "Nine Python framework packages, three TypeScript, one Go, plus an MCP server documented in this tree but not implemented in it"
+  integration: "Nine Python framework packages, three TypeScript, one Go, plus a Go MCP server registering thirteen tools, every one of them a read"
   background: "All extraction is the vendor's; the client sees only task ids and an indexing lag it polls through"
   trust: "min_fact_rating is a hosted score on a fact, not a state; nothing is candidate, verified or rejected"
   strengths: "A committed retrieval-budget ablation with ten runs per point that isolates memory failure from answering failure"
@@ -146,7 +146,7 @@ flowchart TB
 
 ## 3. Architecture
 
-Four independent things share the tree.
+Six code trees share the repository, developed and released independently.
 
 - **`ingestion/`** — `zep-ingest`, about 4,900 lines of Python. A
   `Loader → Transform* → LimitGuard → Submitter` pipeline with loaders for Slack
@@ -155,10 +155,16 @@ Four independent things share the tree.
   memory-adjacent implementation in the repository.
 - **`benchmarks/`** — a LoCoMo harness (about 1,800 lines plus tests) with five
   committed experiments, and a LongMemEval harness with no committed results.
+- **`zep-eval-harness/`** — about 4,600 lines of Python driving a smaller
+  end-to-end ingest-then-ask loop over four conversations and four reference
+  documents, with its runs committed under `runs/` (section 10).
 - **`integrations/`** — one package per framework per language, released
   independently: Google ADK, Microsoft Agent Framework, AutoGen, AG2, CrewAI,
   LangGraph, LiveKit, Pydantic AI and Strands in Python; ADK, Mastra and Vercel
   AI SDK in TypeScript; ADK in Go.
+- **`mcp/zep-mcp-server/`** — about 1,550 lines of Go, a self-contained module
+  (`go.mod` declaring `github.com/getzep/zep/mcp/zep-mcp-server`) with a
+  `Makefile`, a `Dockerfile` and a `docker-compose.yml`.
 - **`legacy/`** — Zep Community Edition, a Go server on Postgres via `bun`,
   with `docker-compose.ce.yaml` and a `Dockerfile.ce`. Deprecated and
   unsupported, per the README and the linked strategy post.
@@ -173,9 +179,21 @@ sensitivity", with trigger patterns listed. It is a useful artifact precisely
 because it shows what a production memory vendor decided to bias its extractor
 toward: user preferences, aggressively, at the expense of everything else.
 
-`mcp/zep-mcp-server/` contains `README.md`, `docs/TOOLS.md` and `docs/DOCKER.md`
-documenting thirteen tools — and no source. The MCP server is described here and
-implemented elsewhere.
+The MCP server is a thin, complete Go binary over the `zep-go/v3` SDK.
+`cmd/server/main.go` loads config through `internal/config`, and
+`internal/server/server.go:67` `registerTools()` calls `mcp.AddTool` thirteen
+times against the tool values declared in `internal/server/tools.go`. Each
+handler in `internal/handlers/` is thirty to ninety lines: apply defaults, build
+the SDK request struct, call one SDK method, marshal the response with
+`transform.FormatJSON`. Two transports are supported — `StdioTransport` for
+Claude Desktop and Cline, and `mcp.NewStreamableHTTPHandler` on a configurable
+port, chosen by `TransportMode` (`server.go:93`).
+
+One detail in the HTTP path is a defect rather than a design choice:
+`runHTTP`'s shutdown calls `context.WithTimeout(context.Background(), 5)` at
+`server.go:160`. The second argument is a `time.Duration`, so that is five
+*nanoseconds*, not five seconds — the graceful-shutdown window is effectively
+zero and in-flight requests are dropped on `SIGINT`.
 
 ### Deployment and ergonomics
 
@@ -191,7 +209,9 @@ appeal or a disqualification depending on the reader.
 - **The store is not human-readable or hand-repairable.** Inspection goes
   through `graph.search` and the getters in `zep_graph_inspect.py`.
 - Install is `pip install zep-cloud` for the SDK; `zep-ingest` and each
-  integration package are separate installs.
+  integration package are separate installs. The MCP server is the one thing in
+  the tree an operator runs: `make build` or `docker compose up`, a `ZEP_API_KEY`
+  in the environment, and a stateless proxy holding nothing.
 
 The screen of this checkout on 13 August 2026 found one auto-run surface, 47
 dependency surfaces inside the seven-day cooldown, 14 build-time execution
@@ -249,9 +269,12 @@ is a documented service limit rather than a library choice.
 
 `Destination` is a frozen dataclass whose `__post_init__` rejects any
 construction that is not exactly one of `graph_id` or `user_id`
-(`bool(graph_id) == bool(user_id)` raises). Every write and every read carries
-one, which is what earns the `scope_enforced` mark: the scope is not a tag that
-happens to be stored, it is a required argument that the read path cannot omit.
+(`bool(graph_id) == bool(user_id)` raises). Every write and every read in
+`zep-ingest` carries one, which is what earns the `scope_enforced` mark: the
+scope is not a tag that happens to be stored, it is a required argument that
+this read path cannot omit. The mark covers that library and not the whole
+tree — the MCP server's five UUID-addressed getters take no scope key, as
+section 8 sets out.
 
 `FactTriple` is the richest type and the clearest window into the hosted schema,
 because every documented API limit is re-validated client-side so a bad triple
@@ -283,12 +306,15 @@ an API contract, not read out of a schema, because the schema is not here.
 
 ## 6. Retrieval Mechanics
 
-The surface is `graph.search`, documented in `mcp/zep-mcp-server/docs/TOOLS.md`
-and exercised in the benchmark: a query string, a `scope` of `edges`, `nodes` or
-`episodes`, a `limit` capped at 50, and a `reranker` chosen from `rrf`, `mmr`,
-`node_distance`, `episode_mentions` and `cross_encoder`. Filters are
-`min_fact_rating`, `node_labels`, `edge_types`, and `center_node_uuid` for
-node-distance reranking; `mmr_lambda` tunes diversity.
+The surface is `graph.search`, assembled parameter for parameter in
+`mcp/zep-mcp-server/internal/handlers/search.go:15` and exercised in the
+benchmark: a query string, a `scope` of `edges`, `nodes` or `episodes`, a
+`limit`, and a `reranker` chosen from `rrf`, `mmr`, `node_distance`,
+`episode_mentions` and `cross_encoder`. Filters are `min_fact_rating`,
+`node_labels`, `edge_types`, and `center_node_uuid` for node-distance
+reranking; `mmr_lambda` tunes diversity. The handler defaults `scope` to
+`edges` and `limit` to 10 and enforces no ceiling — the maximum of 50 that
+`docs/TOOLS.md` records is the service's, checked on the other side.
 
 Retrieval is application-driven. There is no automatic injection: the caller
 searches, formats and places the result. The benchmark's pattern is the one to
@@ -359,13 +385,29 @@ Pydantic AI and Strands; TypeScript covers ADK, Mastra and the Vercel AI SDK; Go
 covers ADK. That breadth is the product's real distribution strategy, and it is
 maintained as thirteen release trains rather than one adapter layer.
 
-The MCP surface is thirteen read-oriented tools — `search_graph`,
-`get_user_context`, `get_user`, `list_threads`, `get_user_nodes`,
-`get_user_edges`, `get_episodes`, `get_thread_messages`, `get_node`, `get_edge`,
-`get_episode`, `get_node_edges`, `get_episode_mentions`. Every one of them
-reads. There is no `add_memory` or `delete_memory` in the documented tool set,
-so under MCP the agent is a consumer of memory that something else wrote. Its
-source is not in this tree.
+The MCP surface is thirteen tools and every one of them is a read, which is
+checkable against `internal/server/server.go:67` rather than against a document:
+`search_graph`, `get_user_context`, `get_user`, `list_threads`,
+`get_user_nodes`, `get_user_edges`, `get_episodes`, `get_thread_messages`,
+`get_node`, `get_edge`, `get_episode`, `get_node_edges`,
+`get_episode_mentions`. Each handler bottoms out in exactly one SDK call and
+all thirteen are getters — `Graph.Search`, `Graph.Node.GetByUserID`,
+`Graph.Episode.Get`, `Thread.GetUserContext` and so on. The wrapped client
+(`pkg/zep/client.go`) embeds the whole `zep-go/v3` client, so `Graph.Add` and
+the delete endpoints are one line away and no tool reaches them. There is no
+`add_memory` and no `delete_memory`, so under MCP the agent is a consumer of
+memory that something else wrote.
+
+Scope is asymmetric across those thirteen. Six take a `user_id`
+(`search_graph`, `get_user`, `list_threads`, `get_user_nodes`,
+`get_user_edges`, `get_episodes`) and two take a `thread_id`
+(`get_user_context`, `get_thread_messages`). The remaining five are addressed
+by bare UUID — `get_node`, `get_edge`, `get_episode`, `get_node_edges`,
+`get_episode_mentions` (`internal/handlers/types.go:61-84`) — so an agent
+holding a UUID out of one user's search result can fetch that object without
+naming a user. Whether the hosted API refuses a cross-user fetch on the API key
+is not observable from here; the client does not attempt the check, which is
+the opposite of the invariant `Destination` enforces in `zep-ingest`.
 
 Agency over memory is consequently low by construction. The model does not
 decide what to remember; the application ingests, the vendor extracts, and the
@@ -380,7 +422,7 @@ merge, and the recommended fix is to rewrite aliases before ingestion. That fix
 is a text-substitution pass over a corpus about to become a permanent knowledge
 graph, which is a data-corruption engine if it is naive. It is not naive:
 
-- Aliases shorter than three characters, or matching a built-in 150-word
+- Aliases shorter than three characters, or matching a built-in 146-word
   `DEFAULT_RISKY_WORDS` set of common English words and word-like given names
   (`will`, `mark`, `bill`, `art`, `page`, `chase`, `hope`, `may`, `dot`),
   are **rejected at construction** with an error explaining that "sentence-start
@@ -426,8 +468,13 @@ side of it and nothing more.
 `ingestion/tests/` holds about thirty test modules covering loaders,
 transforms, submitters, validation, limits, threads, triples and the example
 ontology — a well-tested client library. `benchmarks/locomo/tests/` adds tests
-for config, persistence and common utilities. There are no tests for the
-Community Edition in this tree.
+for config, persistence and common utilities. The MCP server's twelve Go tests
+are thinner and cover no handler: `config_test.go` checks that a missing API
+key fails and that the server-name, version and log-level defaults load,
+`types_test.go` checks struct-tag and zero-value behaviour on the input types,
+and `helpers_test.go` covers `transform`'s JSON formatting and
+optional-parameter readers. Nothing exercises a tool end to end, and there are
+no tests for the Community Edition in this tree.
 
 The benchmark harness is the contribution. `benchmarks/locomo/` runs LoCoMo-10
 (1,540 questions per run, pulled from `snap-research/locomo`) and grades each
@@ -481,12 +528,34 @@ the sum of the two runs' standard deviations, and accompanied by
 accuracy-given-complete *falling* slightly, 0.917 to 0.915, the shape a mild
 distraction effect makes. The knee is at 20/20.
 
-What is not here: `zep-eval-harness/runs/` contains only a `.gitkeep`, so the
-ingestion-and-retrieval harness has no committed output. `benchmarks/longmemeval/`
-ships a runner, a dataset analysis script and a notebook, but no results. And no
-committed result compares Zep to anything else — the sweep is Zep against its
-own configuration, which is the right experiment for choosing a limit and the
-wrong one for choosing a vendor.
+The second harness, `zep-eval-harness/`, commits one complete run chain and it
+is a much smaller artifact than the LoCoMo sweep. `runs/chunk_sets/1_20260331T222430/`
+holds ten chunks from four reference documents at `chunk_size: 500`;
+`runs/users/1_20260331T222436/manifest.json` and
+`runs/documents/1_20260331T222500/manifest.json` record two synthetic users,
+four conversations, the custom entity and edge types used, and the resulting
+Zep episode UUIDs; `runs/evaluations/1_20260331T222821/results.json` grades
+**four questions** with `gemini-2.5-flash-lite` as both answerer and judge — 4
+of 4 COMPLETE, 3 of 4 correct, `accuracy_when_complete` 75%, median prompt
+3,144 tokens, median search 337 ms. Four questions across two users, all in one
+`basic_facts` category, is a smoke test rather than a measurement, and its
+timing and token statistics have a sample size of four behind them.
+
+Two things about it are worth more than the numbers. Each run directory carries
+a `*_config_snapshot/` — the actual Python config modules copied verbatim
+beside the results — so a committed result names the ontology, custom
+instructions and prompts it was produced under instead of pointing at a config
+that has since moved. And every test case in `data/test_cases/` carries a
+`needles` array giving the source file, line and excerpt where the answer was
+stated, so a failure is attributable to a specific ingested sentence. The same
+two-axis grading as the LoCoMo harness is used — `zep_evaluate.py` runs an
+accuracy judge and a COMPLETE/PARTIAL/INSUFFICIENT completeness judge — so the
+design idea in section 11 is applied twice in this tree rather than once.
+
+What is not here: `benchmarks/longmemeval/` ships a runner, a dataset analysis
+script and a notebook, but no results. And no committed result compares Zep to
+anything else — the sweep is Zep against its own configuration, which is the
+right experiment for choosing a limit and the wrong one for choosing a vendor.
 
 The tests a reader would want before trusting this and cannot find: anything
 asserting that `invalid_at` actually stops a superseded fact from being
@@ -558,9 +627,9 @@ Walk away if any of three things is true. If you need to inspect or repair the
 store, you cannot: the mechanism is on the other side of an API and this
 repository is the map, not the territory. If you need offline or air-gapped
 operation, there is no local mode and the self-hostable edition is deprecated.
-And if you want an agent that decides what to remember, the documented MCP
-surface is thirteen read tools — this design assumes the application ingests and
-the model only asks.
+And if you want an agent that decides what to remember, the MCP server
+registers thirteen tools and all thirteen are reads — this design assumes the
+application ingests and the model only asks.
 
 The reader who gets the most from this repository may be one who never adopts
 Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
@@ -581,8 +650,9 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
 - Why is the LoCoMo sweep's 30/30 retrieval median (0.189 s) *lower* than
   20/20's (0.241 s)? Most likely load rather than budget, but the harness does
   not record enough to say.
-- Where is the MCP server implemented, and does it expose any write tool that
-  `docs/TOOLS.md` omits?
+- Does the hosted API reject a `get_node` or `get_edge` for a UUID belonging to
+  another user under the same API key? The MCP server's five UUID-addressed
+  getters pass no scope key, so the answer lives entirely on the server side.
 
 ## Appendix: File Index
 
@@ -610,14 +680,21 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
 - `ingestion/src/zep_ingest/verify.py` — `search_when_ready()`.
 - `benchmarks/locomo/evaluation.py` — two-scope concurrent search, both graders.
 - `benchmarks/locomo/prompts.py` — `CONTEXT_TEMPLATE`, `RESPONSE_PROMPT`, `GRADER_PROMPT`.
-- `mcp/zep-mcp-server/docs/TOOLS.md` — the thirteen documented MCP tools.
+
+**MCP**
+
+- `mcp/zep-mcp-server/internal/server/tools.go`, `server.go` — the thirteen tool declarations and `registerTools()`.
+- `mcp/zep-mcp-server/internal/handlers/` — one file per tool; `types.go` carries the input schemas and shows which tools take a scope key.
+- `mcp/zep-mcp-server/pkg/zep/client.go`, `internal/config/config.go`, `internal/transform/` — SDK wrapper, config, parameter and result marshalling.
+- `mcp/zep-mcp-server/docs/TOOLS.md` — the tool documentation, including the service-side `limit` maximum of 50.
 
 **Evals**
 
 - `benchmarks/locomo/experiments/` — five experiments, ten runs each, with configs and summaries.
 - `benchmarks/locomo/benchmark.py`, `persistence.py`, `config.py`, `ontology.py`.
 - `benchmarks/longmemeval/` — runner and notebook, no committed results.
-- `zep-eval-harness/` — ingestion/retrieval harness; `runs/` holds only `.gitkeep`.
+- `zep-eval-harness/zep_evaluate.py` — the second two-axis grader; `data/test_cases/` with per-answer `needles`.
+- `zep-eval-harness/runs/` — one committed chain: chunk set, user and document manifests, and a four-question `evaluations/1_20260331T222821/results.json`, each with its config snapshot.
 
 **Legacy Community Edition**
 
@@ -626,5 +703,7 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
 - `legacy/docker-compose.ce.yaml`, `Dockerfile.ce` — the deprecated self-host path.
 
 ## History
+
+**2026-08-31** — [`be263ee23085410185835e0d8508b47fd35e9abb`](https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb) — same pin, two absence claims corrected, both wrong in the direction of asserting something missing that is committed. The MCP server was described as documented here and implemented elsewhere; `mcp/zep-mcp-server/` is a complete Go module — `cmd/server/main.go`, `internal/server/{server,tools}.go`, thirteen handler files, `pkg/zep/client.go`, `go.mod`, `Makefile`, `Dockerfile` — and `registerTools()` registers exactly the thirteen tool names the report listed. The read-only finding survives on code rather than on `docs/TOOLS.md`; the scope asymmetry across the five UUID-addressed getters, the twelve Go tests and the nanosecond shutdown timeout at `server.go:160` were not previously reported, and the open question asking where the server is implemented is answered from the tree. `zep-eval-harness/runs/` was described as holding only a `.gitkeep`; it holds one committed chain — chunk set, user and document manifests, and a four-question evaluation under `gemini-2.5-flash-lite` — thin but present, and section 10 describes it instead. `DEFAULT_RISKY_WORDS` holds 146 words, not 150. No capability mark moved; `scope_enforced` was re-checked in both directions and stands on `Destination` in `zep-ingest`, which section 5 states explicitly.
 
 **2026-08-13** — [`be263ee23085410185835e0d8508b47fd35e9abb`](https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb) — first reading. Screened before opening: one auto-run surface, 47 dependency surfaces inside the seven-day cooldown, 14 build-time execution points, 29 unpinned surfaces across 93 files. Nothing was installed and nothing was run; the committed benchmark artifacts were read from git, not reproduced.

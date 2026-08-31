@@ -15,11 +15,11 @@ stack_retrieval: "vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "A free-text memo of at most five sentences, keyed by topic and subtopic, plus tagged events and their embedded gists"
-  storage: "Postgres with pgvector; composite (id, project_id) primary keys throughout"
+  storage: "Postgres with pgvector; composite (id, project_id) primary keys on all seven memory tables"
   retrieval: "Profiles selected by topic preference and token budget; events by tag filter and gist embedding similarity"
   write: "Buffered — blobs queue in buffer_zones until a token threshold or a one-hour flush, then one LLM extract-and-merge pass"
   update_delete: "An LLM rewrites the memo in place (APPEND / UPDATE / ABORT); no prior value is retained"
-  scoping: "project_id and user_id in every primary key, foreign key, index and read-path filter"
+  scoping: "project_id and user_id in every memory table's primary key, foreign key, index, read-path filter and Redis cache key"
   integration: "REST API with Python, TypeScript and Go clients, an MCP server, and an OpenAI-compatible wrapper"
   background: "Buffer flush, plus organize_profile when a topic exceeds max_profile_subtopics"
   trust: "None represented; a memo is a string, and a rewrite leaves no record of what it replaced"
@@ -43,10 +43,15 @@ sentences by prompt instruction, a topic is capped at
 happened. It is trying to maintain the smallest description of a user that is
 still useful, and to make that description cheap enough to inject on every turn.
 
-**What is genuinely good is the scoping.** Every table's primary key is
-`(id, project_id)`, every foreign key is the composite `(user_id, project_id)`,
-and every index leads with those columns. Scope is not a field someone remembered
-to filter on — it is the row's identity, so writing a query that crosses a tenant
+**What is genuinely good is the scoping.** All seven memory tables —
+`users`, `general_blobs`, `buffer_zones`, `user_profiles`, `user_events`,
+`user_event_gists`, `user_statuses` — declare
+`PrimaryKeyConstraint("id", "project_id")`, every foreign key between them is
+the composite `(user_id, project_id)`, and every index leads with those
+columns. The two exceptions are the account tables and prove the rule:
+`Project`'s primary key is `project_id` alone and `Billing`'s is `id`, because
+neither sits inside a tenant. Scope is not a field someone remembered to filter
+on — it is the memory row's identity, so writing a query that crosses a tenant
 boundary takes effort. Of the systems in this atlas that enforce scope, this is the
 most structural implementation.
 
@@ -169,8 +174,12 @@ tokens exceed `max_chat_blob_buffer_token_size` (default 1024) or when
 On success the buffer rows are marked `BufferStatus.done` and, unless
 `CONFIG.persistent_chat_blobs` is set, the source blobs are deleted (line 211).
 
-**Extraction and merge** — `controllers/modal/chat/`: `extract.py` → `merge.py`
-(or `merge_yolo.py`) → `organize.py` → `event_summary.py`. The prompts are
+**Extraction and merge** — `controllers/modal/chat/`: `extract.py` →
+`merge_yolo.py` → `organize.py` → `event_summary.py`. Two merge
+implementations are committed and only one is wired: `chat/__init__.py:14`
+carries `# from .merge import merge_or_valid_new_memos` commented out above
+`from .merge_yolo import merge_or_valid_new_memos` on line 15, so `merge.py`
+is unreachable and the batched path is the merge path. The prompts are
 separate and readable: `prompts/extract_profile.py`, `prompts/merge_profile.py`,
 `prompts/merge_profile_yolo.py`, `prompts/organize_profile.py`,
 `prompts/event_tagging.py`, each with a Chinese counterpart (`zh_*`).
@@ -183,8 +192,11 @@ both through a language-specific prompt pack.
 
 **Update/delete** — `api_layer/profile.py` exposes `get_user_profile`,
 `add_user_profile`, `update_user_profile`, `delete_user_profile` and
-`import_user_context`. Profile reads filter on `UserProfile.user_id` and
-`UserProfile.project_id` (`controllers/profile.py:212`).
+`import_user_context`. Profile reads filter on both scope columns —
+`get_user_profiles()` at `controllers/profile.py:75` does
+`.filter_by(user_id=user_id, project_id=project_id)` at line 95 — and the
+bulk delete at `controllers/profile.py:206` carries the same pair alongside
+the id list.
 
 **Schema** — `models/database.py`: `Project`, `User`, `GeneralBlob`, `BufferZone`,
 `UserProfile`, `UserEvent`, `UserEventGist`, `UserStatus`.
@@ -209,6 +221,14 @@ other memory table follows the same shape. The consequence is that
 discipline the developers have to maintain — the schema will not let them forget
 it, and a cascade delete of a project actually removes its memory rather than
 orphaning it.
+
+The scope also reaches past the schema into the cache, which is the part this
+atlas's [rubric](../../methodology/atlas-rubric/) names as the usual blind spot
+behind a `scope_enforced` mark. `get_user_profiles()` keys Redis on
+`user_profiles::{project_id}::{user_id}` (`controllers/profile.py:78`), and
+`refresh_user_profile_cache()` at line 220 deletes that same composite key
+after every add, update and delete. There is no cache entry keyed on
+`user_id` alone for a second tenant to collide with.
 
 What the model does *not* have is anything above the string. `UserProfile` is
 `content TEXT` plus an `attributes` JSONB carrying topic and subtopic. There is no
@@ -269,18 +289,36 @@ but a documented default with a name.
 
 Rewriting: `merge_profile` returns `APPEND`, `UPDATE\t[UPDATED_MEMO]`, or `ABORT`,
 parsed on an `llm_tab_separator` (`::`). `UPDATE` carries the complete new memo, and
-the controller writes it over the old `content`. Nothing checks that the rewrite
+the controller writes it over the old `content`. The wired variant,
+`merge_profile_yolo`, uses the identical three-verdict vocabulary and the same
+five-sentence cap; what it changes is the batching — every extracted memo in a
+flush is numbered into one prompt and the model answers `N. VERDICT{tab}…` per
+line, so a flush costs one merge call rather than one per memo. Nothing checks that the rewrite
 retained the facts the old memo held, which is the check the atlas's
 [structural-loss guard on generated
 rewrites](../../compare/#structural-loss-guard-on-generated-rewrites) exists for.
 
 A second rewriting pass, `organize_profile`, fires when a topic exceeds
 `max_profile_subtopics` (15) and merges subtopics into fewer, broader ones. Its
-committed few-shot example shows eleven subtopics collapsing into two — the
-compression is aggressive by design.
+committed few-shot example (`prompts/organize_profile.py:9-29`) shows eleven
+subtopics collapsing into three — `上岛冒险`, `休息`, `逃离` — and two of the
+eleven, `下雨` and `到达新地方`, appear nowhere in the output at all. That is
+deliberate: the prompt's first bullet is "You can discard some memos if they're
+not relevant to the topic." So the pass is not only a merge, it is a merge with
+an unlogged drop, and the compression is aggressive by design.
 
-`profile_strict_mode` constrains extraction to the configured topic list, which is a
-genuine governance knob: with it on, the extractor cannot invent a schema.
+Two config flags gate how much LLM judgement a write gets, and they are
+different knobs. `profile_strict_mode` constrains extraction to the configured
+topic list, so with it on the extractor cannot invent a schema.
+`profile_validate_mode` (`env.py:118`, default `True`) decides whether a memo
+at a *new* `(topic, subtopic)` key goes through the merge model at all: at
+`merge_yolo.py:35-37` it is read as a per-project override falling back to
+`CONFIG`, and when it is false, the subtopic definition carries no
+`validate_value` and no profile exists at that key, the memo is appended
+straight to the `add` list with a `Skip validation` trace and no model call
+(`merge_yolo.py:56-72`; the unwired `merge.py:82-98` holds the identical
+branch). Turning it off is a real cost saving and it removes the only gate that
+can `ABORT` a first-time claim.
 
 ### Operational cost
 
@@ -358,10 +396,65 @@ under another, and asserts *that memory's id* is absent from the result. The fir
 tests that a filter does not over-return; only the second asserts that named
 material must not be retrieved. **`negative_eval` is withheld.**
 
-There are committed experiments — `docs/experiments/900-chats/` holds a
-ShareGPT-derived transcript set — but no scored benchmark results. The survey that
-prompted this review reports Memobase on LoCoMo; **no LoCoMo harness or result is
-committed to this repository**, so that number is a claim rather than an artifact.
+`docs/experiments/900-chats/` holds a ShareGPT-derived transcript set, and
+`docs/experiments/locomo-benchmark/` holds the LoCoMo number and the artifacts
+behind it. That is unusually complete for this atlas and it is worth judging on
+what it does and does not establish.
+
+**What is committed.** A full harness — `run_experiments.py` dispatching over
+six techniques, `evals.py` scoring BLEU, F1 and an LLM judge, `generate_scores.py`
+aggregating by category, `metrics/llm_judge.py`, `prompts.py`, and
+`src/{memobase_client,memzero,zep,openai,rag,langmem}` adapters — forked, per
+its README's first line, from
+[mem0's evaluation directory](https://github.com/mem0ai/mem0/tree/main/evaluation)
+at commit `393a4fd5a6cfeb754857a2229726f567a9fadf36`. Under `fixture/memobase/`
+are four result files, two per version: `results_0503_3000.json` and
+`memobase_eval_0503_3000.json` for v0.0.32, `results_0710_3000.json` and
+`memobase_eval_0710_3000.json` for v0.0.37. The eval files carry 1,540 graded
+questions across the ten LoCoMo conversations (category 5, the adversarial set,
+is skipped by `evals.py`), and re-aggregating
+`memobase_eval_0710_3000.json` by hand reproduces the README's table exactly:
+single-hop 0.7092 over 282 questions, temporal 0.8505 over 321, multi-hop
+0.4688 over 96, open-domain 0.7717 over 841, **overall LLM-judge 0.7578**. The
+number is an artifact, and it is one a reader can recompute offline from the
+committed file with no API key.
+
+**The `results_*.json` files are the better artifact and are 35 MB each,**
+because each of the 1,540 records carries not just question, gold answer and
+response but `speaker_1_memories` and `speaker_2_memories` — the exact rendered
+profile block that was in front of the answering model — plus
+`speaker_1_memory_time`, `speaker_2_memory_time` and `response_time`. Almost
+nothing else in this atlas commits the retrieved context per question. It makes
+a wrong answer attributable: you can read the memo the model was given and see
+whether the failure was retrieval or reading. Median `response_time` in the
+v0.0.37 file is 1.383 s and median `speaker_1_memory_time` 0.972 s.
+
+**What it does not establish, and the caveats are load-bearing.** The
+comparison rows are not run here — the README states plainly that the other
+methods' figures are pasted from the Mem0 paper
+([arXiv:2504.19413](https://arxiv.org/abs/2504.19413)), so this is a vendor
+running its own system on a fork of a competitor's harness and transcribing the
+competitor's published baselines beside it. A later note in the same README
+records that the Zep row was superseded by figures the Zep team supplied, which
+move Zep from 65.99 to 75.14 overall — 0.64 points behind the bolded Memobase
+v0.0.37 figure rather than 9.79, and ahead of it on single-hop (74.11 to 70.92)
+and by 19 points on multi-hop. The run is single — no repeats, no variance, against
+[Zep](../zep/)'s ten runs per configuration on the same dataset. And the
+configuration is bespoke: `src/memobase_client/config.yaml` sets
+`overwrite_user_profiles` to five hand-written topics and twenty subtopics
+fitted to LoCoMo's conversations (`personal_narrative / identity_journey`,
+`personal_narrative / self_acceptance`), replacing the eight shipped defaults in
+`prompts/user_profile_topics.py` outright, and `memobase_search.py` reads a
+3,000-token context. `memobase_add.py` calls `insert(..., sync=True)` and
+`flush(sync=True)`, so the benchmark never experiences the buffer lag that
+section 7 identifies as the operative cost for a real user. The judge is
+`gpt-4o-mini` at `metrics/llm_judge.py:43`, not the `gpt-4o` the README's
+explanatory aside names.
+
+None of that is misconduct — the artifacts are there precisely so it can be
+checked, which is more than most published memory benchmarks allow. It does
+mean the headline 75.78 is a number about Memobase under a schema written for
+this dataset, graded once, beside baselines nobody re-ran.
 
 The test I would want: post a fact, flush, post a contradicting fact, flush, and
 assert what the profile says and whether anything records that the first value was
@@ -424,15 +517,12 @@ the dispute to stick.
 
 ## 12. Open Questions
 
-- **What does `profile_validate_mode` do?** It is declared in `env.py` (line 118,
-  default `True`) and again in the per-project config override, and no other
-  reference to it was found in the server package. Either it is dead configuration
-  or it is consumed somewhere the search missed.
 - **What happens to a half-processed buffer across a restart?** `BufferStatus` has
   the states; the recovery path was not traced.
-- **Does `merge_profile_yolo` skip the merge decision entirely?** The name and the
-  separate prompt suggest a faster, less careful path; which deployments use it was
-  not established.
+- **Why is `merge.py` kept in the tree with its import commented out?** The
+  per-memo merge path is complete and unreachable, and whether it is a rollback
+  lever, an A/B remnant or a path the hosted service still runs is not
+  answerable from this repository.
 - **Is there a retention or decay policy for events?** `time_range_in_days` bounds
   *retrieval*; no pruning of `user_events` was found.
 - **Do the hosted playground and the OSS server behave identically on profile
@@ -464,6 +554,13 @@ the dispute to stick.
 `src/server/api/tests/{test_api,test_controller,test_db,test_chat_modal}.py`,
 `src/client/tests/`
 
+**Evals** — `docs/experiments/locomo-benchmark/{run_experiments,evals,generate_scores}.py`,
+`metrics/llm_judge.py`, `src/memobase_client/{memobase_add,memobase_search}.py`,
+`src/memobase_client/config.yaml`, `fixture/memobase/*.json`;
+`docs/experiments/900-chats/`
+
 ## History
+
+**2026-08-31** — [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901) — same pin, five corrections, the first of them load-bearing and wrong in the direction of asserting an absence. Section 10 said no LoCoMo harness or result was committed and used that to discount the published number as a claim rather than an artifact. `docs/experiments/locomo-benchmark/` is a full harness forked from mem0's evaluation directory, with four committed result files under `fixture/memobase/`; re-aggregating `memobase_eval_0710_3000.json` reproduces the README's 75.78 overall across 1,540 graded questions, and the 35 MB `results_*.json` files carry the rendered memory block and per-question latency that produced each answer. Section 10 judges it on its merits instead — a single vendor-run pass under a topic schema written for the dataset, with the baseline rows transcribed from the Mem0 paper rather than re-run. `profile_validate_mode` was called possibly-dead configuration; it is consumed at `merge_yolo.py:35-37` and `merge.py:82-98` and gates whether a first-time memo reaches the merge model at all, so the open question is dropped and section 7 states the mechanism. The `organize_profile` few-shot collapses eleven subtopics into three and discards two of them, not into two. Section 1 said every table's primary key is `(id, project_id)`; that holds for the seven memory tables and not for `Project` or `Billing`. The profile-read citation moves from `controllers/profile.py:212`, which sits in a delete, to `get_user_profiles()` at line 75 and its filter at line 95. Also established: `merge.py` is unwired at `chat/__init__.py:14` and `merge_yolo` is the live merge path, which answers the open question about which one runs. No capability mark moved; `scope_enforced` was re-checked in both directions and gained evidence, the Redis profile cache being keyed on `user_profiles::{project_id}::{user_id}`.
 
 **2026-07-29** — [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901) — first reading.
