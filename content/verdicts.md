@@ -295,12 +295,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need durable beliefs, ranked retrieval, or an OSI-compatible licence.
 
 ### [`openclaw`](../systems/openclaw/)
-- Best idea: scope composed inseparably into every predicate, and 567 lines spent keeping the runtime's own envelope out of memory.
-- Biggest risk: a vector-only reference backend for content full of names and identifiers, with auto-capture that can undo deletions.
-- Most reusable component: `memory-capture-sanitization.ts`, `scopedPredicate`, and the doctor-contract idea.
-- Maturity impression: test lines far exceed implementation lines; the plugin contract is mature, the memory model deliberately minimal.
-- Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
-- Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
+- Best idea: a regeneration path that refuses to destroy human writing — `preserveHumanNotesBlock` carries the region between `<!-- openclaw:human:start -->` and its closing marker across every machine rewrite, and throws rather than regenerate over damaged markers.
+- Biggest risk: the durability policy is a hand-tuned additive scorer over twenty-one English keyword regexes in `rem-evidence.ts`, visibly fitted to one operator's vocabulary — `butler`, `obsidian`, `codex`, `tmux`, `north star` — with sixteen magic weights and no committed evaluation of what it keeps or drops. Nothing works outside English.
+- Most reusable component: the wiki's human-block machinery and risk-gated import, `scopedPredicate` plus the per-agent database file, and the dry-run-with-refusals deletion report.
+- Maturity impression: `memory-core` alone is 38,131 source lines against roughly 49,000 lines of tests; two of seven capability marks, `scope_enforced` and `human_review`. The scope predicate carrying the only structural safety guarantee has no test that names it.
+- Study when: building a host runtime with swappable memory, capturing from a channel that wraps messages in scaffolding, or designing a memory a person is expected to edit by hand.
+- Do not copy when: you need per-user scope inside an agent, deletion that forgets a claim rather than a conversation, or consolidation that works in a language other than English.
 
 ### [`atomic-agent`](../systems/atomic-agent/)
 - Best idea: numbered cross-phase invariants cited from the schema into a design document, and votes kept as append-only events with derived scores.

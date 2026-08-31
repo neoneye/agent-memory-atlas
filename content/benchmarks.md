@@ -1174,6 +1174,49 @@ The metrics worth reporting are bytes per stored memory, index bytes as a
 multiple of source bytes, and growth per active day. All three are trivial to
 collect and none of them appears anywhere.
 
+### The failure modes named by people watching agents fail
+
+The metrics above are missing from memory papers. A different kind of evidence
+says what their absence costs, and it comes from outside this field entirely.
+
+*Can AI agents conduct open-ended AI research? Early evidence from two case
+studies* ([arXiv:2607.27191](https://arxiv.org/abs/2607.27191), 29 July 2026,
+revised 7 August; Kirgis, Kapoor, Narayanan and twenty other authors) runs what
+it calls **shadow evaluations**: frontier agents are given the central research
+question from *unpublished* high-quality papers, and the papers' own authors
+grade the output. Two NeurIPS 2026 submissions, six days and thousands of
+dollars of compute per agent. The agents handled the engineering and
+*"could not make substantial progress towards answering the research
+questions"* — unambiguous rejections from the original authors.
+
+The setup is the interesting part before the result is: because the target
+papers are unpublished, the answer cannot be in pretraining. This is the
+contamination control that memory benchmarks built on public corpora almost
+never have.
+
+Five recurring failure modes are named. **Three of them are memory failures in
+this atlas's terms**, and none is measured by any benchmark on this page:
+
+- *"ineffective backtracking from dead ends"* — the agent has no durable record
+  of what it already tried and what that cost, so it re-enters paths it has
+  already exhausted. This is the [rejected-value tombstone](../patterns/rejected-value-tombstone/)
+  gap stated as a capability failure rather than a schema one.
+- *"poor resource awareness"* — nothing carries the running budget across the
+  horizon, so spend is invisible to the agent making the decisions.
+- *"instruction drift"* — the original instruction is not retained against the
+  accumulating context that displaces it.
+
+The other two — *"poor judgment about the bar for publishable research"* and
+*"uncreative responses to shortcomings in the research design"* — are not memory
+problems, and saying so matters: this is not a paper claiming memory is the
+bottleneck. It is a paper that watched agents fail over six days and named what
+went wrong, and a majority of its list happens to describe state that was not
+kept.
+
+That is the argument for the metrics this section says are missing. A benchmark
+that scores single-turn recall would rate all three of those failures as
+successes.
+
 ## 6. Does Anything Benchmark Forgetting?
 
 **Nothing independent does.** No public benchmark tests whether a deleted memory
@@ -1590,6 +1633,49 @@ recent context can satisfy is measuring the context.
 One qualification the paper states itself: the effect is clearest on RULER, and
 *"results on LongBench/Babilong show mixed outcomes where fixed long windows
 sometimes outperform stochastic training."* No code repository is linked.
+
+### The follow-up that argues the cheap baseline was the answer all along
+
+*Sliding-window beats linear attention*
+([arXiv:2608.28444](https://arxiv.org/abs/2608.28444), 28 August 2026;
+Jolicoeur-Martineau, Sukthanker, Cameron and Gervais) is the same subject from
+the opposite end, and it is on this page for the methodological point rather
+than the architecture.
+
+The claim is that retrofitting an LLM to linear attention — a large, fashionable
+line of work aimed at escaping quadratic KV growth — *"has not been properly
+compared to simpler baselines."* When it is, the baseline wins: Sliding Window
+Attention with sinks *"performs as well or better than post-trained Linear
+Attention models"* across several LLMs, and on long-context reasoning
+(Needle-in-a-Haystack and BABILong) SWA reports *"2 to 10 times higher"* scores.
+SWA needs no post-training at all.
+
+Two things follow for this atlas, and only the second is about models.
+
+The first is the pattern this page keeps finding in memory benchmarks: **a
+sophisticated mechanism published without the cheap control, which then beats
+it.** FP-AMB's TF-IDF baseline outscoring every real memory architecture on its
+own corpus is the same result in the agent-memory register, as is the
+[benchmark whose baseline wins](#a-benchmark-whose-baseline-wins-and-the-category-that-cannot-fail)
+already on this page. A system that never ran the trivial arm has not
+established that its machinery is doing anything.
+
+The second is a caution about reading it as a memory result, which it is not. SWA
+with sinks does not remember more; it *discards* older tokens and keeps a fixed
+window. That it beats a learned compression of the full history is a finding
+about attention architectures, and it is out of this atlas's scope in the usual
+way — a KV cache holds no claim that could turn out to be false. It is
+nonetheless the sharpest available answer to "why not just use a longer
+context": the paper's own recommendation is to stop carrying the history, not to
+carry it better. Anything that must survive being dropped from the window is
+what a memory system is for, and neither architecture in this comparison offers
+it.
+
+Note that this paper and *Short window attention enables long-term memorization*
+above reach compatible conclusions from opposite directions — the earlier one
+shows a *narrower* window forcing the recurrent path to learn, this one shows a
+bounded window outperforming the learned path outright. Both are arguments
+against assuming the expensive mechanism earns its place.
 
 ### The metric that asks whether the pruning broke anything later
 
@@ -2112,7 +2198,10 @@ next background pass is free to undo. [CowAgent](../systems/cowagent/)
 re-distils its memory file nightly from retained daily files.
 [Atomic Agent](../systems/atomic-agent/) re-clusters. Magic Context and Redis
 Agent Memory Server both extract on a schedule from retained history.
-OpenClaw's auto-capture can restore content a user deleted. MIRIX's `auto_dream`
+OpenClaw's dreaming pass consults a durable `memory_session_tombstones` table
+before ingesting, so a forgotten *session* is not re-consolidated — but the row is
+keyed on `session_id`, so the same claim reaching the agent through a different
+conversation is learned again. MIRIX's `auto_dream`
 pass loads up to 500 items per memory type with an explicit `start_date=None,
 end_date=None` and lets an agent merge and hard-delete them. Only
 [Verel](../systems/verel/), [RainBox](../systems/rainbox/) and

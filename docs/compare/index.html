@@ -11900,25 +11900,35 @@ resists demotion most</td>
 </tr>
 <tr>
 <td><code>openclaw</code></td>
-<td>Categorized entry (preference/fact/decision/entity/other) with
-embedding</td>
-<td>LanceDB via <code>memory-lancedb</code> extension; swappable
-embedding adapters</td>
-<td>Vector search with mandatory agent-scoped predicate; no lexical
-arm</td>
-<td>Optional auto-capture after envelope sanitization; 500-char
-truncation</td>
-<td>Exact scoped delete; no tombstones, and auto-capture can restore
-content</td>
-<td><code>agentId</code>, composed inseparably into every predicate</td>
-<td>Plugin contract via <code>memory-core</code>; tools, CLI, doctor
-checks</td>
-<td>Auto-capture cursor with fingerprint drift detection</td>
-<td><code>createdAt</code> and category only</td>
-<td>Envelope sanitization before capture; scope that cannot be
-dropped</td>
-<td>Vector-only reference backend; sanitization is a denylist tied to
-envelope formats</td>
+<td>A markdown section — <code>MEMORY.md</code> and wiki pages of
+record, chunked into snippets with a path and line span, indexed rather
+than stored as rows</td>
+<td>Markdown files as the record, indexed into a per-agent SQLite
+database with an FTS table and a <code>sqlite-vec</code> vector table;
+LanceDB is one optional backend extension</td>
+<td>Hybrid — vector and FTS keyword arms combined with a candidate
+multiplier and temporal decay, degrading to either arm alone when the
+other is unavailable</td>
+<td>Session transcripts ingested on a cursor, promoted short-term to
+durable, and consolidated by a three-phase dreaming pass</td>
+<td><code>forgetMemoryEntries</code> with a dry-run preview, a workspace
+lock, and refusals for entries of mixed lineage; a forgotten session is
+tombstoned so consolidation will not re-ingest it</td>
+<td><code>agentId</code> — a predicate in the LanceDB backend, and a
+separate SQLite database file per agent in the core</td>
+<td>Plugin contract, tools, CLI, doctor health checks, and a memory wiki
+with human-editable regions</td>
+<td>A dreaming cron in three phases — light, deep and REM — plus an
+auto-capture cursor with fingerprint drift detection</td>
+<td>Category and an imported-conversation risk level; no verification
+state on a durable entry</td>
+<td>Scope composed into the predicate, a review gate that withholds
+risky imports from durable candidacy, and a regeneration path that
+refuses to destroy human notes</td>
+<td>The durability policy is a hand-tuned additive scorer over
+twenty-one English keyword regexes visibly fitted to one operator's
+life; the session tombstone is keyed on the source, not the claim; the
+host event journal is capped at 10,000 entries</td>
 </tr>
 <tr>
 <td><code>opencode-mem</code></td>
@@ -15508,7 +15518,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>92 of 352:</em> <a
+<p><em>93 of 352:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -15575,7 +15585,8 @@ href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
-<a href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
+<a href="../systems/openclaw/"><code>openclaw</code></a>, <a
+href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
 href="../systems/openkb/"><code>openkb</code></a>, <a
 href="../systems/opensre/"><code>opensre</code></a>, <a
 href="../systems/openyak/"><code>openyak</code></a>, <a
@@ -15916,7 +15927,9 @@ tool calls, because a hard character budget makes automatic capture
 self-defeating. <code>openclaw</code> and <code>holographic</code> both
 capture without a model — OpenClaw after sanitizing its own message
 envelope, Holographic by regex over user turns when auto-extraction is
-enabled.</p>
+enabled. OpenClaw keeps the model out of consolidation too: no dreaming
+file calls one, so what graduates into durable memory is decided by a
+keyword scorer.</p>
 <p>Two systems in the Hermes/OpenClaw ecosystem independently guard
 against the same subtle failure: <strong>the harness's own scaffolding
 becoming memory.</strong> OpenClaw devotes 567 lines to stripping media
@@ -16045,9 +16058,13 @@ an unusual threat model in which the deployment's own configuration is
 the attack surface. <code>openviking</code> extracts into typed memory
 files whose <code>stage</code> field separates long-term user memory
 from execution-derived agent memory. <code>holographic</code> and
-<code>openclaw</code> deliberately do not extract at all: both store
-lightly-processed user text, which keeps capture model-independent but
-fills the store with prose rather than normalized claims.</p>
+<code>openclaw</code> both keep a model out of the write path, by
+different means. Holographic stores lightly-processed user text, which
+fills the store with prose rather than normalized claims. OpenClaw does
+select and summarize — but with a hand-tuned additive scorer over
+twenty-one English keyword regexes in <code>rem-evidence.ts</code>, so
+durability is decided by vocabulary rather than by a model or a
+person.</p>
 <p><code>cognee</code> runs typed task pipelines that chunk documents,
 extract graph structures, embed several views, and optionally ground
 nodes in an ontology. <code>claude-mem</code> asks an observer model for
@@ -16342,9 +16359,12 @@ recency reranker using separate half-lives for last access and creation.
 <code>holographic</code> fuses FTS5, Jaccard, and HRR cosine, then
 multiplies by trust — and silently reweights to lexical-only when NumPy
 is absent while still reporting itself as available.
-<code>openclaw</code>'s reference backend is vector-only, which sits
-awkwardly with a category set dominated by preferences, entities, and
-decisions. <code>a-mem</code> is vector-only despite hybrid wording.
+<code>openclaw</code> runs a genuine hybrid — a <code>sqlite-vec</code>
+vector arm and an FTS keyword arm merged with a candidate multiplier and
+temporal decay — and degrades in both directions, to keyword-only when
+no embedding provider is available and to vector-only when FTS is not,
+logging each fall back rather than reporting itself healthy.
+<code>a-mem</code> is vector-only despite hybrid wording.
 <code>mastra-observational-memory</code> is the deliberate exception:
 its primary path is sequential observations plus a recent raw tail, with
 semantic observation retrieval optional. <code>daimon</code> is the
@@ -16635,16 +16655,23 @@ uniformly weak here, and usefully so: none of <code>holographic</code>,
 <code>redis-agent-memory-server</code>, <code>byterover</code>, or
 <code>openclaw</code> has a rejected-value tombstone, so in every one of
 them a corrected or deleted memory can be re-derived from retained
-material with nothing to stop it. <code>byterover</code> is the partial
-exception in an unexpected place — its <code>detectStructuralLoss</code>
-/ <code>resolveStructuralLoss</code> pair is the only mechanism in the
-atlas that guards a <em>rewrite</em> rather than a claim, counting
-exactly what an LLM curation pass would delete and merging the loss back
-in. <code>holographic</code> inverts the usual failure: its
-<code>contradict</code> action surfaces contradictions as an ordinary
-query, but only reports them, with no supersession or review workflow
-attached, and its docstring claim that "no other memory system does
-this" is not accurate within this atlas.</p>
+material with nothing to stop it. <code>openclaw</code> is the closest
+miss and shows exactly what the mark asks for: its
+<code>memory_session_tombstones</code> table is durable and carries a
+written <code>reason</code>, and the consolidation sweep consults it so
+a forgotten session is never re-ingested — but it is keyed on
+<code>session_id</code>, so the same claim arriving in a different
+conversation is new information again. <code>byterover</code> is the
+partial exception in an unexpected place — its
+<code>detectStructuralLoss</code> / <code>resolveStructuralLoss</code>
+pair is the only mechanism in the atlas that guards a <em>rewrite</em>
+rather than a claim, counting exactly what an LLM curation pass would
+delete and merging the loss back in. <code>holographic</code> inverts
+the usual failure: its <code>contradict</code> action surfaces
+contradictions as an ordinary query, but only reports them, with no
+supersession or review workflow attached, and its docstring claim that
+"no other memory system does this" is not accurate within this
+atlas.</p>
 <p>A specification for measuring any of this — the shapes a
 contradiction can take, and the four things worth scoring separately —
 is in <a href="../benchmarks/#contradiction-test">the contradiction
@@ -16998,9 +17025,11 @@ prunes to a budget by a recency composite with separate half-lives for
 last access and creation.</li>
 <li><code>byterover</code>: <code>maxMemories</code> cap with no
 eviction policy visible in the inspected modules.</li>
-<li><code>openclaw</code>: exact agent-scoped delete, undermined by
-auto-capture, which can restore the same content from a later matching
-message.</li>
+<li><code>openclaw</code>: <code>forgetMemoryEntries</code> with a
+dry-run preview whose report shape matches the real run, a workspace
+lock, and explicit <code>refusals</code> rather than a partial delete; a
+session tombstone stops consolidation re-ingesting what was forgotten.
+Keyed on the source session, not on the value.</li>
 <li><code>magic-context</code>: archive plus
 <code>supersededByMemoryId</code> and <code>mergedFrom</code> lineage,
 with age decay owning memories that cannot be verified; no
@@ -17080,14 +17109,17 @@ deeper layer.</li>
 </ul>
 <p>Semantic forgetting is an antipattern unless there is explicit user
 review or exact ID targeting.</p>
-<p>Deletion is also where pluggable memory breaks down. Both host
-runtimes in the atlas — <code>hermes-agent</code> and
-<code>openclaw</code> — define a memory-provider contract with
+<p>Deletion is also where pluggable memory breaks down.
+<code>hermes-agent</code> defines a memory-provider contract with
 <strong>no deletion hook and no scope parameter</strong>, so a user's
 "forget that" has no defined path into whatever backend is mounted.
-<code>holographic</code> shows the resulting hazard concretely: it
-mirrors the host's built-in memory additions into its own store but
-implements only the <code>add</code> action, so removing an entry from
+<code>openclaw</code> answers this inside its own core rather than at
+the contract — <code>forgetMemoryEntries</code> and the session
+tombstone are <code>memory-core</code> machinery, so a third-party
+backend mounted beside it inherits neither. <code>holographic</code>
+shows the resulting hazard concretely: it mirrors the host's built-in
+memory additions into its own store but implements only the
+<code>add</code> action, so removing an entry from
 <code>MEMORY.md</code> leaves the mirrored copy behind indefinitely.</p>
 <h4
 id="the-layer-below-delete-what-the-storage-engine-does-with-the-vector">The
@@ -17282,22 +17314,24 @@ memory about the user from memory about a peer under
 session behind auth. <code>openclaw</code> has a single
 <code>agentId</code> axis but defends it unusually well, composing scope
 and user filter into one predicate "so scope cannot be lost" and scoping
-deletes the same way. <code>hermes-agent</code> isolates by profile but
-has no project or room boundary within one. <code>magic-context</code>
-has a three-level lattice — <code>project</code>,
-<code>ecosystem</code>, <code>universe</code> — plus a
-<code>shareable</code> flag governing what may cross a boundary, with
-project identity resolved to the git root and a rekey map for when a
-repository moves. <code>pi</code> has no scope because it has no memory.
-<code>byterover</code> scopes only by storage directory, and
-<code>holographic</code> has no scope at all — it describes itself as a
-single-user store, with <code>category</code> serving as partitioning
-rather than access control. A-MEM, Swafra, and Holographic remain the
-outliers with effectively global local corpora. <code>daimon</code>
-scopes by a slug munged from the project's working directory, and the
-rule it derives is worth copying: callers that <em>display</em> what
-they read may fall back to another bucket, callers that <em>persist</em>
-what they read may not — carry always reads with
+deletes the same way; in <code>memory-core</code> the same key is a
+physical boundary rather than a syntactic one, since
+<code>openOpenClawAgentDatabase({ agentId })</code> gives each agent its
+own SQLite file. <code>hermes-agent</code> isolates by profile but has
+no project or room boundary within one. <code>magic-context</code> has a
+three-level lattice — <code>project</code>, <code>ecosystem</code>,
+<code>universe</code> — plus a <code>shareable</code> flag governing
+what may cross a boundary, with project identity resolved to the git
+root and a rekey map for when a repository moves. <code>pi</code> has no
+scope because it has no memory. <code>byterover</code> scopes only by
+storage directory, and <code>holographic</code> has no scope at all — it
+describes itself as a single-user store, with <code>category</code>
+serving as partitioning rather than access control. A-MEM, Swafra, and
+Holographic remain the outliers with effectively global local corpora.
+<code>daimon</code> scopes by a slug munged from the project's working
+directory, and the rule it derives is worth copying: callers that
+<em>display</em> what they read may fall back to another bucket, callers
+that <em>persist</em> what they read may not — carry always reads with
 <code>fallback=False</code>, so a cross-project pointer can never enter
 durable state. When the display fallback does fire, the foreign body is
 suppressed and only a header appears, on the stated reasoning that one
@@ -17447,9 +17481,13 @@ exists.</li>
 <code>src/agent/core/domain/memory/types.ts</code>;
 <code>ContextData</code> in
 <code>src/server/core/domain/knowledge/markdown-writer.ts</code>.</li>
-<li><code>openclaw</code>: <code>MemoryEntry</code> in
-<code>extensions/memory-lancedb/lancedb-store.ts</code>; categories in
-<code>config.ts</code>.</li>
+<li><code>openclaw</code>: markdown files of record indexed into a
+per-agent SQLite database
+(<code>extensions/memory-core/src/memory/manager.ts</code>,
+<code>manager-db.ts</code>); <code>MemoryEntry</code> and categories in
+the optional LanceDB backend
+(<code>extensions/memory-lancedb/lancedb-store.ts</code>,
+<code>config.ts</code>).</li>
 <li><code>daimon</code>: the item-field table in
 <code>plugin/daimon_briefing/schema.py</code>; checkpoint shape in the
 <code>SERIALIZE_SYS</code> prompt in <code>serializer.py</code>; on-disk
@@ -17600,9 +17638,11 @@ in <code>V0/agent_memory_server/long_term_memory.py</code>.</li>
 <code>src/agent/infra/memory/memory-deduplicator.ts</code>;
 <code>resolveStructuralLoss()</code> in
 <code>knowledge/conflict-resolver.ts</code>.</li>
-<li><code>openclaw</code>: <code>sanitizeForMemoryCapture()</code> in
-<code>extensions/memory-lancedb/memory-capture-sanitization.ts</code>;
-<code>store()</code> in <code>lancedb-store.ts</code>.</li>
+<li><code>openclaw</code>: <code>session-ingestion.ts</code> and
+<code>short-term-promotion-apply.ts</code> in
+<code>extensions/memory-core/src/</code>;
+<code>sanitizeForMemoryCapture()</code> in
+<code>extensions/memory-lancedb/memory-capture-sanitization.ts</code>.</li>
 <li><code>daimon</code>: <code>serialize_strict()</code> in
 <code>plugin/daimon_briefing/serializer.py</code> with its gate chain
 (<code>sanitize_source_ids</code>, <code>pin_imperatives</code>,
@@ -17734,11 +17774,12 @@ extractors in <code>persona/cognitive_modules/retrieve.py</code>.</li>
 <code>V0/agent_memory_server/long_term_memory.py</code>.</li>
 <li><code>byterover</code>: <code>ListMemoriesOptions</code> filtering
 in <code>src/agent/infra/memory/memory-manager.ts</code>.</li>
-<li><code>openclaw</code>: <code>scopedPredicate()</code> and
-<code>query()</code> in
-<code>extensions/memory-lancedb/lancedb-store.ts</code>;
-<code>normalizeRecallQuery()</code> in
-<code>memory-policy.ts</code>.</li>
+<li><code>openclaw</code>: <code>searchVector()</code>,
+<code>searchKeyword()</code> and <code>searchPathKeyword()</code> in
+<code>extensions/memory-core/src/memory/manager-search.ts</code>, merged
+in <code>manager-search-orchestration.ts</code>;
+<code>scopedPredicate()</code> in
+<code>extensions/memory-lancedb/lancedb-store.ts</code>.</li>
 <li><code>daimon</code>: <code>search()</code> and
 <code>suggest()</code> in <code>plugin/daimon_briefing/recall.py</code>;
 ranking in <code>scoring.py</code>.</li>
@@ -17966,8 +18007,9 @@ executor, hotness maintenance.</li>
 extraction, compaction, dedupe, and forgetting sweeps via
 <code>docket_tasks.py</code>.</li>
 <li><code>byterover</code>: bounded-concurrency LLM deduplication.</li>
-<li><code>openclaw</code>: auto-capture cursor advancement; no separate
-worker.</li>
+<li><code>openclaw</code>: a dreaming cron in three phases — light, deep
+and REM — in <code>extensions/memory-core/src/dreaming-phases.ts</code>,
+plus the auto-capture cursor.</li>
 <li><code>daimon</code>: no worker — a detached
 <code>daimon serialize</code> child spawned by
 <code>hook/daimon-session-end.py</code>, tracked through
@@ -20199,7 +20241,7 @@ at <a
 href="https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c"><code class="commit-id" title="1052ac1a5dd0fde4da8693d4712064f7876c269c">1052ac1a…</code></a></li>
 <li><a href="https://github.com/openclaw/openclaw">openclaw/openclaw</a>
 at <a
-href="https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11"><code class="commit-id" title="570eab59e7c7ce052f4550af7507e7dd77c73e11">570eab59…</code></a></li>
+href="https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8"><code class="commit-id" title="6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8">6e79f2e4…</code></a></li>
 <li><a
 href="https://github.com/OSU-NLP-Group/HippoRAG">OSU-NLP-Group/HippoRAG</a>
 at <a
