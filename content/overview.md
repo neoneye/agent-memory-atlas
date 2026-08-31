@@ -2881,6 +2881,40 @@ Learning to Self-Modify and Consolidate Memories* and also ships no code — so 
 reader meeting either should check which sense of consolidation is meant, and
 whether anything survives the example.
 
+**A paper titled *Learning how to Forget* is about cache eviction, and unlike the
+two above it ships the artifact.** *Learning how to Forget: Fine-tuning for
+Long-Context Sparse Attention*
+([arXiv:2608.19920](https://arxiv.org/abs/2608.19920), Seeger, Zhang, Patil,
+Benidis and Schelter, 20 August 2026) fine-tunes a model to co-adapt with the
+KV-cache policy that will evict for it at inference — on a budget its abstract
+puts at a single 40 GB A100 — and reports that a model trained this way often
+outperforms one trained with exact attention under sequence parallelism.
+Forgetting here is the eviction: once the slots are full, a new token overwrites
+an old one. What is compared are cache policies — `lastrec`, a content-dependent
+`smart_lastrec`, and three H2O variants — over the Helmet suite on NQ, TriviaQA,
+HotpotQA and PopQA at 64k and 128k tokens, and on TREC, NLU, CLINC150 and a JSON
+key-value probe.
+
+It is recorded rather than passed over for two reasons. The title names this
+atlas's central concern and means something else by it, which is the collision
+this section exists to mark. And it is the one paper here that can be **checked**:
+KeysAndValues ([awslabs/keys_values](https://github.com/awslabs/keys_values),
+Apache-2.0) is a real library — roughly 65,000 lines of Python beside CUDA
+kernels under `csrc/` — read at
+[`23888f05f866a2ebaf8b9e637ba47b0ebd4016f0`](https://github.com/awslabs/keys_values/commit/23888f05f866a2ebaf8b9e637ba47b0ebd4016f0),
+screened first: no auto-run surface, one build-time execution surface
+(`test/conftest.py`, which runs on pytest collection) and a `pyproject.toml`
+with no lockfile beside it. Reading it settles what the abstract leaves open.
+`keys_values/kvcache/` holds `h2o.py`, `qh2o.py`, `buffers.py`,
+`quant_buffers.py` and `offloading.py` — eviction policies and the buffers they
+evict from. The word *forget* occurs once in the package, as a string in a test
+fixture (`kvcache/test_utils_advanced.py:628`). Every occurrence of *memory* is
+an allocation: an out-of-memory retry in `array_limit.py`, temporary-memory
+notes in the attention kernels, shared memory in `flashinfer_ops.py`. There is no
+`sqlite`, no session and no store anywhere in it, and nothing it holds outlives
+the process. What it forgets is a token's key and value, and it forgets them to
+fit a context into a GPU — which is exactly the line this section draws.
+
 ### Not in scope: the semantic response cache
 
 The third collision is a **semantic cache**: a store of past question/answer
