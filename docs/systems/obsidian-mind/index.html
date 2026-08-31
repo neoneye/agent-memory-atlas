@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A byte budget on session-start
+injection that degrades the cheapest-to-lose sections to pointers and
+then names every one it dropped, ranked by value density rather than
+size.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="obsidian-mind — Agent Memory Atlas">
+    <meta property="og:description" content="A byte budget on
+session-start injection that degrades the cheapest-to-lose sections to
+pointers and then names every one it dropped, ranked by value density
+rather than size.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="obsidian-mind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A byte budget on
+session-start injection that degrades the cheapest-to-lose sections to
+pointers and then names every one it dropped, ranked by value density
+rather than size.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>obsidian-mind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "obsidian-mind",
+      "description": "A byte budget on session-start injection that degrades the cheapest-to-lose sections to pointers and then names every one it dropped, ranked by value density rather than size.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A silent loss is worse than the bloat</p>
+          <h1>obsidian-mind</h1>
+          <p class="document-deck">A byte budget on session-start
+injection that degrades the cheapest-to-lose sections to pointers and
+then names every one it dropped, ranked by value density rather than
+size.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/breferrari/obsidian-mind">
+              <span>Source</span>
+              <strong>breferrari/obsidian-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d" title="b84464b983d7b25e811d52986f8b61dbcbad961d">
+              <span>Analyzed revision</span>
+              <code>b84464b9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>obsidian-mind is a vault template rather than an engine: an Obsidian
+vault laid out for AI coding agents, with <code>brain/</code> (Key
+Decisions, Patterns, Gotchas, People &amp; Context, North Star, Skills),
+<code>work/</code>, <code>perf/</code>, Obsidian <code>.base</code>
+database views, a <code>vault-manifest.json</code>, TypeScript lifecycle
+hooks, and QMD semantic search. It targets Claude Code with working
+hooks for Codex CLI and Gemini CLI, and ships in four languages.</p>
+<p><strong>The contribution is a solved problem most of this atlas has
+not noticed it has: what session-start injection costs, and what happens
+when the vault outgrows it.</strong></p>
+<p><code>ARCHITECTURE.md</code> states the failure first:</p>
+<blockquote>
+<p>"Two of those inputs grow with the vault — the file listing grows
+with every note, the North Star excerpt with every status edit — so
+without a ceiling the eager layer drifts upward a little every day and
+nobody notices until a session is paying for it."</p>
+</blockquote>
+<p>Then five mechanisms, each with a reason:</p>
+<ol type="1">
+<li><strong>Source-aware injection</strong> — resume and compact
+re-inject only the volatile sections, because "the static bulk is
+already in-conversation".</li>
+<li><strong>An injection-size meter</strong> as the last line of every
+injection, so "you always see what context costs".</li>
+<li><strong>An injection budget</strong> enforcing what the meter
+measures — "over the ceiling, the cheapest-to-lose sections degrade to
+pointers — and <strong>the meter names every one it dropped, because a
+silent loss is worse than the bloat</strong>".</li>
+<li><strong>A single hook spawn per write</strong> — the QMD refresh
+rides the validation hook.</li>
+<li><strong>Listing collapse</strong> — "any folder past a note-count
+threshold folds to one count line, so a vault can't outgrow the ceiling
+through whichever folder nobody thought to configure."</li>
+</ol>
+<p>Both the budget (<code>eager_layer_budget_bytes: 80000</code>) and
+the threshold (<code>listing_collapse_threshold: 12</code>) live in
+<code>vault-manifest.json</code>.</p>
+<p><strong>And the argument for how to degrade is the part to
+steal:</strong></p>
+<blockquote>
+<p>"Rank the eager layer by <strong>value density, not size</strong>:
+filenames are the cheapest bytes (one Glob rebuilds them), so the
+listing surrenders first. Anything irreplaceable — identity, personal
+context, correctness guards — carries no fallback and is never traded
+for plumbing. Optimizing this layer means removing
+<strong>duplication</strong>, not <strong>information</strong>."</p>
+</blockquote>
+<p>Plus the case against the obvious alternative: "Line-based caps
+cannot do this job: shortening entries under a line cap just slides the
+window deeper and refills it."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is markdown. <code>brain/</code> holds the durable knowledge;
+<code>work/</code> holds active material with configured open loops;
+<code>perf/</code> accumulates evidence. Session start injects a bounded
+excerpt; the agent then queries QMD by meaning and reads only what it
+needs.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the eager layer degrades worst-priority sections first to fit its byte budget and names every section it dropped in a size meter</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the eager layer degrades worst-priority sections first to fit its byte budget and names every section it dropped in a size meter
+flowchart TD
+    SS[&quot;SessionStart&quot;] --&gt; EL[&quot;eager layer: small excerpts,&lt;br/&gt;filenames, git summary&quot;]
+    EL --&gt; BUD{&quot;over eager_layer_budget_bytes (80,000)?&quot;}
+    BUD --&gt;|no| INJ[&quot;inject&quot;]
+    BUD --&gt;|yes| DEG[&quot;degrade worst-priority first:&lt;br/&gt;listing → pointer,&lt;br/&gt;then next-cheapest&quot;]
+    DEG --&gt; INJ
+    INJ --&gt; MET[&quot;size meter as the last line —&lt;br/&gt;names every section it dropped&quot;]
+    RC[&quot;resume / compact&quot;] --&gt; VOL[&quot;re-inject volatile sections only&lt;br/&gt;(static bulk already in-conversation)&quot;]
+    VOL --&gt; MET
+    LC[&quot;folder past listing_collapse_threshold (12)&quot;] --&gt; ONE[&quot;one count line&quot;]
+    LC --&gt; EL
+    Q[&quot;agent query&quot;] --&gt; QMD[&quot;QMD semantic search&quot;]
+    QMD --&gt; READ[&quot;read only the matching notes&quot;]
+    W[&quot;Write / Edit a note&quot;] --&gt; VH[&quot;PostToolUse validate-write:&lt;br/&gt;frontmatter + wikilink hygiene warnings&quot;]
+    VH --&gt; QR[&quot;QMD refresh rides this hook —&lt;br/&gt;one spawn per write&quot;]
+    MCP[&quot;om MCP server&quot;] --&gt; RE{&quot;resolveExposure:&lt;br/&gt;mcp_exposed_roots, then mcp_never_expose&quot;}</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no engine — the vault <em>is</em> the system.
+<code>vault-manifest.json</code> is the configuration surface:
+<code>open_loop_dirs</code>, <code>open_loop_sections</code>,
+<code>eager_layer_budget_bytes</code>,
+<code>listing_collapse_threshold</code>, <code>memory_root</code>,
+<code>mcp_exposed_roots</code>, <code>mcp_never_expose</code>,
+<code>mcp_inbox</code>, plus a <code>qmd_context</code> paragraph
+describing the vault in prose for the semantic index.</p>
+<p>The executable parts are TypeScript hooks under
+<code>.claude/scripts/</code> and <code>.shardmind/hooks/</code>:
+<code>validate-write</code>, <code>pre-compact</code>,
+<code>classify-message</code>, <code>charcount</code>,
+<code>generate-memory-index</code>, <code>qmd-refresh-run</code>,
+<code>tidy-fix</code>, <code>personalize</code>, <code>bootstrap</code>,
+<code>post-update</code>.</p>
+<p><code>bases/</code> holds Obsidian database views — Memories,
+Competency Map, Incidents, People Directory, Recently Touched, Review
+Evidence, 1-1 History, Work Dashboard — so the human side of the same
+store is queryable without an agent.</p>
+<p><code>ARCHITECTURE.md</code> is long, argued, and contains Mermaid
+diagrams of its own decision procedures; <code>CHANGELOG.md</code>
+records the budget and meter arriving as separate releases.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Budget</strong> — <code>ARCHITECTURE.md</code>
+<code>:99-103</code>, <code>README.md</code> <code>:225</code>,
+<code>vault-manifest.json</code> (<code>eager_layer_budget_bytes</code>,
+<code>listing_collapse_threshold</code>).</p>
+<p><strong>Validate</strong> —
+<code>.claude/scripts/validate-write.ts</code> (the PostToolUse contract
+<code>:1-9</code>), <code>.claude/scripts/lib/frontmatter.ts</code>
+(<code>isBlockedMemoryPath</code> <code>:45-54</code>).</p>
+<p><strong>Expose</strong> — <code>ARCHITECTURE.md</code>
+<code>resolveExposure</code> <code>:491-513</code>.</p>
+<p><strong>Index</strong> —
+<code>.claude/scripts/generate-memory-index.ts</code>,
+<code>.claude/scripts/qmd-refresh-run.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown with frontmatter and wikilinks.
+<code>brain/Memories.md</code> is an index note pointing at six topic
+notes — Key Decisions, Patterns, Gotchas, People &amp; Context, North
+Star, Skills — each described by what it is for:
+"<strong>Gotchas</strong> — things that have bitten before and will bite
+again".</p>
+<p>There is no status, no confidence, no supersession and no tombstone.
+A note that stops being true is edited or it is not; git is the history.
+That is consistent with the design — this is a personal knowledge vault,
+not a belief store — and it means correction is entirely the user's
+discipline.</p>
+<p><code>isBlockedMemoryPath</code> is a small piece of care worth
+noting: it unifies path separators <strong>before</strong> normalising,
+because "<code>normalize()</code> on a POSIX host doesn't treat
+<code>\</code> as a separator, so backslash-spelled <code>..</code>
+segments would otherwise survive uncollapsed". A path check that
+anticipates the Windows-separator bypass on a POSIX host is the kind of
+thing that is usually learned from an incident.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two paths. The <strong>eager layer</strong> at session start is
+bounded and self-reporting. The <strong>lazy path</strong> is QMD
+semantic search — "the agent queries by meaning via QMD before reading
+files, so it pulls only what's relevant".</p>
+<p><strong>Exposure, not scope.</strong> <code>resolveExposure</code>
+decides which notes the <code>om</code> MCP server serves:
+<code>mcp_exposed_roots</code> narrows, <code>mcp_never_expose</code>
+blocks, and <code>ARCHITECTURE.md</code> explains why both ship empty —
+the allowlist "exists for the unusual vault holding material that is
+<em>not the user's to share</em> — employer-confidential notes, a
+client's data. Both exposure keys ship empty: the template must not
+impose one vault's sensitivities on every install."</p>
+<p>That is a genuine read-path gate and it is a <strong>path</strong>
+policy rather than a stored scope key on a memory, so the
+<code>scope_enforced</code> mark — which certifies a user, project,
+agent or tenant key reaching the query — is not earned. Naming the
+distinction matters here because the mechanism is good: it is
+publication control, not multi-tenancy.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes notes; a PostToolUse hook validates them. The hook
+"skips files outside the vault-note scope (dotfiles, templates, root
+docs, translated READMEs, thinking drafts), and emits a
+<code>hookSpecificOutput</code> with vault hygiene warnings when
+frontmatter or wikilinks are missing" — warnings, not refusals, which is
+the right register for a hygiene check on a human's own vault.</p>
+<p>The QMD refresh rides that same hook rather than spawning its own
+process, which is the fourth of the five budget mechanisms: the cost
+being controlled is process spawns per write, not just bytes per
+session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>CLAUDE.md</code>, <code>AGENTS.md</code> and
+<code>GEMINI.md</code> at the root, with lifecycle hooks for
+SessionStart, UserPromptSubmit (message classification), PostToolUse
+(validation) and pre-compact. Skills as slash commands. Four README
+translations. An <code>om</code> MCP server for the vault.</p>
+<p>Supporting three agent CLIs from one vault, with a manifest that
+declares which roots each may see, is the integration story most
+single-agent memory tools do not attempt.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks</strong>, and for this design that is the expected
+result rather than a shortfall: notes are notes. No trust state, no
+tombstone, no bitemporality, no audit log beyond git, no review surface,
+no negative eval.</p>
+<p><strong>The honest risk is the one section 5 names.</strong> A vault
+that accumulates "Gotchas" and "Key Decisions" over a year contains
+decisions that were reversed and gotchas that were fixed, and nothing in
+the system distinguishes them from the live ones. The budget mechanism
+controls how <em>much</em> gets injected with real rigour; nothing
+controls whether what gets injected is still true.</p>
+<p>The two safety-adjacent mechanisms are both well-judged. The exposure
+policy ships empty and explains why. The path check anticipates a
+separator bypass.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no benchmark, no test suite found.</strong> The
+verification artifacts here are the hooks themselves —
+<code>validate-write</code> checks vault hygiene on every write, and
+<code>charcount</code> and the size meter make the injection cost
+observable at runtime rather than measured offline.</p>
+<p>That is a defensible answer for a template: the thing worth measuring
+is what a session costs, and it is measured continuously and printed,
+rather than benchmarked once. The meter <em>naming what it dropped</em>
+is the part that makes it an instrument rather than a number.</p>
+<p>What is not measured is whether the vault layout helps — no
+comparison against a flat <code>CLAUDE.md</code>, which is the baseline
+every reader will have.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put a byte budget on session-start injection and enforce
+it.</strong> Without a ceiling, the eager layer "drifts upward a little
+every day and nobody notices until a session is paying for it".</li>
+<li><strong>Print a size meter as the last line of every
+injection.</strong> Context cost that is invisible is context cost that
+is unmanaged.</li>
+<li><strong>Name every section the budget dropped, in the
+meter.</strong> "A silent loss is worse than the bloat" — an agent that
+quietly lost your identity section will behave strangely and you will
+not know why.</li>
+<li><strong>Rank by value density, not size.</strong> Filenames are the
+cheapest bytes because one Glob rebuilds them, so the listing degrades
+first; identity, personal context and correctness guards carry no
+fallback and are never traded.</li>
+<li><strong>Use a byte budget, not a line cap.</strong> "Shortening
+entries under a line cap just slides the window deeper and refills
+it."</li>
+<li><strong>Re-inject only the volatile sections on resume and
+compact.</strong> The static bulk is already in the conversation;
+omitting it removes duplication rather than information.</li>
+<li><strong>Collapse any folder past a note threshold to a single count
+line</strong>, so the vault cannot outgrow the ceiling through the one
+directory nobody configured.</li>
+<li><strong>Ride an existing hook rather than spawning another.</strong>
+One process per write, not two.</li>
+<li><strong>Ship your exposure allowlist empty, and say why.</strong>
+"The template must not impose one vault's sensitivities on every
+install."</li>
+<li><strong>Unify path separators before normalising.</strong>
+<code>normalize()</code> on POSIX will not collapse a backslash-spelled
+<code>..</code>.</li>
+<li><strong>Give the semantic index a prose description of the
+vault.</strong> <code>qmd_context</code> is a paragraph telling the
+index what this collection is for.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let an accumulating knowledge vault have no staleness
+story.</strong> A year of "Key Decisions" contains reversed ones, and
+nothing here separates them.</li>
+<li><strong>Do not measure only the budget.</strong> Whether the layout
+beats a flat <code>CLAUDE.md</code> is the comparison a reader wants and
+it is not made.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice if you already live in Obsidian and want your agent
+working from the same vault you read — the <code>.base</code> views mean
+the human and the agent query one store. It is a template you adopt
+wholesale, not a component.</p>
+<p><code>ARCHITECTURE.md</code>'s injection-budget section is worth
+reading whatever you build. It is the clearest treatment in this atlas
+of a cost every agent memory system pays and most never measure.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What happens when the budget drops something
+irreplaceable?</strong> The design says identity and correctness guards
+carry no fallback; what the meter does if they alone exceed the ceiling
+was not traced.</li>
+<li><strong>Is there a staleness pass?</strong> Nothing found marks a
+note as superseded.</li>
+<li><strong>How does QMD rank?</strong> The semantic index is external
+to this repository.</li>
+<li><strong>Does the layout beat a flat instructions file?</strong>
+Unmeasured.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The budget</strong> — <code>ARCHITECTURE.md</code> (the drift
+argument and the byte-budget case <code>:99</code>, value-density
+ranking and the duplication-not-information rule <code>:103</code>,
+<code>resolveExposure</code> <code>:491-513</code>),
+<code>README.md</code> (the five mechanisms <code>:225</code>),
+<code>vault-manifest.json</code> (<code>eager_layer_budget_bytes</code>,
+<code>listing_collapse_threshold</code>, <code>open_loop_dirs</code>,
+<code>open_loop_sections</code>, <code>mcp_exposed_roots</code>,
+<code>mcp_never_expose</code>, <code>qmd_context</code>),
+<code>CHANGELOG.md</code> (<code>:75</code>, <code>:100</code>)</p>
+<p><strong>Hooks</strong> —
+<code>.claude/scripts/validate-write.ts</code> (<code>:1-22</code>),
+<code>.claude/scripts/lib/frontmatter.ts</code>
+(<code>isBlockedMemoryPath</code> <code>:45-54</code>),
+<code>.claude/scripts/pre-compact.ts</code>,
+<code>classify-message.ts</code>, <code>charcount.ts</code>,
+<code>generate-memory-index.ts</code>, <code>qmd-refresh-run.ts</code>,
+<code>tidy-fix.ts</code>,
+<code>.shardmind/hooks/{personalize,bootstrap,post-update}.ts</code></p>
+<p><strong>The vault</strong> —
+<code>brain/{Memories,Key Decisions,Patterns,Gotchas,North Star,Skills}.md</code>,
+<code>work/</code>, <code>perf/</code>, <code>reference/</code>,
+<code>org/</code>, <code>thinking/</code>, <code>templates/</code>,
+<code>bases/*.base</code></p>
+<p><strong>Agent surfaces</strong> — <code>CLAUDE.md</code>,
+<code>AGENTS.md</code>, <code>GEMINI.md</code>, <code>Home.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d"><code>b84464b983d7b25e811d52986f8b61dbcbad961d</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no hook was run. QMD is an external dependency and was
+not examined.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

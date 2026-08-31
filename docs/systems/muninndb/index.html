@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A 300,000-line Go memory engine
+with Ebbinghaus decay, Hebbian learning and ACT-R activation in the
+storage layer — a discrete trust label, valid time separate from record
+time, and a per-engram provenance log whose wire format documents its
+own evolution rules.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MuninnDB — Agent Memory Atlas">
+    <meta property="og:description" content="A 300,000-line Go memory
+engine with Ebbinghaus decay, Hebbian learning and ACT-R activation in
+the storage layer — a discrete trust label, valid time separate from
+record time, and a per-engram provenance log whose wire format documents
+its own evolution rules.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MuninnDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A 300,000-line Go memory
+engine with Ebbinghaus decay, Hebbian learning and ACT-R activation in
+the storage layer — a discrete trust label, valid time separate from
+record time, and a per-engram provenance log whose wire format documents
+its own evolution rules.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MuninnDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MuninnDB",
+      "description": "A 300,000-line Go memory engine with Ebbinghaus decay, Hebbian learning and ACT-R activation in the storage layer \u2014 a discrete trust label, valid time separate from record time, and a per-engram provenance log whose wire format documents its own evolution rules.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A database whose primitives are
+cognitive</p>
+          <h1>MuninnDB</h1>
+          <p class="document-deck">A 300,000-line Go memory engine with
+Ebbinghaus decay, Hebbian learning and ACT-R activation in the storage
+layer — a discrete trust label, valid time separate from record time,
+and a per-engram provenance log whose wire format documents its own
+evolution rules.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/scrypster/muninndb">
+              <span>Source</span>
+              <strong>scrypster/muninndb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca7980a341551" title="fc16e786970c7ef31a6e5244cfdca7980a341551">
+              <span>Analyzed revision</span>
+              <code>fc16e786…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MuninnDB is a 299,740-line Go memory engine — 995 source files, one
+binary, no dependencies to install — serving MCP, REST, gRPC and its own
+binary protocol from a Pebble key-value store. Its claim is that memory
+<em>"strengthens with use, fades when unused, and pushes to you when it
+matters"</em>, and the unusual thing is where that lives: the decay
+curve, the Hebbian weights, the activation model and the confidence
+update are <strong>engine-native</strong>, in
+<code>internal/cognitive</code> and
+<code>internal/engine/activation</code>, not layered over a general
+store by an application.</p>
+<p>Three mechanisms make it worth the read regardless of whether you
+would deploy it.</p>
+<p><strong>Provenance is a first-class append-only record with an actor
+and a verb.</strong> <code>ProvenanceEntry</code> carries a timestamp, a
+<code>SourceType</code> — human, LLM, document, inferred, external,
+working-memory promotion, or synthetic — an <code>AgentID</code> that
+looks like <code>user:mj</code> or <code>ollama:llama3.2</code> or
+<code>consolidation-worker</code>, and an <code>Operation</code> drawn
+from a fixed vocabulary: create, evolve, update-relevance, update-meta,
+update-trust, stamp-valid-until, merge, promote. A <code>Details</code>
+payload carries the predecessor id, the caller's stated reason, and the
+valid-time boundary the change took effect at.</p>
+<p><strong>And the comment on that struct is the best piece of schema
+writing in this corpus.</strong> It explains why the record is JSON,
+that an entry written before <code>Details</code> existed decodes with
+<code>Details == nil</code> — <em>"absent, never a zero-value pretending
+to be data"</em> — and names the only two changes that would require a
+real format version: renaming or retyping an existing field, or making a
+new field load-bearing for correctness rather than informational. Most
+systems here discover their format rules by breaking them.</p>
+<p><strong>Trust is a label and time is two axes.</strong>
+<code>TrustLevel</code> is a discrete enum — unset, verified, inferred,
+external, untrusted — described in the source as a <em>provenance
+confidence label</em> that feeds use-time effective importance rather
+than being the ranking. <code>EffectiveAt</code> is explicitly
+<em>"distinct from Timestamp, which is when the write happened"</em>,
+and there is a <code>stamp-valid-until</code> operation beside
+<code>ValidFrom</code> and <code>ValidUntil</code> on the engram. That
+is bi-temporality implemented because the design needed it, not bolted
+on.</p>
+<p><strong>One caveat belongs at the top rather than in a licence
+footnote.</strong> The README states that a <strong>provisional patent
+was filed on 26 February 2026 over the core cognitive
+primitives</strong> — engine-native Ebbinghaus decay, Hebbian learning,
+Bayesian confidence, semantic triggers — and the licence is Business
+Source License 1.1. This report describes the mechanisms because they
+are published and readable; whether a reader may implement them is a
+question this atlas cannot answer and the reader should not assume from
+a code-grounded description.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An engram is written, decays, is strengthened by co-activation, and
+is retrieved by activation rather than by similarity alone.</p>
+<p><strong>Writing records who and why.</strong> Every create or change
+appends a provenance entry under the engram's own key, so the audit is
+per-memory rather than a global stream.</p>
+<p><strong>Correction is supersession with a named predecessor.</strong>
+The <code>evolve</code> operation writes a successor, records
+<code>PredecessorID</code> on it — <em>"the storage-side mirror of the
+RelSupersedes edge, recorded on the successor so the successor's own
+audit trail answers 'what did this replace'"</em> — carries the caller's
+<code>Reason</code>, and stamps <code>EffectiveAt</code> as the
+successor's valid-from and the predecessor's valid-until in one
+move.</p>
+<p><strong>Contradiction is a property of edge types,
+precomputed.</strong> <code>contraMat</code> is a 64×64 boolean matrix
+built at init: <code>RelSupports</code> contradicts
+<code>RelContradicts</code>, <code>RelPrecededBy</code> contradicts
+<code>RelFollowedBy</code>, and <code>ContradictionSeverity</code>
+scores a pair. Detecting a contradiction is a table lookup rather than a
+model call.</p>
+<p><strong>Forgetting is an API verb.</strong> <code>Forget</code> and
+<code>BatchForget</code> exist on gRPC and the binary protocol,
+<code>handleDeleteEngram</code> on REST, and
+<code>handleListDeleted</code> will tell you what went — deletion is
+something the system expects to be asked about afterwards.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an abstention gate returns nothing rather than a weak answer, and evolution links a successor to its predecessor with an effective date instead of overwriting</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an abstention gate returns nothing rather than a weak answer, and evolution links a successor to its predecessor with an effective date instead of overwriting
+flowchart TD
+    W[&quot;Write via MCP / REST / gRPC / MBP&quot;] --&gt; E[(&quot;Engram&lt;br/&gt;TrustLevel, importance,&lt;br/&gt;ValidFrom / ValidUntil&quot;)]
+    W --&gt; P[(&quot;Provenance log, per engram&lt;br/&gt;source, agent, operation, reason&quot;)]
+    EV[&quot;evolve&quot;] --&gt; S[&quot;Successor engram&quot;]
+    EV --&gt; P
+    S -- &quot;PredecessorID + EffectiveAt&quot; --&gt; E
+    E --&gt; A[&quot;Activation: base-level decay&lt;br/&gt;+ spreading over Hebbian edges&quot;]
+    A --&gt; G{&quot;Abstention gate&quot;}
+    G -- &quot;below threshold&quot; --&gt; N[&quot;Return nothing&quot;]
+    G -- &quot;above&quot; --&gt; R[&quot;Recall&quot;]
+    R --&gt; H[&quot;Hebbian worker:&lt;br/&gt;co-activation strengthens edges&quot;]
+    H --&gt; E
+    T[&quot;Transition worker&quot;] --&gt; PAS[&quot;Sequential activation pairs&quot;]</code></pre></details></figure>
+<p>The loop from recall back into edge weights is the design: use
+changes reachability, and the trust label stays out of it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary, Pebble underneath, <code>~/.muninn</code> for state,
+and an uninstall instruction in the README that is two commands.
+Packages are split by concern — <code>engine</code>,
+<code>storage</code>, <code>cognitive</code>, <code>episodic</code>,
+<code>consolidation</code>, <code>scoring</code>, <code>index</code>,
+<code>query</code>, <code>provenance</code>, <code>audit</code>,
+<code>auth</code>, <code>backup</code>, <code>replication</code>,
+<code>metrics</code>, <code>plugin</code>, <code>mcp</code>. Replication
+and backup as first-class packages is rare in this corpus: most
+local-first memories treat durability as the user's problem.</p>
+<p><code>.claude/deep-review/</code> holds dated design documents —
+<code>2026-07-28-importance-two-strength-decay-design.md</code>,
+<code>2026-08-01-decay-time-normalization-design.md</code>,
+<code>2026-07-28-mcp-trigger-stream-design.md</code> — so the reasoning
+behind the tuning decisions is in the tree beside the code.</p>
+<p>The screen reported <strong>two auto-run surfaces</strong>:
+<code>.claude/settings.json</code> and <code>.claude/hooks/</code>. That
+is a memory system shipping agent-harness hooks in its own repository,
+which is exactly the surface the screen exists to name; nothing here was
+executed, and a reader cloning this tree into a Claude Code workspace
+should read those two files before opening it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Provenance</strong> —
+<code>internal/provenance/types.go</code> (the entry, the source
+vocabulary, the <code>Details</code> payload and the format-evolution
+comment) and <code>store.go</code> (<code>Append</code>).</li>
+<li><strong>Trust</strong> — <code>internal/storage/types.go</code>
+(<code>TrustLevel</code> on the engram),
+<code>internal/storage/engram.go:416</code>
+<code>UpdateTrust</code>.</li>
+<li><strong>Decay and Hebbian learning</strong> —
+<code>internal/cognitive/decay.go</code>, <code>hebbian.go</code>,
+<code>hebbian_ltp.go</code>, with clock-skew tests beside them.</li>
+<li><strong>Contradiction</strong> —
+<code>internal/cognitive/contradict.go</code>, the 64×64 matrix and
+<code>ContradictionSeverity</code>.</li>
+<li><strong>Transitions</strong> —
+<code>internal/cognitive/transition.go</code>, a worker recording
+sequential activation pairs for predictive activation.</li>
+<li><strong>Activation</strong> —
+<code>internal/engine/activation/</code>, including ACT-R and an
+abstention gate.</li>
+<li><strong>Deletion</strong> —
+<code>Forget</code>/<code>BatchForget</code> in
+<code>internal/transport/grpc/server.go</code> and
+<code>internal/transport/mbp/server.go</code>;
+<code>handleListDeleted</code> in the REST server.</li>
+<li><strong>Scope</strong> — the <code>ws [8]byte</code> workspace
+prefix through <code>internal/storage/</code>, and vault checks in
+<code>internal/transport/mbp/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An engram is ULID-keyed under a workspace prefix and carries
+importance, two strengths, a <code>TrustLevel</code>, valid-from and
+valid-until, and typed edges. The two-strength design has its own dated
+design note, which is the right place for a tuning decision to be
+argued.</p>
+<p><code>TrustLevel</code> earns the <code>trust_state</code> mark on
+the rubric's terms: it is a discrete label with <code>untrusted</code>
+and <code>verified</code> at opposite ends, stored as a field, and the
+source describes it as feeding <em>use-time effective importance</em> —
+so reachability and standing are separate quantities rather than one
+number doing both jobs, which is the failure this atlas records most
+often on the trust side.</p>
+<p>Valid time is genuinely separate from record time.
+<code>EffectiveAt</code> in the provenance <code>Details</code> is
+documented as the valid-time boundary, <code>Timestamp</code> as when
+the write happened, and <code>stamp-valid-until</code> is its own
+operation in the vocabulary.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Activation rather than similarity: a base-level term that decays,
+spreading activation across edges whose weights the Hebbian worker
+maintains, and an <strong>abstention gate</strong> that can return
+nothing. A retrieval that is allowed to decline is the mechanism this
+atlas's <a href="../../patterns/gate-the-expensive-path/">gate the
+expensive path</a> page argues for, and the test directory around it —
+<code>abstention_gate_measure_test.go</code>,
+<code>admission_test.go</code>, <code>clockskew_test.go</code>,
+<code>cognition_trial_arms_test.go</code> — suggests it is treated as a
+measured component rather than a threshold someone picked.</p>
+<p>Semantic triggers invert the direction: the store can push a memory
+when it becomes relevant, rather than waiting to be asked.
+<code>docs/semantic-triggers.md</code> and a dated design note cover the
+stream design.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous; the derivation is what runs in
+the background. Hebbian potentiation, transition recording,
+consolidation, decay and confidence each have a worker with its own
+lifecycle, and the transition worker's comment states its pattern is
+copied from the Hebbian one — small, and a sign of a codebase that
+reuses its own shapes rather than inventing per-worker.</p>
+<p>Every write appends provenance. That is the property the rest of the
+design rests on, and it is why <code>audit_log</code> is earned here
+rather than argued: the record is append-only, per engram, in the
+system's own store, with an actor and a verb.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four transports from one binary — MCP for agents, REST for tooling,
+gRPC for services, and a binary protocol for its own SDKs — plus a web
+console and language SDKs. The MCP surface is the one most readers will
+touch, and the trigger stream is what distinguishes it from the usual
+tool-call-and-wait shape.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope is enforced at two levels and tested at the outer
+one.</strong> A workspace prefix is a parameter of the storage API
+rather than a filter applied afterwards, and vaults sit above it at the
+transport layer. <code>internal/transport/mbp/vault_scope_test.go</code>
+commits the cases that matter:
+<code>TestHello_Token_VaultMismatch_Rejected</code>, and
+<code>TestNoneSession_LockedVault_AllOpsRejected</code> — a session
+established against the public default vault cannot touch a locked one,
+asserted across operations rather than on one endpoint. That earns
+<code>negative_eval</code> on the boundary that every other guarantee
+here depends on.</p>
+<p><strong>Provenance answers who, what and why.</strong> Source type,
+agent id, operation verb, free-text note, predecessor, reason, effective
+time. Very few systems in this atlas record the <em>reason</em> a change
+was made as a first-class field.</p>
+<p><strong>What is missing is a rejected-value tombstone.</strong>
+Deletion is a real API verb, supersession names its predecessor, and
+nothing is keyed on the <em>value</em>, so a re-extraction of a
+forgotten claim lands as new. Given how much of this design is already
+correct — an audit that would show it, a trust label that could hold
+<code>untrusted</code>, a contradiction matrix — the gap is narrower
+here than in most systems that lack it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test files sit beside the code throughout, and the naming shows what
+the project considers fragile: clock skew appears in both the decay and
+the activation suites, <code>hebbian_read_fault_test.go</code> and
+<code>hebbian_callback_persistence_test.go</code> cover the worker's
+failure paths, <code>contradict_test.go</code> the matrix, and
+<code>cognition_trial_arms_test.go</code> an experimental arm
+comparison. <code>internal/bench</code> exists in-tree.</p>
+<p>No published benchmark number appears in the README, and none is
+claimed against another system.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Write the format-evolution rules into the struct
+comment.</strong> Which changes are additive, what absence must mean,
+and the exact two changes that would need a version byte. It costs a
+paragraph and it is the difference between a schema that evolves and one
+that accretes compatibility shims.</p>
+<p><strong>Record the reason for a change, not just the change.</strong>
+<code>Details.Reason</code> is the caller's justification and
+<code>PredecessorID</code> is on the successor, so a memory's own audit
+answers <em>what did this replace and why</em> without a join.</p>
+<p><strong>Make contradiction a property of edge types.</strong> A
+precomputed matrix over relation types costs nothing per check and
+catches the structural contradictions a model call would be asked
+about.</p>
+<p><strong>Let retrieval abstain, and test the gate as a measured
+component.</strong></p>
+<p><strong>Keep the trust label out of the ranking it informs.</strong>
+<code>TrustLevel</code> feeds effective importance; it is not the
+score.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not ship agent-harness hooks in a repository people will
+clone into their own harness</strong> without saying so at the top of
+the README. <code>.claude/settings.json</code> and
+<code>.claude/hooks/</code> are the first thing a screening tool flags
+and the last thing a reader expects from a database.</p>
+<p><strong>Do not stop at supersession.</strong> Everything needed for a
+value-keyed refusal is present — the audit, the label, the matrix — and
+nothing keys on the value.</p>
+<h3 id="fit">Fit</h3>
+<p>This is the most infrastructure-shaped memory in the atlas:
+replication, backup, four transports, a keyspace design, workers with
+lifecycles. If you want a memory <em>service</em> several agents share
+and you are comfortable with a BSL licence and an asserted patent over
+its primitives, it is the most complete implementation of
+cognitively-motivated decay and activation here.</p>
+<p>It is the wrong choice if you need to build on those primitives
+freely, or if you want a store you can read end to end in an afternoon —
+300,000 lines is a commitment, and the patent notice means the
+mechanisms are documented rather than donated.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A provisional patent over the primitives</strong>, asserted
+in the README, beside a BSL 1.1 licence. Readable, not freely reusable,
+and the reader should treat both as live constraints.</li>
+<li><strong>Agent-harness hooks in the repository</strong>, which
+execute in a reader's harness rather than in the project's.</li>
+<li><strong>No value-keyed refusal</strong>, so a forgotten claim can
+return through extraction.</li>
+<li><strong>Cognitive parameters are numerous</strong> — two strengths,
+decay, Hebbian rates, activation thresholds — and the dated design notes
+argue them well without any committed measurement of the defaults
+against alternatives.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the provenance record's shape and its comment, the
+contradiction matrix, and the separation of trust label from effective
+importance. Those three are independent of the engine and of any patent
+claim over decay and Hebbian learning, which a reader should assess
+separately.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What exactly does the provisional patent cover, and how should an
+implementer of the atlas's decay-and-reinforcement pattern read it?</li>
+<li>Is the deleted-engram listing a tombstone in waiting — it already
+knows what went — and would keying it on a normalized value be a schema
+change or a new keyspace?</li>
+<li>Are the decay and activation defaults measured anywhere, or argued
+in the design notes and then shipped?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/provenance/types.go</code></td>
+<td>Provenance entry, source vocabulary, <code>Details</code>, the
+format-evolution comment</td>
+</tr>
+<tr>
+<td><code>internal/cognitive/decay.go</code>, <code>hebbian.go</code>,
+<code>hebbian_ltp.go</code></td>
+<td>Ebbinghaus decay and Hebbian potentiation</td>
+</tr>
+<tr>
+<td><code>internal/cognitive/contradict.go</code></td>
+<td>64×64 relation-type contradiction matrix and severity</td>
+</tr>
+<tr>
+<td><code>internal/cognitive/transition.go</code></td>
+<td>Sequential activation pairs for predictive activation</td>
+</tr>
+<tr>
+<td><code>internal/engine/activation/</code></td>
+<td>ACT-R activation, admission and the abstention gate</td>
+</tr>
+<tr>
+<td><code>internal/storage/engram.go</code></td>
+<td>Engram record, <code>UpdateTrust</code>, workspace-prefixed
+keys</td>
+</tr>
+<tr>
+<td><code>internal/transport/mbp/vault_scope_test.go</code></td>
+<td>The committed cross-vault refusals</td>
+</tr>
+<tr>
+<td><code>.claude/deep-review/</code></td>
+<td>Dated design documents for decay, strengths and the trigger
+stream</td>
+</tr>
+</tbody>
+</table>
+<h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca7980a341551"><code>fc16e786970c7ef31a6e5244cfdca7980a341551</code></a>
+— first reading. Screened before reading: <strong>2 auto-run
+surfaces</strong> (<code>.claude/settings.json</code> and
+<code>.claude/hooks/</code>, agent-harness hooks shipped in the
+repository), 2 build-time execution paths and 5 unpinned dependency
+surfaces, none inside the seven-day cooldown. Nothing was built or run.
+Licensed BSL 1.1, with a provisional patent asserted in the README over
+the core cognitive primitives as of 26 February 2026; both are recorded
+as caveats on use rather than as reasons not to analyse published
+code.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

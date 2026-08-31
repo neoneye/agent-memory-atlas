@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Markdown-as-memory for coding
+agents whose CLI refuses a write that violates a per-category schema no
+matter what the agent's prompt says, with a SQLite index rebuilt from
+the files and a recall hook the harness runs instead of the model.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Neuron — Agent Memory Atlas">
+    <meta property="og:description" content="Markdown-as-memory for
+coding agents whose CLI refuses a write that violates a per-category
+schema no matter what the agent's prompt says, with a SQLite index
+rebuilt from the files and a recall hook the harness runs instead of the
+model.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neuron — Agent Memory Atlas">
+    <meta name="twitter:description" content="Markdown-as-memory for
+coding agents whose CLI refuses a write that violates a per-category
+schema no matter what the agent's prompt says, with a SQLite index
+rebuilt from the files and a recall hook the harness runs instead of the
+model.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Neuron — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Neuron",
+      "description": "Markdown-as-memory for coding agents whose CLI refuses a write that violates a per-category schema no matter what the agent's prompt says, with a SQLite index rebuilt from the files and a recall hook the harness runs instead of the model.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A schema the agent's prompt cannot
+override</p>
+          <h1>Neuron</h1>
+          <p class="document-deck">Markdown-as-memory for coding agents
+whose CLI refuses a write that violates a per-category schema no matter
+what the agent's prompt says, with a SQLite index rebuilt from the files
+and a recall hook the harness runs instead of the model.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kovartravis/neuron">
+              <span>Source</span>
+              <strong>kovartravis/neuron</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">
+              <span>Analyzed revision</span>
+              <code>9f6eaf90…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Neuron is markdown-as-memory for coding agents, and its thesis is a
+sentence from its own README: <em>"tell an agent to append to a
+<code>.md</code> file is a prompt, not a product."</em> Everything the
+agent learns lives as <code>.neuron/*.md</code> files — readable,
+git-diffable, hand-editable — and the part that turns that from a
+suggestion into a guarantee is a CLI that <strong>refuses to write an
+entry that violates a per-category schema, no matter what the agent's
+prompt says.</strong> MIT, TypeScript, release v2.4.1, with 745 test
+cases across 68 files.</p>
+<p>Three design decisions lift it above the other markdown-memory
+systems in this atlas.</p>
+<p><strong>The schema is enforced at one chokepoint, on the write path,
+below the prompt.</strong> <code>neuron.yaml</code> declares required
+and enum-typed fields per category — "every <code>decisions</code> entry
+needs a <code>ticket</code> and a <code>reviewedBy</code>" — and
+<code>NeuronMemory.enforceFieldSchema</code> checks every mutation
+before it lands, from the CLI and from <code>neuron scan</code> alike. A
+missing required field, an undeclared field, or a value outside a
+declared enum throws with a message naming the cause (and a did-you-mean
+on enum near-misses). An agent whose prompt says "just save it" cannot:
+the schema is a property of the store, not of the instruction, which is
+the thing markdown-memory usually cannot promise.</p>
+<p><strong>Recall is the harness's job, not the model's, and the
+fidelity is measured rather than asserted.</strong> On Claude Code and
+Codex CLI, <code>neuron init</code> wires four lifecycle points —
+<code>session-start</code>, <code>pre-prompt</code>,
+<code>context-reset</code> and (since v2.4.0) <code>pre-command</code>,
+the last firing a gated lookup on every Bash tool call
+(<code>PreToolUse</code>), not only per prompt turn — that query memory
+and inject results before the model sees the prompt. Where a harness
+lacks a per-turn hook point, Neuron says so, in a <strong>three-rung
+ladder</strong> — <code>deterministic</code>, <code>best-effort</code>,
+<code>instruction-only</code> — and <code>neuron init</code> reports the
+rung per project per harness by reading each harness's real hook
+registration through a <code>verify()</code> call, not by inferring from
+a config file's existence. Cursor's row is labelled best-effort
+<em>and</em> flagged "not verified against a real Cursor installation …
+shipped on fixture/documentation evidence only." A memory system that
+tells you which of its own guarantees it has not been able to test is
+rare enough to be the headline.</p>
+<p><strong>Supersession is the epistemic move, and it is one-way by
+design.</strong> <code>supersededBy</code> is a forward link set only by
+the write gate's <code>--supersedes</code> resolution, never on
+creation; a superseded row is hard-excluded from every read path; and
+the comment is explicit that "a wrong mark is corrected by a new
+forward-linking entry, not by clearing this." History is retained and
+retrievable with <code>includeSuperseded</code>, and the live view never
+shows it.</p>
+<p>The weaknesses are the ones markdown-as-record buys. The store of
+truth is text a hand-edit can break, and the codebase's own comments
+record where that bit: ticket 38, a stray <code>---</code> in one
+entry's body made the parser undercount a category by ~38% and the
+reconciler mass-deleted the vector mirror to match. The parser bug is
+fixed and a loud-but-non-blocking tripwire added, and the honesty of
+writing that into the code is itself characteristic of the tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>markdown entry</strong> under
+<code>.neuron/</code>, one file per category (or a configurable root per
+category), each entry carrying <code>content</code>,
+<code>category</code>, <code>tags</code>, an optional
+<code>importance</code>, config-declared typed <code>fields</code>,
+<code>createdAt</code>, and an optional
+<code>supersededBy</code>/<code>supersededAt</code>. The markdown is the
+store of record; a SQLite row is its mirror.</p>
+<p>The state machine is small and the interesting part is what is
+<em>not</em> in it:</p>
+<pre class="text"><code>write  -&gt; enforceFieldSchema: refuse if a required field is missing,
+                              a field is undeclared, or an enum value is invalid
+       -&gt; markdown file written, SQLite mirror reconciled
+live   -&gt; retrievable; the default read hard-excludes superseded rows
+supersede (--supersedes) -&gt; supersededBy set, one way, by the write gate only
+                          -&gt; row hard-excluded from every read unless includeSuperseded
+correct a wrong supersede -&gt; write a NEW forward-linking entry; never clear the link</code></pre>
+<p>There is no <code>verified</code> and no <code>rejected</code>.
+<code>importance</code> is a scalar that feeds ranking, not a trust
+state, and nothing marks an entry as endorsed or refuted. The epistemic
+vocabulary is entirely supersession: a claim does not become
+<em>wrong</em>, it becomes <em>replaced</em>, and the replacement points
+back. That is a deliberate narrowing — the system can say "this
+superseded that" and cannot say "this is disputed" — and it is why this
+report withholds <code>trust_state</code> despite the schema
+machinery.</p>
+<p>The subtle correctness property is that <strong>the mirror is never
+the truth.</strong> Every command reconciles the SQLite index from the
+markdown before reading, delete the database and Neuron rebuilds it, and
+a divergence between the two is resolved in the files' favour. That
+inverts the usual arrangement, where the index is authoritative and the
+human-readable export is a courtesy. Here the thing you can open in an
+editor is the thing that is true, and the fast thing is disposable.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the schema gate sits on the write path below the prompt, and the markdown is the truth the mirror is rebuilt from</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the schema gate sits on the write path below the prompt, and the markdown is the truth the mirror is rebuilt from
+flowchart TB
+    Agent[&quot;agent (any prompt)&quot;] --&gt; CLI[&quot;neuron memory add / neuron scan&quot;]
+    CLI --&gt; Gate{&quot;enforceFieldSchema&lt;br/&gt;required present? field declared?&lt;br/&gt;enum value valid?&quot;}
+    Gate --&gt;|&quot;no&quot;| Refuse[&quot;throw, naming the field&lt;br/&gt;— the prompt cannot override this&quot;]
+    Gate --&gt;|&quot;yes&quot;| MD[(&quot;.neuron/*.md&lt;br/&gt;store of record&quot;)]
+    MD --&gt; Recon[&quot;reconcile on every command&quot;]
+    Recon --&gt; DB[(&quot;SQLite mirror&lt;br/&gt;FTS5 + ONNX embeddings&lt;br/&gt;rebuildable, disposable&quot;)]
+    DB --&gt; Query[&quot;queryGated: RRF(vector, FTS)&lt;br/&gt;+ FTS-match gate + reranker threshold&quot;]
+    Query --&gt; Hook[&quot;harness hook injects before the model&lt;br/&gt;deterministic / best-effort / instruction-only&quot;]
+    MD -.-&gt;|&quot;--supersedes: one-way link,&lt;br/&gt;hard-excluded from reads&quot;| MD
+    MD -.-&gt;|&quot;a stray &#39;---&#39; once made the parser&lt;br/&gt;undercount and mass-delete the mirror&lt;br/&gt;(ticket 38, now a loud tripwire)&quot;| DB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One TypeScript package, a CLI over a <code>NeuronMemory</code> core
+(<code>src/index.ts</code>, ~2,000 lines) and a
+<code>DualStorageRouter</code> that dispatches each category to its
+resolved backend.</p>
+<ul>
+<li><strong><code>src/storage/</code></strong> —
+<code>mdStorage.ts</code> / <code>mdStorageAdapter.ts</code> (the
+markdown store of record), <code>dualStorageRouter.ts</code>
+(per-category md-vs-vector dispatch and reconciliation),
+<code>mdVectorSync.ts</code> (content hashing and the mirror), and
+<code>multiRootMdStorage.ts</code> (configurable per-category
+roots).</li>
+<li><strong><code>src/index.ts</code></strong> — the SQLite core: schema
+and migrations, FTS5 virtual tables with sync triggers,
+<code>queryGated</code>, <code>enforceFieldSchema</code>,
+<code>checkFieldCompliance</code>, supersession columns.</li>
+<li><strong><code>src/config/neuronYaml.ts</code></strong> (835 lines) —
+the schema language: category field definitions,
+<code>validateNeuronYaml</code>, <code>validateDeclaredFields</code>,
+reserved names.</li>
+<li><strong><code>src/scanner/</code></strong> — Tree-Sitter parsing
+(<code>treesitter.ts</code>, <code>grammars.ts</code>) and the
+deterministic architecture-card <code>diff.ts</code>.</li>
+<li><strong><code>src/harnesses/</code></strong> — the hook payload
+builders, budgets and epoch state.</li>
+<li><strong><code>src/commands/</code></strong> — the CLI verbs,
+including <code>hook.ts</code> (the injection entry point) and
+<code>init.ts</code> (the harness wiring and
+<code>verify()</code>).</li>
+<li><strong><code>src/models/</code></strong> — embeddings; ONNX via
+<code>@huggingface/transformers</code> and <code>onnxruntime-web</code>,
+local, no network.</li>
+</ul>
+<p>Storage is two things with two roles. The markdown files are the
+record. The SQLite database — one per machine, in a cache directory
+outside the repo, keyed by a <code>project_id</code> hashed from the
+project root — holds a <code>memories</code> table, FTS5 mirror tables
+kept in sync by triggers, and the embeddings. It is explicitly
+disposable: "delete it and Neuron rebuilds it from your files."</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Fully local and offline.</strong> ONNX embeddings run
+in-process, no API key, no cloud call. This is the rare atlas entry
+whose semantic search needs nothing standing up and nothing to
+authenticate.</li>
+<li><strong>The store of record is in the repo and reviewable.</strong>
+<code>.neuron/*.md</code> diffs in a pull request; the SQLite index
+lives outside the repo and is never committed.</li>
+<li><strong>Install and first run</strong> is
+<code>npm install -g @kovartravis/neuron</code> then
+<code>neuron init</code>, which pre-downloads the models and wires
+whatever harness it detects.</li>
+<li><strong>Hand-repair is a first-class path</strong> — the files are
+the truth, so fixing a wrong memory is editing a line, and the mirror
+reconciles on the next command.</li>
+</ul>
+<p>The screen found one auto-run surface
+(<code>.claude/settings.json</code> hooks — the harness registration
+this system is <em>about</em>), two build-time execution points (a
+<code>postinstall</code> that Termux-fixes a shebang on Android and a
+<code>prepublishOnly</code> build), three unpinned surfaces and six
+dependency surfaces inside the cooldown, with
+<code>package-lock.json</code> present. A <code>CLAUDE.md</code> was
+read as data. Nothing was installed and nothing was run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write gate</strong> —
+<code>NeuronMemory.enforceFieldSchema</code> in
+<code>src/index.ts:1255</code>. The single chokepoint every writer
+passes through; rejects undeclared fields, fills defaults, enforces
+required-on-create, and validates enum membership with a
+<code>suggestClosest</code> hint.</li>
+<li><strong>Config schema</strong> — <code>validateNeuronYaml</code> and
+<code>validateDeclaredFields</code> in
+<code>src/config/neuronYaml.ts</code>, which refuse a malformed schema
+itself (an enum with no values, a required field with no default on a
+<code>scan</code> category).</li>
+<li><strong>Dual dispatch and reconcile</strong> —
+<code>DualStorageRouter.transact</code> and <code>reconcile</code> in
+<code>src/storage/dualStorageRouter.ts</code>, with the
+<code>MASS_DELETE_WARN_FRACTION</code> tripwire.</li>
+<li><strong>Retrieval</strong> — <code>queryGated</code> in
+<code>src/index.ts:693</code>: RRF fusion of a vector leg and an FTS5
+leg (<code>RRF_K = 60</code>), then an FTS-match gate, then a
+cross-encoder reranker with
+<code>RERANKER_ACCEPT_THRESHOLD = -8</code>.</li>
+<li><strong>Supersession</strong> — the <code>superseded_by</code> /
+<code>superseded_at</code> columns and the
+<code>AND superseded_by IS NULL</code> clause applied on every read
+(<code>src/index.ts:768</code>).</li>
+<li><strong>Injection hook</strong> — <code>src/commands/hook.ts</code>,
+building capped payloads per lifecycle point
+(<code>SESSION_START_CHAR_BUDGET</code>,
+<code>PRE_PROMPT_CHAR_BUDGET</code>) with a discovery hint when more
+matches exist than were injected.</li>
+<li><strong>Fidelity verification</strong> — <code>verify()</code> per
+harness under <code>src/harnesses/</code>, read by
+<code>neuron init</code> to print the
+<code>detected / wired / fidelity</code> line.</li>
+<li><strong>Architecture card</strong> —
+<code>src/scanner/diff.ts</code>, producing a byte-identical blueprint
+until the code changes.</li>
+<li><strong>Compliance sweep</strong> —
+<code>checkFieldCompliance</code> at <code>src/index.ts:1318</code>,
+which reports (never hard-errors on read) live entries missing a
+now-required field.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The markdown entry round-trips through frontmatter; the SQLite
+<code>memories</code> row mirrors it with additive per-field columns
+(ticket 44), FTS5 tables, an <code>embedding</code> blob, and the
+supersession columns. <code>Memory</code> carries <code>id</code>,
+<code>category</code>, <code>content</code>, <code>tags</code>,
+<code>importance</code>, <code>fields</code> (the config-declared typed
+fields), <code>createdAt</code>, and
+<code>supersededBy</code>/<code>supersededAt</code>.</p>
+<p><strong>The declared-field system is the data model's distinguishing
+feature.</strong> A category's fields are declared once in
+<code>neuron.yaml</code> as <code>string</code> or <code>enum</code>,
+with <code>required</code> and <code>default</code>, and they become:
+CLI flags (<code>--ticket</code>, <code>--reviewedBy</code>), markdown
+frontmatter keys, and additive SQLite columns — one declaration, three
+surfaces, kept consistent by <code>enforceFieldSchema</code>. That is
+schema-on-write for a markdown store, which is the combination the
+README argues does not otherwise exist.</p>
+<p><strong>Scoping</strong> is <code>project_id</code>, a hash of the
+project root, applied as <code>WHERE project_id = ?</code> on every
+SQLite read, and the markdown is physically partitioned per category
+under configurable roots. That earns <code>scope_enforced</code>: the
+scope is a stored key filtered on the read path, not a tag. The caveat
+worth stating is that the boundary is a project directory, not an
+authenticated identity — two projects sharing a machine share the cache
+database and are kept apart by the hash, which is correct for a
+single-developer tool and not a multi-tenant guarantee.</p>
+<p>Temporal fields are <code>createdAt</code> and
+<code>supersededAt</code>, both record time. Nothing tracks when a fact
+was true in the world, so <code>bitemporal</code> does not apply.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is genuine hybrid search, and the fusion is written
+plainly. <code>queryGated</code> runs a vector leg and an FTS5 lexical
+leg, fuses them with Reciprocal Rank Fusion at <code>RRF_K = 60</code>
+normalised against the theoretical maximum, and adds an importance term.
+Then two gates in sequence: an <strong>FTS-match requirement</strong> (a
+row that never matched the lexical leg is dropped when the query has
+text), and a <strong>cross-encoder reranker</strong> scoring each
+survivor against the query, keeping those above <code>-8</code>. The
+reranker never runs on a candidate the FTS gate already rejected, and
+the gate's cumulative rejection count is surfaced in
+<code>neuron status</code> because "a structural (unfitted) gate has no
+threshold to tune, so its cumulative impact is the only visibility."</p>
+<p>Every read path applies <code>AND superseded_by IS NULL</code> unless
+<code>includeSuperseded</code> is set, and the injection hook never sets
+it — so recalled context is live memory only, and the history is
+reachable only by an explicit query.</p>
+<p>The one retrieval subtlety worth flagging: the reconcile-before-read
+means every query pays for a markdown-to-mirror reconciliation of the
+<code>md</code> categories first. For a small <code>.neuron/</code> that
+is nothing; for a large one it is a per-query cost the vector-only
+configurations avoid, and the router short-circuits an empty
+<code>md</code> list to reclaim it.</p>
+<p>The failure mode the system worries about in its own comments is not
+ranking but <em>reconciliation</em>: a markdown parse error
+undercounting a category and the mirror being trimmed to match. The read
+path is fine; the sync path is where the store of record and its index
+can diverge, and the tripwire lives there.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and pass through
+<code>enforceFieldSchema</code> first, which is the whole product.
+Undeclared field → throw. Required field missing on create → throw
+(unless a <code>default</code> is configured). Enum value not in the
+declared set → throw, with a suggestion. The message names the field and
+points at the <code>neuron.yaml</code> path, and the same gate covers
+<code>neuron scan</code>'s bulk ingest, so an automated architecture
+scan cannot bypass the schema a manual add is held to.</p>
+<p>A refused write is a <em>whole</em> refusal, not a partial one — the
+CLI comments make this a rule ("a refused write must not be a partial
+write"), tested against the unquoted-multiword case where storing only
+the first word would be silent corruption.</p>
+<p>Deduplication is content-hash based (<code>computeMemoryHash</code>),
+and supersession is the correction primitive: a new entry with
+<code>--supersedes &lt;id&gt;</code> sets the old row's forward link,
+and the old row leaves every live read. There is no update that rewrites
+history and no hard delete on the ordinary path — <code>update</code> is
+a partial patch that does not re-demand fields the entry already
+satisfied, and removal is supersession.</p>
+<p>Reconciliation is the background-shaped work, but it is inline: every
+command reconciles the mirror from markdown before it reads. Nothing
+runs on a schedule, nothing re-embeds the whole store periodically, and
+the only bulk mutation is the reconcile itself — which is exactly why
+the mass-delete tripwire exists. The design choice recorded in ADR 0011
+is notable: no <code>--force</code> and no blocking tripwire, because
+<code>.neuron/</code> is git-recoverable and a real bulk deletion must
+not be blocked; the tripwire only makes an unusually large deletion
+<em>loud</em>.</p>
+<p>Embedding is local ONNX, computed on write into the mirror. Because
+the mirror is rebuildable, a lost or corrupt database is re-embedded
+from the files rather than lost.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is the sharpest-thought-through part, and the
+fidelity ladder is why. Neuron distinguishes three levels of recall
+guarantee and refuses to present the weaker ones as the stronger:</p>
+<ul>
+<li><strong>Deterministic</strong> — every injecting hook point has a
+known payload cap, failure posture and timeout, and recall refreshes
+every turn. Claude Code and Codex CLI, via <code>SessionStart</code> /
+<code>UserPromptSubmit</code> / <code>PreCompact</code>.</li>
+<li><strong>Best-effort</strong> — real harness-executed injection with
+at least one undocumented edge. Copilot CLI (session-start only) and
+Cursor.</li>
+<li><strong>Instruction-only</strong> — no hook injects; recall depends
+on the model choosing to read <code>AGENTS.md</code> and run
+<code>neuron memory query</code> itself. The fallback for everything
+else.</li>
+</ul>
+<p><code>neuron init</code> reports the rung by calling each harness's
+<code>verify()</code> against its real registration rather than
+inferring from a file's presence, and the Cursor row carries an explicit
+"not verified against a real installation" caveat with a ticket
+reference. This is the correct shape for a claim that depends on someone
+else's software: state the guarantee, state how it was checked, and mark
+the one you could not check. Most systems in this atlas claim "works
+with Claude Code" and stop.</p>
+<p>The agent's write agency is real but bounded: it can add, update and
+supersede through the CLI, and it cannot write outside the schema. The
+recall side is deliberately taken away from the agent's judgement on
+supported harnesses — the harness injects, so recall does not depend on
+the model remembering to look, which is the failure the README names as
+the reason the hooks exist.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The trust model is supersession, not status.</strong> There
+is no <code>verified</code>, no <code>rejected</code>, no confidence
+beyond an <code>importance</code> scalar. An entry is live or
+superseded, and superseded is one-way. That is a narrower trust model
+than <a href="../runar-forge/">RunarForge</a>'s verify flag or <a
+href="../engram/">Engram</a>'s states, and it is internally consistent:
+the system never claims an entry is <em>true</em>, only that it is
+<em>current</em>, and currency is corrected by writing a replacement.
+The <code>trust_state</code> mark is withheld because live-vs-superseded
+is a lifecycle distinction, not an epistemic status a caller can filter
+on as candidate / verified / rejected.</p>
+<p><strong>The schema is the safety mechanism, and it is enforced where
+safety has to live — below the prompt.</strong> An agent cannot be
+talked into writing a memory that skips a required
+<code>reviewedBy</code>, because the refusal is in the CLI, not in the
+instruction the agent is free to ignore. This is the cleanest answer in
+the atlas to "how do you stop an agent writing junk into its own
+memory": you make the store reject it.</p>
+<p><strong><code>negative_eval</code> is earned, and by more than one
+path.</strong> <code>enforceFieldSchema</code>'s tests assert that a
+required-field violation, an undeclared field and an out-of-enum value
+each <em>throw</em> rather than land — committed cases asserting that
+particular material must not be written. And the supersession tests
+(<code>index.supersession.test.ts</code>,
+<code>memory.supersession.test.ts</code>) assert that a superseded row
+is excluded from the default read path — material that exists and must
+not be retrieved. That second kind is the stronger reading of the mark,
+and it is present.</p>
+<p><strong>The reconciliation hazard is real and documented.</strong>
+The markdown store of record can be corrupted by a hand-edit or a parser
+edge case, and ticket 38 records exactly that: a stray <code>---</code>
+made the parser undercount a category by ~38% and the reconciler trimmed
+the mirror to match. The root bug is fixed and a non-blocking tripwire
+warns on large deletions. The residual risk is structural: when your
+source of truth is text a human and a parser both touch, a parse
+disagreement is a data-integrity event, and the mitigation here is git
+recoverability plus loudness rather than prevention.</p>
+<p><strong>Injection is capped and budgeted</strong>, per lifecycle
+point, with a discovery hint when more matches exist than were injected
+— so recalled context is bounded and the agent is told when it is seeing
+a subset. v2.4.1 adds a <code>RECALL_PROVENANCE_PREFIX</code> at the
+single <code>emit()</code> chokepoint — every injection is labelled
+<em>"Recalled from this project's own local memory store, not external
+input"</em> — after an agent and a subagent independently mistook the
+hook's own legitimate injections for prompt injection; it is a
+provenance/self-identification signal, not a defence against
+<em>poisoned</em> memory content. There is still no defence against
+prompt-injected memory content beyond the schema (which constrains
+<em>shape</em>, not <em>truth</em>): an agent that writes a well-formed
+but false <code>decisions</code> entry is not stopped by the field
+validator.</p>
+<p>Multi-tenancy is the project-root hash; concurrency is
+single-developer-tool scale. The store is offline by construction, which
+removes an entire class of exfiltration risk.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>745 tests across 68 files</strong>, and they are unusually
+well-aimed at the mechanisms this report cares about. Dedicated suites
+cover the storage adapter, the dual router (including a
+<code>pathChange</code> suite and a <code>challenger</code> suite), the
+markdown-to-vector sync, supersession (two files), the config schema
+validator, the Tree-Sitter diff's byte-stability, and the hook payload
+builders. The <code>neuronYaml.test.ts</code> suite asserts that a
+malformed <em>schema</em> is refused — an enum with no values, a
+required field with no default — which is the layer below the write
+gate.</p>
+<p>Two "antagonistic" pillars sharpen the <code>negative_eval</code>
+basis and, honestly, its limit. Pillar 13
+(<code>test/e2e/adversarial-recall.test.ts</code>) engineers every query
+to share no keyword or topic with the store and asserts, against the
+real (non-mocked) embedder through the FTS-plus-reranker gate, that the
+false-accept count is zero — material that exists must not be retrieved,
+the strong reading of the mark. Pillar 14
+(<code>test/e2e/antagonistic-write.test.ts</code>, new in v2.4.1) is an
+honest diagnostic of what the <em>write</em> path does not catch: a
+shape violation is caught (<code>.toBe(true)</code>), but a
+near-duplicate paraphrase, a direct contradiction of a live entry, and a
+provenance-free decision all pass through uncaught
+(<code>.toBe(false)</code>) — the supersession/similarity gate only
+hard-errors above 0.97 cosine, and this repo's own
+<code>decisions</code> category declares no schema fields to check. It
+is the clearest statement in the corpus that the system has no
+value-keyed rejection: <code>tombstone</code> stays withheld because the
+code confirms the gap rather than closing it.</p>
+<p>The gap is the one common to every markdown-memory system here: there
+is no retrieval-quality benchmark. The RRF weights, the reranker
+threshold of <code>-8</code>, and the FTS gate are all tested for
+<em>behaviour</em> (a superseded row is excluded, a non-matching row is
+gated out) and not for <em>quality</em> (whether the ranking surfaces
+the right memory). <code>benchmarks/</code> exists in the tree; what it
+measures is throughput-shaped rather than recall-precision-shaped.</p>
+<p>What would raise confidence further: a test that a mass-deletion of
+the kind ticket 38 describes trips the warning at the configured
+fraction, and a negative-retrieval case at the injection layer asserting
+a superseded entry never reaches a hook payload (the supersession tests
+assert it at the query layer; the hook path sets
+<code>includeSuperseded</code> false, so it should hold, and a direct
+test would pin it).</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Enforce the schema on the write path, below the
+prompt.</strong> A per-category required/enum field spec, checked at one
+chokepoint every writer passes through, turns "please include a ticket"
+from an instruction the agent can ignore into a write that fails without
+one. If your agent curates its own memory, this is the mechanism that
+makes the curation trustworthy, and it is one function.</p>
+<p><strong>Publish a fidelity ladder and verify it per
+integration.</strong> Deterministic / best-effort / instruction-only,
+reported by calling the harness's real registration rather than
+inferring from a config file, with the integration you could not test
+explicitly marked unverified. This is how to make an integration-matrix
+claim honest, and almost nothing in this atlas does it.</p>
+<p><strong>Make the human-readable form the store of record and the
+index disposable.</strong> Reconcile the fast index from the files on
+every command; delete it and rebuild. The property you buy is that the
+thing a reviewer reads in a pull request is the thing that is true, not
+a courtesy export that can drift from the real store.</p>
+<p><strong>Make supersession one-way and hard-exclude the
+superseded.</strong> A forward <code>supersededBy</code> link set only
+by the write gate, a read path that drops superseded rows by default,
+and a rule that a wrong mark is fixed by a new entry rather than by
+clearing the link — an append-only correction model that keeps history
+without showing it.</p>
+<p><strong>Refuse partial writes.</strong> A multiword value that
+silently stores only its first word is corruption; refusing the whole
+write is the safe failure, and it is worth a test.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not make a hand-editable store of record
+parseable-but-fragile without a tripwire.</strong> A stray
+<code>---</code> cost this project a mass-deleted mirror once. If humans
+and a parser both write your truth, a parse disagreement is a
+data-integrity event — make bulk deletions loud even if git makes them
+recoverable.</p>
+<p><strong>Do not let reconciliation trim the durable store to match a
+miscounted index.</strong> The direction of authority matters: reconcile
+the index from the record, never the record from the index, or a parser
+bug becomes data loss.</p>
+<p><strong>Do not confuse a shape schema with a truth check.</strong>
+Enforcing that a <code>decisions</code> entry has a <code>ticket</code>
+does not make its content correct — a well-formed false memory passes.
+Say which one you have; this system is honest that the schema constrains
+shape.</p>
+<p><strong>Do not present a best-effort integration as a
+guarantee.</strong> The gap between "a hook fires at session start" and
+"recall refreshes every turn" is exactly the gap that makes an agent
+silently operate on stale memory. Name the rung.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who wants their agent's memory to be plain
+files they own, review in diffs, and edit by hand — with a schema that
+keeps the agent honest and recall that the harness guarantees rather
+than the model remembering to look. For a single developer or a small
+team on Claude Code or Codex, it is close to the best-argued version of
+markdown-as-memory in the atlas, and the offline ONNX stack means it
+costs nothing to run and leaks nothing.</p>
+<p>Walk away if you need a trust model richer than live-vs-superseded —
+there is no verified or rejected state, and disputed claims have no
+representation. Walk away if you need multi-tenant isolation: the
+boundary is a project-root hash on a shared cache, fine for one person
+and not an auth boundary. And weigh the markdown-as-record tradeoff
+honestly: you gain reviewability and hand-repair, and you take on a
+store of truth that a parser edge case can corrupt, mitigated by
+loudness and git rather than prevented.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a superseded entry ever reach a hook payload? The query layer
+excludes it and the hook sets <code>includeSuperseded</code> false, so
+it should not; there is no direct test at the injection layer.</li>
+<li>What does <code>benchmarks/</code> measure, and is any of it
+retrieval precision rather than throughput?</li>
+<li>How does the reconcile-before-every-read cost scale on a large
+<code>.neuron/</code>? The router short-circuits an empty
+<code>md</code> list, but a large md-backed store pays a reconciliation
+per query.</li>
+<li>Is the reranker threshold of <code>-8</code> fitted to anything, or
+a structural default? The comment calls the gate "unfitted", which
+suggests the latter.</li>
+<li>How is the per-machine cache database isolated when two users share
+a machine? The <code>project_id</code> hash separates projects, not OS
+users.</li>
+<li>Does the Cursor adapter's unverified status change if a maintainer
+gains access? The matrix is explicit that it is fixture-evidence only
+"as of 2026-08-10".</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Write gate and schema</strong></p>
+<ul>
+<li><code>src/index.ts</code> — <code>enforceFieldSchema</code>,
+<code>queryGated</code>, supersession columns,
+<code>checkFieldCompliance</code>.</li>
+<li><code>src/config/neuronYaml.ts</code> — the schema language,
+<code>validateNeuronYaml</code>,
+<code>validateDeclaredFields</code>.</li>
+<li><code>src/commands/memory.ts</code> — the CLI write verbs and the
+partial-write refusal.</li>
+</ul>
+<p><strong>Storage</strong></p>
+<ul>
+<li><code>src/storage/mdStorage.ts</code>,
+<code>mdStorageAdapter.ts</code> — the markdown store of record.</li>
+<li><code>src/storage/dualStorageRouter.ts</code> — per-category
+dispatch, reconcile, mass-delete tripwire.</li>
+<li><code>src/storage/mdVectorSync.ts</code> — content hashing and the
+mirror.</li>
+<li><code>src/storage/multiRootMdStorage.ts</code> — configurable
+per-category roots.</li>
+</ul>
+<p><strong>Retrieval and models</strong></p>
+<ul>
+<li><code>src/index.ts</code> — RRF fusion, FTS gate, reranker.</li>
+<li><code>src/models/</code> — ONNX embeddings and the cross-encoder
+reranker.</li>
+</ul>
+<p><strong>Integration</strong></p>
+<ul>
+<li><code>src/commands/hook.ts</code> — the injection entry point and
+payload budgets.</li>
+<li><code>src/commands/init.ts</code> — harness wiring and
+<code>verify()</code>.</li>
+<li><code>src/harnesses/</code> — per-harness adapters and the fidelity
+ladder.</li>
+</ul>
+<p><strong>Scanner</strong></p>
+<ul>
+<li><code>src/scanner/treesitter.ts</code>, <code>grammars.ts</code>,
+<code>diff.ts</code> — the deterministic architecture card.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>src/index.supersession.test.ts</code>,
+<code>src/commands/memory.supersession.test.ts</code> — exclusion of
+superseded rows.</li>
+<li><code>src/config/neuronYaml.test.ts</code> — schema-of-schema
+validation.</li>
+<li><code>src/storage/dualStorageRouter.test.ts</code>,
+<code>mdStorageAdapter.test.ts</code> — the store and its mirror.</li>
+<li><code>src/commands/hook.test.ts</code> — payload building and
+degradation posture.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4"><code>9f6eaf9023eb62788d8ce143f314751336cdebd4</code></a>
+— re-pinned at release v2.4.1 (<a
+href="https://github.com/kovartravis/neuron/commit/f52e303c6463444de17ef1b08b4bba20ffe51e50"><code>f52e303c6463444de17ef1b08b4bba20ffe51e50</code></a>
+was v2.4.0). Screened again; the <code>.claude/settings.json</code>
+auto-run surface is still present, nothing installed or run. No mark
+changed — <code>scope_enforced</code> (<code>project_id = ?</code> on
+every read) and <code>negative_eval</code> both hold, and
+<code>negative_eval</code> is strengthened by the
+antagonistic-recall/antagonistic-write pillars now cited in §10. New
+context folded in: a fourth lifecycle point, <code>pre-command</code>,
+fires a gated lookup on every Bash tool call; a <strong>resident git-log
+recall</strong> source indexes the repo's own commit history into a
+parallel FTS+embedding table
+(<code>refreshGitLogIndex</code>/<code>searchGitLog</code>), so
+retrieval now spans the <code>.neuron/*.md</code> store and git history;
+a <code>RECALL_PROVENANCE_PREFIX</code> labels every injection as
+internal after agents mistook the hook's own output for injection; and a
+cross-process mkdir-mutex guards the SQLite migration chain. The v2.4.1
+antagonistic-write pillar is an honest diagnostic confirming the write
+path catches shape violations but not near-duplicates, contradictions or
+missing provenance — so no value-keyed tombstone exists and none is
+claimed. Size restated as 745 tests across 68 files; the prior "~28,900
+lines / ~700 tests" figures had drifted. No paper.</p>
+<p><strong>2026-08-14</strong> — <a
+href="https://github.com/kovartravis/neuron/commit/af55adbc34ff7b04b9083c3f1dd0047002429285"><code>af55adbc34ff7b04b9083c3f1dd0047002429285</code></a>
+— first reading, at a commit dated 13 August 2026. Screened before
+opening: one auto-run surface (<code>.claude/settings.json</code>
+hooks), two build-time execution points, three unpinned surfaces, six
+dependency surfaces inside the seven-day cooldown,
+<code>package-lock.json</code> present, <code>CLAUDE.md</code> read as
+data. Nothing was installed or run; the schema-refusal and
+supersession-exclusion claims were established from the write gate and
+the read-path SQL, corroborated by the committed tests, not by executing
+the CLI.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

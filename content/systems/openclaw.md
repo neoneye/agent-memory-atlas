@@ -437,18 +437,29 @@ which is the case the source-keyed tombstone actually needs.
 ## 10. Tests, Evals, and Benchmarks
 
 Roughly 49,000 lines of tests sit against `memory-core`'s 38,131 source lines,
-with `memory-lancedb/index.test.ts` at 4,497 lines and the memory-core doctor
-contract at 2,530. The suites were not run for this review.
+with `memory-lancedb/index.test.ts` at 4,256 lines and
+`memory-core/doctor-contract-api.test.ts` at 2,814. The suites were not run for
+this review.
 
 Against that, one absence is worth naming precisely: **`scopedPredicate` has no
 test that names it.** Searching every `*.test.ts` in `extensions/` for the
 identifier returns nothing, and `memory-lancedb/index.test.ts` contains no case
-that stores under one agent and asserts a second agent cannot read it. The
-mechanism carrying the system's only structural safety guarantee is verified by
-inspection alone. The mark stands because the guarantee is structural — an
-unscoped predicate is not expressible, and the core goes further with a database
-per agent — but a system this well tested leaving that particular case uncovered
-is the gap a reader should close first.
+that stores under one agent and asserts a second agent cannot read it — the
+cross-agent read, which is the assertion the mark most wants behind it, is
+covered by no committed case.
+
+What the suite does cover is the adjacent half. `index.test.ts:192-200` is a
+`test.each` over five filter strings — `agentId = 'beta'`,
+`category = 'preference' OR agentId = 'beta'`,
+`category = 'preference') OR (1 = 1`, `category IN ('preference', 'fact')`,
+`importance = 'high'` — asserting that each throws, under the name *"rejects a
+filter that could escape the owner predicate"*. So the case where a caller
+supplies a filter designed to break out of the scope conjunction is tested, and
+tested with the injection shapes that matter; what is untested is whether the
+conjunction excludes the other agent when nobody attacks it. The mark stands
+because the guarantee is structural — an unscoped predicate is not expressible,
+and the core goes further with a database per agent — but the positive
+cross-agent assertion is the gap a reader should close first.
 
 No committed retrieval-quality benchmark exists, and none evaluates the
 durability scorer. Third-party comparative results exist — [OpenViking](../openviking/)'s
@@ -522,6 +533,6 @@ designed, and write the evaluation it never got.
 
 ## History
 
-**2026-08-31** — [`6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8`](https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8) — second reading, and a substantial correction. Three published claims were wrong at the commit they described rather than overtaken by it. The report treated `memory-core` as a plugin contract of a few hundred lines and `memory-lancedb` as the memory system; at the previous pin `memory-core` was already 35,318 source lines holding the dreaming consolidation pass, the hybrid search manager, short-term promotion and session ingestion. It recorded `stack_retrieval: "vector"` and stated there was "no lexical arm"; `searchKeyword` and `searchPathKeyword` were present and wired through `manager-search-orchestration.ts` at that pin. And it withheld `human_review`; the `risk.level === "low"` gate, the withheld-digest text and the `status: "draft"` page were all present at that pin too. Storage is restated as markdown files indexed into per-agent SQLite, with LanceDB as one optional backend. Genuinely new upstream since `570eab59e7c7ce052f4550af7507e7dd77c73e11`: `memory_session_tombstones` and `memory-entry-origins.ts`, `forgetMemoryEntries` in `memory-forget.ts`, and the withheld-digest UI strings. `scope_enforced` holds. `tombstone` remains withheld — the new table is keyed on `session_id`, not on the value. `audit_log` and `negative_eval` were examined and withheld for the reasons in section 9a. Marks move from one to two.
+**2026-08-31** — [`6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8`](https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8) — second reading, and a substantial correction. Three published claims were wrong at the commit they described rather than overtaken by it. The report treated `memory-core` as a plugin contract of a few hundred lines and `memory-lancedb` as the memory system; at the previous pin `memory-core` was already 35,318 source lines holding the dreaming consolidation pass, the hybrid search manager, short-term promotion and session ingestion. It recorded `stack_retrieval: "vector"` and stated there was "no lexical arm"; `searchKeyword` and `searchPathKeyword` were present at that pin, both exported from `extensions/memory-core/src/memory/manager-search.ts` (`manager-search-orchestration.ts`, which carries them at this pin, did not exist at `570eab59`). And it withheld `human_review`; the `risk.level === "low"` gate, the withheld-digest text and the `status: "draft"` page were all present at that pin too. Storage is restated as markdown files indexed into per-agent SQLite, with LanceDB as one optional backend. Genuinely new upstream since `570eab59e7c7ce052f4550af7507e7dd77c73e11`: `memory_session_tombstones` and `memory-entry-origins.ts`, `forgetMemoryEntries` in `memory-forget.ts`, and the withheld-digest UI strings. `scope_enforced` holds. `tombstone` remains withheld — the new table is keyed on `session_id`, not on the value. `audit_log` and `negative_eval` were examined and withheld for the reasons in section 9a. Marks move from one to two. Two section 10 figures were also overstated in opposite directions and are corrected against `wc -l`: `memory-lancedb/index.test.ts` is 4,256 lines rather than 4,497, and the memory-core doctor contract — `doctor-contract-api.test.ts`, not the 341-line LanceDB file of the same name — is 2,814 rather than 2,530. Section 10 called the scope predicate verified by inspection alone; `index.test.ts:192-200` asserts that five filters shaped to escape the owner predicate all throw, so the untested case is narrower than stated — the positive cross-agent read, not the escape.
 
 **2026-07-27** — [`570eab59e7c7ce052f4550af7507e7dd77c73e11`](https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11) — first reading.

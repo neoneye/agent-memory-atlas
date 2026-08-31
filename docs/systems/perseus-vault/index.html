@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
+reports, whose self-audit retires the claims it cannot back, and whose
+rejected-value tombstone stores a digest rather than the value it
+refuses.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Perseus
+Vault — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
+reports, whose self-audit retires the claims it cannot back, and whose
+rejected-value tombstone stores a digest rather than the value it
+refuses.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Perseus
+Vault — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
+reports, whose self-audit retires the claims it cannot back, and whose
+rejected-value tombstone stores a digest rather than the value it
+refuses.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Perseus Vault — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Perseus Vault",
+      "description": "A local-first vault whose published benchmark means recompute exactly from committed per-run reports, whose self-audit retires the claims it cannot back, and whose rejected-value tombstone stores a digest rather than the value it refuses.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Claims audited against artifacts</p>
+          <h1>Perseus Vault</h1>
+          <p class="document-deck">A local-first vault whose published
+benchmark means recompute exactly from committed per-run reports, whose
+self-audit retires the claims it cannot back, and whose rejected-value
+tombstone stores a digest rather than the value it refuses.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault">
+              <span>Source</span>
+              <strong>Perseus-Computing-LLC/perseus-vault</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36" title="9c829207a4b44a8e679ba912b4c1c5608c8f1e36">
+              <span>Analyzed revision</span>
+              <code>9c829207…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-27</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Perseus Vault is roughly 63,000 lines of Rust over 666 commits,
+MIT-licensed, shipping one binary and one SQLite file with no services.
+It exposes memory through an MCP stdio server plus LangGraph, CrewAI and
+AutoGen adapters, stores entities with bi-temporal bounds, retrieves
+with BM25 and dense vectors fused by RRF, and encrypts bodies with
+AES-256-GCM by default on a fresh install. It carries all seven of this
+atlas's capability marks.</p>
+<p>That would make it a substantial report on mechanism alone. It is a
+more interesting one because of how it handles its own claims.</p>
+<p><strong>It ships a <code>CLAIMS-AUDIT.md</code> that retires claims
+it cannot back.</strong> The file audits the README against code and
+committed artifacts, and its 2026-07-16 entry records what that
+cost:</p>
+<ul>
+<li><em>"Retired the 'sub-millisecond recall' entry"</em> — with the
+reason stated plainly: no committed artifact supported it, and the old
+justification, bundled offline embeddings, <em>"said nothing about
+latency."</em> The replacement is measured and cited: FTS5 recall p50
+3.14 ms at 10K entities, dense p50 194.5 ms at 1M.</li>
+<li><em>"Removed the unbacked 100K-entity insert-rate figure from the
+README (no artifact anywhere in the repo backed it)."</em></li>
+<li>Reworded "signed results" to <strong>"content-hashed
+(sha256)"</strong>, because <code>signature_sha256</code> is a
+self-computed content hash <em>"not a cryptographic signature."</em>
+Downgrading your own security-adjacent wording is not a common
+edit.</li>
+<li>Clarified that <code>federate</code> is a local export and
+re-import, <em>"file based, no network peers."</em></li>
+</ul>
+<p>This atlas's <a href="../../benchmarks/">benchmarks page</a> has
+spent most of its length on figures with no traceable artifact. Here is
+a project that went looking for its own and deleted the ones that
+failed.</p>
+<p><strong>Its benchmark discipline is the strongest in the
+corpus.</strong> The README leads with 73.8% on LongMemEval against
+Zep's published 63.8% and Mem0's 49.0%. That number is the mean of
+<strong>three independent full 500-question runs</strong>, each with its
+own committed report carrying dataset, split, <code>n_instances</code>,
+<code>mock_llm: false</code>, the pinned answerer and judge model
+snapshots, temperature, retrieval mode and <code>k</code>, commit,
+binary version, platform, hardware, elapsed time and a run signature.
+Recomputed from those three artifacts at this commit:</p>
+<pre class="text"><code>qa_report.json        0.736
+qa_report_seed2.json  0.750
+qa_report_seed3.json  0.728
+mean                  0.738   ← the published figure, exactly</code></pre>
+<p><strong>And the headline is the lower of its two numbers.</strong>
+The same directory holds three <code>official-cot</code> runs meaning
+<strong>79.0%</strong> (0.800 / 0.786 / 0.784, also recomputed exactly),
+and the README quotes the plain-prompt 73.8% instead. The comparison
+document explains why in a section headed <em>"Caveats (read before
+quoting the number)"</em>: the two prompts are different official
+conditions, <em>"every quote must carry its <code>answer_prompt</code>
+label"</em>, and — on the competitors — <em>"Zep's publication does not
+state their variant; flag that when comparing, never blend."</em> Zep's
+and Mem0's figures are labelled as their publishers' claims and cited to
+an issue rather than reproduced as head-to-heads, which is the reporting
+policy this atlas credits <a href="../daimon/">Daimon</a> for writing
+down, implemented.</p>
+<p><strong>And the count claim is derived rather than asserted.</strong>
+The audit's check is <code>scripts/registry_metadata_check.py</code>,
+which extracts the embedded registry literal from
+<code>src/mcp.rs</code> and parses it exactly as the Rust implementation
+does, rather than grepping for a name pattern. From that one derivation
+it asserts the same number appears in <code>README.md</code>,
+<code>CLAIMS-AUDIT.md</code>, <code>glama.json</code>,
+<code>manifest.json</code> and <code>server.json</code>, and it fails on
+a duplicate name or a non-canonical one. Run at this commit it exits
+zero and prints
+<code>{"canonical_tools_list_count": 90, "compatibility_manifest_count": 270, "registry_count": 90}</code>.</p>
+<p>What makes it a check rather than a documented command is
+<code>.github/workflows/mcp-registry.yml</code>, whose
+<code>verify-registry</code> job runs on every <code>push</code> and
+<code>pull_request</code> and executes both the parser and the Rust
+uniqueness test. The audit describes it in those terms: <em>"this parser
+is formatting-insensitive and runs in CI"</em>.</p>
+<p>That is the difference between a count that agrees today and a count
+that cannot silently drift, and the second is the property worth having.
+The canonical/legacy split does not live in the literal —
+<code>tool_registry_base</code> calls the <code>mimir_*</code> names
+<em>"an implementation migration detail"</em> and
+<code>legacy_alias_tool</code> synthesizes aliases by prefix rewriting
+at advertise time — so the parser rewrites a <code>mimir_</code> prefix
+to <code>perseus_vault_</code> before counting, and rejects the result
+if any name survives that is not canonical. The advertised surface
+remains a runtime decision, and
+<code>compatibility_manifest_count</code> is the parser's own name for
+it: 270, three aliases per canonical tool.</p>
+<p><strong>A fresh install encrypts, and a test says what that
+means.</strong> The first default startup creates an owner-only key and
+an encrypted canary row. <code>tests/encryption_bootstrap.rs</code> pins
+the behaviour rather than the intent: the key file must be mode
+<code>0600</code> and hold exactly 32 bytes, the canary must be
+established, and the stored body must <strong>not</strong> equal the
+plaintext JSON that was written —
+<code>assert_ne!(stored, r#"{"note":"bootstrap encrypted body"}"#)</code>.
+A second case covers the opt-out, asserting that an explicit plaintext
+choice suppresses key creation and stores the body verbatim.</p>
+<p><strong>Two things the default does not cover, and both are stated
+upstream.</strong> A database created before the default flipped stays
+plaintext until an explicit <code>init --rekey</code>, so "encrypted by
+default" is a claim about fresh installs and the claims audit says
+exactly that. And the key sits beside the database it protects, at
+owner-only permissions — which defends the file carried off a disk, not
+an attacker who already reads the filesystem as that user. The threat
+model is narrower than the banner, disclosed, and the narrower claim is
+the one to quote.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An entity's standing is three separate things — a discrete
+<code>status</code>, a boolean <code>verified</code>, and a
+<code>certainty</code> float — over a bi-temporal record that keeps its
+own history.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — world time and transaction time are separate column pairs on both the entity and its history, so supersession leaves the prior version readable as-of a past date</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: world time and transaction time are separate column pairs on both the entity and its history, so supersession leaves the prior version readable as-of a past date
+stateDiagram-v2
+    [*] --&gt; candidate: trust admission
+    candidate --&gt; active: accepted
+    active: status active&lt;br/&gt;verified 0 or 1, certainty float
+    active --&gt; active: correct, score, promote, demote
+    active --&gt; superseded: supersede writes a history row&lt;br/&gt;and sets superseded_by
+    superseded: valid_to and invalidated_at closed&lt;br/&gt;prior version readable via as_of
+    active --&gt; deprecated: demote
+    active --&gt; archived: archive with archive_reason
+    archived --&gt; active: restore
+    superseded --&gt; [*]: purge erases history&lt;br/&gt;and redacts the journal
+    archived --&gt; [*]: forget
+
+    note right of superseded
+        valid_from / valid_to is world time.
+        recorded_at / invalidated_at is
+        transaction time. Both are columns,
+        on entities and on entity_history.
+    end note</code></pre></details></figure>
+<p>The schema comments say it directly — <code>valid_from_unix_ms</code>
+is <em>"when the fact became true in the world"</em> and
+<code>recorded_at_unix_ms</code> is <em>"transaction time: when Mneme
+first knew it"</em> — which is the distinction the <a
+href="../../patterns/bi-temporal-fact-validity/">bi-temporal fact
+validity</a> pattern exists for, present on both the live table and its
+history.</p>
+<p>What the diagram has no state for is a value that was judged wrong.
+<code>purge</code> and <code>forget</code> remove records; nothing
+records the <em>content</em> so a later ingest cannot re-assert it. That
+is the one mark missing and the one gap the rest of the design makes
+conspicuous.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Rust binary over one SQLite file. Tables: <code>entities</code>
+and <code>entity_history</code>, <code>journal</code> with
+<code>audit_chain_state</code>, <code>communities</code>,
+<code>keystones</code>, <code>artifacts</code> and
+<code>artifact_bindings</code>, <code>agents</code>,
+<code>authority_manifests</code> with <code>authorized_actions</code>
+and <code>authorized_action_leases</code>,
+<code>dedup_signatures</code>, <code>encryption_canary</code>, and a
+<code>state</code> key-value table.</p>
+<p>Entity columns carry the whole model: <code>category</code>,
+<code>key</code>, <code>body_json</code>, <code>status</code>,
+<code>type</code>, <code>tags</code>, <code>decay_score</code>,
+<code>retrieval_count</code>, <code>layer</code>,
+<code>topic_path</code>, <code>archived</code> with
+<code>archive_reason</code>, <code>links</code>, <code>verified</code>,
+<code>source</code>, <code>certainty</code>, <code>always_on</code>,
+<code>workspace_hash</code>, <code>visibility</code>, the four temporal
+columns, an <code>embedding</code> blob and an <code>emb_sig</code>
+sign-bit signature.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>curl | sh</code> to <code>~/.local/bin</code>, then
+<code>serve --db</code>. No Docker, no Postgres, no network dependency
+in <code>Cargo.toml</code>. Encryption requires an explicit
+<code>init</code> that creates the key and the canary row;
+<code>serve</code> warns when an encrypted vault is opened without a
+key.</p>
+<p>The cost of the single-file model is the usual one and the project
+does not hide it: <code>federate</code> is export and re-import rather
+than peer sync, so multi-machine use is a file operation.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="three-runs-one-signature-and-a-caveat-section">Three runs, one
+signature, and a caveat section</h3>
+<p><code>benchmark/longmemeval/</code> holds <code>run.py</code>, the
+per-run reports, <code>COMPARISON.md</code> and a retrieval diagnostic.
+Each report is a full config stamp rather than a score, and the
+comparison document records the provenance per run — <em>"plain run 2
+signature <code>929623670d8bcc67…</code>; CoT runs
+<code>20327b31b5940f58…</code> / <code>7c8ce1b406c0cc4b…</code> /
+<code>eb848e786677a8d1…</code> — each over the per-question verdict
+set."</em></p>
+<p>The design decision worth stealing is that the answer prompt is
+<em>"folded into the run signature (a CoT number can never be silently
+blended with a plain-prompt one)"</em>. Blending incomparable conditions
+is the most common way a benchmark table misleads without anybody lying,
+and making the condition part of the hash removes the possibility rather
+than warning against it.</p>
+<p>Publishing per-question-type results is the second. The committed
+report shows <code>single-session-user</code> at 0.957 and
+<code>single-session-preference</code> at <strong>0.300</strong> on 30
+questions. A weak category is visible because they published the
+breakdown; in most of this corpus it would be inside the headline
+average.</p>
+<h3 id="the-count-derived-from-source-and-asserted-in-ci">The count,
+derived from source and asserted in CI</h3>
+<p>Three surfaces say 65. The audit's designated command returns 76, and
+the tool names it lists are unmistakably real — <code>recall</code>,
+<code>supersede</code>, <code>correct</code>, <code>forget</code>,
+<code>purge</code>, <code>bitemporal</code>, <code>valid_at</code>,
+<code>operator_review</code>, <code>journal</code>,
+<code>beliefs</code>, <code>conflicts</code>, <code>promote</code>,
+<code>demote</code>, <code>keystone_get</code>, and so on.</p>
+<p><strong>The instructive part is where the fix landed.</strong> This
+is a project that retired a latency claim for lack of an artifact and
+downgraded "signed" to "content-hashed" on its own initiative. The claim
+that had gone stale was the one with a check attached — because a
+command written down in a Markdown file runs only when somebody
+remembers, and the discipline that catches unbacked claims is a
+different discipline from the one that keeps backed claims current. It
+is the same failure this atlas has recorded in its own count sweeps: the
+guard exists, and nothing runs it.</p>
+<h3 id="trust-as-three-axes-not-one-float">Trust as three axes, not one
+float</h3>
+<p><code>status</code> carries <code>active</code>,
+<code>candidate</code>, <code>superseded</code>,
+<code>deprecated</code>, <code>compacted</code>, <code>dead</code> and
+<code>useful</code>; <code>verified</code> is a separate boolean;
+<code>certainty</code> is a separate float; <code>source</code> records
+where it came from. <code>src/trust_admission.rs</code> gates what
+enters.</p>
+<p>Keeping "we checked this" apart from "how confident are we" apart
+from "what state is this record in" is a distinction most systems here
+collapse, and it is what makes the <code>trust_state</code> mark
+straightforward: <code>candidate</code> and <code>superseded</code> are
+states that withhold a memory from being treated as current, expressed
+as a column rather than inferred from a number.</p>
+<h3 id="a-tombstone-that-stores-the-digest-not-the-value">A tombstone
+that stores the digest, not the value</h3>
+<p><code>rejected_value_tombstones</code> is keyed on
+<code>(workspace_hash, subject, predicate, value_sha256)</code> and
+carries <code>reason</code>, <code>evidence_ref</code>,
+<code>author_agent_id</code>, a creation timestamp and an optional
+expiry. The value itself is never written — only
+<code>value_sha256</code>, over a normalized form:</p>
+<pre class="rust"><code>fn normalize_rejected_value(value: &amp;str) -&gt; String {
+    let canonical = match serde_json::from_str::&lt;serde_json::Value&gt;(value) {
+        Ok(v) =&gt; v.to_string(),
+        Err(_) =&gt; value.to_string(),
+    };
+    canonical.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().join(&quot; &quot;).to_lowercase()
+}</code></pre>
+<p>JSON is canonicalised when it parses, whitespace is collapsed, and
+the result is lower-cased — so a re-indented body, a re-ordered object
+and a case variant all hash to the same tombstone. That is the
+normalization the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> pattern calls the part where the real work is, done in
+nine lines.</p>
+<p>Storing only the digest is the part worth taking. The pattern page
+lists as a tradeoff that <em>"the tombstone itself can contain sensitive
+data and must follow deletion policy"</em> — a rejection record for a
+leaked credential is a copy of the credential. A digest refuses the
+value without retaining it, and the doc says so in the same terms: the
+raw value is never stored, so <em>"rejection records cannot leak the
+content they suppress."</em></p>
+<p><code>is_value_rejected</code> runs the lookup as
+<code>workspace_hash IN ('', ?1)</code>, so a tombstone written with an
+empty workspace is global and a named one binds to its workspace, and
+one workspace's rejection cannot censor another. Expired rows are
+deleted on the way past.</p>
+<p>The enforcement point is <code>remember_impl</code>, with the reach
+stated in a comment:</p>
+<blockquote>
+<p>scoped rejected-value tombstones are enforced on every remember-path
+write (agent remember, capture, ingest, connectors, derived writers) so
+a corrected/deleted value cannot be laundered back in under a new key. A
+deliberate trusted override passes <code>allow_rejected=true</code> and
+is journaled below for audit.</p>
+</blockquote>
+<p><strong>And the check follows provenance, which is the gap every
+digest-keyed tombstone has.</strong> A digest refuses the value it was
+written for and nothing else, so a consolidation pass that summarises a
+rejected source produces a body with a different digest and walks
+straight through. <code>value_suppressed_with_connections</code> is
+shared by ordinary reads and maintenance scans on exactly that ground —
+<em>"a derived body is not safe merely because its own digest differs
+from a rejected source body's digest"</em> — and
+<code>lineage_source_ids_from_body</code> pulls the source references
+out of three JSON fields (<code>source_ids</code>,
+<code>evidence_for</code>, <code>promoted_from</code>) that are
+<em>"intentionally hash-free provenance references, not a new authority
+mechanism"</em>, so propagating suppression never requires storing the
+rejected value anywhere.</p>
+<p>The walk is recursive with a <code>seen</code> set for cycles and a
+depth cap of eight, and both edges fail closed: hitting the cap
+suppresses, and a source whose encrypted bytes are missing or
+unauthentic suppresses, because <em>"serving a derived record whose
+evidence cannot be checked would recreate the same bypass."</em> A
+maintenance source row selected by a global run takes its workspace from
+the row rather than from the run's optional scope. The committed test is
+named for the case:
+<code>rejected_value_does_not_flow_through_maintenance_derived_writes</code>.</p>
+<p>Two further details separate this from the other holders. The lookup
+keys on the <strong>predicate and the digest and not the
+subject</strong>, so a rejected value is refused under any key in scope
+— broader than the identity index it is written under, and named in a
+test as
+<code>rejected_value_tombstone_blocks_same_value_under_any_key_in_scope</code>.
+And the override is not a bypass flag but an audited act, journaled in
+the same hash-chained ledger as everything else, which is the shape the
+pattern page asks for when a trusted human correction must win.</p>
+<p>Four tests cover it: blocking under any key in scope, workspace
+isolation, normalization and expiry, and — at the MCP layer —
+<code>rejected_value_tombstones_block_laundering_and_support_audited_override</code>,
+whose name is the whole mechanism.</p>
+<h3 id="deletion-that-is-tested-to-have-happened">Deletion that is
+tested to have happened</h3>
+<p><code>purge_erases_history_and_redacts_journal_for_purged_entities</code>
+seeds an entity with fake PII, supersedes it several times so
+<code>entity_history</code> accumulates, then purges and asserts the
+history rows are gone, the journal rows are marked
+<code>redacted</code>, and <code>category</code>, <code>key</code> and
+<code>entity_id</code> are scrubbed to empty strings. A companion test,
+<code>purge_does_not_redact_other_workspace_live_journal_rows</code>,
+asserts the blast radius stops at the workspace boundary.</p>
+<p>An audit log that reproduces the content a user asked to delete is a
+real hazard and one this atlas has flagged elsewhere. Testing both that
+the secret is gone and that the erasure did not over-reach is the pair
+of assertions the problem needs, and it is why the
+<code>negative_eval</code> mark applies.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is an entity keyed by
+<code>(category, key, workspace_hash)</code> — an identity index the
+schema comments date to issue #339 and credit with <em>"~66x on
+workspace-scoped browse at 30k rows."</em></p>
+<p><code>entity_history</code> mirrors the entity columns and adds the
+transaction interval, with a comment describing it as
+<code>[recorded_at_unix_ms, invalidated_at_unix_ms)</code> and
+<code>superseded_by</code> pointing at the replacement. So a superseded
+value is readable as of a past instant rather than lost, and
+<code>mimir_as_of</code>, <code>mimir_valid_at</code>,
+<code>mimir_recall_when</code>, <code>mimir_timeline</code> and
+<code>mimir_history</code> are the tools over it.</p>
+<p>The <code>journal</code> is hash-chained — SHA-256 plus a keyed MAC,
+with <code>audit_chain_state</code> holding the chain head — and rows
+are stamped with <code>workspace_hash</code> at write time <em>"so purge
+can scope journal redaction per-workspace."</em> That is an append-only
+mutation record in the system's own store with a tamper-evident chain,
+which is the <code>audit_log</code> mark and a strong instance of
+it.</p>
+<p>What is absent is the tombstone. <code>forget</code> and
+<code>purge</code> are removals; supersession records a replacement.
+Nothing is keyed on the rejected <em>value</em>, so a later ingest of
+the same wrong content creates a new entity, and the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> page's argument applies unchanged.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 for lexical, dense vectors for semantic, fused by reciprocal
+rank. The performance detail worth noting is <code>emb_sig</code>: a
+sign-bit signature of each embedding, one bit per dimension, so
+<code>dense_search</code> Hamming-prefilters candidates <em>"instead of
+reading every full embedding blob once the vault is large enough."</em>
+Written on store and backfilled by a migration.</p>
+<p>Scope reaches the query: <code>workspace_hash</code> appears in read
+predicates across <code>tools.rs</code>, <code>communities.rs</code> and
+the trust-admission path, alongside a <code>visibility</code> column.
+The usual caveat applies — the caller supplies the workspace — so the
+mark certifies the key reaches the query, not that a caller cannot pass
+a different one.</p>
+<p>Measured latencies, from the artifacts the claims audit points at
+rather than from prose: FTS5 recall p50 3.14 ms at 10K entities; dense
+recall p50 194.5 ms at 1M entities on the uniform arm.</p>
+<h3 id="the-projection-that-says-why-a-memory-was-not-returned">The
+projection that says why a memory was not returned</h3>
+<p><code>include_selection_decisions: true</code> on a fused recall
+attaches a bounded per-candidate record of the selection, specified in
+<code>docs/specs/selection-decisions-v1.md</code> and implemented in
+<code>src/selection_decisions.rs</code>. Several systems in this corpus
+record why a candidate was refused at <em>write</em> time — <a
+href="../knowledge-worker/">Knowledge Worker</a>'s validator enumerates
+<code>bad_type:&lt;t&gt;</code> and <code>orphan_src:&lt;id&gt;</code>,
+<a href="../wenlan/">Wenlan</a> types its extraction refusals. This is
+the same discipline on the read path, and the read path is where it is
+scarce: the artifact answers not <em>what came back</em> but <em>why
+this did not</em>.</p>
+<p>Each candidate carries one disposition from a closed set —
+<code>selected</code>, <code>dropped_budget</code>,
+<code>dropped_type_cap</code>, <code>dropped_caller_limit</code>,
+<code>dropped_coverage</code>, <code>filtered_lifecycle</code>,
+<code>filtered_scope</code>, <code>filtered_policy</code>,
+<code>abstained</code>, <code>unavailable</code>,
+<code>not_in_candidate_pool</code> — beside its source-arm ranks, its
+fused, rerank and validity components where those exist, a token
+estimate with the estimator named, and a one-based
+<code>final_rank</code>. Six design decisions in the spec are what make
+it evidence rather than telemetry.</p>
+<ul>
+<li><strong>It reconciles after the serving gates, not before
+them.</strong> The fused database path records arm, fusion,
+type-allocation, coverage, caller-limit and budget decisions; the tool
+layer then walks the six governed gates — requesting-agent visibility,
+retrieval profile and workspace scope, external-reference filters,
+post-ranking and caller limit, temporal reconstruction and valid-time
+filtering, confirmed-query fallback — snapshotting the surviving ids
+before each one, so a candidate is attributed to the <em>first</em> gate
+that removed it and the reported order is the delivered order. A
+projection built from the pre-filter fused ranking would be a different
+document and a misleading one.</li>
+<li><strong>A missing score is omitted rather than zeroed.</strong>
+<code>missing_scores_are_explicit_and_raw_content_has_no_serialization_slot</code>
+asserts the serialized trace contains no <code>fused_score</code> and no
+<code>token_estimate</code> key when neither was computed — the
+discipline the atlas's <a href="../../benchmarks/">benchmarks page</a>
+keeps asking for, applied to a per-request artifact.</li>
+<li><strong>A failed arm is reported and produces no
+candidates.</strong> <code>arms</code> carries each engaged source arm's
+<code>ok</code>, <code>empty</code>, <code>degraded</code>,
+<code>skipped</code> or <code>unavailable</code> state, and
+<code>unavailable_arms_are_explicit_without_fabricating_candidates</code>
+pins that an arm that could not run contributes nothing rather than an
+empty slot that reads as a considered-and-rejected candidate.</li>
+<li><strong>It fails closed rather than truncating.</strong> The
+candidate list caps at 4,096, retaining delivered candidates first; if
+the final <em>served</em> order itself exceeds the bound, the projection
+refuses rather than returning what the spec calls <em>"an unverifiable
+partial order."</em></li>
+<li><strong>Tampering breaks the fingerprint.</strong>
+<code>replay_fingerprint_sha256</code> covers membership, policy digest,
+arm state, ranks, score components, dispositions, counts, token
+accounting and final order;
+<code>tampering_with_a_decision_invalidates_the_replay_fingerprint</code>
+flips one disposition and then increments the token budget, and asserts
+<code>validate()</code> fails on each.</li>
+<li><strong>It cannot change what was served.</strong> The spec states
+that the gates remain authoritative and the projection <em>"cannot
+resurrect a superseded, expired, quarantined, redacted, invisible, or
+out-of-scope entity"</em>, and — the sentence worth the whole document —
+that it <em>"must not be treated as evidence of model-internal causal
+reasoning."</em> A system publishing an explanation surface and bounding
+what the explanation is evidence <em>of</em> is rarer than the
+surface.</li>
+</ul>
+<p>The projection is hash-only: <code>candidate_id</code> is the
+existing opaque entity identifier, and no body, query, prompt,
+credential or tool argument enters it, with policy inputs represented
+only inside the one-way <code>policy_digest</code>. It introduces no new
+MCP tool and no persistence table, and it defaults to off, so the
+ordinary recall response shape is unchanged.</p>
+<p>The consumer is in the other repository.
+<code>Perseus-Computing-LLC/perseus</code>, the context engine this
+atlas <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-22-a-context-engine-that-expires-on-purpose.md">triaged
+and excluded</a>, projects the same vocabulary through
+<code>src/perseus/context_inspector.py</code> and the MCP tool
+<code>perseus_context_inspect</code> — and carries no producer of its
+own, which is what a reader looking at either repository alone would
+conclude was an unwired mechanism.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes arrive as MCP tool calls and are synchronous against SQLite.
+Supersession writes a history row, closes the prior interval and sets
+<code>superseded_by</code>; <code>correct</code>, <code>promote</code>,
+<code>demote</code> and <code>score</code> move the trust axes;
+<code>archive</code> sets a flag and a reason; <code>forget</code> and
+<code>purge</code> remove.</p>
+<p>Background work is extensive — decay ticks, <code>cohere</code>,
+<code>dream</code>, <code>consolidate</code>, <code>hygiene</code>,
+community detection — and <code>score</code> sets a persistent
+importance floor that decay and cohere respect, with the reasoning in
+the schema comment: <em>"an explicit score survives the recency-based
+recompute instead of being erased by the next tick (fidelity &gt;
+recency)."</em> An explicit human judgement outranking an automatic
+recompute is the right default and is written down where the column is
+declared.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model in the read path; embeddings are bundled ONNX and run
+locally. The background passes are the variable cost and several are
+LLM-assisted. Storage grows with history, which is the price of the
+bi-temporal model, and <code>purge</code> is the release valve.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP stdio server implementing <code>initialize</code>,
+<code>tools/list</code> and <code>tools/call</code>, with adapters
+committed for LangGraph, CrewAI and AutoGen. Legacy <code>mimir_*</code>
+and <code>mneme_*</code> aliases remain callable and are counted
+separately from the canonical set — and <code>mimir_alias_usage</code>
+exposes counters for canonical versus alias calls, so a maintainer can
+see whether the old names can be retired. Instrumenting a deprecation
+rather than announcing one is a small, unusually practical touch.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A claims audit that retires unbacked claims</strong>, naming
+the retired figure, the reason, and the artifact that replaced it.</li>
+<li><strong>Three full runs per benchmark condition</strong>, each with
+a complete config stamp, and published means that recompute exactly from
+the committed reports.</li>
+<li><strong>The answer prompt folded into the run signature</strong>, so
+incomparable conditions cannot be blended.</li>
+<li><strong>Competitor figures labelled as published claims</strong> and
+cited, not reproduced as head-to-heads.</li>
+<li><strong>Per-question-type results published</strong>, including the
+weak category.</li>
+<li><strong>Bi-temporal columns on the live table and its
+history</strong>, with <code>superseded_by</code>.</li>
+<li><strong>A hash-chained journal</strong> with a keyed MAC and
+per-workspace stamping.</li>
+<li><strong>Purge tested both ways</strong> — the content is gone, and
+the erasure did not cross the workspace boundary.</li>
+<li><strong>Trust split into status, verified and certainty</strong>,
+three axes rather than one.</li>
+<li><strong>An explicit score that outranks the decay
+recompute</strong>, with the rule stated at the column.</li>
+<li><strong>Encryption on by default for a fresh install</strong>, with
+a committed test asserting the stored body is not the plaintext.</li>
+<li><strong>A rejected-value tombstone storing a digest rather than the
+value</strong>, refused on every remember-path write, with a trusted
+override that is journaled.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><p><strong>The tombstone is enforced on the predicate and the value,
+not the subject.</strong> A rejected value is blocked under any subject
+in scope, which is deliberate and named in a test — and it is the
+pattern page's first tradeoff, a normalization that can refuse a
+legitimately different fact, taken further than any other holder here
+takes it.</p></li>
+<li><p><strong>A tombstone can expire.</strong>
+<code>expires_at_unix_ms</code> is honoured and reaped on lookup, which
+the pattern page's round-8 lesson calls the way a tombstone stops being
+one. Nothing in the default path sets it, so this is a facility rather
+than a live gap.</p>
+<p>The sequence nothing yet covers end to end is the one the project's
+author named: reject value A, replace it with B, re-ingest A through a
+different write path, run the background consolidation passes, and check
+that A remains rejected. The committed tests cover the write paths and
+the override; the background passes are the untested leg.</p></li>
+<li><p><strong>A pre-existing database stays plaintext</strong> until an
+explicit <code>init --rekey</code>, so the default covers fresh installs
+rather than upgrades; and the key lives beside the database at
+owner-only permissions.</p></li>
+<li><p><strong>Federation is file-based</strong>, so the multi-machine
+story is manual.</p></li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>592 <code>#[test]</code> functions inline across <code>src/</code>,
+plus three integration files under <code>tests/</code>. Nothing was run
+for this review — the suite is Rust and the benchmark harness calls
+<code>gpt-4o-2024-08-06</code> for both answering and judging, so
+reproducing the LongMemEval figure means paying for 500 questions × 3
+runs × 2 model calls.</p>
+<p><strong>What was verified is the arithmetic, and it holds.</strong>
+The published 73.8% and 79.0% are the exact means of the three committed
+reports in each condition. That is a weaker claim than a re-run and a
+much stronger one than the corpus norm: it establishes that the headline
+figure is a function of artifacts in the repository rather than a number
+in a README, and that the runs behind it were three rather than one.</p>
+<p><code>benchmark/</code> also carries scale, contention, temporal,
+recall, quality, beam, context-selection and embedding-quantization
+suites with committed JSON, and <code>GAUNTLET.md</code> over the top.
+<code>PERF.md</code> and the claims audit both point at artifacts rather
+than restating figures.</p>
+<p>The untested surface is the one the tool-count finding exposes:
+nothing in CI runs the audit's verification command, so a claim with a
+documented check went stale anyway.</p>
+<h2 id="10a-mechanisms-beside-the-store">10a. Mechanisms beside the
+store</h2>
+<p>Three pieces of machinery sit next to the entity store rather than
+inside it, and each answers a question the store cannot.</p>
+<p><strong>A zero-token write gate.</strong>
+<code>src/write_gate.rs</code> is a deterministic precheck the provider
+flow calls <em>before</em> LLM enrichment: content-hash dedup, key
+supersession, and a stored-signature near-duplicate scan return
+<code>Store</code>, <code>Duplicate</code>, <code>Supersede</code>,
+<code>Forget</code> or <code>Adjudicate</code>, and only the last
+escalates to a model or an operator. Two properties are stated as
+contract rather than left to reading: the gate is <strong>read-only by
+construction</strong> — it never mutates — and <code>Forget</code> is
+<em>"deliberately conservative (only vague/empty notes) so the gate can
+never drop a substantive fact"</em>. Putting the cheap deterministic
+layer in front of the expensive one is the <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> pattern,
+applied to the <em>decision</em> rather than to the capture.</p>
+<p><strong>A self-audit that distinguishes "could not check" from
+"passed."</strong> <code>src/verify.rs</code> re-asserts the store's
+invariants against a live database over a
+<code>SQLITE_OPEN_READ_ONLY</code> connection, across eight checks, and
+its status enum is three-valued: <code>Pass</code>,
+<code>Unverified</code>, <code>Fail</code>. The exit contract makes the
+middle state load-bearing — <strong>0 all pass, 2 a check could not run
+(UNVERIFIED, never PASS), 3 an invariant is violated</strong> — so a
+verifier that cannot reach a check reports that rather than reporting
+success. Findings print <code>path:key</code> only, never values, so
+running it against a real store does not spill one. This is the same
+discipline the benchmarks page credits <code>a40-labs/memory</code> for,
+and the two are the only instances in the corpus.</p>
+<p><strong>A memory red-team harness, honest about being a
+skeleton.</strong> <code>benchmark/redteam/</code> aims three published
+attack families — MAFIA, MemCollusion and Chronos — at the recall and
+admission surfaces, with a <code>manifest.json</code> fixing budgets
+(300 probes, 90 poison writes) and an outcome taxonomy, worked probe and
+scenario datasets, and <code>harness.py</code> carrying deterministic
+validators for the four MemCollusion construction constraints plus
+sha256 pinning of harness and datasets. Its README opens by calling
+itself a <strong>skeleton</strong>, and lists what exists rather than
+what it found: no results are committed and no run is claimed. An
+adversarial suite for a memory store is something this atlas has asked
+for and not found; this is the first, and it has not been run.</p>
+<h3 id="four-subsystems-around-the-entity">Four subsystems around the
+entity</h3>
+<p>Four modules extend what an entity can carry without changing what an
+entity is, and each is versioned, bounded and opt-in.</p>
+<p><strong><code>src/evidence_lanes.rs</code> separates the summary from
+the span it came from.</strong> Two governed representations —
+<code>Derived</code> and <code>Verbatim</code> — are requestable over
+already-ranked candidates, and the docstring is explicit that <em>"the
+ordinary recall path never calls this function."</em> The verbatim lane
+recovers a source span out of a retained entity body and refuses to
+guess: <em>"A bad hash returns a structured result with no text;
+malformed storage or bounds are errors that the caller maps to a
+non-disclosing exclusion reason."</em> The receipt over the selection is
+content-free, order-independent and digest-verified. The detail worth
+stealing is temporal: residual spans carry their own creation time, and
+<code>residual_projection_respects_temporal_anchor_and_bounds</code>
+asserts that a valid-time view does not pick up a residual recorded
+after the coordinate being asked about — <em>"Do not attach current
+residuals to a valid-time view."</em> A bitemporal store that gets this
+wrong reports today's evidence for a question about last month, and
+nothing about the answer looks wrong.</p>
+<p><strong><code>src/task_lineage.rs</code> carries an action's lineage
+across a session boundary</strong> as a <code>deny_unknown_fields</code>
+request with a transition, an action class, a budget cost and an impact
+count, bounded at 64 history entries.</p>
+<p><strong><code>src/declared_graph.rs</code> makes the graph declared
+and attested rather than inferred</strong> — nodes and edges submitted
+with a namespace, a canonical id, a revision and a span reference,
+capped at 256 nodes and 512 edges per submission. Every other graph
+memory in this corpus derives its edges from an extractor; this one
+accepts them under attestation and bounds what it will accept.</p>
+<p><strong><code>src/provider_source.rs</code> keeps provider-native
+identity and event lifecycle</strong> — five event types
+(<code>upsert</code>, <code>comment</code>, <code>reply</code>,
+<code>attachment</code>, <code>delete</code>) and two states
+(<code>active</code>, <code>deleted</code>) — as hash-only metadata
+embedded in an existing entity body, under a comment that draws the
+boundary: <em>"Provider bodies never belong in this type."</em></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep a claims audit file and let it delete things.</strong>
+Naming a retired claim, why it failed, and what replaced it is worth
+more than any number the README could have kept.</li>
+<li><strong>Run your benchmark three times and commit all
+three.</strong> A single run is a sample; a mean with its members
+committed is a result, and it lets a reader recompute your headline
+without rerunning anything.</li>
+<li><strong>Fold the condition into the run signature.</strong> If the
+prompt variant is part of the hash, a chain-of-thought number cannot be
+quoted beside a plain one by accident.</li>
+<li><strong>Publish the per-category breakdown</strong>, including the
+category you do badly on. It costs a table and it is the difference
+between a score and a result.</li>
+<li><strong>Cite competitors as their publishers' claims.</strong>
+Reproducing someone else's number as a head-to-head asserts a
+comparability you did not establish.</li>
+<li><strong>Split trust into status, verified and confidence.</strong>
+One float cannot express "checked and wrong".</li>
+<li><strong>Let an explicit human score outrank the automatic
+recompute</strong>, and write the rule where the column is
+declared.</li>
+<li><strong>Test a deletion in both directions</strong> — the content is
+gone, and the erasure stopped at the boundary.</li>
+<li><strong>Instrument your deprecation.</strong> A counter for
+canonical versus alias calls tells you when the alias can go.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Documenting a verification command and not running
+it.</strong> A check that lives in Markdown runs when somebody
+remembers; the count it guards went stale by eleven while the audit
+around it stayed sharp. Put it in CI or accept that it is a
+comment.</li>
+<li><strong>Treating supersession and purge as protection against
+re-assertion.</strong> Both are keyed on the record. The next ingest of
+the same wrong value creates a new one.</li>
+<li><strong>Leaving a count's only check in a Markdown file.</strong>
+The fix here was to derive the number from source and run the derivation
+in CI; until that happened the audit around it stayed sharp while the
+count drifted.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right if you want a single-binary local memory with real correction
+semantics — bi-temporal history, supersession with a readable past, a
+tamper-evident journal, tested purge — and you would rather read a
+project's own audit of its claims than take its README on faith. All
+seven marks is a position several other systems here hold.</p>
+<p>Wrong if you need multi-machine memory without manual file movement,
+or encryption on a database that predates the default. The rejection
+guarantee is the most privacy-careful instance of one in the atlas — a
+digest rather than the value — and the open question about it is reach
+rather than existence: the background consolidation passes are the leg
+no committed test walks.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The lineage walk reads three JSON fields by name. What writes them,
+and what fraction of derived bodies in a real store carry any of the
+three — a suppression that propagates only along declared provenance is
+exactly as complete as the declarations are.</li>
+<li>The tombstone matches on predicate and digest without the subject.
+What is the false-positive surface — the same value legitimately true of
+two subjects under one predicate?</li>
+<li>Nothing sets <code>expires_at_unix_ms</code> on the default path. Is
+a lapsing rejection intended, or is the column there for a caller that
+does not exist yet?</li>
+<li><code>single-session-preference</code> scores 0.300 in the committed
+report. Is that a retrieval failure, a prompt failure, or a category the
+design does not target?</li>
+<li>Does <code>emb_sig</code> Hamming prefiltering change recall, and is
+there an artifact measuring the loss rather than the speedup?</li>
+<li>What would it take to make <code>federate</code> a sync rather than
+an export?</li>
+<li><code>enforce_strict_workspace_binding</code> sits beside the
+compatibility method rather than replacing it. Which callers take which,
+and what would it cost to retire the lenient one?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and temporal model: <code>src/schema.rs</code>
+(<code>entities</code>, <code>entity_history</code>,
+<code>journal</code>, <code>audit_chain_state</code>,
+<code>encryption_canary</code>, the <code>valid_*</code> and
+<code>recorded_at</code>/<code>invalidated_at</code> columns).</li>
+<li>Tools and review surface: <code>src/mcp.rs</code> (registry),
+<code>src/tools.rs</code> (<code>handle_operator_review</code>, recall,
+supersede, correct, purge).</li>
+<li>Trust admission: <code>src/trust_admission.rs</code>.</li>
+<li>Selection explanation: <code>src/selection_decisions.rs</code>,
+<code>docs/specs/selection-decisions-v1.md</code>, and the
+<code>include_selection_decisions</code> reconciliation in
+<code>src/tools.rs</code>.</li>
+<li>Evidence, lineage, graph and provider identity:
+<code>src/evidence_lanes.rs</code>, <code>src/task_lineage.rs</code>,
+<code>src/declared_graph.rs</code>,
+<code>src/provider_source.rs</code>.</li>
+<li>Storage and deletion tests: <code>src/db.rs</code>
+(<code>purge_erases_history_and_redacts_journal_for_purged_entities</code>,
+<code>purge_does_not_redact_other_workspace_live_journal_rows</code>).</li>
+<li>Benchmarks: <code>benchmark/longmemeval/</code>
+(<code>qa_report.json</code>, <code>qa_report_seed2.json</code>,
+<code>qa_report_seed3.json</code>, the three
+<code>qa_report_cot*.json</code>, <code>COMPARISON.md</code>,
+<code>run.py</code>), <code>benchmark/scale/report.json</code>,
+<code>benchmark/lambda/results/</code>,
+<code>benchmark/GAUNTLET.md</code>, <code>PERF.md</code>.</li>
+<li>Claims: <code>CLAIMS-AUDIT.md</code>; encryption behaviour:
+<code>docs/ENCRYPTION.md</code>.</li>
+<li>Integrations: <code>integrations/langgraph/</code>,
+<code>integrations/crewai/</code>,
+<code>integrations/autogen/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-27</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36"><code>9c829207a4b44a8e679ba912b4c1c5608c8f1e36</code></a>
+— fifth reading, twenty commits on, five new modules totalling roughly
+7,000 lines of Rust. All seven marks stand and none changed; no claim in
+this report went stale.</p>
+<p>The addition worth the re-pin is
+<code>src/selection_decisions.rs</code> with its own spec, described in
+section 6: an opt-in per-candidate record of why each recall candidate
+was or was not delivered, reconciled <em>after</em> the six governed
+serving gates rather than from the pre-filter fused order, with omitted
+rather than zeroed scores, failed arms reported without fabricated
+candidates, a fail-closed bound, and a replay fingerprint a committed
+test tampers with. Its consumer is the context engine in the sibling
+repository, which carries the disposition vocabulary and no producer —
+half a mechanism in each repository, and the reason reading either alone
+gives the wrong answer.</p>
+<p>Four more subsystems arrived beside the entity, described in section
+10a: evidence lanes separating a derived summary from the verbatim span
+with a temporal rule that keeps current residuals out of a valid-time
+view; task lineage across session boundaries; a declared and attested
+graph, bounded per submission; and provider-native source identity kept
+as hash-only metadata. Screened again first: two auto-run publication
+manifests, one build-time execution point, nine unpinned surfaces and
+four files inside the seven-day cooldown; nothing was built, installed
+or executed. <code>stack_source</code> promoted from <code>seeded</code>
+to <code>reviewed</code>.</p>
+<p><strong>2026-08-22</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/88c14ed9fc430f8a80094796617b3f95fe3f4a36"><code>88c14ed9fc430f8a80094796617b3f95fe3f4a36</code></a>
+— fourth reading, two commits on. Screened again first: two auto-run
+surfaces, one build-time execution point, eight unpinned surfaces and
+one file inside the seven-day cooldown; nothing was built or executed.
+The tombstone gained lineage propagation — <code>src/db.rs</code> grows
+a suppression check shared by ordinary reads and maintenance scans,
+following <code>source_ids</code>, <code>evidence_for</code> and
+<code>promoted_from</code> recursively with a cycle set, a depth cap of
+eight and fail-closed behaviour at both the cap and an unauthentic
+source body, with
+<code>rejected_value_does_not_flow_through_maintenance_derived_writes</code>
+committed beside it. <code>enforce_strict_workspace_binding</code> adds
+a scope path that refuses an unbound profile instead of treating it as
+legacy. The official Python client gains a temp-owned, per-run-key
+ephemeral admitted fixture exercised against the real binary in CI, and
+<code>tests/encryption_bootstrap.rs</code> grows. All seven marks stand;
+the tombstone's evidence is stronger than it was, because the mechanism
+now covers the derivation path that a digest alone cannot.</p>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/1bf7041e428a7302281c67f5d597a06f33d38cce"><code>1bf7041e428a7302281c67f5d597a06f33d38cce</code></a>
+— re-pinned nine commits on, 46 files and +6,561 lines, most of it under
+<code>benchmark/</code>. Screened again: two auto-run surfaces, one
+build-time execution point, one manifest inside the cooldown across
+eight unpinned surfaces; nothing was installed and no benchmark was run.
+Marks unchanged at seven of seven. <strong>The addition is the artifact
+this atlas specified and has not built.</strong></p>
+<p><code>benchmark/scoped_memory/</code> is a <em>portable scoped-memory
+capability contract</em>, versioned
+<code>perseus-vault-scoped-memory-contract/v1</code> and described in
+its own README as <em>"a capability boundary, not a second memory
+API"</em>. Four properties make it worth reading whatever you think of
+the rest of the system.</p>
+<ul>
+<li><strong>Scope is bound out of band and the model cannot reach
+it.</strong> The contract binds <code>user_id</code>,
+<code>workspace_hash</code>, <code>agent_id</code> and
+<code>session_id</code> supplied by the host, and states that
+<em>"model-authored arguments cannot supply or override any of those
+fields"</em>; <code>contract.py:190</code> returns
+<code>_result("deny", "caller_scope_injection")</code> when they try.
+<em>"Scope and policy filtering happens before a ranker receives
+candidate IDs"</em>, and <code>RecordingRanker</code> exists so a test
+can prove what the ranker was handed.</li>
+<li><strong>The outcome vocabulary refuses to collapse an absence into a
+pass.</strong> <code>OUTCOMES</code> is <code>allow</code>,
+<code>deny</code>, <code>scope_mismatch</code>,
+<code>stale_conflict</code>, <code>abstain</code>,
+<code>unavailable</code>, and the README states the rule directly:
+<em>"A missing semantic provider or surface is represented as
+<code>unavailable</code>; it is never converted to a fabricated zero or
+pass."</em>
+<code>test_publication.py::test_failed_surface_is_explicitly_partial_not_zero</code>
+pins it.</li>
+<li><strong>It runs against two surfaces.</strong>
+<code>InProcessSurface</code> is a deterministic reference, and
+<code>McpSurface</code> is an adapter over the shipped
+<code>VaultClient</code> and the canonical MCP tools
+<code>recall</code>, <code>context</code>, <code>get_entity</code>,
+<code>remember</code>, <code>correct</code> and <code>supersede</code> —
+so the same contract exercises a reference implementation and the real
+system, which is what makes a passing run mean anything.</li>
+<li><strong>The published artifact is hash-only and stable.</strong>
+<code>test_report_is_hash_only_and_repeated_signature_is_stable</code>
+asserts the report carries hashes rather than content and that a
+repeated run signs identically.</li>
+</ul>
+<p>Writes require a trusted authority whose capability set includes the
+operation, a stale expected version fails closed, and corrections and
+supersessions retain the prior record with a deterministic successor
+relationship — the same semantics the report describes in the store,
+restated as an executable contract.</p>
+<p>Also at this pin:
+<code>benchmark/recall/test_fusion_regression.py</code> adds
+conflict-magnet fusion regressions, <code>test_replay.py</code> a shared
+retrieval replay envelope, evidence-sufficiency curves and
+protocol-comparability lanes under <code>longmemeval</code>, corpus
+inputs certified and redacted before use, proposal-admission writes
+isolated, and <code>src/db.rs</code> and <code>src/tools.rs</code> grown
+by 237 and 157 lines.</p>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/443239f45d39106169a2f37d193897c609850bd9"><code>443239f45d39106169a2f37d193897c609850bd9</code></a>
+— re-read 125 commits on, roughly 109,000 added lines in
+<code>src/</code> across 69 files. Every one of the seven marks was
+re-verified at this pin and every one holds, but one evidence record had
+gone stale under it: <code>human_review</code> named
+<code>mimir_action_approve</code> in <code>src/mcp.rs</code>, which
+existed at the previous pin and does not exist at this one. The approval
+surface is <code>admission_decide</code> in <code>src/tools.rs</code>,
+refusing any decision that is not <code>approve</code> or
+<code>reject</code>, and the record is re-anchored to it with
+<code>none</code> for its test, because no committed test names the
+path. Nothing in the previous reading was found stale, so this is an
+extension rather than a correction: section 10a adds the three
+mechanisms that are new in kind — <code>write_gate.rs</code>, a
+deterministic read-only precheck that decides
+Store/Duplicate/Supersede/Forget before any model call and refuses to
+let <code>Forget</code> drop a substantive fact; <code>verify.rs</code>,
+a runtime self-audit whose three-valued status makes
+<code>Unverified</code> a distinct exit code from <code>Pass</code>; and
+<code>benchmark/redteam/</code>, an adversarial harness against MAFIA,
+MemCollusion and Chronos whose README calls itself a skeleton and
+commits datasets and validators without results.</p>
+<p>The remaining growth was read at the level of what it changes about
+this report's claims rather than line by line, and it changed none of
+them. The screen reported two auto-run publication manifests —
+<code>server.json</code> and <code>smithery.yaml</code>, both registry
+metadata — plus a <code>build.rs</code> and a <code>Cargo.lock</code>
+inside its cooldown; nothing was installed and no test was run. One skew
+worth recording: <code>server.json</code> declares version 2.23.0 while
+the OCI package it lists pins 2.20.2.</p>
+<p><strong>2026-08-08</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785"><code>60d7ac4fc41bff182a6a53826f0b230bc6b9b785</code></a>
+— re-pinned three commits after the previous reading, which was one day
+old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read
+against the previous pin.</p>
+<p><strong>A claim in this report was wrong at the pin it was made on,
+and is retracted.</strong> The scoping row said
+<code>workspace_hash</code> was applied in read queries on entities
+<em>and journal rows</em>. At <code>4008228</code> it was not:
+<code>get_recent_journal(limit)</code> selected
+<code>FROM journal ORDER BY created_at_unix_ms DESC LIMIT ?1</code> with
+no workspace predicate and blanked the field on the way out, under a
+comment reading <em>"Not selected by this listing query; purge-scoping
+metadata only."</em> A caller in one workspace listing recent journal
+events received every workspace's. <code>8e26619</code> (#877) fixed it
+upstream: the reader now takes a <code>workspace_hash</code>, and the
+unscoped variant is <code>get_recent_journal_admin</code>, gated on an
+in-process <code>JournalAdminAuthorization</code> whose own comment says
+no public transport mints one. The <code>scope_enforced</code> mark
+stands — entity recall was scoped throughout, and the rubric's mark
+measures the memory read path — but the matrix sentence overstated it
+and now says which pin changed it.</p>
+<p><strong>Three mechanisms arrived that the previous reading could not
+have seen.</strong> <code>#880</code> adds an
+<code>epistemic_state</code> column at schema v27 —
+<code>candidate</code>, <code>verified</code>,
+<code>corroborated</code>, <code>rejected</code>,
+<code>defensively_recalled</code> — explicitly orthogonal to the
+lifecycle <code>status</code>, with
+<code>recall_filters_by_epistemic_state_on_all_paths</code> committed
+beside it. <code>defensively_recalled</code> is the one this atlas has
+no other instance of: every trust state in the corpus withholds a
+memory, and this one serves it while framing it as untrusted.
+<code>#864</code> adds a <code>RecallOutcome</code> carrying
+<code>abstained</code>, a machine-readable <code>reason</code>
+(<code>no_match</code>, <code>db_unhealthy</code>,
+<code>embedding_unavailable</code>, <code>deadline_elapsed</code>,
+<code>partial_arms</code>), a deadline flag and embedding-backend health
+— so an empty recall now distinguishes <em>nothing matched</em> from
+<em>the backend was down</em>, which the <a
+href="../../benchmarks/">benchmarks page</a> records as measured
+nowhere. And <code>#865</code> splits
+<code>memory.read</code>/<code>propose</code>/<code>commit</code>, types
+retrieved memory as untrusted below <code>verified</code>, and adds
+versioned per-agent authority manifests; the split is documented
+<strong>fail-open when no manifest exists</strong>, which is why it is
+in the risks row rather than the strengths one. The admission evaluator
+also gained a <code>proposed</code> outcome, keeping an unvalidated
+authoritative claim a reviewable proposal rather than a fact.</p>
+<p><strong><code>#878</code> is the one worth copying.</strong> A
+memory-quality scorecard, blocking on any pull request touching vault
+behaviour, whose <code>release_ready</code> demands accuracy of exactly
+1.0 over a committed 24-case manifest and requires every category to be
+present: long-horizon recall, contradiction and supersession,
+shared-memory visibility, adversarial contamination, temporal validity,
+scope validity, and provenance. That list is close to the acceptance
+suite this atlas publishes and has never run against anything.</p>
+<p><strong>Said plainly, because the atlas would otherwise be marking
+its own homework.</strong> These commits use this atlas's vocabulary —
+admission contract, epistemic trust axis, recall outcome, untrusted
+recall — and the <a href="../../methodology/atlas-rubric/">rubric</a>
+already warns that a mark count partly measures who has read it. Two
+things bound that here. This report carried all seven marks
+<em>before</em> these commits, so no mark was added by them and none
+could be. And the commits carry the project's own issue numbers, which
+is evidence of an internal plan rather than of a checklist. What changed
+is the prose, and the prose now says when.</p>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4"><code>4008228ee4fb1846bef562d91037b4be11356de4</code></a>
+— one commit past the previous pin, and it adds a file rather than
+changing one: a 251-line research memo under
+<code>docs/research/</code>. No source, schema, test or manifest moved,
+so every published claim and all seven marks stand unexamined by this
+reading rather than re-confirmed by it. Screened first: 2 auto-run
+surfaces (<code>server.json</code>, <code>smithery.yaml</code>), 1
+build-time exec (<code>build.rs</code>), 8 unpinned surfaces and 2 files
+inside the seven-day cooldown — the same shape as the previous screen,
+with the auto-run pair still the MCP publication manifests. Nothing was
+built or run. The memo is worth one sentence because of what it argues
+rather than what it changes: it reviews five 2026 memory papers and
+concludes that <em>"memory is a state machine, not just a search
+index"</em>, listing revision, forgetting, temporal validity and
+provenance as the properties that matter — which is a description of the
+mechanisms this system already carries marks for, arrived at from the
+literature rather than from the code. It also repeats the <a
+href="https://arxiv.org/abs/2507.05257">MemoryAgentBench mislabel</a>
+this atlas has traced twice before, citing the benchmark as evaluating
+<em>"selective forgetting"</em> where the repository itself calls that
+competency conflict resolution.</p>
+<p><strong>2026-08-05</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601"><code>5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601</code></a>
+— second reading, two commits on. Screened before reading: 2 auto-run
+surfaces (<code>server.json</code>, <code>smithery.yaml</code>), 1
+build-time exec (<code>build.rs</code>), 8 unpinned surfaces, and
+<code>Cargo.toml</code> and <code>Cargo.lock</code> both changed the day
+of the pin. Both auto-run findings predate the previous pin and are MCP
+publication manifests declaring how a client starts the published image;
+neither reads outside the tree nor reaches the network with anything it
+reads. Nothing was built or executed from the checkout — the only thing
+run was <code>scripts/registry_metadata_check.py</code>, which is stdlib
+Python that reads files in the tree and prints JSON.
+<code>6d6c6c8</code> is titled <em>"implement Atlas review
+follow-ups"</em> and closes three upstream issues; each was verified
+here against code rather than against the commit message. The tool count
+is derived rather than asserted: the parser extracts the embedded
+registry literal from <code>src/mcp.rs</code> and parses it as the
+implementation does, then asserts the same figure in five published
+surfaces, and <code>.github/workflows/mcp-registry.yml</code> runs it on
+every push and pull request alongside a Rust uniqueness test. Run at
+this commit it exits zero and reports <code>registry_count: 90</code>,
+<code>canonical_tools_list_count: 90</code>,
+<code>compatibility_manifest_count: 270</code>.
+<code>CLAIMS-AUDIT.md</code> replaced its
+<code>grep -o '"name": "mimir_[a-z_]*"'</code> instruction with that
+command, described as formatting-insensitive and CI-run. Encryption is
+on by default for a fresh install, with
+<code>tests/encryption_bootstrap.rs</code> asserting a 32-byte key at
+mode <code>0600</code>, an established canary, and a stored body that is
+not the plaintext that was written, plus a second case for the explicit
+opt-out; a database created before the flip stays plaintext until
+<code>init --rekey</code>, which the audit states.
+<code>tombstone</code> moves to present and the report carries all seven
+marks: <code>rejected_value_tombstones</code> is keyed on
+<code>(workspace_hash, subject, predicate, value_sha256)</code> over a
+value normalized by JSON canonicalisation, whitespace collapse and
+lower-casing, stores only the digest so a rejection record cannot leak
+what it suppresses, is enforced in <code>remember_impl</code> across the
+remember paths, honours a global-or-workspace scope through
+<code>workspace_hash IN ('', ?1)</code>, and admits a trusted override
+that is journaled — with four committed tests including one for
+laundering and the override. <code>5d6cecf</code> adds Ed25519-signed
+policy/authority profiles verified before a manifest takes effect,
+failing closed, which is new context rather than a change to any
+published claim.</p>
+<p><strong>2026-08-04</strong> — same pin, corrected after the project's
+author reviewed the report. The tool-count finding was stated as "stale
+by eleven", which asserts that 76 is the true canonical figure; nothing
+established that. Parsing the embedded registry literal rather than
+grepping it returns <strong>88</strong> top-level entries — 87
+<code>mimir_</code>-named, one <code>perseus_vault_</code>-named — so
+the claim (65), its designated command (76) and the registry (88)
+disagree three ways. The canonical/legacy split is not present in the
+literal: <code>tool_registry_base</code> calls the <code>mimir_*</code>
+names "an implementation migration detail" and
+<code>legacy_alias_tool</code> synthesizes aliases by prefix rewriting
+at advertise time, so what is advertised is a runtime decision no static
+count can see. The finding is drift between a count definition and its
+verification command, not a corrected number. The tombstone gap is
+additionally qualified against the pattern page's own "not an
+established best practice" header, and the falsifying test the author
+proposes — reject A, replace with B, re-ingest A by another path, run
+consolidation, check whether A stays rejected — is recorded in section
+9.</p>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b"><code>838c63dabbcfc4aaee0867ba7ff0bab7829e442b</code></a>
+— first reading. The published LongMemEval means were recomputed from
+the six committed per-run reports and match exactly (73.8% plain, 79.0%
+CoT); the benchmark itself was not re-run, as it requires paid model
+calls. The claims audit's own tool-count command was executed and
+returns 76 against a claim of 65.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

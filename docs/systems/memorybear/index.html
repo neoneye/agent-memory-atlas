@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Low-activation memories are merged
+into a summary node that keeps DERIVED_FROM edges to what it replaced —
+and each forgetting cycle records how many fusions failed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoryBear — Agent Memory Atlas">
+    <meta property="og:description" content="Low-activation memories are
+merged into a summary node that keeps DERIVED_FROM edges to what it
+replaced — and each forgetting cycle records how many fusions failed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoryBear — Agent Memory Atlas">
+    <meta name="twitter:description" content="Low-activation memories
+are merged into a summary node that keeps DERIVED_FROM edges to what it
+replaced — and each forgetting cycle records how many fusions failed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoryBear — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemoryBear",
+      "description": "Low-activation memories are merged into a summary node that keeps DERIVED_FROM edges to what it replaced \u2014 and each forgetting cycle records how many fusions failed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Forgetting that fuses rather than
+deletes</p>
+          <h1>MemoryBear</h1>
+          <p class="document-deck">Low-activation memories are merged
+into a summary node that keeps DERIVED_FROM edges to what it replaced —
+and each forgetting cycle records how many fusions failed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/SuanmoSuanyangTechnology/MemoryBear">
+              <span>Source</span>
+              <strong>SuanmoSuanyangTechnology/MemoryBear</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62" title="857bb5b4022fec641b0a511b82b0968a761a0d62">
+              <span>Analyzed revision</span>
+              <code>857bb5b4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoryBear is a memory service built on Neo4j and FastAPI with a web
+console — "Perceive · Extract · Associate · Forget" — Apache-2.0,
+roughly 410,000 lines across an API, a web app and sandbox
+infrastructure, bilingual in English and Chinese throughout.</p>
+<p><strong>The mechanism worth the report is what its forgetting does
+instead of deleting.</strong></p>
+<p><code>forgetting_engine/actr_calculator.py</code> implements a real
+ACT-R base-level activation model, with the formula written out in the
+header and Anderson (2007) cited:</p>
+<pre><code>R(i) = offset + (1-offset) * exp(-λ*t / Σ(I·t_k^(-d)))</code></pre>
+<p>where <code>offset</code> is a "minimum retention rate (prevents
+complete forgetting)", <code>I</code> is importance, <code>t_k</code> is
+time since the <em>k</em>-th access and <code>d</code> is a decay
+constant around 0.5. Recency and frequency combine into one activation
+value rather than being separate ranking terms.</p>
+<p>When activation falls below a threshold,
+<code>forgetting_strategy.py</code> does not delete. It
+<strong>identifies low-activation Statement–Entity node pairs, fuses
+them into a <code>MemorySummary</code> node, and wires
+<code>DERIVED_FROM</code> edges from the sources to the summary</strong>
+before removing the originals — the module's own list of
+responsibilities ends with "保留溯源信息并删除原始节点" (preserve
+provenance information and delete the original nodes), and step 4 of the
+fusion is "溯源保留： 记录原始节点 ID，保持可追溯性" (provenance
+retention: record the original node ids, maintain traceability).</p>
+<p>So forgetting here is lossy compression with a typed edge back to
+what was lost, and the summary keeps <code>original_statement_id</code>
+and <code>original_entity_id</code>. A reader who later asks "what
+happened to this fact" gets a summary and a pointer rather than an
+absence — which is the property most decay-based systems in this atlas
+give up.</p>
+<p><strong>And the forgetting cycle audits itself.</strong>
+<code>forgetting_cycle_history</code> records, per run and per user:
+<code>merged_count</code>, <strong><code>failed_count</code></strong>,
+<code>average_activation_value</code>, <code>total_nodes</code>,
+<code>low_activation_nodes</code>, <code>duration_seconds</code> and
+<code>trigger_type</code> (<code>manual</code> or
+<code>scheduled</code>), indexed on
+<code>(end_user_id, execution_time)</code>.</p>
+<p><code>failed_count</code> is the column to notice. A forgetting pass
+that records the node pairs it <em>could not</em> fuse is admitting that
+fusion can fail and making the failure countable — most background
+passes in this corpus report what they did and are silent about what
+they could not do.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A conversation is perceived, extracted into
+<strong>Statements</strong> and <strong>Entities</strong>, and
+associated into a Neo4j graph. Every node and every relationship carries
+<code>end_user_id</code>.</p>
+<p>Access history accumulates per node
+(<code>access_history_manager.py</code>), activation is computed from
+it, and the scheduler runs cycles that fuse the bottom of the
+distribution.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — ACT-R activation decides what falls below the forgetting threshold, and fusion writes a summary node with DERIVED_FROM edges before deleting the originals — with each cycle's counts recorded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: ACT-R activation decides what falls below the forgetting threshold, and fusion writes a summary node with DERIVED_FROM edges before deleting the originals — with each cycle&#39;s counts recorded
+flowchart TD
+    P[&quot;perceive: conversation in&quot;] --&gt; X[&quot;extract: Statements + Entities&quot;]
+    X --&gt; A[&quot;associate: graph edges, end_user_id stamped&quot;]
+    A --&gt; AH[&quot;access history per node&quot;]
+    AH --&gt; ACTR[&quot;ACT-R activation:&lt;br/&gt;offset + (1-offset)·exp(-λt / Σ I·t_k^-d)&quot;]
+    ACTR --&gt; LOW{&quot;below the forgetting threshold?&quot;}
+    LOW --&gt;|no| KEEP[&quot;retained; offset floors the decay&quot;]
+    LOW --&gt;|yes| PAIR[&quot;identify Statement-Entity pairs&quot;]
+    PAIR --&gt; FUSE[&quot;fuse into a MemorySummary node,&lt;br/&gt;optional LLM-written summary&quot;]
+    FUSE --&gt; DF[&quot;MERGE (source)-[:DERIVED_FROM]-&gt;(ms)&lt;br/&gt;original ids recorded&quot;]
+    DF --&gt; DEL[&quot;originals deleted&quot;]
+    FUSE -.-&gt;|&quot;fusion fails&quot;| FC[&quot;counted in failed_count&quot;]
+    DEL --&gt; H[&quot;forgetting_cycle_history row:&lt;br/&gt;merged, failed, avg activation, duration, trigger&quot;]</code></pre></details></figure>
+<p>The <code>offset</code> term is worth its own sentence. Because
+activation is floored, a memory never decays to zero — the curve
+asymptotes to a minimum retention rate. Combined with fusion rather than
+deletion, the design's position is that nothing is ever entirely gone,
+only progressively coarser.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Neo4j holds the graph; Postgres holds configuration, cycle history
+and operational state; Redis caches. FastAPI serves the API, a React web
+console sits over it, and an <code>e2b-infra</code> directory plus a
+<code>sandbox</code> directory support sandboxed execution. Docker
+Compose is the documented deployment.</p>
+<p>The forgetting engine is its own package with nine modules — the
+ACT-R calculator, an access-history manager, a memory-strength module, a
+strategy, a scheduler, a service and configuration utilities — which is
+more separation than most decay implementations here get, and it is why
+the strategy can be read independently of the maths.</p>
+<p>Configuration is loaded from the database
+(<code>load_actr_config_from_db</code>), so the decay constant,
+forgetting rate and threshold are operator-tunable per deployment rather
+than compiled in.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Activation</strong> —
+<code>forgetting_engine/actr_calculator.py</code>, with
+<code>access_history_manager.py</code> supplying the <code>t_k</code>
+series.</p>
+<p><strong>Cycle</strong> — <code>memory_forget_service.py</code> →
+<code>ForgettingScheduler</code> →
+<code>ForgettingStrategy.identify</code> → fuse →
+<code>ForgettingCycleHistoryRepository</code>.</p>
+<p><strong>Fusion</strong> —
+<code>forgetting_strategy.py:355-395</code>: the Cypher
+<code>OPTIONAL MATCH</code> over inbound relationships and
+<code>MERGE (source)-[:DERIVED_FROM]-&gt;(ms)</code> for both the
+statement and the entity side, so edges into the originals are rerouted
+to the summary rather than orphaned.</p>
+<p><strong>Scope</strong> — <code>neo4j_connector.py:219</code> and
+<code>:232</code>:
+<code>MATCH (n) WHERE n.end_user_id = $end_user_id</code> for nodes and
+the matching form for relationships; <code>create_indexes.py:348</code>
+builds indexes that require the property.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The graph is the model: <code>Statement</code> and
+<code>Entity</code> nodes with a <code>MemorySummary</code> tier above
+them, <code>DERIVED_FROM</code> edges recording fusion lineage, and
+<code>end_user_id</code> on everything.</p>
+<p><code>forgetting_cycle_history</code> is the relational side and it
+is the more interesting table, described in section 1. Recording
+<code>average_activation_value</code> per cycle means an operator can
+watch the distribution move over time — whether the store is drifting
+toward everything being cold, which is the failure mode a decay system
+needs to detect and almost none instruments.</p>
+<p><code>trigger_type</code> distinguishing <code>manual</code> from
+<code>scheduled</code> matters for reading that history: a
+manually-triggered cycle during a demo and a nightly one produce very
+different numbers, and separating them is one column.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Graph traversal plus vector search, with activation available as a
+ranking signal, and a "vector version (non-graph)" mode described in the
+README as trading some accuracy for latency.</p>
+<p><strong>Scope is enforced and it is enforced everywhere</strong>,
+which is the correct answer for a multi-user service on a single graph
+database: <code>end_user_id</code> is a predicate in the connector's
+queries, a required property in the index definitions, and the key of
+the delete path (<code>add_nodes.py:16</code> deletes a user's entire
+subgraph with
+<code>MATCH (n {end_user_id: ...}) DETACH DELETE n</code>).</p>
+<p>That last line is worth flagging as a hazard as well as a feature: it
+is an f-string interpolating <code>end_user_id</code> directly into
+Cypher rather than binding a parameter, in a function that deletes
+everything matching. The surrounding calls bind parameters properly;
+this one does not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction is an LLM pipeline behind the API, so writes are not
+instantaneous and the graph lags the conversation.</p>
+<p>Correction is not a first-class operation. There is no supersession
+pointer, no contradiction detection surfaced in the forgetting engine,
+and no rejected-value record. What exists is decay plus fusion: a memory
+that stops being reinforced becomes part of a summary. A memory that is
+<em>wrong</em> and frequently accessed will be reinforced and retained,
+which is the standard weakness of usage-driven retention and is worth
+stating plainly for a system whose whole lifecycle is
+activation-driven.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A FastAPI service with an MCP surface, a web console, a sandbox tier
+and Docker Compose. The console is where the forgetting curve and the
+cycle history are surfaced — the service layer exposes "遗忘曲线生成"
+(forgetting-curve generation) as an API concern, so an operator can see
+the decay model they configured.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded</strong>, per section 6, with the
+interpolation caveat.</p>
+<p><strong>Audit log — awarded, and scoped precisely.</strong>
+<code>forgetting_cycle_history</code> is an append-only per-run record
+with counts, an average, a duration and a trigger type. It audits
+<em>the forgetting subsystem</em>, not every mutation — an edit or an
+association does not appear — so it is a background-pass ledger rather
+than a full mutation log, and it is a good one.</p>
+<p><strong>Trust state — no.</strong> <code>importance</code> feeds
+activation; nothing records belief.</p>
+<p><strong>Tombstone — no.</strong> The <code>DERIVED_FROM</code> edge
+is lineage, not refusal: the same statement can be re-extracted and will
+enter as a new node.</p>
+<p><strong>Bitemporal, human review, negative eval — no</strong> on what
+was inspected.</p>
+<p><strong>Two cautions.</strong> The Cypher interpolation in the
+user-delete path noted above. And the <code>offset</code> floor means a
+memory can never decay out entirely — which is the design's intent, and
+it also means an operator who <em>wants</em> something gone must delete
+rather than wait, and the fusion path is not a deletion path.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Three papers are cited</strong>, which is more than most
+systems here have: a core technical report hosted on the project's own
+site, a multimodal affective memory engine report (<a
+href="https://arxiv.org/abs/2603.22306">arXiv:2603.22306</a>), and
+<strong>A-MBER</strong>, an affective memory benchmark (<a
+href="https://arxiv.org/abs/2604.07017">arXiv:2604.07017</a>) — which
+the atlas's own <a href="../../benchmarks/">benchmarks page</a> already
+tracks. Publishing a benchmark dataset alongside the system it measures
+is a real contribution and also a conflict of interest worth naming.</p>
+<p><strong>The benchmark claims cannot be checked from this
+tree.</strong> The README reports F1, BLEU-1 and LLM-as-a-Judge scores,
+states that MemoryBear "consistently outperforms competing systems
+including Mem0, Zep, and LangMem across all four task categories", and
+gives 72.90 ± 0.19% for the vector version and 75.00 ± 0.20% for the
+graph version. <strong>Every one of those figures is inside a
+PNG.</strong> There is no harness, no result file, no dataset reference
+and no run configuration in the repository — the numbers are images with
+error bars, and an error bar in an image is not reproducible.</p>
+<p>That is a different failure from the three systems in earlier batches
+whose benchmarks live in a sibling repository: there, a reader can go
+and look. Here there is nowhere to go.</p>
+<p>14 test files against 410,000 lines. <strong>I ran
+nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fuse instead of deleting, and keep the edge.</strong> A
+<code>MemorySummary</code> with <code>DERIVED_FROM</code> edges from
+what it replaced, holding the original ids, turns forgetting from an
+absence into a coarser record. "What happened to this fact" stays
+answerable.</li>
+<li><strong>Reroute inbound edges to the summary.</strong> The
+<code>OPTIONAL MATCH</code> plus <code>MERGE</code> is what stops fusion
+orphaning the graph around the nodes it removed.</li>
+<li><strong>Count what your background pass could <em>not</em>
+do.</strong> <code>failed_count</code> beside <code>merged_count</code>
+is one column and it is the difference between a pass that reports its
+work and one that reports its success rate.</li>
+<li><strong>Record the average activation per cycle.</strong> It is how
+you notice a store drifting cold before every memory is a summary.</li>
+<li><strong>Separate manual from scheduled runs in the history.</strong>
+Otherwise a demo contaminates the trend.</li>
+<li><strong>Floor the decay curve.</strong> An <code>offset</code> term
+means activation asymptotes to a minimum rather than reaching zero,
+which is a deliberate position on whether forgetting should ever be
+total.</li>
+<li><strong>Load the decay parameters from the database.</strong> Decay
+constants are exactly the thing an operator needs to tune per deployment
+without a rebuild.</li>
+<li><strong>Give the forgetting engine its own package.</strong> Nine
+modules — calculator, history, strength, strategy, scheduler, service,
+config — means the maths can be read separately from the policy.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not publish benchmark numbers only as images.</strong>
+Error bars in a PNG cannot be checked, reproduced or cited, and a reader
+has nowhere to look.</li>
+<li><strong>Do not interpolate an identifier into a
+<code>DETACH DELETE</code> query.</strong> The surrounding code binds
+parameters; <code>add_nodes.py:16</code> does not, and it is the most
+destructive statement in the repository.</li>
+<li><strong>Do not expect usage-driven retention to correct
+anything.</strong> A wrong memory that is frequently retrieved is
+reinforced by exactly the mechanism that keeps a right one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team wanting a hosted multi-user memory service with a
+console, a graph backend and a principled decay model, comfortable with
+Neo4j plus Postgres plus Redis and with a codebase whose comments are
+largely Chinese.</p>
+<p>The transferable idea is small and separable: fusion-with-provenance
+as the forgetting operation, and a cycle-history table that counts its
+own failures. Both are worth lifting into a system with a different
+decay model entirely.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Where are the benchmark numbers from?</strong> No harness,
+dataset or result file is in the tree, and the three papers are hosted
+elsewhere.</li>
+<li><strong>What happens when fusion fails?</strong>
+<code>failed_count</code> is recorded; whether the pair is retried next
+cycle, skipped permanently, or left below threshold forever was not
+traced.</li>
+<li><strong>Can a <code>MemorySummary</code> itself be
+forgotten?</strong> The strategy fuses Statement–Entity pairs; whether
+summaries participate in later cycles decides whether the store
+converges or accumulates a summary tier.</li>
+<li><strong>Is the A-MBER benchmark's evaluation of MemoryBear
+independent?</strong> The benchmark and the system share authors, which
+the reader should know.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Activation</strong> —
+<code>api/app/core/memory/storage_services/forgetting_engine/actr_calculator.py</code>
+(the formula and the Anderson citation <code>:1-23</code>),
+<code>access_history_manager.py</code>, <code>memory_strength.py</code>,
+<code>config_utils.py</code></p>
+<p><strong>Fusion</strong> —
+<code>forgetting_engine/forgetting_strategy.py</code> (the
+responsibilities <code>:1-12</code>, provenance retention
+<code>:38</code> and <code>:191</code>, the <code>DERIVED_FROM</code>
+rewiring <code>:355-395</code>), <code>forget_service.py</code>,
+<code>forgetting_engine.py</code></p>
+<p><strong>Cycles</strong> —
+<code>forgetting_engine/forgetting_scheduler.py</code>,
+<code>api/app/services/memory_forget_service.py</code>,
+<code>api/app/models/forgetting_cycle_history_model.py:15-35</code>,
+<code>api/app/repositories/forgetting_cycle_history_repository.py</code></p>
+<p><strong>Scope</strong> —
+<code>api/app/repositories/neo4j/neo4j_connector.py:219</code>,
+<code>:232</code>, <code>create_indexes.py:348-364</code>,
+<code>add_nodes.py:16</code> (the interpolated delete)</p>
+<p><strong>Retrieval</strong> —
+<code>api/app/core/memory/src/search.py</code></p>
+<p><strong>Service and console</strong> — <code>api/</code>,
+<code>web/</code>, <code>sandbox/</code>, <code>e2b-infra/</code></p>
+<p><strong>Claims</strong> — <code>README.md</code> §Benchmarks (images
+only), §Papers (three, all hosted outside the repository)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62"><code>857bb5b4022fec641b0a511b82b0968a761a0d62</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test or benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

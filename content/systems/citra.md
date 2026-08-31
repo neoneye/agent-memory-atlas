@@ -16,7 +16,7 @@ stack_source: "reviewed"
 capability_evidence:
   trust_state: "the status field, as a filter on the query rather than a weight on the score | smart-app-service/clause_store.py:65,:89-90,:599-627 | ten statuses exist and three fire: `LIVE_STATUSES = (\"active\", \"candidate\", \"dissented\")` against an `ALL_STATUSES` that adds `superseded`, `retired`, `sop_conflict`, `quarantined`, `orphaned`, `challenged` and `underperforming`. `candidates_for_facets` builds `\"status\": {\"$in\": list(statuses)}` with `LIVE_STATUSES` as the default, so a withheld clause is absent from the result set rather than ranked below it. The distinction is drawn in the code as a defect the project fixed: `PRECISION_FLOOR` *\"used to appear in exactly one place — a stats field called `needs_refinement` — so a judgement officers had overruled on 4 of every 10 cases it fired kept firing, merely ranked a little lower. Measured wrongness with no consequence is the same failure as knowledge that looks present and is not\"* | smart-app-service/tests/test_judgement_hierarchy.py:474-478 — *\"suspended judgements never fire as judgements\"*, `assert hits == []`, paired with the creation assertion above it and the restore below it"
   scope_enforced: "the facet set, as a containment predicate the store evaluates | smart-app-service/clause_store.py:599-627, smart-app-service/consolidation.py:531 | a clause fires only when `scope_facets ⊆ case_facets`, expressed as `{\"$expr\": {\"$setIsSubset\": [\"$scope_facets\", facets]}}` on the read query, with a multikey `$in` ahead of it to drive the index — *\"the query a graph database was not needed for\"*. Scope is derived rather than authored: it is the intersection of the labels on every correction that formed the clause, floored by `scopes_can_co_fire` so corrections only combine when their facets overlap, and a clause is never narrower than what its own evidence agreed on. Tenancy is a separate axis in the same key — `_key()` carries `tenant_id` and `app_slug` into every query | smart-app-service/tests/test_clause_store.py:364 asserts two disjoint facets cannot co-fire; the control-arm run reports the judgement firing on 0/2 non-matching files"
-  audit_log: "a per-clause history array, appended on transition and never trimmed | smart-app-service/clause_store.py:467-493,:437-449 | `set_status` snapshots the prior version, text, scope, status, actor, cause and timestamp into `$push: {\"history\": …}` and bumps `version` — *\"Never an in-place silent mutation\"*. `reconcile_scope_families` pushes the same shape. No `$pop`, `$pull` on history or `$slice` exists anywhere in the service, so the array only grows, and `apply_performance` routes its automatic parking through `set_status` rather than writing status directly, carrying `actor=\"precision-monitor\"` and a written cause naming the counts | smart-app-service/tests/test_clause_store.py:1234 asserts a batch job cannot walk back a human's curation"
+  audit_log: "a per-clause history array, appended on transition and never trimmed | smart-app-service/clause_store.py:467-493,:437-449 | `set_status` snapshots the prior version, text, scope, status, actor, cause and timestamp into `$push: {\"history\": …}` and bumps `version` — *\"Never an in-place silent mutation\"*. `reconcile_scope_families` pushes the same shape. `clause_store.py` carries no `$pop`, `$pull` or `$slice` and is the only writer of `smartapp_clauses` in the service, so the array only grows, and `apply_performance` routes its automatic parking through `set_status` rather than writing status directly, carrying `actor=\"precision-monitor\"` and a written cause naming the counts. Two writers sidestep it: `record_dissent` uses a bare `$set`, and the A/B harness scripts under `demo-data/` write `status` onto the collection directly | smart-app-service/tests/test_clause_store.py:1234 asserts a batch job cannot walk back a human's curation"
   human_review: "the challenge and adjudication path, role-gated, with the parked clause withheld while it waits | smart-app-service/main.py:11815-11840,:11843, smart-app-service/clause_store.py:70-83 | `challenge_clause` is *\"a supervisor stopped this judgement pending adjudication\"* — a `challenged` status outside `LIVE_STATUSES`, so the clause stops firing until a named person decides. The design states why it is not a score: *\"The fix is deliberately NOT a trust tier. Weighting officers by seniority would encode org hierarchy into an audit trail a regulator reads, and seniority is not correctness. This is a ROLE-held stop: it does not rank anyone, it parks one clause and forces a named human to decide.\"* Quarantine, retire and SOP-conflict resolution are separate endpoints behind `_require_memory_curator`, each recording actor and cause | smart-app-service/tests/test_clause_store.py:1247 — `test_dismissing_a_challenge_cannot_lift_an_admin_quarantine`, a regression test for a privilege-escalation hole in this exact path"
   negative_eval: "committed cases asserting a withheld clause does not reach the case, paired with the positive control in the same test | smart-app-service/tests/test_judgement_hierarchy.py:462-486, test_clause_store.py:1234-1262 | the SOP-conflict test asserts the clause was created (`s[\"created\"] == 1`, status `sop_conflict`), then that it does not fire — *\"suspended judgements never fire as judgements\"*, `assert hits == []` — then resolves the conflict and asserts `out[\"status\"] == \"active\"`. Created, withheld, restored, over one fixture. Beside it `test_the_monitor_never_resurrects_a_curated_clause` parks a clause by hand and runs the precision monitor over it with 12 blames in 20 firings, asserting the status stays `quarantined`, and `test_dismissing_a_challenge_cannot_lift_an_admin_quarantine` documents the laundering path it closes | this is the test"
 matrix:
@@ -30,7 +30,7 @@ matrix:
   background: "A consolidation job that forms and reconciles clauses, and a precision monitor that parks a clause measured wrong more often than the floor allows"
   trust: "Ten statuses of which three fire; corroboration is a headcount of distinct officers, never a per-officer weight, and the project states that weighting officers by seniority would encode hierarchy into an audit trail"
   strengths: "A status the read path filters on rather than scores, a store that refuses an unprovenanced clause, and a published null result naming which of its own features measurably did nothing"
-  risks: "Retirement makes a clause invisible to the matcher that would have recognised the same lesson, so a quarantined judgement re-forms from the same corrections under a new id; `record_dissent` is the one status writer that leaves no history entry; and the project is nine days old"
+  risks: "Retirement makes a clause invisible to the matcher that would have recognised the same lesson, so a quarantined judgement re-forms from the same corrections under a new id; `record_dissent` is the one status writer in the store that leaves no history entry, and the audited path is a convention of `clause_store.py` rather than a property of the collection; and the project is nine days old"
 ---
 
 ## 1. Executive Summary
@@ -42,8 +42,9 @@ is what an experienced officer does, recovered from what they actually did.
 The store is a single MongoDB collection and the object is small: one rule in 40
 words or fewer, a set of facets it fires within, the corrections that taught it,
 the officers who supported it and the officers who acted against it, firing
-counters, and a status. Apache-2.0, 92 commits, and 116,582 source lines in
-`smart-app-service` alone against 27,105 lines of tests there and 1,679 test
+counters, and a status. Apache-2.0, 92 commits, and 116,582 lines of Python and
+TypeScript in `smart-app-service` alone — of which 27,105 are the Python test
+suite under `tests/`, leaving 89,477 lines of everything else. 1,688 Python test
 functions across the tree.
 
 **The status is the reason to read it.** Ten values exist and three of them fire:
@@ -152,8 +153,9 @@ flowchart TB
 
 ## 3. Architecture
 
-The memory lives in one service. `smart-app-service` is 116,582 source lines
-across 239 files, and the clause machinery is a small, legible part of it:
+The memory lives in one service. `smart-app-service` is 239 Python and TypeScript
+files totalling 116,582 lines, 111 of those files and 27,105 of those lines being
+the test suite, and the clause machinery is a small, legible part of it:
 
 - `clause_store.py` (1,314 lines) — the collection, the statuses, the read query,
   the transitions and the ranking.
@@ -230,15 +232,38 @@ stops being applied — nobody has to outrank anyone."*
     "changed_by": actor or "system", "cause": cause, "at": now}}
 ```
 
-No `$pop`, no `$pull` on history, no `$slice` anywhere in the service — the array
-only grows.
+`clause_store.py` contains no `$pop`, no `$pull` and no `$slice` at all, and it
+is the only writer of `smartapp_clauses` inside the service — `main.py` and
+`memory_export.py` only read it — so nothing trims `history`; the array only
+grows.
 
-`record_dissent` is the exception. When an officer's dissent share crosses
+The service does cap arrays elsewhere, which is the comparison that gives the
+clause store its shape. `entity_links.py:210` pushes each new reference with
+`{"$each": [ref], "$slice": -_MAX_REFS}` at `_MAX_REFS = 200` while `$inc`-ing a
+separate `ref_count`, and `fraud_checks.py:1495` does the same at `-50`; four
+further `$slice` uses (`fraud_checks.py:1003,1542,1568`, `entity_links.py:215`)
+are read-time projections that fetch only the last few refs rather than drag a
+hot entity's whole history over the wire. Those are evidence pointers on
+high-cardinality fingerprint and entity documents, and dropping the oldest is the
+right call there. The clause history is the one array the project chose not to
+bound.
+
+`record_dissent` is the exception to `set_status`. When an officer's dissent share crosses
 `DISSENT_RATIO`, it flips `status` to `dissented` with a bare `$set` and no
 history push. So the one transition that stops a clause being presented as a rule
 — the one caused by officers disagreeing in the field rather than by a curator or
 a monitor — is the one transition the trail does not record. Every other status
 writer in the file routes through `set_status`.
+
+Outside the service there is a second bypass, and it is the one the published run
+used. `demo-data/tenants/acme-bank/scripts/memory_ab_dsa.py:134` toggles the
+seeded clause between arms with
+`update_one({...}, {"$set": {"status": status}})` straight onto the collection,
+and `memory_ab.py:55` does the same with `update_many` across the whole app. They
+are harness scripts rather than product code, but they demonstrate that the
+audited path is a convention of `clause_store.py` and not a property of the
+store: anything holding the Mongo URI can change a clause's status and leave no
+history entry.
 
 ### Retirement, and why the same lesson comes back (`consolidation.py:513`)
 
@@ -328,7 +353,7 @@ Strengths:
 - Automatic parking on measured precision, by a monitor, with a written cause.
 - An append-only per-clause history carrying actor and cause.
 - A regression test for a privilege-escalation hole in the governance path.
-- A published null result. Apache-2.0, nine CI workflows, 1,679 test functions.
+- A published null result. Apache-2.0, nine CI workflows, 1,688 test functions.
 
 Gaps:
 
@@ -341,14 +366,15 @@ Gaps:
   rule three officers taught is LLM-written even though the policy it encodes is
   not — mitigated by `match_tokens` and by never rewriting, not removed.
 - **Nine days old.** The first commit is 16 August 2026 and the pinned commit is
-  25 August; 92 commits carry 116,582 source lines in one service, so most of
+  25 August; 92 commits carry 116,582 lines in one service, so most of
   this tree arrived in bulk rather than accreting in the open, and the
   lockfiles predate the repository's own first commit.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,679 test functions across 169 files, with 85 in `test_clause_store.py` and 24
-in `test_judgement_hierarchy.py` covering the memory directly. The suites were
+1,688 Python test functions across 166 files, with 85 in `test_clause_store.py`
+and 24 in `test_judgement_hierarchy.py` covering the memory directly — 1,137 of
+the 1,688 sit in `smart-app-service`. The suites were
 not run: eight dependency surfaces sat inside the seven-day freshness cooldown at
 this pin, so nothing here was installed or executed.
 
@@ -463,5 +489,7 @@ holes the project has already had to close.
 - The reported run: `docs/Citra-Decision-Memory-Credit-Note.pdf`.
 
 ## History
+
+**2026-08-31** — [`3106ce5f122d00fe63b8ec9d445da771170fdcd6`](https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6) — same pin, three corrections. Section 4 and the `audit_log` evidence record asserted *"No `$pop`, no `$pull` on history, no `$slice` anywhere in the service"*. `$slice` appears six times — `fraud_checks.py:1003,1495,1542,1568` and `entity_links.py:210,215` — so the evidence was false as written even though the conclusion was not: none of the six touches the clause `history` array, `clause_store.py` carries no `$pop`, `$pull` or `$slice` at all, and it is the only writer of `smartapp_clauses` in the service. The claim is re-scoped to the store, and the capped `refs` arrays elsewhere (200 per entity link, 50 per fingerprint, with `ref_count` incrementing past the trim) are described as the contrast they are. Verifying that also turned up a second audit bypass beside `record_dissent`: `demo-data/tenants/acme-bank/scripts/memory_ab_dsa.py:134` and `memory_ab.py:55` set `status` directly on the collection, which is how the published A/B run toggled `C-002`. `audit_log` was re-checked in both directions and holds — the mark rests on a named append-only mutation record in the system's own store, which `set_status` and `reconcile_scope_families` provide; no mark moved. Second, section 1 read *"116,582 source lines in `smart-app-service` alone against 27,105 lines of tests there"*: both figures are correct but nested, not disjoint — the 116,582 counts all 239 `.py`/`.ts`/`.tsx` files including the 111 test files, leaving 89,477 lines outside `tests/`. Third, the test-function count was 1,679 across 169 files; an independent recount at this pin gives **1,688 `def test_` across 166 files**, 1,137 of them in `smart-app-service`.
 
 **2026-08-31** — [`3106ce5f122d00fe63b8ec9d445da771170fdcd6`](https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6) — first reading, at 92 commits and nine days of public history. Screened before reading: no auto-run surface, eight build-time execution surfaces, twenty-seven unpinned surfaces and **eight dependency surfaces inside the seven-day freshness cooldown**, so nothing was installed and nothing was run. Five marks. `tombstone` is withheld on a specific finding rather than an absence: retirement and quarantine withhold a clause and deliberately release its corrections back to the matcher, which is right for a clause withdrawn on its results and wrong for the dismissed-officer case the quarantine endpoint names in its own docstring. `bitemporal` is withheld on record-time-only timestamps. The reported `p = 0.0005` recomputes exactly as a one-sided sign test over 15 discordant pairs, and the paired design the PDF names is the correct one for two arms over the same nineteen files.

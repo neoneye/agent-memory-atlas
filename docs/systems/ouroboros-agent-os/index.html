@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A spec-first agent OS whose
+durable memory records what the system believes the user asked for, on
+whose authority it believes it, and how that belief was demoted when a
+better source arrived.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Ouroboros — Agent Memory Atlas">
+    <meta property="og:description" content="A spec-first agent OS whose
+durable memory records what the system believes the user asked for, on
+whose authority it believes it, and how that belief was demoted when a
+better source arrived.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ouroboros — Agent Memory Atlas">
+    <meta name="twitter:description" content="A spec-first agent OS
+whose durable memory records what the system believes the user asked
+for, on whose authority it believes it, and how that belief was demoted
+when a better source arrived.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Ouroboros — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Ouroboros",
+      "description": "A spec-first agent OS whose durable memory records what the system believes the user asked for, on whose authority it believes it, and how that belief was demoted when a better source arrived.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A ledger of intent, not of knowledge</p>
+          <h1>Ouroboros</h1>
+          <p class="document-deck">A spec-first agent OS whose durable
+memory records what the system believes the user asked for, on whose
+authority it believes it, and how that belief was demoted when a better
+source arrived.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Q00/ouroboros">
+              <span>Source</span>
+              <strong>Q00/ouroboros</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Q00/ouroboros/commit/6deb72d37da119bd6419be4d0508b71bfc3b5b59" title="6deb72d37da119bd6419be4d0508b71bfc3b5b59">
+              <span>Analyzed revision</span>
+              <code>6deb72d3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-13</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Ouroboros is a spec-first workflow engine for AI coding — 310,000
+lines of Python across 573 modules, MIT, 2,072 commits since 21 January
+2026 — that positions itself as an "Agent OS" and drives fourteen named
+agent hosts through one loop: interview the human, crystallize an
+immutable Seed, execute, evaluate, reflect, repeat.</p>
+<p><strong>It is not a memory system, and that is what makes it worth
+reading here.</strong> The durable store holds no facts about the world,
+no user profile, no retrieved documents. It holds a <strong>decision
+ledger</strong>: for each key of a specification, what the system
+currently believes the user wants, which authority that belief rests on,
+how the decision was reached, and — when a better source arrived — the
+older value with a written note saying what displaced it. Nearly every
+mechanism this atlas hunts for in knowledge stores turns out to be here,
+applied to intent.</p>
+<p>Three things are genuinely good. First, <strong>provenance is two
+axes, not one.</strong> <code>LedgerSource</code> records what kind of
+authority a value rests on — a user goal, a repository fact, a
+conservative default, an assumption — and
+<code>DecisionProvenance</code> records separately how the decision was
+reached: <code>USER_CONFIRMED</code>, <code>MODEL_INFERRED</code>,
+<code>TIMEOUT_DEFAULT</code>, <code>LATERAL_CONSENSUS</code>,
+<code>MAINTAINER_POLICY</code>. The module says why the split exists: a
+timeout-defaulted decision had been indistinguishable from a
+user-confirmed one, so degraded specifications executed silently. The
+two model-derived provenances are gated; the three grounded ones pass
+unconditionally.</p>
+<p>Second, <strong>an adopted fact is structurally barred from becoming
+a requirement.</strong> <code>bigbang/answer_provenance.py</code>
+classifies an interview answer once, where it enters, on its advertised
+prefix: <code>[from-code]</code>, <code>[from-repo]</code>,
+<code>[from-research]</code> and <code>[from-data]</code> mark something
+the user <em>adopted</em> rather than <em>decided</em>. The content is
+withheld from the answer slot — the slot requirements are read from —
+and left intact in the question slot, because sharpening the next
+question is what the observation was collected for.
+<code>test_observation_content_never_reaches_a_requirement_consumer</code>
+runs that assertion against all four render surfaces at once.</p>
+<p>Third, <strong>conflict resolution has no model in it.</strong>
+<code>resolve_conflict</code> walks a fixed ten-entry source-priority
+ladder, falls back to confidence, and returns <code>CONFLICTING</code>
+only on an exact tie — at which point the driver blocks rather than
+invent a merge. The loser is demoted to <code>WEAK</code> and keeps its
+value and a rationale string naming what displaced it.</p>
+<p>The weakness is the one the design implies rather than one it got
+wrong: <strong>the belief has a horizon of one build.</strong> The
+ledger is per-session, the lineage is per-task, and no path carries a
+settled decision from a finished run into a new one.
+<code>project_map.py</code> can enumerate a project's past runs, but
+nothing reads them to answer "we already decided this last month". A
+system whose headline is <em>"it gets smarter on its own"</em>
+accumulates, at this commit, within a lineage and not across them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>ledger entry</strong>: one decision about
+one key of a specification. <code>auto/ledger.py</code> gives it a
+value, a <code>LedgerSource</code>, a <code>DecisionProvenance</code>, a
+confidence, and a <code>LedgerStatus</code> from <code>MISSING</code>,
+<code>WEAK</code>, <code>DEFAULTED</code>, <code>INFERRED</code>,
+<code>CONFIRMED</code>, <code>CONFLICTING</code>, <code>BLOCKED</code>.
+Alongside it, <code>core/requirement_candidate.py</code> models the
+pre-Seed form with its own vocabulary — <code>CandidateResolution</code>
+of <code>CONFIRMED</code> / <code>NEEDS_CONFIRMATION</code> /
+<code>UNKNOWN</code> / <code>CONFLICTING</code>, a
+<code>ConfirmationAuthority</code> of <code>USER</code> /
+<code>REPO_EVIDENCE</code> / <code>NONE</code> held deliberately
+separate from <code>CandidateContentSource</code>, and a
+<code>PromotionDisposition</code> of <code>PROMOTE</code> /
+<code>OMIT</code> / <code>BLOCK</code>.</p>
+<p>The separation of <em>where content came from</em> and <em>who
+confirmed it</em> is the load- bearing idea. A value can be
+<code>MODEL_INFERRED</code> in origin and <code>USER</code> in
+authority; the two fields never collapse, so the question "why do you
+believe that" and the question "who signed off" have different answers
+and both are stored.</p>
+<p>A belief becomes durable in stages. An utterance is classified as
+decision or observation at the moment it is recorded. A decision
+distills into a candidate. A candidate is confirmed by the user or by
+repository evidence, or it waits, or it conflicts. Confirmed candidates
+promote into a Seed — and the Seed is frozen, never mutated. A belief
+stops being one in exactly three ways: it is <strong>demoted</strong> to
+<code>WEAK</code> by a higher-priority source, with the old value and a
+rationale retained; it is <strong>blocked</strong>, which is a
+human-decision surface rather than a terminal state, and an earlier
+transient blocker can be retired by a later same-key answer; or its
+acceptance criterion is <strong>revised</strong> in the next generation
+through an <code>ACPatch</code> of <code>keep</code> /
+<code>revise</code> / <code>add</code>. Deletion is absent by
+construction — <code>remove</code> was deliberately left out of the v1
+patch vocabulary because dropping an AC would shift the positional
+identity that regression detection depends on.</p>
+<p>Above a Seed sits the lineage. <code>core/lineage.py</code> tracks O₁
+→ O₂ → … → Oₙ as frozen read models projected from events and never
+persisted directly. An acceptance criterion carries a
+<code>semantic_ac_key</code> — a SHA-256 digest of its description,
+verify command, expected artifacts and output assertion, with list
+position and session identity deliberately excluded — so the same
+criterion keeps one identity across retries and successors, and a
+semantically replaced one gets a new key. <code>ACResult</code> then
+adds the epistemic layer the atlas cares about most:
+<code>authority_state</code> returns <code>pass</code>,
+<code>fail</code> or <code>unresolved</code>, and an overridden verdict
+retains what the evaluator originally said in
+<code>provisional_verdict</code> alongside the overriding source and
+reason.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an utterance becomes a clause of the spec, and the two ways it stops being one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an utterance becomes a clause of the spec, and the two ways it stops being one
+stateDiagram-v2
+    [*] --&gt; Observation: prefix marks an adopted fact
+    [*] --&gt; Decision: prefix marks a choice the caller made
+
+    Observation --&gt; Withheld: classify_answer_provenance
+    Withheld --&gt; [*]: sharpens the next question, never a requirement
+
+    Decision --&gt; Candidate: build_requirement_distillation
+    Candidate --&gt; NeedsConfirmation: no authority yet
+    Candidate --&gt; Conflicting: exact source and confidence tie
+    NeedsConfirmation --&gt; Confirmed: user or repo evidence
+    Conflicting --&gt; Confirmed: a human decides
+    Candidate --&gt; Blocked: promotion refused
+
+    Confirmed --&gt; Seed: ambiguity at or below 0.2
+    Confirmed --&gt; Weak: outranked, value and rationale kept
+    Blocked --&gt; Confirmed: a later same-key answer retires it
+
+    Seed --&gt; Verdict: evaluation returns pass, fail or unresolved
+    Verdict --&gt; Revised: ACPatch revises the criterion
+    Revised --&gt; Seed: next generation
+    Weak --&gt; [*]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing has to be running. Ouroboros is a Python package installed by
+<code>pipx</code> or <code>uv tool</code>, exposing a
+<code>ouroboros</code> CLI (aliased <code>ooo</code>) and an MCP server,
+with a Rust TUI crate under <code>crates/ouroboros-tui</code> and a Bun
+plugin for OpenCode. There is no daemon, no server, no container, no
+vector service, and no queue.</p>
+<p>Durable state lands in three places:</p>
+<ul>
+<li><strong><code>~/.ouroboros/ouroboros.db</code></strong> — a single
+global SQLite database resolved by
+<code>config/models.py:resolve_event_store_path</code>, with exactly two
+tables. <code>events</code> is the append-only log: <code>id</code>,
+<code>aggregate_type</code>, <code>aggregate_id</code>,
+<code>event_type</code>, a JSON <code>payload</code>, a timestamp and a
+<code>consensus_id</code>, with five indexes.
+<code>brownfield_repos</code> registers repositories. Two migrations,
+dated 16 January and 18 March 2026, are the whole schema history.</li>
+<li><strong><code>~/.ouroboros/data/*.json</code></strong> — interview
+and auto-pipeline state, written through
+<code>core/owner_only.py:write_owner_only</code> at mode 0600 in
+directories at 0700, atomically, with the parent directory fsynced and a
+warning logged when durability cannot be confirmed.</li>
+<li><strong><code>.ouroboros/artifacts/&lt;prefix&gt;/&lt;sha256&gt;.json</code></strong>
+— content-addressed bodies for Disposable Memory, with per-contract
+manifests holding reference and tombstone history, guarded by one
+cross-process store lock.</li>
+</ul>
+<p>The split between the first two matters more than it looks. The event
+log stores <strong>previews, not content</strong>:
+<code>events/interview.py</code> writes
+<code>initial_context[:500]</code>, <code>question_preview[:200]</code>
+and <code>response_preview[:200]</code>, and the timing payload is
+commented as "privacy-safe". <code>events/base.py</code> additionally
+strips every nested <code>raw_*</code> and <code>subscribed_*</code> key
+before persistence, so an event payload cannot carry another event
+payload. The consequence is worth stating plainly: the permanent, global
+audit trail cannot reconstruct the content it audits, and if
+<code>ooo cleanup</code> prunes a terminal session's state file, the
+200-character preview is what remains.</p>
+<p>There is no retrieval stack because there is nothing to search.
+Twelve runtime dependencies — <code>aiosqlite</code>,
+<code>anyio</code>, <code>click</code>, <code>jsonschema</code>,
+<code>pydantic</code>, <code>prompt-toolkit</code>,
+<code>python-dotenv</code>, <code>pyyaml</code>, <code>rich</code>,
+<code>sqlalchemy</code>, <code>structlog</code>, <code>typer</code> —
+and not an embedding, index or similarity function among them.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One command installs it; it runs fully local and offline apart from
+whichever LLM the chosen host calls. No API key is needed to
+<em>store</em> anything — the event log and state files work with no
+provider configured — though the interview, reflection and evaluation
+stages are all LLM calls, so an unconfigured install stores nothing
+interesting. Every durable file is JSON or SQLite and repairable by
+hand.</p>
+<p>The dependency policy is the most careful this atlas has read.
+Runtime dependencies carry bounded ranges; optional extras are
+<strong>exact-pinned on purpose</strong>, with the reason in the
+manifest: a future compromised "latest" must not be auto-pulled on a
+fresh PyPI install, since <code>pipx</code> and <code>uv tool</code>
+resolve from package metadata and not from <code>uv.lock</code>. The
+comment names the March 2026 litellm 1.82.7/1.82.8 incident as the
+motivation, <code>uv.lock</code> hash-pins the full transitive graph,
+and a test —
+<code>test_runtime_and_optional_dependencies_have_upper_bounds</code> —
+enforces that runtime deps stay ranges and extras stay exact.
+<code>python-dotenv</code> gets a tighter patch-only ceiling than its
+neighbours because it parses <code>.env</code>, which the codebase names
+as a trust boundary.</p>
+<p>Against that, the repository's own <code>.mcp.json</code> starts the
+server with <code>uvx --isolated --from "ouroboros-ai[mcp]"</code> and
+no version, so a harness reading that file resolves the newest published
+<code>ouroboros-ai</code> at every start. The exact-pinned extras bound
+what that pulls in transitively; the package's own version floats.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture and classification.</strong>
+<code>bigbang/interview.py:InterviewState.record_answer</code> is the
+single point where an answer enters.
+<code>bigbang/answer_provenance.py:classify_answer_provenance</code>
+reads the advertised prefix and settles provenance as a typed field;
+consumers read the field and never re-read the marker. The module
+documents the drift this prevents:
+<code>_classify_interview_answer_source</code> in
+<code>mcp/tools/authoring_handlers.py</code> classifies
+<code>[from-research]</code> as human, and that is exactly the
+per-surface re-reading the design removes.</p>
+<p><strong>Distillation.</strong>
+<code>bigbang/requirement_distillation.py:build_requirement_distillation</code>
+turns rounds into <code>RequirementCandidate</code> records with tagged
+<code>RequirementEvidence</code>. This path emits a Seed with no LLM in
+it, which is why the withholding must be structural rather than
+prompt-level — a redaction that lived in a prompt template would never
+have reached here.</p>
+<p><strong>Conflict resolution.</strong>
+<code>auto/ledger.py:resolve_conflict</code> compares normalized values
+first (identical values are <code>SAME_VALUE</code>, not a conflict),
+then handles <code>BLOCKED</code> in both directions, then indexes both
+sources into <code>SOURCE_PRIORITY</code>, then compares confidence, and
+only then returns <code>CONFLICTING</code>. The surrounding
+<code>add_entry</code> logic applies the outcome: the loser's status
+becomes <code>WEAK</code> and its <code>rationale</code> is set to a
+sentence naming the reason — "Superseded by a later user-confirmed
+answer", "Superseded by deterministic source-priority/confidence
+policy", "Conflicts with another same-priority auto ledger answer".</p>
+<p><strong>Gate.</strong> <code>bigbang/ambiguity.py</code> scores goal
+clarity at 40%, constraint clarity at 30% and success-criteria clarity
+at 30%; <code>AMBIGUITY_THRESHOLD = 0.2</code> decides whether the
+ledger may become an executable Seed. <code>auto/grading.py</code> holds
+the separate gate that <code>MODEL_INFERRED</code> and
+<code>TIMEOUT_DEFAULT</code> decisions must pass.</p>
+<p><strong>Crystallization.</strong> <code>core/seed.py</code> freezes
+the Seed and derives <code>semantic_ac_key</code> per criterion via
+<code>derive_semantic_ac_key</code>.</p>
+<p><strong>Reflection.</strong>
+<code>evolution/reflect.py:ReflectEngine</code> reads the prior
+generation's evaluation results, the current ontology and the wonder
+output, and emits <code>ACPatch</code> deltas and
+<code>OntologyMutation</code> records for the next Seed. Interview runs
+for generation 1 only; Reflect handles every generation after it.</p>
+<p><strong>Regression.</strong>
+<code>evolution/regression.py:RegressionDetector</code> computes
+regressions from lineage history with no new storage — an AC that passed
+in any prior generation and fails in the latest is a regression, tracked
+with its consecutive- failure count.</p>
+<p><strong>Rewind.</strong> <code>evolution/rewind.py</code> returns a
+<code>CommittedRewindResult</code> carrying a
+<code>rewind_event_id</code>. Rewinding to an earlier generation appends
+an event; it does not delete the generations after it.</p>
+<p><strong>Invalidation.</strong>
+<code>InterviewState.discard_stale_requirement_distillation</code>,
+called on every <code>load_state</code>, drops a cached distillation
+unless it matches both a <code>requirement_input_revision</code> and a
+<code>requirement_input_fingerprint</code> — a code version and a
+content hash. A derived belief survives a reload only if neither its
+inputs nor the logic that derived them changed.</p>
+<p><strong>Projection.</strong>
+<code>project_map.py:ProjectMap.build</code> enumerates all sessions,
+filters on <code>project_id</code> or <code>project_root</code>, rejects
+a session whose start identity is partial or duplicated, and raises
+<code>ProjectRunLimitError</code> past its limit rather than return a
+truncated history.</p>
+<p><strong>Artifact lifecycle.</strong>
+<code>persistence/artifact_store.py</code> writes bodies by SHA-256,
+tracks per-contract references and retention, and prunes only under the
+store lock, with the prune reason recorded.
+<code>ArtifactTombstonedError</code> makes a replay of a pruned artifact
+fail loudly.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The relational schema is two tables and neither is about memory
+content. Identity and structure live in Pydantic models, almost all
+<code>frozen=True</code>.</p>
+<p>A <code>LedgerEntry</code> carries a section key, a value, a
+<code>LedgerSource</code>, a <code>DecisionProvenance</code>, a
+confidence, a <code>LedgerStatus</code>, and a <code>rationale</code>
+that is written when the entry loses a conflict. Ten required sections —
+goal, actors, inputs, outputs, constraints, non_goals,
+acceptance_criteria, verification_plan, failure_modes, runtime_context —
+define what a complete belief set looks like.</p>
+<p>A <code>RequirementCandidate</code> carries
+<code>candidate_id</code>, a <code>RequirementSection</code> from a
+nine-value enum, text bounded at 8,000 characters, a
+<code>CandidateContentSource</code>, a <code>CandidateResolution</code>,
+a <code>ConfirmationAuthority</code>, and typed
+<code>RequirementEvidence</code> items. Reference-derived evidence is
+validated to require a <code>reference_id</code>, so a claim sourced
+from a reference cannot be stored without naming which one.</p>
+<p>Scoping is a <code>ProjectIdentity</code> of <code>project_id</code>,
+<code>project_root</code> and <code>workspace_path</code>, where
+<code>project_id</code> is derived from the canonical root and
+re-derived in <code>__post_init__</code> to reject a mismatched pair. It
+is written onto session events through <code>to_event_data()</code> and
+applied as a read filter in <code>project_map.py</code>. A session whose
+start event carries only part of the identity raises
+<code>ProjectIdentityConflictError</code> rather than being partially
+attributed.</p>
+<p>Temporal fields are single-axis. Events carry one
+<code>timestamp</code>, which is record time; artifacts carry
+<code>retain_until</code>; the interview state carries an updated-at
+stamp. Nothing tracks when a belief was <em>true</em> separately from
+when it was <em>written</em>, which is the right call for a store whose
+subject is a decision rather than a fact about the world.</p>
+<p>Episodic and semantic material are not separated because neither
+exists. Everything here is what the atlas would call procedural and
+normative: what to build, how it will be checked, and who said so.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search. No keyword index, no embeddings, no graph
+traversal, no reranking, no LLM judge over stored material, no token
+budgeter for injected memories. The read paths are three:</p>
+<ul>
+<li><strong>Replay by identity.</strong>
+<code>EventStore.replay(aggregate_type, aggregate_id)</code>
+reconstructs one aggregate. Lineages and sessions are read models
+rebuilt this way and never persisted directly.</li>
+<li><strong>Load by key.</strong> <code>load_state(interview_id)</code>,
+<code>AutoStateStore.load(session_id)</code> — a file path derived from
+an id, under a shared file lock, with the stale- distillation check on
+the way out.</li>
+<li><strong>Enumerate and filter.</strong>
+<code>get_all_sessions()</code>,
+<code>get_recent_events(limit=100)</code>,
+<code>query_latest_events_per_aggregate</code>, and the project-scoped
+filter above.</li>
+</ul>
+<p>Retrieval is application-driven throughout: <code>ooo resume</code>,
+<code>ooo status</code>, <code>ooo cancel</code>, the TUI session
+selector, and the MCP resource handlers each ask for what they need by
+identity. The agent never issues a memory query.</p>
+<p>The failure modes that follow are the ones a store without ranking
+has. Recall is exact or absent — there is no fuzzy path to a prior
+decision, so a decision the caller cannot name by id is unreachable. And
+because the reflect prompt assembles the prior generation's material
+directly rather than selecting from a corpus, context growth is bounded
+by generation count rather than by store size, with
+<code>core/text.py:truncate_head_tail</code> doing the trimming.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous and blocking</strong>, and this is the
+correct choice for the subject matter: a decision the user just made
+must be durable before the next question is asked. There is no deferred
+extraction, no lag before a memory is retrievable, and no eventual
+consistency to reason about.</p>
+<p><code>InterviewEngine.save_state</code> serializes on the event loop,
+then offloads the locked write to a thread so the loop is not stalled;
+<code>write_owner_only</code> writes atomically, chmods to 0600, and
+fsyncs the parent directory, returning whether durability was confirmed
+and logging <code>interview.state_save_durability_uncertain</code> when
+it was not. <code>EventStore</code> offers both <code>append</code> and
+<code>append_durable(event, timeout=...)</code>, plus conditional
+appenders — <code>append_session_start_if_absent</code>,
+<code>append_session_terminal_if_active</code>,
+<code>append_session_pause_if_active</code> — that make idempotence a
+property of the store rather than of every caller.</p>
+<p>Extraction is partly LLM and partly not, and the split is deliberate.
+The interview and reflection stages call a model;
+<code>build_requirement_distillation</code> does not, and
+<code>resolve_conflict</code> does not. Where a wrong answer would
+silently corrupt the specification, the logic is deterministic.</p>
+<p>Deduplication is by normalized value: identical values on the same
+key resolve to <code>SAME_VALUE</code> and no conflict is raised. Update
+is append-with-demotion rather than overwrite — the superseded entry
+keeps its value and gains a rationale.</p>
+<p>Forgetting exists in two forms. <code>ooo cleanup</code> prunes
+merged worktrees, stale locks, and terminal-phase state files whose
+worktree is gone, defaulting to completed sessions only and requiring
+<code>--state-all</code> to touch blocked or failed ones. Artifacts
+expire by TTL crossed with per-contract retention, and the GC takes the
+store lock so a new reference cannot race a prune decision; a replay
+after pruning raises <code>ArtifactTombstonedError</code> rather than
+returning empty. <strong>The event log itself is never pruned</strong> —
+there is no retention policy, no vacuum, and no delete path over
+<code>events</code>.</p>
+<p>Nothing runs in the background over memory. No consolidation pass, no
+nightly map-reduce, no re-embedding — so the token bill scales with the
+day's activity and not with the corpus.</p>
+<p>Malicious input is handled unevenly, and the seam is worth naming.
+Session signals are scrubbed against four secret-shaped regexes in
+<code>core/session_signal.py</code> before they travel. Interview
+answers are validated for emptiness and length only —
+<code>InputValidator.validate_user_response</code> does no redaction —
+and while the event log records just a 200-character preview, the state
+file under <code>~/.ouroboros/data/</code> holds the full text at 0600.
+A credential pasted into an interview answer is stored in the clear on
+disk and travels into the Seed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the primary surface, with roughly forty handler
+modules under <code>mcp/tools/</code> covering the interview, seed
+authoring, evaluation, evolution, jobs, brownfield registration and
+projections. <code>.mcp.json</code> starts it under the
+<code>claude-cli</code> runtime with the <code>claude_code</code> LLM
+backend; <code>runtime_backend</code> is a <code>Literal</code> over
+<code>claude</code>, <code>codex</code>, <code>copilot</code>,
+<code>hermes</code>, <code>gemini</code>, <code>opencode</code>,
+<code>kiro</code> and <code>goose</code>, with more hosts named in the
+README.</p>
+<p>The model has essentially <strong>no agency over memory</strong>. It
+cannot write a belief, promote a candidate, or resolve a conflict. It
+answers interview questions, executes against a frozen Seed, and
+produces evaluation verdicts; the ledger's transitions are code. Where a
+model does shape the store — the interview, the reflect stage, auto-fill
+— its output is tagged with a provenance that a gate later checks,
+rather than entering as an unmarked fact.</p>
+<p>Two Claude Code hooks ship in <code>.claude/settings.json</code>, and
+both are local and read-only: <code>scripts/keyword-detector.py</code>
+parses the prompt for trigger words and prints a skill suggestion, and
+<code>scripts/drift-monitor.py</code> stats
+<code>~/.ouroboros/data/interview_*.json</code> and prints an advisory
+if a session was touched in the last hour. Neither reaches the network
+or reads outside the project and that directory.</p>
+<p>Adapting the integration for another harness is the design's stated
+purpose and the code supports it: the runtime adapter layer under
+<code>providers/</code> and <code>interview_adapters/</code> is where
+host differences live, and <code>SessionSignalCapabilities</code>
+defaults every runtime ability to unsupported so adding a capability
+contract cannot change an existing runtime's behaviour.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance is the strongest thing here. Two orthogonal axes, decided
+at the boundary, carried as typed fields, gated where they are weakest.
+<code>ACResult</code> retains the provisional verdict, the overriding
+source and the override reason whenever an evaluator's verdict is
+overturned, so a <code>pass</code> that was originally a
+<code>fail</code> can always be told from one that never was.
+Uncertainty has somewhere to live: <code>unresolved</code> is a distinct
+authority state from <code>fail</code>, and an unresolved criterion
+stays in the evolution working set.</p>
+<p>Injection resistance is unusual in shape. Because the model cannot
+write a belief, a prompt-injected "remember that X" has no store to land
+in. The nearest real surface is repository-derived content —
+<code>[from-code]</code> and <code>[from-repo]</code> answers reflect
+what is in the tree — and the withholding rule is precisely the
+mitigation: adopted material can sharpen a question but cannot become a
+requirement. It still reaches the question slot, and the test suite pins
+that as intended rather than conceded.</p>
+<p>Concurrency is handled with more care than the single-user framing
+requires: <code>BEGIN IMMEDIATE</code> on SQLite writes, a cross-process
+artifact store lock, file locks around interview state, lease-based
+advancement claims with waiters in
+<code>persistence/lineage_claims.py</code>, and a settlement fence for
+transactional writes.</p>
+<p>Three real gaps. <strong>Interview content is unredacted at
+rest</strong>, as above. <strong>The audit trail cannot reconstruct what
+it audits</strong> — the global event log holds previews, the content
+lives in files that <code>ooo cleanup</code> can delete, and the two
+have different lifetimes. And <strong>the global database is
+unbounded</strong>: <code>events</code> accumulates across every project
+on the machine forever, with no retention path, which is a defensible
+choice for an audit log and an undocumented one for disk.</p>
+<p>Backup and replication are absent by design; the store is a file the
+user owns.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>15,650 test functions across 724 files, nine CI workflows including
+bespoke gates for module size, an auto-mode performance budget, a
+max-turns envelope and an auto-boundary check.</p>
+<p>The memory-relevant testing is genuinely good.
+<code>tests/unit/bigbang/test_answer_provenance.py</code> is the piece
+to copy: twenty tests around one rule, including a <strong>negative
+eval</strong> parametrized across all four requirement-consuming render
+surfaces asserting that an observation's content is absent and the
+withheld-note present; a companion test asserting the user's decision in
+the same interview survives; a test asserting an interview with no
+observation renders exactly as before; and a test pinning that the
+<em>question</em> line is deliberately not redacted, with a docstring
+explaining that redacting it would make the user's own answer
+uninterpretable and that this is "intended behavior, not a conceded
+leak". Separate tests cover a round persisted before the provenance
+field existed, a legacy reframed answer recovering its provenance, and a
+distillation cached before the change not being reused.</p>
+<p><code>tests/canonical/README.md</code> is unusually honest about what
+its harness is not: "no CI obligation", not a regression engine, not a
+replay system, not a cost-budgeted runner, with CI running a fixture
+shape-check only and the live run gated behind
+<code>OUROBOROS_RUN_CANONICAL=1</code> and an acknowledged token
+cost.</p>
+<p>The one committed experiment is the most creditable artifact in the
+repository and the sharpest contrast with the README.
+<code>tests/canonical/evidence/issue-1450-20260715-162447-736593/REPORT.md</code>
+records a live paired quality experiment run on 15 July 2026 against
+source tree <code>fbf81ae</code>: three paired orders, six arms, 393
+seconds, 46 committed evidence files. Its verdict is
+<strong><code>inconclusive</code></strong> — all three pairs were
+<code>invalid</code>, both arms failed different mandatory gates, and
+the report says so, adds "do not wire the treatment into production
+based on this run", declines to report cost because "an exact cost
+cannot be reported without fabrication", and closes by refusing to
+generalize beyond the frozen <code>cli-todo</code> fixture.</p>
+<p>Set against that: the README's headline is "It gets smarter on its
+own", its results table promises "12 hidden assumptions exposed,
+ambiguity scored to 0.19", and its comparison table claims a low rework
+rate. No committed artifact measures any of those. The engineering
+discipline inside the repository is not the discipline of the front
+page.</p>
+<p>What is missing before trusting the store: no test asserts that a
+credential in an interview answer is redacted anywhere, and none covers
+the event log's growth or an operator's ability to bound it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Decide provenance once, at the boundary, and carry it as a
+type.</strong> The <code>answer_provenance</code> module exists because
+the same marker was being re-read by each consumer and one of them got
+it wrong. A field set where the data enters cannot drift; a regex
+re-applied per surface will.</p>
+<p><strong>Split what a value rests on from how the decision was
+reached.</strong> One provenance axis conflates a user's answer with a
+model's guess that a human happened to accept. Two axes let you gate the
+weak combinations — <code>MODEL_INFERRED</code> and
+<code>TIMEOUT_DEFAULT</code> behind a clarity threshold — without
+distrusting everything a model touched.</p>
+<p><strong>Withhold by role, not by string.</strong> The same text is an
+observation in the answer slot and useful context in the question slot.
+A rule that redacts the string everywhere destroys the second use; a
+rule scoped to the slot keeps it. Then pin the intentional non-redaction
+with a test, or a later contributor will "finish the job".</p>
+<p><strong>Resolve same-key conflicts with a fixed priority ladder and
+no model.</strong> Ten ordered sources, then confidence, then a tie that
+blocks. It is auditable, reproducible, free, and it makes the residual
+human decision small and rare — which is the difference between a
+contradiction queue that drains and one that grows.</p>
+<p><strong>Demote instead of deleting, and write the reason in the
+record.</strong> A <code>WEAK</code> entry carrying its old value and
+the sentence "Superseded by a later user-confirmed answer" answers "why
+does the system think this now" without a separate audit join.</p>
+<p><strong>Invalidate a derived cache on both a content fingerprint and
+a code revision.</strong> Most stores that cache an extraction re-derive
+it when the input changes and never when the extractor does, so an
+improved extractor silently leaves old records behind.</p>
+<p><strong>Make a scope key derivable and verify it on
+construction.</strong> <code>project_id</code> is a function of the
+project root, re-derived in <code>__post_init__</code>; a mismatched
+pair cannot exist. Refusing a <em>partial</em> identity rather than
+repairing it is the same instinct.</p>
+<p><strong>Fail rather than truncate a history.</strong>
+<code>ProjectRunLimitError</code> past the run limit is better than a
+silent partial answer, because a truncated history reads exactly like a
+complete one.</p>
+<p><strong>Commit the inconclusive experiment.</strong> A repository
+containing a negative result with its raw evidence is telling you
+something no benchmark table can.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let an unbounded global log accumulate with no
+retention story.</strong> One SQLite file under <code>$HOME</code>
+collecting every event from every project forever needs either a
+documented growth bound or a prune path; an append-only log with neither
+is a decision deferred onto the user's disk.</p>
+<p><strong>Do not let the audit trail and the content it audits have
+different lifetimes.</strong> Previews in a permanent log plus full text
+in files a cleanup command deletes means the surviving record cannot
+explain itself.</p>
+<p><strong>Do not treat "the user typed it" as "the user consented to
+store it."</strong> An interview is a text field, users paste secrets
+into text fields, and length validation is not redaction. If one code
+path already knows what a credential looks like — this one has four
+regexes for exactly that — run it where content becomes durable, not
+only where it travels.</p>
+<h3 id="fit">Fit</h3>
+<p>This is a large, opinionated system with a narrow purpose, and the
+fit question is not about memory at all. If you want a store for what an
+agent has learned about a user or a domain, walk away: there is nothing
+here to retrieve, no knowledge accumulates, and a finished run teaches
+the next one nothing. If you want an engine that forces a specification
+out of a vague request and then holds the agent to it, this is a serious
+implementation of that idea with the provenance machinery to back
+it.</p>
+<p>The maintenance budget it assumes is real — 310,000 lines and 573
+modules, carried by one dominant author and a handful of regulars, with
+bespoke CI gates that exist because the codebase is large enough to need
+them. The deployment cost is almost nothing, which is the trade:
+complexity concentrated in the package rather than in the operator's
+infrastructure.</p>
+<p>The people who should read it and take only the parts are builders of
+memory systems who have a trust field they are not sure how to populate.
+The four enums in <code>auto/ledger.py</code> and
+<code>core/requirement_candidate.py</code> are perhaps two hundred lines
+total and encode more careful thinking about epistemic state than most
+dedicated memory stores in this atlas manage across their whole
+schema.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does anything carry a settled decision from a completed run into a
+new one? No read path found does, but the surface is large and
+<code>project_map.py</code> shows the data would support it.</li>
+<li>How large does <code>~/.ouroboros/ouroboros.db</code> get for a
+heavy user over months? Answering this needs a real usage history rather
+than a checkout.</li>
+<li>Does the interview state file ever get redacted before or during the
+handoff to an external host's context? The Seed is what travels; whether
+an unredacted answer reaches a provider depends on adapter behaviour
+that would need running to observe.</li>
+<li>What fraction of real interviews end in <code>CONFLICTING</code> and
+reach a human? The ladder is designed to make that rare and no committed
+telemetry says whether it is.</li>
+<li>The README names two sibling repositories,
+<code>Ouro-labs/ourocode</code> and
+<code>Ouro-labs/ouroboros-plugins</code>. Whether either introduces
+cross-run memory was not examined.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong> —
+<code>src/ouroboros/persistence/schema.py</code>,
+<code>src/ouroboros/persistence/migrations/scripts/001_initial.sql</code>,
+<code>src/ouroboros/persistence/migrations/scripts/002_brownfield.sql</code>,
+<code>src/ouroboros/config/models.py</code>
+(<code>get_config_dir</code>, <code>resolve_event_store_path</code>),
+<code>src/ouroboros/core/owner_only.py</code>.</p>
+<p><strong>Belief model</strong> —
+<code>src/ouroboros/auto/ledger.py</code>,
+<code>src/ouroboros/core/requirement_candidate.py</code>,
+<code>src/ouroboros/bigbang/answer_provenance.py</code>,
+<code>src/ouroboros/core/lineage.py</code>,
+<code>src/ouroboros/core/seed.py</code>.</p>
+<p><strong>Write path</strong> —
+<code>src/ouroboros/persistence/event_store.py</code>,
+<code>src/ouroboros/bigbang/interview.py</code>
+(<code>save_state</code>, <code>load_state</code>,
+<code>discard_stale_requirement_distillation</code>),
+<code>src/ouroboros/auto/state.py</code>,
+<code>src/ouroboros/persistence/lineage_claims.py</code>.</p>
+<p><strong>Read and projection</strong> —
+<code>src/ouroboros/project_map.py</code>,
+<code>src/ouroboros/core/project_identity.py</code>,
+<code>src/ouroboros/evolution/regression.py</code>,
+<code>src/ouroboros/evolution/rewind.py</code>.</p>
+<p><strong>Gates and evolution</strong> —
+<code>src/ouroboros/bigbang/ambiguity.py</code>,
+<code>src/ouroboros/auto/grading.py</code>,
+<code>src/ouroboros/evolution/reflect.py</code>,
+<code>src/ouroboros/evolution/loop.py</code>.</p>
+<p><strong>Forgetting</strong> —
+<code>src/ouroboros/persistence/artifact_store.py</code>,
+<code>src/ouroboros/persistence/artifact_binding.py</code>,
+<code>src/ouroboros/cli/commands/cleanup.py</code>,
+<code>src/ouroboros/core/disposable_memory.py</code>.</p>
+<p><strong>Safety</strong> —
+<code>src/ouroboros/core/security.py</code>,
+<code>src/ouroboros/core/session_signal.py</code>,
+<code>src/ouroboros/events/base.py</code>.</p>
+<p><strong>Integration</strong> — <code>.mcp.json</code>,
+<code>.claude/settings.json</code>,
+<code>scripts/keyword-detector.py</code>,
+<code>scripts/drift-monitor.py</code>,
+<code>src/ouroboros/mcp/tools/</code>.</p>
+<p><strong>Tests and evidence</strong> —
+<code>tests/unit/bigbang/test_answer_provenance.py</code>,
+<code>tests/canonical/README.md</code>,
+<code>tests/canonical/evidence/issue-1450-20260715-162447-736593/REPORT.md</code>.</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-13</strong> — <a
+href="https://github.com/Q00/ouroboros/commit/6deb72d37da119bd6419be4d0508b71bfc3b5b59"><code>6deb72d37da119bd6419be4d0508b71bfc3b5b59</code></a>
+— first reading, at release v0.51.3. Screened before reading: 2 auto-run
+surfaces (<code>.claude/settings.json</code> hooks,
+<code>.mcp.json</code> MCP server), 2 dependency surfaces inside the
+seven-day cooldown (<code>pyproject.toml</code>, <code>uv.lock</code>),
+1 unpinned manifest
+(<code>src/ouroboros/opencode/plugin/package.json</code>, two
+<code>latest</code> ranges); both hooks read only the project and
+<code>~/.ouroboros/data</code> and reach no network. Nothing was
+installed and nothing was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A committed security audit grading
+five findings in its own code, each with the exploit path, the fix, and
+the regression test that pins it — including the one it did not fix.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenCode
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A committed security audit
+grading five findings in its own code, each with the exploit path, the
+fix, and the regression test that pins it — including the one it did not
+fix.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenCode
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A committed security audit
+grading five findings in its own code, each with the exploit path, the
+fix, and the regression test that pins it — including the one it did not
+fix.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenCode Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenCode Memory",
+      "description": "A committed security audit grading five findings in its own code, each with the exploit path, the fix, and the regression test that pins it \u2014 including the one it did not fix.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A path traversal it found in itself, with
+the payload printed</p>
+          <h1>OpenCode Memory</h1>
+          <p class="document-deck">A committed security audit grading
+five findings in its own code, each with the exploit path, the fix, and
+the regression test that pins it — including the one it did not fix.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tickernelz/opencode-mem">
+              <span>Source</span>
+              <strong>tickernelz/opencode-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe" title="d1d0eb01b5efed517da4ae31baa7666768e86cfe">
+              <span>Analyzed revision</span>
+              <code>d1d0eb01…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-26</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenCode Memory is a memory plugin for the OpenCode agent — embedded
+Turso/libSQL with native vector indexes, project memories, an
+automatically learned user profile, a bundled React web UI, and a CI
+matrix across Linux, Windows and four macOS/architecture
+combinations.</p>
+<p><strong>The artifact worth the report is
+<code>SECURITY_AUDIT.md</code></strong>, a committed read-only audit of
+the project's own code with five graded findings, each carrying the
+exploit path, the fix, and the regression test that pins it.</p>
+<p><strong>Finding 1, CRITICAL — path traversal</strong>, is written out
+with a working payload:</p>
+<blockquote>
+<p>"<code>extractScopeFromTag()</code>… split the client-supplied
+<code>containerTag</code> on <code>_</code> and used everything after
+the second <code>_</code> as a <code>hash</code>, with no character
+validation… A request such as
+<code>POST /api/memories {"content":"x","containerTag":"project_x_../../../../../../Temp/pwn"}</code>
+creates directories and a SQLite file outside
+<code>~/.opencode-mem/data</code>. The same unsanitized parsing was
+duplicated in <code>migration-service.ts</code>'s re-embed path."</p>
+</blockquote>
+<p>The fix validates the hash against <code>^[a-zA-Z0-9]+$</code>,
+applies the same guard to the duplicate site, and cites
+<code>tests/api-handlers-container-tag-traversal.test.ts</code>.</p>
+<p><strong>Finding 2, HIGH — CORS used as authentication</strong>, is
+the more instructive one:</p>
+<blockquote>
+<p>"<code>isAllowedBrowserOrigin()</code> returned <code>true</code>
+whenever no <code>Origin</code> header was present — which is the case
+for <code>curl</code>, other local processes, and any non-browser
+client. Every <code>/api/*</code> handler (read/write/delete memories,
+full user-profile CRUD, migrations) had no session/token check at all.
+If <code>webServerHost</code> is set to <code>0.0.0.0</code> (a
+documented config option), this is reachable from the whole LAN with no
+auth."</p>
+</blockquote>
+<p>The fix is a 256-bit token generated on first run, persisted at mode
+<code>0600</code>, required on every <code>/api/*</code> request, and
+injected into the server-rendered HTML so the bundled UI keeps working
+"while a malicious cross-origin web page cannot read it (opaque/no-cors
+responses)". And the audit states the limit of its own fix: "This does
+not fully replace a 'don't expose to <code>0.0.0.0</code> without more'
+warning."</p>
+<p><strong>Finding 5 is marked not fixed</strong> — a Gemini API key in
+a URL query string, "per Google's own Gemini REST API design (not a
+defect introduced by this plugin)." Publishing the one you decided to
+live with, with the reason, is what makes the other four credible.</p>
+<p><strong>The second thing worth taking is redaction that fails
+closed</strong> — section 7.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memories are sharded by <code>container_tag</code> — a scope derived
+from the project — and each shard is a Turso database with vectors
+stored inline. Retrieval is an approximate nearest-neighbour scan
+followed by a scope filter. A user profile is learned separately and
+versioned.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a `&lt;private&gt;` block redacts with a depth counter and an unclosed tag redacts to the end of the text, and the profile changelog keeps a full snapshot per version until cleanup trims to the newest N</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a `&lt;private&gt;` block redacts with a depth counter and an unclosed tag redacts to the end of the text, and the profile changelog keeps a full snapshot per version until cleanup trims to the newest N
+flowchart TD
+    P[&quot;prompt / session&quot;] --&gt; AC[&quot;auto-capture: structured extraction&quot;]
+    AC --&gt; PR[&quot;privacy: &amp;lt;private&amp;gt;…&amp;lt;/private&amp;gt; → [REDACTED]&lt;br/&gt;depth counter, unclosed tag redacts to end&quot;]
+    PR --&gt; DD[&quot;deduplication-service: cosine over stored vectors&quot;]
+    DD --&gt; SH[&quot;shard for container_tag&quot;]
+    SH --&gt; M[&quot;memories: content, vector F32_BLOB,&lt;br/&gt;tags_vector, container_tag, type,&lt;br/&gt;project_path, git_repo_url, is_pinned&quot;]
+    Q[&quot;search&quot;] --&gt; VT[&quot;vector_top_k — DiskANN ANN&quot;]
+    VT --&gt; F[&quot;WHERE id IN (…) AND container_tag = ?&quot;]
+    UP[&quot;profile learning&quot;] --&gt; UPT[&quot;user_profiles&quot;]
+    UPT --&gt; CL[&quot;user_profile_changelogs:&lt;br/&gt;version, change_type, change_summary,&lt;br/&gt;full profile_data_snapshot&quot;]
+    CL --&gt; RET[&quot;cleanupOldChangelogs:&lt;br/&gt;keep the newest N versions, delete the rest&quot;]
+    API[&quot;/api/*&quot;] --&gt; TOK{&quot;x-opencode-mem-token&quot;}
+    TOK --&gt;|missing| REJ[&quot;rejected&quot;]
+    TOK --&gt;|valid| API2[&quot;handlers&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/services/</code> is where everything lives:
+<code>turso/</code> (shard manager, connection manager, vector search,
+vector utils), <code>ai/</code> with per-provider adapters,
+<code>user-profile/</code>, <code>user-prompt/</code>, plus
+<code>auto-capture</code>, <code>deduplication-service</code>,
+<code>privacy</code>, <code>secret-resolver</code>,
+<code>auth-token</code>, <code>cors</code>, <code>api-handlers</code>,
+<code>web-server</code>, <code>memory-scope</code>, <code>tags</code>,
+<code>language-detector</code>, and four migration/cleanup services.</p>
+<p>The UI history is documented rather than quietly rewritten: a
+CDN-loaded vanilla UI, then an interim Svelte UI, now "a Vite-bundled
+React 19 app under <code>web/</code>", with the audit noting which
+findings describe the pre-rewrite UI and what the current mitigation
+is.</p>
+<p>66 test files, ~29,000 lines of TypeScript, and a
+<code>.legacy.bak</code> written per shard before the migration from
+legacy SQLite shards rewrites it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Audit</strong> — <code>SECURITY_AUDIT.md</code> (five
+findings), with
+<code>tests/api-handlers-container-tag-traversal.test.ts</code>,
+<code>tests/web-userprofile-xss.test.ts</code>,
+<code>tests/web-memorytype-xss.test.ts</code>.</p>
+<p><strong>Authenticate</strong> —
+<code>src/services/auth-token.ts</code>,
+<code>src/services/web-server.ts</code>,
+<code>src/services/cors.ts</code>, <code>web/src/lib/api.ts</code>.</p>
+<p><strong>Redact</strong> — <code>src/services/privacy.ts</code> (the
+depth counter and the fail-closed rationale <code>:7-20</code>).</p>
+<p><strong>Store and scope</strong> —
+<code>src/services/turso/shard-manager.ts</code> (<code>memories</code>
+<code>:291-309</code> and its four indexes),
+<code>src/services/turso/vector-search.ts</code>
+(<code>container_tag = ?</code> <code>:169</code>, <code>:246</code>,
+<code>:283</code>), <code>src/services/memory-scope.ts</code>.</p>
+<p><strong>Version the profile</strong> —
+<code>src/services/user-profile/user-profile-manager.ts</code>
+(<code>user_profile_changelogs</code> <code>:185-195</code>, the insert
+<code>:330</code>, <code>cleanupOldChangelogs</code>
+<code>:340-357</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories(id, content, vector F32_BLOB(dims), tags_vector F32_BLOB(dims), container_tag, tags, type, created_at, updated_at, metadata, display_name, user_name, user_email, project_path, project_name, git_repo_url, is_pinned)</code>
+with indexes on <code>container_tag</code>, <code>type</code>,
+<code>created_at DESC</code> and <code>is_pinned</code>.</p>
+<p><strong>Two vectors per memory</strong> — one for content and one for
+tags — is an unusual choice and a cheap one: it lets a tag-similarity
+arm exist without a second table.</p>
+<p><code>is_pinned</code> is the only field that changes a memory's
+standing, and it changes retention rather than truth. There is no
+confidence, no status, no supersession pointer and no tombstone:
+correction is deduplication plus a cleanup service.</p>
+<p><strong><code>user_profile_changelogs</code> is the closest thing to
+an audit trail</strong> — <code>version</code>,
+<code>change_type</code>, <code>change_summary</code> and a full
+<code>profile_data_snapshot</code> per change, which makes any past
+profile state recoverable. It is not an audit log by this atlas's
+definition because <code>cleanupOldChangelogs()</code> deletes
+everything outside the newest
+<code>userProfileChangelogRetentionCount</code> versions. That is a
+reasonable retention policy and it means the record is a bounded undo
+history rather than a durable account of what changed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>vector_top_k</code> over libSQL's DiskANN index — approximate
+nearest neighbours, stated as approximate in the README rather than
+implied to be exact — then the candidate ids are filtered by
+<code>container_tag = ?</code> on the rows.</p>
+<p>That ordering is worth noticing. The scope filter is applied
+<strong>after</strong> the ANN scan, so the effective result count for a
+scope is whatever survives the filter, and a shard holding several
+scopes could return fewer than <code>k</code>. In practice
+<code>container_tag</code> is also the shard key, so the scan is already
+largely scope-local; the belt-and-braces filter on the row is what earns
+<code>scope_enforced</code> — a stored key reaching the query — and it
+is what makes the path-traversal fix in finding 1 load-bearing, since
+<code>container_tag</code> is both the security boundary and the
+retrieval boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Auto-capture extracts memories from prompts via a provider that can
+return structured output, deduplication compares against stored vectors
+by cosine, and <code>privacy.ts</code> redacts before storage.</p>
+<p><strong>The redaction fails closed, deliberately:</strong></p>
+<blockquote>
+<p>"Scans tags with a depth counter rather than matching pairs with a
+single regex, so that the two malformed shapes fail <em>closed</em>: An
+<strong>unclosed</strong> <code>&lt;private&gt;</code> redacts to the
+end of the input. A non-greedy pair match found no closing tag and left
+the region untouched, so a typo…"</p>
+</blockquote>
+<p>A user typing <code>&lt;private&gt;</code> and forgetting the closing
+tag gets everything after it redacted. The alternative — a regex pair
+match — silently stores the secret. The tag regex also tolerates
+internal whitespace (<code>&lt;private &gt;</code>) "the way an XML
+parser would", which is the other half: a redaction filter must accept
+every shape the user might plausibly write, because the shapes it
+rejects are the ones that leak.</p>
+<p>The legacy-shard migration backs up each shard as
+<code>&lt;shard&gt;.db.legacy.bak</code> before rewriting it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An OpenCode plugin, published to npm, with a local web UI (memory
+timeline, user profile viewer), 12+ local embedding models via
+<code>@huggingface/transformers</code>, OpenAI and Anthropic providers,
+and a documented <code>webServerHost</code> option that the audit
+specifically flags as the thing that turns a local API into a LAN
+one.</p>
+<p>The README is precise about degradation: "Auto-capture and user
+profile learning require an AI provider that can return
+structured/tool-call output. Memory search/add/list still work without
+auto-capture provider configuration." Saying which features fail without
+which dependency, rather than listing requirements as a block, is a
+small kindness.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>One mark: scope enforced</strong>, per section 6.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log, human review,
+negative eval — no</strong>, with <code>user_profile_changelogs</code>
+the near miss explained in section 5.</p>
+<p><strong>The security posture is the strength and the report should be
+specific about what it is.</strong> <code>SECURITY_AUDIT.md</code> is
+scoped to commit <code>0998c69</code>; the commit read here is
+<code>8cba720</code>. So the audit is a point-in-time artifact and the
+code has moved since — which is the normal condition of any audit, and
+worth stating because a reader might take a committed
+<code>SECURITY_AUDIT.md</code> as a standing guarantee. The three
+regression tests it names are the durable part: they still run.</p>
+<p><strong>Two of the five findings were introduced by a pattern rather
+than a bug</strong>, and both are worth carrying away. CORS is not
+authentication, and it fails in exactly the direction that is invisible
+in a browser — <code>curl</code> sends no <code>Origin</code>, so the
+check that "works" when you test it in a browser passes everything else.
+And an unvalidated client-supplied string that reaches
+<code>path.join()</code> is a filesystem write primitive; here the same
+unvalidated parse existed at two call sites, which is the usual reason a
+fix is incomplete.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no retrieval benchmark, no committed
+results.</strong> 72 test files against 75 source files, and a CI matrix
+spanning Linux, Windows, macOS 15 and macOS 26 on both
+<code>darwin/x64</code> and <code>darwin/arm64</code> — and the README
+is careful about what that matrix does and does not say: "Older macOS
+releases are not excluded by that matrix; they are simply outside the
+current GitHub-hosted runner set."</p>
+<p>Three tests pin a specific exploit each, named after the
+vulnerability the audit found:
+<code>api-handlers-container-tag-traversal</code>,
+<code>web-userprofile-xss</code>, <code>web-memorytype-xss</code>. The
+traversal one is the model of its kind because it has a positive: it
+rejects a hash segment carrying <code>../</code>, rejects one carrying a
+path separator, <strong>and accepts a legitimate sha256-style
+tag</strong> — so a validator that had regressed into rejecting
+everything would fail it.</p>
+<p><strong>Two suites test the mechanism rather than the output, which
+is rarer.</strong> <code>turso-vector-search.test.ts</code> asserts on
+the shape of the emitted SQL: that <code>FROM vector_top_k</code> is
+present, that the join is
+<code>CROSS JOIN memories m ON m.rowid = v.id</code>, that
+<code>indexOf("vector_top_k") &lt; indexOf("memories m")</code> so the
+ANN index drives the query rather than being post-filtered — and that
+the filtered variant carries <code>m.container_tag = ?</code>. A scope
+predicate silently dropped from the generated SQL fails that assertion,
+which is a different guarantee from a search that happens to return the
+right rows. <code>turso-exact-fallback.test.ts</code> covers the other
+side: with the vector index missing, the exact scan still returns the
+right row.</p>
+<p><code>user-profile-cold-buffer-isolation.test.ts</code> is what earns
+<code>negative_eval</code> and is the one to copy. Before the embedding
+model warms up, observations are buffered rather than merged, and the
+buffer was global. The test seeds a preference for
+<code>profile_A</code> and one for <code>profile_B</code> while cold,
+then warms and merges each in turn:</p>
+<pre class="ts"><code>expect(descsB).toContain(&quot;B prefers spaces over tabs&quot;);
+expect(descsB).not.toContain(&quot;A prefers tabs over spaces&quot;);
+// ...then the same assertion pair with A and B exchanged</code></pre>
+<p>Both directions, each negative paired with a positive over the same
+manager, so an empty merge fails rather than passes. It is also the
+right <em>level</em>: the shard layer keeps users apart in storage, and
+this pins the layer above it, where an in-memory buffer had been holding
+everyone's observations in one bucket.</p>
+<p>Nothing measures retrieval quality, deduplication precision, or
+extraction accuracy.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Publish a security audit of your own code, graded, with the
+exploit path.</strong> Five findings with severities, the payload that
+demonstrates the critical one, the fix, and the test that pins it. It
+costs a document and it is the strongest trust signal a small project
+can send.</li>
+<li><strong>Include the finding you did not fix, with the
+reason.</strong> The Gemini key in a query string is upstream's design;
+saying so is what makes "fixed" mean something on the other four.</li>
+<li><strong>State the limit of your own fix.</strong> "This does not
+fully replace a 'don't expose to <code>0.0.0.0</code> without more'
+warning."</li>
+<li><strong>Name a regression test after the vulnerability.</strong>
+<code>api-handlers-container-tag-traversal.test.ts</code> tells the next
+contributor what they are about to break.</li>
+<li><strong>Do not use CORS as authentication.</strong>
+<code>isAllowedBrowserOrigin()</code> returning <code>true</code> when
+no <code>Origin</code> header is present is the whole bug: every
+non-browser client passes, and you cannot see it from a browser.</li>
+<li><strong>Generate a token on first run, <code>0600</code>, and inject
+it server-side.</strong> The bundled UI keeps working, and a
+cross-origin page cannot read it because the response is opaque.</li>
+<li><strong>Validate anything client-supplied that reaches
+<code>path.join()</code></strong> — and grep for the second call site,
+because there usually is one.</li>
+<li><strong>Make redaction fail closed.</strong> A depth counter rather
+than a pair-matching regex means an unclosed
+<code>&lt;private&gt;</code> redacts to the end of the input instead of
+storing the secret, and tolerating <code>&lt;private &gt;</code> accepts
+what a user will actually type.</li>
+<li><strong>Back up before you rewrite.</strong>
+<code>&lt;shard&gt;.db.legacy.bak</code> per shard before the migration
+touches it.</li>
+<li><strong>Say which features degrade without which
+dependency</strong>, rather than listing prerequisites as a wall.</li>
+<li><strong>Say what your CI matrix does not cover.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a committed audit read as a standing
+guarantee.</strong> It is pinned to a commit; the code moves. A date and
+a scope line at the top — which this one has — is the minimum, and
+re-running it is the rest.</li>
+<li><strong>Do not trim a changelog and call it an audit trail.</strong>
+Keeping the newest N versions gives you undo, not accountability.</li>
+<li><strong>Do not leave correction to deduplication.</strong> Nothing
+here can mark a memory wrong, superseded or stale; a duplicate is merged
+and a mistake persists.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice if you use OpenCode and want project memory with a
+local vector store, no external database, and a UI to inspect what was
+captured. The security work is well above the median for a plugin of
+this size.</p>
+<p>Not a memory design to learn correction from — there is nothing to
+correct with.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Has the audit been re-run since
+<code>0998c69</code>?</strong> The document is scoped to that
+commit.</li>
+<li><strong>What is <code>userProfileChangelogRetentionCount</code> by
+default?</strong> It sets how much profile history survives.</li>
+<li><strong>Does the container-tag filter after ANN ever
+under-return?</strong> <code>vector_top_k</code> selects before the
+scope filter is applied to the rows.</li>
+<li><strong>Is the auth token rotated?</strong> It is generated on first
+run and persisted.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The audit</strong> — <code>SECURITY_AUDIT.md</code> (scope
+and the GUI-rewrite note <code>:1-7</code>, finding 1 CRITICAL path
+traversal with its payload <code>:9-15</code>, finding 2 HIGH
+CORS-as-auth and the token fix <code>:17-23</code>, finding 3 stored XSS
+<code>:25-29</code>, finding 4 unpinned CDN scripts <code>:31-35</code>,
+finding 5 not fixed <code>:37-39</code>)</p>
+<p><strong>Security fixes</strong> —
+<code>src/services/auth-token.ts</code>,
+<code>src/services/cors.ts</code>,
+<code>src/services/api-handlers.ts</code>
+(<code>extractScopeFromTag</code>),
+<code>src/services/migration-service.ts</code>,
+<code>web/src/lib/api.ts</code>, <code>web/src/lib/html.ts</code></p>
+<p><strong>Redaction</strong> — <code>src/services/privacy.ts</code>
+(<code>PRIVATE_TAG</code> <code>:5</code>, the fail-closed rationale
+<code>:7-20</code>)</p>
+<p><strong>Storage</strong> —
+<code>src/services/turso/shard-manager.ts</code> (<code>shards</code>
+<code>:96</code>, <code>shard_metadata</code> <code>:269</code>,
+<code>memories</code> <code>:291-309</code>, the four indexes
+<code>:312-324</code>), <code>src/services/turso/vector-search.ts</code>
+(<code>container_tag = ?</code> <code>:169</code>, <code>:246</code>,
+<code>:283</code>),
+<code>src/services/turso/connection-manager.ts</code></p>
+<p><strong>Profile</strong> —
+<code>src/services/user-profile/user-profile-manager.ts</code>
+(<code>user_profiles</code> <code>:168</code>,
+<code>user_profile_changelogs</code> <code>:185-195</code>, the
+changelog insert <code>:330</code>, <code>cleanupOldChangelogs</code>
+<code>:340-357</code>)</p>
+<p><strong>Write path</strong> —
+<code>src/services/auto-capture.ts</code>,
+<code>src/services/deduplication-service.ts</code>,
+<code>src/services/secret-resolver.ts</code>,
+<code>src/services/shard-path-migration-service.ts</code></p>
+<p><strong>Tests</strong> —
+<code>tests/api-handlers-container-tag-traversal.test.ts</code>,
+<code>tests/web-userprofile-xss.test.ts</code>,
+<code>tests/web-memorytype-xss.test.ts</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-26</strong> — <a
+href="https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe"><code>d1d0eb01b5efed517da4ae31baa7666768e86cfe</code></a>
+— re-pinned 37 commits on, at 533 commits since 23 December 2025 and
+roughly 29,500 lines of TypeScript. Screened again before reading: no
+auto-run surface, one build-time execution surface, two unpinned
+surfaces, two files inside the seven-day cooldown, and a
+<code>.husky/pre-commit</code> payload inert until something points
+<code>core.hooksPath</code> at it; <code>AGENTS.md</code> is addressed
+to a reading agent and was treated as data. Nothing was installed and no
+test was run.</p>
+<p><code>negative_eval</code> is added on
+<code>user-profile-cold-buffer-isolation.test.ts</code>, and the bug it
+covers is the reason it matters: the shard layer separates users by
+putting their memories in different database files, and the cold-start
+buffer that holds observations before the embedding model warms up was a
+single global bucket. Storage was scoped and the layer above it was not.
+The committed case asserts in both directions, each negative paired with
+a positive over the same manager.</p>
+<p>Two other fixes in range are the same shape.
+<code>all-projects</code> tool queries were walking only project shards,
+so user-scope memories were silently missing from a search that claimed
+to span everything — the fix carries the reason in
+<code>resolveMemoryScope</code>. And compacted memory injected into a
+session is marked synthetic rather than passing as ordinary context.</p>
+<p><code>scope_enforced</code> is unchanged and better evidenced:
+<code>turso-vector-search.test.ts</code> asserts the emitted SQL keeps
+<code>vector_top_k</code> ahead of <code>memories</code> and that the
+filtered variant carries <code>m.container_tag = ?</code>, so a dropped
+scope predicate fails a test rather than only changing results. No other
+mark moved. <code>tombstone</code> remains absent —
+<code>DELETE FROM memories WHERE id = ?</code> with nothing keyed on the
+removed value. <code>trust_state</code> is absent:
+<code>MemoryType</code> is <code>string</code>, and the closed
+vocabulary in the schema is <code>MemoryMetadata.source</code> over
+<code>manual</code>, <code>auto-capture</code>, <code>import</code> and
+<code>api</code>, which records where a memory came from rather than
+whether it is believed. <code>audit_log</code> is absent for a reason
+worth the distinction: <code>user_profile_changelogs</code> stores a
+full <code>profile_data_snapshot</code> per version and looks like an
+audit trail, but <code>cleanupOldChangelogs</code> runs on every update
+and deletes all but the newest N rows, and the table cascades away with
+its profile. A version history with retention is not an append-only
+record of mutations, and the memories table has no mutation record at
+all.</p>
+<p><code>SECURITY_AUDIT.md</code> is still pinned to commit
+<code>0998c69</code>, which is older than both this pin and the previous
+one.</p>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/tickernelz/opencode-mem/commit/8cba720736ff8d3f6315ced14362259efc301899"><code>8cba720736ff8d3f6315ced14362259efc301899</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test was run. <code>SECURITY_AUDIT.md</code> is scoped
+to an earlier commit than the one pinned here.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

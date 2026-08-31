@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Rust memory server
+where typed memories, indexed docs and code symbols are nodes in one
+SQLite graph — with consolidation that supersedes and never deletes, and
+a context guard that writes a handoff memory before the window is
+cleared.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mimir — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Rust memory
+server where typed memories, indexed docs and code symbols are nodes in
+one SQLite graph — with consolidation that supersedes and never deletes,
+and a context guard that writes a handoff memory before the window is
+cleared.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mimir — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Rust memory
+server where typed memories, indexed docs and code symbols are nodes in
+one SQLite graph — with consolidation that supersedes and never deletes,
+and a context guard that writes a handoff memory before the window is
+cleared.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mimir — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mimir",
+      "description": "A local-first Rust memory server where typed memories, indexed docs and code symbols are nodes in one SQLite graph \u2014 with consolidation that supersedes and never deletes, and a context guard that writes a handoff memory before the window is cleared.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One graph, three node kinds</p>
+          <h1>Mimir</h1>
+          <p class="document-deck">A local-first Rust memory server
+where typed memories, indexed docs and code symbols are nodes in one
+SQLite graph — with consolidation that supersedes and never deletes, and
+a context guard that writes a handoff memory before the window is
+cleared.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MakerViking/mimir">
+              <span>Source</span>
+              <strong>MakerViking/mimir</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3" title="e005dede938832fd63d5097bbf5145228f693ce3">
+              <span>Analyzed revision</span>
+              <code>e005dede…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mimir is a 32,100-line Rust workspace under MIT or Apache-2.0,
+published to crates.io as <code>mimir-mem</code>, that gives a coding
+agent one local store for three things most systems keep apart:
+<strong>typed memories, indexed documentation chunks and code symbols
+are all nodes in one SQLite graph</strong>, searched together in a
+single pass by BM25 fused with local ONNX embeddings, and exposed
+through one globally registered MCP server.</p>
+<p>The unification is the design. A <code>node</code> row carries a
+<code>kind</code>, a <code>uid</code>, content, a normalized
+<code>content_hash</code>, a <code>project_id</code>, JSON
+<code>meta</code> and both <code>deleted_at</code> and
+<code>superseded_by</code>; an <code>edge</code> table joins them by
+typed relation. A symbol node and a memory node differ by their kind and
+their meta, not by living in different stores — so a query about a
+function can return the note somebody wrote about it and the symbol
+itself, ranked against each other rather than merged afterwards by a
+caller.</p>
+<p>Two mechanisms are worth taking away regardless of the rest.
+<strong>Consolidation supersedes and never deletes</strong>, stated as
+an invariant in the module's own header comment and implemented as
+<code>UPDATE node SET superseded_by = ?2</code>, so the merge that
+collapses two memories leaves both rows and a pointer. And the
+<strong>context guard</strong> turns the moment a coding session runs
+out of window into a memory event: in <code>handoff</code> mode it
+instructs the agent to write one structured <code>session-handoff</code>
+memory <em>before</em> the user clears, then restores it on the next
+<code>SessionStart</code>. That is the conversation-window boundary this
+atlas puts outside its scope, handled by making one durable memory out
+of it.</p>
+<p>The gap is the familiar one and it is one predicate wide.
+<code>remember</code> computes a normalized content hash and looks for
+an existing node with the same hash — under
+<code>AND deleted_at IS NULL</code>. A memory a user deleted therefore
+does not match its own hash, and is re-created as new on the next
+restatement, with the mechanism that would have caught it already
+computed and already indexed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Everything is a node, and a node stops being current in two different
+ways.</p>
+<p><strong>Writes are explicit and deduped by value.</strong>
+<code>remember</code> normalizes the text, hashes it, and refuses an
+exact restatement — the committed test uses <em>"SCRAM auth rejects
+non-ASCII passwords"</em> against <em>"scram auth rejects\nnon-ascii
+passwords"</em>, so case, whitespace and line breaks collapse to one
+hash. That is the normalization other systems in this atlas bolt on
+later, present at the first write.</p>
+<p><strong>Indexing brings the other two kinds in.</strong> Documents
+are chunked and code is parsed into symbol nodes with a
+<code>stable_id</code> in meta and an index on it, so a symbol survives
+a file being reformatted.</p>
+<p><strong>Retrieval is one query over all three.</strong> FTS5 gives
+BM25, the <code>embedding</code> table gives cosine, and
+<code>scope_sql</code> composes the project filter into the same
+statement rather than filtering afterwards.</p>
+<p><strong>Superseded is not deleted, and deleted is not gone.</strong>
+The consolidator marks the older of a near-duplicate pair
+<code>superseded_by</code> the newer; the default read path excludes
+both superseded and soft-deleted rows, and
+<code>include_superseded</code> exists for the caller that wants
+history.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the duplicate check filters on `deleted_at IS NULL`, so forgetting a memory frees its content hash and the same text can be remembered again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the duplicate check filters on `deleted_at IS NULL`, so forgetting a memory frees its content hash and the same text can be remembered again
+flowchart TD
+    R[&quot;remember&quot;] --&gt; H[&quot;normalize + content_hash&quot;]
+    H --&gt; Q{&quot;existing node with&lt;br/&gt;this hash?&quot;}
+    Q -- &quot;yes, live&quot; --&gt; DUP[&quot;refused as duplicate&quot;]
+    Q -- &quot;no&quot; --&gt; N[(&quot;node&lt;br/&gt;kind=memory&quot;)]
+    DOC[&quot;doc chunker&quot;] --&gt; N2[(&quot;node kind=doc&quot;)]
+    SYM[&quot;symbol indexer&quot;] --&gt; N3[(&quot;node kind=symbol&quot;)]
+    N --&gt; S[&quot;one search pass:&lt;br/&gt;FTS5 BM25 + ONNX cosine,&lt;br/&gt;scope_sql in the same query&quot;]
+    N2 --&gt; S
+    N3 --&gt; S
+    C[&quot;consolidate&quot;] -- &quot;superseded_by, never DELETE&quot; --&gt; N
+    D[&quot;forget&quot;] -- &quot;deleted_at&quot; --&gt; N
+    D -. &quot;hash lookup filters deleted_at IS NULL&quot; .-x Q</code></pre></details></figure>
+<p>The dotted edge is the finding: the value-keyed lookup exists and
+excludes the rows a deletion produced.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Five crates — <code>mimir-core</code> (33 source files: the store,
+search, consolidation, briefs, evals, the context guard),
+<code>mimir-cli</code> (28), <code>mimir-graph</code>,
+<code>mimir-syntax</code> and <code>mimir-proxy</code>. One SQLite file,
+migrations in code, no server dependency. <code>contrib/</code> ships a
+systemd service, a watchdog service and a timer, which is a level of
+operational packaging almost nothing else in this corpus provides.</p>
+<p>The screen of this checkout is the cleanest so far: <strong>zero
+auto-run surfaces, zero build-time execution, zero unpinned dependency
+surfaces</strong>, with a <code>Cargo.lock</code> unchanged for fourteen
+days — so every version it resolves is at least that old.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema</strong> —
+<code>crates/mimir-core/src/db/migrations.rs</code>: <code>node</code>,
+<code>edge</code>, <code>node_fts</code>, <code>embedding</code>,
+<code>recall_event</code>, <code>savings_event</code>,
+<code>injection_log</code>, <code>meta</code>.</li>
+<li><strong>Write and dedupe</strong> — <code>memory.rs</code>:
+normalization, <code>content_hash</code> lookup.</li>
+<li><strong>Consolidation</strong> — <code>consolidate.rs</code>, with
+the never-delete invariant in the header and <code>superseded_by</code>
+as the mechanism.</li>
+<li><strong>Scope</strong> — <code>search::scope_sql</code>, composed
+into every read.</li>
+<li><strong>Context guard</strong> — <code>context_guard.rs</code>,
+<code>pause</code> and <code>handoff</code> modes.</li>
+<li><strong>Evals</strong> — <code>eval/brief.rs</code> and
+<code>eval/fixtures.rs</code>, with <code>forbidden_ids</code>.</li>
+<li><strong>Symbols</strong> — <code>mimir-syntax</code>,
+<code>anchors.rs</code>, <code>stable_id</code> in node meta.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>node</code> table is the whole model. Indexes tell you what
+the design considers hot:
+<code>(kind, project_id) WHERE deleted_at IS NULL</code> for scoped
+reads, <code>content_hash</code> for dedupe,
+<code>substr(uid, -6)</code> for short-id lookup from a CLI, and two
+partial indexes over <code>json_extract(meta, '$.stable_id')</code> and
+<code>'$.name'</code> restricted to <code>kind = 'symbol'</code>.</p>
+<p><code>superseded_by</code> and <code>deleted_at</code> are separate
+columns doing separate jobs, which is more than most stores here
+distinguish: one records that a better version exists, the other that a
+person asked for removal. What no column records is <em>why</em>, or by
+whom, or on what evidence — there is no actor, no status and no
+rejection record anywhere in the schema.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid by construction rather than by configuration: FTS5 BM25 and
+ONNX embeddings over the same node set, with the embedding table keyed
+by <code>(model, content_hash)</code> so a model change is a backfill
+rather than a silent mismatch — the guardrail this atlas records
+MemPalace for, present here as a schema decision.</p>
+<p>The scope filter is composed into the SQL, not applied to the
+results, so <code>LIMIT</code> means the same thing for every caller.
+<code>recall_event</code> records what came back and when, and
+<code>injection_log</code> records what was put into a prompt; between
+them a reader can answer "why did the agent know that" after the
+fact.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and model-free. An exact restatement is
+refused at the hash; near-duplicates survive until consolidation runs,
+and consolidation supersedes rather than merging destructively.</p>
+<p>The context guard is the most interesting write path. It estimates
+transcript size by <strong>byte count rather than tokenization</strong>
+— cheap enough to run on every prompt, and stated as an approximation
+with a tunable ratio instead of pretending to be exact — and every
+database access in it <strong>fails open</strong>: a missing session or
+a query error degrades to "estimate from the full transcript" or "don't
+nag" rather than to an error. A guard that breaks a coding session when
+its own lookup fails would be worse than no guard, and the module says
+so.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One globally registered MCP server, so an agent gets memory without
+per-project configuration; a CLI with <code>brief</code>,
+<code>context</code>, <code>graph</code>, <code>rules</code>,
+<code>savings</code> and <code>rewrite</code> subcommands; session hooks
+that drive the context guard; a proxy crate; and systemd units for
+running it as a daemon with a watchdog. <code>savings_event</code>
+exists to quantify what the injection saved, which is a product decision
+as much as an engineering one — it makes the value of the memory layer
+measurable to the person paying for tokens.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope reaches the query.</strong> <code>project_id</code> on
+the row, <code>scope_sql</code> in the statement, and the read-path
+index carved to match. That earns <code>scope_enforced</code> in its
+strongest ordinary form: not a post-filter, not a tag.</p>
+<p><strong>Correction is structural but anonymous.</strong> Supersession
+and soft delete are distinct and durable, and neither carries a reason,
+an actor, or a status. A reader asking "was this wrong, or just old?"
+cannot be answered by this schema.</p>
+<p><strong>The near-miss is exact.</strong> A normalized content hash is
+computed on every write, indexed, and consulted — and the consulting
+query excludes deleted rows. Removing
+<code>AND deleted_at IS NULL</code> from that lookup, or adding a second
+lookup that ignores it, would turn a dedupe key into a <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a>. The work this atlas usually finds missing — the
+normalization — is the part already done.</p>
+<p><strong>Telemetry is not audit.</strong> <code>recall_event</code>,
+<code>injection_log</code> and <code>savings_event</code> are
+append-only records of <em>reads</em>, which is the half of the pattern
+this atlas does not credit; no table records that a node was superseded
+or deleted, when, or by whom.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The eval module is the standout. <code>eval/brief.rs</code> defines
+fixture cases carrying <code>expected_ids</code> <strong>and
+<code>forbidden_ids</code></strong> — the assertion that particular
+material must not come back — resolved against a built store. That is
+the form this atlas asks for in every pattern page's test list and finds
+in a minority of systems, and it earns <code>negative_eval</code>
+without qualification.</p>
+<p>Unit tests sit beside the code in Rust convention, including the
+normalization case quoted above. CI runs on GitHub Actions; no benchmark
+numbers are published in the README, and none is claimed.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Put memories, docs and symbols in one table with a
+<code>kind</code>.</strong> One index, one ranking pass, one scope
+filter. The alternative — three stores and a merge step — is where
+relevance comparisons go to die, because nothing ranks a note against
+the function it describes.</p>
+<p><strong>State the never-delete invariant in the module that could
+break it.</strong> <code>consolidate.rs</code> opens with it, and the
+code matches.</p>
+<p><strong>Key embeddings by
+<code>(model, content_hash)</code>.</strong> A model swap becomes a
+visible backfill instead of a silent quality regression.</p>
+<p><strong>Make the context-window cliff produce a memory.</strong> The
+handoff mode writes one structured memory before a clear and restores it
+after — the cheapest useful answer to a problem this atlas otherwise
+declares out of scope.</p>
+<p><strong>Fail open in a guard that runs on every prompt</strong>, and
+say so in the header.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not filter deleted rows out of the lookup that could
+refuse a re-write.</strong> The hash is already normalized and already
+indexed; excluding <code>deleted_at</code> rows from it is what makes
+deletion recoverable by restatement.</p>
+<p><strong>Do not let read telemetry stand in for a mutation
+record.</strong> Three tables log what was retrieved and injected, and
+none logs what changed.</p>
+<h3 id="fit">Fit</h3>
+<p>This is the shape to copy for a single developer's coding agent:
+local, one file, no daemon required, MCP-registered once, with the
+operational packaging to run it as a service if wanted. It suits a
+reader who wants strong retrieval and inspectable state today and can
+accept that correction is anonymous.</p>
+<p>It does not suit a setting where a deletion must be defensible or a
+memory's epistemic standing has to be recorded — not because the store
+could not carry those columns, but because at this commit it does not,
+and the machinery around them (actors, statuses, reasons) is absent
+rather than partial.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A value-keyed lookup that excludes the deleted
+rows</strong>, one predicate from being a tombstone.</li>
+<li><strong>No mutation record</strong> beside three read-side event
+tables.</li>
+<li><strong>No trust or status field</strong>, so wrong and stale look
+identical.</li>
+<li><strong>Byte-count context estimation</strong> is a deliberate
+approximation, and a model whose tokenizer diverges from the tuned ratio
+will trip the guard early or late.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the single-table graph, the embedding key, and the eval
+fixture shape with <code>forbidden_ids</code>. Those three are
+independent of the rest and each closes a failure this atlas records
+repeatedly.</p>
+<p>The correction layer is where a fork would start: the columns for
+supersession and deletion exist, and what is missing is a reason, an
+actor and a lookup that survives a delete.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the <code>deleted_at IS NULL</code> clause in the dedupe lookup
+deliberate — is re-remembering a deleted memory considered the correct
+behaviour?</li>
+<li>Does anything consume <code>savings_event</code> beyond the CLI
+report, and is the estimate validated against real token counts
+anywhere?</li>
+<li>What resolves a symbol node whose <code>stable_id</code> changes
+because the symbol was renamed rather than moved?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/mimir-core/src/db/migrations.rs</code></td>
+<td>The whole schema: nodes, edges, FTS5, embeddings, event tables</td>
+</tr>
+<tr>
+<td><code>crates/mimir-core/src/memory.rs</code></td>
+<td>Normalization, content-hash dedupe, scoped listing</td>
+</tr>
+<tr>
+<td><code>crates/mimir-core/src/consolidate.rs</code></td>
+<td>Supersession with the never-delete invariant stated</td>
+</tr>
+<tr>
+<td><code>crates/mimir-core/src/context_guard.rs</code></td>
+<td>Pause and handoff modes, byte-count estimation, fail-open</td>
+</tr>
+<tr>
+<td><code>crates/mimir-core/src/eval/brief.rs</code></td>
+<td>Fixture cases with <code>expected_ids</code> and
+<code>forbidden_ids</code></td>
+</tr>
+<tr>
+<td><code>crates/mimir-cli/src/mcp.rs</code></td>
+<td>The MCP surface</td>
+</tr>
+<tr>
+<td><code>contrib/</code></td>
+<td>systemd service, watchdog and timer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3"><code>e005dede938832fd63d5097bbf5145228f693ce3</code></a>
+— first reading. Screened before reading: <strong>zero</strong> auto-run
+surfaces, zero build-time execution paths and zero unpinned dependency
+surfaces, with <code>Cargo.lock</code> present and unchanged for
+fourteen days, so every version it resolves is at least that old — the
+cleanest screen recorded in this atlas. Nothing was built or run; the
+analysis is static. The name is worth flagging for anyone reconciling
+systems by name rather than by URL: <a href="../perseus-vault/">Perseus
+Vault</a> exposes its MCP tools under a <code>mimir_*</code> prefix and
+is an unrelated project.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

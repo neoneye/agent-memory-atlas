@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single 200-line plain-text
+memory per workspace, rewritten whole by an LLM on a debounce keyed to
+the directory rather than the session — and a bundled skill describing a
+different memory system entirely.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenYak — Agent Memory Atlas">
+    <meta property="og:description" content="A single 200-line
+plain-text memory per workspace, rewritten whole by an LLM on a debounce
+keyed to the directory rather than the session — and a bundled skill
+describing a different memory system entirely.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenYak — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single 200-line
+plain-text memory per workspace, rewritten whole by an LLM on a debounce
+keyed to the directory rather than the session — and a bundled skill
+describing a different memory system entirely.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenYak — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenYak",
+      "description": "A single 200-line plain-text memory per workspace, rewritten whole by an LLM on a debounce keyed to the directory rather than the session \u2014 and a bundled skill describing a different memory system entirely.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One document per workspace</p>
+          <h1>OpenYak</h1>
+          <p class="document-deck">A single 200-line plain-text memory
+per workspace, rewritten whole by an LLM on a debounce keyed to the
+directory rather than the session — and a bundled skill describing a
+different memory system entirely.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openyak/openyak">
+              <span>Source</span>
+              <strong>openyak/openyak</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432" title="bd88bff824c29fc48024eb19b7435cb2c065e432">
+              <span>Analyzed revision</span>
+              <code>bd88bff8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenYak is a desktop agent platform — roughly 90,000 lines of Python
+on the backend — whose memory is 859 lines and one idea: <strong>each
+workspace directory gets one plain-text document, and an LLM rewrites it
+after conversations.</strong></p>
+<p>The model is <code>WorkspaceMemory</code>: an id, a
+<code>workspace_path</code> with a unique index, and a
+<code>content</code> column. One row per directory, capped by the
+storage layer at 200 lines. There is no retrieval, no embedding, no
+scoring and nothing below the document to address — the whole thing is
+wrapped in <code>&lt;workspace-memory&gt;</code> tags and prepended to
+the system prompt when it is non-empty.</p>
+<p>Three things are worth taking from it, and they are all in the update
+path.</p>
+<p><strong>The debounce is keyed by workspace, not by session</strong>,
+and the docstring says why: <em>"so that concurrent sessions in the same
+workspace don't produce duplicate or conflicting updates."</em> Two
+agents working in one directory collapse into a single refresh rather
+than racing to overwrite each other's document. This atlas finds a real
+answer to concurrent memory writes in a handful of systems; this is one
+of them, and it costs a dictionary key.</p>
+<p><strong>The rewrite refuses to write nothing.</strong> Three guards
+in sequence: skip if no conversation text could be extracted, skip if
+the LLM returned an empty response, and write only
+<code>if new_content.strip()</code>. For a design whose every write
+destroys the previous version, refusing the empty case is the minimum
+viable protection and several systems here do not have it.</p>
+<p><strong>The prompt forbids Markdown at length and the parser cleans
+up after it anyway.</strong> The instruction lists every construct to
+avoid — headings, bold, italic, code, fences, links, blockquotes — and
+<code>parse_workspace_memory_response</code> still strips outer code
+fences before storing. Instructing and then verifying is the right
+order, and it is rare here.</p>
+<p>The weaknesses follow from the same shape. <strong>There is no floor,
+only a ceiling.</strong> An empty rewrite is refused; a three-line
+rewrite that replaces two hundred lines is written without comment. <a
+href="../soul-of-waifu/">Soul of Waifu</a> puts a length floor on
+exactly this operation and is the smaller system. And the 200-line cap
+is enforced by truncation —
+<code>result_lines[:MAX_WORKSPACE_MEMORY_LINES]</code> — so a model that
+returns 250 lines loses the last fifty silently, with no marker and no
+log.</p>
+<p><strong>And the repository ships a second, incompatible memory
+concept.</strong> A bundled plugin skill,
+<code>memory-management/SKILL.md</code>, describes a <em>"two-tier
+memory system"</em> with <em>"CLAUDE.md for working memory, memory/
+directory for the full knowledge base"</em> — a filesystem design the
+backend does not implement and the <code>workspace_memory</code> tables
+know nothing about. A reader who finds the skill first will conclude the
+product has a knowledge base it does not have.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>the current state of one document about one
+directory</strong>. Not a fact, not a claim, not a row — a paragraph of
+plain text that is true until the next conversation rewrites it.</p>
+<p>That is the whole model, and its consequence is worth stating
+plainly: <strong>nothing in this system can be corrected, because
+nothing in it can be addressed.</strong> There is no id below the
+document, so there is no supersession, no tombstone, no trust state and
+no provenance. A wrong sentence is fixed by an LLM choosing to drop it
+on the next rewrite, or by a person opening the editor.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p>After a conversation in a workspace,
+<code>WorkspaceConversationContext</code> is queued — session id,
+workspace path, messages, model id, timestamp. After the debounce, the
+queue formats the conversation (user and assistant text only; tool calls
+and intermediate results stripped, each message truncated to 2,000
+characters), loads the current document, and calls the model with
+<code>WORKSPACE_MEMORY_UPDATE_PROMPT</code>.</p>
+<p>The prompt is a good specimen of the genre. It asks for information
+<em>"useful for FUTURE sessions: project structure, conventions,
+decisions made, ongoing tasks, known issues, user preferences"</em> and
+explicitly excludes conversation-specific details, timestamps,
+<code>"user asked about X"</code> phrasing, temporary debugging states
+and one-off commands. It tells the model to remove <em>"outdated or
+superseded information"</em> — which is the only place supersession
+exists in this system, as an instruction rather than a mechanism.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>By not surviving a rewrite. That is the only automatic path: the
+model is asked to preserve what is still relevant and drop what is not,
+and whatever it returns becomes the document.</p>
+<p>Beside that, a person can edit the text directly in the settings tab,
+or delete the row entirely. Both are immediate and neither is
+recorded.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — sessions in the same directory coalesce into one pending entry, an empty rewrite is not written, and the tail past two hundred lines is dropped silently</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: sessions in the same directory coalesce into one pending entry, an empty rewrite is not written, and the tail past two hundred lines is dropped silently
+stateDiagram-v2
+    [*] --&gt; Queued: a conversation ends in a workspace
+    Queued --&gt; Queued: another session in the same directory joins the same pending entry
+    Queued --&gt; Rewritten: after the debounce, an LLM merges the old document with the conversation
+    Rewritten --&gt; Document: written only when the result is non-empty
+    Rewritten --&gt; Document: the tail past two hundred lines is dropped silently
+    Document --&gt; Injected: wrapped in workspace-memory tags when non-empty
+    Document --&gt; Document: a person edits the text in the settings tab
+    Document --&gt; [*]: a person deletes the row
+    note right of Document
+        There is no unit below the document.
+        Nothing here can be addressed, so nothing
+        here can be superseded or rejected.
+    end note</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A FastAPI backend with SQLAlchemy and a React frontend, shipped as a
+desktop application. The memory subsystem is seven files under
+<code>backend/app/memory/</code> plus an API module and a builtin
+tool.</p>
+<p><strong>Persistence is one table.</strong>
+<code>workspace_memory</code> with a unique index on
+<code>workspace_path</code>, paths normalised before every read and
+write so the same directory expressed two ways resolves to one row.</p>
+<p><strong>The queue is the only moving part.</strong> An in-process
+async queue with a pending map keyed by workspace path, a debounce
+period, and a guard against re-entrancy (<em>"already processing,
+skipping"</em>). It is not durable — a restart loses whatever was
+pending, which for a memory refresh is the right trade.</p>
+<p><strong>Injection is unconditional and unbudgeted</strong> beyond the
+200-line cap: if the document is non-empty and memory is enabled, the
+whole thing goes into the system prompt, wrapped in a tag. There is a
+test asserting it lands first.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A desktop install. The memory needs a database the app already has
+and a model the app is already configured with — no vector store, no
+embedding provider, no extra service.</p>
+<p>The store is a text document with an editor in the settings tab,
+which makes it the most directly repairable memory in this atlas after
+the file-based ones: what the model reads is what you see, and you can
+fix it in place.</p>
+<p>Apache-2.0, which after a run of source-available systems is worth
+saying plainly: you can read, use, modify and redistribute this one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Model</strong> —
+<code>backend/app/memory/workspace_memory_model.py</code> (27
+lines).</p>
+<p><strong>Storage</strong> — <code>workspace_memory_storage.py</code>:
+<code>_normalize_path</code>, <code>_enforce_line_cap</code>,
+<code>get_workspace_memory</code> (<code>:42</code>, the read-path
+filter), <code>upsert_workspace_memory</code>,
+<code>list_workspace_memories</code>,
+<code>delete_workspace_memory</code>.</p>
+<p><strong>Update queue</strong> —
+<code>workspace_memory_queue.py</code> (320 lines): the pending map, the
+debounce, the re-entrancy guard, and the three write guards at
+<code>:148</code>, <code>:182</code> and <code>:191</code>.</p>
+<p><strong>Rewrite</strong> — <code>workspace_memory_updater.py</code>:
+<code>WORKSPACE_MEMORY_UPDATE_PROMPT</code>,
+<code>format_conversation_for_workspace_update</code>,
+<code>parse_workspace_memory_response</code>.</p>
+<p><strong>Injection</strong> — <code>injection.py</code>:
+<code>build_workspace_memory_section</code>.</p>
+<p><strong>API</strong> —
+<code>backend/app/api/workspace_memory.py</code>:
+<code>GET /list</code>, <code>GET</code>, <code>PUT</code>,
+<code>DELETE</code>, <code>POST /refresh</code>,
+<code>POST /export</code>.</p>
+<p><strong>Human surface</strong> —
+<code>frontend/src/components/settings/memory-tab.tsx</code>,
+<code>frontend/src/hooks/use-workspace-memory.ts</code>.</p>
+<p><strong>The other memory</strong> —
+<code>backend/app/data/plugins/productivity/skills/memory-management/SKILL.md</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three columns and a timestamp mixin. <code>id</code> is a ULID,
+<code>workspace_path</code> is unique, <code>content</code> is text
+defaulting to empty.</p>
+<p><strong>Scope is the workspace path</strong>, normalised and applied
+as the <code>WHERE</code> clause on every read. It is the whole boundary
+— there is no user, agent, session or tenant key, which is correct for a
+single-user desktop application and would be the first thing to change
+for anything else.</p>
+<p><strong>There is no provenance.</strong> The document does not record
+which conversation produced which line, which model wrote it, or when
+any particular sentence entered. <code>TimestampMixin</code> gives the
+row a created and updated time; the content has none.</p>
+<p><strong>There is no unit below the document</strong>, and that is the
+single fact that determines everything in sections 6 through 9.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is none, and unlike <a href="../dexto/">Dexto</a> — which also
+has none — there is not even a filter, because there is only ever one
+row to fetch.</p>
+<p><code>build_workspace_memory_section</code> loads the document for
+the current workspace and returns it wrapped in
+<code>&lt;workspace-memory&gt;</code> tags, or <code>None</code> when
+memory is disabled, the workspace is empty or <code>"."</code>, or the
+content is blank.</p>
+<p>The failure mode is the one every whole-document memory has:
+relevance is whatever the last rewrite decided to keep. A fact that
+mattered three conversations ago is present only if the model judged it
+worth preserving each time in between, and nothing records that it was
+ever there.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Deferred, debounced, and destructive.</strong> The write is
+an LLM call that happens after the conversation, not during it, so it
+costs the user no latency in the turn — a better placement than <a
+href="../agentswarms/">AgentSwarms</a>, which awaits its extraction
+inside the request.</p>
+<p>The debounce keyed by workspace is the design's best decision. Two
+sessions in one directory contribute to one refresh rather than each
+rewriting the document from its own view of the conversation, which is
+the failure mode that makes whole-document memory dangerous under
+concurrency.</p>
+<p><strong>Every write is a full overwrite of the only copy.</strong>
+There is no diff, no version, no backup and no history. The previous
+document exists nowhere after the <code>upsert</code> — so a bad rewrite
+is unrecoverable, and the only protection against one is the non-empty
+check.</p>
+<p>The <code>format_conversation_for_workspace_update</code> truncation
+to 2,000 characters per message is worth noting as a quiet input bound:
+a long assistant answer is cut before the model that decides what to
+remember ever sees the end of it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory reaches the model one way — the injected section — and the
+agent has one builtin tool file (12 lines) beside it. The important
+surfaces are the API and the settings tab.</p>
+<p><code>POST /refresh</code> lets a person force a regeneration rather
+than waiting for the debounce, and <code>PUT</code> lets them replace
+the document outright. Together with the delete dialog and the inline
+editor, that is a person editing the same text the model reads — <a
+href="../../patterns/memory-as-an-editing-surface/">memory as an editing
+surface</a> rather than a viewer over a store, and the atlas's
+<code>human_review</code> mark.</p>
+<p><code>POST /export</code> exists and is the only path by which a
+document leaves the database.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Concurrency is handled and is the strong column.</strong> The
+workspace-keyed pending map plus the re-entrancy guard means the
+dangerous interleaving — two rewrites from two stale reads — cannot
+happen within one process.</p>
+<p><strong>There is no trust model, and the shape forbids one.</strong>
+Nothing can be marked uncertain, attributed, superseded or rejected,
+because there is nothing to mark. The prompt asks the model to remove
+<em>"outdated or superseded information"</em>, which places the entire
+correction semantics inside a sentence in a prompt.</p>
+<p><strong>Prompt-injection exposure is direct.</strong> The rewriting
+model reads the assistant's own replies, so anything the agent repeated
+from a fetched page or a tool result is a candidate for the durable
+document, and the document is injected verbatim into every subsequent
+system prompt for that workspace. The prompt's exclusions are about
+<em>relevance</em>, not about trust.</p>
+<p><strong>Data loss is the standing risk.</strong> A short rewrite
+replaces a long one, a 250-line rewrite loses fifty lines off the end,
+and neither event is logged or surfaced. The fix for the first is a
+length floor — refuse a rewrite under some fraction of the previous
+document, as Soul of Waifu does — and for the second, a marker or a
+warning instead of a slice.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>114 test files under <code>backend/tests/</code>, and <strong>one of
+them touches memory</strong>:
+<code>test_session/test_prompt_assembler.py</code> asserts that the
+workspace-memory section is placed first in the assembled prompt.</p>
+<p>That leaves the whole update path untested. The assertions that are
+missing are the ones that would catch this report's findings, and each
+is a few lines against a pure function:</p>
+<ul>
+<li><code>parse_workspace_memory_response</code> strips fences and caps
+at 200 lines.</li>
+<li>The queue does not write when the model returns an empty
+response.</li>
+<li>Two contexts for one workspace collapse to a single pending
+entry.</li>
+<li><code>_normalize_path</code> maps two spellings of a directory to
+one row.</li>
+</ul>
+<p>No benchmark and nothing to benchmark: with no retrieval there is no
+ranking to score. I inspected these files; I did not run them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Debounce by the thing being written, not by the
+writer.</strong> Keying the pending map on <code>workspace_path</code>
+rather than <code>session_id</code> is one line and it removes the whole
+class of concurrent-rewrite bugs that whole-document memory otherwise
+has. The docstring explains the choice, which is why it will survive a
+refactor.</p>
+<p><strong>Refuse to write nothing.</strong> Three guards — no
+conversation text, empty response, empty parsed content — each one line,
+on a path where a write destroys the previous version.</p>
+<p><strong>Instruct and then verify.</strong> The prompt bans Markdown
+in eight clauses and the parser strips code fences anyway. Assume the
+model will ignore a formatting instruction some of the time and clean up
+on the way in.</p>
+<p><strong>Give the document an editor, not a viewer.</strong> A
+<code>PUT</code>, a delete dialog and an inline textarea over the exact
+text the model reads makes correction a thirty-second job and needs no
+schema.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not ship a ceiling without a floor.</strong> Refusing an
+empty rewrite and accepting a three-line one is protection against the
+failure that never happens and none against the one that does. Compare
+the previous length to the new one and refuse a collapse.</p>
+<p><strong>Do not truncate the tail silently.</strong>
+<code>lines[:200]</code> discards the end of what the model wrote with
+no marker, no warning and no log line, so the document silently loses
+whatever the model chose to put last — which, given the prompt asks for
+sections, may be the most recent material.</p>
+<p><strong>Do not ship a skill describing a memory system you did not
+build.</strong> The bundled <code>memory-management</code> skill
+documents a CLAUDE.md-plus-<code>memory/</code>-directory design that no
+code here implements. Plugin content is documentation as far as a reader
+is concerned, and two incompatible memory stories in one repository is
+worse than either alone.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer using the desktop app who wants each
+project to carry a short, readable brief that keeps itself roughly
+current — and who will open the settings tab when it drifts. Within that
+brief it is well judged: no infrastructure, no retrieval to tune, a
+document you can read in ten seconds, and concurrency handled
+properly.</p>
+<p>It is the wrong shape for anything that must remember <em>facts</em>
+rather than <em>context</em>. There is no unit to address, so there is
+no correction, no provenance and no way to ask what the system believed
+last month — and adding any of those means replacing the data model
+rather than extending it. The 200-line cap is the honest signal of the
+intended scale.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often does a rewrite lose material a user
+wanted?</strong> Every refresh is a full regeneration with no diff and
+no history, so the failure is invisible by construction — and nothing
+logs the before-and-after lengths that would make it visible.</li>
+<li><strong>Does the 200-line truncation fire in practice?</strong> The
+prompt states the limit and the parser enforces it; whether models
+respect it, and what is lost when they do not, is unmeasured.</li>
+<li><strong>Is the bundled memory-management skill vestigial or
+planned?</strong> It describes a filesystem two-tier design that no
+backend code implements, and nothing in the repository reconciles the
+two.</li>
+<li><strong>What happens to the queue on shutdown?</strong> The pending
+map is in-process, so a restart during a debounce window drops the
+refresh silently. Whether that is acceptable depends on how long the
+debounce is, which is configuration this report did not resolve.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Model and storage</strong> —
+<code>backend/app/memory/workspace_memory_model.py</code>,
+<code>workspace_memory_storage.py</code>.</p>
+<p><strong>Update path</strong> —
+<code>backend/app/memory/workspace_memory_queue.py</code>,
+<code>workspace_memory_updater.py</code>.</p>
+<p><strong>Injection and config</strong> —
+<code>backend/app/memory/injection.py</code>,
+<code>backend/app/memory/config.py</code>.</p>
+<p><strong>API</strong> —
+<code>backend/app/api/workspace_memory.py</code>.</p>
+<p><strong>Agent tool</strong> —
+<code>backend/app/tool/builtin/memory.py</code>.</p>
+<p><strong>Human surface</strong> —
+<code>frontend/src/components/settings/memory-tab.tsx</code>,
+<code>frontend/src/hooks/use-workspace-memory.ts</code>.</p>
+<p><strong>The other memory</strong> —
+<code>backend/app/data/plugins/productivity/skills/memory-management/SKILL.md</code>.</p>
+<p><strong>Tests</strong> —
+<code>backend/tests/test_session/test_prompt_assembler.py</code>.</p>
+<p><strong>Licence</strong> — <code>LICENSE</code> (Apache-2.0).</p>
+<h2 id="history">History</h2>
+<p><strong>2026-07-31</strong> — <a
+href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432"><code>bd88bff824c29fc48024eb19b7435cb2c065e432</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

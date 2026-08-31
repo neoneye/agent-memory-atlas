@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A four-judge jury returns approve,
+reject or quarantine on every write — and quarantine is stored by
+halving a float and appending a marker into a free-text field.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="PLTM — Agent Memory Atlas">
+    <meta property="og:description" content="A four-judge jury returns
+approve, reject or quarantine on every write — and quarantine is stored
+by halving a float and appending a marker into a free-text field.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PLTM — Agent Memory Atlas">
+    <meta name="twitter:description" content="A four-judge jury returns
+approve, reject or quarantine on every write — and quarantine is stored
+by halving a float and appending a marker into a free-text field.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>PLTM — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "PLTM",
+      "description": "A four-judge jury returns approve, reject or quarantine on every write \u2014 and quarantine is stored by halving a float and appending a marker into a free-text field.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A third verdict with nowhere to live</p>
+          <h1>PLTM</h1>
+          <p class="document-deck">A four-judge jury returns approve,
+reject or quarantine on every write — and quarantine is stored by
+halving a float and appending a marker into a free-text field.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Alby2007/PLTM-Claude">
+              <span>Source</span>
+              <strong>Alby2007/PLTM-Claude</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0" title="5146bfbfd2f210674da5a3b16c04ac0ddf6803f0">
+              <span>Analyzed revision</span>
+              <code>5146bfbf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>PLTM is an MIT-licensed MCP server giving Claude Desktop persistent
+memory: 67,000 lines of Python, 136 advertised tools, a React dashboard,
+and a one-command installer for macOS, Linux and Windows.</p>
+<p><strong>The idea worth taking is in
+<code>src/reconciliation/conflict_detector.py</code>:</strong></p>
+<blockquote>
+<p>"Opposite predicate detection catches conflicts that LLM-based
+systems miss. Example: 'I like jazz' vs 'I hate jazz' — LLMs may see
+high semantic similarity and miss the conflict, but our rule-based
+approach explicitly detects opposite predicates."</p>
+</blockquote>
+<p>That is a correct and useful observation about a structural blind
+spot. Two statements that contradict each other are <em>near
+neighbours</em> in embedding space, because contradiction requires
+shared subject and shared topic. A similarity threshold therefore treats
+a contradiction and a corroboration identically. The three-stage
+pipeline — identity match on subject + predicate, fuzzy object match
+with a threshold, and an explicit exception that <strong>skips the
+similarity filter for exclusive predicates</strong> so no conflict is
+filtered away — is the right shape for the problem.</p>
+<p><strong>The second mechanism is a four-judge jury on the write
+path</strong> — memory, safety, time and consensus judges, returning
+<code>APPROVE</code>, <code>REJECT</code> or <code>QUARANTINE</code>,
+with the safety judge documented as "always-binding". A three-valued
+verdict where the middle value means <em>stored but not trusted</em> is
+exactly the design this atlas looks for.</p>
+<p><strong>And it has nowhere to live.</strong>
+<code>typed_memories</code> has no verdict column. A quarantined memory
+is handled like this:</p>
+<pre class="python"><code>elif decision.verdict == Verdict.QUARANTINE:
+    logger.info(f&quot;Jury QUARANTINED memory: {decision.explanation} — reducing strength&quot;)
+    mem.strength = max(0.1, mem.strength * 0.5)   # Store with reduced strength
+    mem.context = (mem.context + f&quot; [QUARANTINED: {decision.explanation}]&quot;).strip()</code></pre>
+<p>A halved float and a marker appended to a free-text field. Nothing
+can query for quarantined memories, nothing on the read path treats them
+differently from a memory that simply decayed, and the reason survives
+only as prose inside the content a model will read back as fact.</p>
+<p><strong>The numbers need discounting</strong>, section 10.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Text arrives, is extracted into memories, and a jury deliberates
+before anything is stored. Conflicts against existing memories are
+detected by rules rather than by a model. Retrieval is per-user, ranked
+by strength with decay.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a rejected item leaves no record of what was refused, and a quarantined one is halved and tagged in its context — arriving at retrieval indistinguishable from a decayed memory</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a rejected item leaves no record of what was refused, and a quarantined one is halved and tagged in its context — arriving at retrieval indistinguishable from a decayed memory
+flowchart TD
+    IN[&quot;incoming content&quot;] --&gt; EX[&quot;extraction&quot;]
+    EX --&gt; J[&quot;jury: memory, safety, time, consensus&quot;]
+    J --&gt; V{&quot;verdict&quot;}
+    V --&gt;|REJECT| R[&quot;return empty id, log a warning&lt;br/&gt;no record of what was refused&quot;]
+    V --&gt;|QUARANTINE| Q[&quot;strength × 0.5, floor 0.1&lt;br/&gt;context += &#39; [QUARANTINED: reason]&#39;&quot;]
+    V --&gt;|APPROVE| A[&quot;insert&quot;]
+    Q --&gt; INS[&quot;INSERT OR REPLACE INTO typed_memories&quot;]
+    A --&gt; INS
+    INS --&gt; CD[&quot;ConflictDetector, three stages&quot;]
+    CD --&gt; S1[&quot;stage 1: identity — exact subject + predicate&quot;]
+    S1 --&gt; S2[&quot;stage 2: fuzzy object match, threshold 0.6&lt;br/&gt;SKIPPED for exclusive predicates&quot;]
+    S2 --&gt; S3[&quot;stage 3: opposite-predicate detection&lt;br/&gt;&#39;likes&#39; vs &#39;hates&#39;&quot;]
+    QRY[&quot;query&quot;] --&gt; RD[&quot;FTS + embeddings WHERE user_id = ?&quot;]
+    RD --&gt; OUT[&quot;ranked by strength&quot;]
+    Q -. &quot;indistinguishable from a decayed memory&quot; .-&gt; OUT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/</code> holds the engine: <code>core</code> (models,
+ontology), <code>storage</code> (<code>sqlite_store</code> with
+<code>atoms</code> and <code>provenance</code>,
+<code>vector_store</code>), <code>memory</code>
+(<code>memory_types</code> with <code>typed_memories</code>,
+<code>memory_jury</code>), <code>jury</code> (four judges plus an
+orchestrator), <code>extraction</code>, <code>reconciliation</code>,
+<code>pipeline</code> (<code>memory_pipeline</code>,
+<code>write_lane</code>), and <code>api</code>.</p>
+<p><strong>There are two memory systems in the repository.</strong>
+<code>atoms</code> + <code>provenance</code> is a
+subject/predicate/object graph with an
+<code>UNIQUE(subject, predicate, object, graph)</code> constraint;
+<code>typed_memories</code> is a flat row with <code>strength</code>,
+<code>confidence</code>, <code>evidence_for</code>,
+<code>evidence_against</code>, <code>episode_timestamp</code>,
+<code>success_count</code>, <code>failure_count</code> and consolidation
+fields. <code>migrate_atoms_to_typed.py</code> sits at the repository
+root, so the migration is in progress and both are live: the jury runs
+on <code>typed_memories</code>, the benchmark runs on
+<code>atoms</code>.</p>
+<p>Two housekeeping facts a reader will notice. <code>venv311/</code> —
+a Python virtual environment — is committed. And two files named
+<code>C__Users_alber_CascadeProjects_LLTM_CONSCIOUSNESS_SYNTHESIS_COMPLETE.md</code>
+and <code>..._IMPROVEMENTS_NEEDED.md</code> sit at the root, Windows
+paths flattened into filenames by a copy that went wrong.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Judge</strong> — <code>src/jury/orchestrator.py</code>,
+<code>memory_judge.py</code>, <code>safety_judge.py</code>,
+<code>time_judge.py</code>, <code>consensus_judge.py</code>,
+<code>base_judge.py</code>.</p>
+<p><strong>Store</strong> — <code>src/memory/memory_types.py</code>
+(<code>typed_memories</code> DDL <code>:168</code>, the jury call and
+verdict handling <code>:253-280</code>, the insert
+<code>:280-289</code>).</p>
+<p><strong>Detect conflicts</strong> —
+<code>src/reconciliation/conflict_detector.py</code> (the three stages
+and the exclusive-predicate exception).</p>
+<p><strong>Retrieve</strong> — <code>src/memory/memory_types.py</code>
+(<code>user_id</code> conditions <code>:364</code>, the FTS join
+<code>:410</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>atoms</code>: <code>id</code>, <code>atom_type</code>,
+<code>graph</code>, <code>subject</code>, <code>predicate</code>,
+<code>object</code>, a JSON <code>metadata</code> blob, and denormalised
+<code>confidence</code>, <code>first_observed</code>,
+<code>last_accessed</code>, under
+<code>UNIQUE(subject, predicate, object, graph)</code>.</p>
+<p><code>provenance</code> is the most complete provenance schema in
+this batch, and the comment above it states the intent: <em>every claim
+must be traceable</em>. It carries <code>claim_id</code>,
+<code>source_type</code>, <code>source_url</code>,
+<code>source_title</code>, <code>quoted_span</code>,
+<code>page_or_section</code>, <code>accessed_at</code>,
+<code>content_hash</code>, <code>confidence</code>,
+<code>authors</code>, <code>arxiv_id</code>, <code>doi</code>,
+<code>commit_sha</code>, <code>file_path</code> and
+<code>line_range</code>, with a foreign key to <code>atoms</code> and an
+index on <code>claim_id</code>.</p>
+<p><strong>No code inserts into it.</strong>
+<code>INSERT INTO provenance</code> appears nowhere in <code>src</code>.
+The schema names exactly the fields a serious traceability model needs —
+a quoted span, a content hash, a commit SHA, a line range — and no
+writer exists.</p>
+<p><code>typed_memories</code> carries <code>strength</code>,
+<code>confidence</code>, <code>evidence_for</code>,
+<code>evidence_against</code>, <code>episode_timestamp</code>,
+<code>emotional_valence</code>, <code>trigger</code>,
+<code>action</code>, <code>success_count</code>,
+<code>failure_count</code>, <code>consolidated_from</code> and
+<code>consolidation_count</code>. <code>episode_timestamp</code>
+alongside <code>created_at</code> is the raw material for a bitemporal
+model, and no query filters on it as a validity interval — only
+<code>episode_timestamp &gt; ?</code> for recency.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 with an embedding path and MMR, ranked by strength with
+decay.</p>
+<p><strong><code>user_id</code> is a genuine read-path
+predicate.</strong> It appears as the first condition in the filtered
+query builder (<code>conditions = ["user_id = ?"]</code>), in the FTS
+join (<code>WHERE typed_memories_fts MATCH ? AND tm.user_id = ?</code>),
+and in the statistics and existence queries. A stored key reaching the
+query is what the <code>scope_enforced</code> mark certifies, and it is
+earned here.</p>
+<p>Quarantined memories are returned like any other, ranked slightly
+lower because their strength was halved once. A memory quarantined for a
+safety reason and a memory that has simply not been accessed for a while
+are, to the read path, the same thing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The jury deliberates, then
+<code>INSERT OR REPLACE INTO typed_memories</code>.</p>
+<p><strong><code>REJECT</code> leaves nothing behind.</strong> The
+handler logs a warning with the first 80 characters of the content and
+returns an empty string: <em>"Empty ID signals rejection"</em>. There is
+no record keyed on the rejected value, so the same content arriving
+again is judged again from scratch — and if the judges are
+non-deterministic or the rules change, it can be admitted next time with
+nothing recording that it was once refused.</p>
+<p><strong>The jury's individual verdicts are discarded at the
+adapter.</strong> <code>convert_to_legacy_decision</code> maps a
+four-judge <code>SimpleJuryDecision</code> onto the older
+<code>JuryDecision</code> shape and sets <code>memory_judge=None</code>,
+<code>safety_judge=None</code>, with the comment "Individual judge
+verdicts not tracked in new system". The confidence adjustment collapses
+to three constants — <code>+0.1</code> for approve, <code>-0.1</code>
+for quarantine, <code>-0.3</code> for reject. Which judge objected, and
+on what grounds, does not survive.</p>
+<p><code>SafetyJudge</code> is rule-based by design — "For MVP:
+Rule-based safety checks. Future: Grammar-constrained LLM with Outlines"
+— matching SSN, credit-card, email, password and US phone patterns.
+Naming the MVP status and the intended successor in the docstring is the
+right way to ship a placeholder.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server for Claude Desktop with 136 advertised tools, a
+curl-to-bash and irm-to-iex installer that "clones the repo, creates a
+venv, installs deps, downloads the embedding model, initializes the
+database, and auto-configures Claude Desktop", a
+<code>health_check.py</code>, a React dashboard, Docker Compose, k8s
+manifests and a monitoring directory.</p>
+<p>136 tools against 26 test files is a wide surface on a narrow base,
+and the README's own badges put the contrast side by side:
+<code>MCP tools 136</code> next to <code>tests 11 passing</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded</strong>, per section 6.</p>
+<p><strong>Trust state — withheld, and this is the near miss.</strong>
+<code>QUARANTINE</code> is a real third verdict with a real meaning,
+produced by a real deliberation, and it is persisted as a halved float
+plus a bracketed string inside <code>context</code>. The mark requires a
+discrete status as a <em>field</em>; a marker in free text cannot be
+queried, cannot be filtered on, and worse, is read back to the model as
+part of the memory's own text. Add a <code>verdict</code> column and a
+read-path filter and this becomes one of the better trust models in the
+corpus.</p>
+<p><strong>Tombstone — no</strong>, per section 7.</p>
+<p><strong>Audit log — no.</strong> The jury's decision is a log line,
+not a row.</p>
+<p><strong>Bitemporal, human review, negative eval — no.</strong></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> 26 test files under <code>tests/</code>, a
+dozen loose <code>test_*.py</code> scripts at the repository root, and
+<code>REPRODUCE.md</code>.</p>
+<p>The headline claims are "198/200 tests pass (99% accuracy)" and, in
+the conflict detector's own docstring, "Accuracy: 100% on benchmark (vs
+66.9% for Mem0 baseline)".</p>
+<p><strong>These are not retrieval benchmark numbers.</strong>
+<code>run_200_test_benchmark.py</code> is a class called
+<code>ComprehensiveBenchmark</code> that constructs an in-memory SQLite
+store, a rule-based extractor and the conflict detector, then runs 200
+hand-written assertions and prints <code>Accuracy: passed/total</code>.
+It is a unit-test suite whose pass rate is being reported as
+accuracy.</p>
+<p><code>benchmarks/compare_with_mem0.py</code> then runs Mem0 against
+the same 200 cases and calls it "apples-to-apples… the exact same
+200-test benchmark". It is the same test set, and the test set was
+written by the author of the system it scores, to exercise the rules
+that system implements. <strong>Scoring 100% on your own specification
+is a tautology, and the other system's 66.9% measures how much of this
+system's spec it happens to satisfy.</strong> The mechanism may well be
+better than Mem0 at opposite-predicate conflicts — the reasoning in
+section 1 suggests it should be — but this comparison cannot establish
+it.</p>
+<p><code>REPRODUCE.md</code> is offered as independent reproduction and
+its first instruction is
+<code>git clone https://github.com/yourusername/procedural-ltm</code> —
+a placeholder account and a repository name that is not this
+repository's. As written, the reproduction cannot be run.</p>
+<p>One more small thing: the README carries an MIT badge,
+<code>pyproject.toml</code> declares
+<code>license = {text = "MIT"}</code>, and there is no
+<code>LICENSE</code> file in the tree.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Detect opposite predicates explicitly.</strong>
+Contradictions are near neighbours in embedding space by construction —
+"I like jazz" and "I hate jazz" share subject and topic — so a
+similarity threshold treats a contradiction like a corroboration. A rule
+that knows <code>likes</code> and <code>hates</code> are opposites
+catches what cosine distance structurally cannot.</li>
+<li><strong>Skip the similarity filter for exclusive
+predicates.</strong> If a predicate can have only one true object, every
+candidate is a potential conflict and filtering by string similarity
+first will drop the ones you most need to see.</li>
+<li><strong>Give the write path a three-valued verdict.</strong>
+Approve, reject, quarantine — with the middle value meaning "stored, not
+trusted" — is a better vocabulary than a confidence float, and it is
+what the atlas's <code>trust_state</code> mark is for.</li>
+<li><strong>Make one judge always-binding.</strong> A safety veto that
+no consensus can outvote is the right structure for the category where a
+majority is not the question.</li>
+<li><strong>Say when a component is an MVP and what replaces
+it.</strong> "For MVP: Rule-based safety checks. Future:
+Grammar-constrained LLM with Outlines" tells a reader exactly how much
+to trust the current behaviour.</li>
+<li><strong>Design the provenance table the way this one is
+designed</strong> — <code>quoted_span</code>, <code>content_hash</code>,
+<code>accessed_at</code>, <code>commit_sha</code>,
+<code>file_path</code>, <code>line_range</code>. Then write to it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not store a verdict in a free-text field.</strong>
+<code>context += " [QUARANTINED: …]"</code> cannot be queried, cannot be
+filtered, and gets read back to the model as part of the memory. A
+verdict needs a column and a read-path predicate.</li>
+<li><strong>Do not signal rejection by returning an empty
+string.</strong> The refusal is not recorded anywhere, so the same
+content can be admitted on the next attempt with nothing remembering
+that it was once refused.</li>
+<li><strong>Do not discard which judge objected.</strong> "Individual
+judge verdicts not tracked in new system" throws away the only
+information that makes a jury better than a single classifier.</li>
+<li><strong>Do not report a unit-test pass rate as accuracy.</strong>
+198/200 assertions passing is a statement about your code, not about
+your retrieval.</li>
+<li><strong>Do not benchmark a competitor on your own
+specification.</strong> Cases written to exercise your rules will score
+your rules at 100% and anything else lower, and the number says nothing
+about either system on a third party's data. Use LoCoMo, LongMemEval,
+BEAM, or state plainly that the suite is a specification.</li>
+<li><strong>Check the reproduction instructions by running
+them.</strong> <code>yourusername</code> and a repository name that does
+not exist are both caught by one attempt.</li>
+<li><strong>Do not commit <code>venv311/</code>.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The conflict detector is the part worth reading and it is
+self-contained: three stages, a similarity threshold, an
+exclusive-predicate exception, and an opposite-predicate table. That
+idea transfers to any system doing dedup or correction by embedding
+similarity, which is most of this atlas.</p>
+<p>The rest is a large surface — 136 tools, two parallel memory schemas
+mid- migration, a dashboard, k8s manifests — on 26 test files, with the
+headline numbers measuring the code against its own assertions. Treat
+the claims as untested and the mechanism as interesting.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Which schema wins?</strong> <code>atoms</code> +
+<code>provenance</code> and <code>typed_memories</code> are both live,
+with a migration script at the root and the jury wired to only one.</li>
+<li><strong>Was <code>provenance</code> ever written?</strong> The
+schema is detailed enough that something must have been intended; no
+writer exists at this commit.</li>
+<li><strong>Does the jury run on every write path?</strong> It was
+traced through <code>memory_types.py</code>;
+<code>pipeline/write_lane.py</code> and <code>memory_pipeline.py</code>
+also deliberate, and whether every entry point passes through one of
+them was not established.</li>
+<li><strong>What are the two failing tests of 200?</strong>
+<code>REPRODUCE.md</code> reports 198/200 and does not say which.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Conflict detection</strong> —
+<code>src/reconciliation/conflict_detector.py</code> (the docstring
+claim <code>:1-13</code>, the three stages <code>:26-40</code>)</p>
+<p><strong>Jury</strong> — <code>src/jury/orchestrator.py</code>
+(<code>convert_to_legacy_decision</code> <code>:16-45</code>, the
+dropped per-judge verdicts <code>:42-44</code>),
+<code>src/jury/safety_judge.py</code> (the always-binding docstring
+<code>:11-22</code>, <code>PII_PATTERNS</code> <code>:24-30</code>),
+<code>src/jury/memory_judge.py</code>, <code>time_judge.py</code>,
+<code>consensus_judge.py</code>, <code>base_judge.py</code>,
+<code>src/core/models.py</code> (<code>JuryVerdict</code> /
+<code>JudgeVerdict</code> <code>:63</code>, <code>:72</code>)</p>
+<p><strong>Storage</strong> — <code>src/storage/sqlite_store.py</code>
+(<code>atoms</code> <code>:56-73</code>, <code>provenance</code>
+<code>:78-97</code>), <code>src/storage/vector_store.py</code>
+(<code>atom_embeddings</code> <code>:68</code>),
+<code>src/memory/memory_types.py</code> (<code>typed_memories</code>
+<code>:168</code>, the verdict handling <code>:265-279</code>, the
+insert <code>:280-289</code>, <code>user_id</code> predicates
+<code>:258</code>, <code>:364</code>, <code>:410</code>,
+<code>:522</code>, <code>:534</code>, the episodic recency query
+<code>:1064</code>)</p>
+<p><strong>Pipeline</strong> —
+<code>src/pipeline/memory_pipeline.py</code>
+(<code>deliberate_batch</code> <code>:93-97</code>),
+<code>src/pipeline/write_lane.py</code></p>
+<p><strong>Claims</strong> — <code>README.md</code> (the badge row),
+<code>REPRODUCE.md</code> (the placeholder clone URL <code>:9</code>,
+the accuracy framing <code>:14</code>, <code>:62-66</code>),
+<code>run_200_test_benchmark.py</code>
+(<code>ComprehensiveBenchmark</code> <code>:13-60</code>, the accuracy
+print <code>:458</code>), <code>benchmarks/compare_with_mem0.py</code>
+(the apples-to-apples framing <code>:1-12</code>)</p>
+<p><strong>Housekeeping</strong> — <code>venv311/</code>,
+<code>C__Users_alber_CascadeProjects_LLTM_CONSCIOUSNESS_SYNTHESIS_COMPLETE.md</code>,
+<code>C__Users_alber_CascadeProjects_LLTM_IMPROVEMENTS_NEEDED.md</code>,
+<code>migrate_atoms_to_typed.py</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0"><code>5146bfbfd2f210674da5a3b16c04ac0ddf6803f0</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

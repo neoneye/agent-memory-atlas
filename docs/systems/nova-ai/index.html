@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-user companion whose
+memory is a hand-built concept graph with an audit log on every record,
+a confirmation gate before any relation is written, and a value-keyed
+refusal that the write path consults first and only a person can lift.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Nova AI — Agent Memory Atlas">
+    <meta property="og:description" content="A single-user companion
+whose memory is a hand-built concept graph with an audit log on every
+record, a confirmation gate before any relation is written, and a
+value-keyed refusal that the write path consults first and only a person
+can lift.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Nova AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-user companion
+whose memory is a hand-built concept graph with an audit log on every
+record, a confirmation gate before any relation is written, and a
+value-keyed refusal that the write path consults first and only a person
+can lift.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Nova AI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Nova AI",
+      "description": "A single-user companion whose memory is a hand-built concept graph with an audit log on every record, a confirmation gate before any relation is written, and a value-keyed refusal that the write path consults first and only a person can lift.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Symbolic memory, no model</p>
+          <h1>Nova AI</h1>
+          <p class="document-deck">A single-user companion whose memory
+is a hand-built concept graph with an audit log on every record, a
+confirmation gate before any relation is written, and a value-keyed
+refusal that the write path consults first and only a person can
+lift.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Whooptie/NOVA_AI">
+              <span>Source</span>
+              <strong>Whooptie/NOVA_AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f" title="924f91acb98e9f5d46121c09d3429f981cc99f7f">
+              <span>Analyzed revision</span>
+              <code>924f91ac…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-15</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Nova is a personal companion built by one author for one user,
+running 24/7 as a local Windows background process. It is roughly 25,000
+lines of Python across about 40 modules, and its defining constraint is
+stated in the README: <strong>no LLM, no cloud</strong>. Nothing here
+calls a model. Every mechanism in this report is symbolic — string
+matching, a hand-built concept graph, and rules.</p>
+<p>That constraint is what makes it worth reading. Most systems in this
+atlas reach for an embedding when they need similarity and a model when
+they need judgement, which means their correction machinery competes
+with a component that can always produce something plausible. Nova has
+no such component, so every epistemic decision is somewhere in the code,
+in the open.</p>
+<p><strong>Its knowledge memory is a concept graph with provenance on
+every edge.</strong> A concept is a word; a word has senses carrying
+<code>sense_id</code>s; a sense has relations (<code>is_a</code>,
+<code>part_of</code>, <code>causes</code>, <code>synonym</code>,
+<code>antonym</code>) and each relation carries a <code>source</code>, a
+<code>confidence</code> and a <code>created_at</code>. The committed
+<code>concepts.json</code> holds 242 concepts with real, differing
+provenance — <code>"source": "wikipedia"</code> on edges the
+auto-learner derived, <code>"source": "user"</code> on edges Kevin
+supplied.</p>
+<p><strong>Writes to it pass a spoken confirmation gate.</strong> Before
+a relation is stored, Nova asks <em>"Mag ik onthouden dat 'X' is een
+soort van 'Y'?"</em> — may I remember that X is a kind of Y — and writes
+only on "ja". If the subject has more than one known sense it asks which
+one first, by number. The gate is not a review UI; it is a turn in the
+conversation, and it is the only thing standing between a parsed
+sentence and a stored belief.</p>
+<p><strong>Every record carries its own audit log.</strong>
+<code>ensure_concept</code> seeds an <code>audit_log</code> array, and
+<code>_append_audit</code>, <code>_audit_sense</code> and
+<code>_audit_relation</code> append to it on creation, on sense upgrade,
+on confidence change and on every relation added, with
+<code>old_value</code> and <code>new_value</code> where a value changed.
+The same entries are mirrored to <code>logs/concepts.jsonl</code>. Nova
+can answer "when did I come to believe this, and who told me" for
+anything in the graph.</p>
+<p><strong>The refusal is the mechanism worth reading, and it is
+consulted before the write.</strong> <code>weerleg</code> — refute —
+sets <code>status = "rejected"</code> on a sense, a concept's every
+sense, or a relation, with the reason and timestamp written into that
+record's own audit log. The reasoning layer then filters
+<code>status != "rejected"</code> when choosing a sense and when
+offering disambiguation candidates, while <code>get_senses()</code>
+deliberately keeps showing it <em>"transparantie"</em> — so a person
+inspecting the graph sees what the reasoner refuses to use.</p>
+<p>What makes it a tombstone rather than a soft delete is the
+deduplication loop in <code>add_sense</code>
+(<code>core/semantic.py:188</code>). It matches an incoming definition
+against existing senses by definition text, and its
+<strong>first</strong> test on a match is the rejected status
+(<code>:204</code>). A hit returns not a sense but a signal —
+<code>{"blocked": "rejected", "sense": …, "attempted_source": …}</code>
+— and the stored sense is not touched at all. The refusal is keyed on
+the value, and re-asserting the value is refused rather than
+absorbed.</p>
+<p>The signal is threaded up rather than swallowed, which is the part
+worth copying. <code>TeachEngine.teach</code> passes it through
+untouched and deliberately skips <code>_auto_extract_is_a</code> on that
+path — <em>"er is niets nieuws om relaties uit te halen"</em>
+(<code>:1634</code>). <code>SemanticConceptsModule.teach</code>
+(<code>:2154</code>) is the layer with the chat bus, and it splits on
+the source. A non-user source — <code>wikipedia</code>,
+<code>auto_extract</code> — is only reported, never applied. A
+re-assertion by the user becomes a <code>pending_reactivation</code> and
+a spoken question: <em>"I had already rejected '<word>' →
+'<definition>'. Do you really want to confirm this again?"</em>
+Answering <code>nee</code> leaves the rejection standing. Answering
+<code>ja</code> sets <code>confirmed</code> and writes a
+<code>sense_reactivated</code> audit entry carrying the previous status
+and the reason <em>"Kevin bevestigde expliciet opnieuw"</em>
+(<code>:2207</code>).</p>
+<p>So the value-keyed refusal is not merely durable against automatic
+re-derivation: lifting it requires a person to answer a question about
+that specific value, and the lift is itself an audited event. That is
+the shape this atlas argues for, and Nova reaches it with string
+equality and a dict.</p>
+<p>The limit is exactness. The dedup match is
+<code>s.get("definition") == definition</code> — a paraphrase of a
+refuted definition is a different string and is not blocked. Nova has no
+embedding to fall back on by design, so there is no semantic version of
+this gate available to it.</p>
+<p><code>hard_delete</code> sits behind it as a second step: it refuses
+while any sense is still unrejected, so physical removal requires the
+refusal first.</p>
+<p><strong>Licence caveat, stated because it governs what a reader may
+do with the rest.</strong> <code>LICENSE.txt</code> is headed
+<em>"Viewable, Not Reusable"</em> — all rights reserved, published so
+others can read the project and follow how it is being built. This
+report analyses mechanisms; it is not an invitation to copy code, and
+the ideas below are described so they can be re-implemented rather than
+lifted.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nova has two memories that never touch. Events are what happened;
+concepts are what is true. The second one is the interesting one, and
+its state machine has an entrance, a gate, and no exit.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a parsed relation is not stored until a person answers, and a rejected relation cannot be lifted by re-extraction — only by someone re-teaching it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a parsed relation is not stored until a person answers, and a rejected relation cannot be lifted by re-extraction — only by someone re-teaching it
+stateDiagram-v2
+    [*] --&gt; Unknown: word encountered
+    Unknown: definition &quot;unknown&quot;&lt;br/&gt;confidence 0.1
+    Unknown --&gt; Defined: teach or wikipedia auto_learn
+    Defined: sense with a definition&lt;br/&gt;plus source and confidence
+    Defined --&gt; Defined: add_sense records old and new value
+
+    Defined --&gt; Pending: relation parsed from a sentence
+    Pending: pending_relation&lt;br/&gt;&lt;b&gt;not stored&lt;/b&gt;
+    Pending --&gt; Defined: user answers &quot;nee&quot;
+    Pending --&gt; Believed: user answers &quot;ja&quot;
+    Believed: relation appended&lt;br/&gt;source, confidence, created_at
+
+    Believed --&gt; Conflicting: an incompatible is_a arrives
+    Conflicting: a background sweep finds it&lt;br/&gt;and tells the user
+    Conflicting --&gt; Rejected: user answers with weerleg
+    Believed --&gt; Rejected: user refutes it directly
+    Rejected: status rejected&lt;br/&gt;reason and time in the audit log
+    Rejected --&gt; Rejected: auto re-extraction lands here&lt;br/&gt;and cannot lift it
+    Rejected --&gt; Believed: only a person re-teaching it
+    Rejected --&gt; [*]: hard_delete, refused until everything is rejected</code></pre></details></figure>
+<p>The gate between <code>Pending</code> and <code>Believed</code> is
+the design's best idea: a parsed relation is not a belief, and a person
+decides which it becomes. That is <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+arrived at independently, in a system with no model to distrust.</p>
+<p>The arrow that matters is the self-loop on <code>Rejected</code>.
+Nova is monotonic in the direction that is safe — a person's
+confirmation outranks any later automatic match, and an automatic match
+can never downgrade what a person confirmed — and the refusal is the
+exit the graph needs, because <code>is_a_chained</code> walks inference
+chains and a wrong edge left in place would be reasoned through
+confidently forever.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process, one machine, no services. <code>main.py</code> builds an
+in-process <code>EventBus</code> and loads modules from
+<code>core/</code>, <code>modules/</code> and <code>identity/</code>.
+Storage is <code>data/</code>: <code>interactions.db</code> and
+<code>interactions.jsonl</code> for events, <code>concepts.json</code>
+for knowledge, and a dozen smaller JSON files for the profile, learned
+patterns, chess state and classifier models.</p>
+<p><code>core/</code> carries the infrastructure —
+<code>memory.py</code> (816 lines), <code>semantic.py</code> (1,546),
+<code>intent_router.py</code> (2,565), <code>event_bus.py</code>,
+<code>response_engine.py</code>, <code>module_loader.py</code>.
+<code>modules/</code> is the surface area: knowledge, learning, weather,
+chess, math, activity, preferences, context. <code>identity/</code>
+holds personality, emotion, expression and self-query.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -r requirements.txt</code> and run
+<code>main.py</code>. The dependencies are ordinary —
+<code>python-chess</code>, a Stockfish binary for the chess module,
+scikit-learn for the intent classifier. No database server, no vector
+store, no API key, and no network call is required for the memory itself
+to work.</p>
+<p>The cost is that it is one person's machine. There is no scope key
+anywhere in <code>memory.py</code> or <code>semantic.py</code> — no
+user, no tenant, no project — because the system is built for exactly
+one named user, and the profile module is literally
+<code>kevin_profile.py</code>. That is a coherent choice rather than an
+oversight, and it is also what makes the design non-transferable without
+a schema change.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-confirmation-gate">The confirmation gate</h3>
+<p><code>RelationFlow</code> holds one <code>pending_relation</code> at
+a time and drives a short conversation. If the subject has several real
+senses it asks which, by number; then the same for the object; then it
+asks for confirmation in words a person can answer:</p>
+<blockquote>
+<p><code>"Mag ik onthouden dat '{subject}' {rel_text} '{obj}'?"</code></p>
+</blockquote>
+<p><code>handle_confirm</code> writes on
+<code>ja</code>/<code>yes</code>/<code>y</code>, discards on
+<code>nee</code>/<code>no</code>/<code>n</code>, and on anything else
+re-asks rather than guessing. Senses whose definition is
+<code>"unknown"</code> are excluded from the choice list, so Nova never
+asks a person to disambiguate between meanings it does not actually
+hold.</p>
+<p>What makes this more than a prompt is that it is the <em>only</em>
+path from parsed language to a stored relation. There is no bulk import
+and no background extractor writing edges unattended.</p>
+<h3 id="the-correction-that-is-kept-out-of-the-ground-truth">The
+correction that is kept out of the ground truth</h3>
+<p>The intent classifier learns from Kevin's corrections — the "nee ik
+bedoelde X" ("no, I meant X") flow — and the handling of that data is
+the sharpest piece of engineering in the repository. Corrections go to
+<code>data/gecorrigeerde_voorbeelden.jsonl</code>, deliberately
+<strong>not</strong> into <code>training_data.json</code>.
+<code>retrain_vanuit_bestanden</code> combines three sources — the
+curated base set, the confirmed corrections, and Layer 0 examples that a
+deterministic <code>detect_*()</code> already got right without the
+classifier guessing — and the docstring is explicit about why the
+combination is temporary:</p>
+<blockquote>
+<p>"BELANGRIJK: dit schrijft GEEN van de twee aanvullende bronnen terug
+naar <code>training_data.json</code> zelf — dat bestand blijft Kevin's
+eigen, schone basisset. De combinatie gebeurt enkel TIJDELIJK, in het
+geheugen, vlak vóór het trainen."</p>
+</blockquote>
+<p>The merge happens in a local copy because <code>retrain()</code>
+writes <code>self.voorbeelden</code> back to disk, so extending the
+instance attribute would have silently persisted corrections into the
+human-owned file. The hazard is named in a comment beside the line that
+avoids it, and a <code>try/finally</code> restores the clean set even
+when training fails.</p>
+<p>This is a real answer to a problem most memory systems have and few
+separate: the difference between what a person carefully asserted and
+what the system inferred from being corrected. Here the curated set is a
+file a human owns, the derived set is a different file, and the merge
+exists only in RAM for the duration of a training run.</p>
+<p>Two consequences worth stating. Words the classifier could not place
+go to <code>data/onbekende_correcties.jsonl</code> as a hint list for
+future categories, rather than being forced onto the nearest existing
+label — a refusal to guess, recorded rather than discarded. And both
+files are <strong>empty at this commit</strong>: the machinery is wired
+to a four-hourly retrain in <code>main.py</code> and documented as
+confirmed end-to-end in the changelog, but the author has not committed
+his live corrections, so what ships is the mechanism without the
+data.</p>
+<h3 id="retrieval-that-says-what-it-is-not">Retrieval that says what it
+is not</h3>
+<p><code>memory.search</code> is
+<code>SELECT * FROM interactions WHERE data LIKE ?</code> over the event
+JSON, newest first, with an optional <code>recent_weeks</code> cutoff.
+<code>find_similar</code> pulls the newest 500 rows and scores them with
+<code>difflib.SequenceMatcher</code>. The docstring draws the boundary
+itself:</p>
+<blockquote>
+<p>"Dit is PUUR symbolisch (difflib, standaard in Python) — GEEN ML,
+GEEN embeddings, GEEN betekenis-matching. 'hond' wordt dus niet gelinkt
+aan 'kat' met deze methode, enkel woorden die er letterlijk op
+lijken."</p>
+</blockquote>
+<p>Purely symbolic; no ML, no embeddings, no meaning-matching — "dog" is
+not linked to "cat", only to words that literally resemble it. Stating
+the limit next to the method is the same discipline <a
+href="../memu/">memU</a> applies to its retrieval, and it matters more
+here, because a reader who assumed semantic recall would misread every
+result the function returns.</p>
+<p>Semantic recall does exist, but it lives in the graph rather than the
+index: <code>is_a_chained</code>, <code>part_of_chained</code> and
+<code>causes_chained</code> walk relations with a visited set and return
+the path, and <code>explain_is_a</code> renders that path as a sentence
+— <em>"Ja, een {source} is een {target}, want: hond → dier → levend
+wezen."</em> A memory that can show its reasoning as a chain of stored
+edges is rare in this atlas, and it is a direct consequence of refusing
+the embedding.</p>
+<h3
+id="contradiction-detection-and-the-loop-that-answers-it">Contradiction
+detection, and the loop that answers it</h3>
+<p><code>find_contradictions</code> checks a word's <code>is_a</code>
+parents against three hardcoded incompatible groups —
+<code>{dier, plant, meubel, voertuig, gebouw, apparaat, voedsel}</code>,
+<code>{levend, niet-levend}</code>, <code>{vloeibaar, vast, gas}</code>
+— and returns a list with a readable reason per conflict.</p>
+<p><code>modules/knowledge/contradiction_checker.py</code> is its
+caller: a periodic sweep in <code>main.py</code>'s background loop, on
+the same pattern as the weather and emergence modules, walking the whole
+knowledge graph, collecting conflicts, and raising them with the user
+through <code>layer4_response</code> <strong>with a concrete
+<code>weerleg:</code> proposal per conflict</strong> so the refusal is
+one spoken sentence away. Its module docstring is explicit that it adds
+no intelligence: <em>"Puur symbolisch: geen ML, geen generatie — roept
+enkel bestaande, al-geteste reasoning-code aan"</em> — purely symbolic,
+calling existing already-tested reasoning code and formatting the
+result.</p>
+<p>It also solves the problem that makes proactive reporting unbearable.
+A <code>contradiction_state.json</code> remembers which conflicts have
+already been raised, keyed on the word plus its sorted conflict list so
+the same collision produces the same key whatever order the
+<code>is_a</code> relations were stored in. An unresolved conflict is
+mentioned once, not every cycle.</p>
+<p>That is <a href="../../patterns/resolve-not-just-detect/">resolve,
+don't just detect</a> completed end to end: detection, a bounded
+proactive surface, a named resolution verb, and a state that ends in the
+store rather than in a conversation.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two stores, different shapes.</p>
+<p><strong>Events.</strong> SQLite <code>interactions</code> with
+<code>timestamp</code>, <code>month</code>, <code>year</code>,
+<code>event_type</code>, <code>data</code> (the JSON payload) and
+<code>created_at</code>, plus an <code>interactions_old</code> archive
+table with the same columns, plus a JSONL mirror. An
+<code>ignore_types</code> set keeps loop-inducing types out, including
+<code>memory:interaction_added</code> — memory listens to everything,
+including itself.</p>
+<p><strong>Concepts.</strong> <code>concepts.json</code>, keyed by
+lowercased word:</p>
+<pre class="json"><code>&quot;hond&quot;: {
+  &quot;senses&quot;: [{
+    &quot;sense_id&quot;: &quot;hond#1&quot;,
+    &quot;definition&quot;: &quot;De hond is de gedomesticeerde ondersoort van de wolf.&quot;,
+    &quot;pos&quot;: &quot;noun&quot;,
+    &quot;relations&quot;: [
+      {&quot;type&quot;: &quot;is_a&quot;, &quot;target&quot;: &quot;wolf&quot;, &quot;confidence&quot;: 0.8,
+       &quot;source&quot;: &quot;wikipedia&quot;, &quot;created_at&quot;: &quot;2026-06-27T18:58:08&quot;},
+      {&quot;type&quot;: &quot;is_a&quot;, &quot;target&quot;: &quot;zoogdier&quot;, &quot;confidence&quot;: 0.9,
+       &quot;source&quot;: &quot;user&quot;, &quot;created_at&quot;: &quot;2026-07-05T00:00:00&quot;}
+    ],
+    &quot;audit_log&quot;: []
+  }],
+  &quot;metadata&quot;: {&quot;created_at&quot;: &quot;...&quot;, &quot;updated_at&quot;: &quot;...&quot;, &quot;sources&quot;: [&quot;...&quot;],
+               &quot;last_used_at&quot;: &quot;...&quot;, &quot;usage_count&quot;: 0,
+               &quot;confidence_history&quot;: []},
+  &quot;audit_log&quot;: [&quot;...&quot;]
+}</code></pre>
+<p>Provenance sits per edge, which is the right grain — a concept
+assembled from a Wikipedia definition and three user-supplied relations
+records which is which. <code>confidence_history</code> and
+<code>usage_count</code> give decay and reinforcement somewhere to
+land.</p>
+<p>What is absent: no status field, so nothing distinguishes a candidate
+from a verified belief as a <em>state</em>; no validity time separate
+from record time; no rejected values; no scope key. The
+<code>"unknown"</code> definition sentinel comes closest to a trust
+state — it is filtered out when choosing a sense to attach a relation
+to, and carries <code>confidence: 0.1</code> — but it is a value in the
+definition field rather than a status, and it has no rejected
+counterpart, so the mark is withheld.</p>
+<p>The whole file is <code>json.dump</code>ed on every save:
+<code>ConceptStore.save</code> rewrites the entire graph for a single
+confidence bump. At 242 concepts that is affordable, and the write is
+atomic — a temporary file in the same directory, <code>flush</code> plus
+<code>os.fsync</code>, then <code>os.replace</code>, with the PID in the
+temporary name and the orphaned file cleaned up if the write fails
+(<code>core/semantic.py:31</code>). An interrupted write leaves the
+previous graph intact rather than truncating it. The cost is still
+O(graph) per mutation; the failure mode is not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three paths, none of them ranked by a model:</p>
+<ol type="1">
+<li><strong>Keyword</strong> — <code>LIKE '%term%'</code> against the
+event JSON blob, newest first. This matches key names as readily as
+values.</li>
+<li><strong>Fuzzy</strong> — <code>SequenceMatcher</code> over the
+newest 500 events, <code>min_ratio=0.6</code>, top 5. Catches typos; the
+500-row window means older events are unreachable this way regardless of
+relevance.</li>
+<li><strong>Graph</strong> — chained relation walks with cycle
+protection, returning the path.</li>
+</ol>
+<p>The write buffer is flushed before both SQL paths so a just-written
+event is searchable, and a comment notes that <code>_flush_buffer</code>
+is deliberately called outside the caller's lock because it takes its
+own.</p>
+<p>The absence of fusion is not the usual gap here — there is no
+semantic arm to fuse with. What a reader should take is the shape: <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
+fusion</a> assumes an embedding arm that misses exact tokens. Nova is
+the other half of that trade running alone — exact and near-exact
+matching only, with meaning handled by an explicit graph rather than by
+proximity in a vector space.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Events arrive on the bus and land in a write buffer flushed after 50
+events or 5 seconds, whichever comes first, with
+<code>append_to_disk</code> retrying up to three times. Writes do not
+block the conversation; the lag before an event is searchable is bounded
+by the flush, and because both search paths force a flush first, that
+lag is not observable through them. <code>atexit</code> and signal
+handlers flush on shutdown.</p>
+<p>Knowledge writes are different in kind: synchronous, one at a time,
+and gated on a human answer. <code>add_relation</code> deduplicates on
+<code>(type, target)</code> within a sense, appends the relation, stamps
+<code>metadata.updated_at</code>, writes an audit entry, and saves the
+whole file.</p>
+<p>One detail worth flagging. <code>add_relation</code> hardcodes
+<code>"confidence": 1.0</code> and <code>"source": "user"</code> into
+the relation object it builds, regardless of caller. The committed data
+contains <code>"source": "wikipedia"</code> edges, so another path — the
+auto-extractor behind <code>_auto_extract_is_a</code> and
+<code>auto_learn</code> — writes provenance properly. The result is a
+field that is meaningful for historical rows and constant for everything
+arriving through the confirmation flow, which is the flow a reader would
+most want provenance from.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model calls, so there is no token cost and no provider latency
+anywhere in the memory path. The background loop runs maintenance every
+six hours: trim the RAM cache from a daytime ceiling of 5,000 events
+back to 500, move events older than 90 days to
+<code>interactions_old</code>, gzip anything past 365 days, vacuum,
+rotate backups, and run a health check. The classifier retrains every
+four hours.</p>
+<p>Nothing rewrites the store's contents — archival moves rows between
+tables and compression moves them to files, but no pass reconsiders or
+rewrites a memory. That is why cost does not scale with corpus size, and
+also why the graph never improves on its own.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent framework here and no tool protocol. The
+integration surface is the <code>EventBus</code>: modules publish and
+subscribe, <code>MemoryModule.on_event</code> records everything not in
+<code>ignore_types</code>, and <code>intent_router.py</code> decides
+what a message meant and which module answers.</p>
+<p>The genuinely unusual integration is temporal. Nova runs continuously
+and decides on her own initiative whether <em>now</em> is a reasonable
+moment to speak, using <code>interruption_tracker.py</code> against a
+learned <code>interruption_patterns.json</code> of when interruptions
+were previously tolerated. Memory feeds that decision rather than only
+answering questions with it — a use of stored history most systems here
+have no place for, and the nearest thing in this atlas to prospective
+memory driven by a person's habits rather than a schedule.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>An audit log on the record itself</strong>, appended on
+create, upgrade, confidence change and relation add, with old and new
+values, mirrored to a JSONL log.</li>
+<li><strong>A confirmation gate</strong> as the only path from parsed
+language to a stored relation, with sense disambiguation asked
+first.</li>
+<li><strong>Per-edge provenance and confidence</strong> in the schema,
+with real, differing sources in the committed data.</li>
+<li><strong>Corrections quarantined from the curated training
+set</strong>, the merge held in a local copy, restored under
+<code>try/finally</code> even when training fails.</li>
+<li><strong>A refusal to guess, recorded</strong> — unplaceable
+correction words go to a hint file instead of being forced onto the
+nearest label.</li>
+<li><strong>Explainable inference</strong> — chained walks that return
+the path, and helpers that render it as a sentence a person can
+check.</li>
+<li><strong>A real operational lifecycle</strong> — buffered writes with
+retry, RAM trimming, archival, compression, vacuum, backup rotation,
+health check, shutdown flush.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>A rejection only a person can make.</strong> Every path to
+<code>rejected</code> runs through the user; nothing lets the system
+refuse its own bad inference, so a contradiction sits until someone
+answers the prompt.</li>
+<li><strong>The status is written and barely read.</strong> Three call
+sites read it back, all to compute an audit diff, and two reasoning
+queries filter on it. Nothing reports on it, counts it, or surfaces the
+unverified backlog.</li>
+<li><strong>The whole graph is rewritten on every save</strong>, though
+atomically.</li>
+<li><strong><code>tombstone</code> — earned, by design and pinned by
+tests.</strong> The record is keyed on the definition text; the reasoner
+filters it; and <code>add_sense</code>'s dedup loop tests the rejected
+status before anything else, returning a <code>blocked</code> signal and
+leaving the stored sense untouched. Re-admission requires a person to
+answer a question about that value and writes its own audit entry. Six
+cases in <code>tests/test_tombstone.py</code> hold each link, including
+the one that matters most — that a re-asserted rejected definition
+neither changes status nor creates a second sense.</li>
+<li><strong><code>negative_eval</code> — earned, with a positive
+control.</strong>
+<code>test_part_of_chained_na_weerlegging_is_false</code> asserts that a
+refuted intermediate link removes a reasoning path, and
+<code>test_get_relations_negeert_rejected_relatie</code> asserts a
+refuted <code>is_a</code> is absent from <code>get_relations</code>
+while remaining in <code>concepts.json</code>. Each is paired with an
+assertion that the same query <em>succeeds</em> before the refutation,
+so a pass cannot come from retrieval being broken — a control most of
+the negative-eval suites in this atlas do not have.</li>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>unverified</code>, <code>confirmed</code> and
+<code>rejected</code> on every sense and relation, set from
+<code>source</code> at write time, with a stated monotonicity rule: a
+user confirmation may overwrite <code>unverified</code>, and a later
+automatic match may never push a confirmed sense back down.</li>
+<li><strong>No scope key</strong>, by design, which makes the schema
+single-user rather than merely deployed that way.</li>
+</ul>
+<h3 id="the-asymmetry-worth-naming">The asymmetry worth naming</h3>
+<p>Nova <em>can</em> forget — just not the things that would matter
+most. The preference store implements
+<code>vergeet: &lt;woord&gt;</code>: <code>remove_preference</code>
+deletes a word, or with a <code>bron</code> argument removes only the
+automatic or only the explicit sub-block and leaves the word standing
+under the other, then publishes <code>preference_forgotten</code>. That
+is a more careful forget than several dedicated memory systems in this
+atlas manage, and it is source-aware in exactly the way a correction
+should be.</p>
+<p>It applies to what Kevin likes, and <code>weerleg</code> applies to
+what Nova knows. The two verbs differ in kind and the difference is
+right: <code>vergeet</code> deletes a preference outright, and
+<code>weerleg</code> leaves the refuted knowledge in the file where a
+person can still see it while the reasoner cannot use it. Deleting a
+taste is harmless; deleting a belief loses the record that it was ever
+held and refuted.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/</code> holds 27 files carrying <strong>272 test
+functions and 491 assertions</strong>, and they are pytest cases that
+fail rather than exploration scripts whose output a person reads.
+<code>conftest.py</code> puts the repository root on
+<code>sys.path</code> at collection time, which is the one thing in the
+tree that executes before a test does.</p>
+<p>The memory-relevant suites are the ones to read.
+<code>test_tombstone.py</code> holds the refusal in six cases across
+three scenarios — a reasoning chain broken by a refuted intermediate
+link, <code>get_relations</code> ignoring both a refuted relation and
+every relation under a refuted sense, and the re-assertion path. Each
+isolates itself in <code>tmp_path</code> with its own
+<code>ConceptStore</code>, and the module docstring says why it drives
+<code>SenseEngine</code>/<code>RelationEngine</code> directly rather
+than <code>SemanticConceptsModule</code>: the latter always constructs a
+store at the default path, which is the author's real
+<code>concepts.json</code>. A test suite that names the way it could
+have corrupted production data is not a common thing to find.</p>
+<p><code>test_hard_delete_en_atomic_save.py</code> covers the other half
+— that <code>hard_delete</code> refuses while any sense is unrejected,
+and that an interrupted <code>save</code> leaves the previous graph
+intact.</p>
+<p>What is unasserted is narrow. There is no retrieval-quality benchmark
+and no ranking evaluation of any kind, which for a store with no
+embeddings is a smaller gap than it sounds — there is nothing to tune.
+Nothing asserts that a retrain leaves <code>training_data.json</code>
+byte-identical, the invariant the most carefully reasoned code in the
+repository exists to preserve, still guarded by a
+<code>try/finally</code> and a comment.</p>
+<p>The changelog is unusually detailed, records live end-to-end
+confirmations with dates, and documents bugs found while building —
+including one where an over-broad search-and-replace deleted an entire
+method, caught by a local harness before the file shipped. The suite is
+that practice written down: the same discipline held by the repository
+rather than by the person.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate the write on a spoken confirmation.</strong> "May I
+remember that X is a kind of Y?" is a better governance surface than a
+review queue nobody opens, and it costs one turn at exactly the moment
+the user has the context to answer.</li>
+<li><strong>Quarantine corrections from curated ground truth.</strong>
+Keep the human-authored set in its own file, keep derived corrections in
+another, and merge only in memory for the duration of a training run —
+with the reason written beside the local copy that makes it safe.</li>
+<li><strong>Record the inputs you refused to classify</strong> instead
+of forcing them onto the nearest existing label. The hint file is how
+the next category gets discovered.</li>
+<li><strong>Put the audit log on the record</strong>, not only in a side
+channel, so exporting one concept exports its history — the placement <a
+href="../nooa-memory/">NOOA Memory</a> argues for from the other
+direction.</li>
+<li><strong>Return the inference path, not just the answer.</strong>
+Turning a graph walk into a sentence a person can check is what makes a
+symbolic store auditable in a way a similarity score is not.</li>
+<li><strong>Say what your retrieval does not do.</strong> "No
+embeddings, no meaning-matching — 'dog' is not linked to 'cat'" prevents
+every downstream misreading of a result.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Detection with no caller.</strong> A finder nothing invokes
+is worse than none, because the repository reads as though the problem
+is handled. Nova wrote the caller afterwards; write it in the same
+change, and give it a state file so a standing conflict is raised once
+rather than every cycle.</li>
+<li><strong>A knowledge store with no removal path.</strong>
+Additive-only is defensible for an event log and indefensible for
+beliefs, especially with inference on top: one wrong <code>is_a</code>
+is walked by every chained query forever.</li>
+<li><strong>Rewriting the whole store on every mutation,
+non-atomically.</strong> A confidence bump should not put the entire
+graph at risk of truncation.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this if you are building symbolic or graph memory without a
+model, or if you want to see what correction looks like when there is no
+LLM to blame. The confirmation gate and the training-set quarantine are
+both stronger than what several model-driven systems here manage, and
+they are stronger <em>because</em> the author had to decide each case
+explicitly rather than delegate it.</p>
+<p>Do not read it as a component. The licence forbids reuse, the schema
+has no scope key, and the store is a single JSON file rewritten whole.
+It is a well-kept notebook of one person's design decisions, and its
+value to a reader is the decisions — of which the strongest is that a
+refusal should be keyed on what was said, not on the row that said
+it.</p>
+<p>The honest summary of the whole system: Nova is careful about
+<em>how</em> something becomes a belief and has no theory at all about
+how something stops being one. That is the same asymmetry the atlas
+finds almost everywhere, arrived at from the opposite direction — not
+because a model made correction hard, but because nobody has yet written
+the delete.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the exact-text refusal need a looser key? A paraphrase of a
+refuted definition is a different string, and a store with no embedding
+has no cheap way to close that — <code>difflib.SequenceMatcher</code> is
+already used elsewhere in the tree and would be the obvious
+candidate.</li>
+<li>What happens to the <code>unverified</code> backlog? Nothing counts
+it or offers it for confirmation, so it grows silently as Wikipedia and
+auto-extraction run.</li>
+<li>Why does <code>add_relation</code> hardcode
+<code>source: "user"</code> and <code>confidence: 1.0</code> when the
+schema and the committed data both carry real values?</li>
+<li>Are <code>gecorrigeerde_voorbeelden.jsonl</code> and
+<code>onbekende_correcties.jsonl</code> empty because they are
+runtime-only, or because the flow rarely fires?</li>
+<li>What would <code>concepts.json</code> need for a second user, given
+no scope key exists?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Event memory: <code>core/memory.py</code>
+(<code>MemoryModule</code>, <code>on_event</code>,
+<code>_flush_buffer</code>, <code>search</code>, <code>query</code>,
+<code>find_similar</code>, <code>archive_old_events</code>,
+<code>compress_ancient_events</code>, <code>run_maintenance</code>,
+<code>health_check</code>).</li>
+<li>Knowledge: <code>core/semantic.py</code> (<code>ConceptStore</code>,
+<code>_append_audit</code>, <code>SenseEngine.add_sense</code>,
+<code>upgrade_unknown_sense</code>,
+<code>RelationEngine.add_relation</code>,
+<code>ReasoningEngine.find_contradictions</code>,
+<code>is_a_chained</code>, <code>explain_is_a</code>,
+<code>RelationFlow.start_relation_flow</code>,
+<code>handle_confirm</code>).</li>
+<li>Corrections and learning:
+<code>modules/learning/intent_classifier.py</code>
+(<code>retrain_vanuit_bestanden</code>,
+<code>_laad_gecorrigeerde_voorbeelden</code>),
+<code>modules/learning/pattern_matcher.py</code>,
+<code>modules/learning/word_associations_learner.py</code>.</li>
+<li>Preferences and the one forget path:
+<code>modules/preferences/kevin_profile.py</code>
+(<code>remove_preference</code>).</li>
+<li>Routing and integration: <code>core/intent_router.py</code>,
+<code>core/event_bus.py</code>, <code>core/response_engine.py</code>,
+<code>main.py</code>.</li>
+<li>Timing: <code>core/interruption_tracker.py</code>,
+<code>modules/activity/session_watcher.py</code>.</li>
+<li>Committed state: <code>data/concepts.json</code> (242 concepts),
+<code>data/training_data.json</code>,
+<code>data/gecorrigeerde_voorbeelden.jsonl</code> (empty),
+<code>data/onbekende_correcties.jsonl</code> (empty).</li>
+<li>Licence: <code>LICENSE.txt</code> ("Viewable, Not Reusable").</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-15</strong> — <a
+href="https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f"><code>924f91acb98e9f5d46121c09d3429f981cc99f7f</code></a>
+— 11 commits on. Two published criticisms closed and the tombstone's
+provenance reversed: what this report described as a property held by an
+omission is a designed, tested, human-gated refusal.</p>
+<p>Bug #32 (<code>core/semantic.py:204</code>, dated 8 August 2026 in
+the source comment) puts the rejected-status test first in
+<code>add_sense</code>'s dedup loop. A definition matching a refuted
+sense returns
+<code>{"blocked": "rejected", "sense": …, "attempted_source": …}</code>
+and leaves the stored sense untouched, where before it fell through to
+the status branch — which meant a <code>user</code> re-assertion
+silently set <code>confirmed</code> and lifted the refusal. The signal
+is threaded through <code>TeachEngine.teach</code> (<code>:1634</code>,
+which also skips <code>_auto_extract_is_a</code> on that path) to
+<code>SemanticConceptsModule.teach</code> (<code>:2154</code>), where a
+non-user source is reported only and a user re-assertion becomes a
+<code>pending_reactivation</code> and a spoken yes/no. A <code>ja</code>
+writes a <code>sense_reactivated</code> audit entry carrying the old
+status; a <code>nee</code> leaves the rejection standing.</p>
+<p><code>negative_eval</code> is earned.
+<code>tests/test_tombstone.py</code> asserts that a refuted intermediate
+link removes a <code>part_of_chained</code> path, that
+<code>get_relations</code> returns neither a refuted relation nor
+anything under a refuted sense, and that a re-asserted rejected
+definition changes no status and creates no second sense. Each negative
+case is paired with an assertion that the same query succeeds before the
+refutation.</p>
+<p><code>ConceptStore.save</code> is atomic (<code>:31</code>):
+temporary file in the same directory, <code>flush</code> plus
+<code>os.fsync</code>, <code>os.replace</code>, PID in the temporary
+name, orphan cleaned up on failure. At the previous pin it was a bare
+<code>open(…, "w")</code> on <code>concepts.json</code> itself.</p>
+<p>The test suite is the other reversal: 21 files carrying 3 test
+functions and 4 assertions at the previous pin, 27 files carrying 272
+test functions and 491 assertions here.</p>
+<p>Unchanged: the licence is still <em>"Viewable, Not Reusable"</em>,
+all rights reserved; there is still no scope key; and the refusal still
+matches definition text exactly, so a paraphrase evades it.</p>
+<p>Nothing was run. Screening found no auto-run surface, two build-time
+execution surfaces (<code>conftest.py</code>, a vendored Stockfish
+<code>Makefile</code> that is new since the previous pin) and ten
+unpinned requirements.</p>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894"><code>c4c000b17487683deecb06cf810dc82c17ef0894</code></a>
+— 5 commits on. Four published criticisms went stale together, all
+closed by the project, and the report is rewritten around what replaced
+them.</p>
+<p><code>weerleg</code> sets <code>status = "rejected"</code> on a
+sense, a whole concept's senses or a relation, with reason and timestamp
+in the record's own audit log; the reasoning query and the
+disambiguation candidate list both filter it out while
+<code>get_senses()</code> still shows it. <code>add_sense</code>'s dedup
+loop matches an incoming definition without exempting rejected rows, and
+its status branch promotes only on <code>source == "user"</code> — so
+<code>wikipedia_teacher</code> and <code>auto_extract</code> re-deriving
+a refuted definition land on the refusal and cannot lift it.
+<code>tombstone</code> earned, keyed on the value.
+<code>hard_delete</code> refuses while any sense is unrejected, so
+physical removal requires the refusal first.</p>
+<p><code>trust_state</code> earned: <code>unverified</code>,
+<code>confirmed</code>, <code>rejected</code> as a field on senses and
+relations, written from <code>source</code>, with
+<code>scripts/migrate_trust_state.py</code> backfilling existing rows —
+dry-run by default, timestamped backup before <code>--apply</code>,
+re-read and revalidated after writing, idempotent.</p>
+<p><code>find_contradictions</code> has a caller.
+<code>modules/knowledge/contradiction_checker.py</code> sweeps the graph
+on the background loop, raises each conflict with the user through
+<code>layer4_response</code> with a concrete <code>weerleg:</code>
+proposal, and keeps a <code>contradiction_state.json</code> keyed on the
+word plus its sorted conflict list so a standing conflict is raised once
+rather than every cycle.</p>
+<p>Unchanged: the licence is still <em>"Viewable, Not Reusable"</em>,
+all rights reserved; 21 test files still carry five assertions between
+them, so none of the above is pinned by a test; and
+<code>ConceptStore.save</code> still rewrites the whole graph
+non-atomically.</p>
+<p>Nothing was run — <code>requirements.txt</code> changed three days
+before this reading, inside the cooldown.</p>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f"><code>4a7d89b915b8bd785606c347b6ae5733030edc1f</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

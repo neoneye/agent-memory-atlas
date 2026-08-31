@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Memory middleware for four coding
+agents whose inspectable half is the client — required scope, redaction
+before the payload leaves the machine, and a fenced recall block — while
+the store, its ranking and its correction semantics live behind three
+HTTP endpoints.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoraX
+Code — Agent Memory Atlas">
+    <meta property="og:description" content="Memory middleware for four
+coding agents whose inspectable half is the client — required scope,
+redaction before the payload leaves the machine, and a fenced recall
+block — while the store, its ranking and its correction semantics live
+behind three HTTP endpoints.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoraX
+Code — Agent Memory Atlas">
+    <meta name="twitter:description" content="Memory middleware for four
+coding agents whose inspectable half is the client — required scope,
+redaction before the payload leaves the machine, and a fenced recall
+block — while the store, its ranking and its correction semantics live
+behind three HTTP endpoints.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoraX Code — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemoraX Code",
+      "description": "Memory middleware for four coding agents whose inspectable half is the client \u2014 required scope, redaction before the payload leaves the machine, and a fenced recall block \u2014 while the store, its ranking and its correction semantics live behind three HTTP endpoints.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Four hosts, one hosted store</p>
+          <h1>MemoraX Code</h1>
+          <p class="document-deck">Memory middleware for four coding
+agents whose inspectable half is the client — required scope, redaction
+before the payload leaves the machine, and a fenced recall block — while
+the store, its ranking and its correction semantics live behind three
+HTTP endpoints.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/memorax-ai/memorax-code">
+              <span>Source</span>
+              <strong>memorax-ai/memorax-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b" title="b98cb8c78956a1cd5b6b364549217fb2b6db601b">
+              <span>Analyzed revision</span>
+              <code>b98cb8c7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoraX Code is middleware that gives four coding agents — Codex,
+Claude Code, DeepSeek Harness and OpenCode — a shared memory across
+sessions. MIT, ~27,000 lines of TypeScript across six packages: one
+local backend, four client deployment adapters, and an npm assembly
+layer. <code>ARCHITECTURE.md</code> describes the backend as <em>"a
+capability-oriented modular monolith"</em> and is explicit that the
+clients keep ownership of models, credentials, native tools and
+transcripts.</p>
+<p><strong>The store is not here.</strong>
+<code>src/provider/memorax/adapter.ts</code> speaks three endpoints —
+<code>POST /v1/memories/search</code>,
+<code>POST /v1/memories/add</code>, and
+<code>GET /v1/memories/add/status/{taskId}</code> — against a hosted
+MemoraX service. What this repository contains is the client half: when
+to retrieve, what to send, what to strip before sending, how to render
+what comes back, and how to survive a failed write. Everything the atlas
+usually cares most about — what a memory is, how it is ranked, whether
+it can be corrected, what happens when two facts disagree — is decided
+on the far side of that boundary and is not inspectable at this commit.
+The report says so throughout rather than hedging each sentence.</p>
+<p><strong>Strongest, and worth taking whether or not you use
+this:</strong> <code>src/memory/payload-redaction.ts</code> redacts
+credential material <em>before the payload leaves the machine</em> —
+private-key blocks, <code>Authorization</code> headers, Bearer and Basic
+tokens, JWTs, and sensitive key/value pairs — with a
+<code>SAFE_CREDENTIAL_VALUE_PATTERN</code> allowlist so that
+<code>${ENV_VAR}</code>, <code>&lt;placeholder&gt;</code> and
+<code>change-me</code> are left alone. Its committed tests carry the
+positive control this atlas argues for: one case asserts the categories
+are replaced, another asserts <em>"representative non-sensitive coding
+text"</em> survives untouched, a third asserts the transform is
+idempotent, and a fourth asserts that a payload consisting only of
+placeholders is not meaningful text.</p>
+<p><strong>Weakest:</strong> there is no delete. Not "no tombstone" — no
+removal of any kind in the client's vocabulary, and no endpoint for one
+in the surface it speaks. A user who wants a memory gone has nothing in
+this repository to call.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever the service returns. The client's model of it is
+thin by design: a rendered line with a <code>memory_type</code>,
+assembled into a block.</p>
+<pre class="text"><code>turn start ──► automatic-retrieval ──► POST /v1/memories/search
+                                              │
+                                              ▼
+                             &lt;memories&gt;
+                               &lt;facts memory_type=&quot;...&quot;&gt;
+                                 ...lines...
+                               &lt;/facts&gt;
+                             &lt;/memories&gt;          truncated at maxContextChars
+
+turn end   ──► writeback buffer ──► chunk ──► redact ──► POST /v1/memories/add
+                                                              │  taskId
+                                                              ▼
+                                              GET /v1/memories/add/status/{taskId}</code></pre>
+<p>There is <strong>no state machine</strong>, because the client holds
+no state a memory can be in. Nothing here marks a fact candidate,
+verified, rejected or stale; nothing expires it; nothing supersedes it.
+The one epistemic act the client performs is negative and happens before
+the write: if redaction leaves nothing but placeholders,
+<code>hasMeaningfulMemoryPayloadText</code> returns false and there is
+nothing worth storing.</p>
+<p>Control is <strong>automatic</strong>. Retrieval fires at turn start
+behind <code>memoryRetrievalEnabled</code>, writeback fires at turn end,
+and the model is not asked. There is no tool a model can call to
+remember or recall something deliberately — the memory is a property of
+the session, not an instrument the agent operates.</p>
+<p>The system treats what the service returns as ground truth, and has
+no field in which to disagree with it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the inspectable half is the client — required scope, redaction before the payload leaves the machine, a char-budgeted fenced block on the way back — while what a memory is, how it is ranked and whether it can ever be corrected are decided behind three HTTP endpoints</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the inspectable half is the client — required scope, redaction before the payload leaves the machine, a char-budgeted fenced block on the way back — while what a memory is, how it is ranked and whether it can ever be corrected are decided behind three HTTP endpoints
+    subgraph clients[&quot;Client-owned runtimes&quot;]
+        CX[&quot;Codex&quot;]
+        CL[&quot;Claude Code&quot;]
+        DSH[&quot;DeepSeek Harness&quot;]
+        OC[&quot;OpenCode&quot;]
+    end
+
+    subgraph backend[&quot;Local backend (this repository)&quot;]
+        HOOK[&quot;per-client hook runtimes&quot;]
+        TURN[&quot;turn coordinator&quot;]
+        RET[&quot;automatic-retrieval&quot;]
+        WB[&quot;writeback buffer&lt;br/&gt;chunk · reconciler&quot;]
+        RED[&quot;payload-redaction&quot;]
+        SCOPE[&quot;repository/scope&lt;br/&gt;git-repository · local-directory · codex-projectless&quot;]
+        OBS[&quot;observability&quot;]
+    end
+
+    SVC[(&quot;MemoraX service&lt;br/&gt;/v1/memories/*&quot;)]
+
+    clients --&gt; HOOK --&gt; TURN
+    TURN --&gt; RET --&gt;|&quot;POST /search&quot;| SVC
+    SVC --&gt;|&quot;facts&quot;| RET --&gt;|&quot;&amp;lt;memories&amp;gt; block, char-budgeted&quot;| clients
+    TURN --&gt; WB --&gt; RED --&gt;|&quot;POST /add&quot;| SVC
+    SVC --&gt;|&quot;taskId&quot;| WB --&gt;|&quot;GET /add/status/{taskId}&quot;| SVC
+    SCOPE -.-&gt;|&quot;required; refused when unresolvable&quot;| RET
+    SCOPE -.-&gt; WB
+    OBS -.-&gt; RET
+    OBS -.-&gt; WB</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> One local backend process serving
+four adapters, installed from npm as <code>@memorax/memorax-code</code>,
+Node ≥20. Adapters install client-side hooks;
+<code>src/clients/{codex,claude,dsh,opencode}/memory-hook-runtime.ts</code>
+gives each host its own turn-start and writeback runtime behind a common
+<code>MemoryService</code> interface (<code>recordTurnStart</code>,
+<code>writebackTurn</code>, <code>drain</code>, <code>close</code>).</p>
+<p><strong>Persistence.</strong> None of its own that holds memories.
+The local state is operational: a writeback buffer with chunking and a
+reconciler, a task projection for in-flight adds, and a trace store. The
+memories live in the hosted service.</p>
+<p><strong>Search.</strong> Not here. <code>stack_retrieval</code> is
+empty for that reason — the client issues one search per turn start and
+renders the response; there is no lexical index, no vector store and no
+ranking code in this repository.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npm i -g @memorax/memorax-code</code>, then per-client install.
+An account and credentials are required before anything can be stored at
+all — the merge at this pin is
+<code>feat/secure-trial-credentials</code> — so this is not a system you
+can run offline or inspect end to end. The local half is readable
+TypeScript with a <code>memorax memory status | search | add</code> CLI,
+which is the part an operator can debug.</p>
+<p><strong>The licence covers the client.</strong> MIT applies to what
+is in this repository; the service it depends on is not covered by it,
+and the terms under which the stored memories are held are not visible
+from the tree.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Retrieval.</strong>
+<code>src/memory/automatic-retrieval.ts</code> — gated by
+<code>memoryRetrievalEnabled</code> with a
+<code>startupRetrieveTimeoutMs</code>, takes an optional
+<code>query</code>, a <code>ConfiguredRepositoryMemoryResult</code> and
+a <code>sessionKey</code>, and returns
+<code>{context?, retrieved, skipReason?}</code>. The
+<code>skipReason</code> is the interesting field: a turn that retrieved
+nothing says why.</p>
+<p><strong>Rendering.</strong>
+<code>src/provider/memorax/adapter.ts:500-516</code> groups returned
+items by <code>memory_type</code> into
+<code>&lt;facts memory_type="…"&gt;</code> blocks inside a
+<code>&lt;memories&gt;</code> element, escapes attributes, and truncates
+the joined result at <code>config.maxContextChars</code>. Recall arrives
+as structured, bounded, fenced text rather than as loose prose — though
+the fence is a rendering convention, and nothing in the client tells the
+model that the content inside it is untrusted.</p>
+<p><strong>Scope.</strong> <code>src/repository/scope.ts</code> resolves
+a <code>RepositoryMemoryScope</code> of kind
+<code>git-repository</code>, <code>local-directory</code> or
+<code>codex-projectless</code>, with an explicit fallback reason
+(<code>git_metadata_invalid</code>) and result kinds <code>none</code>,
+<code>invalid</code>, <code>degraded</code> and <code>repository</code>.
+<code>adapter.ts:456</code> refuses outright: <em>"memory scope is
+required for MemoraX search/add"</em>. A scope that cannot be resolved
+is an error, not a default — which is the opposite of the caller-
+supplied string this atlas usually finds.</p>
+<p><strong>Writeback.</strong>
+<code>src/memory/automatic-writeback.ts</code> with
+<code>writeback-buffer.ts</code>, <code>writeback-chunk.ts</code>,
+<code>writeback-reconciler.ts</code> and
+<code>writeback-task-projection.ts</code>: decisions are buffered (with
+a scope-upgrade path), chunked, redacted, and posted. Failures are
+classified — <code>automatic-writeback.ts:506-509</code> retries only on
+HTTP 408, 429 and 5xx, so a 400 is not retried into a loop.</p>
+<p><strong>Redaction.</strong>
+<code>src/memory/payload-redaction.ts</code> — an ordered rule set over
+private-key blocks, <code>Authorization</code> and
+<code>Proxy-Authorization</code> headers, Bearer and Basic tokens, JWTs,
+and a broad sensitive-key pattern covering <code>password</code>,
+<code>client_secret</code>, <code>api_key</code>,
+<code>access_token</code>, <code>refresh_token</code>,
+<code>private_key</code>, <code>credential</code>, <code>secret</code>
+and <code>token</code>. <code>SAFE_CREDENTIAL_VALUE_PATTERN</code>
+exempts values that are obviously not secrets — <code>${ENV}</code>,
+<code>process.env.X</code>, <code>&lt;placeholder&gt;</code>,
+<code>example</code>, <code>change-me</code>, type names — so a config
+snippet is not destroyed to protect a variable name.</p>
+<p><strong>Turn coordination.</strong>
+<code>src/memory/turn-coordinator.ts</code> and
+<code>repository-session.ts</code> bind a turn to a scope and a session
+key so retrieval and writeback agree about what they are talking
+about.</p>
+<p><strong>Observability.</strong>
+<code>src/memory/observability.ts</code> and
+<code>src/app/memory-observability.ts</code> emit events with a source,
+related turns and a diagnostic logger;
+<code>src/memory/reminder-trace-recorder.ts</code> records
+reminders.</p>
+<p><strong>Tests.</strong> Ten files under <code>test/memory/</code>
+covering retrieval, writeback, the buffer, chunking, the reconciler, the
+task projection, the CLI, the service, the turn coordinator and
+redaction, plus per-client hook-runtime suites.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema in this repository. The client's types describe
+<em>transport</em>: a rendered item with a <code>memory_type</code> and
+a line, a writeback decision, a buffered decision with a scope upgrade,
+a task projection for an in-flight add. What a stored memory contains,
+which fields it carries, and whether it has an id the client could later
+reference are all service-side.</p>
+<p><strong>Scoping</strong> is the one identity the client owns, and it
+is well made: a scope is required, three kinds are distinguished, a
+degraded resolution is named rather than silently downgraded, and the
+reason for a fallback is carried (<code>git_metadata_invalid</code>).
+Whether that scope is <em>enforced</em> on the read is the service's
+business, which is why the mark is withheld below.</p>
+<p><strong>Provenance and time.</strong> A memory carries the turn and
+scope it was written under. There is no validity interval, no capture
+time visible in the client's model, and no author field.</p>
+<p><strong>Correction.</strong> None. <code>grep</code> for a delete, a
+removal or a forget across <code>provider/memorax/adapter.ts</code>
+returns nothing, and the three endpoints the adapter speaks contain no
+removal. This is the sharpest thing the report can say about correction,
+and it is a statement about the visible surface rather than about the
+product.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One search per turn start, with an optional query, a timeout, and a
+<code>skipReason</code> when it does not fire. The response is grouped
+by <code>memory_type</code>, rendered into the
+<code>&lt;memories&gt;</code> block and truncated at a character budget
+— so the injection cost is bounded and the truncation is at the end of
+the rendered text rather than by dropping whole items, which means the
+last fact in the block can be cut mid-line.</p>
+<p><strong>Ranking is not in this repository.</strong>
+<code>parseScore</code> exists in
+<code>provider/memorax/config.ts</code>, so the service returns a score
+the client can read; nothing in the client filters or re-orders on it.
+What a search matches, how it is ranked and whether it is lexical,
+vector or hybrid cannot be determined from this tree, and no committed
+artifact reports it.</p>
+<p><strong>Failure modes.</strong> A search that returns nothing and a
+search that was skipped are distinguishable to the operator through
+<code>skipReason</code> and the observability events, which is better
+than most. A search that returns the <em>wrong</em> facts is invisible:
+there is no relevance signal the client acts on and no negative feedback
+path.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Automatic, per turn, and asynchronous by contract:
+<code>POST /v1/memories/add</code> returns a task id and
+<code>GET /v1/memories/add/status/{taskId}</code> reports on it. The
+atlas notes repeatedly that <strong>write-to-readable lag is measured
+nowhere</strong>; here it is at least <em>acknowledged in the API</em>,
+because the add is explicitly a task with a status rather than a
+synchronous write. The client polls, but nothing reports the
+distribution, and the report cannot say what the lag is.</p>
+<p><strong>Redaction is the write path's most consequential
+step</strong>, and it runs before the network call rather than after
+ingestion — the boundary that matters when the store is someone
+else's.</p>
+<p><strong>Deduplication, conflict handling and supersession</strong>
+are absent from the client. Two contradictory facts from two turns are
+two adds.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The retrieval call sits on turn start, so the agent waits for it up
+to <code>startupRetrieveTimeoutMs</code>. Writeback is buffered and
+drained rather than blocking the turn. Nothing re-reads the corpus
+locally, so the local token cost is the rendered block per turn, bounded
+by <code>maxContextChars</code>; the service-side cost of an add —
+whether it extracts, embeds or consolidates — is not visible. Because
+the block is injected per turn rather than once per session, it sits
+where a provider's prompt-prefix cache is invalidated on every request,
+which <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> describes and nothing here reports.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four adapters, four hook runtimes, one <code>MemoryService</code>
+interface. The agent does not call memory; the middleware calls it
+around the agent. There is <strong>no MCP server and no tool</strong> —
+no <code>remember</code>, no <code>recall</code>, nothing the model can
+invoke deliberately — which is a coherent product decision and the
+reason the model cannot direct its own memory here.</p>
+<p>The CLI (<code>memorax memory status | search | add</code>) is the
+human's surface, and <code>--config-only</code> on status makes the
+configuration inspectable without a network call.</p>
+<p>Compaction and session lifecycle are handled per client in
+<code>src/clients/*/memory-hook-runtime.ts</code>; the Claude runtime
+carries <code>transcriptReadAttempts</code> and
+<code>transcriptRetryDelayMs</code>, which is an admission that reading
+a transcript from disk races the host writing it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The privacy boundary is the strong part.</strong> Redaction
+before transmission, an allowlist that keeps placeholder values intact,
+an idempotence property, and a check that refuses to treat an
+all-placeholder payload as content. For a system that ships a
+developer's session text to a hosted service, that is the right place to
+spend the effort.</p>
+<p><strong>Trust representation:</strong> none. The client has no field
+for doubt and no way to express that a returned fact is wrong. The
+<code>&lt;memories&gt;</code> block is rendered into the model's context
+as ordinary text; nothing labels it untrusted, and since its contents
+came from previous sessions of the same or other repositories, a
+poisoned memory has no barrier on the way back in.</p>
+<p><strong>Deletion and privacy.</strong> No delete path in the client,
+and none in the three endpoints it speaks. Whatever the service offers,
+this repository cannot reach it — so a user asking <em>"remove what you
+learned about X"</em> has no answer here.</p>
+<p><strong>Failure handling</strong> is careful: retries bounded to
+408/429/5xx, a reconciler for interrupted writebacks, and a task
+projection so an in-flight add is not lost on restart.</p>
+<p><strong>What cannot be assessed</strong> from this tree:
+multi-tenancy, retention, whether scope is enforced server-side, whether
+the service deletes on request, and what it does with the transcripts it
+receives.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Ten memory test files plus per-client hook-runtime suites, and the
+redaction suite is the one that earns the mark. Its four cases together
+form the shape this atlas argues for elsewhere: an absence assertion
+(each detector category is replaced), a <strong>positive
+control</strong> (representative non-sensitive coding text survives), an
+idempotence property, and a semantic check
+(<code>hasMeaningfulMemoryPayloadText("[REDACTED:EMAIL], [REDACTED:API_KEY]")</code>
+is <code>false</code>, while the same placeholders inside a sentence are
+<code>true</code>).</p>
+<p><strong>What is not tested, because it cannot be:</strong> everything
+about the store. There is no fixture service, no recorded fixture of a
+search response used to assert ranking behaviour, and no benchmark. The
+repository does not claim otherwise — <code>ARCHITECTURE.md</code> says
+live source and executable tests are the authority for current
+behaviour, and the store is neither.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Redact before the payload leaves the machine, and pair the
+rule set with an allowlist.</strong> Redaction that destroys
+<code>${DATABASE_URL}</code> and <code>change-me</code> along with real
+secrets makes the memory useless; the
+<code>SAFE_CREDENTIAL_VALUE_PATTERN</code> half is what makes the
+aggressive half safe to ship.</li>
+<li><strong>Test redaction with a positive control and an idempotence
+case.</strong> "Secrets are removed" passes on an empty string;
+"non-sensitive coding text is preserved" is what stops the rule set from
+eating the corpus.</li>
+<li><strong>Refuse a scope you cannot resolve.</strong> Three named
+kinds, a named fallback reason, and an outright refusal beat defaulting
+to a global namespace.</li>
+<li><strong>Say why a retrieval did not happen.</strong> A
+<code>skipReason</code> beside <code>retrieved: false</code> turns
+"memory did nothing" into a debuggable event.</li>
+<li><strong>Make an asynchronous add a task with a status
+endpoint.</strong> It is the only honest way to describe a write that is
+not readable yet.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not ship a memory client with no delete.</strong>
+Whatever the service supports, the surface a user can reach is the
+surface that exists; a store you can only add to is a commitment nobody
+can undo.</li>
+<li><strong>Do not render recall as ordinary context.</strong> A fenced
+block is a good start, and it needs a sentence telling the model the
+contents are data from an earlier session rather than instructions.</li>
+<li><strong>Do not truncate the rendered block by characters</strong>
+without saying what was cut. A budget that clips the last fact mid-line
+loses a memory silently.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who works across several coding agents and
+wants one memory behind all of them without building it. The engineering
+on the local half is careful, and the redaction posture is better than
+most of what this atlas has read. It is not a fit if you need to inspect
+or own the store, if deletion is a requirement, or if the correction
+semantics matter to you — none of those questions can be answered from
+this repository, and the report is not able to answer them on the
+product's behalf.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the service store, and what does a
+<code>memory_type</code> mean? The client groups by it and never
+enumerates the values.</li>
+<li>Is there a delete API the client does not use? Three endpoints are
+spoken; the surface may be larger.</li>
+<li>Is scope enforced server-side, or is the required client-side scope
+the whole boundary? This decides whether the isolation is real, and it
+is not visible here.</li>
+<li>What is the actual write-to-readable lag? The add is a task with a
+status endpoint, which is the right shape for measuring it, and nothing
+in the repository reports a distribution.</li>
+<li>What are the retention and deletion terms for transcripts sent to
+the service?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Provider boundary:</strong>
+<code>packages/ts/memorax-code-backend/src/provider/memorax/adapter.ts</code>,
+<code>http.ts</code>, <code>config.ts</code></li>
+<li><strong>Retrieval:</strong>
+<code>src/memory/automatic-retrieval.ts</code>,
+<code>src/memory/turn-coordinator.ts</code></li>
+<li><strong>Write path:</strong>
+<code>src/memory/automatic-writeback.ts</code>,
+<code>writeback-buffer.ts</code>, <code>writeback-chunk.ts</code>,
+<code>writeback-reconciler.ts</code>,
+<code>writeback-task-projection.ts</code></li>
+<li><strong>Privacy:</strong>
+<code>src/memory/payload-redaction.ts</code></li>
+<li><strong>Scope:</strong> <code>src/repository/scope.ts</code>,
+<code>src/memory/repository-session.ts</code></li>
+<li><strong>Client integration:</strong>
+<code>src/clients/{codex,claude,dsh,opencode}/memory-hook-runtime.ts</code>,
+<code>packages/ts/memorax-code-*-adapter/</code></li>
+<li><strong>Operator surface:</strong> <code>src/memory/cli.ts</code>,
+<code>src/memory/observability.ts</code></li>
+<li><strong>Tests:</strong>
+<code>test/memory/memory-payload-redaction.test.mjs</code>,
+<code>automatic-memory-retrieval.test.mjs</code>,
+<code>automatic-memory-writeback.test.mjs</code>,
+<code>memory-writeback-reconciler.test.mjs</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b"><code>b98cb8c78956a1cd5b6b364549217fb2b6db601b</code></a>
+— first reading. Screened before anything was read: no auto-executing
+surface, three build-time execution points, seven dependency manifests
+inside the seven-day cooldown, and <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> addressed to a reading agent, recorded as data;
+nothing was installed, no client was deployed and no request was made to
+the service. Every claim here is about the client at this commit — the
+store behind <code>/v1/memories/*</code> was not exercised, and the
+report says where that boundary falls rather than inferring across
+it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

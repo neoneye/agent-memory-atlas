@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Four Markdown files and an
+848-line validator that refuses to seal a session while a rejected value
+has been reasserted — with a noise floor that excludes both tombstones
+in its own worked example.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memory
+Compiler — Agent Memory Atlas">
+    <meta property="og:description" content="Four Markdown files and an
+848-line validator that refuses to seal a session while a rejected value
+has been reasserted — with a noise floor that excludes both tombstones
+in its own worked example.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory
+Compiler — Agent Memory Atlas">
+    <meta name="twitter:description" content="Four Markdown files and an
+848-line validator that refuses to seal a session while a rejected value
+has been reasserted — with a noise floor that excludes both tombstones
+in its own worked example.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memory Compiler — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memory Compiler",
+      "description": "Four Markdown files and an 848-line validator that refuses to seal a session while a rejected value has been reasserted \u2014 with a noise floor that excludes both tombstones in its own worked example.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A tombstone that blocks the close</p>
+          <h1>Memory Compiler</h1>
+          <p class="document-deck">Four Markdown files and an 848-line
+validator that refuses to seal a session while a rejected value has been
+reasserted — with a noise floor that excludes both tombstones in its own
+worked example.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/KTVSUN/memory-compiler">
+              <span>Source</span>
+              <strong>KTVSUN/memory-compiler</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/KTVSUN/memory-compiler/commit/e79ee179a70688b349fc4f1bd957aafc54d0c224" title="e79ee179a70688b349fc4f1bd957aafc54d0c224">
+              <span>Analyzed revision</span>
+              <code>e79ee179…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-11</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memory Compiler is 1,432 lines — one 848-line Python file with no
+third-party dependencies, four Markdown conventions, two templates and a
+worked example. MIT licensed, three commits, all uploaded on 11 August
+2026, and self-described as <em>"a reference implementation, not a
+maintained product — pulled out of a real project and genericized for
+sharing"</em>.</p>
+<p>It is in this atlas because of one file and one function.
+<code>TOMBSTONES.md</code> is an add-only table whose columns are
+<code>ID | Fact / Key | Rejected value | Replacement | Date | Reason | Source</code>,
+and <code>tombstone_collision_check()</code> scans the other canonical
+files for any rejected value appearing verbatim. A hit is a blocking
+finding: <code>cmd_close</code> refuses to seal the session and leaves
+the ledger entry <code>OPEN</code>. That is a durable record keyed on
+the <strong>value</strong>, consulted mechanically, with teeth — the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> this atlas finds in a small minority of the systems it has
+read, implemented in about thirty lines by someone who evidently hit the
+problem it solves.</p>
+<p>The design premise is stated in the README and is the opposite of
+most of this corpus: <em>"it assumes most of what happens in a session
+should be thrown away, and the small amount that should persist should
+be written deliberately, validated mechanically, and provably
+correctable when it turns out wrong."</em> There is no extraction, no
+embedding, no retrieval engine and no background pass. The four files
+are the memory; the compiler's whole job is to refuse to let them go
+quietly wrong.</p>
+<p><strong>The finding that matters is a noise floor.</strong>
+<code>tombstone_collision_check</code> only considers rejected values of
+twelve characters or more, with the reason in a comment — <em>"ignore
+short/generic strings, too noisy"</em>. Both tombstones in the shipped
+example are ten characters long: <code>2026-09-01</code>, a superseded
+go-live date, and <code>hex 1E3A5F</code>, a superseded brand colour.
+Neither is visible to the automatic check. What actually covers them is
+<code>memory_tests.yaml</code>, where two hand-written
+<code>must_not_return</code> cases name the same values — so in the
+project's own example, the safety net that runs on every close cannot
+see either tombstone, and the mechanism that catches them is the one an
+adopter has to remember to write.</p>
+<p>That is not fatal and it is worth being precise about: dates, hex
+codes, prices, version numbers and names are most of what gets corrected
+in practice, and they are almost all under twelve characters.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row in one of four tables, and which table it is in
+<em>is</em> its epistemic status.</p>
+<ul>
+<li><strong><code>CONTEXT.md</code></strong> holds durable facts. Every
+mutable entry carries an <code>as_of</code> date and an evidence
+pointer.</li>
+<li><strong><code>OPEN_ITEMS.md</code></strong> is the work ledger.
+Items have permanent IDs and must resolve to <code>OPEN</code>,
+<code>BLOCKED</code>, <code>DONE</code> or <code>DROPPED</code> —
+<code>DROPPED</code> being distinct from <code>DONE</code> is the point,
+because the handoff discipline is designed to catch items quietly
+abandoned rather than finished.</li>
+<li><strong><code>DECISIONS.md</code></strong> is append-only, and each
+decision carries its <em>why</em>.</li>
+<li><strong><code>TOMBSTONES.md</code></strong> is add-only and holds
+what is no longer true.</li>
+</ul>
+<p>A fact becomes memory because a person or an agent typed it into a
+table. It stops being memory by moving to <code>TOMBSTONES.md</code>
+with a replacement, a date, a reason and a source — and the replacement
+is recorded as a <strong>pointer, not a copy</strong>. The architecture
+states why: <em>"A copied value is the next stale fact waiting to
+happen."</em> In the example, <code>T-001</code>'s replacement column
+reads <code>D-002</code>, a decision id, and <code>CONTEXT.md</code>'s
+current go-live entry says in its own margin that it deliberately does
+not repeat the old date because that is exactly the reassertion the
+tombstone exists to prevent.</p>
+<p>There is no trust ladder, and that is a decision rather than an
+omission. <code>ARCHITECTURE.md</code> §5 records it: <em>"Trust tags
+kept to one: <code>candidate</code>, recovery-sourced only. More
+granular trust levels sounded appealing but nobody could agree on the
+boundaries, and a tag nobody maintains is worse than no tag."</em> Only
+facts recovered from a crashed session are tagged, and only until
+reconciled.</p>
+<p>The state that governs everything is the session, not the memory. A
+session is <code>OPEN</code> or <code>CLOSED</code>, and the transition
+between them is where every check lives.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — closing a session validates before sealing, and a re-asserted tombstoned value or a failing must-not-return test sends it back to open rather than through</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: closing a session validates before sealing, and a re-asserted tombstoned value or a failing must-not-return test sends it back to open rather than through
+stateDiagram-v2
+  [*] --&gt; Blocked: unresolved recovery candidate
+  Blocked --&gt; Open: person resolves with a note
+  [*] --&gt; Open: --open, after canonical files and conflict-copy checks
+  Open --&gt; Open: edit the four Markdown files
+  Open --&gt; Validate: --close
+  Validate --&gt; Open: tombstoned value reasserted verbatim
+  Validate --&gt; Open: must_not_return test fails
+  Validate --&gt; Open: concurrent modification or version change
+  Validate --&gt; Sealed: every finding is ok
+  Open --&gt; Recovery: session crashes without closing
+  Recovery --&gt; Blocked: candidate written, new sessions refused
+  Sealed --&gt; [*]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no runtime. <code>memory_check.py</code> is a command-line
+program run twice per session — <code>--open</code> at the start,
+<code>--close</code> at the end — against a directory of Markdown
+files.</p>
+<ul>
+<li><strong><code>memory_check.py</code></strong> (848 lines) —
+validation, the generated index, the test runner, the session ledger,
+locking and recovery.</li>
+<li><strong><code>templates/HANDOFF_TEMPLATE.md</code></strong> — the
+end-of-session writeup, with a size cap and a supersedes-diff
+discipline.</li>
+<li><strong><code>templates/RECOVERY_TEMPLATE.md</code></strong> —
+generated when a session crashes.</li>
+<li><strong><code>examples/</code></strong> — a freelancer's
+client-rebrand project with all four files populated plus
+<code>memory_tests.yaml</code>.</li>
+</ul>
+<p>Storage is the filesystem: four Markdown files at a topic root, a
+JSON ledger entry per session, and recovery candidates as JSON plus a
+rendered Markdown view. Writes go through <code>atomic_write_json</code>
+and <code>atomic_write_text</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Cheap to the point of being hard to beat: Python 3, no dependencies,
+one file to copy. The store is Markdown, so it is diffable, reviewable
+in a pull request, correctable in any editor, and readable by any agent
+that can open a file — the properties the <a
+href="../../patterns/memory-as-an-editing-surface/">memory-as-an-editing-surface</a>
+pattern is about.</p>
+<p>Multi-machine use is addressed rather than assumed. The synced folder
+is transport and never authority; a single-writer rule prevents the
+final write race while baseline hashing detects a stale writer, and the
+architecture insists the distinction matters. The compiler detects sync
+conflict-copy files by name and blocks. <code>§6.3</code> names the case
+it does not solve — two machines editing offline simultaneously —
+instead of implying coverage.</p>
+<p><strong>What is missing is the integration.</strong> The README is
+explicit that <em>"the glue code is yours to write for whatever agent
+harness you're on"</em>. There is no hook, no plugin, no slash command
+and no MCP server in the repository, so an adopter supplies the part
+that makes <code>--open</code> and <code>--close</code> actually run.
+Everything this report describes is contingent on that glue
+existing.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-tombstone--tombstone_collision_check">The tombstone —
+<code>tombstone_collision_check()</code></h3>
+<pre class="python"><code>val = row[2].strip().strip(&quot;`\&quot;&quot;)
+if len(val) &gt;= 12:  # ignore short/generic strings, too noisy
+    rejected_values.append((row[0], val))</code></pre>
+<p>then, for each canonical file other than <code>TOMBSTONES.md</code>,
+<code>if val in text</code> produces an <code>ask</code> finding naming
+the tombstone id. <code>run_validate</code> collects it, and
+<code>cmd_close</code> turns any <code>ask</code> into a refusal:</p>
+<pre class="python"><code>if any(f[0] == &quot;ask&quot; for f in findings):
+    print(&quot;[ASK] validation finding(s) above must be resolved before this close can seal — &quot;
+          &quot;ledger entry left OPEN.&quot;)
+    return 1</code></pre>
+<p>Three properties are worth separating. It is keyed on the
+<strong>value</strong>, not on a record id, which is what distinguishes
+this from the supersession chains that fill the rest of this corpus. It
+is <strong>enforced at a chokepoint</strong> — you cannot seal a session
+past it. And it is <strong>substring matching over four files</strong>,
+which bounds what it can honestly claim: it catches a stale value copied
+back into canonical memory, not a model reasserting the same fact in
+different words, and not anything said in conversation.</p>
+<p>The twelve-character floor is the part to weigh. It exists for a real
+reason — a two-character rejected value would match everywhere — and the
+cost is that the class of value most often corrected falls below it.</p>
+<h3 id="the-tests--run_tests">The tests — <code>run_tests()</code></h3>
+<p><code>memory_tests.yaml</code> is parsed by a hand-rolled reader and
+supports exactly two assertion types:</p>
+<ul>
+<li><code>must_reference</code> — a value that must still be findable in
+a named file.</li>
+<li><code>must_not_return</code> — a value that must never reappear,
+with the failure text <em>"tombstoned value '…' found
+verbatim"</em>.</li>
+</ul>
+<p>Both run on <code>--close</code>, and a failure blocks the seal on
+the same path as a validation finding. The example ships one positive
+and two negatives, and the two negatives are precisely the two
+tombstoned values the collision check is too short-sighted to see.
+Whether that is deliberate design — tests as the escape hatch for short
+values — or coincidence, it is the arrangement that makes the example
+correct, and an adopter who writes no tests loses it.</p>
+<h3 id="the-close--cmd_close">The close — <code>cmd_close()</code></h3>
+<p>The gate is a sequence of refusals, and its order is deliberate:
+conflict-copy files, then a <strong>compiler version check</strong>
+(<em>"memory tooling changed during session — opened under X, closing
+under Y. Revalidate, don't silently continue"</em>), then baseline-hash
+comparison for concurrent modification, then validation, then build,
+then tests. Only after all of them does the ledger entry become
+<code>CLOSED</code>.</p>
+<p>Step five is the one worth quoting, because it is an absence declared
+rather than implied:</p>
+<pre class="python"><code>print(&quot;[ok] audit: not implemented in this reference build — no audit trail was written&quot;)</code></pre>
+<p>This atlas has recorded the opposite shape more than once — a schema
+with an audit table, an ORM class, indexes and a dashboard counter that
+nothing ever inserts into. Printing "this did not run" on every close is
+the cheapest possible defence against a reader assuming it did.</p>
+<h3 id="recovery--cmd_recovery_scan--cmd_resolve_recovery">Recovery —
+<code>cmd_recovery_scan()</code> /
+<code>cmd_resolve_recovery()</code></h3>
+<p>A session that crashes leaves an <code>OPEN</code> ledger entry.
+<code>--recovery-scan</code> finds stale ones and writes a candidate
+document from <code>RECOVERY_TEMPLATE.md</code>; a person or another
+agent fills in the facts from the transcript and runs
+<code>--resolve-recovery</code> with a note. Two things make this a real
+gate rather than a report. An unresolved candidate <strong>hard-blocks
+<code>--open</code></strong>, so no new writing session starts while a
+crash is unreconciled. And the resolution seals the stale entry with
+<code>closed_via: "recovery"</code>, marked, in the code's words,
+<em>"distinctly marked so it's never mistaken for a normal validated
+close"</em> — a session that was reconciled by hand and one that passed
+every check are different facts, and the ledger keeps them
+different.</p>
+<h3 id="validation--the-other-checks">Validation — the other checks</h3>
+<p><code>validate_open_items</code>, <code>validate_tombstones</code>
+and <code>validate_decisions</code> enforce exact table headers, unique
+permanent IDs, and no empty cells — every field in a tombstone row is
+mandatory, so a rejection without a reason or a source cannot be
+recorded. <code>truncation_check</code> looks for a file that ends
+mid-structure: an odd number of code fences, a row whose column count
+disagrees with the header, a file ending on an unterminated table row.
+That is aimed squarely at the failure where a model writes a file and
+stops partway.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown tables. <code>TOMBSTONES.md</code> carries seven mandatory
+columns; <code>OPEN_ITEMS.md</code> uses permanent IDs and a closed
+status vocabulary; <code>DECISIONS.md</code> is append-only with a
+rationale column; <code>CONTEXT.md</code> is prose with an
+<code>as_of</code> date and an evidence pointer on every mutable
+claim.</p>
+<p>Provenance is a convention enforced only at the column level: a
+tombstone must have a non-empty <code>Source</code>, but nothing checks
+that the source resolves to anything. Temporal information is a single
+<code>as_of</code> per fact — when the claim was evidenced — with no
+separate record of when the file learned it, so the store cannot answer
+what it believed on a past date. There is no scope key; the unit of
+isolation is the topic directory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are none, and the report should be plain about it. No index is
+queried, no similarity is computed, and the compiler never answers a
+question. <code>build_generated_index</code> regenerates a disposable
+summary view marked as generated, and the design intent is that the
+agent reads the canonical files directly.</p>
+<p>That makes the four files a <em>context payload</em> rather than a
+retrieval result, and it puts a hard ceiling on scale: everything
+durable is meant to fit in a prompt. For the target — one long-running
+project, one or two people — that is the right trade, and it is the
+reason the rest of the design can be as strict as it is. A system that
+must select from ten thousand memories cannot afford to block a session
+close on a whole-file scan.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are manual. A person or an agent edits the Markdown; nothing
+extracts facts from a transcript, and no model is called anywhere in the
+repository. <code>HANDOFF_TEMPLATE.md</code> imposes a size cap and a
+supersedes diff, which is where the discipline against quiet drops
+lives.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Nothing runs on the turn.</strong> The agent's session is
+unaffected until <code>--close</code>.</li>
+<li><strong>The lag before a memory is usable is zero</strong> — it is
+in the file the moment it is typed.</li>
+<li><strong>No background pass exists</strong>, so nothing can silently
+re-derive a value that was tombstoned. In a corpus where most deletions
+survive only until the next scheduled job, having no scheduled jobs is a
+real property.</li>
+<li><strong>The close cost is a full scan</strong> of four files plus
+every test, which is milliseconds at the intended scale and grows
+linearly with the store.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Deliberately absent. The README states the intent — session-start
+behaviour runs <code>--open</code> and <code>--recovery-scan</code>,
+session-end runs <code>--close</code> — and leaves the wiring to the
+adopter. In practice that means the guarantees here hold exactly as
+often as the adopter's harness remembers to invoke the compiler, and
+nothing in the repository can enforce that. A session that simply never
+calls <code>--close</code> gets none of the checks and leaves a stale
+<code>OPEN</code> entry that blocks the next one, which is at least a
+failure that surfaces.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A rejected value reasserted verbatim blocks the session from
+sealing.</strong></li>
+<li><strong>Tombstone replacements are pointers</strong>, with the
+reasoning recorded: a copied value is the next stale fact.</li>
+<li><strong>Every tombstone field is mandatory</strong>, so a rejection
+cannot be recorded without a reason and a source.</li>
+<li><strong>An unresolved crash hard-blocks new sessions</strong>, and a
+recovery close is marked as distinct from a validated one.</li>
+<li><strong>A tooling-version change mid-session refuses the
+close</strong> rather than revalidating under different rules.</li>
+<li><strong>Single-writer locking and stale-writer detection are treated
+as different jobs</strong>, and the architecture says why.</li>
+<li><strong>The unimplemented audit prints that it did not
+run.</strong></li>
+<li><strong><code>ARCHITECTURE.md</code> §5 records the decisions that
+could have gone the other way</strong>, each with the condition under
+which an adopter should choose differently.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>The collision floor excludes short values</strong>, which is
+most of what gets corrected — and both tombstones in the example fall
+under it.</li>
+<li><strong>Verbatim substring matching only</strong>, so a paraphrase
+of a rejected value passes every check.</li>
+<li><strong>The checks bound the files, not the model.</strong> Nothing
+here prevents an agent from stating a tombstoned fact in conversation;
+the guarantee is about what is written back.</li>
+<li><strong>No audit trail</strong>, by declaration.</li>
+<li><strong>Provenance is a non-empty string</strong>, not a resolvable
+reference.</li>
+<li><strong>No integration ships</strong>, so every guarantee depends on
+glue the adopter writes.</li>
+<li><strong>Three commits of history</strong>, all uploaded on one day,
+with no test suite for the compiler itself.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There is no test suite for
+<code>memory_check.py</code>.</strong> The 848 lines that enforce every
+rule in this report are themselves unexercised by any committed test,
+which is the gap I would close first —
+<code>tombstone_collision_check</code> and the
+<code>ask</code>-blocks-close path are each a few lines and each carries
+the whole guarantee.</p>
+<p>What is committed is a <em>test format for the memory</em>, which is
+a different and rarer thing. <code>memory_tests.yaml</code> supports
+<code>must_reference</code> and <code>must_not_return</code>, both run
+on every close, both able to block the seal. The example ships two
+<code>must_not_return</code> cases naming tombstoned values.</p>
+<p>Those are <strong>committed negative assertions about a corrected
+value</strong>, which is the harder form this atlas has otherwise
+recorded in very few systems. The kind matters and is worth stating for
+a strict reader: they assert about the contents of a canonical Markdown
+file rather than about the result of a query. In this design that
+distinction is thin, because the file <em>is</em> what reaches the agent
+— but a reader applying the rubric's narrowest reading should count it
+as an assertion about a written artifact, not a retrieval result.</p>
+<p><strong>I ran nothing.</strong> The screen reported
+<code>NOTHING SCANNED</code> — there is no manifest, hook or agent file
+at any path it knows about — so I read the tree by hand instead: eleven
+files, and no build, install or execution surface among them beyond the
+single script. The character-length observations in this report were
+computed separately rather than by running the compiler.</p>
+<p><strong>No paper, arXiv reference or citation file exists in this
+repository.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key the tombstone on the value and check it at a
+chokepoint.</strong> The whole mechanism is a table with a
+rejected-value column and thirty lines that scan for it before anything
+is allowed to seal. Every part of this atlas's argument about correction
+is satisfied by that much code, at this scale.</li>
+<li><strong>Record the replacement as a pointer, not a copy.</strong> A
+copied value is the next stale fact, and a tombstone that copies is a
+tombstone that will need a tombstone.</li>
+<li><strong>Make every field of a rejection mandatory.</strong> A
+rejected value with no reason and no source is an assertion nobody can
+review later.</li>
+<li><strong>Refuse the close, do not warn on it.</strong> A finding that
+leaves the session <code>OPEN</code> is a mechanism; the same finding
+printed as a warning is a habit.</li>
+<li><strong>Print the absences.</strong> A pipeline step that announces
+"not implemented in this build — nothing was written" costs one line and
+prevents a reader from assuming an audit trail exists.</li>
+<li><strong>Distinguish a reconciled close from a validated one</strong>
+in the record. Sealing both as <code>CLOSED</code> would erase the
+difference between a session that passed the checks and one somebody
+patched up by hand.</li>
+<li><strong>Separate detection from prevention and say which is
+which.</strong> Hash comparison detects a stale writer; a single-writer
+rule prevents the race. Conflating them is how a system claims a
+guarantee it only has a symptom of.</li>
+<li><strong>Write down the decisions that could have gone the other
+way</strong>, with the condition that would change them. §5 is the most
+reusable file in this repository and contains no code.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A noise floor that excludes your real data.</strong> If
+short strings are too noisy to match, the fix is a narrower comparison —
+a whole-cell or field-scoped match — not a length cutoff that silently
+drops dates, prices and identifiers. Test the floor against your own
+corrections before trusting it.</li>
+<li><strong>Verbatim-only reassertion checks presented as reassertion
+prevention.</strong> They catch a copy-paste and nothing else; say so
+where the guarantee is stated.</li>
+<li><strong>Leaving the enforcement path untested.</strong> The code
+that refuses is the code that matters, and here it is the code with no
+test.</li>
+<li><strong>Shipping the conventions without the glue.</strong> A
+close-time gate that depends on the adopter remembering to invoke it is
+a gate with an unmeasured miss rate.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one specific person: someone running a long project with
+an agent, who already writes things down, and whose memory problem is
+that a correction from three weeks ago keeps coming back. It is a few
+hours to adopt and the entire mechanism fits in one reading. Its ceiling
+is the prompt — everything durable is meant to be small enough to hand
+over whole — so it does not compete with a store, it replaces the need
+for one at a scale most of this corpus has moved past.</p>
+<p>Do not reach for it if memory has to be shared, scoped, or queried,
+or if extraction has to be automatic; none of that is here and none of
+it is pretended. And weigh the maturity honestly: three commits, no
+tests on the compiler, and a self-description as a reference
+implementation. What it is worth is not the code you would run but the
+shape of it — this is the smallest complete demonstration in the atlas
+that correction can be made to fail loudly, and it is worth reading
+whatever you are building.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was the twelve-character floor measured against a real corpus of
+corrections, or chosen to quiet a specific false positive?</li>
+<li>Are the example's two <code>must_not_return</code> tests
+deliberately covering what the collision check cannot see, or is the
+overlap incidental?</li>
+<li>What did the original project — the one this was genericized from —
+use as its agent glue, and how often did a session end without
+<code>--close</code>?</li>
+<li>Does the handoff supersedes-diff discipline catch quietly dropped
+items in practice, or does it depend on the writer already
+noticing?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Validation, gates, ledger, recovery: <code>memory_check.py</code>
+(<code>tombstone_collision_check</code>, <code>run_validate</code>,
+<code>run_tests</code>, <code>cmd_close</code>, <code>cmd_open</code>,
+<code>cmd_recovery_scan</code>, <code>cmd_resolve_recovery</code>,
+<code>truncation_check</code>).</li>
+<li>Canonical file conventions and design rationale:
+<code>ARCHITECTURE.md</code>, especially §4 (lifecycle), §5 (decisions)
+and §6 (multi-machine sync).</li>
+<li>Worked example: <code>examples/CONTEXT.md</code>,
+<code>examples/OPEN_ITEMS.md</code>, <code>examples/DECISIONS.md</code>,
+<code>examples/TOMBSTONES.md</code>,
+<code>examples/memory_tests.yaml</code>.</li>
+<li>Session discipline: <code>templates/HANDOFF_TEMPLATE.md</code>,
+<code>templates/RECOVERY_TEMPLATE.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-11</strong> — <a
+href="https://github.com/KTVSUN/memory-compiler/commit/e79ee179a70688b349fc4f1bd957aafc54d0c224"><code>e79ee179a70688b349fc4f1bd957aafc54d0c224</code></a>
+— first reading, on the <code>main</code> default branch, at the third
+commit of a repository created the same day. Screened before reading:
+the screen reported <code>NOTHING SCANNED</code>, finding no manifest,
+hook or agent file at any path it knows about, so the tree was
+enumerated and read by hand — eleven files, one of them executable code.
+Nothing was installed and nothing was executed; the character-length
+arithmetic in section 1 was computed separately from the repository's
+own code.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

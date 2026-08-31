@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An append-only log with a binary
+merge tree over it, where detail decays with age by geometry rather than
+by policy, and every compression is asked of the agent inline because
+nothing ever runs in the background.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OptMem — Agent Memory Atlas">
+    <meta property="og:description" content="An append-only log with a
+binary merge tree over it, where detail decays with age by geometry
+rather than by policy, and every compression is asked of the agent
+inline because nothing ever runs in the background.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OptMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="An append-only log with a
+binary merge tree over it, where detail decays with age by geometry
+rather than by policy, and every compression is asked of the agent
+inline because nothing ever runs in the background.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OptMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OptMem",
+      "description": "An append-only log with a binary merge tree over it, where detail decays with age by geometry rather than by policy, and every compression is asked of the agent inline because nothing ever runs in the background.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">No background work</p>
+          <h1>OptMem</h1>
+          <p class="document-deck">An append-only log with a binary
+merge tree over it, where detail decays with age by geometry rather than
+by policy, and every compression is asked of the agent inline because
+nothing ever runs in the background.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/VictorTaelin/OptMem">
+              <span>Source</span>
+              <strong>VictorTaelin/OptMem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96" title="e36da55815951d50d103d7242d92cf9a71ceee96">
+              <span>Analyzed revision</span>
+              <code>e36da558…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<blockquote>
+<p><strong>Licence: none.</strong> There is no <code>LICENSE</code> file
+in this repository, so all rights are reserved by default and the code
+cannot be reused. This atlas normally skips unlicensed repositories for
+that reason. It is reviewed here as an exception, because it carries
+several mechanisms the atlas has not otherwise found — the exception is
+about <em>reading</em> it, not about using it. Ask the author before
+adopting anything below.</p>
+</blockquote>
+<p>OptMem is about 860 lines of dependency-free Python in a single file
+called <code>memo</code>, plus a 426-token prompt block you paste into
+<code>AGENTS.md</code> or <code>CLAUDE.md</code>. That is the whole
+integration. Its commands are <code>wake</code>, <code>note</code>,
+<code>nap</code>, <code>recall</code>, <code>zoom</code>,
+<code>forget</code>, <code>config</code>.</p>
+<p>It is the smallest system in this atlas and one of the most
+opinionated, and three of its positions are held by nothing else
+here.</p>
+<p><strong>Nothing ever runs in the background.</strong> Not "a queue
+you can disable" — there is no background path at all. When
+<code>note</code> appends a memory and a compression becomes due, the
+compression is <em>printed in the output of <code>note</code></em> for
+the agent to answer before its next action. Consolidation is a turn the
+agent already had to take, rather than a job that rewrites memory while
+nobody is watching.</p>
+<p><strong>Detail decays by geometry rather than by policy.</strong>
+Memories form a binary merge tree over an append-only log, and
+<code>wake</code> prints a <em>cover</em> of that tree chosen to fit a
+line budget:</p>
+<pre class="python"><code>def cover(T, budget):
+    &quot;&quot;&quot;The blocks `memo wake` prints: at most `budget` of them, finest near T.
+
+    Detail decays with age, so recent memories stay verbatim and ancient ones
+    collapse. If everything fits, nothing is compressed at all.&quot;&quot;&quot;</code></pre>
+<p>The tuning knob is a single <code>alpha</code>, binary-searched so
+that a block "stays whole iff its size is at most <code>alpha</code>
+times its age". Nothing scores importance, nothing embeds, nothing
+ranks. Recency wins because older material is structurally coarser, and
+the last clause is the good part: <strong>if everything fits, nothing is
+compressed at all.</strong></p>
+<p><strong>Position is identity.</strong> Records are fixed width, so
+there is no index:</p>
+<blockquote>
+<p>"memory <code>i</code> lives at <code>i*LOG_REC</code> of
+<code>LOG.txt</code>, and block <code>[k*s,(k+1)*s)</code> lives at
+<code>k*TREE_REC</code> of <code>TREE/&lt;s&gt;</code>. Padding costs
+~2x on disk and buys O(1) everywhere."</p>
+</blockquote>
+<p>The README states the resulting numbers — a million memories is 608
+MB and <code>wake</code> takes 0.03s — which makes OptMem the only
+system in this atlas that reports its <strong>storage footprint and
+recall latency at scale</strong>, the two metrics this atlas's <a
+href="../../benchmarks/">benchmarks page</a> complains nobody
+publishes.</p>
+<p>Reservations beyond the licence: there is no scope, no trust state,
+no correction of a recorded memory, and no multi-user story.
+<code>forget</code> drops a <em>summary</em>, not a memory. The log is
+append-only in the strong sense — it is never edited — which is a
+feature for auditability and means a wrong memory stays wrong
+forever.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>~/.optmem/
+  memo          one file of Python 3, no dependencies
+  memory/
+    LOG.txt     every memory, one per line, append-only, never edited
+    TREE/       the summaries: a cache, rebuildable from the log alone
+    config      the sizes
+
+LOG.txt   #0 #1 #2 #3 #4 #5 #6 #7 ...        fixed-width records
+TREE/2    [0,2) [2,4) [4,6) [6,8)            each one line
+TREE/4    [0,4)       [4,8)
+TREE/8    [0,8)
+
+wake  ──▶ cover(T, budget): coarse blocks for old memories,
+          verbatim records for recent ones, at most `budget` lines
+
+note  ──▶ append; if a block is now due, PRINT the compression request
+nap   ──▶ the agent answers it: one line, ≤ ENTRY_CHARS
+forget ─▶ drop a summary; the next nap rebuilds it from the log</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One file. The parts worth naming:</p>
+<ul>
+<li><code>cover</code> / <code>_cover</code> — the budgeted tile of the
+merge tree.</li>
+<li><code>pending</code> / <code>pending_count</code> — which blocks are
+due, "one stat per level, never a scan".</li>
+<li><code>nap_prompt</code> / <code>next_nap</code> — the compression
+request handed to the agent.</li>
+<li><code>log_*</code> / <code>tree_*</code> — fixed-width record access
+by offset.</li>
+<li><code>repair</code>, <code>parse</code>, <code>records</code> —
+tolerance for partial writes.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model is asked for a summary line only when a block falls due, and forgetting blanks that summary — so what changes is the collapsed view, never the log underneath</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the model is asked for a summary line only when a block falls due, and forgetting blanks that summary — so what changes is the collapsed view, never the log underneath
+flowchart TD
+  N[&quot;note &#39;...&#39;&quot;] --&gt; L[&quot;LOG.txt append&quot;]
+  L --&gt; P{&quot;is a&lt;br/&gt;block&lt;br/&gt;due?&quot;}
+  P --&gt;|yes| Req[&quot;print compression&lt;br/&gt;request&quot;]
+  Req --&gt; A[&quot;agent answers:&lt;br/&gt;memo nap lo-hi&lt;br/&gt;&#39;&lt;line&gt;&#39;&quot;]
+  A --&gt; T[&quot;TREE/&lt;size&gt; record&quot;]
+  P --&gt;|no| Done[&quot;done&quot;]
+  W[&quot;wake&quot;] --&gt; C[&quot;cover(T, budget)&quot;]
+  L --&gt; C
+  T --&gt; C
+  C --&gt; Out[&quot;budgeted context:&lt;br/&gt;verbatim recent, collapsed&lt;br/&gt;ancient&quot;]
+  F[&quot;forget lo-hi&quot;] --&gt; Drop[&quot;blank&lt;br/&gt;the summary&quot;]
+  Drop --&gt; A</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="consolidation-with-no-scheduler">Consolidation with no
+scheduler</h3>
+<p>Every other system in this atlas that consolidates does it in a
+worker, a cron, a queue, or a hook — and pays for it. The atlas's own <a
+href="../../benchmarks/">benchmarks page</a> names <em>write-to-readable
+lag</em> as a metric nobody measures, and the <a
+href="../../patterns/recoverable-background-work/">recoverable
+background work</a> pattern exists because background passes lose data
+when they fail.</p>
+<p>OptMem's answer is to have no background. <code>note</code> appends
+and then, if a block has come due, prints the compression request as
+part of its own output; the prompt instructs the agent to answer it
+"before your next action". Write-to-readable lag is zero because there
+is no asynchronous step, and there is no queue to drain, retry, monitor,
+or lose.</p>
+<p>What it costs is honest: the agent pays for consolidation in its own
+turn, and a compression is only as good as the model that happens to be
+running. What it buys is that <strong>no process can change your memory
+while you are not looking</strong>, which several systems in this atlas
+cannot say.</p>
+<p><code>pending_count</code> deserves note for a detail most such loops
+get wrong: levels are clamped at zero, because "a level can hold MORE
+blocks than T needs — T is a snapshot, and memories keep arriving while
+an agent reads".</p>
+<h3 id="the-cover-and-why-it-is-not-a-ranker">The cover, and why it is
+not a ranker</h3>
+<p><code>_cover(T, alpha)</code> tiles <code>[0,T)</code> with aligned
+power-of-two blocks, keeping a block whole "iff its size is at most
+<code>alpha</code> times its age". <code>cover(T, budget)</code>
+binary-searches <code>alpha</code> over sixty iterations to hit a line
+budget, then spends any leftover budget by splitting the <em>newest</em>
+remaining block, "where detail is worth most".</p>
+<p>This is a retrieval policy with no query in it. It answers "what
+should the agent see at session start", not "what matches this question"
+— and for a memory whose whole purpose is orientation rather than
+lookup, that is the right question. Compare <a
+href="../genericagent/">GenericAgent</a>, which reaches a similar place
+through a hand-written ROI rule, and <a href="../hermes-agent/">Hermes
+Agent</a>, which freezes a budgeted block into the prompt. OptMem gets
+there with a closed-form geometry and one constant.</p>
+<p>The atlas's <a href="../../patterns/decay-and-reinforcement/">decay
+and reinforcement</a> pattern warns that decay is usually a tuning
+surface nothing validates. Here there is nothing to tune per memory
+kind: age determines resolution, and the only parameter is how many
+lines you are willing to read.</p>
+<h3 id="an-append-only-log-that-is-genuinely-never-edited">An
+append-only log that is genuinely never edited</h3>
+<p><code>LOG.txt</code> is described as "every memory, one per line,
+append-only, never edited", and <code>TREE/</code> as "a cache,
+rebuildable from the log alone". <code>recall</code> searches "every
+memory ever recorded, word for word".</p>
+<p>That is <a href="../../patterns/evidence-before-belief/">evidence
+before belief</a> in its purest form and with the strongest guarantee in
+the atlas: the derived layer cannot corrupt the evidence, because the
+code never writes to the evidence except by appending.
+<code>WAKE_LINES</code> is explicitly "a reading budget, not a storage
+budget: change it whenever, in either direction, and nothing is
+recomputed".</p>
+<h3 id="forget-corrects-the-summary-not-the-memory"><code>forget</code>
+corrects the summary, not the memory</h3>
+<p><code>memo forget &lt;lo&gt;-&lt;hi&gt;</code> "drop[s] a bad
+summary; the next nap rebuilds it". This is the only correction verb,
+and it operates on the derived layer.</p>
+<p>That is a coherent position rather than an oversight — if the log is
+the evidence and the tree is a projection, then a bad compression is a
+projection bug and the fix is to recompute it. It also means OptMem has
+<em>no</em> way to correct a memory itself: a wrong <code>note</code> is
+in the log forever, and will keep being folded into every summary above
+it. The system has an unusually strong answer to "can I trust what I
+read" and no answer at all to "what if what I recorded was wrong".</p>
+<h3 id="failure-handling-in-a-file-format">Failure handling in a file
+format</h3>
+<p>Several small decisions treat partial writes as normal:</p>
+<ul>
+<li>A blank half-block is diagnosed rather than propagated —
+<code>nap_prompt</code> dies with the exact command to run: "The summary
+of #a-b is blank. Run: <code>memo forget a-b</code>", because "pending()
+lists a block only after its halves settled, so a missing half is a
+blank record — a corrupt write."</li>
+<li><code>repair</code> exists for truncated files.</li>
+<li>The store is "UTF-8 by construction, so the tool reads and prints
+UTF-8 no matter what the machine's locale says. Without this, one arrow
+in a memory makes wake crash on a latin-1 locale."</li>
+</ul>
+<p>An error message that contains the command that fixes it is a small
+thing that this atlas has otherwise seen only in <a
+href="../mempalace/">MemPalace</a>'s repair tooling.</p>
+<h3 id="transport-limits-are-a-first-class-concern">Transport limits are
+a first-class concern</h3>
+<blockquote>
+<p>"Every harness truncates a command that prints too much, and each
+drops a different piece: Claude Code cuts the middle at 30,000 chars, pi
+cuts the head at 50 KB, Codex budgets 10,000 tokens. So the memory is
+handed over in parts that fit all of them. These are transport limits,
+not memory limits."</p>
+</blockquote>
+<p>No other system in this atlas has noticed that the <em>harness</em>
+silently truncates tool output, that each one truncates a different
+region, and that a memory block sized for a token budget can therefore
+arrive with its middle missing. For a design whose entire delivery
+mechanism is "print a lot of text at session start", that is the
+difference between working and appearing to work.</p>
+<p>Related, and equally practical: "After <code>curl | sh</code> nothing
+is on PATH, so a bare <code>memo nap 0-1 '...'</code> would not [run]:
+the tool names itself." Every printed command is emitted with the path
+that will actually execute.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One line, at most 280 characters, fixed width, addressed by position.
+No tags, no type, no source, no timestamp field surfaced, no scope, no
+status.</p>
+<p>The prompt does the work a schema would elsewhere: it tells the agent
+to record "a task worth real effort, a fact or insight the user teaches
+you, anything you learn about their life (even indirectly), any event of
+lasting effect", and "Do not register redundant memories."</p>
+<p>What is absent is nearly everything this atlas usually looks for —
+trust state, provenance, scope, supersession, tombstones, contradiction
+handling. The compression prompt carries the only epistemic instruction
+in the system: "Keep what has lasting effect, drop what does not.
+<strong>Invent nothing.</strong>"</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two paths. <code>wake</code> prints the budgeted cover — the whole
+memory, at age-appropriate resolution, with no query.
+<code>recall &lt;regex&gt;</code> searches every raw memory word for
+word, which is exact and unranked.</p>
+<p>There is no embedding model, so there is no version to migrate and no
+drift when a provider changes a model — the failure mode this atlas
+lists as an uncovered dimension does not exist here.
+<code>zoom &lt;lo&gt;-&lt;hi&gt;</code> opens a block into its two
+halves for reading down the tree.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>note</code> appends one line and may return a compression
+request. That is the entire write path. There is no extraction, no LLM
+at write time, no queue.</p>
+<p>It is <a href="../../patterns/zero-llm-capture/">zero-LLM capture</a>
+with the enrichment step moved into the agent's own turn rather than
+into a worker.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A prompt block pasted into <code>AGENTS.md</code> or
+<code>CLAUDE.md</code>, instructing the agent to run
+<code>memo wake</code> "before any other tool call, in every session,
+and then do exactly what it prints, to the end of its output", to
+<code>note</code> whenever something worth keeping happens, and to
+answer a compression request "before your next action".</p>
+<p><code>$MEMORY_DIR</code> relocates the store — "a synced folder, a
+git repo" — which is the entire multi-device and versioning story.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>No background work at all</strong>, so write-to-readable lag
+is zero and nothing rewrites memory unobserved.</li>
+<li><strong>A genuinely append-only log</strong>, never edited, with
+everything else rebuildable from it.</li>
+<li><strong>Detail decaying by geometry</strong>, with one parameter and
+a closed form.</li>
+<li><strong>"If everything fits, nothing is compressed"</strong> — no
+lossy step until one is needed.</li>
+<li><strong>No index to keep in sync</strong>, because position is
+identity.</li>
+<li><strong>Reading budget decoupled from storage</strong>, changeable
+in either direction with nothing recomputed.</li>
+<li><strong>Committed footprint and latency numbers</strong> at a
+million memories.</li>
+<li><strong>Harness truncation treated as a real
+constraint.</strong></li>
+<li><strong>Errors that print the command that fixes them.</strong></li>
+<li><strong>No embedding model</strong>, so no vector migration and no
+provider drift.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No licence.</strong> All rights reserved; nothing here is
+reusable as it stands.</li>
+<li><strong>No correction of a recorded memory.</strong> A wrong
+<code>note</code> is permanent and is folded into every summary above it
+forever.</li>
+<li><strong>No scope, no trust state, no provenance, no multi-user
+story.</strong></li>
+<li><strong>Consolidation quality depends on whichever model is in the
+chair</strong> when a block comes due, and nothing records which one it
+was.</li>
+<li><strong>Compression is irreversible in practice</strong> — the log
+is retained, but once an old block is coarse, <code>wake</code> will not
+show its detail again unless someone zooms deliberately.</li>
+<li><strong>The agent must comply.</strong> The whole design rests on a
+prompt instructing the model to run <code>wake</code> first and answer
+naps promptly; nothing enforces it.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test.py</code> is 611 lines against an 860-line tool, which is
+a good ratio, and the README's scale figures (608 MB and 0.03s at a
+million memories) are the only committed footprint-and-latency numbers
+in this atlas.</p>
+<p>Nothing was run for this review. There is no quality benchmark, and
+the thing worth measuring is specific: <strong>how much is lost by the
+geometric cover</strong>. Because the log is retained, that is directly
+answerable — compare an agent given <code>wake</code>'s output against
+one given the raw log, on questions about old material — and it does not
+appear to have been done.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Consider having no background work.</strong> If
+consolidation can be requested inline in the output of the write
+command, the queue, the worker, the lag, the retry logic and the "who
+changed my memory" question all disappear together.</li>
+<li><strong>Let resolution decay with age by construction.</strong> A
+closed-form cover over a merge tree needs one parameter, is
+deterministic, and cannot drift the way a tuned scoring policy
+does.</li>
+<li><strong>Do not compress until you must.</strong> "If everything
+fits, nothing is compressed at all" should be the default for any
+budgeted summarizer.</li>
+<li><strong>Separate the reading budget from the storage
+budget</strong>, so changing how much you read recomputes nothing.</li>
+<li><strong>Make position identity</strong> where records can be fixed
+width — it removes an index and a class of sync bugs for a constant
+factor on disk.</li>
+<li><strong>Treat harness truncation as a real constraint.</strong> Tool
+output is silently cut at different places by different harnesses; a
+system that prints its whole memory needs to know that.</li>
+<li><strong>Put the fix in the error.</strong> "Run:
+<code>memo forget 4-7</code>" is worth more than a stack trace.</li>
+<li><strong>Publish footprint and latency at scale.</strong> Two
+numbers, and almost nobody has them.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>No licence</strong>, which forecloses reuse regardless of
+quality.</li>
+<li><strong>An append-only log with no correction path</strong> —
+auditability bought at the price of never being able to fix a wrong
+entry.</li>
+<li><strong>A design that depends entirely on prompt compliance</strong>
+for its write and consolidation discipline.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow the <em>ideas</em>, not the code, and not without asking: the
+no-background posture, the geometric cover, the
+reading-budget/storage-budget split, and the harness-truncation
+awareness are all transferable to systems that also have scope, trust
+and correction.</p>
+<p>Do not copy the data model into anything that needs to fix a mistake.
+OptMem is a memory you can always trust to be what was written, and can
+never repair.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How much is lost by the cover, relative to the raw log, on questions
+about old material?</li>
+<li>What happens when a wrong memory is recorded — is there any intended
+workflow beyond noting a correction later and hoping the compression
+prefers it?</li>
+<li>Which model produced each summary? Nothing records it, and quality
+varies.</li>
+<li>What does concurrent <code>note</code> from two agents do to a
+fixed-width append?</li>
+<li>Would a licence be added on request? Everything above is unusable
+without one.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>The tool: <code>memo</code> —
+<code>cover</code>/<code>_cover</code>,
+<code>pending</code>/<code>pending_count</code>,
+<code>nap_prompt</code>/<code>next_nap</code>,
+<code>log_*</code>/<code>tree_*</code>, <code>repair</code>,
+<code>parse</code>, <code>records</code>.</li>
+<li>The prompt: <code>README.md</code>, "The prompt" section — the whole
+integration.</li>
+<li>Tests: <code>test.py</code>.</li>
+<li>Store layout: <code>~/.optmem/memory/{LOG.txt,TREE/,config}</code>,
+relocatable with <code>$MEMORY_DIR</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-07-28</strong> — <a
+href="https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96"><code>e36da55815951d50d103d7242d92cf9a71ceee96</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

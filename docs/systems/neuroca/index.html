@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Three tiers, a lymphatic
+consolidator and neural tubules — with every integration test of the
+memory system skipped at module level because they 'use the old memory
+architecture'.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NeuroCA — Agent Memory Atlas">
+    <meta property="og:description" content="Three tiers, a lymphatic
+consolidator and neural tubules — with every integration test of the
+memory system skipped at module level because they 'use the old memory
+architecture'.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NeuroCA — Agent Memory Atlas">
+    <meta name="twitter:description" content="Three tiers, a lymphatic
+consolidator and neural tubules — with every integration test of the
+memory system skipped at module level because they 'use the old memory
+architecture'.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NeuroCA — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NeuroCA",
+      "description": "Three tiers, a lymphatic consolidator and neural tubules \u2014 with every integration test of the memory system skipped at module level because they 'use the old memory architecture'.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory system mid-refactor</p>
+          <h1>NeuroCA</h1>
+          <p class="document-deck">Three tiers, a lymphatic consolidator
+and neural tubules — with every integration test of the memory system
+skipped at module level because they 'use the old memory
+architecture'.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Modern-Prometheus-AI/Neuroca">
+              <span>Source</span>
+              <strong>Modern-Prometheus-AI/Neuroca</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4" title="b4d4198e0d102be9074aa3c74b660c6d4091cdf4">
+              <span>Analyzed revision</span>
+              <code>b4d4198e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NeuroCA is a "Persistent Memory System for LLMs" organised as a
+NeuroCognitive Architecture: short-, medium- and long-term tiers, a
+<strong>lymphatic</strong> subsystem for consolidation, an
+<strong>annealing</strong> optimizer, and <strong>tubules</strong>
+carrying weighted connections. MIT, roughly 134,000 lines of Python.</p>
+<p><strong>The finding is the state of its own test suite, and it is
+checkable in four lines.</strong></p>
+<p><code>tests/integration/memory/test_memory_integration.py:18</code>
+and <code>tests/integration/memory/test_tiered_storage.py:22</code> both
+begin with the same module-level skip:</p>
+<pre class="python"><code>pytest.skip(&quot;These tests use the old memory architecture and need to be
+             refactored&quot;, allow_module_level=True)</code></pre>
+<p><code>allow_module_level=True</code> means the entire file is skipped
+before a single test runs. The remaining integration file,
+<code>test_memory_tier_integration.py</code>, skips Redis by default and
+skips SQLite with the reason "SQLite tests need further investigation
+for thread safety and initialization" — leaving, in effect, the
+in-memory backend.</p>
+<p>So at this commit <strong>no integration test exercises the memory
+system against a durable backend.</strong> The unit tests that remain
+add three more skips for search, count and stats, each reasoned
+"implementation varies across backends" — which is the assertion a
+backend-agnostic interface most needs.</p>
+<p>An outside corpus declined this project as "alpha; ~110K lines of
+AI-generated scaffolding, integration tests all skipped". This report
+does not repeat the scaffolding claim, which is a judgement about
+provenance the code cannot settle. The testing claim is precise, and it
+holds: the tests are skipped, the reason is recorded in the skip itself,
+and the reason is that the architecture they test has been replaced.</p>
+<p><strong>That is a report about a moment, which is what a pinned
+report is for.</strong> The skips are not neglect — they are an honest
+marker left by someone mid-migration, and they say so. A reader
+evaluating NeuroCA today should read them as "the new memory
+architecture is not yet covered", not as "the tests fail".</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <code>MemoryItem</code> carries content — structured
+(<code>text</code>, <code>summary</code>, <code>json_data</code>) or raw
+— plus metadata: <code>created_at</code>, <code>last_accessed</code>,
+<code>updated_at</code>, <code>status</code>, <code>importance</code>
+and <code>strength</code> (both bounded to <code>[0,1]</code>),
+<code>access_count</code>, <code>tags</code>, <code>source</code>, the
+<code>tier</code> it lives in, <code>expires_at</code> (for STM),
+<code>priority</code> (for MTM), and the consolidation pair.</p>
+<p><code>MemoryStatus</code> is five values, and the vocabulary is
+better than most:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning, in the code's own comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>active</code></td>
+<td>"Normal status, actively used"</td>
+</tr>
+<tr>
+<td><code>archived</code></td>
+<td>"No longer active but preserved"</td>
+</tr>
+<tr>
+<td><code>consolidated</code></td>
+<td>"Moved to a higher tier"</td>
+</tr>
+<tr>
+<td><code>forgotten</code></td>
+<td>"Marked for deletion but not yet removed"</td>
+</tr>
+<tr>
+<td><code>decaying</code></td>
+<td>"In the process of natural decay"</td>
+</tr>
+</tbody>
+</table>
+<p>Separating <code>consolidated</code> from <code>archived</code> is
+the useful distinction: one means the memory was promoted and lives on
+elsewhere, the other means it was set aside where it is. And
+<code>forgotten</code> as "marked for deletion but not yet removed" is
+an explicit soft-delete state rather than an implied one — a memory in
+that state is gone from the agent's view and still present for whatever
+needs to clean it up.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — consolidation promotes a copy into a higher tier and records what it came from, while forgetting is a mark that maintenance later acts on</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: consolidation promotes a copy into a higher tier and records what it came from, while forgetting is a mark that maintenance later acts on
+stateDiagram-v2
+    [*] --&gt; active: added through the MemoryManager, routed to a tier
+    active --&gt; decaying: natural decay, strength falling
+    decaying --&gt; active: reinforced by access
+    active --&gt; consolidated: lymphatic consolidator promotes it&lt;br/&gt;consolidated_from + consolidated_at recorded
+    consolidated --&gt; [*]: the promoted copy lives in a higher tier
+    active --&gt; archived: no longer active, preserved in place
+    decaying --&gt; forgotten: marked for deletion, not yet removed
+    forgotten --&gt; [*]: removed by maintenance</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three tiers (<code>tiers/stm</code>, <code>mtm</code>,
+<code>ltm</code>) over pluggable backends
+(<code>backends/in_memory</code>, <code>sqlite</code>, vector) selected
+by a factory, with a <code>MemoryManager</code> as "the primary entry
+point" orchestrating across both axes. The <code>memory/README.md</code>
+documents this layout accurately, which made the reading faster and is
+worth crediting on its own.</p>
+<p>The biologically-named subsystems are the distinguishing surface:</p>
+<ul>
+<li><strong><code>lymphatic/</code></strong> — a consolidator, an
+abstractor and a scheduler. The consolidator's header names four
+strategies (importance filtering, semantic clustering, temporal decay
+modelling, contextual association strengthening) and the metaphor:
+processes "that mimic how the human brain's lymphatic system clears
+waste and consolidates important memories during rest periods".</li>
+<li><strong><code>annealing/</code></strong> — an optimizer with phases
+and a scheduler, i.e. simulated annealing applied to the memory
+store.</li>
+<li><strong><code>tubules/</code></strong> —
+<code>connections.py</code>, <code>pathways.py</code> and
+<code>weights.py</code>, with the weights module citing "Hebbian
+learning, homeostatic plasticity, and decay dynamics".</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Add</strong> — <code>MemoryManager</code> → tier selection →
+backend.</p>
+<p><strong>Consolidate</strong> —
+<code>lymphatic/consolidator.py</code>, with a documented API of
+<code>consolidate(memories)</code> and
+<code>schedule_consolidation(memories, delay=3600)</code>.</p>
+<p><strong>Optimise</strong> — <code>annealing/optimizer.py</code> with
+<code>phases.py</code> and <code>scheduler.py</code>.</p>
+<p><strong>Weight</strong> — <code>tubules/weights.py</code>.</p>
+<p><strong>Search</strong> — per-tier <code>search.py</code> under
+<code>tiers/base/</code>, with <code>relevance</code> attached to the
+result rather than stored.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The Pydantic model is careful in the places that matter:
+<code>importance</code> and <code>strength</code> are
+<code>Field(..., ge=0.0, le=1.0)</code>, <code>access_count</code> is
+<code>ge=0</code>, and <code>relevance</code> is explicitly documented
+as "often added during search" rather than persisted — so a query-time
+score cannot be mistaken for stored state.</p>
+<p><code>consolidated_from</code> (the id of the source memory) and
+<code>consolidated_at</code> are the pair worth lifting. A promoted
+memory knows where it came from, so consolidation is traceable rather
+than an appearance in a higher tier — the same property <a
+href="../memorybear/">MemoryBear</a> gets from a
+<code>DERIVED_FROM</code> edge, expressed as two columns.</p>
+<p><code>embedding_model</code> and <code>embedding_dimensions</code>
+stored alongside the vector is a small, correct detail: a store that
+changes embedding models can tell which vectors are stale.</p>
+<p>There is no supersession pointer, no contradiction record and no
+verification field. Correction is decay and forgetting.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Per-tier search behind the manager, with backend-specific
+implementations — and that variability is exactly what the three skipped
+unit tests name: search, count and stats are skipped because
+"implementation varies across backends".</p>
+<p>An interface whose conformance tests are skipped for variance is an
+interface whose contract is not settled. That is a fair state for a
+refactor in progress and it is the reason this report claims no
+retrieval property.</p>
+<p>There is no scope key. Tiers and backends partition <em>storage</em>;
+nothing partitions <em>access</em>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through the manager. STM entries carry
+<code>expires_at</code>; MTM entries carry <code>priority</code>; LTM is
+the consolidation target.</p>
+<p>Correction is the status machine. Nothing is keyed on a value,
+nothing records a rejection, and a wrong memory is expected to decay
+unless access keeps it alive — with the same weakness that has for every
+usage-driven store: a wrong memory that is useful is reinforced.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an API, adapters including Ollama, an integration package and
+a monitoring tier. Benchmarks against Agno are advertised in the README
+and live in a <strong>separate repository</strong>
+(<code>Neuroca-Benchmarks</code>), so nothing about them is checkable
+here — the fourth instance of that pattern in this pass.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks.</strong> There is no rejected-value record, no
+validity axis, no scope key on the read path, no review surface, no
+mutation log, and no negative retrieval case. <code>MemoryStatus</code>
+is a five-value lifecycle vocabulary, not an epistemic one:
+<code>archived</code> and <code>forgotten</code> say where a memory is,
+not whether it is true.</p>
+<p><strong>The honest summary is the test state.</strong> A memory
+system with three tiers, three backends and a consolidation subsystem,
+whose integration coverage against durable backends is zero at this
+commit by explicit module-level skips, cannot be assessed for the
+properties this atlas measures — because the code that would demonstrate
+them is the code the tests were retired for.</p>
+<p>That is worth recording rather than working around. The atlas's rule
+is that a report describes one commit and "not found" means not found in
+the inspected code at that commit. Here the project itself has marked
+which parts are in transition, which is more than most systems in that
+position do.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> 21 test files. Eight skip markers, of
+which the two that matter are module-level skips over the memory
+integration suites, quoted in section 1.</p>
+<p>Benchmarks against Agno are claimed in the README and hosted in
+<code>justinlietz93/Neuroca-Benchmarks</code>. Not in this tree, not
+checked here.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give <code>forgotten</code> a state of its own.</strong>
+"Marked for deletion but not yet removed" is a real intermediate that
+most systems leave implicit, and making it explicit is what lets a
+cleanup pass be separate from the decision to forget.</li>
+<li><strong>Separate <code>consolidated</code> from
+<code>archived</code>.</strong> One means promoted and living elsewhere;
+the other means set aside in place. Collapsing them loses the question
+"where did it go".</li>
+<li><strong>Record <code>consolidated_from</code> and
+<code>consolidated_at</code>.</strong> Two fields, and a promoted memory
+stops being an unexplained appearance in a higher tier.</li>
+<li><strong>Store the embedding model and dimensions with the
+vector.</strong> It is how you find the vectors that need re-embedding
+after a model change.</li>
+<li><strong>Mark <code>relevance</code> as query-time in the
+model.</strong> A score attached during search and documented as such
+cannot be mistaken for persisted state.</li>
+<li><strong>Write the skip reason into the skip.</strong> "These tests
+use the old memory architecture and need to be refactored" is more
+useful to a reader than a green suite that covers nothing, and it is why
+this report could be specific.</li>
+<li><strong>Document the directory layout in a README beside the
+code.</strong> <code>memory/README.md</code> describes the
+tier/backend/model split accurately and made this reading faster.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not skip a conformance test because implementations
+vary.</strong> Search, count and stats varying "across backends" is the
+argument <em>for</em> the conformance test, not against it — that
+variance is the contract breaking.</li>
+<li><strong>Do not let a refactor leave zero durable-backend
+coverage.</strong> In-memory tests passing while SQLite is skipped for
+"thread safety and initialization" means the concurrency behaviour of
+the real backend is untested.</li>
+<li><strong>Do not host the benchmark in another repository if the
+README leads with it.</strong> A reader at this commit cannot check
+it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Nobody should adopt this at this commit. The architecture is legible,
+the model is well-typed and the biological framing is coherent, and the
+memory system's integration coverage against a durable backend is zero
+by the project's own markers.</p>
+<p>It is worth reading for the status vocabulary and the consolidation
+provenance fields, both of which are small, correct, and independent of
+the refactor.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Has the new memory architecture been covered since?</strong>
+The skips are dated by the commit and name their own remedy.</li>
+<li><strong>What is the SQLite thread-safety problem?</strong> The skip
+names it and nothing in the tree resolves it.</li>
+<li><strong>What do the annealing phases optimise?</strong> An
+optimizer, phases and a scheduler exist; the objective function was not
+traced.</li>
+<li><strong>Do tubule weights reach retrieval?</strong>
+<code>weights.py</code> cites Hebbian learning and homeostatic
+plasticity; whether the weights affect what is returned was not
+established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The skipped suites</strong> —
+<code>tests/integration/memory/test_memory_integration.py:18</code>,
+<code>tests/integration/memory/test_tiered_storage.py:22</code>,
+<code>tests/integration/memory/test_memory_tier_integration.py:300-320</code>,
+<code>tests/unit/memory/backends/test_sqlite_backend.py:117</code>,
+<code>:193</code>, <code>:229</code></p>
+<p><strong>Model</strong> —
+<code>src/neuroca/memory/models/memory_item.py</code>
+(<code>MemoryStatus</code> <code>:17-24</code>,
+<code>MemoryContent</code> <code>:27</code>, the metadata block
+<code>:86-120</code>), <code>models/search.py</code>,
+<code>models/working_memory.py</code></p>
+<p><strong>Tiers and backends</strong> —
+<code>src/neuroca/memory/tiers/</code> (<code>base/</code>,
+<code>stm/</code>, <code>mtm/</code>, <code>ltm/</code>),
+<code>src/neuroca/memory/backends/</code>,
+<code>src/neuroca/memory/manager/core.py</code>,
+<code>manager/working_memory.py</code>,
+<code>src/neuroca/memory/interfaces/</code></p>
+<p><strong>Biological subsystems</strong> —
+<code>src/neuroca/memory/lymphatic/consolidator.py</code> (the four
+strategies <code>:4-14</code>), <code>abstractor.py</code>,
+<code>scheduler.py</code>; <code>src/neuroca/memory/annealing/</code>
+(<code>optimizer.py</code>, <code>phases.py</code>,
+<code>scheduler.py</code>); <code>src/neuroca/memory/tubules/</code>
+(<code>weights.py</code> and its citations <code>:1-12</code>,
+<code>connections.py</code>, <code>pathways.py</code>)</p>
+<p><strong>Documentation</strong> —
+<code>src/neuroca/memory/README.md</code>,
+<code>TABLE_OF_CONTENTS.md</code></p>
+<p><strong>Not in this tree</strong> — the Agno comparison lives at
+<code>justinlietz93/Neuroca-Benchmarks</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4"><code>b4d4198e0d102be9074aa3c74b660c6d4091cdf4</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

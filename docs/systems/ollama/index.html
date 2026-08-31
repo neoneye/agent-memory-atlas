@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local inference runtime that
+grew an agent mode whose only durable memory is a skill catalog on disk
+— advertised by name in the prefix, loaded on demand, and gated by
+approval when the model asks for it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Ollama — Agent Memory Atlas">
+    <meta property="og:description" content="A local inference runtime
+that grew an agent mode whose only durable memory is a skill catalog on
+disk — advertised by name in the prefix, loaded on demand, and gated by
+approval when the model asks for it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ollama — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local inference runtime
+that grew an agent mode whose only durable memory is a skill catalog on
+disk — advertised by name in the prefix, loaded on demand, and gated by
+approval when the model asks for it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Ollama — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Ollama",
+      "description": "A local inference runtime that grew an agent mode whose only durable memory is a skill catalog on disk \u2014 advertised by name in the prefix, loaded on demand, and gated by approval when the model asks for it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Procedural memory, and nothing else</p>
+          <h1>Ollama</h1>
+          <p class="document-deck">A local inference runtime that grew
+an agent mode whose only durable memory is a skill catalog on disk —
+advertised by name in the prefix, loaded on demand, and gated by
+approval when the model asks for it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ollama/ollama">
+              <span>Source</span>
+              <strong>ollama/ollama</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ollama/ollama/commit/acdf81510d58d993de6175f8565b504d9777940a" title="acdf81510d58d993de6175f8565b504d9777940a">
+              <span>Analyzed revision</span>
+              <code>acdf8151…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Ollama is on a token-cost list as a way to run open-weight models on
+hardware you already own. Since it grew an <code>agent/</code> package
+that is no longer all it is: there is a session loop, a tool registry,
+an approval gate, a compactor, and a <strong>skill catalog</strong> —
+and the skill catalog is durable, cross-session state that shapes how
+the agent behaves. That makes it a memory system of exactly one
+kind.</p>
+<p>The scope of what it remembers is worth stating plainly first,
+because it is narrow. Nothing the agent <em>learns</em> survives a run.
+There is no episodic store, no extracted fact, no user profile, no
+conversation index. Approvals live on the <code>Session</code> struct
+and die with it. Compaction, at 80% of a 32,768-token window by default,
+replaces archived turns with a summary <em>inside the message
+history</em> and saves nothing to disk. What persists is
+<strong>procedural</strong>: <code>SKILL.md</code> files a person wrote,
+discovered at startup, and available to the model for the rest of the
+session.</p>
+<p>Two mechanisms in that narrow surface are worth a careful reader's
+time.</p>
+<p>The first is <strong>two-stage retrieval, with the reasoning in the
+code</strong>. <code>SkillCatalog.SystemContext()</code> renders an
+<code>&lt;available_skills&gt;</code> block containing each skill's name
+and description and nothing else, above a comment that says why:
+<em>"advertises the catalog without expanding full instructions in every
+request. The skill call is the explicit loading boundary."</em> The body
+arrives later, as a tool result, only for the skill actually used. That
+is the <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> split-by-position shape reached from a token argument
+rather than a caching one — a stable index in the prefix, the volatile
+body after it.</p>
+<p>The second is <strong>approval on recall</strong>.
+<code>agent/tools/skill.go</code> returns <code>true</code> from
+<code>RequiresApproval</code>, with the reason in a comment:
+<em>"Model-initiated loads require approval because a skill's
+instructions can influence the rest of the run."</em> User activation
+through <code>/skill-name</code> bypasses the gate, because the user
+asked. Almost every system in this atlas gates the <em>write</em> to
+memory and lets recall run unattended; this one is the other way round,
+and for procedural memory that is the correct way round.</p>
+<p>Where it is weakest is that the catalog is a read-only substrate as
+far as the agent is concerned. The bundled <code>skill-creator</code> is
+instructions telling the model to write a <code>SKILL.md</code> with the
+user's approval and then to tell the user to start a new session — a
+convention, not a code path. So the loop from "the agent learned
+something" to "the agent remembers it" is closed by a human,
+deliberately.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a validated instruction file with a
+name</strong>. The system's model of it is exactly the front matter:
+<code>name</code>, <code>description</code>, and a Markdown body.</p>
+<p>The state machine has three states and a person moves between all of
+them:</p>
+<ul>
+<li><strong>On disk, not loaded.</strong> A directory under one of four
+roots containing <code>SKILL.md</code>. It must be under 1 MiB, must
+begin with <code>---</code>, must have parseable front matter, and must
+not be empty; anything else is a diagnostic and the skill is
+skipped.</li>
+<li><strong>Advertised.</strong> At agent start,
+<code>LoadDefaultSkills(projectDir)</code> walks the roots and builds a
+name-keyed map. Every loaded skill's name and description are in the
+system prompt for the whole session. <strong>Nothing rescans</strong>:
+the bundled skill's own text tells the user that <em>"new and changed
+skills are discovered when the agent starts, so tell the user to begin a
+new agent session afterward."</em></li>
+<li><strong>Loaded.</strong> The body is in the transcript, as a tool
+result, and stays there. There is no unloading.</li>
+</ul>
+<p>Death is <code>rm</code>. Correction is <code>$EDITOR</code>. A name
+collision across roots is not an error and not reported — the comment
+calls it <em>"expected precedence resolution"</em> — so a project skill
+silently shadows a user skill of the same name, which is the intended
+behaviour and also the one way a memory here can quietly become a
+different memory.</p>
+<p>The epistemics are unusually simple and stated rather than implied. A
+skill is never treated as evidence about the world, only as
+instructions, and it carries no authority: the type comment says <em>"It
+never grants tool permissions; it is supplied to the model as ordinary
+tool-result content"</em>, and the system prompt repeats the same thing
+to the model — <em>"Skills only provide instructions; use ordinary tools
+for filesystem or network access, with their normal approval
+rules."</em> Saying it twice, in two audiences, is the design.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four skill roots collapse into one name-keyed catalog where a later root silently wins, and only the name and description reach the prompt until something asks for the body</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four skill roots collapse into one name-keyed catalog where a later root silently wins, and only the name and description reach the prompt until something asks for the body
+flowchart TD
+    R1[&quot;~/.agents/skills&quot;] --&gt; C
+    R2[&quot;~/.ollama/skills&quot;] --&gt; C
+    R3[&quot;&amp;lt;project&amp;gt;/.agents/skills&quot;] --&gt; C
+    R4[&quot;&amp;lt;project&amp;gt;/.ollama/skills&quot;] --&gt; C[&quot;name-keyed catalog&lt;br/&gt;later root wins, silently&quot;]
+    C --&gt; S[&quot;&amp;lt;available_skills&amp;gt; in the system prompt&lt;br/&gt;name + description only&quot;]
+    S --&gt; Q{&quot;who asks for the body?&quot;}
+    Q -- &quot;user types /name&quot; --&gt; A[&quot;synthetic tool call + result&lt;br/&gt;prepended before the first request&quot;]
+    Q -- &quot;model calls skill(name)&quot; --&gt; H[&quot;approval required:&lt;br/&gt;instructions can steer the run&quot;]
+    H -- &quot;approved&quot; --&gt; A
+    H -- &quot;denied&quot; --&gt; S
+    A --&gt; T[&quot;body sits in the transcript&lt;br/&gt;no unload&quot;]
+    E[&quot;new or edited SKILL.md&quot;] -.-&gt;|&quot;not seen until&lt;br/&gt;the next agent session&quot;| C</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no memory service, no database and no background process.
+The whole subsystem is four files in one Go package:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Concern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent/skills.go</code></td>
+<td>813</td>
+<td>discovery, validation, precedence, the catalog,
+<code>SystemContext()</code>, the bundled skill</td>
+</tr>
+<tr>
+<td><code>agent/skill_activation.go</code></td>
+<td>57</td>
+<td>the synthetic tool call that injects an explicitly requested
+skill</td>
+</tr>
+<tr>
+<td><code>agent/tools/skill.go</code></td>
+<td>40</td>
+<td>the model-facing tool, and its approval requirement</td>
+</tr>
+<tr>
+<td><code>agent/session.go</code></td>
+<td>1,092</td>
+<td>the run loop that holds <code>Skills *SkillCatalog</code></td>
+</tr>
+</tbody>
+</table>
+<p>Persistence is the filesystem. <code>SkillsDir()</code> resolves
+<code>OLLAMA_SKILLS</code>, then
+<code>$XDG_CONFIG_HOME/ollama/skills</code>, then
+<code>~/.ollama/skills</code>.
+<code>defaultSkillRoots(projectDir)</code> returns four roots in this
+order: <code>~/.agents/skills</code>, the resolved user Ollama
+directory, <code>&lt;project&gt;/.agents/skills</code>,
+<code>&lt;project&gt;/.ollama/skills</code>. Later roots overwrite
+earlier ones in the map, so project beats user and — at the same level —
+Ollama's own directory beats the cross-client one.</p>
+<p>That <code>.agents/skills</code> root is the notable line in an
+otherwise ordinary loader. It is a convention shared with other
+harnesses rather than an Ollama path, so a skill written once is visible
+to more than one agent, and this runtime reads it at both the user and
+project level without owning it.</p>
+<p><code>installBundledSkillCreator()</code> writes the bundled
+<code>skill-creator</code> into the user skills directory at startup,
+and a failure there is a diagnostic rather than a fatal error — so the
+catalog always contains at least one skill even when the disk write
+fails, because <code>bundledSkillCreator()</code> parses it from a
+string constant first.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to stand up. Ollama is a single binary, the skills are
+Markdown in a directory, and the whole path is offline — which is the
+point of the project. No API key is needed, nothing is uploaded, and the
+store is as inspectable and hand-repairable as a text file, because it
+is one.</p>
+<p>The cost of adoption is the cost of writing skills, and the ceiling
+is that a skill is only as good as the description in its front matter,
+since that description is the entire basis on which the model decides to
+load it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Discovery.</strong>
+<code>LoadDefaultSkills(projectDir)</code> in
+<code>agent/skills.go:211</code> → <code>defaultSkillRoots</code> →
+<code>DiscoverSkills(root.path)</code> per root →
+<code>parseSkill(path, directoryName)</code> →
+<code>parseSkillContent</code>. Diagnostics accumulate on the catalog
+rather than aborting the load.</p>
+<p><strong>Validation.</strong> <code>parseSkill</code> uses
+<code>os.Stat</code> rather than <code>Lstat</code> <em>"so a symlinked
+SKILL.md resolves to its target file"</em>, rejects anything over
+<code>maxSkillBytes</code> (1 MiB), and <code>parseSkillContent</code>
+rejects an empty file and one that does not begin with
+<code>---\n</code> or <code>---\r\n</code>.</p>
+<p><strong>Advertisement.</strong>
+<code>SkillCatalog.SystemContext()</code> at
+<code>agent/skills.go:720</code> builds the
+<code>&lt;available_skills&gt;</code> list.
+<code>cmd/agent_tui.go:264</code> registers the <code>skill</code> tool
+only when the catalog is non-empty, so a user with no skills gets no
+tool.</p>
+<p><strong>Explicit activation.</strong>
+<code>Session.activateSkill</code> in
+<code>agent/skill_activation.go</code> loads by name and returns two
+messages to prepend — an assistant message carrying a synthetic
+<code>skill</code> tool call, and the tool result carrying
+<code>skill.Content()</code>. It emits the same
+<code>tool_call_detected</code> → <code>tool_started</code> →
+<code>tool_finished</code> event sequence the real tool path emits, so
+the transcript and the event stream cannot tell the difference.</p>
+<p><strong>Model-initiated load.</strong>
+<code>tools.Skill.Execute</code> → <code>Catalog.Load(name)</code>,
+behind <code>RequiresApproval</code> returning an unconditional
+<code>true</code>.</p>
+<p><strong>Discovery in the interface.</strong>
+<code>cmd/tui/chat/input.go:1273</code> offers every catalog skill as a
+<code>/&lt;skill-name&gt;</code> completion, declining to shadow a
+built-in slash command.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Skill</code> is a path, a directory name, a parsed
+front-matter <code>name</code> and <code>description</code>, and a body.
+That is the whole schema, and it is not persisted anywhere but the
+file.</p>
+<p>Scoping is <strong>precedence, not isolation</strong>. All four roots
+are read on every start and merged into one flat namespace; the ordering
+decides who wins a collision. No skill is withheld from any session, no
+root is filtered out at read time, and there is no user, tenant or agent
+key. A project skill cannot be hidden from another project except by not
+being in that project.</p>
+<p>There are no temporal fields, no versions, no correction chain, no
+TTL and no provenance beyond the path the file came from.
+<code>Skill.Name</code> is derived from the directory name and
+constrained by the bundled instructions to lowercase letters, numbers
+and single hyphens, at most 64 characters — a rule stated to the model
+rather than enforced by the loader as far as this reading found.</p>
+<p>Nothing separates episodic from semantic material because neither
+exists. The only distinction the package draws is procedural
+instructions versus everything the session is doing, and the second half
+is discarded.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The model is the retriever.</strong> There is no index, no
+scoring, no embedding and no query. The system prompt lists
+<code>- &lt;name&gt;: &lt;description&gt;</code> for every skill, and
+the model decides which one matches the task and calls
+<code>skill(name)</code> with an exact name. <code>Catalog.Load</code>
+is a map lookup.</p>
+<p>That has a real property worth naming: retrieval quality here is a
+function of how well the <em>descriptions</em> are written, and the
+bundled <code>skill-creator</code> spends most of its length on exactly
+that — its example descriptions all follow the shape "what it does. Use
+when …", which is the model's only signal.</p>
+<p>The token budgeting is the two-stage split. The catalog costs one
+line per skill in every request; the body costs its full length once, in
+the turn it is loaded, and then persists in the transcript until
+compaction archives it. A user with forty skills pays forty lines of
+prefix always and one body sometimes, which is the right trade and is
+the one the comment names.</p>
+<p>Failure modes: a skill whose description does not match how a user
+phrases the task is invisible, with no fallback search to find it. Two
+skills with overlapping descriptions are disambiguated by nothing. And a
+shadowed skill is not merely lower-ranked — it is absent from the
+catalog entirely, with no diagnostic saying so.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>There is no write path from the agent.</strong> No tool
+creates, edits or deletes a skill. The bundled
+<code>skill-creator</code> is a document instructing the model to use
+its ordinary file tools — which carry their own approval rules — to
+write a <code>SKILL.md</code> in the right place, not to overwrite an
+existing skill without the user's approval, and to tell the user that a
+new skill needs a new session before it is visible.</p>
+<p>Every one of those is a convention enforced by the model's
+compliance. The loader does not check that a file was approved, and the
+catalog does not notice a file appearing mid-session because nothing
+rescans.</p>
+<p>Deletion and correction are the filesystem's. There is no conflict
+handling because there are no concurrent writers the system knows
+about.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path costs nothing because there is no write path. The read
+path costs one line per skill per request plus one body per load, and no
+model call is spent deciding anything — the <em>model</em> does the
+selecting as part of a turn it was going to take anyway.</p>
+<p>No background pass exists. Nothing re-reads the store, nothing
+rewrites it, and the catalog is built once per agent start.</p>
+<p>The injection sits on the friendly side of the prompt-cache boundary
+and does so by construction: <code>&lt;available_skills&gt;</code> is
+computed once at start from a name-sorted list, so it is byte-identical
+across turns, and the volatile part — the loaded body — arrives as a
+tool result in the message history rather than in the system prompt.
+<code>List()</code> sorts by name explicitly, which is what keeps the
+block stable rather than map-iteration-ordered. Nothing in the tree
+claims this was the reason.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The surface is one tool, one slash-command convention, and one
+system-prompt block. <code>agenttools.Skill</code> is registered only
+when the catalog is non-empty. Explicit activation goes through
+<code>Session.activateSkill</code> and produces a transcript
+indistinguishable from a model-initiated load, which matters because the
+compactor, the event stream and any downstream consumer see one
+shape.</p>
+<p>The agency split is the interesting part. The model may <em>read</em>
+memory, with approval. It may not write it. The user may write it, and
+may read it without approval. That is an unusual allocation, and it
+follows from what the memory is: instructions that steer the run are
+more dangerous to load than to store.</p>
+<p>Session lifecycle and compaction are handled in
+<code>agent/compactor.go</code>, and they do not interact with skills at
+all: a loaded skill body is ordinary message content and is archived
+into the summary like anything else. So a long session can lose the
+instructions it loaded, and nothing reloads them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust model is small, explicit, and repeated:</p>
+<ul>
+<li><strong>A skill is not a capability.</strong> Stated in the type
+comment and again in the system prompt. The atlas has several systems
+where retrieved memory carries implicit authority; this one refuses it
+in text, in both directions.</li>
+<li><strong>Loading is privileged, storing is not.</strong> The approval
+gate is on <code>tools.Skill</code>, which is the model's path, and is
+bypassed for user activation.</li>
+<li><strong>Symlinks resolve rather than being refused</strong>, which
+is a deliberate <code>Stat</code> over <code>Lstat</code> — convenient
+for a shared skills directory, and it means a skill's real content can
+live outside every root the loader knows about.</li>
+<li><strong>A 1 MiB ceiling</strong> bounds the worst single
+injection.</li>
+</ul>
+<p>What is not defended:</p>
+<ul>
+<li><strong>Nothing checks who wrote a skill.</strong> A
+<code>SKILL.md</code> that appears in
+<code>&lt;project&gt;/.agents/skills</code> because it was checked into
+a repository is loaded on the next agent start in that project, and the
+approval prompt the model hits shows a <em>name</em>, not the
+instructions behind it. The person approving is approving a string they
+have probably not read. That is the near-miss on human review in this
+design: there is a person in the loop and they are shown the wrong
+artifact.</li>
+<li><strong>Silent shadowing.</strong> Precedence resolution is correct
+and unreported, so a project skill overriding a trusted user skill of
+the same name produces no signal anywhere.</li>
+<li><strong>Nothing survives the session but the files.</strong> For the
+failure modes this atlas usually cares about — a wrong fact re-asserted,
+a deleted memory returning — Ollama is immune by not having the
+mechanism, which is worth saying plainly rather than scoring as a
+strength.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Go tests beside the code: 16 <code>func Test</code> entries in
+<code>agent/skills_test.go</code>, 21 in
+<code>agent/compactor_test.go</code>, 38 in
+<code>agent/session_test.go</code>, 3 in
+<code>agent/approval_test.go</code>, 1 in
+<code>agent/skill_activation_test.go</code>, plus
+<code>agent/tools/skill_test.go</code> and a
+<code>agent/testdata/</code> tree.</p>
+<p>What they assert is the loader's contract — discovery across roots,
+precedence, malformed front matter, the size ceiling, the empty-file
+case, catalog listing. That is the right coverage for what this is.</p>
+<p>There is no evaluation of whether the model picks the right skill
+from a description, which is the only quality question the design
+actually raises, and no benchmark of any kind touching memory. No paper
+exists and none is claimed; there is no <code>CITATION.cff</code> and no
+arXiv reference in the README.</p>
+<p>I ran nothing. Every claim here comes from reading the tree at
+<code>acdf81510d58d993de6175f8565b504d9777940a</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Split the catalog from the content.</strong> Put a
+one-line-per-item index in the stable prefix and load the body on demand
+through a tool. It bounds the always-on cost at the number of items
+rather than their size, keeps the prefix byte-identical between turns,
+and gives you a natural place to put an approval gate. Sort the index
+deterministically or the prefix stability is accidental.</li>
+<li><strong>Gate recall, not only writes, when the memory is
+instructions.</strong> Anything retrieved that will be <em>followed</em>
+rather than <em>considered</em> deserves a different permission than a
+fact does. Exempting user-initiated loads keeps the gate from becoming
+noise.</li>
+<li><strong>Say the trust rule to the model as well as in the
+code.</strong> "Skills only provide instructions; use ordinary tools for
+filesystem or network access, with their normal approval rules" is a
+one-line defence against a retrieved document claiming authority it does
+not have. It is not enforcement, and it costs nothing.</li>
+<li><strong>Read the neighbours' directory.</strong> Supporting
+<code>.agents/skills</code> alongside your own path means a user writes
+a skill once. Interoperating on a filesystem convention is the cheapest
+federation there is.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not resolve name collisions silently.</strong> Precedence
+is right; not telling anyone is what turns a correct rule into a
+debugging session. Emit the shadowed path.</li>
+<li><strong>Do not make an approval prompt show a name when the risk is
+in the body.</strong> If loading a document can steer the run, the
+person approving needs to see the document, or at least its
+provenance.</li>
+<li><strong>Do not rely on the model to tell the user your cache is
+stale.</strong> "Start a new session to see the change" is a real
+constraint here and it lives in the text of a bundled skill, where it
+holds only if that skill was loaded.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this shape if your agent's durable memory is genuinely
+procedural — playbooks a person curates — and you want it to cost almost
+nothing. Four files, no database, no background work, and the whole
+thing is legible to a user with a text editor.</p>
+<p>Do not take it as a memory system, because it is not one and does not
+pretend to be. Anything the agent learns in a run is gone at the end of
+it, and there is no seam to add persistence: no store, no event stream
+for memory, no write tool to extend. If you need Ollama's local
+inference <em>and</em> durable episodic memory, the memory belongs in a
+layer above this one — which is what most of the systems in this atlas
+that mention Ollama are doing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does anything enforce the name rules the bundled skill states —
+lowercase, hyphens, 64 characters — or is the directory name accepted as
+given? The loader path this reading followed derives the name from the
+directory without validating its shape.</li>
+<li>Is the shadowed skill genuinely unreachable, or is the losing path
+recoverable through a longer name? The catalog is a flat name-keyed map,
+which suggests not.</li>
+<li>How does an approval prompt render a <code>skill</code> call in each
+surface? The TUI path was read; the API and app surfaces were not.</li>
+<li>Does the agent package have any other durable artifact this reading
+missed? The probe covered <code>agent/</code> and its tools; the wider
+repository is 1,233 files and most of it is inference.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage, discovery and validation</strong>
+<code>agent/skills.go</code></p>
+<p><strong>Context assembly</strong> <code>agent/skills.go</code>
+(<code>SystemContext</code>) ·
+<code>agent/skill_activation.go</code></p>
+<p><strong>Integration</strong> <code>agent/tools/skill.go</code> ·
+<code>agent/session.go</code> · <code>cmd/agent_tui.go</code> ·
+<code>cmd/tui/chat/input.go</code></p>
+<p><strong>Session-bound state, for contrast</strong>
+<code>agent/compactor.go</code> · <code>agent/approval.go</code></p>
+<p><strong>Tests</strong> <code>agent/skills_test.go</code> ·
+<code>agent/skill_activation_test.go</code> ·
+<code>agent/tools/skill_test.go</code> ·
+<code>agent/testdata/</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/ollama/ollama/commit/acdf81510d58d993de6175f8565b504d9777940a"><code>acdf81510d58d993de6175f8565b504d9777940a</code></a>
+— first reading, from the <a
+href="https://github.com/QuesmaOrg/awesome-ai-tokenomics">awesome-ai-tokenomics
+triage</a>, where the entry describes only local inference. Screened
+before reading: no auto-run surfaces, one dependency surface inside the
+seven-day cooldown (<code>go.mod</code>, changed one day earlier) and
+one unpinned manifest. Nothing was executed and nothing was
+installed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

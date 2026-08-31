@@ -157,10 +157,14 @@ a general database service with migrations, and Vertex.
 ## 4. Essential Implementation Paths
 
 **The contract.** `src/google/adk/memory/base_memory_service.py` — four methods,
-of which two are `@abstractmethod` (`add_session_to_memory`, `search_memory`),
-one is concrete with a default (`add_events_to_memory`), and one raises
-`NotImplementedError` by default (`add_memory`, line 97, with a message pointing
-the caller at the event-based paths).
+of which two are `@abstractmethod` (`add_session_to_memory`, `search_memory`)
+and two are non-abstract but **raise `NotImplementedError` in the base class**:
+`add_events_to_memory` at line 92 ("This memory service does not support adding
+event deltas. Call add_session_to_memory(session) to ingest the full session.")
+and `add_memory` at line 117, with a message pointing the caller back at the
+event-based paths. There is no working default behind either — an implementation
+that wants them overrides them, and one that does not leaves a caller with an
+exception. Only `add_session_to_memory` is guaranteed to be implemented.
 
 **The schema.** `memory/memory_entry.py`, 45 lines including licence header.
 `content`, `custom_metadata`, `id`, `author`, `timestamp` — the last documented
@@ -225,7 +229,8 @@ precisely because it is enforced by a signature rather than by a query.
 One method, one query string, no options: `search_memory(app_name, user_id,
 query) -> SearchMemoryResponse`. No `k`, no filters, no time range, no metadata
 predicate, no ranking hints, and no scores on the way back —
-`SearchMemoryResponse` is a bare `list[MemoryEntry]`.
+`SearchMemoryResponse` is a pydantic model with exactly one field,
+`memories: list[MemoryEntry]`, and nothing alongside it to rank on.
 
 The default implementation is a word-set intersection, honestly labelled. The
 Memory Bank implementation delegates to hosted similarity search whose ranking,
@@ -244,15 +249,22 @@ Vertex.
 
 ## 7. Write Mechanics
 
-Three entry points, deliberately layered:
+Three entry points, deliberately layered, but only the first is required of an
+implementation:
 
-- `add_session_to_memory(session)` — the coarse one. Hands the whole session over
-  and lets the service decide.
+- `add_session_to_memory(session)` — the coarse one, and the only abstract write.
+  Hands the whole session over and lets the service decide.
 - `add_events_to_memory(app_name, user_id, events, session_id, custom_metadata)`
   — the same thing with explicit scope, for callers not holding a `Session`.
+  Optional, raising a helpful `NotImplementedError` that redirects the caller to
+  `add_session_to_memory` on services that do not support event deltas.
 - `add_memory(app_name, user_id, memories, custom_metadata)` — direct writes,
   optional, raising a helpful `NotImplementedError` on services that do not
   support them.
+
+So the layering is a convention rather than a guarantee. A caller holding only a
+`BaseMemoryService` can rely on one write path; the other two are a question
+answered by the concrete service, and answered at runtime.
 
 Writes are **application-triggered and synchronous at the call site**; no hook
 captures automatically at a turn or compaction boundary. What Memory Bank does
@@ -452,5 +464,7 @@ methods it is missing.
 - `tests/unittests/tools/test_load_memory_tool.py`
 
 ## History
+
+**2026-08-31** — [`6bab08fc803d26853417c4d6e71704b1a72e035e`](https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e) — count and citation audit at the same pin. Two claims were wrong, both understating how thin the contract is. §4 called `add_events_to_memory` concrete with a working default; it raises `NotImplementedError` at `base_memory_service.py:92` exactly as `add_memory` does at :117, so `add_session_to_memory` is the only guaranteed write — §7's layering is corrected to match. And `SearchMemoryResponse` was described as a bare `list[MemoryEntry]`; it is a pydantic model with a single `memories` field. The substance of both, that no scores come back and that the required methods are two, is unchanged. No capability mark changed.
 
 **2026-07-29** — [`6bab08fc803d26853417c4d6e71704b1a72e035e`](https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e) — first reading.

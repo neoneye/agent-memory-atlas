@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A published format spec whose
+merge semantics get deletion right, shipped in a federation over other
+tools' memory directories — where the retraction its spec argues hardest
+for is a verb a person can type.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memoir-cli — Agent Memory Atlas">
+    <meta property="og:description" content="A published format spec
+whose merge semantics get deletion right, shipped in a federation over
+other tools' memory directories — where the retraction its spec argues
+hardest for is a verb a person can type.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memoir-cli — Agent Memory Atlas">
+    <meta name="twitter:description" content="A published format spec
+whose merge semantics get deletion right, shipped in a federation over
+other tools' memory directories — where the retraction its spec argues
+hardest for is a verb a person can type.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memoir-cli — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memoir-cli",
+      "description": "A published format spec whose merge semantics get deletion right, shipped in a federation over other tools' memory directories \u2014 where the retraction its spec argues hardest for is a verb a person can type.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The tombstone nothing can create</p>
+          <h1>memoir-cli</h1>
+          <p class="document-deck">A published format spec whose merge
+semantics get deletion right, shipped in a federation over other tools'
+memory directories — where the retraction its spec argues hardest for is
+a verb a person can type.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/camgitt/memoir">
+              <span>Source</span>
+              <strong>camgitt/memoir</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653" title="2c1fe382b9c24289624f9f0329f378ab2d2aa653">
+              <span>Analyzed revision</span>
+              <code>2c1fe382…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-19</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memoir is an MCP memory server — 11,932 lines of JavaScript across 63
+files, MIT, 111 commits since 3 March 2026 — whose premise is that
+tool-native memory is a lock-in problem. Claude Code, Cursor and Copilot
+each remember you in one format on one machine; memoir federates over
+all of them, syncs the result between machines with client-side
+AES-256-GCM, and publishes the on-disk shape as <a
+href="https://github.com/camgitt/memoir/blob/2c1fe382b9c24289624f9f0329f378ab2d2aa653/docs/SPEC.md">an
+open format spec</a> so the accumulated context is not trapped in memoir
+either.</p>
+<p><strong>The spec is the reason to read this repository.</strong> It
+is 615 lines defining six entry types, a session working set, and —
+section 5 — normative merge semantics whose preamble states the standard
+the rest of the atlas should be held to: <em>"Every rule here exists
+because its absence produced a real data-loss or data-resurrection bug
+in production."</em> The rules are correct. Union by normalized text so
+a merge never drops what the other side lacks; newest-wins per identity;
+and, because plain removal cannot survive union-merge, two classes of
+tombstone with an argued difference between them. A suppressed decision
+gets an <strong>absolute</strong> tombstone that is monotonic and
+<strong>date-independent</strong> — if either side of a merge carries
+<code>hidden: true</code>, the result does, whatever the dates say —
+because <em>"suppression must be monotonic or it is not
+suppression."</em> A completed next action gets a
+<strong>temporal</strong> tombstone, because a re-add whose
+<code>added</code> postdates the <code>done_at</code> is a deliberate
+revival and must survive. <em>"Implementations MUST NOT substitute one
+class for the other."</em></p>
+<p>The implementation matches the spec, and its comments carry the same
+forensic habit: <code>unionByText</code> re-applies a tombstone from the
+losing copy in eight lines with fourteen lines of comment naming the
+resurrection bug, and the cap logic partitions tombstones out of the
+visible budget because they <em>"keep their original (recent) date"</em>
+and were winning cap slots from real entries.</p>
+<p><strong>And nothing in the shipped product can create an absolute
+tombstone.</strong> The only assignment of <code>hidden = true</code>
+outside the merge function is
+<code>scripts/cleanup-junk-decisions-2026-07.mjs</code>, a dated one-off
+whose own header says <em>"NOT wired into any CLI command or
+package.json script"</em>, whose match strings are placeholders a human
+is expected to fill in, and which is absent from
+<code>package.json</code>'s <code>files</code> array and therefore from
+the npm package entirely. Three read paths filter <code>hidden</code>,
+the validator enforces its invariant, a test suite asserts its exclusion
+across three surfaces, and the spec makes it normative for Full
+conformance. No user can produce one.</p>
+<p>Elsewhere the engineering is uneven in an ordinary way. The secret
+scanner is 27 patterns deep and its per-pattern length floor exists
+because a global floor of eight characters let
+<code>password: s3cr3t</code> through into a backup. The file lock is a
+correct <code>wx</code> create-exclusive with stale recovery and a
+comment explaining that tmp-then-rename prevents torn writes but not
+lost updates. Against that, provenance for an auto-captured decision is
+a prefix on a prose field, and the two walkers over Claude Code's
+transcript tree disagree about which files are transcripts — one
+excludes subagent runs, the other does not and ships what it finds to a
+third party.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>memoir holds two kinds of memory with different lifecycles, and the
+split is the design.</p>
+<p><strong>Entry files</strong> are the cold half: one memory per
+markdown file with YAML frontmatter, typed as <code>fact</code>,
+<code>preference</code>, <code>decision</code>, <code>lesson</code>,
+<code>goal</code> or <code>next_action</code>. The type answers
+<em>"what should a tool do with this when it loads?"</em> — inform,
+constrain style, prevent relitigation, change behavior, orient, or
+resume. Two types carry real structure. A <code>decision</code> is
+expected to carry <code>why</code> and <code>rejected</code>, on the
+argument that <em>"we use Postgres" is trivia; "we use Postgres because
+X, and we rejected SQLite because Y" is experience</em>; neither is a
+validation error, because auto-capture legitimately lacks them, but a
+validator warns. A <code>lesson</code> <strong>requires</strong>
+<code>trigger</code> and <code>how_to_apply</code> — <em>"or it is an
+anecdote, not a lesson"</em> — with <code>fired_count</code> and
+<code>last_fired</code> reserved for a feedback loop that no shipped
+code writes.</p>
+<p><strong>The session working set</strong> is the hot half: goals, next
+actions, open questions, completed actions and recent decisions in one
+JSON document, each list capped, each item identified by its normalized
+text.</p>
+<p>A memory becomes durable by being written — there is no candidate
+state, no verification, no confidence. It stops being one in exactly
+three ways. It <strong>rotates off</strong> the end of a cap, oldest by
+date. It is <strong>completed</strong>, which moves a next action into
+<code>completed_actions</code> as a temporal tombstone. Or it is
+<strong>suppressed</strong>, which sets <code>hidden: true</code> on a
+decision and keeps the row so the tombstone keeps propagating.</p>
+<p>The interesting epistemics are entirely in how those last two survive
+a merge, because a store replicated across machines has no other way to
+delete. Under union-by-identity, removal is not a state — any replica
+still holding the item re-unions it on the next merge. So a removal must
+be a <em>record</em>, and that record must be monotonic, and the spec is
+unusually clear about why the two classes cannot be collapsed: a
+suppressed decision text is junk forever, while finished work can
+legitimately recur.</p>
+<p>Provenance is thin, and the one place it exists is a prefix rather
+than a field. <code>push.js</code> calls
+<code>addNote(text, { why: \</code>auto-captured: ${context}`
+})<code>, so a regex-extracted decision is distinguishable from a user's own only by string-matching the beginning of a prose rationale that is otherwise meant to hold the reason. The extractor's own </code>type<code>—</code>rename<code>, </code>tech<code>, </code>design<code>, </code>stack<code>, </code>user-note`
+— does distinguish them, and is discarded before the write.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — why removal has to be a record, and which of the two records a user can actually create</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: why removal has to be a record, and which of the two records a user can actually create
+stateDiagram-v2
+    [*] --&gt; Live: explicit MCP write, or regex auto-capture
+    Live --&gt; Rotated: cap rotation, oldest by date
+    Rotated --&gt; [*]
+
+    Live --&gt; Completed: memoir_complete_next writes done_at
+    Completed --&gt; Live: a re-add whose added postdates done_at
+    Completed --&gt; Suppressed_temporally: any copy whose added predates done_at
+
+    Live --&gt; Hidden: sets hidden true and hidden_at
+    Hidden --&gt; Hidden: monotonic, inherited by the date winner
+
+    state &quot;no shipped writer&quot; as Gap
+    Gap --&gt; Hidden: only scripts/cleanup-junk-decisions, unshipped</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no server and no database. memoir is an npm package
+(<code>memoir-cli</code>) exposing three binaries — a CLI, an MCP stdio
+server, and an alias — installed by <code>npx memoir-cli</code>, which
+detects host tools and writes their MCP configuration.</p>
+<p>The storage picture is the unusual part: <strong>memoir owns almost
+none of the memory it manages.</strong>
+<code>src/adapters/index.js</code> defines eleven adapters, each
+pointing at a host tool's own directory — <code>~/.claude</code>,
+<code>~/.gemini</code>, <code>~/.codex</code>, the Cursor, Windsurf,
+Zed, Cline and Continue.dev user directories, and Aider's dotfiles in
+<code>$HOME</code>. Reads walk those trees for <code>.md</code>,
+<code>.json</code>, <code>.yml</code> and <code>.yaml</code>; writes go
+back into them. What memoir keeps for itself is three files:</p>
+<ul>
+<li><code>~/.config/memoir/session.json</code> — the working set, schema
+version 1, written tmp-then-rename inside a lock.</li>
+<li><code>~/.config/memoir/events.jsonl</code> — an append-only activity
+log, rotated at 5 MB through two generations.</li>
+<li>Ciphertext in a Supabase storage bucket, when cloud sync is
+configured.</li>
+</ul>
+<p>The spec is candid about the gap between its own model and this: it
+defines a memoir store as a directory of entry files plus a session
+file, then notes the reference implementation <em>"currently keeps these
+in two places for tool-compatibility reasons."</em> The consequence is
+worth stating plainly — a reader who adopts the format gets one store,
+while a user who installs the CLI gets a federation over up to eleven of
+somebody else's, none of which memoir controls the lifecycle of.</p>
+<p>Retrieval has no stack at all. <code>searchMemories</code> reads
+every file from every adapter on every query, scores by how many query
+terms appear anywhere in the content, then crawls <code>$HOME</code> to
+depth 3 for <code>CLAUDE.md</code>, <code>GEMINI.md</code>,
+<code>CHATGPT.md</code>, <code>.cursorrules</code>,
+<code>.windsurfrules</code> and <code>.clinerules</code>, skipping a
+hardcoded set of directories. Nothing is cached between calls.</p>
+<p>Context injection is a marker-delimited block written into four
+always-loaded files: <code>~/.claude/CLAUDE.md</code>,
+<code>~/.cursor/rules/memoir-session.mdc</code>, Windsurf's user
+instructions and <code>~/.gemini/GEMINI.md</code>. The injector replaces
+between markers and never touches anything outside them.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npx memoir-cli</code> and nothing else — no daemon, no
+database, no API key, no container. Eight runtime dependencies, all
+floating carets with a committed lockfile.</p>
+<p>It runs fully local; cloud sync is opt-in and the only thing that
+degrades without it is cross-machine merge. The store is markdown and
+JSON the user can open, and the spec argues that this is load-bearing
+rather than a compromise: <em>"Memory the user cannot read is memory the
+user cannot trust or correct"</em>, and an implementation <em>"MUST NOT
+'upgrade' the store to a database as the canonical form."</em></p>
+<p>Two things an operator should know before installing. Anonymous
+telemetry is <strong>on by default</strong> — a shipped PostHog project
+key, an install UUID, event name, OS and version, honoring
+<code>DO_NOT_TRACK</code>, <code>CI</code> and an opt-out file,
+disclosed once. And auto-capture reads Claude Code's raw session
+transcripts under <code>~/.claude/projects/</code>, which is the most
+sensitive directory on the machine for this purpose.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Merge.</strong>
+<code>src/session/state.js:mergeSessions</code> is the whole of spec
+section 5. <code>unionByText(a, b, dateField, cap)</code> builds a Map
+keyed on <code>text.trim().toLowerCase()</code>, keeps the newer item
+per key by the list's date field, then makes a second pass re-applying
+<code>hidden: true</code> and its <code>hidden_at</code> onto any winner
+whose key has a hidden copy on <em>either</em> side. It then partitions
+before capping — <code>visible</code> and <code>tombstones</code> sliced
+separately — so a tombstone cannot evict a live entry from the visible
+budget. <code>unionTombstones</code> merges
+<code>completed_actions</code> keeping the newest <code>done_at</code>
+per identity, and <code>next_actions</code> is filtered by
+<code>new Date(a.added || 0) &gt; new Date(t.done_at)</code>.</p>
+<p><strong>Suppression, read side.</strong> Three independent filters,
+each commented as a tombstone check: <code>src/session/render.js</code>
+before the pinned block is built, <code>src/commands/why.js</code> in
+both the CLI display and the exported <code>findDecisions</code>, and
+<code>src/mcp.js:727</code> in the <code>memoir_why</code> tool
+handler.</p>
+<p><strong>Suppression, write side.</strong>
+<code>scripts/cleanup-junk-decisions-2026-07.mjs:119</code>. That is the
+entire list.</p>
+<p><strong>Auto-capture.</strong> <code>src/context/capture.js</code>
+finds <code>~/.claude/projects/**/*.jsonl</code> modified within seven
+days, reads at most the trailing 2 MB, and parses line-delimited JSON
+into user messages, written and read file paths, bash commands and error
+lines — every one passed through <code>redactSecrets</code> on the way
+in, with a comment noting that captured decisions <em>"flow into
+session.json, CLAUDE.md and the git backup, none of which get a later
+secret scan."</em></p>
+<p><strong>Extraction.</strong> <code>extractDecisions</code> runs seven
+regexes over the combined user and assistant text for renames, tech
+choices, design and stack decisions, plus one user-only pattern for
+explicit <code>remember that</code> / <code>note that</code> /
+<code>from now on</code> instructions, anchored to message or line start
+and scoped to the first 500 characters. Each refinement carries the
+false positive that caused it: <code>going</code> was dropped from a
+bare alternation because <em>"going on Monday to the office" minted a
+decision (live proof: "going on PostDash" in the real store)</em>, and
+the stack pattern requires a capitalized value because <em>"backend is
+just throwing it away" used to leak through</em>.</p>
+<p><strong>Quality gate.</strong> <code>isQuality</code> rejects text
+under 15 or over 200 characters, with a pipe (a table cell), with three
+or more markdown formatting characters, under three words, starting with
+a pronoun or filler, containing a question mark, with unbalanced
+brackets, or 140+ characters not ending in terminal punctuation. The
+last two are truncation signatures: <em>"real junk: '…only gain is Y)'
+with no opener, because the opening '(' was in the text BEFORE the
+capture started."</em></p>
+<p><strong>Write.</strong> <code>push.js</code> runs
+<code>isQuality</code> once over the parsed decisions before either
+sink, dedupes against the existing decision texts, and calls
+<code>addNote</code>. The dedupe set is built from
+<code>current.current.decisions</code> unfiltered — which includes
+hidden rows — so auto-capture incidentally will not re-assert a
+tombstoned decision. <code>addNote</code> itself performs no such
+check.</p>
+<p><strong>Locking.</strong> <code>src/session/lock.js</code> uses
+<code>fs.openSync(lockPath, 'wx')</code> as an atomic create-exclusive,
+retrying on <code>EEXIST</code> at 50 ms up to 5 s, treating a lock
+older than 30 s as abandoned, releasing in a <code>finally</code>. The
+header explains what it is for: <code>writeSession</code>'s
+tmp-then-rename <em>"only prevents a TORN write; it does not stop two
+concurrent processes from both reading the same on-disk snapshot"</em>,
+and two Claude Code sessions against the same <code>$HOME</code> each
+run their own MCP server.</p>
+<p><strong>Encryption.</strong> <code>src/security/encryption.js</code>
+derives a 256-bit key with scrypt (N=2¹⁴, r=8, p=1) over a random
+32-byte salt, encrypts with AES-256-GCM under a 96-bit IV and 128-bit
+tag, and prefixes an eight-byte <code>MEMOIR01</code> magic for format
+versioning. <code>encryptDirectory</code> derives once, names each
+output file by <code>HMAC-SHA256(key, relPath)</code> truncated to 24
+hex characters, and encrypts the hash→path manifest separately.</p>
+<p><strong>Consolidation.</strong>
+<code>src/commands/consolidate.js</code> sends memory files to an LLM
+for a duplicate/stale/bloat report, then presents an inquirer checkbox
+of files to delete and a confirm prompt; nothing is written without
+<code>--apply</code>.</p>
+<p><strong>Validation.</strong> <code>src/commands/validate.js</code>
+checks both file kinds against the spec by section number, including
+<code>hidden: true without hidden_at — tombstones must carry when they were set (SPEC.md 5.3.1)</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema in the database sense. An entry is frontmatter
+plus a body, restricted to <em>"a simple YAML subset so that it can be
+parsed without a full YAML engine"</em> — scalars, one level of nesting,
+simple string lists, with anchors and block scalars forbidden to
+writers. Two JSON Schemas (<code>schema/entry.schema.json</code>,
+<code>schema/session.schema.json</code>) are the machine-readable
+form.</p>
+<p>Common fields are <code>type</code> and <code>name</code> (required),
+<code>description</code>, <code>created</code>, <code>updated</code>,
+<code>schema_version</code>, <code>project</code>, <code>tags</code>,
+and an <code>origin</code> mapping of <code>tool</code>,
+<code>session_id</code>, <code>machine_id</code>. The extension rule is
+stated as an obligation in both directions: <em>"Readers MUST ignore
+fields they do not recognize. Writers MUST preserve fields they do not
+recognize when rewriting an entry."</em></p>
+<p>Identity is the load-bearing choice and it is deliberately weak: a
+session item is identified by its <strong>normalized text</strong>,
+whitespace-trimmed and case-folded; an entry file by its filename. There
+is no stable id. That makes merge simple and makes a reworded memory a
+different memory — an edit from "Use Postgres" to "Use Postgres 16"
+produces two live entries rather than one corrected one, and a tombstone
+on the first does not reach the second.</p>
+<p>Temporal fields are per-type and single-axis:
+<code>created</code>/<code>updated</code> on entries, <code>date</code>
+on decisions, <code>set_on</code> on goals, <code>added</code> and
+<code>done_at</code> on next actions, <code>asked</code> on questions,
+<code>hidden_at</code> on tombstones. <code>done_at</code> versus
+<code>added</code> is a comparison of two record times rather than
+validity against transaction time.</p>
+<p>Scoping exists in the format and not in the read path.
+<code>project</code> is defined ("absent means global"),
+<code>preference</code> carries <code>scope: global | project</code>,
+and <code>memoir_remember</code> writes project-level files — but
+<code>searchMemories</code> applies no project filter to anything.
+Profiles are sync destinations: a profile config is
+<code>{ provider, localPath }</code>, not a memory partition. There is
+no user, tenant or auth boundary; the store is one person's files.</p>
+<p><code>machines</code> is the one identity that is done properly — a
+stable per-machine UUID paired with a mutable human label, with the spec
+noting that <em>"Labels may change; UUIDs MUST NOT."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>searchMemories(query)</code> tokenizes on punctuation, drops a
+60-word stoplist, and folds the commonest English inflections with rules
+that are deliberately timid — every one keeps a stem of at least four
+characters, so <code>deploys</code>, <code>deploying</code> and
+<code>deployed</code> collapse to <code>deploy</code> while
+<code>was</code> and <code>ring</code> are left alone. A term may also
+match by prefix from four characters at 0.6 of an exact hit, which is
+what lets <code>auth</code> reach <code>authentication</code> without
+letting <code>in</code> reach <code>index</code>.</p>
+<p>Each file is parsed into five scored fields with fixed weights —
+<code>aliases</code> 6, <code>name</code> 4, <code>description</code> 3,
+headings 2, body 1. A term takes its best field plus a quarter of the
+rest, capped; body term frequency saturates, so a file saying
+<code>deploy</code> forty times is worth about twice one saying it once,
+not forty times. The per-file total is then multiplied by
+<strong>coverage squared</strong>, where coverage is the fraction of
+query terms matched anywhere: a file covering two of three terms keeps
+44% of its raw score and one covering a third keeps 11%. Non-markdown
+files are halved on the grounds that <code>settings.json</code> is
+config rather than memory.</p>
+<p>The unit returned is a <strong>passage</strong>, not a file. Matched
+lines are taken with one line of context either side, adjacent hits
+merged into windows, windows ranked by distinct terms matched and then
+emitted in document order within a 700-byte budget, joined by
+<code>⋯</code>. Frontmatter is never included; a file whose only hit was
+in its description falls back to the first six non-blank body lines, so
+a description match still returns prose.</p>
+<p>The weighting is where the design commits to something.
+<code>aliases</code> outranks every other field because it exists for
+one purpose — the other names a memory might be searched under — and
+<code>memoir_remember</code> asks the model to supply them at write
+time, folding them into frontmatter through
+<code>withFrontmatterLists</code>. That is the dependency-free answer to
+semantic matching, and the module says so plainly: there is no concept
+matching, so <code>tiktok</code> reaches a memory about a vertical swipe
+feed only if something wrote <code>tiktok</code> into its aliases. The
+guarantee is prompt-shaped rather than structural — the
+<code>aliases</code> parameter is optional, and nothing refuses a memory
+that arrives without one.</p>
+<p>The <code>$HOME</code> crawl is bounded by caching rather than by
+scope. Discovery walks to depth three for six filenames past a skip
+list, and the file list is cached for 60 seconds and each parsed
+document is cached against its mtime and size, so a long-lived MCP
+process pays the walk once a minute instead of once a call. The CLI does
+not benefit: <code>memoir recall</code> is a fresh process per
+invocation, so both caches start cold and every run pays the full
+crawl.</p>
+<p>Retrieval is tool-mediated: the model calls
+<code>memoir_recall</code> and decides what to do with the result.
+Automatic injection is separate and unranked — the pinned block is the
+working set rendered whole, with hidden decisions filtered and decisions
+capped at a render limit.</p>
+<p>Two failure modes remain, and they are the ones lexical scoring
+cannot reach. A memory is findable by the words it or its aliases
+contain, so an unaliased entry is reachable only through its own
+vocabulary. And because the pinned block is prepended into files the
+host loads as part of its standing context, every working-set change
+rewrites a prefix the provider was caching.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous</strong> and there is no background
+pass. An MCP tool call mutates <code>session.json</code> inside the lock
+and returns; a memory is retrievable immediately because retrieval reads
+the files. Nothing re-reads or rewrites the store on a schedule, so
+there is no token bill that scales with corpus size.</p>
+<p>Three write paths. <strong>Explicit tool calls</strong> —
+<code>memoir_remember</code>, <code>memoir_note</code>,
+<code>memoir_set_goal</code>, <code>memoir_add_next</code>,
+<code>memoir_ask</code> and the rest — where the model supplies the
+content. <strong>Auto-capture</strong> during <code>memoir push</code>,
+which parses Claude Code's transcripts and mints decisions from regex
+matches. And <strong>manual editing</strong>, which the format treats as
+a first-class path.</p>
+<p>Extraction is entirely zero-LLM: seven regexes plus a nine-rule
+quality gate. That is the right call for a capture pass that runs
+unattended and cannot be reviewed, and the annotations show the cost of
+getting it wrong being paid incrementally in production. What it does
+not do is separate whose sentence produced the memory. The explicit
+<code>remember that</code> pattern is scanned over user messages only,
+but the inferential branches run over user and assistant text joined, so
+a model's own <em>"let's use Redis for the session cache"</em> mints a
+durable decision — the self-reinforcement shape this atlas keeps naming
+— and the only trace of it on the record is that <code>why</code> begins
+with <code>auto-captured:</code>.</p>
+<p>Which files count as a transcript is decided twice, by two walkers
+over <code>~/.claude/projects</code>, and they disagree.
+<code>src/context/capture.js</code> — the one that mints decisions —
+skips the <code>subagents</code>, <code>workflows</code> and
+<code>tool-results</code> directories and any
+<code>agent-*.jsonl</code>, with a comment naming the incident: a
+subagent transcript's first user message is the orchestrator's prompt,
+so <code>USER_NOTE_RE</code> was minting decisions out of system
+prompts, and <em>"three of the author's own pinned decisions were
+subagent-prompt fragments."</em> The filename check alone never caught
+them, because the files are <code>agent-&lt;id&gt;.jsonl</code> and the
+test was for the substring <code>subagent</code>.</p>
+<p><code>src/commands/snapshot.js:25</code> carries exactly that
+defeated test. It recurses into every directory without exception and
+admits any <code>.jsonl</code> whose name lacks the substring
+<code>subagent</code>, which is every
+<code>agent-&lt;id&gt;.jsonl</code> the other walker was taught to
+refuse. The sink is different and further out: the messages it collects
+are labelled <em>"User messages (what they asked for)"</em> in a prompt
+posted to <code>generativelanguage.googleapis.com</code>, which is asked
+for a <em>"Key decisions"</em> section. So the contamination one walker
+excludes reaches a summariser through the other, and that path leaves
+the machine. A fix applied at one walker is the general shape here — the
+predicate is duplicated rather than shared, and
+<code>src/adapters/index.js:58</code> is a third copy with a fourth
+spelling.</p>
+<p>Deduplication is exact-match on lowercased text at the auto-capture
+call site and inside <code>unionByText</code> at merge; there is no
+fuzzy or semantic dedup, which is what <code>memoir consolidate</code>
+exists to do with a model and a human in the loop.</p>
+<p>Deletion is the part that is thought through, and section 2 covers
+the merge rules. Two implementation details are worth adding.
+<code>completed_actions</code> is capped at 50 with the spec making the
+retention requirement normative — the cap <em>"MUST be large enough to
+outlive any stale replica that might still carry the completed item, or
+completions resurrect"</em> — and
+<code>visible</code>/<code>tombstones</code> are sliced separately so
+tombstones never consume the live budget. On the cloud side,
+<code>cleanupOldBackups</code> deletes every backup past a cap that is
+<code>MAX_BACKUPS_PRO</code> (100) for a paying account and
+<code>MAX_BACKUPS_FREE</code> (10) otherwise.</p>
+<p>The way that cap is tested is the transferable part. A unit test
+covered it before, and it agreed with the constants — it pinned the
+literal numbers, so when the two were swapped the test moved with them
+and asserted that a paying account retained less.
+<code>test-cloud.mjs:34</code> asserts the relationship instead —
+<code>MAX_BACKUPS_PRO &gt; MAX_BACKUPS_FREE</code> — alongside a
+type-and-sign check. A test that restates a constant cannot detect a
+wrong constant; only one that states the property the constant exists to
+satisfy can.</p>
+<p>Malicious input has one strong defence and one gap. The strong one:
+every model-supplied filename in <code>memoir_remember</code> and
+<code>memoir_read</code> is required to be a bare markdown name with no
+separator and no <code>..</code>, and must resolve inside the target
+directory, with the comment naming the attack — <em>"filename:'.zshrc'
+appends to a shell rc (code execution on next shell)."</em> The gap:
+nothing scans or bounds the <em>content</em> an MCP tool writes, so a
+model instructed by a poisoned file to remember something writes it
+verbatim into a file the host loads on every future session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fourteen MCP tools across three groups: retrieval and storage
+(<code>memoir_recall</code>, <code>memoir_remember</code>,
+<code>memoir_list</code>, <code>memoir_read</code>), working set
+(<code>memoir_set_goal</code>, <code>memoir_add_next</code>,
+<code>memoir_complete_next</code>, <code>memoir_note</code>,
+<code>memoir_ask</code>, <code>memoir_session</code>,
+<code>memoir_why</code>), and management
+(<code>memoir_consolidate</code>, <code>memoir_status</code>,
+<code>memoir_profiles</code>).</p>
+<p>The model has substantial agency: it can write entries into any host
+tool's memory directory, add and complete actions, and record decisions.
+It cannot suppress one — there is no <code>memoir_forget</code> and no
+tool that sets <code>hidden</code>. The asymmetry is the whole finding
+of this report restated as an API surface: an agent can add to memory
+and cannot retract from it.</p>
+<p>Automatic injection is the second surface. The pinned block goes into
+four always-loaded files, which means the working set reaches the model
+whether or not it calls a tool, and <code>memoir_recall</code> is for
+everything else.</p>
+<p>Adapting to another host is a data change rather than a code change —
+an adapter is a name, an icon, a source directory and a filter — which
+is why eleven tools are supported in 959 lines. The MCP server writes
+all output to stderr so it cannot corrupt JSON-RPC on stdout, which is a
+small thing that many MCP servers in this atlas get wrong.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Concurrency is taken seriously and the reasoning is written down. The
+lock covers the whole read-mutate-write cycle rather than the write, the
+event log gets its own dedicated lock rather than borrowing whichever
+lock a caller happens to hold, and <code>appendEvent</code> is pure
+<code>O_APPEND</code> so <em>"a crash mid-write can at worst leave a
+truncated LAST line, never corrupt earlier ones."</em> Stale-lock
+recovery at 30 s is an explicit availability-over-exclusion trade,
+argued for a single-user tool.</p>
+<p>Privacy has two real mechanisms. The event log declares an invariant
+in its header — <em>"NEVER log raw decision/note/goal TEXT content —
+only counts, ids, booleans"</em> — and the call sites honor it
+(<code>decision_captured</code> records
+<code>{ has_why, has_rejected }</code>). And the secret scanner runs on
+every untrusted input during capture, over 27 patterns covering modern
+token prefixes, connection strings, environment assignments, private
+keys and JWTs, with a per-pattern length floor that exists because a
+global floor of eight discarded the six-character matches the password
+pattern was written to catch.</p>
+<p>Encryption is textbook and correctly parameterized for the primitives
+it uses. Two notes rather than faults: scrypt at N=2¹⁴ is at the low end
+of current guidance for a passphrase KDF, and the same derived key is
+used both as the AES key and as the HMAC key that hashes filenames,
+where separate derived subkeys would be the conservative
+construction.</p>
+<p>The version story is the strongest safety argument in the spec, and
+it is implemented. Forward-incompatible data must be
+<strong>quarantined, not guessed</strong>: an implementation meeting a
+newer version <em>"MUST NOT attempt to interpret the data"</em>, must
+back up the original and degrade to an empty-but-valid state, and <em>"a
+degraded read MUST contribute nothing to a merge rather than contribute
+a misreading."</em> The stated reason is exactly right — <em>"A newer
+schema's fields may have semantics — tombstones especially — that an old
+reader would destroy by 'mostly understanding' them."</em></p>
+<p>Three weaknesses. <strong>Uncertainty cannot be represented</strong>:
+there is no confidence, no trust state, no verification, and an
+auto-captured guess and a user's deliberate instruction are the same
+shape of row. <strong>Provenance is a prose prefix</strong>, so any
+consumer that wants to weight the two differently must string-match. And
+<strong>the tombstone has no writer</strong>, which means the one
+correction primitive the design argues hardest for is unavailable to the
+person whose memory it is.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Sixteen suites — fourteen Node, two bash — run by an aggregating
+runner that <em>"runs every suite regardless of individual failures (the
+old <code>&amp;&amp;</code> chain short-circuited and masked
+co-occurring failures)"</em> and skips the bash suites on Windows.
+Coverage is memory-specific: session state and merge, cross-machine sync
+end to end, schema migration, the session lock, secret scanning,
+encryption, the MCP contract over real stdio, capture quality,
+auto-activation, tidy, the event log, hidden decisions, and recall.</p>
+<p><code>test-decisions-hidden.mjs</code> is a <strong>negative
+retrieval assertion</strong> done properly: it asserts the non-hidden
+decision is present and the hidden one absent at three independent
+surfaces — the exported <code>findDecisions</code>, the
+<code>memoir why</code> CLI's captured stdout, and a real stdio call to
+the <code>memoir_why</code> MCP tool. It then tests the cleanup script
+itself: that <code>--dry-run</code> leaves the file byte-identical and
+creates no backup of any timestamp, that real mode tombstones exactly
+two decisions and writes a backup, and that the backup matches the
+original byte for byte.</p>
+<p>The runner's best idea is a <strong>real-state tripwire</strong>.
+Tests must run against a scratch <code>$HOME</code>, and on 13 July 2026
+one suite imported a <code>./src</code> module before shimming it —
+<code>state.js</code> binds its paths from <code>os.homedir()</code> at
+module load — so the fixture write landed on the developer's real
+<code>session.json</code> and destroyed live data <em>"(twice, before it
+was caught)"</em>. The per-file fix was to shim first; the backstop is a
+generic guard that scans the real <code>session.json</code> for known
+fixture strings after every suite. It matches fixture markers rather
+than diffing, because a concurrent <code>memoir push</code> from another
+Claude Code session can legitimately rewrite the file mid-run and a hash
+compare would false-positive.</p>
+<p><code>test-recall.mjs</code> is the retrieval eval, and it is a real
+one at small scale. Six fixture documents are written into a scratch
+<code>$HOME</code> — an aliased entry, an authentication reference, a
+file that says <code>deploy</code> five times, a file that mentions
+every query term once in passing, a bare-markdown entry with no
+frontmatter at all, and a per-project <code>CLAUDE.md</code> — and seven
+queries assert which file comes back first. The cases are chosen to
+separate the scorer's claims from each other: <code>tiktok</code> must
+reach the swipe-feed entry through its aliases, <code>auth cookie</code>
+must reach the authentication file by prefix,
+<code>deploy tape authentication</code> must put the file covering all
+three terms above the files that hammer one, and <code>zzzz qqqq</code>
+must return nothing. Two structural assertions sit alongside them — that
+a returned passage never contains frontmatter, and that it stays within
+the byte budget — plus a cache test that stubs <code>readFile</code>,
+counts reads across two identical searches, touches one file and asserts
+exactly one re-read.</p>
+<p>What it is not is a measurement. There is no metric over the query
+set, no precision or recall number, and no held-out queries: the six
+documents and the seven questions were written by the author of the
+ranker, against the ranking rules as designed, so the suite is a
+regression guard on intended behaviour rather than evidence about
+behaviour on a real store. That distinction is the one the atlas draws
+everywhere, and it is worth naming here because the fixtures are
+unusually well chosen — good fixtures make a good regression test, and a
+good regression test is still not an eval.</p>
+<p>The README's comparison table against claude-mem, basic-memory and
+mem0 is sourced to <em>"public docs, June 2026"</em> and is a
+feature-matrix claim rather than a measured one, which it says. And the
+<code>fired_count</code> / <code>last_fired</code> feedback loop the
+spec reserves for lessons has no writer, which the spec labels as
+roadmap rather than shipped.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Write the merge rules down, and cite the bug beside each
+one.</strong> The single most useful property of this spec is that every
+normative sentence in section 5 is traceable to a production failure. A
+merge algorithm whose rules are justified only by symmetry arguments
+will get relaxed by the next contributor who finds one inconvenient.</p>
+<p><strong>Under union-merge, removal must be a record, and the record
+must be monotonic.</strong> If either replica carries the suppression,
+the merged result carries it, <em>regardless of which copy has the newer
+date</em> — because tombstoning does not touch the item's date, so the
+tombstoned copy usually loses the recency comparison. Get this wrong and
+every un-synced machine resurrects the item, forever.</p>
+<p><strong>Split the tombstone into absolute and temporal, and refuse to
+substitute one.</strong> A suppressed claim is junk permanently; a
+completed task can legitimately be added again. One class cannot serve
+both, and the discriminator is cheap: a re-add whose timestamp postdates
+the completion is a revival, not a straggler.</p>
+<p><strong>Size the tombstone retention against your slowest replica,
+and keep tombstones out of the visible cap.</strong> Both rules are one
+line of code and both were bugs here first: a tombstone that rotates off
+resurrects the item, and a tombstone that competes for cap slots evicts
+a live memory while doing it.</p>
+<p><strong>Quarantine forward-incompatible data instead of interpreting
+it.</strong> An old reader that "mostly understands" a newer schema is
+exactly how a tombstone gets dropped and a deletion undone. Degrade to
+empty, keep the original, and contribute nothing to a merge.</p>
+<p><strong>Ship a tripwire that checks your real state after every test
+run.</strong> Not a fixture, not a mock — a guard that looks for
+test-fixture signatures in the developer's live store. Match markers
+rather than diffing, so a concurrent legitimate write does not
+false-positive.</p>
+<p><strong>Put the whole read-mutate-write cycle in the lock.</strong>
+Atomic rename prevents a torn file and does nothing about two processes
+reading the same snapshot. If your agent harness can run two sessions
+against one home directory — and it can — this is a live data-loss bug,
+not a theoretical one.</p>
+<p><strong>Guard model-supplied filenames as paths, not as
+strings.</strong> Bare name, no separator, no <code>..</code>, and
+resolve-then-assert-containment. The concrete attack is worth naming in
+the comment so nobody relaxes it.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let provenance live as a prefix on a prose
+field.</strong> <code>why: "auto-captured: …"</code> means every
+consumer that wants to treat a regex guess differently from a user's
+instruction has to string-match, and the moment a user writes a
+rationale beginning with those words the distinction is gone. The
+extractor here already computes a type and throws it away before the
+write — one more field would have carried it.</p>
+<p><strong>Do not mint memories from the assistant's own text on an
+inferential path.</strong> The explicit-instruction pattern is correctly
+scoped to user messages; the rename, tech, design and stack patterns are
+not, so the model's own suggestion becomes a durable decision. If both
+sources must feed one extractor, record which one produced each row.</p>
+<p><strong>Do not ship a correction primitive with no way to invoke
+it.</strong> The suppression mechanism here is specified, implemented,
+filtered, validated and tested, and no user can create one. A capability
+that exists everywhere except the API is indistinguishable, from the
+outside, from one that was never built.</p>
+<p><strong>Do not identify a memory by its text alone.</strong> It makes
+merge trivially correct and correction structurally impossible: a
+rephrase is a new memory, and a tombstone on the old wording says
+nothing about the new one.</p>
+<p><strong>Do not crawl the home directory on the read path.</strong> An
+index that is rebuilt from files is explicitly permitted by this format
+— the spec says so — and nothing here builds one.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits one person with several machines and several coding tools
+who wants their AI's context to follow them and is willing to read
+markdown when it goes wrong. That is a real and underserved shape, and
+the local-first, plain-text, no-account default is the right answer for
+it.</p>
+<p>It does not suit anything with more than one user, because there is
+no scope, no tenancy and no auth boundary anywhere — the store is one
+person's home directory. It does not suit a large corpus, because
+ranking is lexical with no index behind it and a home-directory crawl on
+the cold path, so cost scales with the filesystem rather than with the
+store. And it does not suit anyone who needs to be sure a memory is
+<em>gone</em> in the strong sense: retraction is reachable and
+monotonic, but it is keyed on the decision's text, so it suppresses the
+sentence rather than the belief.</p>
+<p>The maintenance budget it assumes is small — 11,932 lines, eight
+dependencies, one dominant author — and the code is dense with the kind
+of comment that makes a small codebase maintainable by someone else. The
+format is a separable and more durable artifact than the implementation:
+a reader who takes section 5 and implements it against their own store
+gets most of the value here without adopting any of the rest.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How does the field-weighted scorer behave on a real store? The
+Appendix A survey describes one of 326 entry files, which is where the
+ranking would start to matter; the committed fixture corpus is six
+documents written alongside the ranker, and nothing measures the gap
+between the two.</li>
+<li>What fraction of memories carry aliases in practice? The field is
+weighted heaviest and is what stands in for semantic matching, but it is
+optional and populated by asking the model for it, so the retrieval
+quality of a real store is a function of how often that request was
+honoured — which a reading of the repository cannot see.</li>
+<li>Has any second implementation of the format appeared? The spec asks
+for one and a conformance claim would be the test of whether section 5
+is implementable from the text alone.</li>
+<li>What does the host tool do when memoir writes into its memory
+directory — reindex, ignore until restart, or conflict with its own
+writer? That needs the hosts running, not the repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Format and schema</strong> — <code>docs/SPEC.md</code>,
+<code>schema/entry.schema.json</code>,
+<code>schema/session.schema.json</code>,
+<code>src/commands/validate.js</code>.</p>
+<p><strong>Merge and tombstones</strong> —
+<code>src/session/state.js</code> (<code>mergeSessions</code>,
+<code>unionByText</code>, <code>unionTombstones</code>,
+<code>completeNext</code>, <code>addNote</code>),
+<code>src/session/migrations.js</code>,
+<code>scripts/cleanup-junk-decisions-2026-07.mjs</code>.</p>
+<p><strong>Capture and extraction</strong> —
+<code>src/context/capture.js</code> (<code>parseSession</code>,
+<code>extractDecisions</code>, <code>isQuality</code>),
+<code>src/commands/push.js</code>.</p>
+<p><strong>Retrieval and injection</strong> — <code>src/mcp.js</code>
+(<code>searchMemories</code>, <code>readMemoryFiles</code>),
+<code>src/adapters/index.js</code>, <code>src/session/render.js</code>,
+<code>src/session/inject.js</code>.</p>
+<p><strong>Concurrency and durability</strong> —
+<code>src/session/lock.js</code>, <code>src/events/log.js</code>.</p>
+<p><strong>Security and privacy</strong> —
+<code>src/security/scanner.js</code>,
+<code>src/security/encryption.js</code>,
+<code>src/telemetry.js</code>.</p>
+<p><strong>Cloud</strong> — <code>src/cloud/storage.js</code>,
+<code>src/cloud/constants.js</code>, <code>src/cloud/auth.js</code>,
+<code>src/providers/index.js</code>.</p>
+<p><strong>Human review</strong> —
+<code>src/commands/consolidate.js</code>,
+<code>src/commands/tidy.js</code>.</p>
+<p><strong>Tests</strong> — <code>run-tests.mjs</code>,
+<code>test-decisions-hidden.mjs</code>, <code>test-session.mjs</code>,
+<code>test-cross-machine.mjs</code>, <code>test-secret-scan.mjs</code>,
+<code>test-mcp-contract.mjs</code>,
+<code>test-capture-quality.mjs</code>,
+<code>test-schema-migration.mjs</code>,
+<code>test-session-lock.mjs</code>.</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-19</strong> — <a
+href="https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653"><code>2c1fe382b9c24289624f9f0329f378ab2d2aa653</code></a>
+— re-read seven commits on, and this report's central criticism is
+closed. It said the absolute tombstone the spec makes normative had no
+writer any user could reach — the only assignment outside the merge
+lived in <code>scripts/cleanup-junk-decisions-2026-07.mjs</code>, whose
+own header said it was not wired into any command. Release 3.12.0 ships
+<code>memoir forget "substring" [--purge] [--yes]</code>
+(<code>src/commands/forget.js</code>), which resolves the decision,
+prints it, states that hiding cannot be undone, and calls
+<code>hideDecision</code> to set <code>hidden</code> and
+<code>hidden_at</code>. <code>--purge</code> redacts the text while
+keeping a sha256 identity, and the activate template tells the model to
+reach for <code>memoir_forget</code> when a recorded decision is
+wrong.</p>
+<p><strong><code>tombstone</code> is carried.</strong> The suppression
+is keyed on the decision text rather than on a row id, a tombstone is
+sticky across replicas — <em>"once any machine marks an entry hidden,
+the merged"</em> result keeps it hidden
+(<code>src/session/state.js:471</code>) — and <code>capDecisions</code>
+gives tombstones a budget separate from visible entries, so the record
+of a retraction is not pruned away with ordinary rows. That is the
+rejected-value shape the rubric asks for, and it is now reachable.</p>
+<p>The residual risk is narrower and is what the row says: the key is
+the text, so a paraphrase of a hidden decision is a different identity
+and is not suppressed. All four marks carry evidence records.
+Separately, the MCP registry manifest that this report recorded as nine
+minors stale was corrected in <code>829e914</code>, with an npm
+<code>version</code> hook added to keep it in step;
+<code>server.json</code> and <code>package.json</code> both read
+3.12.0.</p>
+<p><strong>Two further published claims were stale in the same release
+and are corrected here, both in the direction of the project having
+closed a gap.</strong> Retrieval was not a substring count:
+<code>src/memory/search.js</code> scores five weighted fields with
+saturating term frequency and a coverage-squared multiplier, folds
+plurals and matches by prefix from four characters, and returns matched
+passages with a line of context instead of the head of each file. The
+<code>$HOME</code> crawl survives behind a 60-second index cache and an
+mtime document cache, which amortise for the long-lived MCP server and
+not for the CLI. And the backup retention constants are
+<code>MAX_BACKUPS_FREE</code> 10 against <code>MAX_BACKUPS_PRO</code>
+100, so the inversion this report reported is gone — with
+<code>test-cloud.mjs:34</code> now asserting
+<code>MAX_BACKUPS_PRO &gt; MAX_BACKUPS_FREE</code> rather than the
+literal numbers, which is why the earlier test agreed with the earlier
+bug. <code>test-recall.mjs</code> is new and is the retrieval eval
+section 10 recorded as absent: six fixture documents, seven ranking
+assertions and a no-match case.</p>
+<p>One finding is added rather than corrected.
+<code>src/context/capture.js</code> was taught to skip subagent
+transcripts, whose first user message is an orchestrator prompt — the
+source of three of the author's own spurious pinned decisions.
+<code>src/commands/snapshot.js:25</code> was not, and still admits any
+<code>.jsonl</code> whose name lacks the substring
+<code>subagent</code>, which every <code>agent-&lt;id&gt;.jsonl</code>
+does; it forwards the messages it finds to a third-party model as
+<em>"User messages (what they asked for)"</em>. The predicate is spelled
+a fourth way at <code>src/adapters/index.js:58</code>.</p>
+<p><strong>2026-08-13</strong> — <a
+href="https://github.com/camgitt/memoir/commit/0ae33bbe94ac381da2cad4f99d50f65351e77a27"><code>0ae33bbe94ac381da2cad4f99d50f65351e77a27</code></a>
+— first reading, at v3.11.3. Screened before reading: 1 auto-run surface
+(<code>server.json</code>, an MCP manifest declaring an npm stdio start
+command), 2 dependency surfaces changed six days earlier and inside the
+cooldown, 8 floating ranges with a lockfile beside them; the
+<code>postinstall</code> script is a <code>console.log</code> banner
+with no network or filesystem access. Nothing was installed and nothing
+was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

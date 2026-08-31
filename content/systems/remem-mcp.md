@@ -476,8 +476,8 @@ author.
 
 ## 12. Open Questions
 
-- Three handlers each type `?? defaultSessionKey()` at their own edge while
-  `sqlite.ts` still reads `if (sessionKey)`. What is the next read entry point,
+- Three handlers each type `?? defaultSessionKey()` at their own edge, above a
+  storage layer that reads `if (sessionKey)`. What is the next read entry point,
   and what makes it inherit the default rather than the guard?
 - Is `override_rejection` meant to be the model's decision? It is an ordinary
   tool argument, so the caller a refusal was aimed at is the caller that can

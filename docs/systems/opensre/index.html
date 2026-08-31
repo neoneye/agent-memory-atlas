@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An SRE agent whose automatic
+memory refuses to store an infrastructure fact unless the words in it
+also appear in something the user typed — and redacts the transcript
+before the extractor ever sees it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenSRE — Agent Memory Atlas">
+    <meta property="og:description" content="An SRE agent whose
+automatic memory refuses to store an infrastructure fact unless the
+words in it also appear in something the user typed — and redacts the
+transcript before the extractor ever sees it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenSRE — Agent Memory Atlas">
+    <meta name="twitter:description" content="An SRE agent whose
+automatic memory refuses to store an infrastructure fact unless the
+words in it also appear in something the user typed — and redacts the
+transcript before the extractor ever sees it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenSRE — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenSRE",
+      "description": "An SRE agent whose automatic memory refuses to store an infrastructure fact unless the words in it also appear in something the user typed \u2014 and redacts the transcript before the extractor ever sees it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Grounding as the write gate</p>
+          <h1>OpenSRE</h1>
+          <p class="document-deck">An SRE agent whose automatic memory
+refuses to store an infrastructure fact unless the words in it also
+appear in something the user typed — and redacts the transcript before
+the extractor ever sees it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Tracer-Cloud/opensre">
+              <span>Source</span>
+              <strong>Tracer-Cloud/opensre</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544" title="c81d6c36d69bd6b39c1e18b0205f28422c3d2544">
+              <span>Analyzed revision</span>
+              <code>c81d6c36…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenSRE is an Apache-2.0 framework for AI SRE agents — investigate an
+incident, call the observability tools you already run, answer in Slack
+or a terminal. It is a large repository in public alpha, and its
+long-term memory is a small, carefully-bounded corner of it: about 870
+lines under <code>core/domain/memory/</code> for the store, 387 lines of
+session-end extraction, 183 lines of agent tools, and 147 lines of slash
+commands.</p>
+<p>The memory is markdown files, which is not novel. What is worth the
+report is <strong>where this system decided to put its rigour</strong>,
+because it is not where most extraction pipelines put theirs. There is
+no embedding, no ranking, no trust enum and no audit log. Instead almost
+all of the engineering is on the write gate, and it is unusually
+specific about one failure: <strong>the agent's own output becoming the
+user's memory.</strong></p>
+<p><code>_extracted_item_is_user_grounded</code> refuses to save a
+memory typed <code>infrastructure</code> or
+<code>investigation_learning</code> unless its distinctive tokens
+overlap with text the <em>user</em> wrote in the transcript — a set
+intersection over stop-listed words, with no model in the loop. A second
+regex refuses anything extracted from a transcript containing built-in
+sample, demo, synthetic or benchmark scenarios, unless the user
+explicitly asked for it to be remembered. The atlas records three other
+systems that had to stop their own scaffolding from becoming memory — <a
+href="../openclaw/">OpenClaw</a> strips its message envelope, <a
+href="../holographic/">Holographic</a> excludes compaction summaries, <a
+href="../helm/">Helm</a> stop-lists its own supersession log — and all
+three solve it by <em>subtraction</em>, naming the strings to remove.
+This one solves it by <strong>requiring positive evidence of user
+authorship</strong>, which does not need updating when the agent learns
+to phrase things differently.</p>
+<p>The second mechanism worth taking is one regex module used twice.
+<code>find_memory_safety_issues</code> blocks private key blocks,
+provider tokens, JWTs, URL credentials and labelled secrets from being
+written at all, and <code>redact_memory_unsafe_text</code> runs the same
+patterns over the transcript <strong>before it is sent to the
+classification provider</strong>. Blocking a credential from your store
+and blocking it from leaving the machine are different problems; this
+solves both from one place, and asserts the second in a committed
+test.</p>
+<p>What it does not have is a memory that can stay deleted.
+<code>/memory forget</code> unlinks the file, nothing records that the
+value was rejected, and extraction runs over the last thirty turns after
+<em>every</em> recorded turn — so the statement that produced a memory
+is still in the window the next pass reads.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of it as <strong>a notebook the agent writes in without asking,
+behind a bouncer that has read the transcript.</strong></p>
+<p>Every durable fact passes the same chain, and the interesting
+property is that only one link in it is a language model:</p>
+<ol type="1">
+<li>The model proposes — either as a <code>memory_remember</code> tool
+call mid-turn, or as a JSON item from the post-turn extraction
+pass.</li>
+<li>The type must be one of four (<code>user</code>,
+<code>infrastructure</code>, <code>preference</code>,
+<code>investigation_learning</code>); anything else is dropped without
+comment.</li>
+<li>For the two high-impact types, the <strong>grounding check</strong>
+runs: no model, just a token-set intersection against what the user
+actually typed.</li>
+<li>The <strong>safety check</strong> runs: five regex families, and a
+rejection names the rule rather than echoing the value.</li>
+<li>The slug must normalise to a valid slug; the body is truncated at
+10,000 characters with a marker.</li>
+<li>The write takes a directory lock, preserves <code>created_at</code>
+if the slug already exists, writes through a temp file and an atomic
+replace, and rebuilds the index best-effort.</li>
+</ol>
+<p>Retrieval is the part that barely exists, and deliberately: the store
+is small enough that the whole thing is rendered into the prompt, so the
+ordinary case needs no recall call at all.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — redaction runs before anything leaves the machine, three independent screens can drop a candidate — one of them naming the rule without logging the value — and forgetting unlinks the file while the statement stays in the transcript</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: redaction runs before anything leaves the machine, three independent screens can drop a candidate — one of them naming the rule without logging the value — and forgetting unlinks the file while the statement stays in the transcript
+flowchart TD
+    T[&quot;Session transcript&lt;br/&gt;last 30 turns&quot;] --&gt; RED[&quot;redact_memory_unsafe_text&lt;br/&gt;before anything leaves the machine&quot;]
+    RED --&gt; LLM[&quot;Classification model&lt;br/&gt;returns a JSON array, max 5&quot;]
+    LLM --&gt; TY{&quot;type in the four?&quot;}
+    TY -- &quot;no&quot; --&gt; DROP1[&quot;dropped&quot;]
+    TY -- &quot;yes&quot; --&gt; GR{&quot;infrastructure or&lt;br/&gt;investigation_learning?&quot;}
+    GR -- &quot;no&quot; --&gt; SAFE
+    GR -- &quot;yes&quot; --&gt; UG{&quot;distinctive tokens shared&lt;br/&gt;with the user&#39;s own messages?&quot;}
+    UG -- &quot;no&quot; --&gt; DROP2[&quot;dropped, logged at debug&quot;]
+    UG -- &quot;yes&quot; --&gt; SAFE{&quot;find_memory_safety_issues&quot;}
+    SAFE -- &quot;issues&quot; --&gt; DROP3[&quot;dropped, rule named, value never logged&quot;]
+    SAFE -- &quot;clean&quot; --&gt; W[&quot;save_memory under a FileLock&lt;br/&gt;atomic replace, mode 0600&quot;]
+    W --&gt; F[(&quot;users/&amp;lt;actor id&amp;gt;/memory/&amp;lt;slug&amp;gt;.md&quot;)]
+    F --&gt; IDX[&quot;render_prompt_index&lt;br/&gt;whole store, 8,000 chars, newest first&quot;]
+    IDX --&gt; P[&quot;Every chat and action prompt&quot;]
+    P -.-&gt; T
+    FG[&quot;memory_forget&lt;br/&gt;/memory forget&quot;] --&gt;|&quot;unlink, no record kept&quot;| F
+    FG -.-&gt;|&quot;the statement is still in the transcript&quot;| T</code></pre></details></figure>
+<p>The dotted loop is the design's open edge. Nothing that leaves
+through <code>memory_forget</code> leaves a mark, and the transcript
+that justified the memory is still inside the window the next extraction
+pass will read.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four layers, and the dependency direction is enforced by hand rather
+than by a tool — each module's docstring states what it is allowed to
+import.</p>
+<p><code>core/domain/memory/files.py</code> is the bottom: path
+resolution and <code>write_text_atomically</code>, importing nothing
+else from the package. Its constants carry the most patient comment in
+the tree, explaining <code>0o700</code> and <code>0o600</code> one octal
+digit at a time and stating the reason: <em>"memory holds whatever the
+user told the agent to remember, which can include names, hosts and
+incident detail. On a shared machine the default would otherwise leave
+them world-readable."</em></p>
+<p><code>frontmatter.py</code>, <code>slugs.py</code>,
+<code>models.py</code> and <code>safety.py</code> are pure functions
+over text. <code>index.py</code> renders the two generated views.
+<code>store.py</code> sits on top with the CRUD, the lock and the cache.
+<code>settings.py</code> holds the three environment gates.</p>
+<p><strong>Scope is a <code>ContextVar</code>, not a parameter.</strong>
+<code>config/scope_context.py</code> binds a <code>StorageScope</code>
+for the duration of a turn; <code>session_home()</code> reads it and
+returns <code>&lt;org root&gt;/users/&lt;actor id&gt;</code> for an org
+principal, or the org root when nothing is bound — so a laptop run stays
+flat and a Slack silo separates members without either code path knowing
+about the other. <code>memory_dir()</code> is the single funnel, so
+every read and every write inherits the boundary by construction.</p>
+<p>That design has one classic hazard, and the repository knows it: a
+background thread does not inherit a <code>ContextVar</code> unless the
+context is copied. <code>_schedule_coalesced</code> calls
+<code>contextvars.copy_context()</code> and says why in a comment —
+without it <em>"<code>save_memory()</code> would resolve to the org root
+instead of <code>users/&lt;actor_id&gt;/memory/</code>, misfiling the
+user's extracted facts where their in-scope turns never read them"</em>
+— and a test asserts the thread sees the same scope object.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Memory is on by default in the terminal and in investigations, and
+<strong>off by default on Slack and Telegram</strong>, requiring
+<code>OPENSRE_MEMORY_GATEWAY_ENABLED=1</code>. The stated reason is that
+the scoping is not uniform: Slack memory is per-user, <em>"but Telegram
+stays host-global, so the whole feature is off by default on shared
+gateway hosts to avoid one user's facts crossing into another's
+prompts."</em> A system that disables its own feature on the surface
+where its boundary is weakest is rare enough to name.</p>
+<p>Two more switches: <code>OPENSRE_MEMORY_DISABLED</code> kills the
+feature, and <code>OPENSRE_MEMORY_AUTOEXTRACT_DISABLED</code> keeps the
+tools and the prompt index while turning off the automatic pass — the
+right split, because it lets an operator keep memory the user asked for
+and drop memory the model decided on.</p>
+<p><code>OPENSRE_MEMORY_DIR</code> overrides the location. Storage is
+local and unencrypted, which the docs say in bold and the
+<code>/memory</code> output repeats.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>File</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grounding gate</td>
+<td><code>core/agent_harness/session/memory_extraction.py:331-380</code></td>
+<td>Token-set intersection between the candidate memory and
+user-authored text, plus the sample/synthetic refusal</td>
+</tr>
+<tr>
+<td>Safety gate</td>
+<td><code>core/domain/memory/safety.py:61-129</code></td>
+<td>Five regex families; rules are named, values never echoed</td>
+</tr>
+<tr>
+<td>Redaction</td>
+<td><code>core/domain/memory/safety.py:85-109</code></td>
+<td>Same patterns, substitution instead of rejection, applied to the
+transcript before the provider call</td>
+</tr>
+<tr>
+<td>Extraction</td>
+<td><code>core/agent_harness/session/memory_extraction.py:90-125, 234-255</code></td>
+<td>The prompt, the existing index passed back in, a cap of five items
+and thirty turns</td>
+</tr>
+<tr>
+<td>Coalescing worker</td>
+<td><code>core/agent_harness/session/memory_extraction.py:167-205</code></td>
+<td>One daemon thread, latest snapshot wins, context copied</td>
+</tr>
+<tr>
+<td>Write</td>
+<td><code>core/domain/memory/store.py:91-137</code></td>
+<td>Lock, read-modify-write preserving <code>created_at</code>, atomic
+replace, index rebuild</td>
+</tr>
+<tr>
+<td>Scope resolution</td>
+<td><code>config/constants/paths.py:130-170</code></td>
+<td><code>session_home()</code> and <code>get_memory_dir()</code></td>
+</tr>
+<tr>
+<td>Parse cache</td>
+<td><code>core/domain/memory/store.py:150-208</code></td>
+<td><code>lru_cache</code> keyed on directory <em>and</em> a per-file
+size/mtime signature</td>
+</tr>
+<tr>
+<td>Prompt index</td>
+<td><code>core/domain/memory/index.py:46-83</code></td>
+<td>Newest first, 50 entries, 600 chars of body each, 8,000 total, tail
+pointer to <code>memory_recall</code></td>
+</tr>
+<tr>
+<td>Agent tools</td>
+<td><code>tools/system/agent_memory/tool.py</code></td>
+<td><code>memory_remember</code>, <code>memory_forget</code>,
+<code>memory_recall</code></td>
+</tr>
+<tr>
+<td>Review surface</td>
+<td><code>surfaces/interactive_shell/command_registry/memory_cmds.py</code></td>
+<td><code>/memory</code>, <code>/memory show</code>,
+<code>/memory forget</code>, <code>/memory path</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One record, one file:</p>
+<pre class="text"><code>slug          kebab-case, validated, max 64 chars — also the filename
+memory_type   user | infrastructure | preference | investigation_learning
+description   single line, max 200 chars, shown in the index
+created_at    ISO-8601 UTC, preserved across updates
+updated_at    ISO-8601 UTC
+body          markdown, max 10,000 chars then truncated with a marker</code></pre>
+<p>The type is a <code>StrEnum</code> coerced in
+<code>__post_init__</code>, so a plain string arriving from disk or from
+a tool argument becomes a real enum member on whichever path it enters
+by — a small thing that removes a class of "it worked from the tool but
+not from the file" bug.</p>
+<p><strong>What the record does not carry is the more interesting
+list.</strong> There is no provenance field, so a memory the user
+dictated, one a tool produced and one the extraction pass inferred are
+indistinguishable once written — the grounding check that separated them
+at the gate leaves no trace in the row. There is no confidence and no
+status, so nothing can be held without being believed. And there is no
+validity interval: <code>updated_at</code> is when the file was written,
+never when the fact was true, so <em>"eks-prod-1 is the production
+cluster"</em> and <em>"eks-prod-1 was the production cluster until the
+migration"</em> are the same shape.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The normal path is not retrieval at all.</strong>
+<code>render_prompt_index</code> sorts every memory newest-updated first
+and renders each as an index line plus up to 600 characters of body,
+until it hits 50 entries or 8,000 characters, then appends <em>"… and N
+more memories (use memory_recall)"</em>. The comment says the intent
+plainly: the agent should be able to answer <em>"without a recall
+call"</em>.</p>
+<p>That is the right call at this scale and it has a stated horizon. A
+user with two hundred memories gets the fifty most recently touched, and
+recency of <em>edit</em> is a poor proxy for relevance to the incident
+in front of them — a memory written once and never updated sinks
+regardless of how central it is.</p>
+<p>When recall does happen it is <code>search_memories</code>:
+<code>needle in slug or needle in description.lower() or needle in body.lower()</code>,
+first <code>limit</code> matches in recency order. No embeddings, no
+BM25, no scoring — so <code>eks-prod-1</code> will not find
+<em>"production cluster"</em>, and the caller gets whichever matches
+were most recently written rather than the best ones.</p>
+<p>The cost of reading everything on every turn is paid once.
+<code>_parsed_memories</code> is an <code>lru_cache</code> of 16 stores
+keyed on the directory <strong>and</strong> a tuple of every file's
+name, mtime and size — the docstring explains why directory mtime alone
+is insufficient (<em>"editing a memory in place leaves it unchanged, so
+the cache would serve a stale body"</em>) and why the directory belongs
+in the key (<em>"one Slack user must never be served another's memories,
+however alike the two stores look"</em>). Sixteen entries bound it so a
+gateway serving many users cannot grow the cache without limit.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two writers reach the same <code>save_memory</code>.</p>
+<p><strong>The tool.</strong> <code>memory_remember</code> is described
+to the model with an instruction most systems leave implicit: <em>"Do
+not wait for the user to say remember/save/note; if the fact is useful
+and stable, call this in the same turn."</em> It also tells the model to
+reuse an existing name rather than create a near-duplicate, which is the
+whole of the deduplication strategy — there is no similarity check
+anywhere, so dedup is entirely the model's discipline against an index
+it can see.</p>
+<p><strong>The extraction pass.</strong>
+<code>schedule_memory_extraction</code> is called after every recorded
+turn and again on close. Mid-session calls go to a single coalescing
+daemon: the latest snapshot replaces any pending one and one worker
+drains it, so a burst of turns costs one provider call rather than one
+per turn. The close path passes <code>wait_for_completion=True</code>
+and runs inline, after resources are released, so nothing is lost to
+process exit.</p>
+<p>Then the gates, in order, and only the first is a model:</p>
+<ul>
+<li><strong>Type must be known.</strong> A <code>type</code> outside the
+four is dropped silently.</li>
+<li><strong>Grounding.</strong> For <code>infrastructure</code> and
+<code>investigation_learning</code>, <code>_distinctive_tokens</code>
+lowercases, splits on <code>[-_.]</code>, drops tokens under four
+characters and drops a 36-word stop list of SRE filler
+(<code>alert</code>, <code>incident</code>, <code>production</code>,
+<code>service</code>, <code>root</code>, <code>cluster</code>, …) — then
+requires a non-empty intersection with the same treatment of the user's
+messages. An explicit <em>"remember / save / store / keep / note /
+memorize"</em> in the user's text bypasses the token test, and a
+transcript containing a sample or benchmark scenario fails outright
+unless that explicit request is present.</li>
+<li><strong>Safety.</strong> <code>find_memory_safety_issues</code> over
+description and body.</li>
+<li><strong>Slug validity</strong>, then <code>save_memory</code>,
+capped at five per pass.</li>
+</ul>
+<p>The whole thing is wrapped so it never raises: <em>"any failure (LLM
+unavailable, malformed output, disk errors) is logged and ignored."</em>
+Parsing is correspondingly forgiving — a fenced block, or the substring
+between the first <code>[</code> and the last <code>]</code>, and
+anything unparseable yields <code>[]</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One classification-model call per coalesced burst of turns, over at
+most thirty turns of transcript plus the whole prompt index. Every
+action-agent turn renders the index, which is a directory scan reduced
+to a <code>stat</code> per file by the signature cache. Writes are one
+file plus a full rewrite of <code>MEMORY.md</code>.</p>
+<p>The index rebuild is best-effort by design, and the comment earns its
+place: <em>"a stale index never affects recall or extraction"</em>,
+because every agent-facing read scans the directory.
+<code>MEMORY.md</code> is for the human.</p>
+<p>Writes are synchronous under a 10-second lock timeout and the agent
+blocks on the tool call; the extraction pass never blocks the turn. Lag
+before a fact is retrievable is therefore either zero (tool) or one
+coalesced worker cycle (extraction).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three tools registered through the repository's own decorator, each
+carrying <code>side_effect_level</code>, <code>surfaces</code>,
+<code>tags</code> and an <code>is_available</code> predicate wired to
+<code>memory_available_here()</code> — so on a Slack host without the
+opt-in the tools do not merely fail, they are absent from the schema the
+model sees.</p>
+<p><code>memory_recall</code> is overloaded three ways by argument
+shape: a <code>name</code> reads one entry in full, a <code>query</code>
+searches, and no arguments returns the index. Each result carries
+<code>total_stored</code>, so the model can tell "nothing matched" from
+"nothing is stored".</p>
+<p>The <code>/memory</code> slash commands cover list, show, forget and
+path. The list output ends by telling the user where the files are and
+that they may <em>"edit or delete the files directly"</em> — the store
+is the interface, in the sense the <a
+href="../../patterns/memory-as-an-editing-surface/">memory as an editing
+surface</a> pattern describes, without the pinning and merging the
+mature instances of that pattern carry.</p>
+<p>A second durable record sits beside memory and is worth knowing
+about. After an investigation the user grades the result, and a
+<strong>miss</strong> — rated partial or inaccurate — is classified into
+a five-value taxonomy and appended to
+<code>~/.opensre/misses.jsonl</code>, from where
+<code>opensre misses export</code> turns it into benchmark scenarios the
+eval runner consumes. That is a human-adjudicated record of failures
+feeding the test suite, which is the loop the atlas's <a
+href="../../benchmarks/">benchmarks page</a> argues most systems lack.
+It is <strong>not</strong> per-principal: <code>misses_path()</code>
+resolves to the org root while memory resolves to
+<code>users/&lt;actor id&gt;</code>, so on a shared silo one member's
+graded incident detail is readable in another's export.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The grounding gate is the strongest idea here and its limits
+are legible.</strong> It applies to two of four types by design —
+<code>user</code> and <code>preference</code> memories are still
+<em>"mostly LLM-classified"</em>, which the docstring says outright.
+Token overlap is a proxy for authorship, not a proof: an assistant that
+echoes the user's cluster name back inside an invented claim carries the
+tokens the check looks for. And an explicit <em>"remember"</em> anywhere
+in the user's messages disables both the token test and the
+sample-scenario refusal for the whole pass, so one "note this down"
+early in a session lowers the bar for every item extracted from it.</p>
+<p><strong>Secrets are handled twice and the second is the rarer
+one.</strong> Rejection names the rule (<code>provider_token</code>,
+<code>jwt_token</code>, <code>labeled_secret</code>) and never echoes
+the matched text into a log — a discipline the dataclass comment states
+as intent. Redaction runs before the provider call, and a committed test
+asserts a <code>ghp_</code>-shaped token does not appear in the prompt.
+<code>_looks_like_secret_value</code> carries a thirteen-word benign
+list (<code>configured</code>, <code>rotated</code>, <code>unset</code>,
+…) so <em>"api_key is rotated"</em> is not treated as a leak, which is
+the kind of detail that decides whether a filter survives contact with
+real transcripts.</p>
+<p><strong>Deletion does not stay deleted.</strong>
+<code>delete_memory</code> unlinks and rebuilds the index. Nothing
+records that the value was rejected, and the extraction pass runs after
+every recorded turn over the last thirty — so the user statement that
+produced a memory is still in the window after they ask for it to be
+forgotten, and it will pass the grounding check for exactly the reason
+it passed the first time. The prompt's only defence is an instruction
+not to extract <em>"anything already captured by an existing
+memory"</em>, which is precisely false for a memory that was just
+removed. This is the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> gap in its sharpest form: the re-extraction path is not
+hypothetical here, it is on a per-turn timer.</p>
+<p><strong>Concurrency is handled where it bites.</strong> A directory
+<code>FileLock</code> with a 10-second timeout wraps read-modify-write
+and delete, the docstring naming what it prevents (<em>"parallel writers
+to the same slug cannot both report <code>created=True</code> or discard
+each other's content"</em>), and writes land through a temp file and
+<code>Path.replace</code>. A lock timeout returns <code>None</code>
+rather than raising.</p>
+<p><strong>No audit.</strong> Nothing records that a memory was created,
+updated or deleted, by whom, or from which turn. On a per-user laptop
+store that is a defensible omission; on a Slack silo where extraction
+writes without asking, the question <em>"why does it think that"</em>
+has no answer beyond the file's own body.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory paths are tested with a seriousness the size of the
+feature does not require.
+<code>tests/core/agent_harness/session/test_memory_extraction.py</code>
+is 351 lines over twenty cases, and the useful ones are negative:</p>
+<ul>
+<li>a secret-like extracted item is skipped;</li>
+<li>infrastructure claims appearing only in assistant output are
+skipped;</li>
+<li>sample-alert infrastructure and lessons are skipped;</li>
+<li>a user-grounded infrastructure fact <em>is</em> saved, which pins
+the gate from the other side;</li>
+<li>garbage from the model saves nothing and does not raise;</li>
+<li>a <code>ghp_</code>-shaped token is asserted absent from the prompt
+sent to the provider, with <code>[REDACTED]</code> asserted
+present.</li>
+</ul>
+<p>Beside them,
+<code>test_scheduled_extraction_thread_inherits_storage_scope</code> is
+labelled a regression guard and states the bug it protects against in
+its docstring. <code>test_list_memories_cache.py</code> covers the
+signature-keyed cache, and <code>test_memory_store.py</code> covers
+CRUD, truncation and the safety rejection.</p>
+<p>These are must-not-store and must-not-send assertions rather than
+must-not-<em>retrieve</em> ones — the material is kept out of a write
+decision and out of a provider prompt, not out of a search result — and
+the capability evidence records that distinction rather than hiding it.
+What is not asserted anywhere: that a forgotten memory stays forgotten
+across a subsequent extraction pass.</p>
+<p>The repository also ships <code>cloudopsbench</code> and a synthetic
+scenario suite, and the closed-loop miss export exists to grow it.
+Nothing there measures memory.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>The grounding check, and its shape.</strong> Requiring that
+a durable claim's distinctive tokens appear in user-authored text is a
+deterministic, cheap, model-free test for the failure every extraction
+pipeline has: the agent's own output re-entering as evidence. It
+generalises where a stop list does not, because it does not need to know
+what the agent will say next.</li>
+<li><strong>Applying it selectively.</strong> Only the two high-impact
+types pay the cost, and the code says why. A blanket version would
+reject legitimate profile facts the user never restated.</li>
+<li><strong>The sample-scenario refusal.</strong> Any product shipping
+demo data needs this, and almost nothing has it: built-in example
+incidents must not become the user's incident history.</li>
+<li><strong>One secret module, two jobs.</strong> Reject on the way into
+the store, redact on the way out to a provider — and assert the second
+in a test, because it is the one nobody notices is missing.</li>
+<li><strong>Turning the feature off where its own boundary is
+weak.</strong> Memory is opt-in on shared gateway hosts because one
+surface is still host-global. Shipping a reduced feature beats shipping
+a leak.</li>
+<li><strong>The cache key.</strong> Directory plus per-file size and
+mtime, with the reasoning for each half written down.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deleting with no record, when your extractor re-reads the
+same transcript.</strong> This is not a latent risk here; the pass runs
+after every turn over a thirty-turn window.</li>
+<li><strong>Recency-of-edit as the injection order.</strong> Fifty slots
+filled by whatever was touched most recently is not the same as fifty
+relevant memories.</li>
+<li><strong>Substring search as the only recall.</strong> It cannot
+match a synonym, and it returns the newest matches rather than the
+best.</li>
+<li><strong>An escape hatch that disables several gates at
+once.</strong> One "remember this" from the user turns off both the
+token test and the sample refusal for every item in the pass.</li>
+<li><strong>A scoping boundary that stops at one store.</strong> Memory
+is per-user; <code>misses.jsonl</code> — which carries incident detail
+and a human's notes — is not.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is the right shape for <strong>a single-user or small-team agent
+whose memory should be inspectable in an editor and small enough to
+inject whole.</strong> Below a few hundred memories the absence of
+ranking is a feature: the model sees everything, so nothing is silently
+unretrieved, and the whole store is a directory the user can read, diff
+and delete.</p>
+<p>Walk away if memory has to be shared, audited, or argued with. There
+is no provenance, no trust state, no mutation record, no conflict
+handling and no approval step before an automatic write takes effect.
+For an SRE tool where a wrong "known-flaky service" note shapes the next
+incident triage, the missing piece is not retrieval quality — it is
+being able to ask why the agent believes something, and to make a
+correction that holds.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a forgotten memory come back? The mechanism permits it and no
+test covers it; a single case — save, forget, re-run extraction over the
+same transcript — would settle it either way.</li>
+<li>What does the token-overlap gate reject in practice? The skip is
+logged at debug with the memory's name, so the data exists in any real
+deployment and nothing collects it.</li>
+<li>Why is <code>misses.jsonl</code> org-scoped when memory is
+principal-scoped? Both hold user-supplied incident detail, and the
+storage-scope machinery is already there.</li>
+<li>The prompt index caps at 8,000 characters and 50 entries with a
+pointer to <code>memory_recall</code>. Does the model take the hint, or
+answer from a truncated view?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core/agent_harness/session/memory_extraction.py</code></td>
+<td>387</td>
+<td>The extraction pass, the coalescing worker, and both halves of the
+grounding gate</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/store.py</code></td>
+<td>283</td>
+<td>CRUD, the directory lock, the signature-keyed parse cache</td>
+</tr>
+<tr>
+<td><code>tools/system/agent_memory/tool.py</code></td>
+<td>183</td>
+<td><code>memory_remember</code>, <code>memory_forget</code>,
+<code>memory_recall</code></td>
+</tr>
+<tr>
+<td><code>surfaces/interactive_shell/command_registry/memory_cmds.py</code></td>
+<td>147</td>
+<td><code>/memory</code> list, show, forget, path</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/safety.py</code></td>
+<td>136</td>
+<td>Secret detection for rejection and for redaction</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/index.py</code></td>
+<td>86</td>
+<td><code>MEMORY.md</code> and the prompt block</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/files.py</code></td>
+<td>84</td>
+<td>Paths, permissions, atomic write</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/settings.py</code></td>
+<td>59</td>
+<td>The three environment gates and the shared-surface rule</td>
+</tr>
+<tr>
+<td><code>core/domain/memory/models.py</code></td>
+<td>52</td>
+<td><code>MemoryRecord</code>, <code>MemoryType</code>, the size
+limits</td>
+</tr>
+<tr>
+<td><code>config/constants/paths.py</code></td>
+<td>—</td>
+<td><code>session_home()</code> and <code>get_memory_dir()</code>, lines
+130-170</td>
+</tr>
+<tr>
+<td><code>config/scope_context.py</code></td>
+<td>42</td>
+<td>The storage-scope <code>ContextVar</code></td>
+</tr>
+<tr>
+<td><code>core/domain/feedback/misses/store.py</code></td>
+<td>161</td>
+<td>The org-scoped miss ledger behind closed-loop learning</td>
+</tr>
+</tbody>
+</table>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544"><code>c81d6c36d69bd6b39c1e18b0205f28422c3d2544</code></a>
+— first reading. The screen reported two auto-running surfaces and 64
+build-time execution surfaces — all of them <code>conftest.py</code>
+files that execute on pytest collection — six unpinned dependency
+surfaces, a <code>uv.lock</code>, and <strong>twelve files inside the
+seven-day cooldown</strong>, so nothing was installed and no test was
+run; the analysis is static over the tree. The screen also flagged
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> as instructions
+addressed to a reading agent; both were treated as data and neither was
+followed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

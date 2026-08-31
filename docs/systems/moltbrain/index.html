@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Summaries are parsed into fixed
+fields — request, investigated, learned, completed, next steps — and
+observations are extracted from XML blocks the model emits, with no
+confidence, status or correction anywhere.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MoltBrain — Agent Memory Atlas">
+    <meta property="og:description" content="Summaries are parsed into
+fixed fields — request, investigated, learned, completed, next steps —
+and observations are extracted from XML blocks the model emits, with no
+confidence, status or correction anywhere.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MoltBrain — Agent Memory Atlas">
+    <meta name="twitter:description" content="Summaries are parsed into
+fixed fields — request, investigated, learned, completed, next steps —
+and observations are extracted from XML blocks the model emits, with no
+confidence, status or correction anywhere.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MoltBrain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MoltBrain",
+      "description": "Summaries are parsed into fixed fields \u2014 request, investigated, learned, completed, next steps \u2014 and observations are extracted from XML blocks the model emits, with no confidence, status or correction anywhere.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The session summary is a form, not a
+paragraph</p>
+          <h1>MoltBrain</h1>
+          <p class="document-deck">Summaries are parsed into fixed
+fields — request, investigated, learned, completed, next steps — and
+observations are extracted from XML blocks the model emits, with no
+confidence, status or correction anywhere.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/nhevers/moltbrain">
+              <span>Source</span>
+              <strong>nhevers/moltbrain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639" title="1cb9a70391c7f7fd9da30d2c4c214a393fb6a639">
+              <span>Analyzed revision</span>
+              <code>1cb9a703…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MoltBrain is an AGPL-3.0 TypeScript memory layer for Claude Code,
+OpenClaw and MoltBook — SQLite plus ChromaDB, an MCP surface, a web
+viewer at <code>localhost:37777</code> with themes, favourites, filters,
+export and keyboard shortcuts, and a two-command plugin install.</p>
+<p><strong>The design decision worth naming is that the session summary
+has a schema.</strong></p>
+<p>Most systems in this atlas end a session by asking a model for a
+summary and storing whatever prose comes back.
+<code>session_summaries</code> here has fields:</p>
+<pre class="sql"><code>request TEXT, investigated TEXT, learned TEXT, completed TEXT,
+next_steps TEXT, files_read TEXT, files_edited TEXT, notes TEXT</code></pre>
+<p>and <code>src/parser/parser.ts</code> parses the model's XML into
+exactly that shape. The same applies to observations: <code>type</code>
+is constrained by a <code>CHECK</code> to <code>decision</code>,
+<code>bugfix</code>, <code>feature</code>, <code>refactor</code>,
+<code>discovery</code> or <code>change</code>, and each carries a
+<code>title</code>, <code>subtitle</code>, <code>facts[]</code>,
+<code>narrative</code>, <code>concepts[]</code>,
+<code>files_read[]</code> and <code>files_modified[]</code>.</p>
+<p>A summary that is a form rather than a paragraph is queryable — you
+can ask what was <em>learned</em> across forty sessions without
+re-reading forty paragraphs — and it constrains what the model can hand
+back. That is a real advantage and it is cheap.</p>
+<p><strong>What the system does not have is any notion of a memory being
+wrong</strong> — section 9, and it is the whole of the assessment.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The agent emits XML blocks during a session. A parser turns them into
+typed observations and one structured summary. Both go to SQLite, and a
+background service mirrors them into ChromaDB so semantic search works.
+The web viewer reads SQLite.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the Chroma sync fails fast rather than falling back, and the only deletion path is a duplicate-cleanup script a person runs by hand</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the Chroma sync fails fast rather than falling back, and the only deletion path is a duplicate-cleanup script a person runs by hand
+flowchart TD
+    S[&quot;agent session&quot;] --&gt; X[&quot;XML blocks in the SDK response&quot;]
+    X --&gt; P[&quot;parser.ts&quot;]
+    P --&gt; O[&quot;ParsedObservation:&lt;br/&gt;type, title, subtitle, facts[],&lt;br/&gt;narrative, concepts[],&lt;br/&gt;files_read[], files_modified[]&quot;]
+    P --&gt; SM[&quot;ParsedSummary:&lt;br/&gt;request, investigated, learned,&lt;br/&gt;completed, next_steps, notes&quot;]
+    O --&gt; DB[&quot;SQLite: observations&lt;br/&gt;CHECK type IN (decision, bugfix, feature,&lt;br/&gt;refactor, discovery, change)&quot;]
+    SM --&gt; DB2[&quot;SQLite: session_summaries&lt;br/&gt;one row per memory_session_id&quot;]
+    DB --&gt; CS[&quot;ChromaSync — fail-fast,&lt;br/&gt;no fallback if Chroma is down&quot;]
+    DB2 --&gt; CS
+    CS --&gt; CH[&quot;ChromaDB&quot;]
+    Q[&quot;semantic search via MCP&quot;] --&gt; CH
+    L[&quot;listings&quot;] --&gt; W[&quot;SQL: WHERE project = ?&lt;br/&gt;indexed on project, type, created_at_epoch&quot;]
+    DUP[&quot;cleanup-duplicates.ts&quot;] -.-&gt;|&quot;the only deletion path,&lt;br/&gt;run by hand&quot;| DB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/core</code> splits into <code>storage</code> (DataStore,
+Observations, Sessions, Summaries, Timeline, Prompts, migrations,
+transactions), <code>engine</code> (session, search, agents, branch and
+settings managers, an SSE broadcaster), <code>vector</code>
+(ChromaSync), <code>domain</code>, <code>queue</code>,
+<code>adapters</code>, <code>api</code>, <code>infra</code>.</p>
+<p>Around it sits a substantial product surface: <code>ui</code>,
+<code>themes</code>, <code>shortcuts</code>, <code>favorites</code>,
+<code>filters</code>, <code>formatters</code>, <code>export</code>,
+<code>analytics</code>, <code>locales</code>, an <code>extension</code>,
+a <code>plugin</code> manifest, <code>integrations</code>, and a
+Virtuals Protocol GAME SDK plugin in a separate repository.</p>
+<p>The proportion is worth stating plainly: this is a
+memory-capture-and-browse product, and the memory model underneath it is
+a typed log. 40 test files, plus
+<code>benchmarks/compression.bench.ts</code> and
+<code>search.bench.ts</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Parse</strong> — <code>src/parser/parser.ts</code>
+(<code>ParsedObservation</code> <code>:9-18</code>,
+<code>ParsedSummary</code> <code>:20-26</code>,
+<code>parseObservations</code> <code>:32</code>).</p>
+<p><strong>Store</strong> — <code>src/core/storage/DataStore.ts</code>
+(<code>observations</code> <code>:96-110</code>,
+<code>session_summaries</code> <code>:112-130</code>, the migrated
+<code>observations_new</code> <code>:339-357</code>).</p>
+<p><strong>Read</strong> —
+<code>src/core/storage/observations/recent.ts</code> <code>:21</code>,
+<code>observations/get.ts</code> <code>:45</code>.</p>
+<p><strong>Mirror</strong> —
+<code>src/core/vector/VectorSync.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>observations(id, memory_session_id, project, text, type, title, subtitle, facts, narrative, concepts, files_read, files_modified, prompt_number, created_at, created_at_epoch)</code>
+with a <code>CHECK</code> on <code>type</code> and indexes on session,
+project, type and time.</p>
+<p><code>session_summaries</code> is one row per session with the fixed
+fields above and a <code>UNIQUE</code> constraint on
+<code>memory_session_id</code>.</p>
+<p>Both cascade on delete from <code>sdk_sessions</code>.</p>
+<p><strong>There is no confidence, no status, no
+<code>superseded_by</code>, no <code>verified</code> flag and no
+provenance beyond which session produced it.</strong> An observation is
+a typed, timestamped, project-tagged statement, and every observation is
+equally true forever.</p>
+<p>The migration that added <code>title</code>, <code>subtitle</code>,
+<code>facts</code>, <code>narrative</code>, <code>concepts</code>,
+<code>files_read</code>, <code>files_modified</code> and
+<code>prompt_number</code> — creating <code>observations_new</code>,
+copying the columns explicitly by name, and swapping — is careful SQLite
+migration practice and worth noting as such.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Semantic search runs against the Chroma mirror through MCP tools. SQL
+listings filter on <code>project = ?</code> with indexes on
+<code>project</code>, <code>type</code> and
+<code>created_at_epoch DESC</code>.</p>
+<p><code>project</code> is a stored column reaching the query on the
+observation read paths, which is what <code>scope_enforced</code>
+certifies. It is coarse — one project string, no user or agent dimension
+— and it is genuinely applied.</p>
+<p><strong>ChromaSync is fail-fast on purpose</strong>, and says so:</p>
+<blockquote>
+<p>"Design: Fail-fast with no fallbacks - if Chroma is unavailable,
+syncing fails."</p>
+</blockquote>
+<p>That is the right call and it is worth crediting. A sync that
+silently falls back leaves the vector index quietly behind SQLite, and
+semantic search then returns a subset of what exists with nothing
+indicating it. Failing loudly is how the operator finds out.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent emits XML; the parser extracts; SQLite stores. There is no
+deduplication on the write path, no merge, no supersession and no
+update.</p>
+<p>The only deletion in the tree is
+<code>src/bin/cleanup-duplicates.ts</code>, a standalone binary that
+issues <code>DELETE FROM observations WHERE id IN (…)</code>. Duplicate
+observations are therefore an operational chore run by hand, after the
+fact, rather than a write-path concern — which is a reasonable staging
+post for a young project and is not a correction mechanism.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>/plugin marketplace add nhevers/moltbrain</code> then
+<code>/plugin install moltbrain</code>, and capture starts
+automatically. MCP tools for search, a web viewer on port 37777 for
+browsing, analytics on tokens and concept trends, tag filters,
+favourites, and export to JSON, CSV or Markdown with custom
+templates.</p>
+<p>The capture mechanism is the agent emitting XML blocks, which means
+the quality of memory depends entirely on the model following the
+prompt. There is no extraction pass over the transcript as a fallback,
+so a session where the model forgets to emit an observation block leaves
+no memory.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>One mark: scope enforced</strong>, per section 6.</p>
+<p><strong>Everything else is absent, and the absences
+compound.</strong> There is no trust state, no supersession, no
+tombstone, no audit log, no review surface and no negative eval.
+Combined, they mean:</p>
+<ul>
+<li><strong>A wrong observation is permanent.</strong> Nothing marks it,
+nothing outranks it, nothing supersedes it. It stays in SQLite, stays
+mirrored in Chroma, and stays retrievable at full weight for as long as
+the project exists — unless someone runs the duplicate-cleanup script
+and happens to catch it.</li>
+<li><strong>A superseded decision competes with the decision that
+replaced it.</strong> Both are <code>type = 'decision'</code>, both are
+indexed, both are semantically similar to the same query, and only the
+timestamp distinguishes them. Nothing in retrieval prefers the later
+one.</li>
+<li><strong>A model that hallucinates during capture writes a
+fact.</strong> The XML block is parsed into typed fields and stored with
+the same standing as an accurate one.</li>
+</ul>
+<p>This is the atlas's most common shape and it is worth stating without
+exaggeration: MoltBrain captures well and stores carefully, and it has
+not yet built the layer that decides what remains true. For a
+browse-and-recall product where a person reads the observations, that is
+a defensible stage. For automatic injection into a coding agent's
+context — which is what the README promises — it is the missing
+half.</p>
+<p><strong>The related-repository surface is worth a reader's
+attention.</strong> The Virtuals Protocol GAME SDK plugin lives at
+<code>nhevers/Moltbrain-virtuals</code> and was not read; nothing in
+this repository was found that puts memory on-chain, despite the
+"Storage DApp" navigation link.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no retrieval benchmark, no committed
+results.</strong> 40 test files, and two micro-benchmarks —
+<code>benchmarks/compression.bench.ts</code> and
+<code>benchmarks/search.bench.ts</code> — measuring the implementation
+rather than the memory.</p>
+<p>Nothing measures whether recall improves anything, whether
+observations are accurate, or how often the model emits a usable XML
+block.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give the session summary a schema.</strong>
+<code>request</code>, <code>investigated</code>, <code>learned</code>,
+<code>completed</code>, <code>next_steps</code>,
+<code>files_read</code>, <code>files_edited</code>, <code>notes</code> —
+parsed into columns, not stored as prose. You can then query what was
+<em>learned</em> across every session, and the model has a form to fill
+rather than a paragraph to pad.</li>
+<li><strong>Constrain the observation type with a
+<code>CHECK</code>.</strong> Six values enforced by the database means a
+typo in the writer becomes an error rather than a category nobody
+queries.</li>
+<li><strong>Fail fast when the vector mirror is unavailable.</strong> A
+sync that falls back silently leaves semantic search returning a stale
+subset with no signal. The docstring here states the choice, which is
+the part to copy.</li>
+<li><strong>Migrate SQLite by explicit column list.</strong>
+<code>observations_new</code>, an <code>INSERT … SELECT</code> naming
+every column, then the swap. <code>SELECT *</code> across a schema
+change is how columns end up in the wrong places.</li>
+<li><strong>Index what you filter on.</strong> <code>project</code>,
+<code>type</code>, <code>created_at_epoch DESC</code> and the session
+foreign key, all indexed, at a size where it does not yet matter.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not ship automatic context injection without a correction
+path.</strong> If memory is going into the agent's prompt, a wrong
+observation is not a browsing nuisance — it is an input. Some field the
+reader respects, however simple, has to exist before injection is
+safe.</li>
+<li><strong>Do not let deduplication be a script someone remembers to
+run.</strong> Duplicate observations are a write-path concern;
+<code>cleanup-duplicates.ts</code> is a repair.</li>
+<li><strong>Do not depend on the model emitting a block with no
+fallback.</strong> If the XML is the only capture path, a session where
+the model forgets produces no memory and nothing reports the gap.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reasonable if you want an automatically-populated, browsable record
+of what happened across your coding sessions, with a decent web viewer
+and export, and you will read it yourself. The plugin install is two
+lines and the capture is genuinely automatic.</p>
+<p>Not yet the right choice where memory is injected without a person in
+the loop: there is no mechanism by which a wrong observation stops being
+retrieved.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What happens when Chroma and SQLite diverge?</strong> Sync
+fails loudly; whether anything reconciles afterwards was not
+traced.</li>
+<li><strong>Is there a re-extraction path?</strong> If the model omits
+an observation block, no fallback pass over the transcript was
+found.</li>
+<li><strong>What does the "Storage DApp" section describe?</strong> The
+navigation links to it and nothing in this tree puts memory
+on-chain.</li>
+<li><strong>Does the web viewer allow editing or deleting an
+observation?</strong> That would be the natural place for a human
+correction surface and it was not established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Parsing</strong> — <code>src/parser/parser.ts</code>
+(<code>ParsedObservation</code> <code>:9-18</code>,
+<code>ParsedSummary</code> <code>:20-26</code>,
+<code>parseObservations</code> <code>:32</code>)</p>
+<p><strong>Schema</strong> — <code>src/core/storage/DataStore.ts</code>
+(<code>observations</code> with the type CHECK and four indexes
+<code>:96-110</code>, <code>session_summaries</code>
+<code>:112-130</code>, the migrated <code>observations_new</code> and
+the explicit column copy <code>:339-365</code>,
+<code>user_prompts</code> <code>:414</code>,
+<code>pending_messages</code> <code>:520</code>),
+<code>src/core/storage/migrations/</code></p>
+<p><strong>Read paths</strong> —
+<code>src/core/storage/observations/recent.ts</code>
+(<code>WHERE project = ?</code> <code>:21</code>),
+<code>src/core/storage/observations/get.ts</code>
+(<code>project = ?</code> <code>:45</code>),
+<code>src/core/storage/SessionSearch.ts</code></p>
+<p><strong>Vector mirror</strong> —
+<code>src/core/vector/VectorSync.ts</code> (the fail-fast design note
+<code>:1-9</code>)</p>
+<p><strong>Maintenance</strong> —
+<code>src/bin/cleanup-duplicates.ts</code> (the only
+<code>DELETE FROM observations</code> <code>:44</code>)</p>
+<p><strong>Benchmarks</strong> —
+<code>benchmarks/compression.bench.ts</code>,
+<code>benchmarks/search.bench.ts</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639"><code>1cb9a70391c7f7fd9da30d2c4c214a393fb6a639</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test was run. The companion Virtuals Protocol plugin
+lives in a separate repository and was not read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

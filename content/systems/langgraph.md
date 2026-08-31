@@ -24,7 +24,7 @@ matrix:
   background: "An optional TTL sweeper thread deletes expired items on an interval"
   trust: "None. An Item is an opaque dict with two timestamps and no status, confidence or provenance"
   strengths: "A published conformance suite third-party persistence implementations can run, and namespace scoping enforced in the key rather than by convention"
-  risks: "The conformance suite covers the checkpointer, not the store, and the three store backends disagree on created_at and on whether deletion removes the embeddings"
+  risks: "The conformance suite covers the checkpointer, not the store, and the three store backends disagree on created_at, on whether deletion removes the embeddings, and on how many candidates vector search fetches before deduplicating"
 ---
 
 ## 1. Executive Summary
@@ -60,8 +60,10 @@ the store is where the three first-party backends visibly disagree with each
 other: on whether `created_at` survives an update (Postgres yes, SQLite and
 in-memory no), and on whether deleting an item deletes its embeddings (Postgres
 yes by an enforced foreign key, SQLite no because the identical `ON DELETE
-CASCADE` is declared and SQLite's foreign keys are never switched on). Both
-divergences are in the half of the persistence layer that has no spec to fail.
+CASCADE` is declared and SQLite's foreign keys are never switched on). Both are
+in the half of the persistence layer that has no spec to fail — as is a third,
+smaller one in section 6, where Postgres sizes its vector-search candidate pool
+against how many vectors an item can carry and SQLite multiplies by a constant 2.
 
 ## 2. Mental Model
 
@@ -139,14 +141,20 @@ The store is defined in `langgraph-checkpoint` and implemented three times.
 - **`libs/checkpoint-postgres/.../store/postgres/base.py`** (1,480 lines) —
   Postgres with pgvector, HNSW or IVFFlat, cosine / L2 / inner-product distance.
 - **`libs/checkpoint-sqlite/.../store/sqlite/base.py`** (1,514 lines) — SQLite,
-  embeddings as BLOBs with the distance computed in a registered user function.
+  embeddings as BLOBs with the distance computed by `vec_distance_cosine` /
+  `_L2` / `_L1` from the **sqlite-vec loadable extension**, loaded at `setup()`
+  under `enable_load_extension` (`:1097-1099`) and only when an `IndexConfig`
+  is present. The one Python function registered on the connection
+  (`conn.create_function`, `:870`) is the namespace matcher, not the metric.
 
 Two SQL tables in both server backends: `store (prefix, key, value, created_at,
 updated_at, expires_at, ttl_minutes)` with `PRIMARY KEY (prefix, key)`, and
 `store_vectors (prefix, key, field_name, embedding, …)` with `PRIMARY KEY
 (prefix, key, field_name)` and a foreign key back to `store`. One item can carry
 several embeddings — one per indexed JSON path — and search deduplicates them
-back to one row per key with a window function.
+back to one row per key: SQLite with a `ROW_NUMBER()` window function, Postgres
+with `DISTINCT ON`. The two do not agree on how much they fetch before that
+step, which §6 takes up.
 
 The store reaches a graph three ways: `compile(store=…)` or `@entrypoint(store=…)`
 at build time, `get_store()` from inside a node (a contextvar, so Python ≥ 3.11
@@ -198,14 +206,14 @@ instruction files, read here as data. Nothing was installed and nothing was run.
   `store/base/embed.py`, driven by `IndexConfig.fields` (default `["$"]`, the
   whole document) and overridable per put with `index=[…]` or disabled with
   `index=False`.
-- **Postgres upsert** — `_prepare_batch_PUT_queries` in
-  `store/postgres/base.py:402`: `INSERT … ON CONFLICT (prefix, key) DO UPDATE
-  SET value, updated_at, expires_at, ttl_minutes`.
+- **Postgres upsert** — `_prepare_batch_PUT_queries` at
+  `store/postgres/base.py:311`, whose `INSERT … ON CONFLICT (prefix, key) DO
+  UPDATE SET value, updated_at, expires_at, ttl_minutes` is at `:404`.
 - **SQLite upsert** — `store/sqlite/base.py:421`: `INSERT OR REPLACE INTO store
   (…, created_at, updated_at, …) VALUES (…, CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP, …)`.
 - **TTL sweeper** — `sweep_ttl()` and `start_ttl_sweeper()` at
-  `store/postgres/base.py:834` and `store/sqlite/base.py:1134`, a daemon thread
+  `store/postgres/base.py:834` and `store/sqlite/base.py:1129` and `:1145`, a daemon thread
   issuing `DELETE FROM store WHERE expires_at IS NOT NULL AND expires_at < NOW()`
   on an interval.
 - **Read-time TTL refresh** — the `UPDATE store SET expires_at = NOW() +
@@ -226,7 +234,7 @@ CREATE TABLE store (
     created_at  timestamptz DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamptz DEFAULT CURRENT_TIMESTAMP,
     expires_at  timestamptz,
-    ttl_minutes real,
+    ttl_minutes int,          -- REAL on SQLite
     PRIMARY KEY (prefix, key)
 );
 
@@ -279,12 +287,34 @@ no text matching.
 
 With a `query`, the same prefix and filter constrain a cosine ranking over
 `store_vectors`. Because one item can have several embeddings — one per indexed
-path — the query scores all of them, then `ROW_NUMBER() OVER (PARTITION BY
-prefix, key ORDER BY score DESC)` keeps the best per item. The inner CTE fetches
-`limit * 2` before deduplication, commented "Expanded limit for better results",
-which is a heuristic rather than a guarantee: an item embedded across many
-fields can consume several of those `2 × limit` slots and push a distinct item
-out of the result set entirely.
+path — the query scores all of them and then collapses to one row per key. **The
+two SQL backends do that differently, and only one of them sizes the fetch
+against how many vectors an item can have.**
+
+On SQLite the inner `scored` CTE takes `ORDER BY score DESC LIMIT ?`
+(`store/sqlite/base.py:546-547`) with `op.limit * 2` bound into it (`:565`,
+commented "Expanded limit for better results"), and a `ranked` CTE keeps
+`ROW_NUMBER() OVER (PARTITION BY prefix, key ORDER BY score DESC)` (`:551`)
+filtered to `WHERE rn = 1` (`:556`). The
+factor 2 is a constant and the number of vectors per item is not: an item
+indexed across many fields can occupy several of those `2 × limit` slots with
+duplicates of itself and push a distinct item out of the result set entirely.
+The failure is silent — the caller gets `limit` results and no signal that the
+candidate pool was crowded.
+
+On Postgres the same shape is sized instead of guessed:
+`expanded_limit = (op.limit * vectors_per_doc_estimate * 2) + 1`
+(`store/postgres/base.py:506`), where `vectors_per_doc_estimate` is
+`__estimated_num_vectors`, computed at config time in `_ensure_index_config`
+(`:1473`) by summing the tokenized path count over `IndexConfig.fields`.
+Deduplication is
+`SELECT DISTINCT ON (scored.prefix, scored.key) … ORDER BY prefix, key, neg_score ASC`
+(`:528`).
+Because the estimate is the per-item vector ceiling the config permits, the
+crowding case is materially mitigated rather than merely made less likely.
+
+SQLite computes the same `__estimated_num_vectors` (`store/sqlite/base.py:1507`)
+and does not use it in the search. Porting one expression would close the gap.
 
 There is **no lexical arm** — no BM25, no full-text index, no trigram fallback —
 so an exact-token query (an error code, an identifier, a filename) has only
@@ -487,8 +517,11 @@ designing for.
 **Do not test parallel backends with parallel test suites.** Divergence is the
 default outcome, and it shows up in exactly the places nobody thought to assert:
 a timestamp's semantics across an update, whether a delete reaches the sidecar
-table. One shared suite run against every implementation is the only thing that
-holds them together.
+table, how many candidates a vector search fetches before it deduplicates. That
+third one is the instructive shape — the same module computes the quantity one
+backend uses to size the fetch and the other backend ignores it, so the
+divergence is not a missing feature but an unasserted one. One shared suite run
+against every implementation is the only thing that holds them together.
 
 **Do not declare a constraint the engine will not enforce.** `ON DELETE CASCADE`
 in a SQLite schema is documentation until `PRAGMA foreign_keys = ON` is issued
@@ -519,7 +552,7 @@ the systems in this atlas exist to do.
 It fits worst where scope must be trustworthy rather than merely mandatory —
 namespaces are strings a node computes, so a genuine multi-tenant boundary needs
 a layer above this one. And a reader deploying on SQLite specifically should
-plan for the two divergences in section 5 and 7 rather than assume the backends
+plan for the divergences in sections 5, 6 and 7 rather than assume the backends
 are interchangeable, which is what a substrate with three implementations
 otherwise invites you to assume.
 
@@ -530,9 +563,11 @@ otherwise invites you to assume.
 - Is `PRAGMA foreign_keys` set anywhere outside `libs/checkpoint-sqlite` — by a
   connection factory a caller is expected to supply? Nothing in the package
   requires it, and the schema's cascade reads as though it were.
-- Why does the vector search CTE fetch `limit * 2` before deduplicating? The
-  comment says "better results"; whether it is sufficient depends on how many
-  fields an item indexes, and nothing bounds that.
+- Why does the SQLite vector search CTE fetch a flat `limit * 2` before
+  deduplicating, when the same module already computes
+  `__estimated_num_vectors` and Postgres multiplies by it? Both were written
+  against the same contract; nothing in the tree says whether the SQLite
+  constant predates the Postgres expression or was chosen against it.
 - Is a store conformance suite planned? The checkpointer package's structure
   would transfer almost unchanged.
 - Does LangGraph Platform's hosted store share these implementations, or is it a
@@ -569,5 +604,13 @@ otherwise invites you to assume.
 - `libs/checkpoint/tests/test_store.py`, `libs/checkpoint-postgres/tests/test_store.py` and `test_async_store.py`, `libs/checkpoint-sqlite/tests/test_store.py` and `test_async_store.py`.
 
 ## History
+
+**2026-08-31** — [`644815f9e5bc52ad8f7a5227a456227e9c3e639b`](https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b) — audited at the same pin; no mark moved. One matrix field changed, and both headline findings — the `created_at` divergence across the three backends, and `ON DELETE CASCADE` declared in checkpoint-sqlite with `PRAGMA foreign_keys` appearing nowhere in the package — hold as written.
+
+The material correction is an attribution. Section 6 described the vector-search dedup and oversample as the store's, when the two SQL backends do it differently. `ROW_NUMBER() OVER (PARTITION BY prefix, key ORDER BY score DESC)` and the flat `op.limit * 2` fetch commented "Expanded limit for better results" exist only in `store/sqlite/base.py` (`:551`, `:565`). Postgres computes `expanded_limit = (op.limit * vectors_per_doc_estimate * 2) + 1` (`store/postgres/base.py:506`) off `__estimated_num_vectors` — the tokenized path count over `IndexConfig.fields`, set in `_ensure_index_config` — and dedupes with `SELECT DISTINCT ON (prefix, key)`. So the stated failure mode, an item embedded across many fields crowding distinct items out of the candidate pool, is real on SQLite and materially mitigated on Postgres. The section 12 open question inherited the error and asked why nothing bounds the fetch; on Postgres something does. The sharper question is that `store/sqlite/base.py:1507` computes the same estimate and the search does not use it. That divergence is now a third entry in the sections-5-and-7 list, and the section 11 Avoid bullet on parallel suites gains its most instructive example: not a missing feature but an unasserted one.
+
+Section 3 said the SQLite backend computes distance "in a registered user function". It does not: `vec_distance_cosine` / `_L2` / `_L1` come from the **sqlite-vec loadable extension**, loaded in `setup()` at `sqlite/base.py:1097-1099` and only when an `IndexConfig` is present. The single `conn.create_function` call on the connection (`:870`) registers the namespace matcher, which the appendix already described correctly.
+
+Three citations were off: `_prepare_batch_PUT_queries` is defined at `postgres/base.py:311` and its quoted `ON CONFLICT` SQL is at `:404`, not `:402`; SQLite's `sweep_ttl` is `:1129` and `start_ttl_sweeper` `:1145`. The section 5 schema sketch showed `ttl_minutes real`, which is SQLite's type — Postgres declares it `INT`.
 
 **2026-08-14** — [`644815f9e5bc52ad8f7a5227a456227e9c3e639b`](https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b) — first reading, at a commit dated 11 August 2026. Screened before opening: no auto-run surfaces, 41 dependency surfaces inside the cooldown, 15 build-time execution points, 17 unpinned surfaces, and two agent-instruction files read as data. Nothing was installed or run; the backend divergences in sections 5 and 7 were read from the SQL and the pragma's absence, not observed in a running store.

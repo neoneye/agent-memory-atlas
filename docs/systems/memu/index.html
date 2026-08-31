@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A host-adapter memory whose
+ranking unit and return unit differ by design, whose local and remote
+backends are required to order identically, and whose schema comments
+cite the ADR that produced them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memU — Agent Memory Atlas">
+    <meta property="og:description" content="A host-adapter memory whose
+ranking unit and return unit differ by design, whose local and remote
+backends are required to order identically, and whose schema comments
+cite the ADR that produced them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memU — Agent Memory Atlas">
+    <meta name="twitter:description" content="A host-adapter memory
+whose ranking unit and return unit differ by design, whose local and
+remote backends are required to order identically, and whose schema
+comments cite the ADR that produced them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memU — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memU",
+      "description": "A host-adapter memory whose ranking unit and return unit differ by design, whose local and remote backends are required to order identically, and whose schema comments cite the ADR that produced them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Documented decisions</p>
+          <h1>memU</h1>
+          <p class="document-deck">A host-adapter memory whose ranking
+unit and return unit differ by design, whose local and remote backends
+are required to order identically, and whose schema comments cite the
+ADR that produced them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NevaMind-AI/memU">
+              <span>Source</span>
+              <strong>NevaMind-AI/memU</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb" title="c35060e2a6d35d6c4e155ffa1c6a97a92db964cb">
+              <span>Analyzed revision</span>
+              <code>c35060e2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-04</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memU is an Apache-2.0 Python system of roughly 10,000 lines,
+positioned as a memory layer that plugs into existing coding agents — it
+ships host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes,
+Cola and WorkBuddy, plus a generic one.</p>
+<p>The memory model is deliberately small: a <code>RecallFile</code>
+with a <code>track</code> of <code>"memory"</code> or
+<code>"skill"</code>, sliced into <code>RecallFileSegment</code> rows,
+alongside <code>Resource</code> records. What makes it worth reading is
+not the model but the <strong>discipline around it</strong>, and three
+decisions in particular.</p>
+<p><strong>The ranking unit and the return unit are different,
+deliberately.</strong></p>
+<blockquote>
+<p>"<code>segments</code>: <code>RecallFileSegment</code> slices ranked
+by embedding, <code>file.top_k</code> of them. <code>files</code>: the
+<code>RecallFile</code>s pointed to by those segments — <strong>not a
+ranked search, just a roll-up</strong>. Each file's score is the max
+score of the segments that point to it."</p>
+</blockquote>
+<p>Most systems in this atlas embed and rank the thing they intend to
+return, which forces one unit to be both a good search target and a good
+context payload. Those are different jobs: a paragraph embeds well and
+reads badly out of context; a file reads well and embeds into mush. memU
+ranks the small thing and returns the big one, with max-of-segments as
+the file's score.</p>
+<p><strong>Local and remote backends must order
+identically.</strong></p>
+<blockquote>
+<p>"Both backends order identically, so the two execution paths stay
+byte-for-byte the same."</p>
+</blockquote>
+<p>A memory layer with a local mode and a hosted mode usually means two
+ranking implementations that drift, and users who cannot reproduce a
+result across them. Naming byte-for-byte parity as an invariant makes
+that a testable property rather than an aspiration.</p>
+<p><strong>The schema comments cite the decision records that produced
+them.</strong> <code>RecallFileSegment</code> is "a searchable slice (L2
+item) of a <code>RecallFile</code> <strong>(ADR 0007)</strong>"; the
+paging contract is "<strong>ADR 0014</strong>"; the choice not to force
+a track filter is "<strong>ADR 0006</strong>". <a
+href="../atomic-agent/">Atomic Agent</a> cites numbered invariants from
+its schema into a design document; memU does the same for decisions,
+which means a reader asking "why is it like this" has a document to open
+rather than a maintainer to find.</p>
+<p><strong>The client reports on itself, and the store does
+not.</strong> <code>src/memu/events.py</code> spools a fixed set of
+lifecycle events — install, uninstall, a bridging run, a retrieval, a
+listing, a fatal error — to <code>~/.memu/events.jsonl</code> and POSTs
+them in batches to
+<code>https://api.memu.so/api/memu/analytics/events</code>. It is
+<strong>on by default</strong>, switched off with
+<code>MEMU_TELEMETRY=0</code>, and it honours <code>DO_NOT_TRACK</code>.
+The engineering is careful in ways most telemetry is not: the payload
+keys are an <strong>allowlist</strong> per event rather than a filter,
+so adding a leak takes a deliberate edit; the query text of a retrieval
+is deliberately not among what is recorded, only counts and latency; the
+instance id is random with "no hostname, no MAC, no user name"; and
+recording on the per-turn <code>retrieve</code> hook appends a line and
+returns without ever touching the network.</p>
+<p>Reservations: this is a well-engineered retrieval and sync layer with
+<strong>no epistemic model at all</strong> — no trust state, no
+provenance, no supersession, no tombstone, and no scope beyond
+<code>where</code> filters. It knows how to find and move memories, and
+nothing about whether they are true or whose they are. The telemetry
+inverts that: the system now has a considered account of its own
+operation and still none of its contents, so the only thing memU can
+tell you it is unsure about is whether it is installed correctly.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes retrievable and stops being retrievable, and that is
+the whole state machine:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the segment is the unit that is embedded and searched, and file scores are rolled up from their best segment rather than computed directly</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the segment is the unit that is embedded and searched, and file scores are rolled up from their best segment rather than computed directly
+flowchart TB
+    C[&quot;commit_results&quot;] --&gt; RF[&quot;RecallFile&lt;br/&gt;&lt;i&gt;track: memory or skill&lt;/i&gt;&quot;]
+    C --&gt; RS[&quot;Resource&lt;br/&gt;&lt;i&gt;track: workspace&lt;/i&gt;&quot;]
+    RF --&gt;|sliced| SEG[&quot;RecallFileSegment ×n&lt;br/&gt;&lt;b&gt;the embed and search unit&lt;/b&gt;&quot;]
+    SEG --&gt; PR[&quot;progressive_retrieve:&lt;br/&gt;rank segments by vector,&lt;br/&gt;take file.top_k&quot;]
+    PR --&gt;|&quot;roll up&quot;| FILES[&quot;files, scored by&lt;br/&gt;max(segment score)&quot;]
+    RS --&gt; WR[&quot;workspace resources,&lt;br/&gt;ranked separately&quot;]
+
+    style SEG fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
+<p>Segments are the search unit and files are the answer unit, with a
+file scored by its <strong>best</strong> segment rather than its average
+— so one strong passage surfaces a long file instead of being diluted by
+it.</p>
+<p>There is no supersession, no rejection and no expiry. Re-slicing a
+file drops and recreates its segments; the file itself is updated in
+place. Nothing records that a memory was wrong, and nothing can express
+that it was.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/memu/</code> — <code>agentic_backend.py</code> (the
+protocol), <code>app/</code> (service, agentic, client pool, settings),
+<code>database/</code> (factory, interfaces, models, repositories, and
+<code>sqlite</code>/<code>postgres</code>/<code>inmemory</code>
+implementations), <code>embedding/</code>, <code>vector.py</code>,
+<code>hosts/</code> (per-agent adapters plus <code>bridging</code>,
+<code>retrieval</code>, <code>scheduling</code>,
+<code>templates</code>), <code>cli.py</code>, <code>cloud.py</code>,
+<code>events.py</code>.</p>
+<p><code>docs/adr/</code> holds the numbered decision records the schema
+comments cite, sixteen of them, and they are long — ADR 0016 runs 560
+lines for a telemetry module of 879.</p>
+<p>The protocol is three methods:</p>
+<pre class="python"><code>class AgenticMemoryBackend(Protocol):
+    &quot;&quot;&quot;The three memory capabilities consumed by CLIs and host adapters.&quot;&quot;&quot;
+    async def list_all_recall_files(...) -&gt; dict     # keyset page, opaque cursor
+    async def progressive_retrieve(query, where) -&gt; dict
+    async def commit_results(recall_files, resource, user) -&gt; dict</code></pre>
+<p>with the note that <code>MemoryService</code> "satisfies this
+protocol structurally for local execution" and that "remote
+implementations can provide the same surface without adding transport
+concerns to the local service composition root".</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Runs against SQLite with no other service, or Postgres when you want
+one; an in-memory backend exists for tests. Host adapters install into
+the agent you already use, so adoption is per-agent configuration rather
+than a new runtime. Embeddings need a provider.</p>
+<p>The three-method protocol is the ergonomic centre: a host integration
+has three things to implement or call, which is a much smaller contract
+than most systems here expose.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="rank-the-slice-return-the-file">Rank the slice, return the
+file</h3>
+<p>Splitting the search unit from the return unit is the transferable
+idea. The roll-up rule — a file scores as the <strong>max</strong> of
+its segments, not the sum or the mean — is the right default and worth
+stating: sum rewards long files for having more chances to match, and
+mean punishes a file that contains one excellent paragraph among many
+irrelevant ones. Max asks "does this file contain the best answer",
+which is the question.</p>
+<p>The segments are also explicitly <strong>not ordered</strong>:</p>
+<blockquote>
+<p>"Segments carry no ordinal: how a file is sliced is track-specific
+and not necessarily sequential, so position would not be
+informative."</p>
+</blockquote>
+<p>Declining to store a field because it would be misleading, and
+writing down why, is the kind of decision most schemas leave as an
+accident.</p>
+<h3 id="a-denormalization-with-its-invariant-written-down">A
+denormalization with its invariant written down</h3>
+<p><code>track</code> is stored on the segment as well as the file, and
+the comment explains both the reason and the safety argument:</p>
+<blockquote>
+<p>"denormalized here so retrieval can filter segments by track with a
+plain column predicate instead of a join. It is immutable for a
+segment's lifetime (segments are drop-and-recreated when a file is
+re-sliced), <strong>so it never drifts from the file</strong>."</p>
+</blockquote>
+<p>Denormalized columns rot when nobody records what keeps them
+consistent. Here the invariant — segments are never mutated, only
+replaced — is what makes the copy safe, and it is stated next to the
+copy.</p>
+<h3 id="keyset-pagination-on-domain-identity">Keyset pagination on
+domain identity</h3>
+<p><code>list_all_recall_files</code> pages by
+<code>(track, name, id)</code> with an opaque <code>next_cursor</code>,
+and the docstring explains the choice:</p>
+<blockquote>
+<p>"ordering on the domain identity <code>(track, name)</code> (unique
+within a scope, immutable under commit) is what makes that walk skip-
+and duplicate-free."</p>
+</blockquote>
+<p>Offset pagination over a table that is being written to skips and
+repeats rows. Keyset pagination on a stable, immutable key does not. For
+a memory store being walked by an agent while a background process
+writes to it, that is a correctness property rather than a performance
+one — and it is the sort of thing that is invisible until a sync
+silently misses records.</p>
+<h3 id="retrieval-that-is-explicitly-not-clever">Retrieval that is
+explicitly not clever</h3>
+<blockquote>
+<p>"Single-shot, LLM-free retrieval… <strong>no intention routing,
+sufficiency checks, or summarization</strong>."</p>
+</blockquote>
+<p>Stating what a retrieval path deliberately does <em>not</em> do is
+unusual and useful. It sets an expectation that reads as a design
+position rather than a missing feature, and it means the latency and
+cost of a recall are predictable: one embedding call, two ranked scans,
+no model in the loop.</p>
+<p>The contrast with <a href="../waku-agent/">Waku Agent</a> is
+instructive — Waku puts a small model in front of retrieval to decide
+whether to retrieve at all; memU removes models from the read path
+entirely. Both are defensible; neither is the unexamined default of
+calling an LLM because it is there.</p>
+<h3 id="skills-as-a-track-not-a-subsystem">Skills as a track, not a
+subsystem</h3>
+<p>A <code>RecallFile</code> is on the <code>"memory"</code> track or
+the <code>"skill"</code> track, and <code>list_all_recall_files</code>
+deliberately does not force a track filter (ADR 0006), so skills come
+back alongside memories.</p>
+<p>Compare <a href="../openviking/">OpenViking</a>, which unifies
+memory, resources and skills in one hierarchy, and the <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> pattern. memU's version is the cheapest: one column, one
+shared retrieval path, no second subsystem. What it gives up is the
+verified-execution gate that pattern asks for — a skill here is a file,
+and nothing establishes that it works.</p>
+<h3 id="the-event-spool-and-why-it-is-a-spool">The event spool, and why
+it is a spool</h3>
+<p><code>events.record</code> appends one JSON line and returns — "no
+lock, no network, and no read of the existing spool" — because the
+caller is the per-turn <code>retrieve</code> hook, the one path the
+codebase already forbade from fetching. Delivery happens later, from
+<code>prepare</code> and <code>commit</code>, from
+<code>report uninstall</code>, and from the CLI's error handler.</p>
+<p>The interesting part is the argument for why deferral is not merely
+politeness:</p>
+<blockquote>
+<p>"Client-generated ids buy idempotence <em>for a client that
+retries</em>. A fire-and-forget sender never double-delivers, so it
+would give the backend nothing to deduplicate. A spool that survives an
+offline laptop and re-POSTs on the next flush does."</p>
+</blockquote>
+<p>The <code>event_id</code> and the spool are one decision, not two,
+and the module says so. Most telemetry generates an id because the
+schema has a field for it.</p>
+<p>The payload discipline is the transferable half.
+<code>_ALLOWED_PROPERTIES</code> is a per-event
+<strong>allowlist</strong> — <code>core_action_completed</code> may
+carry <code>action_name</code>, <code>success</code>,
+<code>result_count</code>, two latency clocks and three counts, and
+nothing else, "including anything an agent supplied", so a new field
+leaks only if someone edits that table. Every bound is a named constant
+with its reason beside it: a 1 MB spool cap, 200 POSTs per flush, 20
+stack frames, and <code>MAX_DETAIL_CHARS = 5000</code> because an
+unbounded error detail would be "a privacy dump and an unbounded body at
+once". The one genuinely free-form channel is that <code>--detail</code>
+string on <code>report error</code>, which an agent writes and which is
+deduplicated on a SHA-256 fingerprint so the local ledger "holds no
+agent prose" — the prose itself still goes to the endpoint; it is the
+sidecar file that is hashed.</p>
+<p><strong>What this is not is an audit log.</strong> The spool records
+that a search happened and how many results came back; it records
+nothing about what changed in the store, it is discarded once delivered,
+and its destination is a vendor analytics endpoint rather than the
+memory. The <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> pattern separates retrieval telemetry from a mutation record
+and treats them as two halves; memU has now built one half carefully and
+still has none of the other.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>BaseRecord</code> gives every row <code>id</code>,
+<code>created_at</code>, <code>updated_at</code>.
+<code>RecallFile</code> adds <code>name</code>, <code>track</code>,
+<code>description</code>, <code>content</code>, <code>embedding</code>.
+<code>RecallFileSegment</code> adds <code>recall_file_id</code>,
+<code>track</code>, <code>text</code>, <code>embedding</code>.
+<code>Resource</code> adds <code>url</code>, <code>local_path</code>,
+<code>caption</code>, <code>embedding</code>, <code>track</code>.</p>
+<p>What is absent is the whole rubric: no trust state, no provenance
+beyond timestamps, no supersession or tombstone, no audit, no human
+review surface, no scope key. The <code>where</code> filter is a query
+facility, not a boundary — nothing in the model establishes who a record
+belongs to.</p>
+<p>For a layer that installs into seven different coding agents, the
+absent scope model is the notable one: memories from every host land in
+the same store, and the separation between them is whatever the caller
+passes in <code>where</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One embedding of the query, segments ranked by vector similarity to
+<code>file.top_k</code>, files rolled up by max segment score, workspace
+resources ranked separately to <code>resource.top_k</code>. No lexical
+arm, no rerank, no fusion.</p>
+<p>Vector-only retrieval carries the failure the <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
+fusion</a> pattern describes — exact identifiers and rare tokens are
+exactly what embeddings miss — and for a memory serving coding agents,
+identifiers are a large fraction of what gets asked about.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>commit_results</code> takes recall files, resources and user
+state together and writes them in one call, which keeps a host adapter's
+write path to a single operation. Re-slicing drops and recreates
+segments.</p>
+<h3 id="the-one-repair-path-and-the-drift-underneath-it">The one repair
+path, and the drift underneath it</h3>
+<p><code>get_or_create_recall_file</code> matches on
+<code>(name, track, user scope)</code> and, on a match,
+<strong>backfills</strong>: a stored <code>description</code> or
+<code>embedding</code> that is empty takes the argument's value, while a
+populated field is never overwritten and an empty argument writes
+nothing at all. The docstring is explicit that this is "the only channel
+that can repair a persisted-empty field, since
+<code>update_recall_file</code> skips <code>None</code> arguments", and
+equally explicit that "backfill is not an update".</p>
+<p>This is the closest thing in memU to a correction path, and the
+distance is instructive. It repairs a field that was never filled; it
+cannot express that a field was filled <em>wrongly</em>. A stub gets
+topped up, a mistake stays.</p>
+<p>The reason it is written down at all is that the three backends
+disagreed. The test that arrived with it opens by naming the drift:</p>
+<blockquote>
+<p>"The backends had drifted: SQLite carried no backfill at all, and
+SQLite and Postgres both tested <code>is None</code>, which never fires
+for the empties the models actually hold."</p>
+</blockquote>
+<p>That is worth holding against the design's headline invariant — the
+docstring in <code>agentic_backend.py</code> requiring local and remote
+to "stay byte-for-byte the same". The invariant is real and stated; what
+the repository now also demonstrates is that on a <em>different</em>
+method it did not hold, in three directions at once, and that nothing
+detected it until someone wrote a parametrized test across the backends.
+An invariant asserted in one docstring does not propagate to the methods
+beside it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The read path costs one embedding call and two scans — no LLM, so
+recall latency is predictable and does not depend on a provider's queue.
+The write path is a database write; whatever produced the memory content
+ran in the host, so the model cost sits outside this layer.</p>
+<p>There is no background rewrite of the store, so token burn does not
+scale with corpus size — a consequence of having no consolidation, which
+is also why nothing here improves memory over time.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola and
+WorkBuddy, plus <code>generic</code>, with <code>bridging</code>,
+<code>scheduling</code>, <code>templates</code> and
+<code>host_cli.py</code> shared between them. This is among the broadest
+host coverage in the atlas, alongside <a
+href="../ai-memory/">ai-memory</a>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Search unit separated from return unit</strong>, with
+max-of-segments as the roll-up.</li>
+<li><strong>Local and remote ordering parity</strong> stated as an
+invariant — though the backends had silently drifted on
+<code>get_or_create_recall_file</code>, so read it as a requirement the
+project holds itself to rather than one the code guarantees.</li>
+<li><strong>Decision records cited from the schema</strong>, so "why is
+it like this" is answerable.</li>
+<li><strong>A denormalization with its safety argument</strong> written
+beside it.</li>
+<li><strong>Keyset pagination on immutable domain identity</strong>, so
+a walk under concurrent writes neither skips nor repeats.</li>
+<li><strong>A three-method protocol</strong>, small enough to implement
+remotely.</li>
+<li><strong>Explicitly LLM-free retrieval</strong>, so recall cost and
+latency are predictable.</li>
+<li><strong>Skills as a track</strong>, not a parallel subsystem.</li>
+<li><strong>Three storage backends</strong> behind one repository
+interface.</li>
+<li><strong>Telemetry payloads governed by an allowlist</strong>,
+bounded by named constants, excluding the query text, and honouring
+<code>DO_NOT_TRACK</code>.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state, provenance, supersession, tombstone, or
+audit.</strong></li>
+<li><strong>No scope model</strong>, in a layer that serves seven hosts
+from one store.</li>
+<li><strong>Vector-only retrieval</strong>, in a domain full of exact
+identifiers.</li>
+<li><strong>No consolidation</strong>, so memory does not improve and
+duplicates are not merged.</li>
+<li><strong>Skills are unverified files</strong>, with no execution
+gate.</li>
+<li><strong>Telemetry is on by default and the opt-out is undocumented
+for users.</strong> See below; this is the gap the project's own
+decision record says it closed.</li>
+</ul>
+<h3 id="the-disclosure-the-adr-claims-and-the-tree-does-not-contain">The
+disclosure the ADR claims and the tree does not contain</h3>
+<p>ADR 0016 §11 is titled "Disclosed, and off with one line", and its
+first sub-point is unambiguous about where the disclosure lives:</p>
+<blockquote>
+<p>"<code>INSTALL.md</code> Part 1.2 states plainly what is collected
+and how to turn it off, at the same moment the user chooses local or
+cloud. Silent telemetry in an OSS CLI is a reputational event;
+disclosure at the point of the privacy decision is the cheap way to not
+have one."</p>
+</blockquote>
+<p><strong>Part 1.2 does not contain it.</strong> In every host's
+<code>INSTALL.md</code>, that section covers the cloud-versus-local
+choice, the API key, and the file permissions on
+<code>~/.memu/config.env</code>, and says nothing about events. The
+string <code>MEMU_TELEMETRY</code> appears in exactly three places in
+the tree — the ADR, the <code>events.py</code> module docstring, and
+<code>tests/test_events.py</code> — and in none of
+<code>README.md</code>, any <code>INSTALL.md</code>, or any other
+user-facing document. A user installing memU at this commit is not told
+that lifecycle events go to <code>api.memu.so</code>, and is not told
+the one line that stops it.</p>
+<p>What the install guides <em>did</em> gain is the opposite direction
+of the same flow: a new closing section instructing the agent to run
+<code>report install</code> or <code>report error --detail</code>, to
+"be generous with <code>--detail</code>", and to keep credentials,
+absolute paths, DSNs and "the user's memory content, file contents, or
+transcript text" out of what it writes. So the install procedure now
+asks the agent to send a paragraph of prose to the vendor, with the
+privacy rules aimed at the model rather than surfaced to the person.</p>
+<p>The ADR carries <code>Status: Proposed</code>, and that is worth
+stating without leaning on it: five of the sixteen ADRs are
+<code>Proposed</code> and describe behaviour this report documents as
+shipped — ADR 0014's pagination is the pagination — so in this project a
+proposed status has not meant unmerged. The reasonable reading is a
+disclosure that is intended, specified in unusual detail, and not yet
+written.</p>
+<p>What makes the gap legible rather than ordinary is that the same
+commit built the machinery that would have caught it.
+<code>test_no_guide_asks_for_report_error_without_the_scrubbing_sentence</code>
+walks every host guide, and its docstring names exactly what it is doing
+— "ADR 0016 section 5's gate, as a test rather than a promise" — with
+the reasoning that an instruction "guided prompt-side only… may never
+ship without the sentence that scopes it". Section 5's promise was
+turned into a test and holds. Section 11's promise was not, and does
+not. The two sentences are four pages apart in one document, and the
+difference between them is whether anything executes.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite runs in seconds and passes: <code>uv run pytest</code>
+gives <strong>359 passed, 1 skipped in 2.74s</strong> at this commit,
+with no service dependencies. There is still no retrieval-quality
+benchmark.</p>
+<p>The skip is the interesting one.
+<code>test_postgres_list_segments_deduplicates_cache</code> opens with
+<code>pytest.importorskip("pgvector")</code>, and <code>pgvector</code>
+lives in the optional <code>postgres</code> extra rather than the dev
+group — so on a default developer install it does not run. It is the
+regression test for
+<code>PostgresRecallFileSegmentRepo._cache_segment</code>, which
+appended a segment to its cache on every repeated query and returned
+growing duplicate lists. That bug was Postgres-only; the two backends
+whose tests <em>do</em> run were already correct. The test that covers
+the fixed line is the one skipped by default, and a green suite does not
+say it passed.</p>
+<p>The invariant the design most invites testing is still its own: that
+the local and remote paths order identically. Nothing in the suite
+covers it — the only cross-backend test is
+<code>test_recall_file_backfill.py</code>, which parametrizes over
+<code>inmemory</code> and <code>sqlite</code> and covers a different
+method. That is deterministic, needs no judge, and is the kind of
+property that silently breaks the first time one backend gains a
+tiebreak the other lacks; on <code>get_or_create_recall_file</code> it
+already had.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Rank the slice, return the file.</strong> Embedding and
+reading want different unit sizes, and forcing one unit to do both jobs
+makes retrieval worse at one of them.</li>
+<li><strong>Score a container by the max of its parts</strong>, not the
+sum or mean — sum rewards length, mean punishes a good paragraph in a
+long document.</li>
+<li><strong>Page on immutable domain identity</strong>, not offsets,
+when something walks the store while it is being written.</li>
+<li><strong>Write the invariant next to the denormalization.</strong> A
+copied column is safe only because of a rule, and that rule should not
+live in someone's memory.</li>
+<li><strong>Say what your retrieval deliberately does not do.</strong>
+"No intention routing, sufficiency checks, or summarization" sets an
+expectation and prevents a feature request from being read as a bug
+report.</li>
+<li><strong>Decline to store a field that would mislead</strong>, and
+record why.</li>
+<li><strong>Cite the decision record from the schema
+comment.</strong></li>
+<li><strong>Allowlist your telemetry payload, per event.</strong> A
+denylist leaks by default the first time a caller adds a field; an
+allowlist makes a leak a deliberate edit to one table.</li>
+<li><strong>Spool rather than fire-and-forget</strong>, and notice that
+this is what makes a client-generated event id worth having — a sender
+that never retries gives the receiver nothing to deduplicate.</li>
+<li><strong>Turn the ADR clause you cannot enforce in code into a
+test.</strong> memU's guides are prose an agent reads, so a parametrized
+test walks every guide and asserts the scrubbing sentence is present.
+The clauses that got this treatment held.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Serving many hosts from one store with no scope
+key.</strong> <code>where</code> filters are a query facility, not a
+boundary, and the difference matters the first time two projects share a
+store.</li>
+<li><strong>Vector-only retrieval for coding agents</strong>, where
+identifiers are a large share of queries.</li>
+<li><strong>Shipping telemetry whose disclosure exists only in the
+decision record.</strong> Being careful about the payload does not
+substitute for telling the person who installed it; the ADR here argues
+that case itself, and the sentence it promised is not in the tree.</li>
+<li><strong>Putting the regression test for a backend behind an optional
+extra.</strong> The suite is green either way, which is worse than
+red.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right when you want one memory layer across several coding agents and
+you want the read path cheap, predictable and model-free — the
+three-method protocol makes that a small integration, and the
+engineering discipline is above the atlas average. Wrong when memory has
+to be trusted, corrected, or separated: there is no epistemic model here
+at all, and adding one later means adding a schema this one deliberately
+does not have. Read it as a retrieval and sync layer that is honest
+about being exactly that.</p>
+<p>One thing that judgement now has to carry: adopting memU means opting
+your users into vendor telemetry unless you set
+<code>MEMU_TELEMETRY=0</code> yourself, and they will not learn it from
+anything memU shows them. The payload is counts and latency, not
+content, so the exposure is small — but if you install this for other
+people, the disclosure is yours to make, because the install guide will
+not make it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What separates two hosts' memories in one store beyond a
+caller-supplied <code>where</code>?</li>
+<li>Does anything merge duplicate recall files, or does the store
+accumulate them?</li>
+<li>What establishes that a skill-track file works, given there is no
+execution gate?</li>
+<li>How are <code>file.top_k</code> and <code>resource.top_k</code>
+chosen?</li>
+<li>Does the ordering-parity invariant hold anywhere it is not asserted,
+given the backends had drifted on
+<code>get_or_create_recall_file</code>?</li>
+<li>Will the ADR 0016 §11 disclosure land in the install guides, and
+does anything test for it when it does?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Protocol: <code>src/memu/agentic_backend.py</code>
+(<code>AgenticMemoryBackend</code>, <code>list_all_recall_files</code>,
+<code>progressive_retrieve</code>, <code>commit_results</code>).</li>
+<li>Retrieval: <code>src/memu/app/agentic.py</code>
+(<code>progressive_retrieve</code>, <code>_recall_segments</code>,
+<code>_collect_files</code>, <code>_recall_resources</code>).</li>
+<li>Model: <code>src/memu/database/models.py</code>
+(<code>BaseRecord</code>, <code>Resource</code>,
+<code>RecallFile</code>, <code>RecallFileSegment</code>).</li>
+<li>Repositories and backends:
+<code>src/memu/database/repositories/</code>, <code>sqlite/</code>,
+<code>postgres/</code>, <code>inmemory/</code>.</li>
+<li>Host adapters: <code>src/memu/hosts/</code>
+(<code>claude_code</code>, <code>codex</code>, <code>cursor</code>,
+<code>openclaw</code>, <code>hermes</code>, <code>cola</code>,
+<code>workbuddy</code>, <code>generic</code>,
+<code>bridging</code>).</li>
+<li>Telemetry: <code>src/memu/events.py</code> (<code>record</code>,
+<code>record_action</code>, <code>record_agent_error</code>,
+<code>flush</code>, <code>enabled</code>,
+<code>_ALLOWED_PROPERTIES</code>),
+<code>src/memu/hosts/retrieval.py</code>,
+<code>src/memu/hosts/host_cli.py</code>.</li>
+<li>Decision records: <code>docs/adr/</code> — 0003 (user scope), 0006
+(tracks), 0007 (segments), 0014 (pagination), 0015 (bridging must not
+mine its own run), 0016 (client event reporting).</li>
+<li>Tests: <code>tests/test_events.py</code>,
+<code>tests/test_recall_file_backfill.py</code>,
+<code>tests/test_cache_segment_duplicates.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb"><code>c35060e2a6d35d6c4e155ffa1c6a97a92db964cb</code></a>
+— eight commits on. The memory core is untouched:
+<code>models.py</code>, <code>app/agentic.py</code> and
+<code>agentic_backend.py</code> are byte-identical to the previous pin,
+so every mechanism claim, every quoted docstring and the capability
+assessment (<code>""</code>) stand, re-verified rather than carried.
+What changed sits beside it. <code>events.py</code> adds opt-out client
+telemetry to <code>api.memu.so</code> — allowlisted payloads, no query
+text, <code>DO_NOT_TRACK</code> honoured — whose own decision record
+claims a disclosure in <code>INSTALL.md</code> Part 1.2 that is not in
+the tree; <code>MEMU_TELEMETRY</code> appears in no user-facing
+document. <code>get_or_create_recall_file</code> gained a documented
+backfill after the three backends were found to have drifted three
+different ways, which qualifies the local/remote parity strength this
+report leads with. A Postgres-only segment-cache duplication bug was
+fixed, and its regression test is skipped on a default install because
+<code>pgvector</code> is an optional extra. Suite run: 359 passed, 1
+skipped.</p>
+<p><strong>2026-07-28</strong> — <a
+href="https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e"><code>3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

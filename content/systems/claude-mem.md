@@ -152,7 +152,26 @@ The active local model centers on:
   and modified, model fields, timestamps, and content hash.
 - `session_summaries`: request, investigation, learning, completion, next steps,
   notes, and timestamps.
-- `observation_feedback`: user feedback over derived observations.
+
+Those five, plus `schema_versions` and the `user_prompts_fts` virtual table, are
+what `SessionStore.ts` creates. `initializeSchema` (`:922-991`) lays down
+`sdk_sessions`, `observations` and `session_summaries`; the constructor then runs
+thirty-two idempotent migration steps in order (`:91-122`), each guarded by a
+`PRAGMA table_info` or `PRAGMA index_list` check rather than by the
+`schema_versions` row it writes — `createUserPromptsTable` and
+`createPendingMessagesTable` are the two that add tables, and the rest add
+columns, rebuild tables into `_new` copies, or fix indexes and foreign keys. Six
+further `sync_*` tables belong to the cloud replication path. `observations_fts`
+and `session_summaries_fts` are created lazily by `SessionSearch.ts:78,116`, not
+by the store.
+
+Worth one sentence because it is the kind of thing a reader will trust from a
+document: `docs/architecture-overview.md:125` lists an `observation_feedback`
+table (`observation_id, signal_type`, "Usage tracking") as the sixth row of a
+table whose other five exist, and `CHANGELOG.md:1730` announced it under v11.0.0 as "a new
+`observation_feedback` table for future Thompson Sampling optimization". No
+migration creates it, nothing reads or writes it, and the identifier does not
+appear anywhere under `src/`. The docs describe a table the schema does not have.
 
 SQLite foreign keys link observations and summaries to memory sessions.
 Content hashes deduplicate near-simultaneous reprocessing. The code derives file
@@ -347,5 +366,7 @@ consistency.
 - `docs/server-storage-boundary.md`: active/future schema boundary.
 
 ## History
+
+**2026-08-31** — [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe) — same pin, one correction, in the direction of crediting the system with a table it does not have. Section 5 listed `observation_feedback` as part of the active local model. The identifier appears nowhere under `src/` at this commit — no `CREATE TABLE`, no migration step, no read, no write — only in `CHANGELOG.md:1730`, where a v11.0.0 release note announced it, and in `docs/architecture-overview.md:125`, which lists it beside the five tables that do exist. It was taken from documentation rather than from the schema, which the rubric forbids. The divergence itself is the finding and section 5 states it, over a migration chain verified in its place: `initializeSchema` at `SessionStore.ts:922-991` plus thirty-two PRAGMA-guarded steps at `:91-122`, of which `createUserPromptsTable` and `createPendingMessagesTable` are the only two that add tables, and `observations_fts` / `session_summaries_fts` come from `SessionSearch.ts:78,116` instead. No mark moved; `human_review` was re-checked in the other direction and no approval surface over observation content exists at this pin.
 
 **2026-07-27** — [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe) — first reading.

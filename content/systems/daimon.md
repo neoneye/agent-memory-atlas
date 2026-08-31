@@ -15,7 +15,7 @@ capability_evidence:
   trust_state: "checkpoint items, and the refutation ledger separately | plugin/daimon_briefing/serializer.py | a stored trust field of verbatim vs inferred, verified by code against the transcript by verify_quotes; the ledger folds candidate/active/overturned across both polarities | plugin/tests/test_quote_verification.py, plugin/tests/test_refutations.py"
   scope_enforced: "every store, by project slug, including the one path that crosses projects | plugin/daimon_briefing/store.py, plugin/daimon_briefing/requests.py | `project_slug` resolves the per-project directory under `~/.daimon` and every read and write is rooted there; forget is project-scoped by construction. The cross-project request ledger is the interesting case rather than an exception to it: a request is a row in the **sender's** bucket, the recipient discovers it by read-through at brief time and answers with verdict rows in its own `requests.jsonl` citing the id, so *\\\"every logical request spans two buckets by construction and the joined record is a read-time join. Nobody writes a foreign ledger, and deletion happens once at the source: read-through has no copies to chase\\\"* | plugin/tests/test_isolation.py, plugin/tests/test_requests.py (1,817 lines)"
   audit_log: "events.jsonl, plus the refutation, relation and amendment ledgers | plugin/daimon_briefing/store.py | append_event writes one row per lifecycle event; refutations, relations and amendments each carry their own append-only stream with an observed channel on every row | plugin/tests/test_store.py, plugin/tests/test_refutation_authority.py"
-  human_review: "refutation and relation ledgers, and reverify | plugin/daimon_briefing/refutations.py | CHANNEL_AUTHORITY derives authority from the observed write channel rather than a caller flag, so activation, overturn and ruling ratification require a human channel the CLI cannot reach for ui or signed | plugin/tests/test_refutation_authority.py, test_agent_cannot_self_ratify"
+  human_review: "refutation and relation ledgers, and reverify | plugin/daimon_briefing/refutations.py | CHANNEL_AUTHORITY derives authority from the observed write channel rather than a caller flag, so activation, overturn and ruling ratification require a human channel the CLI cannot reach for ui or signed | plugin/tests/test_refutation_authority.py, plugin/tests/test_refutations.py:70 test_agent_cannot_self_ratify"
   negative_eval: "refutation guard read path | plugin/tests/test_refutations.py | test_guard_fires_on_exact_issue_anchor_not_broad_topic asserts a broad topical query must not surface an active guard | plugin/tests/test_refutations.py:113"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
@@ -56,7 +56,7 @@ model's own trust label as a claim to be falsified before it is stored.
 A second gate goes further, and is the most interesting thing here. Quote
 verification certifies *transcription*, not truth: the model can conclude "the
 tests pass", be wrong, and the transcript will faithfully record it saying so.
-`ground_outcomes` (`serializer.py:1331`) narrows that gap by lexicon — if an
+`ground_outcomes` (`serializer.py:1380`) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green) and the
 item cites no tool-result message as evidence, the item is downgraded to
 `inferred` even though its quote verified. The comment in the source states the
@@ -161,7 +161,7 @@ id, which is why widening the id could not break it.
 Lifecycle is *not* stored on the item. The checkpoint is append-only in
 practice — `last_verified` is stamped in exactly one place and the docstring
 forbids any other writer — and liveness is a **fold over an event log at read
-time** (`store.resolutions`, `store.py:2087`; `store.is_resolved`, `store.py:2128`):
+time** (`store.resolutions`, `store.py:2110`; `store.is_resolved`, `store.py:2151`):
 
 | Latest event for an id | Effect at read |
 | --- | --- |
@@ -174,18 +174,18 @@ time** (`store.resolutions`, `store.py:2087`; `store.is_resolved`, `store.py:212
 Statuses are free-form by design and readers prefix-match, so an unknown status
 resolves rather than vanishes — the writer bothered to record a lifecycle fact.
 Same-second ties break on event *content*, never file order, so a reordered log
-folds identically (`_tie_wins`, `store.py:1960`).
+folds identically (`_tie_wins`, `store.py:2098`).
 
 Three actors can move an item, and the code is explicit about which is which.
 **Code** downgrades trust classes and emits supersede *candidates*. **The
 model** proposes items and typed `supersedes` links but never writes the
-code-owned fields — `strip_code_owned_keys` (`serializer.py:1904`) deletes any
+code-owned fields — `strip_code_owned_keys` (`serializer.py:2029`) deletes any
 the model emits. **A human** resolves, forgets, and re-opens — and re-opening a
 resolved item requires evidence: either the item's code anchor still checks out
 live, or an explicit `--evidence` string. `_cmd_reverify` refuses otherwise,
 with the reason stated in the source: *"re-stamping without evidence would mark
 an unchecked claim verified — the one thing this tool must never do to its own
-audit trail"* (`cli/lifecycle.py:713`).
+audit trail"* (`cli/lifecycle.py:749`).
 
 The system therefore treats memory as **attested transcription plus explicitly
 labelled inference**, never as ground truth. The briefing's own top section is
@@ -306,7 +306,7 @@ parameter, making an unscoped call impossible to write.
 
 ### A third store and a fourth
 
-`relations.py` (578 lines) is a project-scoped **typed relation ledger** —
+`relations.py` (637 lines) is a project-scoped **typed relation ledger** —
 `revision-of`, `answers`, `supersedes`, `reclassified-from` — folded from
 `proposed`/`confirmed`/`rejected`/`retracted` events into the matching states.
 It ships in **shadow mode** and the report of that is precise: recall,
@@ -419,7 +419,7 @@ rows carrying only `tool_result` blocks are surfaced as `role: "tool"` with a
 capped payload, which is what makes outcome grounding possible on that host and
 nowhere else.
 
-**Extraction.** `serializer.serialize_strict` (`serializer.py:2049`) gates on
+**Extraction.** `serializer.serialize_strict` (`serializer.py:2174`) gates on
 `min_messages` (10 by default; tool rows do not count), renders the transcript,
 and chunks it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
 through the D-016 prompt, each cached by content hash under
@@ -444,7 +444,7 @@ computed per merge — no static stoplist, so it stays language-neutral — plus
 **Retrieval.** `recall.search` (`recall.py:754`) runs an FTS5 `MATCH`, AND-joined
 first, retrying OR-joined when AND matches nothing, ordered by
 `superseded_by IS NOT NULL`, then bm25, then a silent `frontier` recency
-tiebreak. `recall.suggest` (`recall.py:1053`) is the proactive path behind
+tiebreak. `recall.suggest` (`recall.py:1099`) is the proactive path behind
 `UserPromptSubmit`, gated hard toward silence: unknown project, fewer than two
 salient terms, or fewer than two distinct shared terms with a matched session all
 return `[]`.
@@ -465,8 +465,8 @@ because zero runtime dependencies is a product claim — exposing four read-only
 tools (`daimon_recall`, `daimon_brief`, `daimon_projects`, `daimon_status`)
 through thin shims in `mcp_tools.py`.
 
-**Tests.** 1,974 test functions across ~29,700 lines under `plugin/tests/`,
-against ~15,200 lines of source.
+**Tests.** 3,929 test functions across ~62,300 lines under `plugin/tests/`,
+against ~30,800 lines of source in `plugin/daimon_briefing/`.
 
 ## 5. Memory Data Model
 
@@ -518,7 +518,7 @@ makes the git merges conflict-free by construction. Teammates' items are
 attributed and never merged into yours.
 
 **Staleness** has a dedicated read-time signal. `briefing.stale_carried`
-(`briefing.py:505`) flags carried items whose effective last-verified age
+(`briefing.py:602`) flags carried items whose effective last-verified age
 exceeds seven days, and the docstring states the reasoning precisely: a fresh
 checkpoint restating a carried item **is not corroboration**, because both
 sources trace back to the same original extraction.
@@ -759,20 +759,20 @@ learns is persisted.
 The local probes read like code written by someone bitten by each of these
 cases, and the reasoning sits beside the mechanism:
 
-- `_probe_branch` (`:332`) consults **both halves of git's ref storage** — a
+- `_probe_branch` (`:433`) consults **both halves of git's ref storage** — a
   loose `refs/heads/<name>` file *and* `packed-refs` — because *"every fresh
   clone packs its refs, so missing this would contradict on sight."*
-- `_git_common_dir` (`:308`) follows the linked-**worktree** indirection, `.git`
+- `_git_common_dir` (`:409`) follows the linked-**worktree** indirection, `.git`
   as a file to `gitdir:` to `commondir`, absolute or relative, because reading
   the worktree dir instead *"would report every branch gone for anyone working
   out of a worktree."* Absent `refs/heads` returns `None` — a skip — rather than
   `MISSING`, since *"answering MISSING there would fabricate a contradiction for
   every claim."*
-- `_probe_path` (`:296`) resolves the target and **refuses when it escapes the
+- `_probe_path` (`:397`) resolves the target and **refuses when it escapes the
   project root**, on the grounds that a symlink out of the tree *"answers about
   ANOTHER checkout"* — the same stance as the cross-repo refusal that keeps
   `owner/repo#12` out of the `gh` path.
-- `_MANIFESTS` (`:354`) is ordered lockfiles-first because a lock records a
+- `_MANIFESTS` (`:455`) is ordered lockfiles-first because a lock records a
   resolved version and a manifest usually records a range, and consulting both
   *"would leave every real project with two conflicting answers and nothing to
   say."*
@@ -867,19 +867,30 @@ links never guess), `test_redact_leak_gaps.py`, `test_receipts.py`,
 `test_isolation.py` (every path escapes the real `$HOME` under test). I did not
 run the suite.
 
-**The refutation ledger carries 106 of those across four files, and they are
-adversarial rather than illustrative.** `test_refutation_authority.py` asserts
-the properties the channel table exists for —
-`test_agent_cannot_self_ratify`, `test_tampered_agent_ratification_flag_cannot_activate`
-(a hand-edited `ratified: true` on an agent row folds to candidate anyway, because
-the fold re-derives authority from the channel rather than trusting the flag), and
-`test_agent_overturn_proposal_does_not_disable_active_guard`.
-`test_refutations.py` covers the fold's determinism under reorder
-(`test_malformed_order_does_not_sink_the_ledger`), identity
-(`test_a_revision_cannot_take_over_another_records_identity`), and guard
-precision (`test_guard_fires_on_exact_issue_anchor_not_broad_topic` — a negative
-retrieval case in the strict sense, asserting that a broad topical query must
-*not* surface an active guard). `test_forget_refutations.py` and
+**The refutation ledger carries 106 of those across four files — 51 in
+`test_refutations.py`, 33 in `test_forget_refutations.py`, 15 in
+`test_refutation_privacy.py`, 7 in `test_refutation_authority.py` — and they are
+adversarial rather than illustrative.** The seven in
+`test_refutation_authority.py` are all about the CLI's own write boundary:
+`test_by_human_is_not_an_accepted_choice`,
+`test_non_interactive_caller_cannot_claim_the_human_channel`,
+`test_cli_cannot_mint_the_ui_or_signed_channels` and
+`test_every_lifecycle_row_records_a_channel`.
+
+The properties the channel table exists for are asserted one layer down, against
+`fold` itself, in `test_refutations.py`: `test_agent_cannot_self_ratify`
+(`:70`), `test_agent_overturn_proposal_does_not_disable_active_guard` (`:96`),
+and `test_tampered_agent_ratification_flag_cannot_activate` (`:155`) — a
+hand-edited `ratified: True` on a `cli-agent` row folds to `candidate` anyway,
+because the fold re-derives authority from the channel rather than trusting the
+flag. That is the sharper placement: it holds for a row written by anything,
+not only for one the CLI would have refused to write. The same file covers the
+fold's determinism under reorder
+(`test_malformed_order_does_not_sink_the_ledger`, `:144`), identity
+(`test_a_revision_cannot_take_over_another_records_identity`, `:397`), and guard
+precision (`test_guard_fires_on_exact_issue_anchor_not_broad_topic`, `:113` — a
+negative retrieval case in the strict sense, asserting that a broad topical
+query must *not* surface an active guard). `test_forget_refutations.py` and
 `test_refutation_privacy.py` bind the second store to the deletion contract, and
 `test_log_text_privacy.py` covers the downgrade lines that must log a hash rather
 than the item's text.
@@ -902,7 +913,7 @@ mirrored the caller's unfiltered call.
 
 Both were exposed by mutation testing rather than by review reading, which is
 the same lesson one level up from the suite: a test that cannot be shown to fail
-is a claim nobody has checked, and 3,679 of them do not change that for any
+is a claim nobody has checked, and 3,929 of them do not change that for any
 individual one.
 
 **The benchmark is the notable part.** `benchmark/` runs LongMemEval-S through
@@ -919,14 +930,16 @@ Two result files are committed:
 | Run | Sample | Recall@5 | Hit@5 | MRR |
 | --- | --- | --- | --- | --- |
 | `longmemeval-s-baseline.json` (D-013, Haiku 4.5) | 5 questions | 0.80 | 1.00 | 0.85 |
-| `interim-317-baseline-first54.json` (Haiku 4.5, scene off) | 52 scored | **0.58** | 0.67 | 0.59 |
+| `interim-317-baseline-first54.json` (Haiku 4.5, scene off) | 54 questions | **0.60** | 0.69 | 0.61 |
 
 The published five-question run costs 3,337 seconds of wall clock and 192
 serialize calls. The 54-question interim file commits per-question rows but no
 aggregate block — it is an A/B baseline awaiting its paired arm — so the second
-row is my own arithmetic over the committed rows, not a figure the project
-publishes. It is the more meaningful of the two, and it is a modest number:
-roughly a third of questions never surface a gold session in the top five.
+row is the unweighted mean over all 54 committed rows, two of which carry
+`abstention: true`, not a figure the project publishes. Dropping those two moves
+it to 0.58 / 0.67 / 0.59. Either way it is the more meaningful of the two, and it
+is a modest number: roughly a third of questions never surface a gold session in
+the top five.
 
 **The deletion claim is tested end to end**, and the test is the most complete
 of its kind in this atlas. `plugin/tests/test_deletion_durability_protocol.py`
@@ -985,9 +998,13 @@ a leak.
 
 **A refutation is subject to the same contract.** `refutations.jsonl` is a second
 plaintext store, so `forget` was extended to reach it: `forget_content_key`
-matches **every subject the record has ever carried, not only the folded one**,
-because a revision rewrites the subject and *"matching only the current subject
-would leave exactly the text `forget` exists to reach unreachable."* `_cmd_forget`
+matches on **every plaintext field rather than the subject alone**, and removes
+**every row of a matched record, not only the row that matched** — because a
+revision rewrites the subject, so an earlier row can hold an older subject the
+folded record no longer renders, and *"keeping it would leave forgotten text on
+disk in a row nothing displays."* The match is whole-value equality after
+canonicalization, never substring containment, so *"a record goes when a field
+IS the forgotten value, never when one mentions it."* `_cmd_forget`
 also stops bailing when no checkpoint exists, since a value can live in the
 ledger with no checkpoint at all.
 
@@ -1103,11 +1120,18 @@ letting the two be confused.
   forward depends on a lexical index to be findable again. That is a defensible
   trade for a briefing product, but it is a trade, and it should be stated where
   users can see it.
-- **An English-only lexicon as a correctness gate.** `ground_outcomes` matches
-  outcome verbs with a regex, so a Spanish session — a language the project
-  otherwise supports throughout — is never grounded. The code chooses the honest
-  no-op over a guess, which is right, but the coverage gap is invisible from
-  outside.
+- **A hand-curated lexicon as a correctness gate, when the gate fails silent.**
+  `ground_outcomes` decides whether an item asserts a completed outcome by
+  matching curated verb regexes. A language nobody enumerated does not produce a
+  warning; it produces an item that is never downgraded, which is indistinguishable
+  from an item that passed. Daimon's own `_OUTCOME_ES_RE` is the worked example
+  and the comment states the incident behind it: the gate was English-only, so a
+  Spanish *"los tests pasan"* sailed through ungrounded *"while its English twin
+  was downgraded"* (#401). The fix was a second hand-written lexicon plus a
+  mirrored `_HEDGE_ES_RE` — two languages instead of one, by the same method, so
+  the n+1 language remains an invisible no-op. If your gate can only ever be
+  extended by enumeration, count the enumeration as the contract and say what is
+  outside it.
 - **Trusting a benchmark's headline sample size.** Five questions is not a
   result. The repo is more honest about this than most; readers still have to
   look at the config stamp.
@@ -1209,7 +1233,7 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 3,679 tests across 129 files
+- `plugin/tests/` — 3,929 tests across 135 files
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
   arm and its self-verification
@@ -1217,6 +1241,20 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-08-31** — [`90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614`](https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614) — audited at the same pin; no mark moved and no matrix field changed. Six claims were wrong at this commit rather than overtaken by it.
+
+The one with teeth was a *criticism*, which is the direction this atlas keeps finding stale. Section 11 faulted `ground_outcomes` for an English-only lexicon that leaves a Spanish session ungrounded. `serializer.py` carries `_OUTCOME_ES_RE` and a mirrored `_HEDGE_ES_RE` (#401), `_asserts_outcome` is documented "English + Spanish", and the comment records that this exact hole — a Spanish "los tests pasan" sailing through while its English twin was downgraded — is closed. The bullet now faults the shape the fix preserves: a gate extended only by enumeration, failing silent on the language nobody enumerated.
+
+Three counts in the body disagreed with the counts in section 10 and the History: section 4 said 1,974 test functions over ~29,700 lines against ~15,200 of source and the appendix said 3,679 tests across 129 files, against a measured **3,929 `def test` across 135 files, ~62,300 test lines against ~30,800 source lines** in `plugin/daimon_briefing/`. `relations.py` is 637 lines, not 578.
+
+`test_agent_cannot_self_ratify`, `test_tampered_agent_ratification_flag_cannot_activate` and `test_agent_overturn_proposal_does_not_disable_active_guard` live in `test_refutations.py`, not `test_refutation_authority.py` — they assert against `fold` directly rather than through the CLI, which is the stronger placement and is now stated as such. The 106-across-four-files count was right: 51 + 33 + 15 + 7.
+
+The quoted clause *"matching only the current subject would leave exactly the text `forget` exists to reach unreachable"* is in no file; `forget_content_key`'s real docstring matches every plaintext field rather than the subject alone and removes every row of a matched record, on whole-value equality after canonicalization. The mechanism was right and the quotation was not.
+
+The interim-317 aggregates were computed over 52 of the 54 committed rows with the filter unstated; over all 54 they are 0.60 / 0.69 / 0.61, and the two excluded rows are the ones carrying `abstention: true`.
+
+Eight line citations had drifted: `ground_outcomes` 1380, `strip_code_owned_keys` 2029, `serialize_strict` 2174, `resolutions` 2110, `is_resolved` 2151, `_tie_wins` 2098, `suggest` 1099, `stale_carried` 602, the reverify refusal at `cli/lifecycle.py:749`, and the four `worldcheck.py` probe cites uniformly +101.
 
 **2026-08-26** — [`90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614`](https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614) — re-pinned 23 commits on, through releases 0.32.0, 0.32.1 and 0.33.0. Screened again before reading: three auto-run surfaces, three build-time execution paths, one unpinned surface and two files inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven. `bitemporal` remains absent and a grep of the whole package for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` returns nothing, so the absence is structural rather than a missing consumer.
 

@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Postgres memory service where
+the agent is a first-class access-control principal with its own
+credentials, and a clamp makes over-granting an agent harmless by
+construction.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memory
+Engine — Agent Memory Atlas">
+    <meta property="og:description" content="A Postgres memory service
+where the agent is a first-class access-control principal with its own
+credentials, and a clamp makes over-granting an agent harmless by
+construction.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory
+Engine — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Postgres memory service
+where the agent is a first-class access-control principal with its own
+credentials, and a clamp makes over-granting an agent harmless by
+construction.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memory Engine — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memory Engine",
+      "description": "A Postgres memory service where the agent is a first-class access-control principal with its own credentials, and a clamp makes over-granting an agent harmless by construction.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Agents as principals</p>
+          <h1>Memory Engine</h1>
+          <p class="document-deck">A Postgres memory service where the
+agent is a first-class access-control principal with its own
+credentials, and a clamp makes over-granting an agent harmless by
+construction.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/timescale/memory-engine">
+              <span>Source</span>
+              <strong>timescale/memory-engine</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927" title="54e4d7d201b5c7ba3aed618ea343d9f4d3f40927">
+              <span>Analyzed revision</span>
+              <code>54e4d7d2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memory Engine is Timescale's Apache-2.0 memory service: about 51,000
+lines of TypeScript on Bun over PostgreSQL 18, using ltree,
+pgvector/halfvec, BM25, JSONB and tstzrange rather than
+application-layer abstractions. Memories live in one table per space,
+searched by hybrid BM25 and semantic retrieval fused with RRF inside SQL
+functions.</p>
+<p>The memory model is deliberately plain. The access model is the most
+developed in this atlas, and it is the reason to read the
+repository.</p>
+<p><strong>The agent is a first-class principal.</strong> Principals are
+users, <em>agents</em>, service accounts, or groups; an agent has its
+own api key, its own grants, and its own identity in the authorization
+tables. Everywhere else in this atlas an agent acts with the user's
+authority or with none, and "which memories may this agent read" is not
+a question the schema can express.</p>
+<p>Grants are <code>(space, principal, tree_path, level)</code> with
+three additive levels — read, write, owner — where
+<code>tree_path</code> is an ltree, so a grant covers a subtree. And the
+safety property that makes it workable:</p>
+<blockquote>
+<p>"a member may grant/revoke their <strong>own agents</strong> at any
+path… safe because <code>agent_tree_access</code> clamps an agent to
+<code>least(agent, owner)</code> at every path, so an over-grant clamps
+<strong>down</strong> to the owner's level rather than escalating"</p>
+</blockquote>
+<p>That clamp is the good idea. Letting people delegate to their own
+agents without an approval workflow is only safe if delegation cannot
+exceed the delegator, and making that a <code>least()</code> at every
+path means a careless or malicious over-grant is <em>harmless by
+construction</em> rather than caught by a check somebody might forget. A
+joining agent is even provisioned at
+<code>owner@home.&lt;owner_id&gt;.&lt;agent_id&gt;</code> — nested
+inside its owner's home so the owner's grant covers it and the clamp
+stays effective.</p>
+<p>Three more decisions are worth the read. Authorization is evaluated
+<strong>inside the search SQL</strong>:
+<code>core.build_tree_access(principalId, spaceId)</code> produces a
+<code>_tree_access</code> jsonb passed into <code>search_memory</code>
+and friends, so a principal's visibility and the ranking are one query
+rather than a filter applied afterwards. Writes <strong>require an
+explicit <code>tree</code></strong>, because "callers choose
+<code>share</code> vs <code>~</code> deliberately". And a space creator
+gets <code>admin + owner@home + owner@share</code> but deliberately
+<strong>not</strong> <code>owner@root</code>, so creating a space does
+not grant sight of other members' private trees.</p>
+<p>Reservations. This is memory as a governed <em>store</em>, not as a
+belief model: there is no trust state, no candidate/verified
+distinction, no supersession chain, no contradiction handling, and no
+tombstone. It knows exactly who may read a memory and nothing about
+whether the memory is true.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>core (control plane)                     me_&lt;slug&gt; (data plane, one per space)
+  principal   u | a | s | g                memory
+  space                                      id uuid v7 (check-constrained)
+  principal_space  (admin = structural)      content, name
+  group_member                               meta   jsonb
+  tree_access (space, principal,             tree   ltree
+               tree_path ltree,              temporal tstzrange
+               access 1|2|3)                 embedding halfvec(1536)
+  api_key                                    embedding_version int4</code></pre>
+<p>Two authority axes, kept apart:</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Carried by</th>
+<th>Governs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>structural</strong></td>
+<td><code>principal_space.admin</code></td>
+<td>roster, groups, invitations</td>
+</tr>
+<tr>
+<td><strong>data</strong></td>
+<td><code>owner@path</code></td>
+<td>reading and writing memory under a subtree</td>
+</tr>
+</tbody>
+</table>
+<p>Reserved tree roots: <code>home.&lt;member_id&gt;</code> (input sugar
+<code>~</code>) and the shared <code>share</code>. An owner grant at any
+path delegates access-management <em>within that subtree</em>, and
+<code>owner@root</code> is the whole space.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Packages, in lines of TypeScript excluding tests:</p>
+<ul>
+<li><code>cli/</code> (27,443) — much of the surface, including harness
+adapters.</li>
+<li><code>server/</code> (7,085) — JSON-RPC endpoints, auth
+middleware.</li>
+<li><code>web/</code> (2,549), <code>protocol/</code> (2,299),
+<code>database/</code> (2,303), <code>engine/</code> (1,789),
+<code>embedding/</code> (1,281), <code>client/</code> (1,182),
+<code>worker/</code> (748).</li>
+<li><code>queries/</code> — seventeen numbered psql benchmark files plus
+tuned variants.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three credential kinds resolve to one principal in middleware, so the scope reaching the store does not depend on which surface the caller used</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three credential kinds resolve to one principal in middleware, so the scope reaching the store does not depend on which surface the caller used
+flowchart TD
+  Cred[&quot;OAuth ·&lt;br/&gt;api key ·&lt;br/&gt;cookie&quot;] --&gt; MW[&quot;middleware&lt;br/&gt;resolves principal&quot;]
+  MW --&gt; BTA[&quot;core.build_tree_access(principal, space)&quot;]
+  BTA --&gt; TA[&quot;_tree_access&lt;br/&gt;jsonb: paths +&lt;br/&gt;levels&quot;]
+  TA --&gt; SQL[&quot;search_memory(...)&lt;br/&gt;in SQL&quot;]
+  Mem[&quot;me_slug.memory&quot;] --&gt; SQL
+  SQL --&gt; RRF[&quot;BM25 + semantic,&lt;br/&gt;fused by RRF&quot;]
+  RRF --&gt; Out[&quot;visible,&lt;br/&gt;ranked results&quot;]
+  Agent[&quot;agent principal&quot;] --&gt; Clamp[&quot;agent_tree_access&lt;br/&gt;= least(agent,&lt;br/&gt;owner)&quot;]
+  Clamp --&gt; TA
+  W[&quot;memory.create —&lt;br/&gt;tree required&quot;] --&gt; Mem</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="agents-as-principals-clamped-to-their-owner">Agents as
+principals, clamped to their owner</h3>
+<p>The clamp is the mechanism this atlas has been missing without naming
+it. Every system here that mounts memory into an agent grants the agent
+whatever the process has. Ask "can this agent read the other project's
+memories?" and the answer is a property of the deployment, not of the
+data model.</p>
+<p>Memory Engine answers it in the schema, and then solves the
+delegation problem the answer creates. If agents are principals, someone
+must grant them access — and routing every grant through an owner
+approval makes the feature unusable, while allowing self-service invites
+privilege escalation. <code>least(agent, owner)</code> at every path
+dissolves the dilemma: a member may grant their own agents freely,
+because the grant is evaluated against their own level at that path.
+Over-grant and it clamps down; lose access yourself and your agent loses
+it too, without a revocation sweep.</p>
+<p>The <code>X-Me-As-Agent</code> header carries the same discipline
+into impersonation, with a stated <strong>parity invariant</strong> —
+acting as your own agent gives "exactly what the agent's own
+<code>ME_API_KEY</code> could do", with management operations barred.
+The human is recorded as <code>authenticatedAs</code> "for observability
+only (never gates authz)", which is precisely the right split between an
+audit field and an authorization field, and one that systems get wrong
+in the other direction all the time.</p>
+<h3 id="authorization-inside-the-ranking-query">Authorization inside the
+ranking query</h3>
+<p><code>build_tree_access</code> materializes the caller's grants as
+jsonb and passes it into the space SQL functions. Visibility is
+therefore a join condition in the same statement that ranks, not a
+filter applied to results afterwards.</p>
+<p>The difference matters for a reason the <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> pattern states and few systems honour: a post-filter interacts
+badly with <code>LIMIT</code>. Rank first and filter after, and a user
+with narrow grants gets fewer than <em>k</em> results — or the system
+silently over-fetches to compensate, and the effective ranking changes
+with the caller's permissions.</p>
+<h3 id="a-documented-negative-result-on-rls">A documented negative
+result on RLS</h3>
+<p>The obvious way to do this in Postgres is row-level security, and the
+repository says plainly why it does not:</p>
+<blockquote>
+<p>"<strong>Access via <code>tree_access</code>, not RLS</strong>: RLS
+was unperformant."</p>
+</blockquote>
+<p>There is no <code>me.user_id</code> GUC, and
+<code>queries/13-tree-access.sql</code> — labelled "Direct RLS helper
+expansion benchmark" — keeps the replacement measurable.</p>
+<p>This atlas complains repeatedly that systems do not measure their
+design decisions. Here is one that tried the textbook answer, measured
+it, rejected it, recorded the reason next to the alternative, and
+committed a benchmark to keep watching. The engineering is unremarkable;
+the <em>documentation of a negative result</em> is rare enough to be
+worth copying on its own.</p>
+<h3 id="writes-must-name-their-destination">Writes must name their
+destination</h3>
+<p><code>memory.create</code> and <code>batchCreate</code>
+<strong>require</strong> an explicit <code>tree</code>, so callers
+"choose <code>share</code> vs <code>~</code> deliberately". Only file
+importers default a tree-less record, and they default it to
+<code>share</code> via a canonically defined constant.</p>
+<p>This is <a href="../../patterns/explicit-write-destination/">explicit
+write destination</a> enforced at the API boundary rather than
+encouraged in a tool description — the strongest instance of that
+pattern the atlas has found. The pattern page argues that defaults are
+acceptable only when safe, obvious and surfaced; here the default is
+<em>absent</em> on the interactive path and present only where a human
+already chose a file to import.</p>
+<h3 id="least-privilege-for-the-space-creator">Least privilege for the
+space creator</h3>
+<p>A space creator gets <code>admin</code>, <code>owner@home</code> and
+<code>owner@share</code> — <strong>not</strong> <code>owner@root</code>.
+They can see the shared tree and their own home, and not other members'
+homes. As an admin they <em>can</em> self-grant <code>owner@root</code>,
+which makes the escalation explicit and auditable rather than implicit
+in provisioning.</p>
+<p>Custom spaces can vary this (<code>--no-home-grants</code> flips the
+creator to "god mode" with <code>owner@/</code>), so the safe default is
+a default rather than a constraint.</p>
+<h3 id="idempotent-writes-with-visible-per-row-outcomes">Idempotent
+writes with visible per-row outcomes</h3>
+<p>The idempotency key is a named row's <code>(tree, name)</code> slot,
+else the explicit id. <code>onConflict</code> is <code>error</code>
+(default), <code>replace</code>, or <code>ignore</code>, and every row
+reports <code>{id, status}</code> where status is
+<code>inserted | updated | skipped</code> — <code>batchCreate</code>
+returns one entry per input <strong>in input order</strong>, "so a skip
+is visible and ids map back to inputs".</p>
+<p>Importers stamp <code>meta.importer_version</code> with deterministic
+metadata and no per-run timestamp, so an unchanged re-import is a
+genuine no-op while a version bump makes meta differ and forces a
+re-render. That is a clean answer to a problem several systems in this
+atlas have: re-ingestion that silently duplicates or silently does
+nothing, with no way to tell which happened.</p>
+<h3 id="a-schema-that-constrains-rather-than-documents">A schema that
+constrains rather than documents</h3>
+<p>The memory table carries constraints that would elsewhere be
+conventions:</p>
+<pre class="sql"><code>id uuid not null primary key default uuidv7()
+   check (uuid_extract_version(id) = 7)
+meta jsonb not null default &#39;{}&#39; check (jsonb_typeof(meta) = &#39;object&#39;)
+temporal tstzrange
+-- point-in-time events: lower = upper, inclusive &#39;[same,same]&#39;
+-- time periods:         lower &lt; upper, &#39;[start,end)&#39;</code></pre>
+<p><code>temporal</code> being a <strong>range</strong> rather than a
+timestamp gives validity time first-class treatment, with a check
+constraint enforcing the convention so a caller cannot store a
+point-in-time event as a half-open interval and quietly break range
+queries. Indexes match: GiST on <code>temporal</code> and
+<code>tree</code>, GIN on <code>meta</code>, BM25 on
+<code>content</code>, HNSW on <code>embedding</code>.</p>
+<p><code>embedding_version int4</code> deserves note on its own. This
+atlas lists behaviour under embedding-model change as a dimension it
+does not cover systematically, because almost nothing here stamps the
+model that produced a vector. Memory Engine does, which makes a
+re-embedding campaign a query rather than an archaeology exercise.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table per space: <code>content</code>, an optional filename-like
+<code>name</code> unique within <code>(tree, name)</code>,
+<code>meta</code> jsonb, <code>tree</code> ltree, <code>temporal</code>
+tstzrange, <code>embedding</code> halfvec(1536) with a version, and
+timestamps. Addressed by immutable id or by <code>folder/name</code>
+path; <code>deleteTree</code> removes a subtree.</p>
+<p>The stated principle is that "complexity comes from conventions in
+<code>meta</code> and <code>tree</code>, not schema proliferation".</p>
+<p>What is absent, and it is most of what this atlas cares about:</p>
+<ul>
+<li><strong>No trust or verification state.</strong></li>
+<li><strong>No supersession chain</strong> — <code>replace</code>
+overwrites in place.</li>
+<li><strong>No tombstone</strong>, so a deleted memory returns on the
+next import that produces it, subject only to the
+<code>(tree, name)</code> idempotency slot.</li>
+<li><strong>No provenance</strong> beyond <code>meta</code> conventions
+and importer stamps.</li>
+<li><strong>No contradiction handling.</strong></li>
+</ul>
+<p>Correction here means editing or deleting a row, with authorization
+checked. For a system whose thesis is that Postgres should do the work,
+that is coherent — but it means Memory Engine answers "who may read
+this" comprehensively and "is this still true" not at all.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid BM25 plus semantic similarity fused by Reciprocal Rank Fusion,
+computed in SQL functions rather than in application code, with ltree
+path filters, JSONB containment filters on <code>meta</code>, and
+temporal range predicates.</p>
+<p><code>queries/</code> holds seventeen numbered psql files mirroring
+the engine's generated SQL "as closely as possible, including
+transaction setup, local timeouts, <code>search_path</code>" — every
+combination of fulltext, semantic, meta and ltree, plus
+<code>12-hybrid-candidates</code>, <code>14-count-visible</code>, and
+two diagnostics: <code>15-diagnose-semantic-visibility</code> and
+<code>17-diagnose-auth-owner</code>.</p>
+<p>Committing diagnostic queries for "why can this principal not see
+what I expected" is the sort of thing that only exists after an
+incident, and it is the operational counterpart to the atlas's complaint
+that nobody can explain their retrieval.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>JSON-RPC <code>memory.create</code> / <code>batchCreate</code> with a
+required tree, plus importers for git history, sessions, and memory
+packs. A worker pool handles embedding generation. Harness adapters
+inject an environment contract so a <code>me</code> call from inside
+Claude, opencode, Codex or Gemini resolves to the configured agent
+identity rather than the human's.</p>
+<p>That last part matters for the access model: without it, an agent's
+writes would land under the human's principal and the whole clamp would
+be decorative.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Two JSON-RPC endpoints with deliberately different credentials — the
+memory data plane accepts any bearer plus an <code>X-Me-Space</code>
+header; the user plane bars agent keys entirely, because "agents can't
+manage the account", and key creation is session-only so "keys can't
+mint keys". MCP, a CLI, a web UI, and per-harness adapters complete the
+surface.</p>
+<p>The credential-safety gate is worth noting: a
+<code>.me/config.yaml</code> in a repository may pin a server only if it
+is on a trusted list, "so an untrusted repo's <code>.me</code> can't
+redirect a global api key… to an attacker". A project-local config file
+that can redirect credentials is a supply-chain hazard that several
+config-file-driven systems in this atlas simply have.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Agents are principals</strong> with their own credentials
+and grants.</li>
+<li><strong><code>least(agent, owner)</code> clamping</strong>, making
+delegation safe by construction.</li>
+<li><strong>Authorization inside the ranking query</strong>, not as a
+post-filter.</li>
+<li><strong>A documented negative result on RLS</strong>, with a
+benchmark retained.</li>
+<li><strong>Explicit write destination</strong>, enforced at the
+API.</li>
+<li><strong>Least privilege for the space creator</strong>, with
+explicit escalation available.</li>
+<li><strong>Structural and data authority kept on separate
+axes.</strong></li>
+<li><strong><code>temporal</code> as a constrained range</strong>, with
+conventions enforced by the database.</li>
+<li><strong><code>embedding_version</code></strong>, making a model
+migration tractable.</li>
+<li><strong>Idempotent writes with per-row, input-ordered
+outcomes.</strong></li>
+<li><strong>Committed SQL benchmarks and access
+diagnostics.</strong></li>
+<li><strong>A trusted-server gate</strong> on project-local config.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state, correction semantics, or tombstone.</strong>
+Memory is a governed store, not a belief model.</li>
+<li><strong><code>replace</code> overwrites in place</strong>, so a
+corrected memory leaves no history.</li>
+<li><strong>Access is evaluated per query from a materialized
+jsonb</strong>, so a grant change mid-request is not observable —
+acceptable, but the staleness window is not documented.</li>
+<li><strong>One database, one pool</strong>, with sharding deferred; the
+per-slug schema keeps a future split cheap but the current ceiling is a
+single Postgres.</li>
+<li><strong>Api-key secrets are sha256</strong>, "not argon2" — stated
+plainly in the design notes, which is better than hiding it, but it is a
+weaker choice than the password path.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Integration tests against a real Postgres, migration tests, a CLI e2e
+suite, and the <code>queries/</code> benchmark set. Nothing was run for
+this review.</p>
+<p>There is no retrieval-<em>quality</em> benchmark — no labelled
+corpus, no recall@k, no LoCoMo or LongMemEval harness. The measurement
+culture here is aimed at latency, query plans and access correctness
+rather than at whether the right memory comes back, which is the mirror
+image of most systems in this atlas and leaves the same kind of hole in
+the other wall.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the agent a principal.</strong> If an agent has memory,
+"which memories may this agent read" should be answerable from the
+schema rather than from the deployment.</li>
+<li><strong>Clamp delegated grants to the delegator</strong> with
+<code>least()</code> at every path. It turns self-service delegation
+from a privilege-escalation risk into a no-op-when-wrong, and removes
+the need for an approval workflow.</li>
+<li><strong>Keep the impersonation parity invariant</strong>: acting as
+an agent grants exactly what that agent could do, and the human identity
+is recorded for observability without ever gating authorization.</li>
+<li><strong>Evaluate authorization inside the ranking query</strong>, so
+<code>LIMIT</code> means the same thing for every caller.</li>
+<li><strong>Require the write destination</strong>, and let the default
+exist only where a human already chose the source.</li>
+<li><strong>Do not grant the creator the root.</strong> Make the
+escalation an explicit, auditable action instead of a provisioning side
+effect.</li>
+<li><strong>Constrain conventions in the schema.</strong> A check
+constraint on range bounds costs nothing and prevents a class of silent
+query breakage.</li>
+<li><strong>Stamp <code>embedding_version</code></strong> on every
+vector.</li>
+<li><strong>Report per-row write outcomes in input order</strong>, so a
+skip is visible.</li>
+<li><strong>Commit the diagnostic queries</strong> for "why can this
+principal not see this", not only the happy-path ones.</li>
+<li><strong>Write down the negative results</strong>, with the benchmark
+that produced them.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A governed store mistaken for a memory model.</strong>
+Excellent authorization does not make extracted facts true, and nothing
+here tracks whether they are.</li>
+<li><strong>In-place <code>replace</code></strong> as the only
+correction.</li>
+<li><strong>Retrieval quality unmeasured</strong>, in a system that
+measures almost everything else.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow:</p>
+<ul>
+<li>The principal model and the agent clamp, which are transferable to
+any system where agents act on a user's behalf.</li>
+<li>Authorization inside the ranking query.</li>
+<li>The required write destination and the creator-privilege
+default.</li>
+<li><code>embedding_version</code> and the constrained
+<code>temporal</code> range.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The assumption that access control is the hard part of memory. It is
+the part this repository solved.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How stale can a materialized <code>_tree_access</code> be relative
+to a concurrent grant change?</li>
+<li>Does anything test that an over-granted agent actually clamps, or is
+the invariant only argued in documentation?</li>
+<li>What is retrieval quality? No labelled evaluation was found.</li>
+<li>Does <code>deleteTree</code> reach embeddings and any derived
+artifacts, or only rows?</li>
+<li>With <code>replace</code> overwriting in place, what recovers a
+memory a bad import clobbered?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Access model:
+<code>packages/database/core/migrate/incremental/005_tree_access.sql</code>,
+<code>core.build_tree_access</code>,
+<code>agent_tree_access</code>.</li>
+<li>Memory schema:
+<code>packages/database/space/migrate/incremental/001_memory.sql</code>
+(uuidv7 check, <code>temporal</code> bounds convention,
+BM25/HNSW/GiST/GIN indexes, <code>embedding_version</code>).</li>
+<li>Design notes: <code>CLAUDE.md</code> (principal model, access
+decisions, RLS rationale, conflict semantics),
+<code>AUTH_DESIGN.md</code>, <code>HARNESS_DESIGN.md</code>.</li>
+<li>Benchmarks and diagnostics: <code>queries/01</code>–<code>17</code>,
+<code>queries/tuned-*.sql</code>, <code>queries/README.md</code>.</li>
+<li>Search: <code>packages/engine/ops/memory.ts</code> and the space SQL
+functions.</li>
+<li>Harness contract: <code>packages/cli/harness-contract.ts</code>,
+<code>packages/cli/failsafe.ts</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-07-28</strong> — <a
+href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927"><code>54e4d7d201b5c7ba3aed618ea343d9f4d3f40927</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust core with six SQL dialects
+and real fact-to-conversation provenance, whose content-addressable
+dedupe key silently collapses every non-Latin fact into one row.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memori — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust core with six SQL
+dialects and real fact-to-conversation provenance, whose
+content-addressable dedupe key silently collapses every non-Latin fact
+into one row.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memori — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust core with six SQL
+dialects and real fact-to-conversation provenance, whose
+content-addressable dedupe key silently collapses every non-Latin fact
+into one row.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memori — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memori",
+      "description": "A Rust core with six SQL dialects and real fact-to-conversation provenance, whose content-addressable dedupe key silently collapses every non-Latin fact into one row.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Portable store, hosted judgement</p>
+          <h1>Memori</h1>
+          <p class="document-deck">A Rust core with six SQL dialects and
+real fact-to-conversation provenance, whose content-addressable dedupe
+key silently collapses every non-Latin fact into one row.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MemoriLabs/Memori">
+              <span>Source</span>
+              <strong>MemoriLabs/Memori</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d" title="538b61f245295aa1a43df8033879f8293627f74d">
+              <span>Analyzed revision</span>
+              <code>538b61f2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memori is a memory store with unusually good bones and one defect
+that matters more than everything else in this report.</p>
+<p>The bones: a Rust core (<code>core/src/</code>) with Python and
+TypeScript bindings, storage drivers for SQLite, PostgreSQL, MySQL,
+Oracle, OceanBase and MongoDB, a schema that models entities, processes,
+sessions, conversations, messages, facts and a subject–predicate–object
+graph, and — rarest of all — a <code>memori_entity_fact_mention</code>
+join table that records <strong>which conversations mentioned which
+fact</strong>. Very little in this atlas can answer "why do you believe
+that?" with a foreign key. Memori can.</p>
+<p>The defect: facts are deduplicated on a content-addressable key,
+<code>generate_uniq</code>, which normalizes by keeping only ASCII
+alphanumerics before hashing. Any fact containing no ASCII letters or
+digits — every fact written in Chinese, Japanese, Korean, Arabic,
+Hebrew, Greek, Cyrillic, Thai — normalizes to the empty string and
+hashes to <code>e3b0c442...</code>. The unique constraint is
+<code>(entity_id, uniq)</code>, and the write is
+<code>ON CONFLICT ... DO UPDATE SET num_times = num_times + 1</code>,
+which does not touch <code>content</code> or
+<code>content_embedding</code>. So for a non-Latin-script user, the
+first fact ever stored is the only fact ever stored, and every
+subsequent one silently increments its counter. Section 5 works through
+it.</p>
+<p>There is a second structural thing to know before adopting: the
+storage is open and self-hostable, but <strong>the extraction is
+not</strong>. What becomes a fact is decided by
+<code>api.augmentation_async()</code>, a call to Memori Labs' hosted
+service. You own the database and rent the judgement.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entity fact</strong>: a sentence about an
+entity, with a normalized hash for identity, a count of how many times
+it has been seen, and a set of conversations that produced it.</p>
+<pre class="text"><code>memori_entity            the subject of memory — external_id is your user id
+  └─ memori_entity_fact  content, content_embedding, num_times,
+                         date_last_time, uniq  ← UNIQUE(entity_id, uniq)
+       └─ memori_entity_fact_mention (entity_id, fact_id, conversation_id)
+memori_conversation → memori_conversation_message   the retained source
+memori_subject / _predicate / _object / _knowledge_graph
+memori_process / _process_attribute   memory about the *agent*, not the user</code></pre>
+<p>The <code>memori_process</code> tables are the part the tagline is
+about — "memory from what agents do, not just what they say". A process
+is a running agent, and it accumulates its own attributes alongside the
+entity's facts. Few systems here model the agent as a memory subject in
+its own right.</p>
+<p>The lifecycle is two states and no transitions between them:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the turn is stored durably with no model involved and augmentation is best-effort on top, and seeing a fact again increments a counter rather than changing its content</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the turn is stored durably with no model involved and augmentation is best-effort on top, and seeing a fact again increments a counter rather than changing its content
+flowchart TB
+    T[&quot;turn captured&quot;] --&gt; C[(&quot;conversation + messages stored&lt;br/&gt;&lt;i&gt;durable, no model involved&lt;/i&gt;&quot;)]
+    C --&gt; AUG[&quot;augmentation, hosted&quot;]
+    AUG --&gt; F[&quot;fact upserted&quot;]
+    SEEN[&quot;seen again&quot;] --&gt; INC[&quot;num_times += 1&lt;br/&gt;&lt;i&gt;content unchanged&lt;/i&gt;&quot;]
+    INC --&gt; F
+    F --&gt; DEL[&quot;delete_entity_memories()&lt;br/&gt;&lt;b&gt;all or nothing&lt;/b&gt;&quot;]
+
+    style INC fill:#e7efe9,stroke:#3d6b59
+    style DEL fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>Seeing a fact again increments a counter and leaves the content
+alone, so repetition is recorded without rewriting. The only exit is
+entity-wide: there is no way to remove one fact.</p>
+<p>A fact is never superseded, corrected, contradicted, expired or
+rejected. It is created, counted, and eventually deleted along with
+everything else about that entity. The vocabulary for anything in
+between does not exist in the schema.</p>
+<p>Memory is <strong>automatic</strong>. There is no tool the model
+calls to remember or forget, and no surface where a person
+adjudicates.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the required path and the best-effort path side by side — capture cannot fail because of the cloud, and facts exist only if it succeeded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the required path and the best-effort path side by side — capture cannot fail because of the cloud, and facts exist only if it succeeded
+flowchart LR
+    SDK[&quot;Python / TS / Rust SDK&quot;] --&gt; TURN[&quot;capture_turn&quot;]
+    TURN --&gt;|required| DB[(&quot;conversation +&lt;br/&gt;messages&quot;)]
+    TURN --&gt;|best effort| AUG[&quot;Memori Cloud&lt;br/&gt;agent/augmentation&quot;]
+    AUG --&gt; W[&quot;write queue&lt;br/&gt;core/src/runtime/worker.rs&quot;]
+    W --&gt; FACTS[(&quot;entity_fact&lt;br/&gt;+ mention&quot;)]
+    Q[&quot;recall&quot;] --&gt; EMB[&quot;embedding search&quot;]
+    Q --&gt; LEX[&quot;lexical search&quot;]
+    EMB --&gt; FACTS
+    LEX --&gt; FACTS</code></pre></details></figure>
+<ul>
+<li><strong>The Rust core</strong> (<code>core/src/</code>) holds the
+augmentation, embeddings, retrieval, search and storage pipelines, with
+a <code>runtime/worker.rs</code> draining a write queue. Python
+(<code>memori/</code>) and TypeScript (<code>memori-ts/</code>) are
+bindings over it, with parallel pure-Python drivers for the dialects the
+core does not carry.</li>
+<li><strong>Seven backends.</strong>
+<code>core/src/storage/migrations/</code> covers SQLite, PostgreSQL and
+MySQL; <code>memori/storage/migrations/</code> adds Oracle, OceanBase
+and MongoDB. The migrations are hand-written SQL with named constraints,
+which makes the data model unusually easy to audit — this report's
+central finding was read out of them.</li>
+<li><strong>Search</strong> is FAISS plus a lexical path
+(<code>memori/search/_faiss.py</code>, <code>_lexical.py</code>, and
+<code>core/src/search/lexical.rs</code>).</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Better than most for the local half. <code>pip install memori</code>,
+point it at a SQLite file, and the schema builds itself through a
+versioned migration table (<code>memori_schema_version</code>). Nothing
+else has to be running.</p>
+<p>But an API key is required to store anything <em>meaningful</em>,
+because the augmentation that turns a turn into facts is a network call
+to <code>https://&lt;subdomain&gt;.memorilabs.ai</code>, metered with a
+<code>QuotaExceededError</code>. Without it you get conversations and
+messages — a transcript log — and no facts. That is the honest way to
+state the offline story, and <code>MEMORI_API_URL_BASE</code> lets you
+point at a different host without providing anything to run there.</p>
+<p>The store is SQL and hand-repairable, which matters more here than
+usual: it is the only way to fix the collision in section 5 once it has
+happened.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — <code>memori/agent.py:94</code>,
+<code>capture_turn()</code>. It posts the turn to
+<code>agent/conversation/turn</code> and then, in a
+<code>try/except</code> that swallows everything, posts to
+<code>agent/augmentation</code>. The docstring states the intent
+plainly: "The conversation turn write is required to succeed. The
+collector-side augmentation request is best-effort so agent integrations
+do not fail after the durable turn has already been recorded." That is
+<a href="../../patterns/recoverable-background-work/">recoverable
+background work</a> done right, and it is the best thing in the codebase
+after the mention table.</p>
+<p><strong>Augmentation</strong> —
+<code>memori/memory/augmentation/augmentations/memori/_augmentation.py:125</code>,
+<code>AdvancedAugmentation.process()</code>. It summarizes the
+conversation, selects messages, builds a payload, and calls
+<code>api.augmentation_async(payload)</code>. The returned object
+becomes <code>Memories</code>, and <code>_schedule_entity_writes</code>,
+<code>_schedule_process_writes</code> and
+<code>_schedule_conversation_writes</code> queue the rows.
+<code>_registry.py</code> registers exactly one augmentation; there is
+no local alternative.</p>
+<p><strong>Fact write</strong> —
+<code>memori/storage/drivers/*/\_driver.py</code>, around line 245 in
+the PostgreSQL driver and line 245 in SQLite.
+<code>uniq = generate_uniq([fact])</code>, then the upsert quoted in
+section 5.</p>
+<p><strong>Key derivation</strong> — <code>memori/_utils.py:46</code>
+and <code>core/src/storage/drivers/mod.rs:37</code>. Two
+implementations, with a comment on the Rust side stating they must
+agree: "Matches the Python SDK: join all terms, strip non-alphanumeric
+characters, lowercase, then SHA-256."</p>
+<p><strong>Retrieval</strong> — <code>memori/memory/recall.py</code>,
+<code>memori/search/_core.py</code>, <code>_faiss.py</code>,
+<code>_lexical.py</code>; <code>core/src/retrieval/pipeline.rs</code> on
+the Rust side. The frequency index
+<code>idx_memori_entity_fact_entity_id_freq (entity_id, num_times DESC, date_last_time DESC)</code>
+is what ranks by repetition.</p>
+<p><strong>Deletion</strong> — <code>memori/memory/recall.py:193</code>,
+<code>delete_entity_memories()</code>, and
+<code>delete_by_entity(entity_id)</code> in each driver.</p>
+<p><strong>Schema</strong> —
+<code>memori/storage/migrations/_sqlite.py</code> is the most readable
+copy; <code>core/src/storage/migrations/postgresql.rs</code> is the Rust
+twin.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Start with what is good, because it is genuinely good.</p>
+<p><code>memori_entity_fact_mention</code> is a three-column join —
+<code>(entity_id, fact_id, conversation_id)</code>, unique on all three
+— that survives because <code>memori_conversation_message</code> retains
+the source text. A fact in this system can name the conversations it
+came from, and those conversations still exist. That is <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+with an actual foreign key rather than a hopeful <code>source</code>
+string, and only a handful of systems in this atlas manage it.</p>
+<p>Scoping is likewise structural. Every memory table hangs off
+<code>entity_id</code> or <code>process_id</code> with
+<code>ON DELETE CASCADE</code>, and every read carries
+<code>WHERE entity_id = ?</code>. <code>memori_entity.external_id</code>
+is your application's user identifier, uniquely constrained. Deleting an
+entity really does remove its memory.</p>
+<p>Now the defect.</p>
+<pre class="sql"><code>CREATE TABLE memori_entity_fact(
+    ..., content TEXT NOT NULL, content_embedding BLOB NOT NULL,
+    num_times INTEGER NOT NULL, uniq TEXT NOT NULL,
+    CONSTRAINT uk_memori_entity_fact_entity_id_uniq UNIQUE (entity_id, uniq)
+)</code></pre>
+<pre class="python"><code>def generate_uniq(terms: list):
+    sha256 = hashlib.sha256()
+    sha256.update(re.sub(r&quot;[^a-z0-9]&quot;, &quot;&quot;, &quot;&quot;.join(terms).lower()).encode(&quot;utf-8&quot;))
+    return sha256.hexdigest()</code></pre>
+<p>The regex keeps <code>a-z0-9</code> only. Non-ASCII characters are
+not folded, transliterated or preserved — they are deleted.
+Reimplementing that function from the committed source and running it
+(Memori itself was not run) gives:</p>
+<table>
+<thead>
+<tr>
+<th>Fact</th>
+<th><code>uniq</code> prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>User lives in Berlin</code></td>
+<td><code>0db907e58ae8137b</code></td>
+</tr>
+<tr>
+<td><code>用户住在柏林</code></td>
+<td><code>e3b0c44298fc1c14</code></td>
+</tr>
+<tr>
+<td><code>ユーザーは東京に住んでいる</code></td>
+<td><code>e3b0c44298fc1c14</code></td>
+</tr>
+<tr>
+<td><code>المستخدم يعيش في القاهرة</code></td>
+<td><code>e3b0c44298fc1c14</code></td>
+</tr>
+<tr>
+<td><code>!!!</code></td>
+<td><code>e3b0c44298fc1c14</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>e3b0c442...</code> is the SHA-256 of the empty string. Every
+fact with no ASCII alphanumerics is the same key. Combined with the
+write:</p>
+<pre class="sql"><code>ON CONFLICT (entity_id, uniq) DO UPDATE SET
+    num_times = memori_entity_fact.num_times + 1,
+    date_last_time = CURRENT_TIMESTAMP</code></pre>
+<p>— which updates neither <code>content</code> nor
+<code>content_embedding</code> — the consequence is exact. For an entity
+whose facts are written in a non-Latin script, the store holds
+<strong>one fact</strong>: whichever arrived first. Every later fact
+increments its counter, refreshes its timestamp, and is otherwise
+discarded. Because <code>num_times DESC</code> leads the ranking index,
+that single row also climbs to the top of recall. And
+<code>memori_entity_fact_mention</code> dutifully records every
+conversation as evidence <em>for that one fact</em>, so the provenance
+mechanism reports confidently on a claim most of those conversations
+never made.</p>
+<p>The same normalization has a smaller inverse problem in Latin
+scripts: <code>café</code> becomes <code>userlovescaf</code> and
+<code>cafe</code> becomes <code>userlovescafe</code>, so an
+accent-folding key fails to fold accents. Both errors have one cause —
+treating "strip punctuation" and "strip everything non-ASCII" as the
+same operation.</p>
+<p>This belongs in this atlas rather than only in an issue tracker,
+because <a href="../../patterns/rejected-value-tombstone/">the tombstone
+pattern</a> argues that <strong>normalization is where the work
+is</strong> in any content-addressable memory key, on the evidence of a
+red team defeating Verel's <code>strip().lower()</code> with unicode
+look-alikes. Memori is the same seam reached from the opposite
+direction: a carefully engineered content-addressable key, implemented
+twice for cross-language parity, tested for case and punctuation
+insensitivity — and never tested with a non-ASCII string.
+<code>tests/test_utils.py:37</code> asserts that <code>"Abc. Def"</code>
+and <code>"abc def"</code> agree. Nothing asserts that two different
+Chinese sentences disagree.</p>
+<p>Beyond that: no validity interval, no version, no supersession
+column, no status, no confidence. <code>num_times</code> is a sighting
+count, not a belief.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms, both scoped by <code>entity_id</code>: embedding similarity
+over <code>content_embedding</code> (FAISS on the Python side,
+<code>core/src/search/</code> in Rust) and a lexical path.
+<code>recall()</code> and <code>recall_summary()</code> are the public
+entry points, with a score threshold
+(<code>_score_for_recall_threshold</code>) and a resolved limit.</p>
+<p>The frequency index means repetition is a ranking signal, and here —
+unlike <a href="../memary/">Memary</a>, where the equivalent sort runs
+backwards — the index is declared <code>num_times DESC</code> and used
+that way. That is the correct version of the same idea.</p>
+<p>The failure mode is the one section 5 creates. Frequency ranking
+amplifies the collision rather than revealing it: the collapsed row is
+the most-counted row, so the system's confidence in its single non-Latin
+fact grows with every conversation that should have added a different
+one. A user would experience this as the assistant becoming
+<em>more</em> insistent about one thing it remembers and never learning
+anything else.</p>
+<p>There is no gate on retrieval — no decision that a turn needs no
+memory — and no fusion between the lexical and embedding arms beyond the
+caller choosing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write path is deferred and split, and the split is well judged:
+the durable turn write must succeed, the augmentation may fail. An
+outage costs you facts, not data, and the conversation can be augmented
+later because the messages are still there.</p>
+<p>Extraction itself is a hosted call.
+<code>AdvancedAugmentation.process()</code> posts the conversation to
+Memori Labs and receives facts back; <code>_registry.py</code> registers
+no other augmentation. This is the cleanest instance in the atlas of <a
+href="../../compare/#platform-only-claims-hidden-behind-oss-apis">platform-only
+capability behind an open API</a>: the schema is open, the drivers are
+open, the Rust core is open, and the one judgement that determines what
+the memory <em>contains</em> is a remote service you cannot inspect, run
+offline, or reproduce.</p>
+<p>Correction does not exist, and the shape of its absence is unusual.
+The upsert is deliberately non-destructive — it never rewrites
+<code>content</code>, which is the opposite of <a
+href="../memobase/">Memobase</a>'s in-place rewrite and avoids that
+whole class of loss. But the same choice means a fact can never be
+<em>fixed</em>: if the extractor produces "User lives in Berlin" and the
+user moves, a later "User lives in Lisbon" is a different
+<code>uniq</code>, so both rows exist, both are ranked, and nothing
+marks either as superseded.</p>
+<p>Deletion is entity-scale only. <code>delete_entity_memories()</code>
+is the sole removal surface exposed by the SDK, and the drivers back it
+with <code>delete_by_entity</code>. There is no "forget this one thing"
+— the granularity of forgetting is the person.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous?</strong> The turn write is; the augmentation is
+not.</li>
+<li><strong>Lag?</strong> Until the hosted augmentation returns and the
+Rust worker drains its queue. Unmeasured here.</li>
+<li><strong>Whole-store passes?</strong> None. Cost scales with turns,
+not with corpus size — a better shape than the nightly-rewrite designs
+elsewhere in this atlas.</li>
+<li><strong>Read path?</strong> Bounded by a resolved limit and a score
+threshold. Because extraction is a remote metered call, the recurring
+cost is a vendor bill rather than a token bill, which is a different
+thing to budget for.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three SDKs (Python, TypeScript, Rust) and three shipped plugins —
+<code>integrations/claude-code</code>, <code>integrations/hermes</code>,
+<code>integrations/openclaw</code> — which puts Memori alongside the
+host-runtime plugins this atlas tracks under <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a>.</p>
+<p>The model has no agency over memory at all. <code>capture_turn</code>
+is called by the integration with the user and assistant content; the
+model never decides to remember, and there is no forget tool for it to
+reach. <code>feedback(content)</code> posts free text to the vendor, and
+is telemetry rather than a memory operation.</p>
+<p>Adapting this to another host is realistic —
+<code>capture_turn</code> and <code>recall</code> are the whole contract
+— provided you accept the hosted augmentation dependency.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance is the strength and it is real: fact → mentions →
+conversation → messages, all with foreign keys and cascade semantics.
+Section 5's collision undermines it for non-Latin content, which is
+worth stating as one sentence rather than two separate findings — a
+provenance mechanism attached to a corrupted identity reports
+confidently and wrongly.</p>
+<p>Trust is unrepresented. Nothing distinguishes a fact the user stated
+from one the hosted extractor inferred, and there is no status a
+downstream query could filter on.</p>
+<p>Prompt injection reaches the extractor by construction: the
+conversation is what is sent, and text crafted to look like a stated
+fact will come back as one. The mitigation would be a trust state, and
+there is none.</p>
+<p>Multi-tenancy is sound — cascade-scoped foreign keys, no cross-entity
+read path — though <code>entity_id</code> is the only boundary; there is
+no organization or project layer above it in the schema.</p>
+<p>The largest privacy consideration is not in the schema at all:
+conversations are posted to a third-party API for augmentation, and that
+is the default and only path to having any facts.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>153 files under <code>tests/</code>, which is the largest suite of
+any system reviewed in this round, plus per-driver test modules and a
+TypeScript suite under <code>memori-ts/tests/</code>. The coverage is
+real: drivers, storage calls, search, config, network.</p>
+<p>It is also the exhibit for what a large suite does not buy you.
+<code>tests/test_utils.py:37</code> tests <code>generate_uniq</code> —
+the function this report is mostly about — with exactly two assertions,
+both ASCII, both confirming that punctuation and case are ignored. No
+test in the repository passes a non-ASCII string to it. A search for
+non-ASCII content across <code>tests/</code> returns nothing. The defect
+in section 5 is not hidden in a corner of the codebase; it is in the
+most-tested utility function, and the tests confirm the behaviour the
+author intended rather than probing the behaviour they did not.</p>
+<p><code>benchmarks/</code> holds <code>01_load_indexes.ipynb</code> and
+<code>02_run_benchmark.ipynb</code> with a README, and the project's
+marketing links to a hosted benchmark page. <strong>No scored results
+are committed to this repository</strong>, so the numbers are claims
+rather than artifacts. The survey that prompted this review lists Memori
+with an empty evaluation column.</p>
+<p>The tests I would want:
+<code>generate_uniq("用户住在柏林") != generate_uniq("用户喜欢咖啡")</code>,
+and a round-trip asserting that two distinct non-ASCII facts produce two
+rows.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make provenance a join table.</strong>
+<code>(entity_id, fact_id, conversation_id)</code> with the messages
+retained is the cheapest complete answer to "why do you believe that?",
+and it is a schema decision rather than an architecture.</li>
+<li><strong>Make the durable write required and the smart write
+optional.</strong> Storing the turn unconditionally and extracting
+best-effort means a provider outage costs you derived data you can
+regenerate, not source data you cannot.</li>
+<li><strong>Give the agent its own memory subject.</strong>
+<code>memori_process</code> and <code>memori_process_attribute</code>
+model the running agent as something to remember facts <em>about</em>,
+separately from the user. Most designs only have the user.</li>
+<li><strong>Upsert without rewriting content.</strong> Incrementing a
+counter rather than regenerating the text avoids the loss that in-place
+LLM rewrites cause. Just give yourself a supersession path as well,
+which Memori does not.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not build a normalization function that deletes what it
+does not recognize.</strong> <code>[^a-z0-9]</code> is a whitelist
+wearing a blacklist's clothing: it looks like "strip punctuation" and
+behaves like "strip every writing system except English". If a key is
+content-addressable, normalize with NFKC and case-fold — do not filter
+to an alphabet.</li>
+<li><strong>Do not test a hash function only with inputs that hash to
+something.</strong> Two assertions on ASCII confirmed the intent and
+missed the collision. The test that matters for any dedupe key is that
+two <em>different</em> things get different keys, including in the
+scripts your users actually write in.</li>
+<li><strong>Do not make the granularity of forgetting the
+person.</strong> "Delete everything about this user" is a compliance
+operation. "Forget that one wrong thing" is the operation users actually
+ask for, and it needs its own path.</li>
+<li><strong>Be explicit when the open part is the storage and the closed
+part is the judgement.</strong> A reader evaluating an Apache-2.0 memory
+library will assume they can run it. Say clearly, early, which decisions
+require your service.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Memori suits a team that wants a portable, auditable memory schema
+across an unusual range of databases, is happy to depend on a vendor for
+extraction, and whose users write in Latin scripts. Within that envelope
+it is one of the better-engineered systems in this atlas — the
+migrations are legible, the provenance is real, the capture path
+degrades correctly, and the Rust core with three SDKs is more
+portability than most projects attempt.</p>
+<p>It is the wrong choice today for any product with users writing
+Chinese, Japanese, Korean, Arabic, Hebrew, Russian, Greek or Thai, and
+that is a statement about one function rather than about the design —
+the fix is a few lines, and everything around it is sound. Until it
+lands, verify the behaviour against your own data before storing
+anything you would miss.</p>
+<p>It is also the wrong choice if the point of self-hosting was to keep
+conversations inside your perimeter. The augmentation call is not
+optional and it is not local.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the non-ASCII collision known upstream?</strong> Issue
+and PR history was not read. The finding here is static — the schema,
+the driver upsert, and a reimplementation of <code>generate_uniq</code>
+run against non-Latin input — and Memori itself was not run.</li>
+<li><strong>Does Memori Cloud normalize differently?</strong> The hosted
+augmentation returns fact strings; the <code>uniq</code> is computed
+client-side in both SDKs, so the collision is in the open code
+regardless. Whether the hosted product's own store shares it cannot be
+determined from here.</li>
+<li><strong>Can augmentation be run locally at all?</strong>
+<code>MEMORI_API_URL_BASE</code> redirects the call, but no server
+implementation ships and <code>_registry.py</code> registers one
+augmentation.</li>
+<li><strong>What does the Rust <code>worker.rs</code> queue guarantee
+across a crash?</strong> The write batch types (<code>WriteOp</code>,
+<code>WriteBatch</code>, <code>WriteAck</code>) suggest acknowledgement
+semantics; the durability contract was not traced.</li>
+<li><strong>How do the pure-Python drivers and the Rust core stay in
+step?</strong> Both implement <code>generate_uniq</code> and both carry
+migrations; the mechanism that keeps the two schema sets identical was
+not established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage/schema</strong> —
+<code>memori/storage/migrations/_sqlite.py</code>,
+<code>_postgresql.py</code>, <code>_mysql.py</code>,
+<code>_oracle.py</code>, <code>_oceanbase.py</code>,
+<code>_mongodb.py</code>;
+<code>core/src/storage/migrations/{sqlite,postgresql,mysql}.rs</code>;
+<code>core/src/storage/models.rs</code></p>
+<p><strong>Key derivation</strong> — <code>memori/_utils.py</code>
+(<code>generate_uniq</code>),
+<code>core/src/storage/drivers/mod.rs</code>
+(<code>generate_uniq</code>)</p>
+<p><strong>Write path</strong> — <code>memori/agent.py</code>
+(<code>capture_turn</code>),
+<code>memori/memory/augmentation/augmentations/memori/_augmentation.py</code>,
+<code>memori/memory/_writer.py</code>,
+<code>memori/storage/drivers/*/_driver.py</code>,
+<code>core/src/runtime/worker.rs</code></p>
+<p><strong>Retrieval path</strong> —
+<code>memori/memory/recall.py</code>,
+<code>memori/search/_core.py</code>, <code>_faiss.py</code>,
+<code>_lexical.py</code>, <code>core/src/retrieval/pipeline.rs</code>,
+<code>core/src/search/lexical.rs</code></p>
+<p><strong>Integrations</strong> —
+<code>integrations/claude-code/</code>,
+<code>integrations/hermes/</code>, <code>integrations/openclaw/</code>,
+<code>memori-ts/</code></p>
+<p><strong>Tests/benchmarks</strong> — <code>tests/test_utils.py</code>,
+<code>tests/storage/drivers/</code>, <code>memori-ts/tests/</code>,
+<code>benchmarks/</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-07-29</strong> — <a
+href="https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d"><code>538b61f245295aa1a43df8033879f8293627f74d</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

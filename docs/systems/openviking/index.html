@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-evolving context database
+that unifies memory, resources, and skills under a filesystem paradigm
+with three-granularity progressive disclosure and tenant-aware
+hierarchical retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenViking — Agent Memory Atlas">
+    <meta property="og:description" content="A self-evolving context
+database that unifies memory, resources, and skills under a filesystem
+paradigm with three-granularity progressive disclosure and tenant-aware
+hierarchical retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenViking — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-evolving context
+database that unifies memory, resources, and skills under a filesystem
+paradigm with three-granularity progressive disclosure and tenant-aware
+hierarchical retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenViking — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenViking",
+      "description": "A self-evolving context database that unifies memory, resources, and skills under a filesystem paradigm with three-granularity progressive disclosure and tenant-aware hierarchical retrieval.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Filesystem context database</p>
+          <h1>OpenViking</h1>
+          <p class="document-deck">A self-evolving context database that
+unifies memory, resources, and skills under a filesystem paradigm with
+three-granularity progressive disclosure and tenant-aware hierarchical
+retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/volcengine/OpenViking">
+              <span>Source</span>
+              <strong>volcengine/OpenViking</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef" title="c67222c3d46de4874eed65af8918fc55513812ef">
+              <span>Analyzed revision</span>
+              <code>c67222c3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenViking is Volcengine's (ByteDance's) open-source "context
+database for AI agents", licensed AGPL-3.0. It is one of the largest
+systems in this atlas — roughly 1,600 Python modules plus Rust crates
+and a C++ index backend — and it is a platform rather than a library:
+server, SDKs, CLI, web studio, connectors, and a Docker/Caddy deployment
+story.</p>
+<p>Its organizing idea is that an agent's context is <strong>a
+filesystem</strong>. Memory, resources, and skills live in one
+URI-addressed hierarchy of Markdown-ish files with links and backlinks,
+and retrieval walks directories rather than querying a flat index.</p>
+<p>Two design choices distinguish it from everything else here.</p>
+<p><strong>Three-granularity progressive disclosure on a single
+item.</strong> Every memory carries <code>abstract</code> (L0),
+<code>overview</code> (L1), and <code>content</code> (L2) fields. These
+are not separate entity layers — they are three resolutions of the
+<em>same</em> memory, and retrieval can request a specific level. This
+is a genuinely different use of L0/L1/L2 vocabulary than <a
+href="../tencentdb-agent-memory/">TencentDB Agent Memory</a>, where
+L0–L3 are distinct entity types (conversation → record → scene →
+persona). The vocabularies collide; the architectures do not.</p>
+<p><strong>Hotness as a retrieval signal explicitly separate from
+truth.</strong> <code>hotness_score</code> blends access frequency and
+exponential recency decay into a 0–1 score used to boost ranking.
+Crucially it is a reachability signal, not a confidence signal — the
+split <a href="../verel/">Verel</a> argues for and <a
+href="../holographic/">Holographic</a> collapses.</p>
+<p>The system also has real multi-tenancy: a <code>RequestContext</code>
+carries tenant and permission filtering into every retrieval call, and
+memory is isolated per user space with a <code>peers/{peer_id}</code>
+sub-space for memory <em>about</em> other participants — closer to <a
+href="../honcho/">Honcho</a>'s peer modelling than to a single-user note
+store.</p>
+<p>The main reservations are scale-of-surface and evidence. The
+configuration and adapter surface is very large; extraction remains
+LLM-driven with no explicit verified/rejected state; and while the
+repository commits an unusually complete benchmark harness — including
+runners for competing systems — it does <strong>not</strong> commit the
+raw result artifacts behind its headline accuracy numbers, which live in
+an off-repo blog post.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The memory unit is a typed file in a URI-addressed tree:</p>
+<pre class="python"><code>MemoryData(
+    memory_type = ...,        # user-definable type from the registry
+    uri         = ...,        # filesystem-style address
+    fields      = {...},      # dynamic, schema-generated per type
+    abstract    = &quot;...&quot;,      # L0 — smallest
+    overview    = &quot;...&quot;,      # L1 — medium
+    content     = &quot;...&quot;,      # L2 — full
+    name, tags, created_at, updated_at,
+)
+
+MemoryFile(uri, content, links[], backlinks[], memory_type, extra_fields)</code></pre>
+<p>Memory <em>types</em> are themselves data.
+<code>MemoryTypeSchema</code> carries a <code>filename_template</code>
+(with <code>{{variable}}</code> interpolation), an
+<code>overview_template</code> for auto-generating
+<code>.overview.md</code> files, an <code>operation_mode</code> of
+<code>upsert</code> / <code>add_only</code> / <code>update_only</code>,
+a <code>stage</code> of <code>user</code> (long-term user memory) or
+<code>agent</code> (execution-derived memory), and a
+<code>peer_enabled</code> flag controlling whether the type is stored
+separately under peer directories.
+<code>schema_model_generator.py</code> builds Pydantic models from these
+definitions at runtime.</p>
+<p>Scoping is a path convention backed by request-level
+authorization:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;user_space&gt;/...</code></td>
+<td>memory about the user</td>
+</tr>
+<tr>
+<td><code>&lt;user_space&gt;/peers/&lt;peer_id&gt;/...</code></td>
+<td>memory about another participant</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>peer_id</code> <code>__self</code> maps back to
+<code>user_space</code>, so "about me" and "about a peer" are one
+addressing scheme rather than two code paths.</p>
+<p>Retrieval lifecycle:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score
+flowchart TB
+    Q[&quot;TypedQuery + RequestContext&lt;br/&gt;&lt;i&gt;tenant, permissions&lt;/i&gt;&quot;] --&gt; DIR[&quot;resolve start directories&lt;br/&gt;&lt;i&gt;explicit target_dirs, or defaults by context_type&lt;/i&gt;&quot;]
+    DIR --&gt; EMB[&quot;embed the query &lt;b&gt;once&lt;/b&gt;&lt;br/&gt;&lt;i&gt;dense + optional sparse&lt;/i&gt;&quot;]
+    EMB --&gt; WALK[&quot;recursive directory walk&lt;br/&gt;QUICK or THINKING&lt;br/&gt;&lt;i&gt;THINKING adds a rerank&lt;/i&gt;&quot;]
+    WALK --&gt; FIL[&quot;level filter L0 / L1 / L2,&lt;br/&gt;scope_dsl FilterExpr constraints&quot;]
+    FIL --&gt; QUO[&quot;per-type quota recall&quot;]
+    QUO --&gt; BL[&quot;blend semantic score with hotness&lt;br/&gt;&lt;i&gt;frequency × recency&lt;/i&gt;&quot;]
+    BL --&gt; R[&quot;QueryResult&lt;br/&gt;&lt;i&gt;matched_contexts, searched_directories&lt;/i&gt;&quot;]
+
+    style QUO fill:#e7efe9,stroke:#3d6b59
+    style R fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
+<p>Two details worth taking. <strong>Per-type quotas</strong> stop one
+memory kind from filling the budget, which is the same problem <a
+href="../../patterns/source-diverse-context/">source-diverse context</a>
+solves for sources. And the result reports
+<code>searched_directories</code> alongside the matches, so a caller can
+see where recall <em>looked</em> and not only what it found — an
+explainability affordance almost nothing else here offers.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Selected modules under <code>openviking/</code>:</p>
+<ul>
+<li><code>session/memory/</code> (8,649 lines): the memory core —
+<code>core.py</code>, <code>extract_loop.py</code>,
+<code>memory_updater.py</code>,
+<code>streaming_memory_updater.py</code>,
+<code>memory_type_registry.py</code>,
+<code>memory_isolation_handler.py</code>, <code>graph_view.py</code>,
+<code>merge_op/</code>, <code>page_id_map.py</code>, and several context
+providers.</li>
+<li><code>retrieve/</code> (1,607 lines):
+<code>hierarchical_retriever.py</code>,
+<code>type_quota_recall.py</code>, <code>intent_analyzer.py</code>,
+<code>memory_lifecycle.py</code>, <code>retrieval_stats.py</code>.</li>
+<li><code>storage/</code>, <code>core/context.py</code>,
+<code>server/identity.py</code>: collection schemas with a
+<code>level</code> field, context levels, and the
+<code>RequestContext</code> used for tenant and permission
+filtering.</li>
+<li><code>pyagfs/</code>, <code>src/</code> (C++), <code>crates/</code>
+(Rust): the agent-filesystem layer and native index/store backends.</li>
+<li><code>resource/</code>, <code>ingest/</code>, <code>parse/</code>,
+<code>connector/</code>: multimodal ingestion and external sources.</li>
+<li><code>privacy/</code>, <code>crypto/</code>,
+<code>observability/</code>, <code>telemetry/</code>,
+<code>metrics/</code>: operational subsystems, including per-level
+(L0/L1/L2) cache hit/miss collectors.</li>
+<li><code>benchmark/</code>: LoCoMo, LongMemEval, tau2, SkillsBench,
+RAG, cuVS, and vector-DB performance harnesses.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extraction passes through an isolation handler before files are written, and the level tags it assigns are what the retriever filters on</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extraction passes through an isolation handler before files are written, and the level tags it assigns are what the retriever filters on
+flowchart TD
+  Sessions[&quot;Session messages&quot;] --&gt; Extract[&quot;extract_loop /&lt;br/&gt;memory_updater&quot;]
+  Extract --&gt; Isolation[&quot;MemoryIsolationHandler&lt;br/&gt;(user_space, peers)&quot;]
+  Isolation --&gt; Files[&quot;Memory files&lt;br/&gt;(L0/L1/L2 +&lt;br/&gt;links)&quot;]
+  Files --&gt; Index[&quot;Vector + sparse&lt;br/&gt;index, level-tagged&quot;]
+  Files --&gt; Graph[&quot;graph_view links/backlinks&quot;]
+  Query[&quot;TypedQuery +&lt;br/&gt;RequestContext&quot;] --&gt; HR[&quot;HierarchicalRetriever&quot;]
+  Index --&gt; HR
+  HR --&gt; Quota[&quot;type_quota_recall&quot;]
+  Quota --&gt; Hot[&quot;hotness_score blend&quot;]
+  Hot --&gt; Result[&quot;QueryResult&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3
+id="hierarchical-retrieval-retrievehierarchical_retrieverpy">Hierarchical
+retrieval (<code>retrieve/hierarchical_retriever.py</code>)</h3>
+<p><code>retrieve()</code> takes a <code>TypedQuery</code> plus a
+<code>RequestContext</code> "used for tenant and permission filtering" —
+authorization is a parameter of retrieval, not a filter bolted on
+afterwards. It also accepts a <code>scope_dsl</code>
+(<code>FilterExpr</code>) for additional constraints and an explicit
+<code>level</code> filter.</p>
+<p>The query is embedded <strong>once</strong> into dense and optional
+sparse vectors, avoiding duplicate embedding calls across the directory
+walk. Two modes exist: <code>QUICK</code> and <code>THINKING</code>,
+selected automatically by whether a rerank client is configured. Image
+queries force <code>QUICK</code> mode and default to
+<code>level=[2]</code>, since abstracts are not useful for visual
+matching.</p>
+<p>Retrieval starts from explicit <code>target_directories</code> when
+given, otherwise from defaults derived from the context type. This
+directory-scoped recursion is what makes the filesystem paradigm more
+than cosmetic: the tree prunes the search space before ranking.</p>
+<h3 id="progressive-disclosure">Progressive disclosure</h3>
+<p>Because <code>abstract</code>, <code>overview</code>, and
+<code>content</code> are fields on one record and the storage schema
+carries a <code>level</code> discriminator, a caller can retrieve just
+enough of a memory to decide whether to fetch more. Cache metrics are
+collected per level (<code>metrics/collectors/cache.py</code> records
+hit/miss by <code>L0</code>/<code>L1</code>/<code>L2</code>), which
+suggests the tiering is a real hot path rather than a nominal one.</p>
+<p>The atlas's usual concern with layered memory — that generated layers
+drift from their evidence — applies here in a milder form than in
+systems where each layer is a separate artifact:
+<code>overview_template</code> auto-generates <code>.overview.md</code>
+files from the underlying content, and re-generation is a rebuild rather
+than a merge.</p>
+<h3 id="lifecycle-hotness-retrievememory_lifecyclepy">Lifecycle: hotness
+(<code>retrieve/memory_lifecycle.py</code>)</h3>
+<pre class="python"><code>score = sigmoid(log1p(active_count)) * exp(-ln(2) * age_days / half_life_days)
+# DEFAULT_HALF_LIFE_DAYS = 7.0</code></pre>
+<p>The docstring is explicit that this is for "cold/hot memory lifecycle
+management" and is "blended with semantic similarity to boost
+frequently-accessed, recently-updated contexts in search results".
+Nothing here touches correctness — this is the atlas's <a
+href="../../patterns/decay-and-reinforcement/">decay-and-reinforcement</a>
+pattern implemented on the right side of the truth/usefulness line.</p>
+<p>The risk is the one that pattern names: <code>active_count</code>
+increments on retrieval, and higher hotness makes future retrieval more
+likely, so the frequency term is a self-reinforcing popularity loop.
+<code>log1p</code> plus a sigmoid compresses it heavily, which dampens
+but does not eliminate the effect, and a memory that stops being
+retrieved decays toward zero with a 7-day half-life regardless of
+whether it is still true.</p>
+<h3 id="isolation-sessionmemorymemory_isolation_handlerpy">Isolation
+(<code>session/memory/memory_isolation_handler.py</code>)</h3>
+<p><code>peer_user_space(user_space, peer_id)</code> returns
+<code>user_space</code> for the sentinel <code>__self</code> and
+<code>f"{user_space}/peers/{peer_id}"</code> otherwise, so memory
+<em>about</em> a third party is physically separated from memory about
+the user. <code>RoleScope</code> infers participant scope from session
+messages, and <code>safe_peer_id</code> normalizes identifiers before
+they become path fragments.</p>
+<p>Combined with tenant-aware <code>RequestContext</code> filtering in
+the retriever, this is one of the stronger scope stories in the atlas —
+comparable to <a href="../honcho/">Honcho</a>'s workspace/peer/session
+model, expressed as paths.</p>
+<h3 id="type-quota-recall-retrievetype_quota_recallpy">Type-quota recall
+(<code>retrieve/type_quota_recall.py</code>)</h3>
+<p>519 lines enforcing per-memory-type quotas in the result set. This is
+a <a href="../../patterns/source-diverse-context/">source-diverse
+context</a> variant keyed on type rather than source document: it
+prevents one prolific memory type from crowding out every other kind of
+context.</p>
+<h3 id="extraction-and-merging">Extraction and merging</h3>
+<p><code>extract_loop.py</code> and <code>memory_updater.py</code> /
+<code>streaming_memory_updater.py</code> drive LLM extraction into typed
+memory files, with <code>merge_op/</code> handling merge semantics and
+<code>operation_mode</code> (<code>upsert</code> / <code>add_only</code>
+/ <code>update_only</code>) constraining what an extraction pass may do
+to an existing record. <code>page_id_map.py</code> maintains stable
+identity across updates.</p>
+<p>The <code>stage</code> field separating <code>user</code> (long-term
+user memory) from <code>agent</code> (execution-derived memory) is a
+useful distinction few systems make explicitly: it keeps observations
+about the world apart from observations about the agent's own runs.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Storage is pluggable, with a level-tagged collection schema
+(<code>storage/collection_schemas.py</code> comments the
+<code>level</code> field as distinguishing L0/L1/L2) plus native
+Rust/C++ index and store backends under <code>crates/</code> and
+<code>src/</code>.</p>
+<p>Strengths of the model:</p>
+<ul>
+<li><strong>User-definable types.</strong> New memory types are schema
+entries, not code changes; models and filenames are generated from
+them.</li>
+<li><strong>Links and backlinks</strong> on every memory file, with a
+<code>graph_view</code> over them — a wiki-shaped graph rather than an
+extracted entity graph.</li>
+<li><strong>Stable identity</strong> via URI plus
+<code>page_id_map</code>.</li>
+<li><strong>Explicit operation modes</strong> limiting what extraction
+may overwrite.</li>
+<li><strong>Level-tagged indexing</strong>, so granularity is a
+first-class query dimension.</li>
+</ul>
+<p>What is absent:</p>
+<ul>
+<li><strong>No epistemic state.</strong> There is no
+candidate/verified/rejected lifecycle and no rejected-value tombstone.
+Extracted memories become active context directly;
+<code>operation_mode</code> constrains <em>how</em> a record changes,
+not whether the claim was ever confirmed.</li>
+<li><strong>No conflict surface.</strong> Merge operations resolve
+overlapping writes, but there is no operator-facing review queue for
+contradictions of the kind <a href="../rainbox/">RainBox</a> or <a
+href="../engram/">engram</a> expose.</li>
+<li><strong>Provenance is structural, not evidential.</strong> URIs,
+types, and timestamps are recorded; a memory does not carry the source
+message spans that justify it in the way <a
+href="../mempalace/">MemPalace</a> or <a
+href="../graphiti/">Graphiti</a> episodes do.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>This is a mature hybrid stack: dense plus optional sparse vectors,
+directory-scoped recursion, an intent analyzer, per-type quotas,
+optional cross-encoder reranking in <code>THINKING</code> mode, level
+filtering, hotness blending, tenant/permission filtering, and multimodal
+(image) queries against a multimodal embedder.</p>
+<p>Two things are worth calling out for anyone borrowing it:</p>
+<ul>
+<li><strong>Mode selection is implicit.</strong> <code>QUICK</code>
+versus <code>THINKING</code> is chosen by whether a rerank client
+happens to be configured, so retrieval quality changes silently with
+deployment configuration rather than with an explicit request
+parameter.</li>
+<li><strong>Score composition is layered.</strong> Semantic similarity,
+hotness, type quotas, level filters, and rerank interact;
+<code>retrieval_stats.py</code> exists to observe this, but the
+effective ranking is not readable from any single expression the way a
+small weighted sum is.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes arrive from session extraction (<code>extract_loop</code>),
+direct SDK/CLI/API calls, and ingestion of external resources through
+<code>connector/</code>, <code>ingest/</code>, and <code>parse/</code>.
+The isolation handler resolves the write target — user space or peer
+sub-space — before anything is persisted, so scope is decided at write
+time rather than inferred at read time. This is the atlas's <a
+href="../../patterns/explicit-write-destination/">explicit write
+destination</a> discipline, enforced structurally.</p>
+<p><code>streaming_memory_updater.py</code> supports incremental update
+as content arrives rather than only at session end.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>OpenViking is a server-first system: a Python SDK, an async client, a
+CLI (<code>openviking_cli</code>), a web studio, an npm package, and a
+bot bridge. It is one of the official memory providers for <a
+href="../hermes-agent/">Hermes Agent</a> (adapter at
+<code>plugins/memory/openviking/</code> in that repository) and is
+widely used as an OpenClaw memory backend.</p>
+<p>The <code>benchmark/locomo/</code> tree contains runners for
+OpenClaw, Hermes, Claude Code, mem0, Supermemory, and VikingBot, which
+is the clearest signal of where the project expects to sit: underneath
+an existing agent harness, replacing its native memory.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Tenant and permission filtering carried into retrieval rather than
+applied afterwards.</li>
+<li>Physical isolation of peer memory from user memory.</li>
+<li>Dedicated <code>privacy/</code> and <code>crypto/</code>
+modules.</li>
+<li>Observability that goes past logging: per-level cache hit/miss
+collectors, retrieval stats, telemetry spans around embedding.</li>
+<li>Write-target resolution before persistence.</li>
+<li>Native backends with a Python fallback path.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No verification tier</strong>, so LLM-extracted memories
+become durable context without corroboration, and a corrected memory has
+nothing preventing re-extraction of the old value.</li>
+<li><strong>Hotness decay is uniform</strong> at a 7-day half-life for
+every memory kind; a stable user preference and a transient project note
+age identically.</li>
+<li><strong>Popularity reinforcement</strong> through
+<code>active_count</code>.</li>
+<li><strong>Very large configuration surface</strong>, with quality that
+varies by embedder, rerank client, backend, and mode.</li>
+<li><strong>AGPL-3.0</strong>, which is a material constraint for anyone
+embedding it in a closed product — worth stating plainly, since most of
+the atlas is MIT/Apache.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>688 test files, including
+<code>tests/test_memory_lifecycle.py</code>,
+<code>tests/session/memory/</code>,
+<code>tests/integration/test_agent_memory_e2e.py</code>,
+<code>tests/storage/test_memory_semantic_stall.py</code>, and
+<code>tests/storage/test_semantic_queue_memory_dedupe.py</code>. The
+suites were not run for this review.</p>
+<p>The benchmark story is the most interesting part, and it cuts both
+ways.</p>
+<p>In its favour, <code>benchmark/</code> commits genuinely reproducible
+harnesses: LoCoMo with an ingest → QA → LLM-judge → statistics pipeline,
+LongMemEval, tau2-bench, SkillsBench, RAG, and vector-DB performance
+suites. <code>stat_judge_result.py</code> reports <strong>token usage
+alongside accuracy</strong>, which is exactly what this atlas asks
+benchmark harnesses to record and what <a href="../swafra/">Swafra</a>
+failed to do. A <code>locomo_bad_case_questions.csv</code> file tracks
+known failure cases. Runners exist for six systems, so the comparison is
+at least mechanically reproducible by a third party.</p>
+<p>Against it, the headline numbers in the README — LoCoMo accuracy of
+82.08% for OpenClaw with OpenViking versus 24.20% native, 82.86% versus
+33.38% for Hermes, 80.32% versus 57.21% for Claude Code, plus claimed
+34.3–91.0% input-token reductions — are attributed to an
+<strong>off-repo blog post</strong>, and the <code>result/</code>
+directories described in the benchmark README contain no committed raw
+artifacts at this commit. The harness is present; the evidence for the
+specific published numbers is not.</p>
+<p>These are also vendor-run comparisons of "competitor's native memory"
+against "competitor plus our product", evaluated with an LLM judge. That
+framing is not illegitimate, but it is not neutral, and the
+native-memory baselines deserve independent scrutiny before the deltas
+are taken at face value.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Three-granularity records.</strong> Storing
+abstract/overview/content on one item, indexing the level, and letting
+callers choose resolution is a cleaner progressive-disclosure mechanism
+than deriving separate summary entities.</li>
+<li><strong>Hotness separate from truth</strong>, with frequency and
+recency combined into an explicitly reachability-only score.</li>
+<li><strong>Per-type recall quotas</strong> to keep one memory type from
+dominating context.</li>
+<li><strong>Write-target resolution before persistence</strong>,
+including a dedicated peer sub-space.</li>
+<li><strong>Authorization as a retrieval parameter</strong> via
+<code>RequestContext</code>.</li>
+<li><strong>Memory types as data</strong>, with generated schemas and
+filename templates.</li>
+<li><strong>Benchmark harnesses that record token volume</strong>, not
+just accuracy.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Extraction without an epistemic gate</strong> — no
+candidate/verified/rejected state, no tombstones.</li>
+<li><strong>Uniform decay half-life</strong> across memory kinds.</li>
+<li><strong>Retrieval-driven popularity reinforcement.</strong></li>
+<li><strong>Implicit retrieval-mode switching</strong> based on
+deployment configuration.</li>
+<li><strong>Headline benchmark numbers without committed raw
+results</strong>, despite a committed harness.</li>
+<li><strong>Vendor-framed comparative benchmarks</strong> using an LLM
+judge.</li>
+<li><strong>Large surface area</strong>: consistency and quality depend
+on which of many backends and models are configured.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow:</p>
+<ul>
+<li>The abstract/overview/content triple with a level-tagged index.</li>
+<li><code>hotness_score</code> essentially as written, keeping it out of
+any confidence field.</li>
+<li>Type-quota recall.</li>
+<li>The <code>user_space</code> / <code>peers/&lt;peer_id&gt;</code>
+isolation convention.</li>
+<li>The benchmark harness shape — reproducible pipeline plus token
+accounting plus a tracked bad-case file.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The full platform if you need a small embeddable memory layer; this
+is a server product.</li>
+<li>The extraction path as a truth model — add a verification tier
+before extracted memories become durable context.</li>
+<li>A single global decay half-life.</li>
+<li>Anything at all, without first checking whether AGPL-3.0 is
+compatible with your distribution plans.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What prevents a corrected memory from being re-extracted? No
+tombstone mechanism was found.</li>
+<li>Should the decay half-life vary by memory type, given that types are
+already first-class?</li>
+<li>How much of the reported LoCoMo delta is the memory layer versus
+prompt-shape changes in each integration's adapter?</li>
+<li>Are the <code>result/</code> artifacts intended to be committed?
+Their absence is the gap between "reproducible harness" and
+"reproducible result".</li>
+<li>Does hotness reinforcement measurably distort recall over months,
+and is there a counterweight?</li>
+<li>How do <code>merge_op</code> semantics behave when two extraction
+passes disagree — last-writer-wins, or is a conflict surfaced
+anywhere?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory core: <code>openviking/session/memory/</code>
+(<code>core.py</code>, <code>extract_loop.py</code>,
+<code>memory_updater.py</code>,
+<code>streaming_memory_updater.py</code>, <code>merge_op/</code>).</li>
+<li>Types and schema generation:
+<code>openviking/session/memory/memory_type_registry.py</code>,
+<code>schema_model_generator.py</code>, <code>dataclass.py</code>.</li>
+<li>Isolation and scoping:
+<code>openviking/session/memory/memory_isolation_handler.py</code>,
+<code>openviking/core/peer_id.py</code>,
+<code>openviking/server/identity.py</code>.</li>
+<li>Retrieval:
+<code>openviking/retrieve/hierarchical_retriever.py</code>,
+<code>type_quota_recall.py</code>, <code>intent_analyzer.py</code>,
+<code>retrieval_stats.py</code>.</li>
+<li>Lifecycle:
+<code>openviking/retrieve/memory_lifecycle.py</code>.</li>
+<li>Storage and levels:
+<code>openviking/storage/collection_schemas.py</code>,
+<code>openviking/core/context.py</code>.</li>
+<li>Links graph:
+<code>openviking/session/memory/graph_view.py</code>.</li>
+<li>Native backends: <code>src/</code> (C++), <code>crates/</code>
+(Rust), <code>openviking/pyagfs/</code>.</li>
+<li>Benchmarks: <code>benchmark/locomo/</code>,
+<code>benchmark/longmemeval/</code>, <code>benchmark/tau2/</code>,
+<code>benchmark/skillsbench/</code>.</li>
+<li>Tests: <code>tests/session/memory/</code>,
+<code>tests/test_memory_lifecycle.py</code>,
+<code>tests/integration/test_agent_memory_e2e.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-07-27</strong> — <a
+href="https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef"><code>c67222c3d46de4874eed65af8918fc55513812ef</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

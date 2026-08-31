@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first MCP memory layer
+whose write gate blocks any event, fact or failure arriving without a
+source and a section citation — and whose agent-facing search reads
+every space when the model omits one.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NeuraKeep — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first MCP memory
+layer whose write gate blocks any event, fact or failure arriving
+without a source and a section citation — and whose agent-facing search
+reads every space when the model omits one.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NeuraKeep — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first MCP memory
+layer whose write gate blocks any event, fact or failure arriving
+without a source and a section citation — and whose agent-facing search
+reads every space when the model omits one.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NeuraKeep — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NeuraKeep",
+      "description": "A local-first MCP memory layer whose write gate blocks any event, fact or failure arriving without a source and a section citation \u2014 and whose agent-facing search reads every space when the model omits one.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">No citation, no memory</p>
+          <h1>NeuraKeep</h1>
+          <p class="document-deck">A local-first MCP memory layer whose
+write gate blocks any event, fact or failure arriving without a source
+and a section citation — and whose agent-facing search reads every space
+when the model omits one.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/dominiclachance/neurakeep">
+              <span>Source</span>
+              <strong>dominiclachance/neurakeep</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/dominiclachance/neurakeep/commit/1ed0d84c83cede37e81593cb6529d3ce68069c78" title="1ed0d84c83cede37e81593cb6529d3ce68069c78">
+              <span>Analyzed revision</span>
+              <code>1ed0d84c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-12</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NeuraKeep is a local-first memory layer for MCP-speaking agents:
+Apache-2.0, version 0.1.0, 10,626 lines of TypeScript across 56 files,
+over a single SQLite vault with FTS5. It ships a CLI
+(<code>neurakeep</code>, aliased <code>umos</code>), an MCP server over
+stdio and HTTP, and a local web app for reviewing what the agent wants
+to remember. There is a commercial hosted tier; the mechanism this
+report describes is entirely in the repository and makes no call to
+it.</p>
+<p>Its organising claim is provenance, and unusually the claim is
+enforced rather than asserted. <code>governProposalDiff</code> refuses
+any event, fact or failure whose <code>sourceIds</code> or
+<code>sectionIds</code> are empty:</p>
+<pre class="ts"><code>if (lacksCitation(event.sourceIds, event.sectionIds)) {
+  warnings.push(block(&quot;citation&quot;, &quot;event&quot;, event.id, &quot;Event lacks source and section citations.&quot;));
+}</code></pre>
+<p>A blocked item makes the whole report <code>ok: false</code>.
+<strong>A memory that cannot say where it came from does not become a
+memory</strong> — which is the <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+argument implemented as a gate rather than a convention, and rare in
+this corpus at this strength.</p>
+<p>Three more things are worth the reading.</p>
+<p><strong>Nothing durable is applied automatically.</strong>
+<code>self-policy.ts</code> declares
+<code>durableAutoApply: ["None. Events, facts, failures, decisions, and do-not-repeat guidance stay proposal-reviewed…"]</code>,
+and the code agrees: extraction produces a row in <code>proposals</code>
+with a <code>diff_json</code>, and a person applies it. The agent's own
+daily notes go through the same queue —
+<code>queueSelfMemorySummary</code> writes a summary into the inbox and
+calls <code>proposeSourceExtraction</code>, so a system that reads its
+own memory cannot promote it.</p>
+<p><strong>There is a real undo.</strong>
+<code>recordGovernorAudit</code> appends a JSONL entry per mutation
+carrying <code>before</code>, <code>after</code>, <code>targetIds</code>
+and an <code>undoable</code> flag derived from whether a
+<code>before</code> existed; <code>undoGovernorAudit</code> restores it
+and records the undo as its own entry. Rollback is one of two axes <a
+href="../../methodology/atlas-rubric/#known-limits">the rubric records
+as uncovered</a>, and this is a working instance of it.</p>
+<p><strong>A dedicated failures table.</strong> <code>failures</code>
+holds <code>attempted</code>, <code>failed_because</code>,
+<code>do_not_repeat</code> and <code>revisit_condition</code> — a memory
+of what did not work, with the condition under which to reconsider it.
+Most systems here record successes and infer the rest.</p>
+<p>The defect is the one collected on the <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> page, and this repository holds both halves of it. The read path
+filters by <code>space</code>, and the filter is written
+<code>AND (? IS NULL OR sections.space = ?)</code>. The MCP tool the
+agent calls passes <code>optionalString(args.space)</code>, so a model
+that omits the argument — which nothing requires it to supply — searches
+every space at once. The <code>failures</code> query in the same file
+takes <code>WHERE space = ?</code> with no null branch, so the system
+contains both the safe and the unsafe form of its own scope check.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Four durable kinds, and which table a memory lands in is most of what
+it means.</p>
+<ul>
+<li><strong><code>sections</code></strong> are the retrievable
+substrate: a source split into ordered chunks with
+<code>previous_section_id</code> / <code>next_section_id</code>, indexed
+by FTS5 through insert, update and delete triggers.</li>
+<li><strong><code>events</code></strong> are things that happened, with
+<code>importance</code> and <code>confidence</code>.</li>
+<li><strong><code>facts</code></strong> are claims:
+<code>subject</code>, <code>predicate</code>, <code>object</code>,
+<code>confidence</code>, <code>supersedes_json</code>, and — the part
+that matters — <code>valid_from</code> and <code>valid_until</code>
+alongside <code>created_at</code>.</li>
+<li><strong><code>failures</code></strong> are things not to do
+again.</li>
+</ul>
+<p>Every one of those tables, and <code>episodes</code>,
+<code>sources</code>, <code>proposals</code> and <code>eval_cases</code>
+too, carries the same five governance columns: <code>space</code>,
+<code>trust_level</code>, <code>source_origin</code>,
+<code>visibility</code>, <code>sensitivity</code>. Applying one envelope
+uniformly to every row type — including the review queue and the
+evaluation cases — is a discipline most schemas here reserve for the
+memory unit alone.</p>
+<p>A memory becomes durable in exactly one way. An extractor reads a
+source and produces a diff; the governor inspects it; if nothing blocks,
+the diff becomes a <code>proposals</code> row with
+<code>status = 'pending'</code>; a person applies it and
+<code>applied_at</code> is set. There is no path from ingestion to a
+durable event, fact or failure that does not pass through that row.</p>
+<p>Correction is supersession with a validity axis.
+<code>facts.supersedes_json</code> names what a claim replaces,
+<code>valid_from</code>/<code>valid_until</code> say when the claim was
+true, <code>created_at</code> says when the store learned it, and
+<code>review_after</code> schedules a date to look again — a memory that
+asks to be re-examined rather than waiting to be contradicted.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the governor blocks a proposal with no source or section id, and every applied proposal writes a before-and-after audit the undo path reads back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the governor blocks a proposal with no source or section id, and every applied proposal writes a before-and-after audit the undo path reads back
+flowchart TD
+  I[&quot;ingest: file, PDF, session&quot;] --&gt; SC[&quot;safety scan&quot;]
+  SC --&gt;|poisoning pattern| DT[&quot;trust_level forced to untrusted&quot;]
+  SC --&gt; SEC[&quot;sections + FTS5&quot;]
+  SEC --&gt; EX[&quot;extractor proposes&lt;br/&gt;events · facts · failures&quot;]
+  EX --&gt; G{&quot;governor&quot;}
+  G --&gt;|&quot;no source or section id&quot;| B[&quot;BLOCK — not a memory&quot;]
+  G --&gt;|&quot;text says do not remember&quot;| B
+  G --&gt;|&quot;duplicate or conflict&quot;| W[&quot;warn, carried into the review&quot;]
+  G --&gt;|ok| P[&quot;proposals row, status pending&quot;]
+  W --&gt; P
+  P --&gt; R{&quot;a person applies it&quot;}
+  R --&gt;|apply| D[&quot;durable event · fact · failure&quot;]
+  D --&gt; A[&quot;governor audit: before, after, undoable&quot;]
+  A -.-&gt;|undo restores before| D</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single Node process over one SQLite file, plus a browser UI served
+locally.</p>
+<ul>
+<li><strong><code>src/db/</code></strong> — <code>schema.sql</code> (230
+lines, nine tables, WAL, foreign keys on) and a
+<code>better-sqlite3</code> client.</li>
+<li><strong><code>src/ingest/</code></strong> — file and PDF ingestion,
+section splitting, a watcher, and <code>security.ts</code>.</li>
+<li><strong><code>src/memory/</code></strong> —
+<code>extractor.ts</code> and <code>llm-extractor.ts</code>,
+<code>governor.ts</code>, <code>governor-audit.ts</code>,
+<code>proposals.ts</code>, <code>quality.ts</code>,
+<code>records.ts</code>, <code>self-loop.ts</code>,
+<code>self-policy.ts</code>.</li>
+<li><strong><code>src/search/fts.ts</code></strong> — the query path and
+the eight-component rank.</li>
+<li><strong><code>src/mcp/</code></strong> — <code>server.ts</code> (the
+tool surface) and <code>http.ts</code> (2,350 lines, the HTTP transport
+and the app API).</li>
+<li><strong><code>src/app/</code>, <code>src/web/</code></strong> — the
+review UI.</li>
+<li><strong><code>src/eval/harness.ts</code></strong> — an evaluation
+runner over <code>eval_cases</code>.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Modest: Node, one SQLite file, no server to stand up, no model
+required for the deterministic path. The vault is a directory
+(<code>.umos</code> by default) holding the database, raw files and
+<code>logs/</code>. Everything is inspectable with <code>sqlite3</code>
+and a text editor, and the audit is JSONL.</p>
+<p><code>server.json</code> is an MCP manifest declaring an npm package
+and a stdio transport — the screen flags it as an auto-run surface,
+correctly in the sense that an MCP client will start the process, and
+benignly in the sense that it declares a published package rather than
+executing anything at checkout.</p>
+<p><strong>Three commits.</strong> The history was squashed or the
+repository published late; there is little to read in the log, and no
+way to see how any of this arrived.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-write-gate--srcmemorygovernorts">The write gate —
+<code>src/memory/governor.ts</code></h3>
+<p>105 lines, four checks, two severities.</p>
+<p><strong>Blocking:</strong> an item with no <code>sourceIds</code> or
+no <code>sectionIds</code>; and any item whose text matches
+<code>/\b(do not remember|don't remember|forget this|should not be saved)\b/i</code>.
+The second is a content-triggered refusal — a memory that says it should
+not exist is not created.</p>
+<p><strong>Warning:</strong> a <code>facts</code> row duplicating an
+existing <code>subject</code>/<code>predicate</code>/<code>object</code>
+case-insensitively, and one sharing
+<code>subject</code>/<code>predicate</code> with a <em>different</em>
+object. The conflict check is the one most systems here either lack or
+route to a log; because every write already stops at a review queue, a
+warning attached to the proposal reaches a person by construction rather
+than by hope.</p>
+<p>What the gate does not do is remember its refusals. A blocked
+<code>do not remember</code> item leaves no record keyed on the value,
+so the same content arriving again is blocked again by the same regex
+rather than by a tombstone — which is the correct outcome here and not
+the same mechanism.</p>
+<h3 id="review--proposals">Review — <code>proposals</code></h3>
+<p><code>diff_json</code> holds the proposed change, <code>status</code>
+moves from <code>pending</code>, <code>applied_at</code> records when it
+took effect, and the same five governance columns travel with the
+proposal. Review happens in the local web app or through the CLI. The
+atlas's usual question — whether a review surface exists or only a
+viewer — is answered by the schema: durable rows have no other
+origin.</p>
+<h3 id="the-audit-and-the-undo--srcmemorygovernor-auditts">The audit and
+the undo — <code>src/memory/governor-audit.ts</code></h3>
+<pre class="ts"><code>const full: GovernorAuditEntry = {
+  ...entry,
+  id: createId(&quot;gov&quot;),
+  createdAt: new Date().toISOString(),
+  undoable: entry.before.length &gt; 0
+};
+appendFileSync(auditPath(paths), `${JSON.stringify(full)}\n`, &quot;utf8&quot;);</code></pre>
+<p>Append-only JSONL under <code>logs/</code>, one entry per mutation,
+carrying the rows as they were and as they became.
+<code>undoGovernorAudit</code> reads an entry, restores
+<code>before</code>, and appends an <code>undo</code> entry of its own,
+so the reversal is itself audited. The web UI exposes it as a
+button.</p>
+<p>Two limits worth stating. <code>undoable</code> is derived from the
+presence of a <code>before</code>, so a pure insert is not undoable
+through this path — reasonable, since deleting it is a different
+operation with different authority. And the audit lives beside the
+database rather than inside it, so a vault copied without
+<code>logs/</code> arrives with its history removed and nothing
+notices.</p>
+<h3 id="the-self-memory-loop--srcmemoryself-loopts">The self-memory loop
+— <code>src/memory/self-loop.ts</code></h3>
+<p>The agent's own daily workspace notes are read, truncated to 14,000
+characters, written into the inbox with a header naming the policy
+version, ingested into the <code>system</code> space with
+<code>sourceOrigin: "agent"</code>, and proposed. The loop that would
+let a system rewrite its own memory is routed through the same queue as
+an external PDF, and lands in a different space so it can be told apart
+afterwards.</p>
+<p><code>self-policy.ts</code> is the declaration beside it: five
+categories — <code>autoIndexOnly</code>, <code>durableAutoApply</code>,
+<code>queuedOnly</code>, <code>neverSave</code>, <code>closeLoop</code>
+— at version 2. It is a published intent rather than a control: every
+reference to it in the tree either reports it over HTTP or embeds its
+version in a header, and no code branches on its contents. The behaviour
+matches what it says, which makes it documentation that can drift rather
+than documentation that is wrong.</p>
+<h3 id="ingestion-safety--srcingestsecurityts">Ingestion safety —
+<code>src/ingest/security.ts</code></h3>
+<p>Two pattern sets. Poisoning —
+<code>ignore previous instructions</code>,
+<code>system prompt|developer message|highest priority instruction</code>,
+<code>write this to memory|save this as trusted|permanent instruction</code>,
+<code>exfiltrate|send the secret/token/key/password</code>. Secrets —
+PEM private keys, <code>sk-</code>-prefixed keys, <code>AKIA</code> AWS
+ids, and a generic <code>api_key|secret|token|password</code>
+assignment.</p>
+<p>The responses differ, and the difference is the interesting part. A
+secret match drives <code>redactSensitiveContent</code>, which replaces
+the match with <code>[REDACTED:name:Nchars]</code> — preserving the
+length as metadata while removing the value. A poisoning match drives
+<code>downgradeTrustForSafety</code>, which returns
+<code>"untrusted"</code> regardless of what the caller requested.
+Injected content is admitted and demoted rather than refused, which
+keeps the evidence and marks it.</p>
+<h3 id="retrieval--srcsearchftsts">Retrieval —
+<code>src/search/fts.ts</code></h3>
+<p>BM25 over <code>sections_fts</code>, then a re-rank whose components
+are named and returned:</p>
+<pre class="ts"><code>const total = fts + trust + recency + sensitivity + project
+            + failureMemory + decision + neighborContext;</code></pre>
+<p><code>SearchRankBreakdown</code> is handed back with every hit, so a
+caller can see why a section scored what it did rather than receiving a
+number. Two of those components are content-aware in a way worth noting:
+<code>failureMemoryBoost</code> and <code>decisionBoost</code> lift
+sections that look like failures or decisions when the query looks like
+it is asking for one.</p>
+<p>The <code>WHERE</code> clause is where the finding is:</p>
+<pre class="sql"><code>WHERE sections_fts MATCH ?
+  AND (? IS NULL OR sections.space = ?)
+  AND (? = 1 OR sections.sensitivity != &#39;secret&#39;)</code></pre>
+<p>The sensitivity clause is default-deny: <code>secret</code> material
+is excluded unless the caller sets <code>includeSecret</code>. The space
+clause is default-allow: a null space matches every space.
+<code>memory_search</code> in <code>src/mcp/server.ts</code> passes
+<code>space: optionalString(args.space)</code>, and the tool schema
+marks it an optional string, so an agent that does not think to pass one
+reads across <code>personal</code>, <code>system</code> and anything
+else the vault holds. The CLI does better — it resolves an unset
+<code>--space</code> to <code>"personal"</code> — and the failures query
+in the same file does better still, taking <code>WHERE space = ?</code>
+with no escape.</p>
+<p>So the system ships the safe form, the defaulted form and the unsafe
+form of the same check, and the unsafe one is on the surface the model
+drives.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nine tables. <code>episodes</code> and <code>sources</code> are
+deduplicated by a unique index on <code>content_hash</code>, so
+re-ingesting the same file is a no-op rather than a second copy.
+<code>sections</code> carry sibling pointers and a
+<code>token_estimate</code>. <code>facts</code> are the only bi-temporal
+rows — <code>created_at</code> against
+<code>valid_from</code>/<code>valid_until</code> — and also carry
+<code>review_after</code>, a scheduled re-examination date this atlas
+has seen in very few schemas.</p>
+<p><code>eval_cases</code> is the unusual one: evaluation cases live
+<em>in the vault</em>, with <code>query</code>,
+<code>expected_source_ids_json</code>,
+<code>expected_section_ids_json</code> and
+<code>expected_answer_contains_json</code>. Tests are user data rather
+than repository data, which means an operator accumulates a regression
+suite about their own memory as they use it.</p>
+<p>What is absent: no rejected-value tombstone; a blocked write leaves
+no keyed record. No embeddings — retrieval is lexical only, which for a
+single-user local vault is a defensible trade and is not presented as
+anything else.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical. FTS5 with triggers keeping the index consistent on insert,
+update and delete — a detail worth naming because an FTS index
+maintained by application code rather than triggers is a common source
+of silent staleness, and this one cannot drift.</p>
+<p>Ranking is the eight-component sum above, with a returned breakdown.
+<code>neighbors</code> lets a caller pull adjacent sections through the
+sibling pointers, so a hit can be widened to its context without a
+second query.</p>
+<p>The failure mode is the space default. The second is subtler:
+<code>trust</code> is a boost, so an <code>untrusted</code> section —
+the classification a poisoning match produces — is ranked lower and
+still returned. The system can mark content as attacker-influenced and
+cannot decline to retrieve it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest → scan → split → extract → govern → propose → review → apply →
+audit. Extraction has a deterministic path (<code>extractor.ts</code>,
+heuristics over headings and cue words) and an optional model path
+(<code>llm-extractor.ts</code>), and the governor runs the same either
+way.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Nothing blocks the agent's turn.</strong> MCP search is a
+local SQLite query; extraction runs on ingest.</li>
+<li><strong>The lag between capture and durability is a human.</strong>
+A memory is retrievable as a <em>section</em> as soon as it is ingested,
+and becomes a durable fact only when someone applies the proposal — an
+unusual and deliberate split, and the honest answer to "how long until
+my agent knows this" is "until you review it".</li>
+<li><strong>No background pass rewrites the store.</strong> The
+self-memory loop appends a proposal; it does not consolidate.</li>
+<li><strong>The audit grows with mutations</strong>, not with the
+corpus, and nothing prunes it.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with <code>memory_search</code>,
+<code>memory_read</code> and companions, over stdio for local clients
+and HTTP for the app. The model can search and read; it cannot make
+anything durable, because the only durable path is a proposal a person
+applies. That is a coherent and quite strict position: NeuraKeep gives
+an agent a memory it can consult and not one it can write.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A write without a citation is refused</strong>, for events,
+facts and failures alike.</li>
+<li><strong>Nothing durable is applied without a person</strong>,
+including the system's own notes about itself.</li>
+<li><strong>A real undo</strong>, with the reversal itself audited.</li>
+<li><strong>Bi-temporal facts</strong>, plus a <code>review_after</code>
+date that schedules re-examination.</li>
+<li><strong>A failures table with a
+<code>revisit_condition</code></strong>, so "do not do this again"
+carries its own expiry criterion.</li>
+<li><strong>One governance envelope on every table</strong>, including
+proposals and eval cases.</li>
+<li><strong>Default-deny on <code>secret</code> sensitivity</strong> at
+the read path, with a committed test.</li>
+<li><strong>Poisoning downgrades trust rather than dropping
+content</strong>, keeping the evidence.</li>
+<li><strong>Secrets are redacted with their length preserved</strong>
+rather than removed silently.</li>
+<li><strong>FTS maintained by triggers</strong>, so the index cannot
+drift from the table.</li>
+<li><strong>Content-hash dedupe</strong> on episodes and sources.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>The MCP search tool's <code>space</code> is optional and an
+omitted space matches all of them</strong>, while the failures query in
+the same file requires one.</li>
+<li><strong><code>trust_level</code> never withholds.</strong> Three
+discrete levels exist and a poisoning scan assigns
+<code>untrusted</code>; the read path filters on
+<code>sensitivity</code> instead, so attacker-influenced content is
+ranked down and returned.</li>
+<li><strong><code>self-policy.ts</code> is reported, never
+enforced</strong> — no code branches on it.</li>
+<li><strong>The audit lives outside the database</strong>, so a vault
+copied without <code>logs/</code> loses its history silently.</li>
+<li><strong>No tombstone</strong>: a blocked or rejected value leaves no
+keyed record.</li>
+<li><strong>Three commits</strong>, so nothing about how this arrived is
+inspectable.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I ran nothing.</strong> The screen reported both manifests
+changed three days ago — inside the seven-day cooldown — so nothing was
+installed, and <code>better-sqlite3</code> is a native module the suite
+cannot run without. Every finding above is static.</p>
+<p>Five committed test files, and the one that matters for this atlas is
+<code>tests/phases3to7.test.ts</code>, whose case is named <em>"hides
+secret records by default and includes rank breakdowns"</em>:</p>
+<pre class="ts"><code>expect(defaultResults.every((result) =&gt; result.sensitivity !== &quot;secret&quot;)).toBe(true);</code></pre>
+<p>followed by the complement with <code>includeSecret: true</code>.
+That is a <strong>committed negative retrieval assertion on a read
+path</strong> — particular material must not appear in an ordinary
+search — with the positive case asserted beside it so the test cannot
+pass by returning nothing. It is the classification-boundary kind rather
+than the corrected-value kind.</p>
+<p><code>tests/next-phases.test.ts</code> adds
+<code>expect(redacted.redacted).not.toContain(fakeKey)</code> — a
+must-not about a redaction function's output rather than a retrieval
+result, and worth counting as the weaker shape.</p>
+<p>What is missing is a test for the finding in section 4. Nothing
+asserts that a search with no space is confined to one, because the
+behaviour under test is that it is not. The test I would want is three
+lines: write a section in <code>personal</code> and one in
+<code>system</code>, call <code>searchSections</code> with no space, and
+assert the result set does not span both.</p>
+<p>The <code>eval/harness.ts</code> runner over <code>eval_cases</code>
+is a genuine evaluation surface, and no committed corpus or result
+accompanies it — the cases are meant to be the operator's.</p>
+<p><strong>No paper, arXiv reference or citation file exists in this
+repository.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Block the write, not the display, when provenance is
+missing.</strong> Requiring a source <em>and</em> a section id — a
+document and the place in it — is stricter than most provenance in this
+corpus, and it is eleven lines including the helper.</li>
+<li><strong>Make the review queue the only path to durability.</strong>
+If a durable row can only exist by way of an applied proposal, "did a
+person see this" stops being a question about process and becomes a
+property of the schema.</li>
+<li><strong>Route the system's own notes through its own queue.</strong>
+A memory system that reads its own output is the easiest way to build a
+feedback loop; filing it as a proposal in a separate space costs nothing
+and makes the loop visible.</li>
+<li><strong>Record <code>before</code> and <code>after</code>, and
+derive undoability from it.</strong> An audit that can be replayed
+backwards is worth more than one that can only be read, and the flag
+falls out of the data rather than needing a decision.</li>
+<li><strong>Give a "do not repeat" a
+<code>revisit_condition</code>.</strong> A prohibition with no expiry
+criterion becomes stale advice that nobody dares delete.</li>
+<li><strong>Put <code>review_after</code> on a claim.</strong>
+Scheduling re-examination is cheaper than detecting contradiction, and
+it catches the facts that quietly stop being true.</li>
+<li><strong>Return the rank breakdown, not the score.</strong> Eight
+named components handed back with each hit turns "why did I get this"
+into a field.</li>
+<li><strong>Maintain the FTS index with triggers.</strong>
+Application-maintained indexes drift; a trigger cannot forget.</li>
+<li><strong>Downgrade trust on a poisoning match instead of dropping the
+content</strong> — then make sure something reads the downgrade.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An optional scope argument on the tool a model
+drives.</strong> <code>(? IS NULL OR space = ?)</code> means an omitted
+argument reads everything, and a model omits what it is not required to
+supply. This repository contains the correct form —
+<code>WHERE space = ?</code> — twenty lines away.</li>
+<li><strong>Two defaults for the same check on different
+surfaces.</strong> The CLI resolves an unset space to
+<code>personal</code> and the MCP tool leaves it null; whichever is
+right, they should not disagree.</li>
+<li><strong>A trust level that only reweights.</strong> If a scan can
+conclude that content is attacker-influenced, something on the read path
+should be able to act on that conclusion.</li>
+<li><strong>A policy object nothing branches on.</strong> Publishing
+intent is useful; publishing it as code invites a reader to assume it is
+enforced.</li>
+<li><strong>Keeping the audit outside the store it audits.</strong> Copy
+the database, lose the history, notice nothing.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person with a local vault who wants an agent that can
+<em>consult</em> memory and not write it — and who is willing to review.
+The review requirement is the whole design, and it is either exactly
+what you want or immediately disqualifying: an agent cannot record a
+fact about your project without you clicking apply. For a small,
+high-stakes personal store — client work, research notes, decisions —
+that trade is defensible and the provenance gate makes it
+enforceable.</p>
+<p>Do not reach for it if memory must accumulate unattended, if you need
+semantic retrieval over a large corpus (this is BM25 over one SQLite
+file), or if you need multi-tenant isolation — the space column is there
+and the agent-facing default undoes it. And weigh the maturity: version
+0.1.0, three commits, a hosted tier under development, and a self-memory
+policy that names an individual. What is worth reading here is the shape
+of the gate, which is more disciplined than most of what surrounds
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the optional <code>space</code> on <code>memory_search</code> a
+deliberate affordance for cross-space recall, or the omission it
+resembles? The failures query suggests the author knows the stricter
+form.</li>
+<li>What consumes <code>trust_level</code>, given the read path filters
+on <code>sensitivity</code>? A downgrade nothing acts on is a
+label.</li>
+<li>Is <code>self-policy.ts</code> intended to become enforceable, or is
+it a published statement of intent?</li>
+<li>Does the hosted tier apply the same governor, and is that the same
+code?</li>
+<li>Three commits: was the history squashed at publication, and is there
+a longer record of how the citation gate arrived?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and governance columns: <code>src/db/schema.sql</code>,
+<code>src/db/schema.ts</code>, <code>src/db/client.ts</code>.</li>
+<li>The write gate and review: <code>src/memory/governor.ts</code>,
+<code>src/memory/proposals.ts</code>,
+<code>src/memory/records.ts</code>,
+<code>src/memory/quality.ts</code>.</li>
+<li>Audit and undo: <code>src/memory/governor-audit.ts</code>
+(<code>recordGovernorAudit</code>, <code>undoGovernorAudit</code>).</li>
+<li>Self-memory: <code>src/memory/self-loop.ts</code>,
+<code>src/memory/self-policy.ts</code>.</li>
+<li>Extraction: <code>src/memory/extractor.ts</code>,
+<code>src/memory/llm-extractor.ts</code>,
+<code>src/memory/extraction-eval.ts</code>.</li>
+<li>Ingestion and safety: <code>src/ingest/ingest.ts</code>,
+<code>src/ingest/security.ts</code>,
+<code>src/ingest/split.ts</code>.</li>
+<li>Retrieval: <code>src/search/fts.ts</code>
+(<code>searchSections</code>, <code>rankRow</code>).</li>
+<li>Agent surface: <code>src/mcp/server.ts</code>,
+<code>src/mcp/http.ts</code>, <code>server.json</code>.</li>
+<li>Evaluation: <code>src/eval/harness.ts</code>, the
+<code>eval_cases</code> table.</li>
+<li>Tests cited: <code>tests/phases3to7.test.ts</code>,
+<code>tests/next-phases.test.ts</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-12</strong> — <a
+href="https://github.com/dominiclachance/neurakeep/commit/1ed0d84c83cede37e81593cb6529d3ce68069c78"><code>1ed0d84c83cede37e81593cb6529d3ce68069c78</code></a>
+— first reading, on the <code>main</code> default branch, at the third
+commit of a repository whose first commit is dated 4 July 2026. Screened
+before reading: 1 auto-run surface (<code>server.json</code>, an MCP
+manifest declaring a published npm package and a stdio transport — read
+and judged benign), 1 build-time exec (<code>prepublishOnly</code>), 1
+unpinned manifest, and both <code>package.json</code> and
+<code>package-lock.json</code> changed within the seven-day cooldown;
+nothing was installed and nothing was executed. The product has a
+commercial hosted tier, and the local core reviewed here makes no
+network call to it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

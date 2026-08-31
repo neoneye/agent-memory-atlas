@@ -31,7 +31,7 @@ matrix:
 
 CortexGraph is an MCP server providing "human-like memory dynamics": memories
 carry a `strength` that decays from `last_used` on an Ebbinghaus curve, and only
-use reinforces them. Roughly 53,000 lines of Python, with an activation-spreading
+use reinforces them. Roughly 45,000 lines of Python, with an activation-spreading
 retrieval layer, a promotion path that writes durable memories into a Markdown
 vault, and a background tier doing pruning, consolidation and relationship
 discovery.
@@ -322,5 +322,7 @@ tables and their indexes), `jsonl_storage.py`, `models.py:10` (`MemoryStatus`)
 `PERFORMANCE_OPTIMIZATIONS.md`
 
 ## History
+
+**2026-08-31** — [`81a2daa3436f0923650eda9d84579cab54710408`](https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408) — count audit at the same pin. Section 1's size figure was overstated: `wc -l` over every `*.py` in the tree gives 44,889 lines across 158 files, not roughly 53,000. Nothing else in the report depends on it, and no finding or mark changed.
 
 **2026-08-09** — [`81a2daa3436f0923650eda9d84579cab54710408`](https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408) — first reading. Screened before reading: five auto-run surfaces including an `.envrc`, build-time execution in `tests/conftest.py`. The tree was read, never installed, and no test was run.

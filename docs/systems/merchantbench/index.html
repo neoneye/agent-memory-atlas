@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A 365-day merchant simulation
+whose only agent memory is one overwritable Markdown document, kept
+behind a tool call the agent has to remember to make.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MerchantBench — Agent Memory Atlas">
+    <meta property="og:description" content="A 365-day merchant
+simulation whose only agent memory is one overwritable Markdown
+document, kept behind a tool call the agent has to remember to make.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MerchantBench — Agent Memory Atlas">
+    <meta name="twitter:description" content="A 365-day merchant
+simulation whose only agent memory is one overwritable Markdown
+document, kept behind a tool call the agent has to remember to make.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MerchantBench — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MerchantBench",
+      "description": "A 365-day merchant simulation whose only agent memory is one overwritable Markdown document, kept behind a tool call the agent has to remember to make.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory priced in money</p>
+          <h1>MerchantBench</h1>
+          <p class="document-deck">A 365-day merchant simulation whose
+only agent memory is one overwritable Markdown document, kept behind a
+tool call the agent has to remember to make.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/KhanCold/merchantbench">
+              <span>Source</span>
+              <strong>KhanCold/merchantbench</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946" title="f44ce969aeccfd65d1eef6afe50f69868e510946">
+              <span>Analyzed revision</span>
+              <code>f44ce969…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-30</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MerchantBench is not a memory system. It is a 365-day, order-level
+e-commerce simulation from Alibaba Group's 1688 and Zhejiang University,
+built to ask whether an agent can hold a coherent commercial policy
+across a horizon long enough that its own earlier decisions constrain
+it. It is in this atlas because of what it ships alongside the
+simulator: a single agent-facing memory mechanism, deliberately minimal,
+wired into a run whose context window is truncated repeatedly — and an
+outcome metric that prices the consequences of getting memory wrong in
+RMB rather than in recall@k.</p>
+<p>The memory is two tools and two files. <code>write_memory_doc</code>
+replaces one Markdown document; <code>read_memory_doc</code> returns it
+whole. Every accepted write appends the full new text, a version marker,
+the simulation step and a wall-clock stamp to a sibling
+<code>.history.md</code> that nothing ever reads back. That is the
+entire design: no schema, no index, no embedding, no TTL, no trust
+field, no delete.</p>
+<p>Three things make it worth a senior engineer's time.</p>
+<p>First, <strong>the failure mode is measured, not
+hypothesised.</strong> The paper (<a
+href="https://arxiv.org/abs/2607.28956">arXiv:2607.28956</a>, submitted
+31 July 2026, revised 4 August 2026) reports 48 runs of 365 simulated
+days and two named memory failures with dates attached: a Claude Opus
+4.8 run whose shelf contracted from 47 active listings on Day 54 to
+three by Day 322 on a false inference it kept acting on, and a
+Qwen3.7-Max run that misremembered Day 285 as the endpoint on Day 282
+and stopped restocking with 83 days left, correcting only when simulated
+time passed the imagined deadline. Both are beliefs that were wrong and
+stayed wrong; both are legible because the version history is on
+disk.</p>
+<p>Second, <strong>the compaction boundary is where the design is honest
+and where it is thin.</strong> The reference ReAct baseline compacts at
+160,000 estimated tokens down to 30,000. Before truncating it appends
+exactly one user message telling the model that history is about to be
+cut and that it should call <code>write_memory_doc</code> now. The
+truncation then happens whether or not the model complied — nothing
+checks, nothing retries, no <code>tool_choice</code> forces it.
+Afterwards, nothing re-injects the document. The agent's own memory is
+reachable only by a tool call it must initiate from a context that was
+just cut to 30,000 tokens.</p>
+<p>Third, <strong>the human baseline does not play by those
+rules.</strong> The browser playground fetches
+<code>read_memory_doc</code> automatically at every activation as part
+of its <code>AUTO_TOOLS</code> bootstrap and renders the result into a
+persistent, editable panel. The three human participants — who finished
+with 3.7× the net assets of the best LLM configuration — never had to
+remember to look at their memory. It was on the screen.</p>
+<p>Where it is strongest: a deterministic, seeded, well-tested simulator
+(724 cases across 42 files, 25,292 lines of tests against 29,163 lines
+of non-test Python), an idempotency layer with fingerprint conflict
+detection, and a leaderboard that distinguishes a metric reported as
+zero from a metric never reported at all. Where it is weakest, for this
+atlas's purposes: the memory mechanism it ships is never isolated. The
+switch to ablate it is one uncommented line in
+<code>env/scenarios/default.yaml</code>, and no committed scenario uses
+it. The framework arm that scored highest is the arm in which both
+memory tools are switched off.</p>
+<p>Apache-2.0, 11 commits, first dated 31 July 2026, pinned here at <a
+href="https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946"><code>f44ce969aeccfd65d1eef6afe50f69868e510946</code></a>
+(17 August 2026).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one Markdown document. It has no fields, no identity
+beyond the file path, and no lifecycle the environment models. There is
+exactly one state — the current text — and exactly one transition, total
+replacement.</p>
+<p>What the environment does model is the <em>record</em> of those
+transitions. Every accepted write appends the whole new document to a
+history file that no tool exposes and no code path reads. So the system
+holds two things with different epistemics: a document that is whatever
+the model last believed, and a log of everything it believed before,
+visible only to whoever is holding the run directory afterwards. The
+agent cannot recover a superseded belief; the analyst can reconstruct
+the exact turn a wrong one entered.</p>
+<p>Nothing in the system judges the content. There is no candidate
+state, no verification, no confidence, no provenance. When the paper
+describes a Claude Opus 4.8 run maintaining "day stamped operating
+hypotheses labeled as validated or rejected", that labelling is prose
+the model chose to write inside a text blob — under <a
+href="../hermes-agent/">Hermes</a>, whose own memory tool lives in a
+different repository, and in a scenario where MerchantBench's memory
+tools are denied outright. The environment stores no such distinction
+and enforces none.</p>
+<p>The interesting epistemic event is therefore not a write. It is the
+compaction boundary: the moment the conversational record of
+<em>why</em> the agent believes something is deleted, and the only thing
+that survives is whatever prose it managed to save one turn earlier.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — at 160,000 tokens the agent gets one advisory turn to save, the history is cut to 30,000 regardless, and nothing puts the memory document back — while the human playground fetches it automatically at every activation</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: at 160,000 tokens the agent gets one advisory turn to save, the history is cut to 30,000 regardless, and nothing puts the memory document back — while the human playground fetches it automatically at every activation
+flowchart TD
+    Obs[&quot;Activation every 12 sim-hours&lt;br/&gt;observation is world state only&quot;] --&gt; Hist[&quot;ReAct history grows&quot;]
+    Hist --&gt; Chk{&quot;prompt tokens &gt;= 160,000?&quot;}
+    Chk -- no --&gt; Act[&quot;LLM turn, then POST /act&quot;]
+    Act --&gt; Hist
+    Chk -- yes --&gt; Tool{&quot;write_memory_doc available?&quot;}
+    Tool -- &quot;no (Hermes scenario)&quot; --&gt; Cut
+    Tool -- yes --&gt; Warn[&quot;append ONE user message&lt;br/&gt;&#39;call write_memory_doc now&#39;&quot;]
+    Warn --&gt; Turn[&quot;exactly one LLM turn&lt;br/&gt;compliance is not checked&quot;]
+    Turn -- &quot;model writes&quot; --&gt; Doc[(&quot;agent_id.md&lt;br/&gt;replaced whole, 256 KiB cap&quot;)]
+    Turn -- &quot;model does something else&quot; --&gt; Cut
+    Doc --&gt; Hyst[(&quot;agent_id.history.md&lt;br/&gt;append-only, never read back&quot;)]
+    Doc --&gt; Cut[&quot;truncate history to 30,000 tokens&lt;br/&gt;unconditional&quot;]
+    Cut --&gt; Pull{&quot;does the agent call&lt;br/&gt;read_memory_doc?&quot;}
+    Pull -- &quot;agent: only if it decides to&quot; --&gt; Doc
+    Pull -- &quot;human playground: always, via AUTO_TOOLS&quot; --&gt; Panel[&quot;memory panel on screen&lt;br/&gt;every activation&quot;]
+    Pull -- no --&gt; Blind[&quot;operates from 30,000 tokens&lt;br/&gt;with its own notes unread&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Flask server, a SQLite database, and a run directory of files.
+Nothing else has to be running; no API key is needed to store anything,
+and no key is needed at all unless you drive it with an LLM
+baseline.</p>
+<ul>
+<li><strong>Simulator</strong> — <code>env/core/simulator.py</code>
+holds one <code>Environment</code> per run and ticks hourly. The default
+scenario runs <code>horizon_steps: 8760</code> at
+<code>step_hours: 1</code> with <code>master_seed: 42</code>, and the
+file states the contract plainly: same seed plus same scenario yields an
+identical trajectory. <code>activation_period: 12</code> means the agent
+is woken 730 times over the year, with
+<code>max_turns_per_step: 30</code>.</li>
+<li><strong>World state</strong> — <code>env/storage/db.py</code>
+creates twelve tables (<code>runs</code>, <code>agents</code>,
+<code>products</code>, <code>store_listings</code>, <code>orders</code>,
+<code>order_status</code>, <code>cash_log</code>, <code>events</code>,
+<code>metrics</code>, <code>daily_aggregates</code>,
+<code>hourly_dist</code>, <code>supplier_events</code>). <strong>None of
+them is a memory table.</strong> Agent memory never touches SQLite.</li>
+<li><strong>Agent memory</strong> — two files per agent per run, under
+<code>runs/&lt;run_id&gt;/agent/memory/</code>. Both are Markdown, both
+are human-readable, both are repairable with a text editor, and both are
+deleted with the run (<code>env/web/runner.py:1725</code>).</li>
+<li><strong>Tool surface</strong> — <code>env/tools/registry.py</code>
+declares 26 <code>ToolSpec</code>s and
+<code>env/tools/observation.py</code> declares two more. The default
+scenario denies <code>market_brief</code> and
+<code>hot_search_terms</code>, leaving 26 tools reachable. That is
+exactly the inventory the paper's Table 2 lists, and it recomputes: 26
+declared minus the two default-denied plus <code>get_observation</code>
+and <code>list_tools</code>.</li>
+<li><strong>Transport</strong> —
+<code>POST /runs/&lt;rid&gt;/agents/&lt;aid&gt;/act</code> takes
+OpenAI-shaped messages, executes the environment tool calls inside them,
+and returns tool results. <code>env/web/routes_agent.py</code> is the
+whole agent-facing API.</li>
+<li><strong>Consumers</strong> — a Python SDK (<code>agent/sdk/</code>),
+a deterministic rule-based baseline, the ReAct compaction baseline, a
+submission template with a Dockerfile, a Docker eval harness
+(<code>eval/run_eval.py</code>), a batch runner, and a browser
+playground for human participants.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>python3.11 -m venv</code>,
+<code>pip install -r requirements.txt</code>,
+<code>python run.py --port 5050</code>. Docker is needed only for the
+containerized evaluation. Four requirement files pin nothing with
+<code>==</code> — <code>Flask&gt;=3.0</code>,
+<code>numpy&gt;=1.26</code>, <code>openai&gt;=1.40</code>,
+<code>jieba&gt;=0.42.1</code> and the rest float — which for a benchmark
+whose selling point is determinism is worth noting: the trajectory is
+seeded, the dependency set is not.</p>
+<p>The store is fully local and fully offline for the rule-based
+baseline and the whole test suite. Only the LLM baselines need an
+OpenAI-compatible endpoint, and <code>README.md</code> is explicit that
+credentials are read at runtime and must not be embedded in an agent
+image.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture / write.</strong>
+<code>write_memory_doc(env, agent_id, content)</code> at
+<code>env/tools/tools.py:2214-2227</code>. It coerces non-strings,
+rejects anything over <code>_MEMORY_DOC_MAX_BYTES = 256 * 1024</code>
+with an error and no write, creates the directory, truncates and
+rewrites the file, then calls <code>_append_memory_history</code>.
+Synchronous, on the agent's turn, no LLM in the loop.</p>
+<p><strong>Extraction / consolidation.</strong> None exists. There is no
+summarizer, no fact extractor, no dedupe, no merge. Whatever the model
+emits is the memory.</p>
+<p><strong>Retrieval.</strong>
+<code>read_memory_doc(env, agent_id)</code> at <code>:2200-2208</code>
+returns the whole file, or
+<code>{"ok": True, "content": "", "bytes": 0}</code> when it does not
+exist. No query parameter, no ranking, no filter, no index. The absence
+is total and it is the right call for a document this size.</p>
+<p><strong>Context assembly.</strong> The observation the agent receives
+each activation is world state — cash, listings, orders, anomalies —
+assembled in <code>env/tools/observation.py</code>. The memory document
+is <strong>not</strong> in it. The only mention memory gets is one line
+of the system brief at <code>:445-447</code>: <em>"Use any available
+tools and skills, including analysis, automation, and memory tools when
+provided, to improve long-run decisions and maximize net_assets."</em>
+Everything else about memory is the agent's initiative.</p>
+<p><strong>Update / delete / forget.</strong> Overwrite is the only
+mutation. There is no delete tool, no expiry, no supersession marker, no
+conflict handling. Forgetting happens by not writing something down.</p>
+<p><strong>The compaction path</strong>, which is where this repository
+is actually interesting, lives in the baseline rather than the
+environment: <code>agent/baselines/react_160k_compact_30k.py</code>.</p>
+<ul>
+<li><code>_maybe_add_compaction_reminder</code> (<code>:483-523</code>)
+runs at the top of every hop. If the last prompt exceeded
+<code>DEFAULT_COMPACT_TRIGGER_TOKENS = 160000</code> it appends one user
+message — <em>"Call write_memory_doc now if important details should be
+kept"</em> — and sets <code>compaction_pending = True</code>.</li>
+<li>If <code>write_memory_doc</code> is not among the available tools it
+skips the warning and truncates immediately, appending a notice after
+the fact.</li>
+<li><code>_compact_history_if_pending</code> (<code>:530-539</code>)
+trims to <code>DEFAULT_COMPACT_KEEP_TOKENS = 30000</code> at the end of
+that same hop (<code>:671</code>, <code>:718</code>, <code>:749</code>),
+unconditionally. Compliance is never checked.</li>
+<li><code>_act_context</code> (<code>:541</code>) sets
+<code>context["compacted"] = True</code> for exactly the hop that
+carried the reminder, which is what the leaderboard counts.</li>
+</ul>
+<p>So the model gets one turn, and one turn only, and the environment
+learns only that a compaction happened — never whether anything was
+saved.</p>
+<p><strong>Idempotency.</strong>
+<code>env/web/routes_agent.py:1053-1063</code> derives
+<code>f"{agent_id}:{env.t}:{tc_id}"</code> for any mutating tool and
+fingerprints it with the canonicalized arguments;
+<code>Environment.with_idempotency</code>
+(<code>env/core/simulator.py:1457</code>) replays the cached result or
+returns <code>idempotency_conflict</code> with HTTP 409 when the same
+call id arrives with different arguments. Because a replay never
+re-enters the handler, a retried write appends no second history version
+— the history records distinct writes, not network retries.</p>
+<p><strong>Tests.</strong> <code>tests/test_memory_doc_tools.py</code>,
+146 lines, four cases, covered in section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. The unit is a file:</p>
+<pre class="text"><code>runs/&lt;run_id&gt;/agent/memory/&lt;agent_id&gt;.md          # current, replaced whole
+runs/&lt;run_id&gt;/agent/memory/&lt;agent_id&gt;.history.md  # every version, appended</code></pre>
+<p>The history entry is the only structured thing in the memory
+subsystem (<code>env/tools/tools.py:2175-2197</code>):</p>
+<pre class="python"><code>f.write(f&quot;{MEMORY_VERSION_MARKER}{version} --&gt;\n&quot;)
+f.write(f&quot;## Memory version {version}\n&quot;)
+f.write(f&quot;- step: {env.t}\n&quot;)
+f.write(f&quot;- wall_ms: {wall_ms}\n&quot;)
+f.write(f&quot;- bytes: {size}\n\n&quot;)
+f.write(content)</code></pre>
+<p><code>MEMORY_VERSION_MARKER</code> is
+<code>"&lt;!-- merchantbench-memory-version "</code>
+(<code>env/compat.py:25</code>), with
+<code>"&lt;!-- realshop-memory-version "</code> retained as a legacy
+form so a run started under the project's old name still counts
+correctly.</p>
+<p><strong>Scoping</strong> is the run and the agent id, expressed as
+the path. <code>_memory_doc_path</code> sanitizes with
+<code>re.sub(r"[^A-Za-z0-9_.-]+", "_", agent_id)</code> and falls back
+to <code>"agent"</code> if stripping leaves nothing, so a hostile id
+cannot traverse out of the memory directory. There is no user, tenant,
+project or session dimension, and none is needed: a run is the unit of
+everything here.</p>
+<p><strong>Temporal fields</strong> are worth stating precisely, because
+they look like more than they are. Each history entry carries
+<code>step</code> — the simulation hour, from 0 to 8759 — and
+<code>wall_ms</code>, the real-world instant. Two clocks, and both of
+them are record time: one says when in the simulated year the write
+happened, the other when in the operator's afternoon. Neither says
+anything about the period over which the recorded belief was
+<em>true</em>. That is the difference between two timestamps and
+bitemporality, and it is why the mark is withheld.</p>
+<p><strong>Provenance and trust: absent.</strong> No source field, no
+confidence, no status. Nothing separates a fact the agent read from a
+tool result from a conclusion it invented. The paper's two failure cases
+are both invented conclusions, and there is no field in which their
+invented-ness could have been recorded.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Nothing to rank. <code>read_memory_doc</code> is a file read.</p>
+<p>The mechanics that matter here are about <em>whether the document is
+read at all</em>, and there the design has a clear asymmetry with a
+measured population on each side of it.</p>
+<p>For an agent, reading is voluntary and unprompted. The observation
+does not carry the document. The system brief mentions that memory tools
+exist. After a compaction the agent holds 30,000 tokens of recent
+history plus a notice that the rest is gone — and from there it has to
+decide, on its own, to spend a tool call recovering its own notes.</p>
+<p>For a human participant, reading is automatic.
+<code>env/web/templates/_human_playground_script.html:114-121</code>
+puts <code>["read_memory_doc", {}]</code> in the <code>AUTO_TOOLS</code>
+bootstrap alongside the store snapshot and open orders, and
+<code>human_playground.html:124-130</code> renders the result into a
+<code>memory-panel</code> textarea with read and save buttons and a
+dirty/saved status line. The human never issues the read. It has already
+happened.</p>
+<p>Both populations are in the paper's Table 1. The humans finished at
+217.61 thousand RMB in mean final net assets; the best LLM
+configuration, Hermes with Qwen3.7-Max, at 59.46. That is 27.34%, which
+is the abstract's 27.3% recomputed exactly from the table. The gap has
+many causes — the humans also issued 8,311 tool calls and generated
+9,442 orders, more than any agent — and this report does not claim the
+memory panel is the reason. It claims something narrower and checkable:
+the two populations were not given the same read path to their own
+memory, and the difference was never measured.</p>
+<p><strong>Failure modes</strong> are the ones a whole-document read
+implies. There is no over-recall problem and no stale-hit problem,
+because there is no selection. What there is instead: everything the
+document says is in context every time it is read, so a wrong sentence
+written on Day 54 is re-presented, at full weight, on Day 322 — which is
+the shape of the Opus 4.8 failure the paper describes.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are agent-initiated, synchronous, and total. There is no
+background path and no lag: <code>write_memory_doc</code> returns after
+the file is on disk, so a memory is retrievable on the next tool call.
+Nothing re-reads or rewrites the store on a schedule, so there is no
+token bill that scales with corpus size — the only cost of memory here
+is the tokens the agent spends writing and reading it.</p>
+<p>Three properties of the overwrite deserve attention.</p>
+<p><strong>It is all-or-nothing.</strong> There is no append, no patch,
+no section edit. To add one line the agent must reproduce the entire
+document. Every write is therefore also an opportunity to silently drop
+everything it failed to reproduce, and the version history is the only
+place that loss is visible.</p>
+<p><strong>It is capped at 256 KiB, and the cap fails closed.</strong>
+Over-limit content returns
+<code>{"ok": False, "error": "content too large (...)"}</code> and
+writes nothing — neither the document nor a history entry. An agent that
+ignores tool errors keeps operating on a memory that is one revision
+behind what it thinks it wrote.</p>
+<p><strong>The version counter is derived from the agent's own
+text.</strong> <code>_append_memory_history</code> computes the next
+version by counting marker occurrences in the existing history, and it
+appends <code>content</code> unescaped. A document containing the
+literal string <code>&lt;!-- merchantbench-memory-version </code> —
+which an agent writing notes about this very mechanism could plausibly
+produce — inflates the count and skips version numbers. Stored content
+is unaffected and the log stays complete; the numbering is what breaks.
+The fix is to count the headings the writer controls, or to escape the
+marker on the way in.</p>
+<p><strong>Injection.</strong> The agent's context is full of
+third-party text — product titles, supplier profiles, the daily market
+brief — and nothing in <code>env/</code> sanitizes any of it. The only
+functions named for sanitizing operate on experiment-group configuration
+(<code>env/web/experiment_groups.py</code>) and on LLM message shape
+(<code>react_160k_compact_30k.py:150</code>). In the public artifact the
+catalog is synthetic and this is inert. It is not inert for the operator
+running the private variant, where product listings are real
+merchant-written text from a live marketplace, flowing into a document
+that is re-read verbatim into later contexts with no marker
+distinguishing what the agent concluded from what a seller wrote.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration surface is HTTP and deliberately framework-neutral.
+An agent registers, polls an observation, and posts assistant messages
+containing tool calls to <code>/act</code>; the environment executes the
+ones it recognizes and returns results.
+<code>agent/submission_template/</code> ships a Dockerfile for hosted
+evaluation. Adapting another framework means writing a loop, not a
+plugin.</p>
+<p><strong>Agency over memory is total and unassisted.</strong> The
+model decides whether to write, what to write, and whether to read.
+Nothing is injected, nothing is suggested beyond one line of the brief,
+and no hook fires at the session boundary. The single piece of
+scaffolding in the whole design is the compaction reminder, and it is
+advisory.</p>
+<p><strong>The scope key is not addressable by the model</strong>, which
+is the part of this design most worth copying.
+<code>read_memory_doc</code> declares <code>_NO_PARAMS</code>;
+<code>write_memory_doc</code> declares only <code>content</code>.
+<code>dispatch_tool</code> (<code>env/tools/dispatch.py:143-163</code>)
+inspects the handler signature and passes <code>agent_id</code> from the
+request path, and rejects any argument the schema does not name with
+<code>unknown arguments for ...</code>. A model cannot ask for another
+agent's memory because there is no field in which to ask.</p>
+<p>That guarantee is a tool-layer guarantee, not a transport one.
+<code>act</code> checks only that <code>agent_id in env.agents</code>
+before proceeding (<code>env/web/routes_agent.py:901-905</code>); there
+is no token, no signature, no per-agent credential anywhere in the
+agent-facing routes. Any process that can reach the port can act as any
+registered agent and read its memory. For a single-operator benchmark
+harness on <code>127.0.0.1</code> that is a reasonable simplification,
+and it should be stated rather than assumed: the isolation is against a
+confused model, not against a hostile client.</p>
+<p><strong>The framework arms do not share a memory substrate</strong>,
+and this is the finding most likely to matter to a reader of the paper.
+<code>env/scenarios/agents/hermes.yaml</code> denies four tools:</p>
+<pre class="yaml"><code>agent:
+  tool_denylist:
+    - market_brief
+    - hot_search_terms
+    - read_memory_doc
+    - write_memory_doc</code></pre>
+<p>The Hermes arm therefore ran with 24 MerchantBench tools, not the 26
+the paper's experimental setup describes, and the two removed are
+exactly the memory tools — because Hermes brings its own
+<code>memory</code> tool and <code>session_search</code>. That memory
+lives in <a href="../hermes-agent/">its own repository</a> — and the
+paper did not run the upstream: the README points at
+<code>KhanCold/hermes-agent</code> on a
+<code>realshop-integration</code> branch, a MerchantBench-specific
+adapter, so neither the fork nor the upstream is inside this pin. The
+ReAct arm kept the document. So the paper's two frameworks differ in
+code execution, planning, skills <em>and</em> memory model at once, and
+the paper's memory observations — including Opus 4.8's 261 memory calls
+with validated/rejected hypothesis labels — are observations of a
+mechanism that is not in this repository.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance: none.</strong> <strong>Verification:
+none.</strong> <strong>Uncertainty: unrepresentable.</strong> The memory
+layer cannot say "I think" — it can only store a sentence. Both
+documented failures are cases where the model's belief was wrong and the
+store had no way to hold that possibility, and no reader — human or
+agent — could tell a recorded observation from a recorded guess.</p>
+<p><strong>Data loss</strong> has a specific and likely shape. Not
+corruption: whole-document replacement by a model reproducing 200 KiB of
+Markdown from memory. Nothing diffs the incoming document against the
+outgoing one, nothing warns on a large shrink, and the write succeeds
+regardless. The <code>.history.md</code> file makes the loss
+<em>auditable</em> after the fact, which is the honest thing to say
+about it: the design records what happened, and prevents nothing.</p>
+<p><strong>Concurrency.</strong> <code>_RUNTIME_EVENTS_LOCK</code>
+guards the runtime event file, but <code>_append_memory_history</code>
+and the document write hold no lock. Within a run this is safe by
+construction — one agent, one activation at a time,
+<code>max_turns_per_step = 30</code> — and the idempotency layer catches
+duplicate submissions of the same tool call id. Two clients posting
+concurrently as the same agent id would interleave; nothing in the
+design contemplates that, and nothing in the routes prevents it.</p>
+<p><strong>Deletion semantics</strong> are coarse and honest: deleting a
+run removes the run directory and the memory with it
+(<code>env/web/runner.py:1725</code>). There is no per-memory delete and
+no way to redact one sentence from the history file, which matters if a
+run against the private catalog ever wrote personal data into a merchant
+note.</p>
+<p><strong>Backup and replication: none.</strong> The run directory is
+the only copy.</p>
+<p><strong>Two marks withheld, with the reason.</strong>
+<code>trust_state</code> fails because the labelling the paper observed
+— hypotheses marked validated or rejected — is prose inside an opaque
+blob, in a different framework's memory, not a field this system stores
+or reads; nothing here could filter on it. <code>human_review</code>
+fails for a subtler reason worth stating: there <em>is</em> a human
+editing a memory document in a browser panel, but that human is the
+operator playing the game and writing their own notes. No surface in
+this repository shows one party an agent's memory for approval,
+correction or adjudication. The playground is a first-person memory
+editor, not a review queue.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>The suite is large and the memory part of it is small and
+good.</strong> 724 cases across 42 files, 25,292 lines against 29,163
+lines of non-test Python. Fourteen <code>pytest.skip</code> calls, and
+the two that matter are honest about the artifact rather than about the
+environment: <code>tests/test_registry.py:124</code> skips a check
+against an internal design document that "is not in the artifact", and
+<code>tests/test_daily_report_tool.py:111</code> skips the daily-report
+header check when the 365 bundled market reports are absent — which they
+are, permanently, in the public release. The remaining skips gate
+JavaScript helper tests on Node.js. No skip in this repository hides a
+behavioural gap behind a green badge.</p>
+<p><code>tests/test_memory_doc_tools.py</code> has four cases and none
+of them is vacuous:</p>
+<ul>
+<li><code>test_memory_doc_tools_appear_in_schema_and_list_tools</code> —
+both tools reach the agent through <code>/tools/schema</code> and
+through <code>list_tools</code> after scenario filtering.</li>
+<li><code>test_memory_doc_read_write_round_trips_markdown</code> —
+asserts the empty read is
+<code>{"ok": True, "content": "", "bytes": 0}</code>, then exact content
+and byte count after a write.</li>
+<li><code>test_memory_doc_writes_keep_markdown_history_file</code> — two
+writes, then asserts the current document is the second, the history
+contains exactly two version markers, both headings,
+<code>step: 0</code>, both bodies, and
+<code>history.index(first) &lt; history.index(second)</code>. The
+ordering assertion is the one that makes this a test of append-only
+behaviour rather than of file existence.</li>
+<li><code>test_memory_doc_is_isolated_by_agent_id</code> — writes
+distinguishable content under two registered agents and asserts each
+read returns its own, exactly. Both scopes are populated before either
+is read, so the case cannot pass on an empty result, and the equality
+cannot survive a leak. This is the whole basis of the
+<code>negative_eval</code> mark, and it is one case.</li>
+</ul>
+<p><strong>What is not tested.</strong> No case exercises the 256 KiB
+rejection path. No case covers the version-marker inflation described in
+section 7. Nothing asserts that <code>read_memory_doc</code> returns the
+document across a compaction, because compaction lives in the baseline
+and <code>tests/test_react_160k_compact_30k.py</code> tests the trimming
+arithmetic rather than the memory round trip through it. And nothing
+tests the behaviour that the whole design turns on: that an agent which
+never calls <code>read_memory_doc</code> after a compaction is operating
+blind.</p>
+<p><strong>The score does not read memory.</strong>
+<code>eval/scoring.py</code> is 76 lines and computes one headline
+number — the last point of the <code>net_assets</code> series, with a
+documented fallback to summing the live cash dict when the series is
+empty. That is the entire metric. There is no memory-quality term, no
+recall check, no retention check. Memory is scored only through its
+consequences, which is both this benchmark's most interesting property
+and the reason it cannot attribute a result to memory.</p>
+<p><strong>The leaderboard does two things well and one thing on
+trust.</strong> <code>env/web/leaderboard.py:238-243</code> defines a
+<code>Memory</code> tool category over
+<code>{read_memory_doc, write_memory_doc}</code>, so per-run memory tool
+usage is broken out rather than pooled. And
+<code>capability_state</code> / <code>coverage_rank</code>
+(<code>:2093-2098</code>) render each runtime metric as
+<code>unavailable</code>, <code>partial</code> or <code>complete</code>
+rather than folding a metric nobody reported into a zero — the ReAct
+baseline declares <code>"memory_compactions": "reported"</code> and
+<code>"skills_evolutions": "not_applicable"</code>
+(<code>react_160k_compact_30k.py:373-376</code>), so a zero for ReAct
+skill evolution reads as <em>not applicable</em> instead of as
+<em>evolved nothing</em>. That distinction is rarer than it should be
+and worth stealing. The thing taken on trust:
+<code>memory_compactions</code> comes from
+<code>context.compacted</code>, which the <strong>agent</strong> sets.
+The environment counts compactions it is told about.</p>
+<p><strong>Nothing is committed from a run.</strong> No JSON, no CSV, no
+JSONL, no database, no trace, anywhere in the tree. The 48 runs behind
+the paper are not reproducible from committed output; the code that
+would produce them is here, and the results are not.</p>
+<p><strong>Two evidence streams the paper runs on are absent from the
+artifact</strong>, and the README says so directly: the 98,843 real
+product records become a deterministic synthetic catalog of 1,000
+products and 200 suppliers, and the 365 daily market reports are not
+redistributable. That second absence has a consequence the README does
+not draw out: the paper's rule-based baseline selects replacement
+listings "using keywords from the daily market report", so it is not
+reproducible from the public artifact either.</p>
+<p><strong>What does recompute, exactly.</strong> Table 1's human mean
+of 217.61 and the best LLM configuration's 59.46 give 27.34%, matching
+the abstract's 27.3%. And Table 2's 26-tool inventory matches the
+registry minus the default denylist plus the two observation tools. Both
+published numbers survive being checked against this commit, which is
+more than most benchmark papers offer.</p>
+<p><strong>The ablation that is one line away.</strong>
+<code>env/scenarios/default.yaml:195-199</code>:</p>
+<pre class="yaml"><code>  tool_denylist:
+    - market_brief
+    - hot_search_terms
+    # - read_memory_doc
+    # - write_memory_doc</code></pre>
+<p>The apparatus for a memory ablation is complete: the denylist is
+honored at <code>/tools/schema</code>, at <code>/act</code>, and inside
+<code>dispatch_tool</code>; the baseline already handles the tools being
+absent by skipping the reminder and truncating immediately; the score is
+a single number; the simulator is seeded. Two uncommented lines and
+three runs would price this benchmark's own memory mechanism. No
+committed scenario does it. What is available instead is a confound: the
+Hermes arm has the memory doc denied and beats the ReAct arm for seven
+of the eight models (Kimi K2.6 is the exception, 23.96 against 24.99),
+and also brings code execution, planning and skills — so the comparison
+says nothing about memory, and the experiment that would has not been
+run. Meanwhile the deterministic rule-based baseline, which has no
+memory and no model, finishes at 24.48 and beats six of the sixteen LLM
+configurations, which bounds how much of the spread any memory mechanism
+could be explaining.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the scope key unaddressable by the model.</strong> Do
+not put <code>user_id</code> or <code>agent_id</code> in the tool schema
+and validate it; leave it out of the schema entirely and inject it from
+the authenticated context, then reject unknown arguments.
+<code>dispatch_tool</code> does this in a dozen lines and the resulting
+guarantee needs no test to hold — though there is one anyway.</li>
+<li><strong>Append the full superseded text on every overwrite.</strong>
+A whole-document memory is easy to reason about and easy to destroy in
+one bad write. A sibling append-only history costs one file handle,
+needs no schema, and converts "the agent's notes are wrong" into "the
+agent's notes went wrong at version 14, step 1296". Both of the paper's
+failure diagnoses depend on it existing.</li>
+<li><strong>Distinguish a metric reported as zero from a metric never
+reported.</strong> The <code>unavailable</code> / <code>partial</code> /
+<code>complete</code> coverage state beside every self-reported runtime
+metric is the right shape for any dashboard aggregating telemetry it
+does not control, and it costs one declaration per agent.</li>
+<li><strong>Score memory through consequences, at least once.</strong>
+Recall benchmarks measure whether the right thing came back. This one
+measures what happens to the business when the wrong thing did, over a
+horizon long enough for a Day 54 mistake to still be compounding on Day
+322. Both kinds of measurement are worth having, and almost nobody
+builds the second.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A one-turn advisory warning before an unconditional
+truncation.</strong> If the context is going away regardless, the save
+is not optional and should not be modelled as a request. Force the call,
+or perform the save yourself from the history you are about to discard,
+or at minimum record whether the agent complied so a failure is
+attributable afterwards. This design does none of the three, and cannot
+distinguish an agent that chose not to save from one that never
+understood it was asked.</li>
+<li><strong>Truncating the context and then not re-injecting the
+memory.</strong> Compaction is precisely the moment the agent is least
+able to notice it should go looking. Whatever survived should be placed
+back in front of the model, not left behind a tool call the model has to
+think of. It is the read-path twin of the failure <a
+href="../../benchmarks/#a-memory-the-system-can-route-around-is-one-nobody-ever-exercises">a
+memory the system can route around</a> describes on the write side:
+there, a memory nothing forces the model to use; here, a memory nothing
+puts in front of it.</li>
+<li><strong>Deriving a version number by counting a marker in text the
+agent wrote.</strong> Any counter computed over untrusted content is
+controllable by whoever writes the content. Count something you control,
+or escape on the way in.</li>
+<li><strong>Shipping the ablation switch and not pulling it.</strong> If
+a mechanism is configurable off in one line and the harness is seeded,
+the arm without it is three runs away. A benchmark that ships a memory
+tool and never measures the version of itself without one has left its
+most answerable question unanswered.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is not a memory system anyone should adopt, and it does not
+present itself as one. The memory here is scaffolding — the least
+mechanism that lets an agent survive 730 activations and a repeatedly
+truncated context — and read as a memory design it is a demonstration of
+how little is needed to make the question interesting rather than a
+proposal for how to answer it.</p>
+<p>Who should read it: anyone building a long-horizon agent evaluation,
+and anyone whose memory design has never been tested against a horizon
+where an early wrong belief has 300 days to compound. The simulator is
+deterministic, well tested, Apache-2.0 and standable in three commands,
+and the tooling around scenarios, idempotency and telemetry coverage is
+better than the memory layer it carries.</p>
+<p>Who should walk away: anyone hoping to reproduce the paper's numbers.
+The real catalog and the daily market reports are gone from the artifact
+by design, no run output is committed, and both the human and rule-based
+baselines depend on something the public tree does not contain. What you
+can reproduce is the <em>shape</em> of the experiment on synthetic data,
+which for a builder testing their own memory layer against a long
+horizon may be the more useful half anyway.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does the memory document pay for itself?</strong>
+Unanswerable from this tree, and two uncommented lines plus three seeded
+runs from being answerable. It is the question this repository is best
+positioned to settle and has not.</li>
+<li><strong>How often does an agent read its memory after a compaction,
+and does the rate predict the score?</strong> The traces would show it;
+no trace is committed and the leaderboard aggregates tool calls per
+category rather than per compaction boundary.</li>
+<li><strong>How much does the human playground's auto-loaded memory
+panel contribute to the human-agent gap?</strong> Requires running human
+participants without the panel, which is a study rather than a code
+question — but the asymmetry is in the code and unremarked in the
+paper.</li>
+<li><strong>What did the failing documents actually say?</strong> The
+Opus 4.8 and Qwen3.7-Max diagnoses are exactly the analysis
+<code>.history.md</code> is for. The files exist on the authors' disks;
+nothing equivalent is published.</li>
+<li><strong>Does the private variant sanitize merchant-written product
+text before it reaches the agent?</strong>
+<code>env/data/build_private_real_db.py</code> is in the tree at 2,367
+lines, but the data it builds from is not, so the ingestion path cannot
+be checked end to end.</li>
+<li><strong>How far has the MerchantBench Hermes fork diverged from
+upstream on the memory path?</strong> <a
+href="../hermes-agent/">Hermes</a> bounds <code>MEMORY.md</code> hard
+and freezes it into the system prompt at session start; whether the
+<code>realshop-integration</code> branch of
+<code>KhanCold/hermes-agent</code> keeps that shape across 730
+activations is the question the paper's 261 memory calls hang on, and it
+is outside this pin.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory storage and write path</strong></p>
+<ul>
+<li><code>env/tools/tools.py:2159-2228</code> —
+<code>_memory_doc_path</code>, <code>_memory_history_path</code>,
+<code>_append_memory_history</code>, <code>read_memory_doc</code>,
+<code>write_memory_doc</code>, <code>_MEMORY_DOC_MAX_BYTES</code>.</li>
+<li><code>env/compat.py:25-26</code> —
+<code>MEMORY_VERSION_MARKER</code>,
+<code>LEGACY_MEMORY_VERSION_MARKERS</code>.</li>
+</ul>
+<p><strong>Tool surface and scope enforcement</strong></p>
+<ul>
+<li><code>env/tools/registry.py:500-524</code> — the two memory
+<code>ToolSpec</code>s.</li>
+<li><code>env/tools/dispatch.py:114-176</code> —
+<code>dispatch_tool</code>, argument validation, <code>agent_id</code>
+injection, denylist.</li>
+<li><code>env/web/routes_agent.py:901-1095</code> — <code>/act</code>,
+idempotency key derivation, scenario denylist.</li>
+</ul>
+<p><strong>Context assembly</strong></p>
+<ul>
+<li><code>env/tools/observation.py:435-460</code> — the system brief;
+the one line that mentions memory.</li>
+<li><code>agent/baselines/react_160k_compact_30k.py:51-57,:315-328,:483-539</code>
+— compaction constants, reminder and notice text, the reminder and
+truncation methods.</li>
+</ul>
+<p><strong>World state (no memory)</strong></p>
+<ul>
+<li><code>env/storage/db.py</code> — twelve tables of simulation
+state.</li>
+<li><code>env/core/simulator.py:1457-1490</code> —
+<code>with_idempotency</code>.</li>
+<li><code>env/scenarios/default.yaml</code>,
+<code>env/scenarios/agents/hermes.yaml</code> — horizon, seed,
+activation period, denylists.</li>
+</ul>
+<p><strong>Human surface</strong></p>
+<ul>
+<li><code>env/web/templates/_human_playground_script.html:114-121,:1072-1073</code>
+— <code>AUTO_TOOLS</code>, memory response handling.</li>
+<li><code>env/web/templates/human_playground.html:124-130</code> — the
+memory panel.</li>
+</ul>
+<p><strong>Measurement</strong></p>
+<ul>
+<li><code>eval/scoring.py</code> — the entire headline metric.</li>
+<li><code>env/web/leaderboard.py:238-243,:1505-1535,:2093-2160</code> —
+memory tool category, <code>memory_compactions</code>, telemetry
+coverage states.</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_memory_doc_tools.py</code> — four cases.</li>
+<li><code>tests/test_react_160k_compact_30k.py</code> — compaction
+arithmetic.</li>
+<li><code>tests/test_registry.py:124</code>,
+<code>tests/test_daily_report_tool.py:111</code> — the two
+artifact-absence skips.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-30</strong> — <a
+href="https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946"><code>f44ce969aeccfd65d1eef6afe50f69868e510946</code></a>
+— first reading, at the eleventh commit. Screened before reading: no
+auto-run hooks and no build-time execution, four requirement files
+floating on <code>&gt;=</code>; nothing was installed and nothing was
+run. Three marks. The memory mechanism is two tools and two files, and
+the report is built around the compaction boundary rather than around
+the store, because that is where the design makes its one consequential
+choice. The paper's headline recomputes from its own Table 1 (59.46 /
+217.61 = 27.34%) and its 26-tool inventory recomputes from the registry
+minus the default denylist; the memory ablation the scenario file is two
+commented lines away from does not exist.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

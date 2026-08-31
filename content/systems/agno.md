@@ -15,7 +15,7 @@ stack_retrieval: ""
 stack_source: "seeded"
 matrix:
   memory_unit: "Six of them — a profile field, a free-text memory, a session summary, a titled learning, an entity carrying facts and events, and a decision with an outcome"
-  storage: "One `BaseDb` behind twenty backends (Postgres, SQLite, Mongo, Redis, DynamoDB, Firestore, ClickHouse, SurrealDB, JSON, GCS); learnings in one table keyed by learning type"
+  storage: "One `BaseDb` behind eighteen backends (Postgres, SQLite, Mongo, Redis, DynamoDB, Firestore, ClickHouse, SurrealDB, JSON, GCS); learnings in one table keyed by learning type"
   retrieval: "No embeddings anywhere on the memory path — `last_n`, `first_n`, or an `agentic` mode that sends the memory list to a model and takes back ids; entity recall matches names on word boundaries"
   write: "`ALWAYS` extraction fired from a post-run hook, or `AGENTIC` tools the model calls; a `background_executor` if the app supplies one, otherwise inline on the response path"
   update_delete: "`retire_fact` stamps `superseded_at`/`superseded_by` and keeps the row; `forget` archives an entity; the curator prunes by age and count; `optimize_memories` clears the table"
@@ -74,8 +74,9 @@ Between those two facts sits the finding this report exists for. Agno's
 `PROPOSE` actually changes is the return value of `instructions()`
 (`agno/learn/stores/learned_knowledge.py:252`): the model is handed a prompt
 that says *"**RULE 3: Only save after explicit approval.** Call `save_learning`
-ONLY after the user says 'yes'"*. The `save_learning` tool it is handed in that
-same mode calls `self.save(...)` with **no approval check of any kind**. The
+ONLY after the user says 'yes' to your proposal."* The `save_learning` tool it
+is handed in that same mode calls `self.save(...)` with **no approval check of
+any kind**. The
 gate is a sentence in a system prompt, addressed to the one component in the
 system that cannot be relied on to follow it.
 
@@ -118,11 +119,13 @@ only one of them keeps it.
 ## 3. Architecture
 
 There is one storage abstraction — `agno.db.base.BaseDb` and its async twin —
-and twenty implementations behind it: Postgres, async Postgres, MySQL, SQLite,
-SingleStore, MongoDB, Redis, Valkey, DynamoDB, Firestore, ClickHouse, SurrealDB,
-GCS-backed JSON, plain JSON files, and an in-memory dict. `BaseDb.__init__`
-names nineteen tables (`agno/db/base.py:38-57`), of which memory uses
-`memory_table` and `learnings_table`.
+and eighteen implementations behind it: fourteen subclass `BaseDb` (Postgres,
+MySQL, SQLite, SingleStore, MongoDB, Redis, Valkey, DynamoDB, Firestore,
+ClickHouse, SurrealDB, GCS-backed JSON, plain JSON files, and an in-memory
+dict) and four subclass `AsyncBaseDb` (async Postgres, async MySQL, async
+SQLite, async MongoDB). `BaseDb.__init__` names twenty-three tables
+(`agno/db/base.py:38-60`), of which memory uses `memory_table` and
+`learnings_table`.
 
 To stand this up you need a database and a model provider. That is the whole
 operational bill for the memory path, and it is a genuinely low one — the JSON
@@ -143,7 +146,7 @@ this report carries a `human_review` mark.
 - `agno/learn/machine.py` — `LearningMachine`, the coordinator. Holds the store
   registry, builds the post-run capture hooks, aggregates tools, and dispatches
   to stores with signature-aware kwargs filtering (`_filter_store_kwargs`,
-  line 43) so a third-party store written without `**kwargs` does not break when
+  line 44) so a third-party store written without `**kwargs` does not break when
   the framework adds context.
 - `agno/learn/stores/protocol.py` — the `LearningStore` Protocol: `recall`,
   `process`, `build_context`, `instructions`, `get_tools`, each with an async
@@ -192,7 +195,7 @@ three retrieval methods and no fourth:
 - `last_n` — the most recent memories. The default.
 - `first_n` — the oldest.
 - `agentic` — send the memories to a model with the query and take back a list
-  of `memory_ids` (`MemorySearchResponse`, line 38).
+  of `memory_ids` (`MemorySearchResponse`, line 36).
 
 So relevance ranking, where it exists at all, costs a model call per search and
 is only as good as that model's id-copying. There is no embedding, no BM25, no
@@ -223,13 +226,14 @@ fail-closed instinct in `recall`.
 Two paths in.
 
 **`ALWAYS` mode** fires from a post-run hook. `LearningMachine.capture_hook()`
-(`agno/learn/machine.py:624`) returns a callable that collects the run's
+(`agno/learn/machine.py:608`) returns a callable that collects the run's
 messages and then does one of two things: if the agent has a
 `background_executor`, it submits `machine.process` to it; **otherwise it calls
 `machine.process(...)` inline**. Inline means an LLM extraction call on the
 response path, after the user has their answer but before the run completes.
 Whether writes block therefore depends on a runtime setting most readers will
-not know they have. `acapture_hook()` is unambiguous: `asyncio.create_task`,
+not know they have. `acapture_hook()` (line 647) is unambiguous:
+`asyncio.create_task` at line 662,
 strong-referenced so it is not garbage collected mid-flight, with failures
 logged and never raised into the run. Memory extraction cannot fail a request —
 and cannot tell you that it failed, either.
@@ -391,7 +395,7 @@ claims, is at least a claim not made.
 ### Fit
 
 Agno suits a team that wants an agent platform and will accept its memory as
-part of the bargain — the AgentOS control plane, twenty database backends and a
+part of the bargain — the AgentOS control plane, eighteen database backends and a
 model-agnostic runtime are the product, and the learning stores are a good
 default that comes with them. Take it if your memory needs are *typed and
 modest*: facts about entities, some profile fields, session summaries, with
@@ -442,5 +446,7 @@ reach `POST /memory/optimize` before someone finds the button.
 | `libs/agno/agno/learn/stores/protocol.py` | 127 | The six-method `LearningStore` Protocol |
 
 ## History
+
+**2026-08-31** — [`7c68873c1357321a5152397c8ab4fb8b3f587bba`](https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba) — count and citation audit at the same pin. `BaseDb.__init__` names 23 table parameters, not nineteen, and they run to line 60 rather than 57. The storage abstraction has 18 implementations, not twenty — 14 subclassing `BaseDb` and 4 subclassing `AsyncBaseDb`; §3's own list named only 15. Four line references had drifted: `capture_hook` 624→608, `MemorySearchResponse` 38→36, `_filter_store_kwargs` 43→44. The RULE 3 quote was truncated mid-sentence and is quoted whole. No finding or capability mark changed.
 
 **2026-07-30** — [`7c68873c1357321a5152397c8ab4fb8b3f587bba`](https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba) — first reading.

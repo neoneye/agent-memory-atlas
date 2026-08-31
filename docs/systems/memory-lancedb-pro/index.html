@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Fact-keyed supersession over
+LanceDB with a real validity axis, an injection-feedback loop that
+suppresses memory nobody used — and a pending state that was written out
+of existence.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memory-lancedb-pro — Agent Memory Atlas">
+    <meta property="og:description" content="Fact-keyed supersession
+over LanceDB with a real validity axis, an injection-feedback loop that
+suppresses memory nobody used — and a pending state that was written out
+of existence.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memory-lancedb-pro — Agent Memory Atlas">
+    <meta name="twitter:description" content="Fact-keyed supersession
+over LanceDB with a real validity axis, an injection-feedback loop that
+suppresses memory nobody used — and a pending state that was written out
+of existence.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memory-lancedb-pro — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memory-lancedb-pro",
+      "description": "Fact-keyed supersession over LanceDB with a real validity axis, an injection-feedback loop that suppresses memory nobody used \u2014 and a pending state that was written out of existence.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">OpenClaw memory plugin</p>
+          <h1>memory-lancedb-pro</h1>
+          <p class="document-deck">Fact-keyed supersession over LanceDB
+with a real validity axis, an injection-feedback loop that suppresses
+memory nobody used — and a pending state that was written out of
+existence.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/CortexReach/memory-lancedb-pro">
+              <span>Source</span>
+              <strong>CortexReach/memory-lancedb-pro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7" title="f6e63af3450be7fb3bb8cdb4898e5010afcb87a7">
+              <span>Analyzed revision</span>
+              <code>f6e63af3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memory-lancedb-pro is an OpenClaw plugin: LanceDB for storage, an LLM
+for extraction and admission, <code>before_prompt_build</code> hooks for
+injection, and about 39,700 lines of TypeScript across 54 source files.
+It captures preferences, decisions and project context automatically and
+recalls them into later sessions.</p>
+<p>Three things make it worth a report, and one of them is a
+warning.</p>
+<p><strong>Fact-keyed supersession.</strong> Every memory can carry a
+<code>fact_key</code>, derived from its category and text when the
+extractor does not supply one. On write, the system scans within the
+requesting scopes for an <em>active</em> memory with the same normalized
+fact key and supersedes it. That is correction keyed on what the fact is
+<em>about</em> rather than on a document id — the ingredient a tombstone
+needs, put to a different use.</p>
+<p><strong>A validity axis that reaches a read.</strong>
+<code>valid_from</code>, <code>invalidated_at</code> and
+<code>valid_until</code> are separate fields;
+<code>isMemoryActiveAt(meta, atMs)</code> takes a caller-supplied
+timestamp, and the fact-query tool passes one through, so "which value
+was current at time T" is answerable. <code>valid_from</code> defaults
+to the row's insertion timestamp but is parsed from the extraction, so a
+fact stated today about last March can carry March.</p>
+<p><strong>An injection-feedback loop.</strong>
+<code>src/auto-recall-tier1.ts</code> counts injections that were never
+confirmed as used. Three of them and the memory is suppressed from
+auto-recall for thirty minutes; twenty-four hours without an injection
+resets the counter, on the reasoning that "this memory is being needed
+again". The threshold is deliberately not configurable, and the comment
+says why: the three-strikes rule is "a behavioral design choice that
+should hold across deployments", while the windows around it are
+operational tuning.</p>
+<p><strong>And the warning.</strong> <code>MemoryState</code> is
+<code>pending | confirmed | archived</code>, and
+<code>tools.ts:158</code> gates on it —
+<code>if (meta.state !== "confirmed") return false</code>. That looks
+like an epistemic gate and is not one. The default state for everything
+except session summaries is <code>confirmed</code>
+(<code>src/smart-metadata.ts:350</code>), and four write sites in the
+extractor set it explicitly with the same comment:
+<code>state: "confirmed", // #350: write confirmed to unblock auto-recall</code>.
+No writer in <code>src/</code> produces a memory in the
+<code>pending</code> state; the literal survives in the type, the
+normalizer, and the tool's input schema. The gate exists, the read path
+honours it, and the population it was meant to hold back is empty by
+construction.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <em>fact about a subject</em> rather than a
+document. That is why <code>fact_key</code> is the interesting field:
+two statements about the same subject collide, and the newer one wins by
+invalidating the older.</p>
+<p>Everything else is a scoring layer around that. Admission decides
+whether a candidate is worth storing at all. Decay decides how a stored
+memory ranks over time. Tiering decides which store it lives in. The
+dreaming engine runs overnight and moves memories between tiers.</p>
+<p>The lifecycle has three exits and they are genuinely distinct:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an admission veto stops a low-utility candidate before it is stored, and being injected three times without a confirmed use suppresses a memory until a day passes without injection</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an admission veto stops a low-utility candidate before it is stored, and being injected three times without a confirmed use suppresses a memory until a day passes without injection
+stateDiagram-v2
+    [*] --&gt; Candidate: extractor proposes
+    Candidate --&gt; [*]: admission veto — utility score at or below the floor
+    Candidate --&gt; Active: admitted, state written as confirmed
+    Active --&gt; Invalidated: another memory with the same fact_key arrives in scope
+    Active --&gt; Expired: valid_until passes
+    Active --&gt; Suppressed: injected 3 times without a confirmed use
+    Suppressed --&gt; Active: 24h with no injection resets bad_recall_count
+    Active --&gt; Archived: dreaming engine tiers it out
+    Invalidated --&gt; Active: as-of read before invalidated_at still returns it
+    Archived --&gt; [*]: excluded from recall</code></pre></details></figure>
+<p>The arrow back from <code>Invalidated</code> is the point of the
+validity axis: an invalidated memory is not gone, it is <em>no longer
+current</em>, and a query anchored to an earlier time still sees it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One LanceDB directory, one Node process, no server. The plugin
+registers against OpenClaw's <code>before_prompt_build</code> hook — the
+README notes this replaced the deprecated
+<code>before_agent_start</code> and that upgrading users should run
+<code>openclaw doctor --fix</code>.</p>
+<p>Metadata is a JSON string carried on each row and parsed on read
+(<code>parseSmartMetadata</code>), which is why
+<code>src/smart-metadata.ts</code> is so defensive: every field goes
+through a normalizer with a fallback, because the string may have been
+written by any prior version. <code>normalizeTimestamp</code>,
+<code>clamp01</code>, <code>clampCount</code>,
+<code>normalizeTier</code>, <code>normalizeState</code> and
+<code>normalizeLayer</code> all exist to make a legacy row parse into a
+valid current row rather than crash.</p>
+<p>Optional Redis provides a distributed lock
+(<code>src/redis-lock.ts</code>) for multi-process installs. Embedding
+and reranking are outsourced to a configured provider; there is no local
+model.</p>
+<p><strong>Licence.</strong> <code>package.json</code> declares
+<code>MIT</code> and the README carries an MIT badge, but <strong>no
+<code>LICENSE</code> file exists in the tree</strong> at this commit. A
+reader should know that the grant is asserted in metadata and not in a
+licence text.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Candidate → stored.</strong>
+<code>src/smart-extractor.ts</code> builds candidates →
+<code>src/admission-control.ts</code> scores them →
+<code>src/store.ts</code> writes to LanceDB.</p>
+<p><strong>Collision → supersession.</strong>
+<code>src/tools.ts:355-380</code> scans rows in the requested scopes,
+skips anything not <code>isMemoryActiveAt</code>, normalizes the fact
+key and collects matches.</p>
+<p><strong>Prompt → injection.</strong> The
+<code>before_prompt_build</code> hook →
+<code>src/adaptive-retrieval.ts</code> and <code>src/retriever.ts</code>
+→ <code>src/auto-recall-tier1.ts</code> updates the counters and
+suppression on every injected memory.</p>
+<p><strong>Nightly.</strong> <code>src/dreaming-engine.ts</code>
+(default cron <code>0 3 * * *</code>) walks pages of memories through
+<code>src/decay-engine.ts</code> and <code>src/tier-manager.ts</code>,
+promoting, demoting and compacting.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>SmartMemoryMetadata</code>
+(<code>src/smart-metadata.ts:40</code>) carries about thirty fields. The
+structural ones:</p>
+<ul>
+<li><strong>Three content levels</strong> — <code>l0_abstract</code>,
+<code>l1_overview</code>, <code>l2_content</code> — so injection can
+spend the abstract and expand only when needed.</li>
+<li><strong>Four classifications</strong> —
+<code>memory_category</code>, <code>tier</code>
+(<code>core | working | peripheral</code>), <code>memory_layer</code>
+(<code>durable | working | reflection | archive</code>), and
+<code>source</code> (six values from <code>manual</code> to
+<code>legacy</code>).</li>
+<li><strong>Validity</strong> — <code>valid_from</code>,
+<code>invalidated_at</code>, <code>valid_until</code>, plus
+<code>memory_temporal_type</code> of <code>static | dynamic</code>,
+which says whether the fact is the kind that can go out of date at
+all.</li>
+<li><strong>Identity and correction</strong> — <code>fact_key</code>,
+<code>supersedes</code>, <code>superseded_by</code>,
+<code>canonical_id</code>, <code>relations</code>.</li>
+<li><strong>Feedback counters</strong> — <code>access_count</code>,
+<code>injected_count</code>, <code>last_confirmed_use_at</code>,
+<code>bad_recall_count</code>, <code>suppressed_until_ms</code>.</li>
+</ul>
+<p><code>suppressed_until_ms</code> documents a three-way presence
+semantic that is worth copying as a habit: <code>undefined</code> means
+Tier 1 has never touched this row and is a lazy-heal sentinel,
+<code>0</code> means touched with no active suppression,
+<code>&gt; 0</code> means suppressed. Distinguishing "never computed"
+from "computed as zero" is what lets the migration heal old rows without
+a migration script.</p>
+<p><code>invalidated_at</code> is only accepted if it is
+<code>&gt;= valid_from</code>, so an incoherent interval is dropped
+rather than stored.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over LanceDB with tag-token search beside it, query
+expansion (<code>src/query-expander.ts</code>), intent analysis
+(<code>src/intent-analyzer.ts</code>), an outsourced reranker with a
+timeout and deadline, and neighbour enrichment. Ranking blends a Weibull
+stretched-exponential decay — recency with an importance-modulated
+half-life and a tier-specific beta, log-saturating frequency, and an
+intrinsic term of importance × confidence.</p>
+<p><code>src/retrieval-trace.ts</code> and
+<code>src/retrieval-stats.ts</code> keep the decomposition inspectable
+rather than collapsing it into one number.</p>
+<p>The scope filter is where this system is better than most of its
+neighbours. <code>isRowScopeAccessible</code>
+(<code>src/store.ts:383</code>) returns true only when the row's scope
+is in the filter, and the comment above it records the change that got
+it there: rows with a null scope now "deny … against any real scope
+filter (no more <code>OR scope IS NULL</code>)". An empty array is
+treated as an explicit deny-all rather than as "no filter", and the
+supersede scan re-checks scope membership itself because "store reads
+mask legacy NULL scopes as <code>global</code>" and a collision target
+outside the requested scopes must never be touched. Three separate
+places where a scope could have leaked, each closed on purpose.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Admission is the only real gate, and it is an LLM.</strong>
+<code>src/admission-control.ts</code> scores each candidate on utility,
+confidence, novelty, recency and a per-category type prior, against
+<code>admitThreshold</code> and <code>rejectThreshold</code>, with three
+presets (<code>balanced</code>, <code>conservative</code>,
+<code>high-recall</code>). The mechanism worth naming is
+<code>utilityVetoThreshold</code>, described in the code as "the utility
+judge's floor of authority: a candidate whose LLM utility score is at or
+below this is rejected outright, regardless of the weighted composite
+(which the type prior otherwise dominates)". A veto that overrides a
+weighted blend is the correct answer to the failure where a generous
+prior floats junk past a low utility score.</p>
+<p>Supersession runs after admission: derive the fact key, scan the
+requested scopes for an active memory with the same key, invalidate it
+and link the pair. <code>FACT_KEY_SCAN_MAX_ROWS</code> bounds the scan
+and throws <code>FactKeyScanOverBoundError</code> rather than silently
+truncating — the right choice, because a truncated collision scan
+produces a duplicate fact, not an error.</p>
+<p>Writes go through the extractor and the admission LLM, so capture is
+not instantaneous, and <code>bulk-store</code> paths exist for batching.
+Nothing records a rejected value: an admission veto leaves no trace on
+the store, so the same candidate arriving tomorrow is judged again from
+scratch — cheap when the judge is deterministic and it is not.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An OpenClaw plugin (<code>openclaw.plugin.json</code>) hooking
+<code>before_prompt_build</code>, a CLI (<code>cli.ts</code>), a tool
+surface (<code>src/tools.ts</code>, 3,000-plus lines), a
+<code>skills/</code> directory, and a team-scope module
+(<code>src/clawteam-scope.ts</code>). Twelve translated READMEs.</p>
+<p>Auto-recall injects on prompt build; manual recall goes through the
+tools. The distinction matters because only the auto-recall path feeds
+the Tier 1 suppression counters — a memory the user fetches deliberately
+does not accrue bad-recall strikes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Bitemporal — awarded.</strong> <code>valid_from</code> and
+<code>invalidated_at</code>/<code>valid_until</code> form a validity
+interval separate from the row's <code>timestamp</code>,
+<code>isMemoryActiveAt</code> takes an arbitrary <code>at</code>, and
+the fact-query tool threads a caller-supplied <code>atMs</code> through
+to <code>serializeFactEntry</code>, returning <code>activeAt</code> and
+<code>validFrom</code> per row. The qualification:
+<code>valid_from</code> falls back to the insertion timestamp, so the
+two axes coincide unless the extractor supplies a date.</p>
+<p><strong>Scope enforced — awarded</strong>, and it is one of the
+stricter implementations in this atlas for the reasons in section 6.</p>
+<p><strong>Trust state — withheld, and the near-miss is the report's
+headline.</strong> A three-value <code>state</code> field consulted on
+the read path is exactly the shape the mark describes. It fails on two
+counts: there is no rejected value, and the candidate value is
+unreachable — every writer in <code>src/</code> emits
+<code>confirmed</code>, four of them with a comment saying the change
+was made to unblock auto-recall. What remains is <code>archived</code>,
+a lifecycle flag, wearing an epistemic vocabulary.</p>
+<p><strong>Audit log — no.</strong>
+<code>src/reflection-event-store.ts</code> records reflection lifecycle
+events and <code>src/admission-stats.ts</code> aggregates admission
+outcomes, but there is no append-only record of mutations to the memory
+store itself.</p>
+<p><strong>Human review — no.</strong> No approval surface; the
+<code>state</code> field's approval-shaped vocabulary has no operator
+behind it.</p>
+<p><strong>Tombstone — no</strong>, and this is the closest miss in the
+batch. <code>fact_key</code> is a value-derived key, the collision scan
+already runs on the write path, and <code>invalidated_at</code> already
+exists. What is absent is a record that a <em>value</em> was rejected:
+superseding writes the new fact and retires the old one, so re-asserting
+the retired value simply supersedes back. The machinery to refuse it is
+in the file.</p>
+<p><strong>Negative eval — no.</strong> 171 test files, none asserting
+that particular material must not be retrieved.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, and no benchmark. There is no arXiv
+reference, DOI, <code>CITATION.cff</code> or BibTeX block, and no
+committed evaluation harness or result file — no LoCoMo, LongMemEval or
+retrieval-quality number anywhere in the tree. Every quality claim in
+the README is qualitative.</p>
+<p>171 test files under <code>test/</code>, almost all
+<code>.mjs</code>, and they are unusually well-targeted at the
+mechanisms this report cares about: <code>admission-utility-veto</code>,
+<code>admission-control-batch-utility</code>,
+<code>autocapture-fallback-gating</code>, <code>clawteam-scope</code>,
+<code>agentid-validation</code>, <code>batch-dedup</code>,
+<code>auto-recall-timeout</code>, <code>cjk-recursion-regression</code>.
+Several are named after the bug they pin rather than the feature they
+cover, which is a good sign about how they were written.</p>
+<p><strong>I did not run them.</strong> The screen flagged both
+<code>package.json</code> and <code>package-lock.json</code> as changed
+within the last day — inside the seven-day cooldown, where
+<code>npm ci</code> would faithfully reproduce a pin however new it is —
+so this tree was read and never installed.</p>
+<p>Two artifacts at the repository root are worth a reader's notice
+because they are not part of the product: <code>commit_msg.txt</code>
+and <code>restore_files.py</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key correction on the fact, not the row.</strong> Deriving a
+<code>fact_key</code> from category plus text, then scanning for an
+active collision inside scope, is what makes "the user's editor
+preference" a single thing that can be updated rather than a pile of
+statements about editors.</li>
+<li><strong>Give the LLM judge a veto that outranks the blend.</strong>
+<code>utilityVetoThreshold</code> exists because a type prior can
+otherwise carry a useless candidate over the admit threshold. A floor
+beats reweighting.</li>
+<li><strong>Throw when a bounded scan hits its bound.</strong>
+<code>FactKeyScanOverBoundError</code> turns a silent duplicate into a
+loud failure, which is the correct trade for a scan whose whole purpose
+is finding the one row that collides.</li>
+<li><strong>Suppress what the agent keeps ignoring, and let the
+suppression expire.</strong> Three unconfirmed injections, thirty
+minutes of suppression, twenty-four hours to reset — a self-correcting
+loop that costs three integers and needs no model.</li>
+<li><strong>Fix the threshold and expose the windows.</strong> The
+comment explaining why three strikes is a constant while the windows are
+config is the clearest statement of that distinction in this
+corpus.</li>
+<li><strong>Distinguish "never computed" from "computed as
+zero".</strong> <code>undefined</code> versus <code>0</code> on
+<code>suppressed_until_ms</code> is what lets old rows heal on first
+touch instead of needing a migration.</li>
+<li><strong>Deny null-scope rows against a real filter.</strong> The
+comment marking the removal of <code>OR scope IS NULL</code> is the
+exact hole several other systems here still have.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not keep a gate whose blocking state you have stopped
+writing.</strong> Four
+<code>// write confirmed to unblock auto-recall</code> comments mean the
+<code>pending</code> state became an obstacle and was routed around
+rather than removed. What is left reads, to anyone auditing the code,
+like an approval workflow.</li>
+<li><strong>Do not let admission be the only filter when admission is a
+model call.</strong> With <code>pending</code> gone, an LLM utility
+score is the sole thing between an extraction and permanent memory, and
+a rejection leaves no record, so the same candidate is re-judged from
+zero every time it recurs.</li>
+<li><strong>Do not ship an MIT badge without a LICENCE file.</strong>
+The declaration in <code>package.json</code> is a claim; the file is the
+grant.</li>
+<li><strong>Do not carry structured metadata as a JSON string if you can
+avoid it.</strong> It is why <code>smart-metadata.ts</code> needs six
+normalizers and why every read pays a parse — a reasonable price for
+LanceDB's schema constraints, and a price.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for an OpenClaw user who wants automatic capture and recall
+with real lifecycle management and is willing to pay for an LLM call per
+candidate batch. The scope work is solid enough to trust with more than
+one project in one store, which is not true of every plugin in this
+class.</p>
+<p>It is not for anyone who needs to verify retrieval quality: nothing
+is measured, and the ranking stack — Weibull decay, tier-modulated
+half-lives, a five-term admission blend — is exactly the kind of
+composite that <a href="../clawmem/">ClawMem's eval</a> found could cost
+two thirds of its MRR when nobody checks. The mechanisms are the reason
+to read this; the tuning is unverified.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What broke in issue #350?</strong> Four comments reference
+it as the reason <code>confirmed</code> is written at capture. Whether
+<code>pending</code> was ever a working queue with a promoter, or always
+inert, is not answerable from this commit.</li>
+<li><strong>How often does the fact-key scan hit its bound?</strong>
+<code>FactKeyScanOverBoundError</code> is thrown to the caller; what the
+caller does with it — abort the write, or store an uncollided duplicate
+— was not traced.</li>
+<li><strong>Does anything consume
+<code>memory_temporal_type</code>?</strong> Marking a fact
+<code>static</code> or <code>dynamic</code> is exactly the signal a
+decay engine should use, and the connection between the classifier and
+the decay weights was not established.</li>
+<li><strong>What is the admission cost per session?</strong> Every
+candidate batch is an LLM call and no aggregate is committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Metadata and validity</strong> —
+<code>src/smart-metadata.ts</code> (<code>SmartMemoryMetadata</code> at
+<code>:40</code>, <code>isMemoryActiveAt</code> <code>:285</code>,
+<code>isMemoryExpired</code> <code>:295</code>, normalization
+<code>:330-380</code>), <code>src/temporal-classifier.ts</code></p>
+<p><strong>Fact-keyed supersession</strong> —
+<code>src/tools.ts:275</code> (<code>isTemporalFactEntry</code>),
+<code>:287</code> (<code>serializeFactEntry</code>),
+<code>:355-380</code> (the collision scan and
+<code>FactKeyScanOverBoundError</code>),
+<code>src/identity-addressing.ts</code></p>
+<p><strong>Admission</strong> — <code>src/admission-control.ts</code>
+(<code>utilityVetoThreshold</code> at <code>:44</code>),
+<code>src/admission-stats.ts</code>,
+<code>src/autocapture-fallback-admission.ts</code>,
+<code>src/reflection-mapped-admission.ts</code>,
+<code>src/noise-filter.ts</code>,
+<code>src/noise-prototypes.ts</code></p>
+<p><strong>Injection feedback</strong> —
+<code>src/auto-recall-tier1.ts</code> (<code>isSuppressed</code>
+<code>:57</code>, <code>computeTier1Patch</code> <code>:85-140</code>),
+<code>src/access-tracker.ts</code></p>
+<p><strong>Scope</strong> — <code>src/store.ts:373-390</code>
+(<code>isExplicitDenyAllScopeFilter</code>,
+<code>isRowScopeAccessible</code>), <code>src/scopes.ts</code>,
+<code>src/workspace-boundary.ts</code>,
+<code>src/clawteam-scope.ts</code></p>
+<p><strong>Retrieval</strong> — <code>src/retriever.ts</code>,
+<code>src/adaptive-retrieval.ts</code>,
+<code>src/query-expander.ts</code>, <code>src/intent-analyzer.ts</code>,
+<code>src/retrieval-trace.ts</code>,
+<code>src/retrieval-stats.ts</code></p>
+<p><strong>Lifecycle</strong> — <code>src/decay-engine.ts</code>,
+<code>src/dreaming-engine.ts</code>, <code>src/tier-manager.ts</code>,
+<code>src/memory-compactor.ts</code>,
+<code>src/memory-upgrader.ts</code></p>
+<p><strong>Extraction</strong> — <code>src/smart-extractor.ts</code>,
+<code>src/extraction-prompts.ts</code>,
+<code>src/prompt-blocks.ts</code>, <code>src/chunker.ts</code>,
+<code>src/batch-dedup.ts</code></p>
+<p><strong>Reflection</strong> — <code>src/reflection-store.ts</code>,
+<code>reflection-event-store.ts</code>,
+<code>reflection-item-store.ts</code>,
+<code>reflection-ranking.ts</code>, <code>reflection-slices.ts</code>,
+<code>reflection-retry.ts</code></p>
+<p><strong>Integration</strong> — <code>openclaw.plugin.json</code>,
+<code>cli.ts</code>, <code>index.ts</code>,
+<code>src/openclaw-memory-capability.ts</code>, <code>skills/</code></p>
+<p><strong>Tests</strong> — <code>test/</code> (171 files;
+<code>admission-utility-veto.test.mjs</code>,
+<code>clawteam-scope.test.mjs</code>, <code>batch-dedup.test.mjs</code>,
+<code>autocapture-fallback-gating.test.mjs</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7"><code>f6e63af3450be7fb3bb8cdb4898e5010afcb87a7</code></a>
+— first reading. Screened before reading: no auto-run surface, but
+<code>package.json</code> and <code>package-lock.json</code> both
+changed within a day, inside the seven-day cooldown. The tree was read,
+never installed, and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

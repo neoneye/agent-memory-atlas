@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A held-out evaluation that removes
+each query's text from its own host chunk before indexing, so lexical
+search cannot win by finding the question inside the answer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mnemos — Agent Memory Atlas">
+    <meta property="og:description" content="A held-out evaluation that
+removes each query's text from its own host chunk before indexing, so
+lexical search cannot win by finding the question inside the answer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mnemos — Agent Memory Atlas">
+    <meta name="twitter:description" content="A held-out evaluation that
+removes each query's text from its own host chunk before indexing, so
+lexical search cannot win by finding the question inside the answer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mnemos — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mnemos",
+      "description": "A held-out evaluation that removes each query's text from its own host chunk before indexing, so lexical search cannot win by finding the question inside the answer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Strip the query from the document before
+you test retrieval</p>
+          <h1>mnemos</h1>
+          <p class="document-deck">A held-out evaluation that removes
+each query's text from its own host chunk before indexing, so lexical
+search cannot win by finding the question inside the answer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/arhuman/mnemos">
+              <span>Source</span>
+              <strong>arhuman/mnemos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/arhuman/mnemos/commit/27df4b569cc26b25e75356322db72f6461939a66" title="27df4b569cc26b25e75356322db72f6461939a66">
+              <span>Analyzed revision</span>
+              <code>27df4b56…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mnemos gives a coding agent "a local, cited memory" of ADRs, design
+docs, notes, runbooks and source — "No vector database. No Ollama. No
+Python or Node service. Just one cgo-free Go binary", with every answer
+landing "on the exact <code>file#section</code> and line range".</p>
+<p><strong>Two things in it are worth taking, and both are about not
+fooling yourself.</strong></p>
+<p><strong>First, <code>internal/eval</code> is a held-out retrieval
+evaluation shipped as a package of the system</strong>, with the leakage
+control most self-built retrieval evals miss:</p>
+<blockquote>
+<p>"Derives example-query/expected-document pairs from a bundle, builds
+a held-out copy of the corpus <strong>with those queries stripped from
+their host chunks</strong>, ingests the copy into an ephemeral database,
+runs each query through the Retriever, and computes doc-level retrieval
+metrics <strong>against a versioned baseline</strong>."</p>
+</blockquote>
+<p>If you generate questions from your documents and then index those
+same documents, the question's wording is <em>inside</em> the chunk that
+should answer it, and a lexical retriever scores near-perfectly for a
+reason that has nothing to do with retrieval quality. Stripping the
+query text from its host chunk before indexing is the fix, and the AST
+used to do it is deliberately the same one ingestion uses — "it mirrors
+the parser configuration used by the ingest pipeline (CommonMark
+defaults) so the AST view of a document matches what ingestion
+sees."</p>
+<p>The metrics are <code>HitAt1</code>, <code>RecallAtK</code>,
+<code>MRRAtK</code>, <code>ExactChunk</code> and <code>N</code>,
+compared against a baseline JSON, and a missing baseline is
+"intentionally not an error; callers print without deltas" — so the
+first run works and every run after it shows movement.</p>
+<p><strong>Second, the secret scanner is built so its own findings
+cannot leak the secret:</strong></p>
+<blockquote>
+<p>"The matched substring is held on an unexported field so it cannot
+leak through serialization or an external caller: the remember tool
+reports only Rule names and never echoes the value back to the
+agent."</p>
+</blockquote>
+<p>A scanner that finds an AWS key and then hands the model a report
+containing the key has moved the secret into the context window it was
+protecting. Using Go's visibility rules as the enforcement — the field
+cannot be marshalled because it is unexported — is exactly the right
+mechanism, and this atlas has not seen another scanner do it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Files on disk are the memory. <code>mnemos ingest</code> chunks them
+into a SQLite index under <code>.mnemos/</code>,
+<code>mnemos search</code> returns chunks with their locations, and the
+agent reads the cited section rather than being handed a summary.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the secret scanner reports a rule name and keeps the matched value on an unexported field, and the eval strips each query's text from its host chunk before re-ingesting into an ephemeral database</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the secret scanner reports a rule name and keeps the matched value on an unexported field, and the eval strips each query&#39;s text from its host chunk before re-ingesting into an ephemeral database
+flowchart TD
+    F[&quot;docs, ADRs, runbooks, source&quot;] --&gt; IN[&quot;mnemos ingest --collection X&quot;]
+    IN --&gt; SEC{&quot;SecretScanner&quot;}
+    SEC --&gt;|&quot;match&quot;| RPT[&quot;report Rule name only —&lt;br/&gt;matched value on an unexported field,&lt;br/&gt;never serialized to the agent&quot;]
+    SEC --&gt;|clean| CH[&quot;chunk by markdown structure&quot;]
+    CH --&gt; DB[&quot;SQLite: documents + chunks&lt;br/&gt;uri, collection, line range&quot;]
+    Q[&quot;mnemos search / MCP&quot;] --&gt; BM[&quot;BM25 over chunks&lt;br/&gt;WHERE d.collection = ?&quot;]
+    DB --&gt; BM
+    BM --&gt; CITE[&quot;result: file#section + line range&quot;]
+    E[&quot;mnemos eval&quot;] --&gt; PAIRS[&quot;derive query / expected-doc pairs&quot;]
+    PAIRS --&gt; STRIP[&quot;strip each query&#39;s text from its host chunk&lt;br/&gt;(same goldmark config as ingest)&quot;]
+    STRIP --&gt; EPH[&quot;ingest the held-out copy into an ephemeral DB&quot;]
+    EPH --&gt; RUN[&quot;run every query through the Retriever&quot;]
+    RUN --&gt; M[&quot;HitAt1, RecallAtK, MRRAtK, ExactChunk, N&quot;]
+    M --&gt; BASE[&quot;compare to versioned baseline JSON&lt;br/&gt;(missing baseline: print without deltas)&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>internal/</code> is twenty focused packages:
+<code>ingest</code>, <code>chunk</code>, <code>parse</code>,
+<code>search</code>, <code>storage</code>, <code>embed</code>,
+<code>memory</code>, <code>okf</code>, <code>eval</code>,
+<code>security</code>, <code>browse</code>, <code>mcp</code>,
+<code>cli</code>, <code>app</code>, <code>config</code>,
+<code>doctor</code>, <code>model</code>, <code>workspace</code>,
+<code>testutil</code>, <code>version</code>.</p>
+<p>A <code>doctor</code> package and a
+<code>THIRD-PARTY-NOTICES.md</code> alongside a <code>SECURITY.md</code>
+and a <code>CODE_OF_CONDUCT.md</code> is unusually complete for a
+single-binary tool.</p>
+<p><strong>The distribution claim is the design constraint.</strong> One
+cgo-free Go binary means no Python, no Node, no model server, no vector
+database and no container — the whole system is
+<code>make install</code> and a TOML file. That rules out embeddings as
+the primary retrieval mechanism, which is why BM25 does the work, and it
+is a coherent trade rather than an omission.</p>
+<p>19,800 lines of Go and <strong>84 test files</strong> — the highest
+test-to-source ratio in this batch.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Evaluate</strong> — <code>internal/eval/holdout.go</code>
+(the package contract <code>:1-5</code>, the shared goldmark instance
+and why <code>:19-22</code>), <code>eval.go</code>,
+<code>metrics.go</code> (<code>Metrics</code> <code>:6-14</code>),
+<code>baseline.go</code> (<code>loadBaseline</code> and the missing-file
+decision <code>:12-25</code>), <code>coverage_test.go</code>,
+<code>buildretriever_noembed_test.go</code>.</p>
+<p><strong>Screen</strong> — <code>internal/security/secrets.go</code>
+(the package contract and the unexported-match rationale
+<code>:1-12</code>), <code>paths.go</code>.</p>
+<p><strong>Retrieve</strong> — <code>internal/search/bm25.go</code> (the
+collection predicate <code>:103</code>), <code>engine_test.go</code>,
+<code>bench_test.go</code>.</p>
+<p><strong>Cite</strong> — <code>internal/memory/write.go</code>,
+<code>read.go</code>, <code>internal/storage/documents.go</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Documents and chunks in SQLite, addressed by <code>uri</code>,
+grouped by <code>collection</code>, with a section anchor and a line
+range so a result is a location rather than a blob.</p>
+<p>There is no status field, no confidence, no supersession pointer and
+no tombstone. The files are the memory and re-ingesting is the update
+path.</p>
+<p><strong>The consequence is worth stating because it cuts against the
+product's own pitch.</strong> The README's first complaint is that an
+agent "forgets why you rejected an architecture" — and a rejected ADR,
+indexed, reads exactly like an accepted one. mnemos will cite it
+faithfully, with the file and line, and nothing in the index says which
+way the decision went. Citation solves <em>where did this come
+from</em>; it does not solve <em>is this still the decision</em>. Many
+ADR conventions carry a <code>status: superseded</code> header, and
+reading it into a retrieval signal is the obvious next mechanism.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 over chunks with <code>d.collection = ?</code> appended as a
+condition — a stored key reaching the query, so
+<code>scope_enforced</code> is earned — and the collection filter has
+both a unit test ("collection filter narrows results") and a benchmark
+comparing "an unfiltered scan and a collection-filtered one" over
+roughly 10,000 chunks. Benchmarking the filtered and unfiltered paths
+against each other is how you find out whether your scope predicate is
+also an index-usage bug.</p>
+<p>Lexical retrieval with no semantic fallback is the trade the
+single-binary constraint buys. For the stated corpus — ADRs, runbooks,
+design docs, source — the vocabulary is largely shared between question
+and document, which is the case where BM25 does well; it is the wrong
+tool when the user's words and the document's diverge.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest a directory into a named collection. Content passes the
+<code>SecretScanner</code> before it is written — the package docstring
+calls the security package "the guardrails that keep mnemos local-first
+and secret-free: the SecretScanner that screens captured content before
+it is written, and the path/exclude rules that bound what the agent can
+touch".</p>
+<p>Screening at write time rather than read time is the correct side of
+the boundary, and pairing it with path rules that bound what may be read
+at all is the other half.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server and a CLI from the same binary, a <code>skills/</code>
+directory, <code>mnemos init</code> writing <code>.mnemos.toml</code>
+and <code>.mnemos/</code>, and a <code>doctor</code> command. The
+README's 60-second path is clone, <code>make install</code>,
+<code>init</code>, <code>ingest</code>, <code>search</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>One mark: scope enforced</strong>, per section 6.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log, human review,
+negative eval — no.</strong> The system's answer to trust is provenance:
+every claim lands on a file and a line range, so a person can check it.
+That is a real answer to a different question from the one the other
+marks ask, and this report's section 5 names where it stops.</p>
+<p><strong>The secret scanner is the best-designed small component in
+this batch</strong>, per section 1, and the path/exclude rules that
+"bound what the agent can touch" are its companion.
+<code>internal/security/paths.go</code> with <code>paths_test.go</code>
+beside it means the boundary is tested, which is more than <a
+href="../diffmem/">DiffMem</a>'s comparable sandbox manages.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>84 test files</strong> against 19,800 lines, and — unusually
+— the evaluation is not a <code>benchmarks/</code> directory of scripts
+but <code>internal/eval</code>, a package of the system with its own
+tests (<code>eval_test.go</code>, <code>coverage_test.go</code>,
+<code>buildretriever_noembed_test.go</code>) and testdata.</p>
+<p>Four things it does right, in a corpus where self-built retrieval
+evals are usually one script and an optimistic number:</p>
+<ul>
+<li><strong>Leakage control.</strong> The query text is stripped from
+its host chunk before the held-out corpus is indexed. Without this,
+generated-question evaluations measure string matching.</li>
+<li><strong>The same parser as production.</strong> The goldmark
+instance "mirrors the parser configuration used by the ingest pipeline…
+so the AST view of a document matches what ingestion sees" — an eval
+that chunks differently from the system is measuring a different
+system.</li>
+<li><strong>An ephemeral database.</strong> The held-out corpus is
+ingested fresh, so the evaluation cannot accidentally query the
+developer's real index.</li>
+<li><strong>A versioned baseline with graceful absence.</strong> Metrics
+compare against a baseline JSON; a missing file "is intentionally not an
+error: it returns <code>(nil, nil)</code> so callers print without
+deltas". The first run works, and every subsequent one shows the
+delta.</li>
+</ul>
+<p><code>ExactChunk</code> alongside the doc-level metrics is the right
+pair: retrieving the correct document and retrieving the correct
+<em>section</em> of it are different successes, and a citation-first
+product should care about the second.</p>
+<p><strong>No results are committed</strong>, which is the gap. The
+harness and the baseline mechanism are in-tree and no baseline JSON is,
+so a reader cannot see what mnemos scores on its own evaluation. One
+committed baseline would turn an excellent methodology into
+evidence.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Strip the query from its host chunk before indexing the
+held-out corpus.</strong> If you generate evaluation questions from your
+own documents, the question's wording sits inside the answer and your
+lexical retriever will look extraordinary for no reason.</li>
+<li><strong>Use the production parser in the evaluation.</strong> An
+eval that chunks differently from ingestion is measuring a system you do
+not ship.</li>
+<li><strong>Ingest the held-out copy into an ephemeral
+database</strong>, so the evaluation cannot read the real index.</li>
+<li><strong>Compare against a versioned baseline, and let a missing
+baseline be fine.</strong> Returning <code>(nil, nil)</code> and
+printing without deltas means the first run is not a special case.</li>
+<li><strong>Measure exact-chunk alongside doc-level hit rate.</strong>
+Right document, wrong section is a different failure and a citation
+product should see it.</li>
+<li><strong>Hold a scanner's match on an unexported field.</strong> The
+finding reports the rule name; the matched secret cannot be serialised
+out to the agent. Language visibility as the enforcement beats
+remembering not to log it.</li>
+<li><strong>Screen secrets on the write path</strong>, and pair it with
+path rules bounding what may be read at all — with a test file next to
+each.</li>
+<li><strong>Benchmark the scoped and unscoped query against each
+other.</strong> It tells you whether the scope predicate is using the
+index or scanning.</li>
+<li><strong>Let the distribution constraint pick the
+architecture.</strong> One cgo-free binary rules out an embedding
+server, so BM25 does the work — a coherent trade, stated as one.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not commit the harness without a baseline.</strong>
+Everything needed to produce a number is here and no number is, so the
+methodology cannot be checked against a result.</li>
+<li><strong>Do not treat citation as a substitute for status.</strong> A
+rejected ADR cites as cleanly as an accepted one, and the README's
+opening complaint is precisely about rejected architectures. ADR
+conventions already carry a <code>status</code> header; reading it into
+the retrieval signal is the missing step.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice when your memory really is your documents and you
+want an agent that quotes them with a line range instead of paraphrasing
+— and when adding a Python service or a vector database to the project
+is not acceptable. <code>make install</code> and a TOML file is the
+whole footprint.</p>
+<p>Read <code>internal/eval/holdout.go</code> and
+<code>internal/security/secrets.go</code> whatever you build. One is the
+cleanest statement of how to evaluate retrieval on your own corpus
+without cheating; the other is a scanner that cannot leak what it
+finds.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What does mnemos score on its own evaluation?</strong> No
+baseline JSON is committed.</li>
+<li><strong>Is ADR <code>status</code> read at all?</strong> Nothing
+found treats a superseded document differently.</li>
+<li><strong>What does <code>internal/embed</code> do given the no-Ollama
+claim?</strong> An embedding package exists beside
+<code>buildretriever_noembed_test.go</code>; the default path was not
+traced.</li>
+<li><strong>What is OKF?</strong> The README names an "OKF knowledge
+base" and <code>internal/okf</code> implements it; the format was not
+examined.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Evaluation</strong> — <code>internal/eval/holdout.go</code>
+(the package contract <code>:1-5</code>, the shared goldmark instance
+and the parser-parity rationale <code>:19-22</code>),
+<code>internal/eval/metrics.go</code> (<code>Metrics</code>
+<code>:6-14</code>), <code>baseline.go</code> (<code>loadBaseline</code>
+and the missing-baseline decision <code>:12-25</code>),
+<code>eval.go</code>, <code>eval_test.go</code>,
+<code>coverage_test.go</code>,
+<code>buildretriever_noembed_test.go</code>, <code>testdata/</code></p>
+<p><strong>Security</strong> — <code>internal/security/secrets.go</code>
+(the package contract and the unexported-match rationale
+<code>:1-12</code>), <code>secrets_test.go</code>,
+<code>paths.go</code>, <code>paths_test.go</code></p>
+<p><strong>Retrieval</strong> — <code>internal/search/bm25.go</code>
+(<code>d.collection = ?</code> <code>:103</code>),
+<code>engine_test.go</code> (the collection-filter case
+<code>:139</code>), <code>bench_test.go</code> (the
+filtered-versus-unfiltered benchmark <code>:95</code>)</p>
+<p><strong>Storage and citation</strong> —
+<code>internal/storage/documents.go</code> (<code>:35</code>,
+<code>:120</code>), <code>internal/memory/write.go</code>
+(<code>:47</code>, <code>:155</code>), <code>read.go</code>,
+<code>internal/chunk/</code>, <code>internal/parse/</code></p>
+<p><strong>Surfaces</strong> — <code>internal/mcp/</code>,
+<code>internal/cli/</code>, <code>internal/doctor/</code>,
+<code>internal/browse/</code>, <code>skills/</code>,
+<code>cmd/</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/arhuman/mnemos/commit/27df4b569cc26b25e75356322db72f6461939a66"><code>27df4b569cc26b25e75356322db72f6461939a66</code></a>
+— first reading. Screened before reading; the tree was read, never
+built, and no evaluation was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="OpenHands V1's durable memory is
+two agent-maintained markdown indexes under a shared character budget,
+off by default — beside a much larger body of context-window machinery
+that is not memory and is worth reading anyway.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenHands
+SDK — Agent Memory Atlas">
+    <meta property="og:description" content="OpenHands V1's durable
+memory is two agent-maintained markdown indexes under a shared character
+budget, off by default — beside a much larger body of context-window
+machinery that is not memory and is worth reading anyway.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenHands
+SDK — Agent Memory Atlas">
+    <meta name="twitter:description" content="OpenHands V1's durable
+memory is two agent-maintained markdown indexes under a shared character
+budget, off by default — beside a much larger body of context-window
+machinery that is not memory and is worth reading anyway.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenHands SDK — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenHands SDK",
+      "description": "OpenHands V1's durable memory is two agent-maintained markdown indexes under a shared character budget, off by default \u2014 beside a much larger body of context-window machinery that is not memory and is worth reading anyway.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Six thousand characters, oldest lines
+first</p>
+          <h1>OpenHands SDK</h1>
+          <p class="document-deck">OpenHands V1's durable memory is two
+agent-maintained markdown indexes under a shared character budget, off
+by default — beside a much larger body of context-window machinery that
+is not memory and is worth reading anyway.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OpenHands/software-agent-sdk">
+              <span>Source</span>
+              <strong>OpenHands/software-agent-sdk</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691" title="9a24f6c8866f353042a57df0514ccc900e3a0691">
+              <span>Analyzed revision</span>
+              <code>9a24f6c8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-29</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the package OpenHands V1 actually runs on, and the
+organisation's layout is the shortest proof:
+<code>OpenHands/OpenHands</code> is Agent Canvas, a control centre that
+renders somebody else's condenser settings;
+<code>OpenHands/legacy</code>, archived 27 July 2026, holds what used to
+be there and has no memory package left in it;
+<code>OpenHands/enterprise</code> carries the server layer and declares
+<code>openhands-sdk==1.43.1</code>,
+<code>openhands-agent-server==1.43.1</code> and
+<code>openhands-tools==1.43.1</code> as dependencies. 140,853 lines of
+Python outside <code>tests/</code>, MIT, 2,244 commits since 23 August
+2025.</p>
+<p><strong>The durable memory is 97 lines.</strong>
+<code>context/memory.py</code> reads two markdown indexes —
+<code>~/.openhands/memory/MEMORY.md</code> for the user and
+<code>&lt;workspace&gt;/.openhands/memory/MEMORY.md</code> for the
+project — concatenates them under a 6,000-character budget, and hands
+the result to the system prompt. The agent maintains both files with
+ordinary file tools; no code in this repository creates, parses or
+validates one. It arrived on 22 July 2026 under <em>"feat: add opt-in
+persistent memory across sessions"</em>, and
+<code>AgentContext.load_memory</code> defaults to
+<code>False</code>.</p>
+<p>One mark, and it is the weak form of <code>scope_enforced</code>.</p>
+<p><strong>Most of what looks like memory here is not.</strong> The
+<code>View</code>, the four view properties and the condenser pipeline
+are several thousand lines of careful work deciding which events reach
+the model <em>within a run</em>. By this atlas's <a
+href="../../compare/#not-in-scope-conversation-window-management">scope
+test</a> — whether the store holds anything that could turn out to be
+false — that is context engineering, not memory: an event cannot be
+wrong, it happened. Section 9a describes it because it is the
+best-engineered thing in the tree and because a reader comparing
+frameworks will be shown it as a memory feature.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The memory is an index with pointers, and the interesting decision is
+what happens when the index outgrows its budget.</p>
+<p>Each tier holds a <code>MEMORY.md</code> the agent curates and dated
+<code>YYYY-MM-DD.md</code> daily logs it does not. Only the indexes are
+injected. The daily logs are <em>"never injected automatically; read
+them on demand when <code>MEMORY.md</code> points to them"</em> — so the
+index is a routing table over detail the agent can fetch, and the budget
+applies only to the routing table.</p>
+<p>When the two indexes together exceed 6,000 characters,
+<code>load_memory</code> does not drop a tier and does not cut mid-line.
+It subtracts the header overhead, splits the remainder evenly between
+the tiers with <em>"a short tier's unused share rolling over to the
+other"</em>, and then deletes whole leading lines from each body until
+it fits — keeping the tail, because the maintenance instructions tell
+the agent to append.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the durable half is two files under one shared budget, and every rule about what happens when they overflow lives in ninety-seven lines of loader with nothing validating what the agent wrote</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the durable half is two files under one shared budget, and every rule about what happens when they overflow lives in ninety-seven lines of loader with nothing validating what the agent wrote
+    AG[&quot;the agent, with ordinary file tools&quot;] --&gt;|&quot;append detail&quot;| DL[(&quot;YYYY-MM-DD.md daily logs&lt;br/&gt;never injected&quot;)]
+    AG --&gt;|&quot;fold durable facts&quot;| U[(&quot;~/.openhands/memory/MEMORY.md&lt;br/&gt;user tier&quot;)]
+    AG --&gt;|&quot;fold durable facts&quot;| P[(&quot;&amp;lt;workspace&amp;gt;/.openhands/memory/MEMORY.md&lt;br/&gt;project tier&quot;)]
+
+    U &amp; P --&gt; LM[&quot;load_memory(working_dir)&quot;]
+    LM --&gt; FIT{&quot;combined &amp;le; 6,000 chars?&quot;}
+    FIT --&gt;|yes| OUT[&quot;&amp;lt;MEMORY_CONTEXT&amp;gt; block&quot;]
+    FIT --&gt;|no| SPLIT[&quot;subtract header overhead&lt;br/&gt;split evenly, short tier&#39;s share rolls over&quot;]
+    SPLIT --&gt; TRUNC[&quot;_truncate_top: delete whole leading lines&lt;br/&gt;keep the tail&quot;]
+    TRUNC --&gt;|&quot;prepend [earlier memory truncated]&lt;br/&gt;counted against the budget&quot;| OUT
+
+    OUT --&gt; PROMPT[&quot;system prompt&quot;]
+    DL -.-&gt;|&quot;agent reads on demand&lt;br/&gt;when MEMORY.md points here&quot;| PROMPT
+
+    GATE[&quot;AgentContext.load_memory&lt;br/&gt;default False&quot;] --&gt; LM
+    TRUNC -.-&gt;|&quot;nothing records&lt;br/&gt;what the dropped lines said&quot;| LOSS([&quot;silent across sessions&quot;])</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing to stand up. Two directories of markdown, read at the start
+of a session. <code>LocalConversation</code> resolves the path lazily on
+the first <code>send_message()</code> / <code>run()</code> because the
+workspace is not known when <code>AgentContext</code> validates, and
+stores the text in <code>memory_context</code>, which is
+<code>exclude=True</code> on serialization — <em>"re-resolved from disk
+each session and must not bloat persisted conversation state."</em> That
+is the right call: a saved conversation cannot restore a stale copy of
+the index.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>The whole in-scope path is <code>load_memory</code> and the two
+functions under it.</p>
+<p><code>_read_index</code> returns <code>None</code> for a missing
+file, logs and returns <code>None</code> for an unreadable one, and
+returns <code>None</code> for an empty one — so an unreadable index and
+an absent index are indistinguishable downstream, which is the one place
+this function is quieter than it should be.</p>
+<p><code>_truncate_top</code> deletes whole leading lines until the body
+plus an <code>[earlier memory truncated]</code> notice fits the budget.
+Three decisions in it are better than the average of this corpus.
+Truncation is <strong>from the top</strong>, keeping the tail, matching
+an append-oriented maintenance instruction. <strong>Partial lines never
+survive</strong>, so the model never reads half a fact. And the notice
+is <strong>charged to the budget</strong> rather than being free, which
+is a one-line decision that keeps the prompt honest: a silently
+shortened index reads to the model as a complete one.</p>
+<p>The budget arithmetic is fair-share with rollover, and the docstring
+states the floor rather than leaving it to be discovered:
+<em>"<code>char_budget</code> is honored whenever it covers the headers
+plus one notice per tier (~150 chars for both tiers)."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is none. <code>MEMORY.md</code> is markdown. No status, no
+confidence, no timestamp, no provenance, no id, no scope key inside a
+file — the tier <em>is</em> the scope, and it is a directory.</p>
+<p>That is the report's main criticism and it should be read against
+what sits beside it. The same repository defends its context window with
+four formal properties, an intersection lattice, a repair path per
+property and 2,960 lines of tests. The part that actually outlives a
+session is a text file with a character cap and no writer in code.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>No index, no query, no ranking. Both indexes are injected whole; the
+agent does the second hop to a daily log with a file read. For one agent
+in one workspace that is coherent, and it does not generalise past
+it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>No write path in code. The agent appends to today's daily log and
+folds durable facts into <code>MEMORY.md</code>, under prompt guidance
+that is unusually specific about the distinction worth drawing:</p>
+<blockquote>
+<p>Record what was expensive to learn: root causes, environment quirks,
+user preferences, decisions and their reasons.</p>
+</blockquote>
+<p>with a matching negative — do not record secrets, and do not record
+<em>"facts that are trivially re-discoverable (directory listings,
+obvious commands)"</em> — and a separation most projects conflate:
+<em>"<code>AGENTS.md</code> remains the place for instructions addressed
+to any agent working in this repository; memory is for what you learned
+yourself."</em></p>
+<p>Nothing enforces any of it. The guidance is good and it is advice to
+a model.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>AgentContext.load_memory</code> is the switch and it
+<strong>defaults to <code>False</code></strong>. It is marked
+<code>SettingProminence.MAJOR</code> with the label "Persistent memory",
+so it surfaces in a client's settings UI — Agent Canvas has a page for
+it — and it was exposed in the agent-settings schema three weeks after
+the loader landed. With the flag off, the memory guidance in the system
+prompt is an older variant pointing at <code>AGENTS.md</code>
+instead.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The scope boundary is honest but thin.
+<code>load_memory(working_dir)</code> reads the project tier from the
+path the conversation supplies, so one workspace's project memory does
+not reach another. There is no canonicalization and no containment
+check, so this is the mark's weaker form: the key reaches the read, and
+a caller passing a different <code>working_dir</code> reads that
+workspace's memory.</p>
+<p>Three absences matter more. <strong>No code writes or validates a
+memory file</strong>, so the guidance about secrets is advice to a
+model, and a credential written into <code>MEMORY.md</code> is injected
+into every subsequent session's prompt. <strong>Nothing records what
+truncation dropped</strong> — the notice says that something was cut and
+nothing says what, so an index that loses its oldest lines each session
+degrades silently, and the daily logs it points at are not consulted to
+recover it. <strong>Nothing can be marked wrong</strong>: there is no
+status, no supersession and no tombstone, so a fact the agent later
+disproves competes with its correction on nothing but position in a
+file.</p>
+<h2 id="9a-the-context-machinery-which-is-not-the-memory">9a. The
+context machinery, which is not the memory</h2>
+<p>Most of the engineering effort in this tree goes into deciding which
+events reach the model within a run, and it is genuinely good work. It
+earns no capability mark here, because an event is a record of something
+that happened and cannot turn out to be false — the test this atlas uses
+to separate memory from <a
+href="../../compare/#not-in-scope-conversation-window-management">context
+engineering</a>. It is described because a reader comparing frameworks
+will be shown it as a memory feature, and because the central idea
+transfers.</p>
+<p><strong>A condenser does not choose where to cut.</strong>
+<code>View.manipulation_indices</code> starts from
+<code>ManipulationIndices.complete(self.events)</code> and intersects it
+with the index set each of four properties admits —
+<code>ObservationUniquenessProperty</code>,
+<code>BatchAtomicityProperty</code>,
+<code>ToolCallMatchingProperty</code>,
+<code>ToolLoopAtomicityProperty</code>, all four listed in
+<code>ALL_PROPERTIES</code>. An index survives only if every property
+admits it, so adding a fifth property can only tighten the set, which is
+the correct direction for a safety rule. The summarizing condenser then
+computes the window it wants from the token budget and snaps both ends
+to legal positions:</p>
+<pre class="python"><code>forgetting_start = view.manipulation_indices.find_next(self.keep_first)
+forgetting_end = view.manipulation_indices.find_next(naive_end)
+forgotten_events = view[forgetting_start:forgetting_end]</code></pre>
+<p><strong>Each property carries a repair as well as a rule.</strong>
+<code>ViewPropertyBase</code> requires both
+<code>manipulation_indices</code> and an <code>enforce</code> returning
+the ids to remove from a view that has already broken the property, and
+the base class says which of the two is load-bearing — indices are the
+mechanism and <em>"properties should hold inductively"</em>, while
+enforcement <em>"is intended as a fallback mechanism to handle edge
+cases, bad data, or unforeseen situations"</em> and therefore needs
+every event in the conversation rather than the current view.</p>
+<p><strong>Tool-call matching states its reason.</strong> It requires
+exactly one observation per action <code>tool_call_id</code>, because
+<em>"some providers (for example Anthropic tool use) require every
+<code>tool_use</code> to have one corresponding <code>tool_result</code>
+in the immediately following user message"</em>, and its
+<code>enforce</code> removes whichever side is unpaired, in both
+directions.</p>
+<p><strong>A drop is an appended event, not a deletion.</strong>
+<code>Condensation</code> carries <code>forgotten_event_ids</code>, an
+optional summary and offset, and the <code>llm_response_id</code> of the
+completion that decided the drop; <code>EventLog</code>'s only mutator
+is <code>append</code>, which rejects a duplicate id and an event whose
+declared parent is missing, and the class has no delete, truncate or
+<code>__setitem__</code>. The forgotten events leave the view and stay
+on disk. That makes <em>what did the agent stop being able to see, and
+when</em> answerable — a good property, and a property of a transcript
+rather than of a memory store, which is why it is here and not in the
+frontmatter.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>687 test files and 220,761 lines against 140,853 lines of
+implementation, which is more test than product and rare at this size.
+Nothing was run for this review.</p>
+<p>The distribution is the finding. The view machinery has 2,960 lines
+across ten files, one per property plus the manipulation-index lattice,
+including a case that forgets one event at a time and asserts both that
+the length dropped by exactly one and that the forgotten id is absent —
+a non-vacuous negative assertion, over a context window rather than over
+a recall.</p>
+<p><code>tests/sdk/context/test_memory.py</code> is what covers the
+durable half. No committed case asserts that particular material must
+not be retrieved from memory, so <code>negative_eval</code> is withheld;
+nothing records mutations of a memory file, so <code>audit_log</code> is
+withheld. <code>tests/integration/tests/</code> runs five condenser
+cases — <code>c01_thinking_block_condenser</code> through
+<code>c05_size_condenser</code> — against real behaviour.</p>
+<p>No paper is cited in the repository, and no benchmark result is
+committed for either half.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p><strong>Charge the truncation notice to the budget.</strong> A
+silently shortened memory index reads to the model as a complete one.
+<code>[earlier memory truncated]</code> costing characters is the
+cheapest honesty in this corpus.</p>
+<p><strong>Truncate in the direction your instructions imply.</strong>
+Telling the agent to append and then trimming the tail would delete
+exactly what it just learned. Keeping the tail costs one function and
+makes the guidance coherent.</p>
+<p><strong>Split an index from its detail, and inject only the
+index.</strong> A routing table under a budget with dated logs behind it
+is a working answer to "the memory does not fit" that does not require a
+retriever.</p>
+<p><strong>Then go further than this does.</strong> Record what
+truncation dropped, give a memory line an id so it can be corrected, and
+put <em>something</em> in code between the model and the file it is
+trusted to maintain.</p>
+<p><strong>Separate "where may I cut" from "how much must I
+cut."</strong> From section 9a, and the one idea here worth stealing for
+a context window: compute the legal positions first, snap the budget's
+window to them, and intersect the constraints so a new rule can only
+tighten.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p><strong>What did truncation drop?</strong> The notice says that
+something was cut and nothing says what. This is the durable half of the
+system quietly degrading.</p>
+<p><strong>Is <code>load_memory</code> on anywhere by default?</strong>
+It is <code>False</code> in the SDK. Whether the agent platform or Agent
+Canvas turns it on for real users decides whether this is a shipped
+memory system or an available one, and neither was established here.</p>
+<p><strong>Does anything ever read a daily log?</strong> The prompt
+tells the agent to write them and to read them when the index points
+there. No code touches them, and nothing committed measures whether the
+pointer is followed.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/context/memory.py</code></td>
+<td>The whole durable memory: two tiers, the budget, the truncation</td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/context/agent_context.py</code></td>
+<td><code>load_memory</code>, <code>memory_context</code></td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/conversation/impl/local_conversation.py</code></td>
+<td>The lazy resolution against the workspace path</td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/context/prompts/sections/static.py</code></td>
+<td>The maintenance guidance the agent is given</td>
+</tr>
+<tr>
+<td><code>tests/sdk/context/test_memory.py</code></td>
+<td>The durable half's tests</td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/context/view/</code></td>
+<td>Section 9a: <code>View</code>, the four properties, the index
+lattice</td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/context/condenser/</code></td>
+<td>Section 9a: the budget and the snap to legal indices</td>
+</tr>
+<tr>
+<td><code>openhands-sdk/openhands/sdk/event/condenser.py</code>,
+<code>conversation/event_store.py</code></td>
+<td>Section 9a: <code>Condensation</code>, and <code>append</code> as
+the only mutator</td>
+</tr>
+</tbody>
+</table>
+<h2 id="history">History</h2>
+<p><strong>2026-08-29</strong> — <a
+href="https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691"><code>9a24f6c8866f353042a57df0514ccc900e3a0691</code></a>
+— same commit, correcting the first reading, which got the scope
+boundary wrong in the direction that flatters a system. It led on the
+<code>View</code> and condenser machinery and awarded two marks to it:
+<code>audit_log</code> for the <code>Condensation</code> event appended
+to <code>EventLog</code>, and <code>negative_eval</code> for a test
+asserting a forgotten id is absent from the view. Both describe the set
+of events reaching the model within a run. An event cannot turn out to
+be false, so by the test this atlas uses — whether the store holds
+anything that could be wrong — that machinery is context engineering and
+not memory, and neither mark should have been awarded for it. Both are
+withdrawn; the marks go from three to one. <code>scope_enforced</code>
+stands, because it rests on <code>load_memory(working_dir)</code> and
+the persistent tier.</p>
+<p>The report is rebuilt around what does survive a session: the
+two-tier <code>MEMORY.md</code>, its 6,000-character budget, the
+fair-share split, top-first truncation and the notice charged against
+the budget. The context machinery is kept in section 9a, labelled,
+because it is the best-engineered thing in the tree and a reader
+comparing frameworks will be offered it as a memory feature.</p>
+<p><strong>2026-08-28</strong> — <a
+href="https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691"><code>9a24f6c8866f353042a57df0514ccc900e3a0691</code></a>
+— first reading, MIT, 2,244 commits since 23 August 2025, 140,853 lines
+of Python outside <code>tests/</code> and 220,761 inside. Reached from
+<code>OpenHands/OpenHands</code>, which is Agent Canvas and holds a
+settings page, a mutation hook and a typed
+<code>CondensationEvent</code> describing this SDK's condenser rather
+than implementing one. Repository provenance was checked against the
+organisation rather than inferred from the one clone:
+<code>agent-canvas</code> and <code>legacy</code> are both archived as
+of 27 July 2026, neither <code>legacy/openhands</code> nor
+<code>enterprise/openhands</code> contains a memory package,
+<code>OpenHands-Cloud</code> is deployment manifests, and
+<code>enterprise</code> pins the three <code>openhands-*</code>
+distributions published from this tree. <code>context/memory.py</code>
+and the view properties were confirmed present in
+<code>git ls-tree</code> at the pinned sha, not only in the working
+tree. Screened before reading: no auto-run surface, fourteen build-time
+execution surfaces, four unpinned surfaces and six files inside the
+seven-day cooldown; <code>AGENTS.md</code> is addressed to a reading
+agent and was treated as data. Nothing was installed and nothing was
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

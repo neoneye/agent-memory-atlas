@@ -301,7 +301,8 @@ MATCH (b:{":".join(self._clean_labels(object.labels))}) WHERE b['name'] = '{obje
 ```
 
 `_clean_labels` replaces spaces, hyphens, dots, commas, colons, semicolons,
-brackets, braces and single quotes — twelve substitutions, including the quote
+brackets, braces and single quotes — thirteen chained `replace()` calls, one for
+the space and twelve for punctuation, including the quote
 that matters. It is applied to the labels and not to the names, on the same two
 lines. Node names are produced by an LLM reading user-supplied text, so a name
 containing an apostrophe breaks the query and a crafted one is injection against
@@ -371,8 +372,16 @@ gating it.
 ## 10. Tests, Evals, and Benchmarks
 
 **585 cases across 17,404 lines in 73 files**, against 45,741 lines of source.
-Fourteen skips, and every one is a `skipUnless` on an unavailable service —
-Postgres, NetworkX dependencies — rather than a behaviour quietly excused.
+Fourteen skips, and every one is gated on the environment rather than excusing a
+behaviour. Four are decorators — three `skipUnless` and one `skipIf` — on an
+unavailable service or dependency (Postgres, the PostgreSQL/NetworkX imports).
+The other ten are inline `self.skipTest` calls for material that is not in the
+tree: three for absent local benchmark artifacts and stored ESCI evals, four for
+frozen search datasets and smoke fixtures, three for optional search and recsys
+plugins that are not installed. So most of the skipping is the benchmark corpus
+being absent, not a service being down — which matters for reading section 10's
+numbers, since the suite that runs by default is smaller than 585 by whatever
+those ten cover.
 
 `tests/test_event_hub_invalidation.py` is the best test in the repository and is
 the whole basis of the `negative_eval` mark. Three cases over one fake graph
@@ -563,5 +572,7 @@ refused should expect to build all three.
 - `tests/test_event_hub_invalidation.py` — the three supersession cases.
 
 ## History
+
+**2026-08-31** — [`b434f92a10d5b95aceab3f845d54472212672a10`](https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10) — count audit at the same pin. Two figures were wrong. `_clean_labels` (`src/lib/neo4j/client.py:156-176`) chains thirteen `replace()` calls, not twelve — one for the space and twelve for punctuation; the injection finding it supports is verbatim-correct and unchanged. Section 10 said all fourteen skips are `skipUnless` on an unavailable service; only four are decorators (three `skipUnless`, one `skipIf`) and ten are inline `self.skipTest` calls for absent benchmark artifacts, frozen datasets and uninstalled optional plugins. Every skip is still environment-gated and no behaviour is excused, but the default-run suite is correspondingly smaller than 585. No finding or mark changed.
 
 **2026-08-30** — [`b434f92a10d5b95aceab3f845d54472212672a10`](https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10) — first reading, at 426 commits. Screened before reading: no auto-run surface, three build-time execution surfaces (a `Makefile`, `tests/conftest.py`, and a `prepublishOnly` script in `tui/package.json`), three unpinned surfaces, and **four dependency manifests inside the seven-day freshness cooldown** — nothing was installed and nothing was run, and both `AGENTS.md` and `CLAUDE.md` were read as data. Three marks. The report is organised around the second ingestion and around the benchmark ledger, because those are the two places where the design's intent and its plumbing come apart: the supersession rule is well-reasoned and unaudited, and the run notes are more careful than the file that publishes them.

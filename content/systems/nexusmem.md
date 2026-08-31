@@ -245,7 +245,7 @@ on, adding `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm in
 last Tuesday" and "what happened last Tuesday" are different questions here, and
 `tests/store.test.ts:468` pins the distinction in its case title — *"asOfEpoch
 excludes a node recorded after the cutoff, even though it happened before"*.
-Section 9b has the one path on which that separation is still lossy.
+Section 9b names the one path on which that separation goes lossy.
 
 Two schema columns carry the epistemics. `provenance` is a four-tier ordering —
 `observed`, `authored`, `recorded`, `derived` — backfilled by kind on migration

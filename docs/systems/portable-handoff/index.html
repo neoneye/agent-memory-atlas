@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A session handoff where local code
+supplies the facts and the model supplies the meaning, every claim
+carries a provenance and a trust label, and the trust a claim may
+declare is capped by where it came from.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Portable
+Handoff — Agent Memory Atlas">
+    <meta property="og:description" content="A session handoff where
+local code supplies the facts and the model supplies the meaning, every
+claim carries a provenance and a trust label, and the trust a claim may
+declare is capped by where it came from.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Portable
+Handoff — Agent Memory Atlas">
+    <meta name="twitter:description" content="A session handoff where
+local code supplies the facts and the model supplies the meaning, every
+claim carries a provenance and a trust label, and the trust a claim may
+declare is capped by where it came from.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Portable Handoff — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Portable Handoff",
+      "description": "A session handoff where local code supplies the facts and the model supplies the meaning, every claim carries a provenance and a trust label, and the trust a claim may declare is capped by where it came from.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A capsule between sessions</p>
+          <h1>Portable Handoff</h1>
+          <p class="document-deck">A session handoff where local code
+supplies the facts and the model supplies the meaning, every claim
+carries a provenance and a trust label, and the trust a claim may
+declare is capped by where it came from.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/legoambarish/portable-handoff">
+              <span>Source</span>
+              <strong>legoambarish/portable-handoff</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e" title="4c9b7f7309803d009ce795af9f397875f23d567e">
+              <span>Analyzed revision</span>
+              <code>4c9b7f73…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-20</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Portable Handoff writes one Markdown <strong>capsule</strong> at the
+end of a coding session so the next session — possibly in a different
+tool — starts from what mattered rather than from nothing. Apache-2.0,
+5,415 lines of Python, standard library only, with a committed check
+(<code>scripts/check_stdlib_only.py</code>) that keeps it that way.</p>
+<p>The design is one sentence in the README and it is the right
+sentence: <em>"the model supplies the meaning and local code supplies
+the facts."</em> <code>preflight</code> collects git state, file hashes
+and timestamps from the machine; the model writes a semantic draft as
+JSON; <code>finalize</code> merges the two and — the part worth the
+report — <strong>rewrites any trust label the source cannot
+support</strong>.</p>
+<p><strong>What is genuinely interesting:</strong> trust is not a number
+and not a claim the writer gets to make. <code>Trust</code> is a
+five-state enum, <code>Provenance</code> is an eight-value enum naming
+the channel a claim arrived through, and
+<code>cap_trust(provenance, trust)</code> refuses <code>verified</code>
+to anything whose provenance is not in
+<code>DETERMINISTIC_PROVENANCES</code> — <em>at parse time</em>, so it
+applies to every capsule this tool reads and not only to ones it wrote.
+A capsule handed to you by a stranger cannot declare itself
+verified.</p>
+<p><strong>Strongest beyond that:</strong> the budget reports what it
+dropped and truncated rather than clipping silently; the briefing states
+the capsule's age and whether its HEAD ever left the machine;
+<code>load</code> re-checks the recorded repository facts against the
+current tree and reports each as <code>match</code> or
+<code>different</code>; and the command-safety module classifies a
+carried shell command at load time against raw text, <em>"so a capsule
+has no field it could populate to declare itself safe."</em></p>
+<p><strong>Weakest:</strong> nothing withholds. Every trust state is
+rendered as a label beside the text and no read path filters, ranks or
+omits on it. The five states are the right vocabulary attached to no
+mechanism — a memory marked <code>untrusted</code> reaches the briefing
+exactly like a <code>verified</code> one, distinguished by a word the
+model is asked to respect. That is why <code>trust_state</code> is
+withheld below despite this being the best-shaped trust vocabulary in
+the corpus.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>claim</strong>: text, plus where it came from,
+plus how much weight it can carry.</p>
+<pre class="text"><code>claim = { text, provenance, trust, evidence_refs[], captured_at }
+
+provenance ∈ conversation:user · conversation:assistant · tool · file
+             git · test · transcript · model_inference
+trust      ∈ verified · observed · claimed · inferred · untrusted
+
+                       cap_trust(provenance, trust)
+   trust = verified  ───────────────────────────────►  claimed
+   unless provenance ∈ { git, tool, test, file, transcript }
+
+decision.status ∈ active · superseded
+secret_scan.status ∈ passed · failed · not_run · unknown</code></pre>
+<p>The state machine is about <strong>authority</strong>, not about
+lifecycle. A claim never moves between trust states over time; it is
+assigned one at capture and capped once at parse. Nothing promotes a
+claim, nothing demotes it later, and nothing expires. A capsule is
+immutable once written — the only "correction" available is writing
+another capsule, and no capsule references the one it replaces.</p>
+<p>Control is <strong>hybrid and explicitly divided</strong>: the model
+authors meaning and may not author facts; the local code authors facts
+and does not interpret them; the user runs the commands. That division
+is the product.</p>
+<p>The system treats a capsule as <strong>untrusted historical
+data</strong> and says so in the rendered artifact, in the module
+docstrings, and in the briefing text it hands the next model.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model may write meaning and never facts — preflight gathers git state and file hashes locally, finalize merges the model's draft with them, and cap_trust rewrites any verified label whose provenance cannot support it, at parse time so it applies to capsules this tool did not write</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the model may write meaning and never facts — preflight gathers git state and file hashes locally, finalize merges the model&#39;s draft with them, and cap_trust rewrites any verified label whose provenance cannot support it, at parse time so it applies to capsules this tool did not write
+    PRE[&quot;preflight&lt;br/&gt;git facts, file hashes,&lt;br/&gt;timestamps&quot;]
+    DRAFT[&quot;model writes&lt;br/&gt;draft.json&lt;br/&gt;meaning only&quot;]
+    FIN[&quot;finalize&quot;]
+    CAP[&quot;cap_trust(provenance, trust)&lt;br/&gt;verified → claimed&lt;br/&gt;unless source is deterministic&quot;]
+    SAN[&quot;sanitize&lt;br/&gt;secret scan + redaction&quot;]
+    BUD[&quot;budget&lt;br/&gt;records dropped + truncated&quot;]
+    FILE[(&quot;capsule.md&lt;br/&gt;+ canonical JSON&quot;)]
+    LOAD[&quot;load&quot;]
+    DRIFT[&quot;re-check recorded git facts&lt;br/&gt;match / different&quot;]
+    CMD[&quot;command_safety&lt;br/&gt;read_only · review · dangerous&quot;]
+    BRIEF[&quot;briefing for the next session&quot;]
+
+    PRE --&gt; FIN
+    DRAFT --&gt; FIN --&gt; CAP --&gt; SAN --&gt; BUD --&gt; FILE
+    FILE --&gt; LOAD --&gt; DRIFT --&gt; BRIEF
+    LOAD --&gt; CMD --&gt; BRIEF
+    LOAD -.-&gt;|&quot;age, and whether HEAD&lt;br/&gt;ever reached a remote&quot;| BRIEF</code></pre></details></figure>
+<p><strong>Runtime shape.</strong> A Python CLI with nine subcommands —
+<code>preflight</code>, <code>finalize</code>, <code>validate</code>,
+<code>load</code>, <code>doctor</code>, <code>export</code>,
+<code>list</code>, <code>source probe|list|show</code> — plus a
+<code>skills/handoff/</code> package installed into Claude Code, Codex
+CLI or Cursor, and
+<code>integrations/generic/HANDOFF_INSTRUCTIONS.md</code> for a host
+with no shell at all. No server, no daemon, no database, no
+dependencies.</p>
+<p><strong>Persistence.</strong> One Markdown file per capsule with an
+embedded canonical JSON document (<code>strict_json.py</code>,
+<code>canonical.py</code>), stored by <code>storage.py</code>. Schema
+<code>handoff-v1.schema.json</code> ships twice — in
+<code>schemas/</code> and in the package resources — and
+<code>models.py:26</code> rejects schema versions 1.0 and 1.1 by name
+rather than accepting them, <em>"because 1.1 adds fields a 1.0 reader
+would not know to distrust."</em></p>
+<p><strong>Retrieval.</strong> There is none. A capsule is loaded whole;
+there is no query, no index and no embedding. The unit of recall is the
+session.</p>
+<p><strong>Transcript adapters.</strong> <code>adapters/</code> reads
+Claude, Codex (files and SQLite), Cursor (files and live) and a generic
+transcript, bounded and read-only, marking every result
+<code>untrusted_content: True</code> (<code>sources.py:45</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install</code>, stdlib only, no lockfile beside
+<code>pyproject.toml</code>. <code>doctor</code> reports whether the
+host can produce a capsule at all. Everything is local; the capsule is a
+Markdown file you can read, diff and email. The paste-only path means
+the design degrades to a host with no shell, at the cost of the
+deterministic half — which is the one part the README does not spell out
+as a trust consequence.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Fact capture.</strong> <code>preflight.py</code> and
+<code>gitfacts.py</code> — repository root, remote, branch, commit,
+dirty state, changed files, and per-file hashes, each stamped
+<code>Provenance.GIT</code> and <code>Trust.VERIFIED</code>
+(<code>gitfacts.py:138</code>).</p>
+<p><strong>Meaning capture.</strong> The model writes a draft JSON
+against <code>schemas/handoff-v1.schema.json</code>;
+<code>skills/handoff/SKILL.md</code> and the per-host command files tell
+it what belongs there.</p>
+<p><strong>Merge and cap.</strong> <code>finalize.py</code> combines the
+two. <code>_downgrade_model_verification</code> (<code>:126-134</code>)
+walks model-authored records and rewrites
+<code>trust: verified → claimed</code> and
+<code>provenance: git → test</code>. <code>models.py:216</code> then
+applies <code>cap_trust(provenance, trust)</code> to every claim as it
+is parsed — <code>:166-170</code>, <em>"Downgrade <code>verified</code>
+to <code>claimed</code> when the source cannot support it"</em> —
+against
+<code>DETERMINISTIC_PROVENANCES = {git, tool, test, file, transcript}</code>
+(<code>:22</code>).</p>
+<p><strong>Sanitize.</strong> <code>sanitize.py</code> scans fields for
+secrets and replaces a match with a kind marker
+(<code>[REDACTED:github]</code>), recording the redaction kind but not
+the matched text. <code>finalize</code> records the scan itself as a
+<code>ScanStatus</code> — <code>passed</code>, <code>failed</code>,
+<code>not_run</code> or <code>unknown</code> — so <em>"no
+redactions"</em> can be read against whether a scan ran at all, and
+<code>render.py:263</code> says so in the artifact: <em>"An empty list
+is only meaningful when the scan status above is
+<code>passed</code>."</em></p>
+<p><strong>Budget.</strong> <code>budgeting.py</code> produces a
+<code>BudgetReport</code> carrying <code>estimated_tokens</code>,
+<code>dropped[]</code> and <code>truncated[]</code>, with preservation
+priorities deciding what goes first. The losses are part of the
+document.</p>
+<p><strong>Load.</strong> <code>load.py</code> re-reads the recorded
+repository facts and compares them with the current tree — repo root,
+remote, commit, branch, dirty — appending a check per field with
+<code>status: "match" | "different"</code> (<code>:92-141</code>). The
+briefing then states the capsule's age and its publication state, pinned
+by <code>test_briefing_states_capsule_age_and_publication_state</code>:
+<em>"less than a day old"</em>, <em>"HEAD reachable from a remote:
+no"</em>, <em>"may exist only on the machine that wrote this
+capsule."</em></p>
+<p><strong>Command safety.</strong> <code>command_safety.py</code>
+classifies <code>next_action.command</code> into <code>read_only</code>,
+<code>review</code> or <code>dangerous</code> from fifteen-plus named
+families — downloaded content piped into a shell, recursive deletion,
+history rewrite, privilege escalation, credential disclosure, scheduled
+persistence. Its docstring states the two things that make it honest:
+<em>"It is not a sandbox and can be evaded. It over-flags on
+purpose"</em>, and <em>"Classification runs at load time against the raw
+text, so a capsule has no field it could populate to declare itself
+safe."</em></p>
+<p><strong>Tests.</strong> <code>tests/</code> — unit, integration,
+security/adversarial, adapters, and a <code>quality/</code> suite with a
+committed <code>quality_report.json</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is the labelled claim, and
+<code>CLAIM_FIELDS = {text, provenance, trust, evidence_refs, captured_at}</code>.
+Beside it sits an <strong>evidence record</strong> —
+<code>evidence_id</code>, <code>kind</code>, <code>source</code>,
+<code>digest</code>, <code>summary</code>, <code>captured_at</code>,
+plus its own provenance and trust — and claims point at evidence by id
+through <code>evidence_refs</code>. That is <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+with an explicit link in the schema rather than as a convention.</p>
+<p><strong>Scoping</strong> is the repository. The capsule records a
+<code>repo_root_hint</code>, and load compares it with the current root;
+there is no user, agent or tenant key, and none is wanted for a file a
+person carries between their own sessions.</p>
+<p><strong>Temporal.</strong> <code>captured_at</code> per claim in
+RFC3339 UTC, validated (<code>models.py:195-197</code>), and a capsule
+<code>created_at</code>. All of it is <em>capture</em> time — there is
+no interval during which a fact is asserted true, so
+<code>bitemporal</code> is not marked. What the design does instead is
+more useful for its purpose: it computes the age at read time and says
+it in words.</p>
+<p><strong>Correction.</strong> <code>DecisionStatus</code> is
+<code>active | superseded</code>, so a decision can be marked as
+replaced <em>within</em> one capsule. Across capsules there is nothing:
+a new capsule does not reference, supersede or invalidate an older one,
+and there is no delete. For a per-session artifact that is defensible;
+it also means the store cannot answer <em>what did we decide,
+currently</em> across a project's history.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>load</code> renders the whole capsule into a briefing, ordered
+and budgeted; <code>export</code> emits a smaller view for pasting, and
+<code>test_export_emits_one_half_not_both</code> pins that it emits one
+half rather than both. There is no search, no ranking and no relevance
+model, because the unit of recall is the whole session.</p>
+<p>Two things happen at read time that most stores in this corpus do
+only at write time, if at all.</p>
+<p><strong>The capsule is checked against the world.</strong> The
+recorded git facts are compared with the current repository and each
+field is reported <code>match</code> or <code>different</code>, so the
+reader sees exactly which of the capsule's assumptions have expired
+rather than discovering it later.</p>
+<p><strong>The capsule's own reliability is stated.</strong> Age in
+words, and whether the recorded HEAD is reachable from a remote —
+<em>"may exist only on the machine that wrote this capsule"</em> — which
+is a publication fact with real consequences for a handoff between
+machines.</p>
+<p><strong>Failure modes.</strong> Everything in the capsule is
+injected; there is no way to ask for part of it, so a large session's
+capsule spends the budget and the <code>dropped[]</code> list is the
+only signal of what did not fit. And the trust labels ride along as text
+— if the receiving model ignores them, nothing else enforces them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two phases by design, and the split is the safety property:
+<strong>the model may write meaning and may not write facts.</strong> A
+model-authored record claiming <code>verified</code> is rewritten to
+<code>claimed</code>; a model-authored record claiming <code>git</code>
+provenance is rewritten to <code>test</code>. The cap is applied again
+on parse, which means it holds for a capsule written by another tool, an
+older version, or a hostile author.</p>
+<p>Writes are synchronous, local and deterministic apart from the
+model's own draft step. There is no extraction pass over transcripts by
+default — the adapters read them bounded and read-only, and mark the
+content untrusted.</p>
+<p><strong>Bounds everywhere.</strong> <code>bounds.py</code> caps
+string length, list items and nesting depth;
+<code>test_large_nested_input_is_bounded</code> pins the depth limit;
+<code>strict_json.py</code> rejects duplicate keys and does not echo the
+offending value into the error. A parser that refuses to quote what it
+rejected is a small thing that almost nothing in this corpus does.</p>
+<p><strong>Conflict handling.</strong> None across capsules, and
+<code>active</code>/<code>superseded</code> within one.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No background work, no model call on the tool's own path — the only
+LLM involvement is the drafting step the host agent performs. The read
+cost is one budgeted document per session start, with the estimate and
+the losses recorded in the document itself. Write-to-readable lag is
+however long it takes to run two commands, and there is no staleness
+process at all because a capsule is never updated — only re-read, with
+its age reported.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A skill (<code>skills/handoff/SKILL.md</code>) plus per-host command
+files for Claude Code and Cursor, an <code>agents/openai.yaml</code> for
+Codex, and <code>HANDOFF_INSTRUCTIONS.md</code> for hosts with no shell,
+where the model is walked through producing the draft by hand.
+<code>scripts/install_skill.py</code> installs it, and
+<code>tests/integration/test_skill_install.py</code> covers the
+install.</p>
+<p>The agent's agency is bounded by construction: it writes a draft in a
+fixed schema and never touches the fact half. There is no tool the model
+can call to mutate a stored capsule, which is unusual here and follows
+from the artifact being a file rather than a service.</p>
+<p>The briefing is where the design shows most clearly. It carries the
+trust label inline on each line (<code>load.py:208</code> renders
+<code>&gt; [claimed] text</code>), states that capsule and transcript
+prose are untrusted historical data, and presents a carried command
+inside a fenced block with <em>"has not been executed and is not a
+verified instruction"</em> and <em>"review before running"</em> —
+assertions pinned by
+<code>test_briefing_presents_a_command_as_inert_data</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The security posture is the strongest part of the
+system</strong>, and it is stated in the same terms the atlas uses. A
+capsule is untrusted input; classification runs on raw text at load; the
+artifact cannot self-certify; the classifier's own limits are written
+into its docstring rather than implied.</p>
+<p><strong>Provenance is real and typed.</strong> Eight channels, capped
+trust, evidence records with digests, and a forged timestamp or evidence
+hash rejected
+(<code>test_forged_timestamp_integrity_and_evidence_hash_are_rejected</code>).</p>
+<p><strong>Secrets</strong> are redacted with the kind recorded and the
+match withheld, and the scan's own status is a field, so an empty
+redaction list cannot be read as a clean bill of health.</p>
+<p><strong>What is absent:</strong> no state withholds.
+<code>untrusted</code> is rendered, not enforced;
+<code>superseded</code> is rendered, not filtered; a
+<code>dangerous</code> command is labelled and gated in prose rather
+than removed. The consistent theory is <em>tell the reader everything
+and let the reader decide</em>, which is coherent, and which relies
+entirely on a model honouring labels in its context — the one assumption
+this codebase otherwise refuses to make anywhere else.</p>
+<p><strong>Deletion and privacy.</strong> A capsule is a file; deleting
+it is deleting the file. Nothing syncs and nothing uploads.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Unit, integration, adapter, security and quality suites, with CI. The
+security file is short and pointed: forged timestamps and evidence
+hashes rejected, malformed JSON never echoing content, large nested
+input bounded.</p>
+<p>The negative assertions earn the one capability mark, and one of them
+is the shape this atlas argues for elsewhere:
+<code>test_secrets_are_redacted_without_ disclosing_the_match</code>
+asserts the secret is <strong>absent</strong> from the rendered Markdown
+<em>and</em> that <code>[REDACTED:github]</code> is
+<strong>present</strong> in the same fixture — an absence assertion with
+its own positive control, so it cannot pass on an empty render.
+<code>test_malformed_json_never_echoes_content</code> does the same for
+the parser's error path.</p>
+<p><code>tests/quality/evaluate_quality.py</code> with a committed
+<code>quality_report.json</code> is the nearest thing to an eval; it
+scores capsule quality rather than retrieval, and the committed artifact
+means the claim is checkable rather than asserted.</p>
+<p><strong>What is not tested:</strong> the paste-only path's trust
+consequences. When a host has no shell, the deterministic half cannot
+run, so every fact becomes model-authored and <code>cap_trust</code>
+demotes it — which is correct behaviour and, as far as the tree shows,
+unasserted.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Cap the trust a record may declare by the provenance it
+arrived with, at parse time.</strong>
+<code>cap_trust(provenance, trust)</code> is four lines and it means an
+authority claim cannot be smuggled in by whoever wrote the file.
+Applying it on read rather than only on write is what makes it hold for
+artifacts you did not produce.</li>
+<li><strong>Record what the budget dropped, inside the
+artifact.</strong> <code>dropped[]</code> and <code>truncated[]</code>
+beside the token estimate turns a silent truncation into a disclosed
+one, which is the difference between a reader who knows the summary is
+partial and one who does not.</li>
+<li><strong>Make "the scan did not run" a distinct value from "the scan
+found nothing."</strong> <code>ScanStatus.not_run</code> beside
+<code>passed</code>, plus a rendered line saying an empty redaction list
+is only meaningful when the status is <code>passed</code>.</li>
+<li><strong>State the artifact's age and publication state at read
+time.</strong> Not a badge — a sentence: <em>"less than a day old"</em>,
+<em>"may exist only on the machine that wrote this capsule."</em></li>
+<li><strong>Classify carried commands against raw text at load, and say
+the classifier can be evaded.</strong> A capsule with no field it can
+populate to declare itself safe is the correct shape for any artifact
+that crosses a trust boundary.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not stop at labelling.</strong> Five well-chosen trust
+states that no read path consults put the whole burden on a model
+honouring words in its context — from a codebase that otherwise refuses
+to trust anything it did not compute. At minimum, let the lowest state
+change what gets rendered.</li>
+<li><strong>Do not let a capsule be the only unit.</strong> With no
+query, a large session spends the budget and the reader gets whatever
+survived the priority order.</li>
+<li><strong>Do not lose the chain.</strong> A new capsule that does not
+reference the one it replaces cannot answer <em>what is currently
+decided</em> across a project, which is the question a handoff format
+will be asked next.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for one person moving work between agents and tools, and
+within that scope it is the most carefully reasoned artifact in this
+corpus about <em>what a model may be trusted to assert</em>. Take it if
+your problem is the lost hour between sessions and you are willing to
+read the capsule. Walk away if you need memory that accumulates: there
+is no store, no query, no supersession across capsules and no way to ask
+what is true now rather than what was true at the end of one
+session.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>On a host with no shell, everything becomes model-authored and
+<code>cap_trust</code> demotes it — does the briefing tell the reader
+that the deterministic half was unavailable, or does it read the same as
+a capsule with real facts in it?</li>
+<li>What does the quality suite actually score, and against what
+reference? The committed report makes it checkable, but the rubric
+behind the number is not obvious from the tree.</li>
+<li>Is there an intended chain between capsules — a
+<code>previous_capsule</code> field — or is one-shot the design? The
+schema has no field for it and the README does not say.</li>
+<li>The repository is new at this pin, with a first release version of
+<code>0.1.0</code>; none of the above has had time to be exercised by
+other people's capsules.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema / model:</strong>
+<code>src/portable_handoff/models.py</code> (<code>Trust</code>,
+<code>Provenance</code>, <code>cap_trust</code> at <code>:166</code>,
+<code>DETERMINISTIC_PROVENANCES</code> at <code>:22</code>),
+<code>schemas/handoff-v1.schema.json</code>,
+<code>src/portable_handoff/schema.py</code></li>
+<li><strong>Write path:</strong>
+<code>src/portable_handoff/preflight.py</code>,
+<code>gitfacts.py</code>, <code>finalize.py</code>
+(<code>_downgrade_model_verification</code> at <code>:126</code>),
+<code>sanitize.py</code>, <code>budgeting.py</code>,
+<code>canonical.py</code>, <code>strict_json.py</code></li>
+<li><strong>Read path:</strong>
+<code>src/portable_handoff/load.py</code> (drift checks at
+<code>:92-141</code>, trust rendering at <code>:208</code>),
+<code>render.py</code>, <code>command_safety.py</code></li>
+<li><strong>Agent surface:</strong>
+<code>skills/handoff/SKILL.md</code>,
+<code>integrations/claude/commands/handoff.md</code>,
+<code>integrations/cursor/commands/handoff.md</code>,
+<code>integrations/generic/HANDOFF_INSTRUCTIONS.md</code>,
+<code>scripts/install_skill.py</code></li>
+<li><strong>Adapters:</strong>
+<code>src/portable_handoff/adapters/</code> (claude, codex,
+codex_sqlite, cursor, cursor_live, transcript_file)</li>
+<li><strong>Tests:</strong>
+<code>tests/security/test_adversarial.py</code>,
+<code>tests/integration/test_blocking_and_briefing.py</code>,
+<code>tests/integration/test_create_load.py</code>,
+<code>tests/quality/evaluate_quality.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-20</strong> — <a
+href="https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e"><code>4c9b7f7309803d009ce795af9f397875f23d567e</code></a>
+— first reading, at version 0.1.0. Screened before anything was read: no
+auto-executing surface, one build-time execution point, one dependency
+manifest inside the seven-day cooldown and no lockfile beside
+<code>pyproject.toml</code>; nothing was installed and no command was
+run. The trust cap and the command classifier were established by
+reading <code>models.py</code> and <code>command_safety.py</code>
+against the committed tests rather than by producing a capsule.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

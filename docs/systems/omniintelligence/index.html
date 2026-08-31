@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Patterns learned from session
+events and moved by an evidence FSM with a deliberate hysteresis band —
+where the cold-start path selects exactly what the gate refuses, and the
+only test of it replaces the gate.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OmniIntelligence — Agent Memory Atlas">
+    <meta property="og:description" content="Patterns learned from
+session events and moved by an evidence FSM with a deliberate hysteresis
+band — where the cold-start path selects exactly what the gate refuses,
+and the only test of it replaces the gate.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OmniIntelligence — Agent Memory Atlas">
+    <meta name="twitter:description" content="Patterns learned from
+session events and moved by an evidence FSM with a deliberate hysteresis
+band — where the cold-start path selects exactly what the gate refuses,
+and the only test of it replaces the gate.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OmniIntelligence — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OmniIntelligence",
+      "description": "Patterns learned from session events and moved by an evidence FSM with a deliberate hysteresis band \u2014 where the cold-start path selects exactly what the gate refuses, and the only test of it replaces the gate.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Evidence-tiered pattern learning</p>
+          <h1>OmniIntelligence</h1>
+          <p class="document-deck">Patterns learned from session events
+and moved by an evidence FSM with a deliberate hysteresis band — where
+the cold-start path selects exactly what the gate refuses, and the only
+test of it replaces the gate.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OmniNode-ai/omniintelligence">
+              <span>Source</span>
+              <strong>OmniNode-ai/omniintelligence</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OmniNode-ai/omniintelligence/commit/8c67665add2b611307a78a3f351e0fac18c5bad8" title="8c67665add2b611307a78a3f351e0fac18c5bad8">
+              <span>Analyzed revision</span>
+              <code>8c67665a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-11</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OmniIntelligence is the memory half of a two-repository loop: it
+learns patterns from coding-session events, grades them on evidence, and
+serves the survivors over HTTP to <a
+href="../omniclaude/">OmniClaude</a>, which injects them into sessions
+and reports back what happened. Both are MIT-licensed. This repository
+is about 164,000 lines of Python across 1,057 source files, with a
+further 150,000 lines of tests, 68 ONEX node packages and 28 Postgres
+migrations.</p>
+<p>It is the most thoroughly <em>reasoned</em> memory lifecycle in this
+atlas, and the reasoning is in the code rather than in a design
+document. Demotion is deliberately harder than promotion — ten
+injections rather than five, a failure streak of five rather than three,
+a 40% success floor against a 60% ceiling — and the docstring beside
+each constant says why, in the terms an experimentalist would use:
+<em>"The 20% gap between promotion (60%) and demotion (40%) ensures ...
+random variance doesn't cause flip-flopping between states."</em> Every
+transition is written to an append-only table carrying a
+<code>gate_snapshot</code> of the conditions that justified it. The
+evidence tier can only increase, and the guarantee is not a convention
+but the <code>WHERE</code> clause of the <code>UPDATE</code>.</p>
+<p>Three things are broken in the way this atlas exists to find, and all
+three are invisible from the outside.</p>
+<p><strong>The cold-start path selects exactly what the gate
+refuses.</strong> <code>SQL_FETCH_CANDIDATE_PATTERNS</code> deliberately
+admits <code>evidence_tier = 'unmeasured'</code> rows for bootstrap
+promotion; <code>apply_transition</code> — which the same handler then
+calls — rejects any transition to <code>PROVISIONAL</code> from a tier
+below <code>OBSERVED</code>. The one test named "full promotion
+lifecycle" passes a mock in place of <code>apply_transition</code> that
+returns success, and asserts a promotion the real reducer would
+refuse.</p>
+<p><strong>The top evidence tier is unreachable.</strong>
+<code>verified</code> is a valid column value, is gated on, and is
+written by nothing: <code>compute_evidence_tier</code> returns only
+<code>OBSERVED</code> or <code>MEASURED</code>, and its docstring says
+<em>"VERIFIED requires independent validation (not computed
+here)."</em></p>
+<p><strong>The manual kill switch reads a stale view.</strong> Disabling
+a pattern is a hard override that bypasses the cooldown — and it is read
+from <code>disabled_patterns_current</code>, a materialized view whose
+only <code>REFRESH</code> statements in the tree are inside integration
+tests.</p>
+<p>The Goodhart and reward-hacking guardrails are real, pure, and
+tested, and nothing calls them.</p>
+<p><strong>A scoping caveat about what can be read here.</strong> The
+ONEX runtime, node base classes and several enums — including
+<code>EnumEvidenceTier</code> itself — come from
+<code>omnibase-core</code>, <code>omnibase-infra</code> and
+<code>omnimarket</code>, which <code>pyproject.toml</code> pins as git
+dependencies on <code>github.com/OmniNode-ai/…</code>. None of those
+three repositories was publicly readable at this reading, so the
+framework beneath the mechanism cannot be inspected at a pinned commit.
+Everything this report describes — the schema, the SQL, the handlers,
+the gates and the tests — is in this repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>learned pattern</strong>: a signature
+clustered from session events, with a domain, keywords, a confidence
+float, and two independent axes of standing.</p>
+<p>The first axis is <strong>lifecycle status</strong> —
+<code>candidate → provisional → validated → deprecated</code> — and it
+decides whether the pattern may be injected into a session. The second
+is <strong>evidence tier</strong> —
+<code>unmeasured → observed → measured → verified</code> — and it
+decides whether the pattern is <em>allowed to advance</em>. Status is
+what the pattern is; tier is what is known about it.</p>
+<p>Tier is computed from one question: was there a measured pipeline
+run, and did it succeed?</p>
+<pre class="python"><code>if run_id is None:
+    computed = EnumEvidenceTier.OBSERVED          # anecdotal
+elif run_result == &quot;success&quot;:
+    computed = EnumEvidenceTier.MEASURED          # quantitative
+else:
+    computed = EnumEvidenceTier.OBSERVED          # a run happened and didn&#39;t succeed</code></pre>
+<p>and it can only go up. The monotonicity is not a Python convention —
+it is the predicate of the statement that writes it:</p>
+<pre class="sql"><code>UPDATE learned_patterns SET evidence_tier = $2, updated_at = NOW()
+WHERE id = $1
+  AND (CASE evidence_tier WHEN &#39;unmeasured&#39; THEN 0 WHEN &#39;observed&#39; THEN 10
+       WHEN &#39;measured&#39; THEN 20 WHEN &#39;verified&#39; THEN 30 ELSE 0 END)
+    &lt; (CASE $2 WHEN &#39;unmeasured&#39; THEN 0 WHEN &#39;observed&#39; THEN 10
+       WHEN &#39;measured&#39; THEN 20 WHEN &#39;verified&#39; THEN 30 ELSE 0 END)</code></pre>
+<p>A concurrent writer, a replayed Kafka message and a buggy caller all
+fail the same way: the statement matches no rows. The migration names
+one writer — <em>"The attribution binder is the SOLE writer of this
+column"</em> — and the guard holds even if that stops being true.</p>
+<p>Status moves only through <code>apply_transition</code>, which the
+demotion handler calls the single source of truth, and which refuses
+<code>→ PROVISIONAL</code> below <code>OBSERVED</code> and
+<code>→ VALIDATED</code> below <code>MEASURED</code>. So the two axes
+are wired together in one direction: evidence gates status, and status
+never touches evidence.</p>
+<p>What kills a pattern is asymmetric on purpose. Promotion is
+optimistic, demotion conservative, and between them sits a 20-point band
+of success rate that belongs to neither.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — promotion needs injections, a success rate and an evidence tier together, and the band between forty and sixty per cent is hysteresis where nothing moves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: promotion needs injections, a success rate and an evidence tier together, and the band between forty and sixty per cent is hysteresis where nothing moves
+stateDiagram-v2
+  [*] --&gt; candidate: clustered from session events
+  candidate --&gt; provisional: 5 injections · 60% success · tier &gt;= observed
+  candidate --&gt; candidate: bootstrap path selects unmeasured, reducer refuses it
+  provisional --&gt; validated: 5 injections · 60% success · tier &gt;= measured
+  validated --&gt; deprecated: 10 injections · under 40% success · after 24h cooldown
+  validated --&gt; deprecated: 5 consecutive failures
+  validated --&gt; deprecated: manual disable, cooldown bypassed
+  validated --&gt; validated: between 40% and 60% — the hysteresis band
+  deprecated --&gt; [*]: excluded from every injection query</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>An event-driven Python service. ONEX nodes — 68 package directories,
+each with a <code>contract.yaml</code>, handlers, models and its own
+<code>node_tests</code> — are dispatched from Kafka topics through a
+runtime plugin. Postgres is the only store this repository runs.</p>
+<ul>
+<li><strong><code>deployment/database/migrations/</code></strong> — 28
+forward migrations with paired rollbacks. <code>005</code> is
+<code>learned_patterns</code>, <code>006</code> disable events,
+<code>007</code> injections, <code>010</code> the lifecycle audit,
+<code>011</code> the evidence tier, <code>012</code> measured
+attributions, <code>022</code> project scope.</li>
+<li><strong><code>src/omniintelligence/nodes/node_pattern_*</code></strong>
+— learning, extraction, storage, promotion, demotion, feedback,
+lifecycle, projection, compliance, matching, assembly.</li>
+<li><strong><code>src/omniintelligence/repositories/learned_patterns.repository.yaml</code></strong>
+— the read SQL, declared as data rather than embedded in Python.</li>
+<li><strong><code>src/omniintelligence/api/router_patterns.py</code></strong>
+— the FastAPI surface that serves patterns to clients.</li>
+<li><strong><code>src/omniintelligence/runtime/dispatch_handler_*.py</code></strong>
+— the wiring from Kafka envelope to handler.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>This is the heavy end of the atlas. An operator needs Postgres with
+28 migrations applied, Kafka with the topics the node contracts declare,
+the ONEX runtime, and — for the loop to close — a separate repository
+running in the agent's session. It cannot run offline as a library;
+there is no embedded mode and no file-backed fallback.</p>
+<p>The store is inspectable and repairable in the way a SQL store is:
+every state is a row, the audit is a table, and an operator who knows
+SQL can answer any question this report asks. That is a genuine
+advantage over the file-and-vector stores that dominate this corpus, and
+it is bought with an operational floor most single-user memory systems
+would not accept.</p>
+<p>The three private git dependencies are the real adoption cost.
+<code>pyproject.toml</code> pins <code>omnibase-core</code> to a commit
+on a repository a reader cannot open, with a comment explaining that the
+needed version <em>"is only available via git"</em> because it is
+unreleased. A reader can install the published wheel; they cannot read
+the framework at the commit this code was written against.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="learning--node_pattern_learning_compute">Learning —
+<code>node_pattern_learning_compute</code></h3>
+<p>Session events are clustered, and each cluster is scored by
+<code>handler_confidence_scoring.py</code>, which is explicit that a
+single number is not the answer:</p>
+<blockquote>
+<p><em>"Confidence scores are DECOMPOSED, not monolithic. A single
+confidence value cannot answer 'why did this pattern score high?' — but
+component scores can."</em></p>
+</blockquote>
+<p>Three components with fixed weights — <code>label_agreement</code>
+0.40, <code>cluster_cohesion</code> 0.30, <code>frequency_factor</code>
+0.30 — asserted at import time to sum to 1.0, and a warning in capitals:
+<em>"NEVER make downstream decisions solely on the confidence field. The
+rolled-up score is for convenience only. Inspect components."</em></p>
+<p><code>learned_patterns</code> has one column,
+<code>confidence FLOAT</code>. The three components appear in no
+migration. The advice is correct and the schema makes it impossible to
+follow — and the bootstrap promotion gate, described below, decides on
+<code>lp.confidence &gt;= 0.8</code>.</p>
+<h3
+id="promotion--handler_auto_promotepy-and-the-path-that-cannot-work">Promotion
+— <code>handler_auto_promote.py</code>, and the path that cannot
+work</h3>
+<p>Two phases per run: <code>CANDIDATE → PROVISIONAL</code>, then
+<code>PROVISIONAL → VALIDATED</code>. The candidate query admits two
+kinds of row:</p>
+<pre class="sql"><code>AND (
+  lp.evidence_tier IN (&#39;observed&#39;, &#39;measured&#39;, &#39;verified&#39;)
+  OR (
+    lp.evidence_tier = &#39;unmeasured&#39;
+    AND COALESCE(lp.injection_count_rolling_20, 0) = 0
+    AND lp.confidence &gt;= 0.8
+    AND lp.recurrence_count &gt;= 1
+    AND lp.distinct_days_seen &gt;= 1
+  )
+)</code></pre>
+<p>The second branch is the cold-start path, and its thresholds carry
+the clearest record in this repository of a gate being loosened under
+supply pressure:</p>
+<blockquote>
+<p><em>"Lowered from 2 to 1: existing candidate patterns were
+initialized with recurrence_count=1 and distinct_days_seen=1. The
+confidence gate (&gt;= 0.8) is the primary quality signal for the
+bootstrap path; requiring recurrence &gt;= 2 blocked all 5,384
+high-confidence candidates that had never been re-observed."</em></p>
+</blockquote>
+<p>Each selected row is then passed to <code>apply_transition_fn</code>
+with <code>to_status=PROVISIONAL</code>. In production that function is
+the real <code>apply_transition</code> —
+<code>dispatch_handler_promotion_check.py</code> imports it directly —
+and it contains:</p>
+<pre class="python"><code>if (to_status == EnumPatternLifecycleStatus.PROVISIONAL
+        and current_evidence_tier &lt; EnumEvidenceTier.OBSERVED):
+    return ModelTransitionResult(success=False, …,
+        reason=&quot;Evidence tier guard: insufficient evidence for PROVISIONAL&quot;, …)</code></pre>
+<p>There is no bootstrap exemption in the guard. Every row admitted by
+the second branch is <code>unmeasured</code>, and every
+<code>unmeasured</code> row is refused. The handler records
+<code>promoted=False</code>, logs a warning, and continues; nothing
+raises.</p>
+<p>So the loosening cannot have unblocked the 5,384 candidates, because
+the reducer refuses them for a reason the loosened thresholds do not
+touch. The two halves are individually correct and disagree about what
+the cold-start rule is.</p>
+<h3 id="demotion--handler_demotionpy">Demotion —
+<code>handler_demotion.py</code></h3>
+<p>The forgetting half, and the best-argued code in either repository.
+Three gates, any one of which fires: manual disable (a hard trigger that
+bypasses the cooldown), a failure streak of five, or a success rate
+under 40% with at least ten injections in the rolling window. Two
+eligibility checks precede gates two and three: the pattern must be
+<code>validated</code>, and 24 hours must have passed since
+promotion.</p>
+<p>The override bounds are the part worth copying. An operator may tune
+the thresholds per request, and the permitted range is itself argued:
+<code>SUCCESS_RATE_THRESHOLD_MAX = 0.60</code> exists to <em>"prevent
+setting demotion threshold at or above promotion threshold (60%) which
+would cause immediate demotion of marginal patterns"</em>, and
+<code>FAILURE_STREAK_THRESHOLD_MIN = 3</code> prevents demoting <em>"on
+small runs of bad luck"</em>. The hysteresis band cannot be configured
+away.</p>
+<p>The handler also refuses to run without Kafka rather than degrading,
+and says so: <em>"Without Kafka, lifecycle events cannot be emitted, and
+demotions will not occur. This is intentional — the reducer is the
+single source of truth."</em> A caller detects it by checking
+<code>reason == "kafka_producer_unavailable"</code>. Failing loudly on
+the <em>forgetting</em> path is the right direction for the failure to
+point.</p>
+<h3 id="the-kill-switch-that-does-not-reach-the-reader">The kill switch
+that does not reach the reader</h3>
+<p>Manual disable is an append-only event —
+<code>pattern_disable_events</code>, with
+<code>event_type IN ('disabled', 're_enabled')</code>, a
+<code>reason TEXT NOT NULL</code> and an
+<code>actor VARCHAR(100) NOT NULL</code>. Requiring a reason and an
+actor on a memory override is rare here and right.</p>
+<p>The demotion and promotion queries do not read that table. They join
+<code>disabled_patterns_current</code>, a <strong>materialized
+view</strong> created in migration <code>008</code>, whose own comment
+carries the operating instruction: <em>"Refresh with: REFRESH
+MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current;"</em>.
+Searching the tree for that statement returns the comment, one line of
+the migration explaining the unique-index requirement, and four calls
+inside
+<code>tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py</code>.
+No scheduler, no job, no dispatch handler refreshes it.</p>
+<p>So the strongest correction the system offers — a person naming a
+pattern and a reason and turning it off — takes effect when somebody
+remembers a maintenance command that is documented in a SQL comment. The
+integration tests pass because they run it themselves.</p>
+<h3 id="outcome-feedback--node_enforcement_feedback_effect">Outcome
+feedback — <code>node_enforcement_feedback_effect</code></h3>
+<p>The rule here is the one this atlas asks for and finds stated in code
+nowhere else. A violation only counts as negative evidence when the
+agent was <strong>both</strong> warned and observed to correct:</p>
+<pre class="python"><code>return [v for v in violations if v.was_warned and v.was_corrected]</code></pre>
+<blockquote>
+<p><em>"If an agent was warned of a violation but did NOT correct it, we
+cannot confirm the violation was real. The warning might have been a
+false positive."</em></p>
+</blockquote>
+<p>That is a real epistemic distinction — between <em>the memory
+fired</em> and <em>the memory was right</em> — and most feedback loops
+in this corpus collapse it, treating every advisory as a labelled
+example and learning from their own false positives.</p>
+<h3 id="audit--pattern_lifecycle_transitions">Audit —
+<code>pattern_lifecycle_transitions</code></h3>
+<p>Every status change writes a row: <code>request_id</code> for
+idempotency, <code>from_status</code>, <code>to_status</code>,
+<code>transition_trigger</code>, <code>correlation_id</code>,
+<code>actor</code>, <code>reason</code>, and a
+<code>gate_snapshot JSONB</code> holding the gate conditions <em>at
+transition time</em>. The foreign key is <code>ON DELETE RESTRICT</code>
+with the reason in a comment: <em>"Audit records must never be silently
+deleted when parent patterns are removed."</em></p>
+<p>An audit that stores the evidence a decision was made on, rather than
+only the decision, is the version of this pattern worth having.</p>
+<h3 id="the-guardrails-nothing-calls">The guardrails nothing calls</h3>
+<p><code>node_anti_gaming_guardrails_compute</code> implements four
+defences as pure functions with 452 lines of tests: Goodhart detection
+over correlated metric pairs, reward-hacking detection when a score
+improves without matching human acceptance, distributional-shift
+detection by symmetric KL approximation, and a diversity constraint that
+is a veto. Its contract declares an operation and no topics. Outside its
+own package, <code>run_all_guardrails</code> appears nowhere in the
+repository.</p>
+<p>The project records this itself.
+<code>docs/reference/NODE_INVENTORY.md</code> marks seven nodes
+<em>"(unregistered)"</em>, including this node's companion alerter and
+<code>node_objective_ab_framework_compute</code>. A published list of
+what is not wired is a better artifact than most projects offer, and it
+is the reason this finding is a citation rather than an accusation.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>learned_patterns</code> carries identity
+(<code>pattern_signature</code>, <code>signature_hash</code>,
+<code>is_current</code>, <code>version</code>), a domain foreign key
+with <code>domain_candidates JSONB</code>, <code>keywords TEXT[]</code>,
+<code>confidence FLOAT CHECK (confidence &gt;= 0.5)</code>, the
+lifecycle columns, provenance (<code>source_session_ids UUID[]</code>,
+<code>recurrence_count</code>, <code>first_seen_at</code>,
+<code>last_seen_at</code>, <code>distinct_days_seen</code>), and rolling
+metrics over a window of 20.</p>
+<p>The constraints are unusually load-bearing. Every rolling counter is
+bounded to <code>[0, 20]</code>, and:</p>
+<pre class="sql"><code>CONSTRAINT check_rolling_metrics_sum
+    CHECK (success_count_rolling_20 + failure_count_rolling_20 &lt;= injection_count_rolling_20)</code></pre>
+<p>An arithmetic invariant of the metrics that drive promotion, enforced
+by the database rather than by whoever writes next.</p>
+<p>What is absent:</p>
+<ul>
+<li><strong>No bi-temporal axis.</strong> <code>first_seen_at</code> and
+<code>last_seen_at</code> are observation times of the pattern, not
+validity times of a claim, and nothing separates when a pattern was true
+from when the row learned it.</li>
+<li><strong>No rejected-value tombstone.</strong>
+<code>deprecated</code> is keyed on the pattern row. The clustering path
+that produced the signature will produce it again from new sessions, as
+a new <code>candidate</code>, and nothing consults the deprecation.</li>
+<li><strong>No confidence components</strong>, as above.</li>
+<li><strong><code>project_scope</code> is a column nothing can
+pass.</strong> Migration <code>022</code> adds it with two indexes, and
+<code>learned_patterns.repository.yaml</code> applies it:
+<code>AND ($6::text IS NULL OR project_scope IS NULL OR project_scope = $6::text)</code>.
+The FastAPI endpoint that serves patterns declares <code>domain</code>,
+<code>language</code>, <code>min_confidence</code>, <code>limit</code>
+and <code>offset</code> — and no project parameter — so <code>$6</code>
+is never bound on the network read path, and every project is served
+every project's patterns.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is SQL. <code>list_validated_patterns</code> filters on
+<code>status IN ('validated', 'provisional')</code>,
+<code>is_current = TRUE</code>, a confidence floor, an optional domain,
+an optional keyword against <code>keywords</code>, and the unreachable
+project predicate. Ordering puts <code>validated</code> before
+<code>provisional</code>, then confidence descending, then id — a stable
+order, which matters when the consumer takes a prefix.</p>
+<p>There is no vector search, no embedding, no reranker and no query
+rewriting in this repository's read path for patterns. For a store of a
+few thousand short signatures selected by domain and confidence, that is
+a defensible choice rather than a missing feature, and it is the reason
+the retrieval stack reads as <code>lexical</code> alone.</p>
+<p>The failure mode is over-supply at the client. The endpoint caps
+<code>limit</code> at 200, and <a href="../omniclaude/">OmniClaude</a>
+requests ten times its injection budget precisely because its own
+filters <em>"each of which can eliminate the majority of
+candidates"</em> run after the fetch. The filtering that decides what an
+agent sees happens on the far side of an HTTP boundary from the store
+that knows the evidence.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Patterns are born from clustering over session events, dispatched
+through Kafka. Outcomes arrive separately: injections are recorded by
+the client, run attributions by the binder, violations by the
+enforcement path. <code>pattern_measured_attributions</code> is the
+evidence table, with a constraint tying tier to the presence of a
+run:</p>
+<pre class="sql"><code>CHECK ((run_id IS NULL AND evidence_tier = &#39;observed&#39;)
+    OR (run_id IS NOT NULL AND evidence_tier IN (&#39;measured&#39;, &#39;verified&#39;)))</code></pre>
+<p>Attribution inserts are idempotent against Kafka redelivery by
+<code>INSERT … WHERE NOT EXISTS</code> — chosen over
+<code>ON CONFLICT</code> because the unique indexes are partial, with
+the reasoning written beside it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Nothing on the agent's turn blocks on this repository's
+writes.</strong> Learning, attribution and lifecycle work are all
+consumers of events; the agent's session has moved on.</li>
+<li><strong>The lag from a session to an injectable pattern is unbounded
+by anything in the tree</strong> — it is clustering cadence, plus a
+promotion check, plus a demotion sweep, plus the tier the attribution
+binder can reach. Nothing measures it.</li>
+<li><strong>The rolling window is 20 and the counters are capped at
+20</strong>, so a pattern's standing is always computed over its last
+twenty injections rather than its history. That is a decay policy
+expressed as a bound, and a cheap one.</li>
+<li><strong>No background pass rewrites the store.</strong> Promotion
+and demotion touch one row each, and the audit only grows.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>GET /api/v1/patterns</code> and Kafka topics. The model never
+talks to this repository; the client does, and the model sees the result
+as text in its context. There are no MCP tools and no agent-callable
+write path — an agent cannot save a memory here, which is a deliberate
+shape: what becomes a pattern is decided by clustering over what agents
+<em>did</em>, not by an agent deciding something is worth
+remembering.</p>
+<p>Adapting this to another host means reimplementing the client, which
+is most of <a href="../omniclaude/">OmniClaude</a>'s injection module,
+against an endpoint that is stable and small.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Monotonicity enforced in the statement</strong>, not by the
+writer's discipline.</li>
+<li><strong>Asymmetric promotion and demotion with a hysteresis
+band</strong>, argued in the constants themselves and bounded against
+operator override.</li>
+<li><strong>An audit that records the gate conditions</strong>, not only
+the outcome, and a foreign key that refuses to lose it.</li>
+<li><strong>Confirmed-only negative feedback</strong> — warned
+<em>and</em> corrected — so the loop does not learn from its own
+unconfirmed advisories.</li>
+<li><strong>Arithmetic invariants in the schema</strong>, including the
+one that keeps the promotion metrics coherent.</li>
+<li><strong>Idempotency against redelivery</strong> on both the
+attribution insert and the transition, with the choice of mechanism
+explained.</li>
+<li><strong>Failing closed on the forgetting path</strong> when Kafka is
+absent, rather than silently not demoting.</li>
+<li><strong>A published list of unregistered nodes</strong>, which is
+how the guardrail finding below is checkable at all.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>The bootstrap promotion path is refused by the reducer it
+calls.</strong></li>
+<li><strong><code>verified</code> is unreachable</strong>, so a
+four-tier ladder is a three-tier ladder with a gate nothing can
+satisfy.</li>
+<li><strong>The manual kill switch is behind an unrefreshed materialized
+view.</strong></li>
+<li><strong>The anti-gaming guardrails are not wired to
+anything.</strong></li>
+<li><strong><code>project_scope</code> cannot be passed by the API that
+serves the injector.</strong></li>
+<li><strong>Confidence components are computed, warned about, and not
+persisted.</strong></li>
+<li><strong>A deprecated pattern's signature can be relearned</strong>
+as a new candidate from new sessions.</li>
+<li><strong>The framework is private.</strong> Three git dependencies on
+repositories a reader cannot open.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I ran nothing.</strong> The screen found no auto-executing
+surfaces and a <code>uv.lock</code> untouched for 16 days — so this tree
+was outside the cooldown and could have been installed — but the default
+posture for this atlas is reading, and the findings above are all
+static. 29 <code>conftest.py</code> files execute at pytest
+collection.</p>
+<p>Roughly 150,000 lines of tests, with per-node suites under
+<code>node_tests/</code> alongside shared <code>tests/unit</code>,
+<code>tests/integration</code> and
+<code>tests/integration/e2e</code>.</p>
+<p>The <strong>negative retrieval assertion</strong> is
+<code>tests/unit/repositories/test_contract_lifecycle_filter.py</code>,
+and it is an unusual shape. Rather than asserting about a result set, it
+loads the repository contract and greps the SQL of every injection query
+for a status it must not permit:</p>
+<blockquote>
+<p><em>"DEPRECATED patterns have been demoted and should no longer be
+used. They MUST NOT be injected."</em></p>
+</blockquote>
+<p>with a companion asserting the same for <code>candidate</code>.
+Because it asserts over the <em>query text</em>, it covers every caller
+of those operations at once, which an example-based test cannot. It is
+also a regex over SQL, so a differently-phrased predicate — a negated
+filter, a status passed as a parameter — would satisfy it without
+meaning the same thing. Both halves are worth knowing.</p>
+<p><code>tests/unit/enums/test_enum_injection.py</code> is the other
+test worth naming: it asserts in both directions that the Python enum
+and the database <code>CHECK</code> constraint contain the same values,
+so the two cannot drift.</p>
+<p>What is missing is the measurement the design implies. The evidence
+tiers, the hysteresis band and the rolling windows are an argument that
+this loop improves outcomes, and no committed result evaluates it; the
+A/B framework node that would is documented as unregistered, and the
+guardrails that would watch for the metrics being gamed are not called.
+The most valuable missing test is narrower and would have caught the
+headline finding: run the bootstrap path through the real
+<code>apply_transition</code> and assert what happens.</p>
+<p><strong>No paper, arXiv reference or citation file exists in this
+repository.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put monotonicity in the <code>WHERE</code> clause.</strong>
+A tier, a version or a state that must only advance should be guarded by
+the statement that writes it, so a concurrent writer and a redelivered
+message fail identically and silently-correctly.</li>
+<li><strong>Make demotion harder than promotion, and write down the
+band.</strong> More observations, a longer streak, a lower floor, and a
+cooldown after promotion. The 20-point gap between 60% and 40% is a
+design parameter that deserves a name and a comment.</li>
+<li><strong>Bound the operator's override.</strong> If thresholds are
+tunable, refuse a demotion threshold at or above the promotion
+threshold. A knob that can erase a hysteresis band will.</li>
+<li><strong>Snapshot the gates into the audit row.</strong> "Why was
+this promoted" is answerable from the audit only if the audit holds the
+conditions, not just the verdict.</li>
+<li><strong>Count a violation only when it was surfaced and then
+corrected.</strong> An advisory the agent ignored is not evidence the
+advisory was right, and a loop that treats it as one trains on its own
+false positives.</li>
+<li><strong>Require a reason and an actor on a manual override</strong>,
+as a <code>NOT NULL</code> column rather than a convention.</li>
+<li><strong>Assert enum-versus-constraint parity in both
+directions.</strong> It is ten lines and it catches the drift that
+produces a runtime constraint violation months later.</li>
+<li><strong>Enforce metric arithmetic in the schema</strong> — successes
+plus failures cannot exceed injections — so the numbers that drive
+promotion cannot go incoherent.</li>
+<li><strong>Publish which of your components are
+unregistered.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A selection query and an enforcement gate with different
+rules.</strong> If one layer chooses rows and another refuses them, the
+system reports zero and nobody looks; put the gate where the selection
+happens, or make the selection call the gate.</li>
+<li><strong>Mocking the component under test in the test named for the
+whole flow.</strong> An integration test that replaces the gate with a
+stub returning success asserts only that the caller is wired, and reads
+as though it asserts the behaviour.</li>
+<li><strong>A state at the top of a ladder that nothing writes.</strong>
+Either something reaches <code>verified</code> or the ladder has three
+rungs; a permanently empty top tier makes every gate that mentions it
+unsatisfiable and every reader assume it is reachable.</li>
+<li><strong>A kill switch behind a manual refresh.</strong> Any
+correction a human can make must reach the read path without a second,
+undocumented human action.</li>
+<li><strong>Decomposing a score and persisting only the
+roll-up.</strong> The warning not to decide on the composite is
+unfollowable if the components are gone by the time anyone can
+decide.</li>
+<li><strong>A scope column the serving API cannot accept.</strong>
+Storing a boundary that no caller can pass is the same as not having
+one, and it reads like having one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team, not a person: a platform group running Kafka and
+Postgres who want memory to be an auditable process with a lifecycle,
+and who will staff the operations that lifecycle implies. The design
+assumes a maintainer who thinks in gates, evidence and windows, and it
+rewards that — the argued constants and the gate snapshots are worth
+more than most of the retrieval sophistication elsewhere in this
+corpus.</p>
+<p>Walk away if you want memory as a library. There is no embedded mode,
+the framework beneath it is three private repositories, and the smallest
+useful deployment is a message bus plus a database plus a second service
+inside the agent.</p>
+<p>The uncomfortable judgement is about the gap between the design and
+its wiring. Four of the mechanisms this report praises — the bootstrap
+path, the top evidence tier, the kill switch, the guardrails — are
+specified more completely than they are connected, and each was found by
+following one call rather than by reading a diagram. A reader borrowing
+from here should borrow the <em>reasoning</em>, which is excellent and
+portable, and verify the wiring in their own tree rather than assuming
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Has the bootstrap path ever promoted a pattern in production, and
+what did the 5,384 candidates do after the thresholds were lowered?</li>
+<li>What is intended to write <code>verified</code> — an independent
+validator, a human, a second pipeline — and does the design want the
+tier gated on something that does not exist yet?</li>
+<li>Is <code>disabled_patterns_current</code> refreshed by
+infrastructure outside this repository, such as a cron in a deployment
+chart not in the tree?</li>
+<li>What consumes the anti-gaming guardrails in the intended design, and
+what topic would carry their alerts?</li>
+<li>How long is the median path from a session event to an injectable
+validated pattern?</li>
+<li>Is the private <code>omnibase-core</code> intended to become
+readable, given that the enums it exports are load-bearing for the
+mechanism this repository publishes as open source?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and constraints:
+<code>deployment/database/migrations/005_create_learned_patterns.sql</code>,
+<code>006_create_pattern_disable_events.sql</code>,
+<code>007_create_pattern_injections.sql</code>,
+<code>008_create_disabled_patterns_current_view.sql</code>,
+<code>010_create_pattern_lifecycle_audit.sql</code>,
+<code>011_add_evidence_tier_to_learned_patterns.sql</code>,
+<code>012_create_pattern_measured_attributions.sql</code>,
+<code>022_add_project_scope_to_learned_patterns.sql</code>.</li>
+<li>Evidence tier and attribution:
+<code>src/omniintelligence/nodes/node_pattern_feedback_effect/handlers/handler_attribution_binder.py</code>.</li>
+<li>Lifecycle gates:
+<code>src/omniintelligence/nodes/node_pattern_lifecycle_effect/handlers/handler_transition.py</code>.</li>
+<li>Promotion:
+<code>src/omniintelligence/nodes/node_pattern_promotion_effect/handlers/handler_auto_promote.py</code>;
+wiring in
+<code>src/omniintelligence/runtime/dispatch_handler_promotion_check.py</code>.</li>
+<li>Demotion:
+<code>src/omniintelligence/nodes/node_pattern_demotion_effect/handlers/handler_demotion.py</code>.</li>
+<li>Confidence decomposition:
+<code>src/omniintelligence/nodes/node_pattern_learning_compute/handlers/handler_confidence_scoring.py</code>.</li>
+<li>Confirmed-only feedback:
+<code>src/omniintelligence/nodes/node_enforcement_feedback_effect/handlers/handler_enforcement_feedback.py</code>.</li>
+<li>Guardrails:
+<code>src/omniintelligence/nodes/node_anti_gaming_guardrails_compute/handlers/handler_guardrails.py</code>.</li>
+<li>Read SQL and API:
+<code>src/omniintelligence/repositories/learned_patterns.repository.yaml</code>,
+<code>src/omniintelligence/api/router_patterns.py</code>.</li>
+<li>Tests cited:
+<code>tests/unit/repositories/test_contract_lifecycle_filter.py</code>,
+<code>tests/unit/enums/test_enum_injection.py</code>,
+<code>tests/integration/test_promotion_lifecycle_integration.py</code>,
+<code>tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py</code>.</li>
+<li>Self-documented wiring:
+<code>docs/reference/NODE_INVENTORY.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-11</strong> — <a
+href="https://github.com/OmniNode-ai/omniintelligence/commit/8c67665add2b611307a78a3f351e0fac18c5bad8"><code>8c67665add2b611307a78a3f351e0fac18c5bad8</code></a>
+— first reading, on the <code>dev</code> default branch. Screened before
+reading: 0 auto-run surfaces, 29 build-time exec surfaces (all
+<code>conftest.py</code>), 0 unpinned manifests, and a
+<code>uv.lock</code> unchanged for 16 days; nothing was installed and
+nothing was executed. The three
+<code>omnibase-*</code>/<code>omnimarket</code> git dependencies were
+not readable at this reading, so no claim here rests on them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
