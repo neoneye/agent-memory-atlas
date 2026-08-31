@@ -105,39 +105,59 @@ def claimed_in_line(line: str) -> tuple[int, str] | None:
     return value, match.group(0)
 
 
-def check(verdicts_text: str, report_marks: dict[str, int]) -> list[str]:
+def check(verdicts_text: str, report_marks: dict[str, int]) -> tuple[list[str], int]:
+    """Problems, and how many entries actually stated a count to check.
+
+    Every count-bearing line in an entry is checked, not just the first. The
+    first version stopped at the first match, so a second statement later in the
+    same entry — the "Six judgements each" format makes two natural, one in the
+    best-idea line and one in the maturity impression — could disagree with the
+    report and with the line above it and still pass.
+    """
     problems = []
+    stated = 0
     for slug, body in entries(verdicts_text).items():
         actual = report_marks.get(slug)
         if actual is None:
             continue
+        claims = 0
         for line in body.splitlines():
             found = claimed_in_line(line)
             if found is None:
                 continue
+            claims += 1
             claimed, phrase = found
             if claimed != actual:
                 problems.append(
                     f"{slug}: the verdict says {phrase!r}, the report carries {actual}"
                 )
-            break
-    return problems
+        if claims:
+            stated += 1
+    return problems, stated
 
 
 def self_test() -> int:
-    reports = {"a": 3, "b": 6, "c": 0, "d": 1}
+    reports = {"a": 3, "b": 6, "c": 0, "d": 1, "e": 5}
     text = (
         "### [`a`](../systems/a/)\n- Maturity impression: 204 tests. No capability mark.\n\n"
         "### [`b`](../systems/b/)\n- Maturity impression: six of seven capability marks, 412 test files.\n\n"
         "### [`c`](../systems/c/)\n- Carries **none** of the seven capability marks, no memory tests.\n\n"
-        "### [`d`](../systems/d/)\n- Section 9a describes the first, which earns no mark here because an event cannot turn out to be false.\n"
+        "### [`d`](../systems/d/)\n- Section 9a describes the first, which earns no mark here because an event cannot turn out to be false.\n\n"
+        # The regression: a correct count first, a stale one after it. Stopping
+        # at the first match read this entry as agreeing with its report.
+        "### [`e`](../systems/e/)\n- Best idea: five capability marks, one of them rare.\n"
+        "- Maturity impression: four capability marks and 90 test files.\n"
     )
-    problems = check(text, reports)
-    # `a` must be caught; `b`, `c` and `d` must not be.
-    if len(problems) != 1 or not problems[0].startswith("a:"):
-        print("self-test failed: expected exactly one problem on 'a', got:", problems, file=sys.stderr)
+    problems, stated = check(text, reports)
+    # `a` and the second line of `e` must be caught; `b`, `c` and `d` must not.
+    caught = sorted(p.split(":")[0] for p in problems)
+    if caught != ["a", "e"]:
+        print("self-test failed: expected problems on 'a' and 'e', got:", problems, file=sys.stderr)
         return 1
-    print("self-test: 4 controls passed")
+    if stated != 4:
+        print(f"self-test failed: expected 4 entries stating a count, got {stated}", file=sys.stderr)
+        return 1
+    print("self-test: 6 controls passed")
     return 0
 
 
@@ -155,7 +175,7 @@ def main(root: str) -> int:
         if count is not None:
             report_marks[path.stem] = count
 
-    problems = check(verdicts.read_text(encoding="utf-8"), report_marks)
+    problems, stated = check(verdicts.read_text(encoding="utf-8"), report_marks)
     if problems:
         print("A verdict entry disagrees with the report it describes:", file=sys.stderr)
         for problem in problems:
@@ -166,7 +186,13 @@ def main(root: str) -> int:
         )
         return 1
 
-    print(f"{len(report_marks)} verdict entries agree with their reports on the mark count.")
+    # Count what was checked, not what was read. The first version printed the
+    # whole roster as agreeing, including every entry that states no count and
+    # is therefore never compared to anything.
+    print(
+        f"{stated} of {len(report_marks)} verdict entries state a mark count; "
+        "all agree with their reports."
+    )
     return 0
 
 

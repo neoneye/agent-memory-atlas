@@ -27,7 +27,7 @@ matrix:
   scoping: "`session_key` defaulting to `sha256(cwd)`, applied as `session_key = ?` on the BM25 and vector arms alike, substituted by each read handler before the storage layer sees the argument; beside it `agent_id`, `team_id`, `user_id` and `task_id`, with an `org` scope that deliberately drops the agent filter for cross-agent handoff"
   integration: "Six MCP tools — recall, capture, search, forget, handoff, adr — plus SessionStart and Stop hooks it writes into Claude Code and Devin CLI config"
   background: "None. No consolidation, extraction or maintenance pass exists; the only pipeline stage implemented is `NoopPipeline`"
-  trust: "A `trust_state` column carrying `candidate` and `rejected`, filtered out of every read path, beside a `rejection_reason` and a `superseded_by` pointer. The `atoms.confidence` column is still populated by nothing"
+  trust: "A `trust_state` column carrying `candidate` and `rejected`, filtered out of every read path, beside a `rejection_reason` and a `superseded_by` pointer. `atoms.confidence` is a per-fact score the rule-based extractor writes and no read path consults"
   strengths: "A rejected-value tombstone the write path consults by content hash before every capture, refusing with the stored reason and an explicit override; a scope default applied by every shipping read handler and pinned by a test that enters through one rather than through a helper; secret redaction before hashing and storage"
   risks: "The tombstone is scoped to `(content_hash, session_key, agent_id)`, so the same rejected value re-asserted under a different agent id or project is not refused; the audit log records tool calls to a file rather than mutations to the store; and `override_rejection` is a plain tool argument the model can set for itself"
 ---
@@ -89,7 +89,7 @@ level:
 | Level | Table | State |
 | --- | --- | --- |
 | L0 | `captures` | written on every `capture` call |
-| L1 | `atoms` — `fact`, `confidence` | table created, never written |
+| L1 | `atoms` — `fact`, `confidence` | written by the rule-based extractor the default config selects |
 | L2 | `scenarios` — `atom_ids`, `summary`, `persona_tags` | table created, never written |
 
 The epistemic state machine is two states wide, and the second state is the
@@ -448,11 +448,20 @@ helper that fills in a default the real handler omits will pass forever and prov
 nothing about the code that ships. Enter through the same entry point production
 uses, even when it is more awkward to set up — especially then.
 
-**Shipping a schema for layers you have not built.** `atoms` and `scenarios`
-exist with types, indexes and a `confidence` column, and nothing writes them. A
-reader who checks the schema concludes there is a distillation pipeline; a reader
-who checks `PipelineStage` implementations finds `NoopPipeline`. If the layers
-are planned, the comment saying "phase 2" is right and the tables can wait.
+**Shipping a schema for a layer you have not built.** `scenarios` exists with
+types, indexes and an `atom_ids` column, and `putScenario` has no caller in
+`src/` — a reader who checks the schema concludes there is a summarisation
+stage, and there is not. If it is planned, the comment saying "phase 2" is right
+and the table can wait.
+
+The layer below it inverts the same problem, and the naming is what hides it.
+`config.pipeline` defaults to the string `"noop"` (`src/config.ts:129`), which
+reads as *do nothing* — but `src/index.ts:1399-1403` maps that value to
+`RuleBasedAtomPipeline`, which extracts current-state facts and calls
+`storage.putAtom` with a per-fact `confidence` (`src/pipeline/atom.ts:33`, `:99`,
+written through at `src/storage/sqlite.ts:1499`). The class actually called
+`NoopPipeline` is unreachable under the default. So L1 is populated on the path
+almost everyone runs, and the name of the setting says the opposite.
 
 ### Fit
 
@@ -529,7 +538,7 @@ of its age, and none of it has been exercised by anyone but its author.
 
 **2026-08-31** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — `scope_enforced` resolved in favour of the mark, at the same pin, and the sections arguing the other way were describing an earlier shape of the handler. `src/server.ts:1403` reads `const sessionKey = (args.session_key as string) ?? defaultSessionKey();`; `handleSearch` at `:1908` and `handleExplainRecall` at `:2236` repeat it verbatim, so `sqlite.ts`'s `if (sessionKey)` guard — which does treat `undefined` as no filter — has no shipped caller that reaches it. `tests/integration/full-flow.test.ts:325` asserts the property through `createServer` and the live `_requestHandlers` entry rather than through a helper.
 
-Sections 2, 4, 6, 7, 9, 10, 11 and 12 carried the earlier reading and state the mechanism instead. Two adjacent claims went with them, both of which the frontmatter already contradicted: `captures` carries `trust_state`, `rejection_reason` and `superseded_by`, all three consulted on the read arms, and the write path's `findRejectedByContentHash` lookup is what `tombstone` rests on. `src/tools/` holds `format.ts` alone, so the second, unwired tool layer described in section 3 is not in the tree.
+Sections 2, 4, 6, 7, 9, 10, 11 and 12 carried the earlier reading and state the mechanism instead. A separate absence claim was wrong in the other direction: `atoms` was described as a table nothing writes, in the matrix, the level table and section 11. `config.pipeline` defaults to `"noop"` and `src/index.ts:1399-1403` maps that value to `RuleBasedAtomPipeline`, so the default path writes an atom per extracted fact with a confidence; `scenarios` is the layer with no writer, and `NoopPipeline` is the class the default never reaches. Two adjacent claims went with them, both of which the frontmatter already contradicted: `captures` carries `trust_state`, `rejection_reason` and `superseded_by`, all three consulted on the read arms, and the write path's `findRejectedByContentHash` lookup is what `tombstone` rests on. `src/tools/` holds `format.ts` alone, so the second, unwired tool layer described in section 3 is not in the tree.
 
 **2026-08-16** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — 203 commits on, and three of this report's findings are closed. Screened first: 1 auto-run surface (`server.json`, an MCP manifest declaring a start command), 2 build-time execution paths — an npm `postinstall` running `scripts/postinstall.js` and a `prepublishOnly` — and 2 manifests inside the seven-day cooldown; nothing was installed, built or run. Marks moved from one to four.
 

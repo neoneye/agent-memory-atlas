@@ -7039,7 +7039,7 @@ any one system.
 
 **2026-08-31** — **A claim that something is absent is the weakest kind this
 atlas publishes, and it is the kind the rubric is built from.** A sweep that
-re-read twenty-six reports against their pinned commits found the positive
+re-read twenty-six of them against their pinned commits found the positive
 claims almost exact — quoted comments, constants, per-file line counts, a
 fifty-run benchmark table recomputed from its raw run files — and the claims of
 *absence* wrong repeatedly. [Zep](../systems/zep/) said an MCP server was

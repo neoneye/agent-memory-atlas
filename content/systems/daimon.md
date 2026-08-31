@@ -1252,7 +1252,7 @@ Three counts in the body disagreed with the counts in section 10 and the History
 
 The quoted clause *"matching only the current subject would leave exactly the text `forget` exists to reach unreachable"* is in no file; `forget_content_key`'s real docstring matches every plaintext field rather than the subject alone and removes every row of a matched record, on whole-value equality after canonicalization. The mechanism was right and the quotation was not.
 
-The interim-317 aggregates were computed over 52 of the 54 committed rows with the filter unstated; over all 54 they are 0.60 / 0.69 / 0.61, and the two excluded rows are the ones carrying `abstention: true`.
+The interim-317 aggregates were computed with the filter unstated, over all committed rows but the two carrying `abstention: true`. Across every committed row they are 0.60 / 0.69 / 0.61.
 
 Eight line citations had drifted: `ground_outcomes` 1380, `strip_code_owned_keys` 2029, `serialize_strict` 2174, `resolutions` 2110, `is_resolved` 2151, `_tie_wins` 2098, `suggest` 1099, `stale_carried` 602, the reverify refusal at `cli/lifecycle.py:749`, and the four `worldcheck.py` probe cites uniformly +101.
 
