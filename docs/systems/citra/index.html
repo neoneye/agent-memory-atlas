@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A decision system that turns
+officer corrections into scoped, provenanced clauses, governs them with
+a ten-value status the read path filters on, and publishes the run where
+three of its four seeded judgements measurably did nothing.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Citra Decision
+System — Agent Memory Atlas">
+    <meta property="og:description" content="A decision system that
+turns officer corrections into scoped, provenanced clauses, governs them
+with a ten-value status the read path filters on, and publishes the run
+where three of its four seeded judgements measurably did nothing.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Citra Decision
+System — Agent Memory Atlas">
+    <meta name="twitter:description" content="A decision system that
+turns officer corrections into scoped, provenanced clauses, governs them
+with a ten-value status the read path filters on, and publishes the run
+where three of its four seeded judgements measurably did nothing.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Citra Decision System — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Citra Decision System",
+      "description": "A decision system that turns officer corrections into scoped, provenanced clauses, governs them with a ten-value status the read path filters on, and publishes the run where three of its four seeded judgements measurably did nothing.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Ten statuses, and only three of them
+fire</p>
+          <h1>Citra Decision System</h1>
+          <p class="document-deck">A decision system that turns officer
+corrections into scoped, provenanced clauses, governs them with a
+ten-value status the read path filters on, and publishes the run where
+three of its four seeded judgements measurably did nothing.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Trustedwear-Tech/citra-decision-system">
+              <span>Source</span>
+              <strong>Trustedwear-Tech/citra-decision-system</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">
+              <span>Analyzed revision</span>
+              <code>3106ce5f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-31</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Citra is a decision system for regulated back-office work — loan
+underwriting, grid maintenance, insurance claims — built around one
+object: a <strong>clause</strong>, which is what an experienced officer
+does, recovered from what they actually did.</p>
+<p>The store is a single MongoDB collection and the object is small: one
+rule in 40 words or fewer, a set of facets it fires within, the
+corrections that taught it, the officers who supported it and the
+officers who acted against it, firing counters, and a status.
+Apache-2.0, 92 commits, and 116,582 source lines in
+<code>smart-app-service</code> alone against 27,105 lines of tests there
+and 1,679 test functions across the tree.</p>
+<p><strong>The status is the reason to read it.</strong> Ten values
+exist and three of them fire:</p>
+<pre class="python"><code>LIVE_STATUSES = (&quot;active&quot;, &quot;candidate&quot;, &quot;dissented&quot;)
+ALL_STATUSES  = (&quot;candidate&quot;, &quot;active&quot;, &quot;dissented&quot;, &quot;superseded&quot;, &quot;retired&quot;,
+                 &quot;sop_conflict&quot;, &quot;quarantined&quot;, &quot;orphaned&quot;,
+                 &quot;challenged&quot;, &quot;underperforming&quot;)</code></pre>
+<p>and <code>candidates_for_facets</code> puts that tuple straight into
+the query — <code>"status": {"$in": list(statuses)}</code> — so a clause
+the system has stopped believing is <strong>absent from the result
+set</strong>, not ranked below the ones it still believes. This atlas
+withholds <code>trust_state</code> from systems that spend a status as a
+score, and the code here states that rule as a defect it had and
+fixed:</p>
+<blockquote>
+<p><code>PRECISION_FLOOR</code> <em>"used to appear in exactly one place
+— a stats field called <code>needs_refinement</code> — so a judgement
+officers had overruled on 4 of every 10 cases it fired kept firing,
+merely ranked a little lower. Measured wrongness with no consequence is
+the same failure as knowledge that looks present and is not."</em></p>
+</blockquote>
+<p>Scope is the second mark and it is derived rather than declared. A
+clause fires when <code>scope_facets ⊆ case_facets</code>, written as
+<code>$setIsSubset</code> on the read query, and its facets are the
+<strong>intersection</strong> of the labels on every correction that
+formed it — floored so that corrections only combine when their facets
+overlap, which keeps a clause from being narrower than its own evidence
+agreed on.</p>
+<p>Two things are unusual enough to name separately.</p>
+<p><strong>The store refuses an unprovenanced clause.</strong>
+<code>create_clause</code> raises rather than insert one that cites no
+corrections, on the stated grounds that <em>"an unprovenanced clause is
+LLM-authored policy, which this store does not accept"</em> — a schema
+constraint enforcing whose knowledge this is.</p>
+<p><strong>Corroboration is a headcount, and the project explains why it
+is not a weight.</strong> Promotion from <code>candidate</code> to
+<code>active</code> requires distinct officers, and the comment on the
+<code>challenged</code> status works through the failure that creates —
+three juniors sharing a misconception outvote the one person who knows
+better — and then refuses the obvious fix: <em>"Weighting officers by
+seniority would encode org hierarchy into an audit trail a regulator
+reads, and seniority is not correctness. This is a ROLE-held stop: it
+does not rank anyone, it parks one clause and forces a named human to
+decide."</em></p>
+<p>The gap is the one this atlas asks about most. Retiring or
+quarantining a clause withholds it and keeps its evidence, but nothing
+is keyed on the <strong>content</strong>. The consolidation matcher
+skips every non-live clause deliberately, so the corrections that taught
+a quarantined judgement are unclaimed, re-cluster on the next run, and
+author the same rule under a new id — which is the intended behaviour
+for a clause withdrawn on its results and the wrong one for the case the
+quarantine endpoint names in its own docstring.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="python"><code># smartapp_clauses — one document per learned judgement
+{
+  &quot;clause_id&quot;: &quot;C-002&quot;,
+  &quot;tenant_id&quot;: ..., &quot;app_slug&quot;: ..., &quot;modality&quot;: ..., &quot;task_type&quot;: ...,
+  &quot;text&quot;: &quot;DSA-sourced files get employment verified with the employer directly …&quot;,
+  &quot;text_words&quot;: 14,                    # CLAUSE_MAX_WORDS = 40
+  &quot;scope_facets&quot;: [&quot;sourcing_channel:dsa&quot;],   # the intersection of its evidence
+  &quot;match_tokens&quot;: [...],               # officer language, kept apart from the paraphrase
+  &quot;provenance&quot;: [...],                 # correction ids — required, enforced
+  &quot;support_officers&quot;: [...], &quot;support_count&quot;: 3,
+  &quot;dissent_officers&quot;: [...], &quot;dissent_count&quot;: 0,
+  &quot;fired_count&quot;: 0, &quot;blamed_count&quot;: 0, &quot;precision&quot;: None,
+  &quot;status&quot;: &quot;active&quot;,                  # one of ten; three of them fire
+  &quot;version&quot;: 1, &quot;history&quot;: [],         # appended on every set_status
+  &quot;refines&quot;: [], &quot;refined_by&quot;: [], &quot;contradicts&quot;: [], &quot;superseded_by&quot;: None,
+}</code></pre>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the ten statuses split into three that reach a case and seven that do not, and the read path applies the split as a query predicate rather than as a weight</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the ten statuses split into three that reach a case and seven that do not, and the read path applies the split as a query predicate rather than as a weight
+flowchart TB
+    CORR[&quot;officer corrections&quot;] --&gt; CONS[&quot;consolidation job&lt;br/&gt;&lt;i&gt;clusters ~3, one LLM call, written once&lt;/i&gt;&quot;]
+    CONS --&gt; PROV{&quot;cites its corrections?&quot;}
+    PROV --&gt;|no| REJ[&quot;ClauseError — refused&quot;]
+    PROV --&gt;|yes| BORN{&quot;distinct officers ≥ 3?&quot;}
+    BORN --&gt;|no| CAND[&quot;candidate&quot;]
+    BORN --&gt;|yes| ACT[&quot;active&quot;]
+    CAND --&gt; LIVE
+    ACT --&gt; LIVE
+    DIS[&quot;dissented&quot;] --&gt; LIVE
+
+    subgraph LIVE[&quot;LIVE_STATUSES — reaches a case&quot;]
+      direction LR
+      L1[&quot;active&quot;] --- L2[&quot;candidate&quot;] --- L3[&quot;dissented&quot;]
+    end
+
+    subgraph HELD[&quot;withheld — absent from the query&quot;]
+      direction LR
+      H1[&quot;retired&quot;] --- H2[&quot;quarantined&quot;] --- H3[&quot;challenged&quot;]
+      H4[&quot;underperforming&quot;] --- H5[&quot;sop_conflict&quot;] --- H6[&quot;orphaned&quot;] --- H7[&quot;superseded&quot;]
+    end
+
+    LIVE --&gt; Q[&quot;candidates_for_facets&lt;br/&gt;&lt;i&gt;status $in LIVE_STATUSES&lt;br/&gt;AND scope_facets ⊆ case_facets&lt;/i&gt;&quot;]
+    HELD -.-&gt;|&quot;never queried&quot;| Q
+    Q --&gt; CASE[&quot;injected into the case&quot;]
+
+    style HELD fill:#f5e6e0,stroke:#a35b3d
+    style PROV fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory lives in one service. <code>smart-app-service</code> is
+116,582 source lines across 239 files, and the clause machinery is a
+small, legible part of it:</p>
+<ul>
+<li><code>clause_store.py</code> (1,314 lines) — the collection, the
+statuses, the read query, the transitions and the ranking.</li>
+<li><code>consolidation.py</code> — clusters corrections, matches them
+to an existing clause or authors a new one, detects contradictions.</li>
+<li><code>clause_eval.py</code> — offline evaluation over the live
+set.</li>
+<li><code>main.py</code> — the curator endpoints: quarantine, challenge,
+retire, SOP-conflict resolution, each role-gated.</li>
+</ul>
+<p>Around it sit a decision API and SDK, an MCP service, a runtime, a
+UI, a DuckDB query service, a reranker, and a bank demo — nineteen
+top-level services in all, of which one holds the memory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-read-query-clause_storepy599">The read query
+(<code>clause_store.py:599</code>)</h3>
+<pre class="python"><code>q = {
+    **_key(tenant_id, app_slug, modality, task_type),
+    &quot;status&quot;: {&quot;$in&quot;: list(statuses)},          # default LIVE_STATUSES
+    &quot;$and&quot;: [
+        {&quot;$or&quot;: [{&quot;scope_facets&quot;: {&quot;$size&quot;: 0}},
+                 {&quot;scope_facets&quot;: {&quot;$in&quot;: facets}}]},
+        {&quot;$expr&quot;: {&quot;$setIsSubset&quot;: [&quot;$scope_facets&quot;, facets]}},
+    ],
+}</code></pre>
+<p>Both marks are in one query. The <code>$in</code> on facets drives
+the multikey index and <code>$setIsSubset</code> is the exact
+containment residual on the small candidate set — the docstring calls it
+<em>"the query a graph database was not needed for"</em>, which is the
+right instinct and rare in this corpus. A globally-scoped clause carries
+an empty facet array and always matches.</p>
+<h3 id="written-once-on-purpose-clause_storepy222">Written once, on
+purpose (<code>clause_store.py:222</code>)</h3>
+<p>The text is authored at birth from roughly three clustered
+corrections by a single LLM call and <strong>never rewritten</strong>;
+later matching corrections touch provenance, officer lists and counters.
+The stated reason is that a store which re-summarises on every
+correction performs the Nth lossy re-encode of an already lossy encode,
+and the earliest lessons degrade first. <code>match_tokens</code> keeps
+the officers' own vocabulary separate from the LLM paraphrase, so later
+corrections match officer language rather than the rendered rule.</p>
+<h3 id="parking-on-evidence-not-authority-clause_storepy539">Parking on
+evidence, not authority (<code>clause_store.py:539</code>)</h3>
+<p><code>apply_performance</code> writes fired and blamed counters from
+the consolidation job, holds <code>precision</code> at <code>None</code>
+until <code>MIN_FIRED_FOR_PRECISION</code> firings so a one-sample
+accident cannot condemn a clause, and then acts:</p>
+<pre class="python"><code>if precision is not None and precision &lt; PRECISION_FLOOR:
+    ...
+    await set_status(..., status=&quot;underperforming&quot;, actor=&quot;precision-monitor&quot;,
+                     cause=(f&quot;officers overruled this on {blamed} of {fired} &quot;
+                            f&quot;cases it fired (precision {precision:.2f}, floor &quot;
+                            f&quot;{PRECISION_FLOOR:.2f}) — parked pending review&quot;))</code></pre>
+<p>The transition goes through <code>set_status</code>, so it lands in
+<code>history</code> with an actor and a written cause. The comment
+names what this buys: <em>"three juniors who agree can still form a team
+judgement, but the moment the cases show it is wrong it stops being
+applied — nobody has to outrank anyone."</em></p>
+<h3 id="the-audit-trail-and-the-one-writer-that-bypasses-it">The audit
+trail, and the one writer that bypasses it</h3>
+<p><code>set_status</code> snapshots the prior state into an append-only
+array:</p>
+<pre class="python"><code>&quot;$push&quot;: {&quot;history&quot;: {
+    &quot;version&quot;: doc.get(&quot;version&quot;), &quot;text&quot;: doc.get(&quot;text&quot;),
+    &quot;scope_facets&quot;: doc.get(&quot;scope_facets&quot;), &quot;status&quot;: doc.get(&quot;status&quot;),
+    &quot;changed_by&quot;: actor or &quot;system&quot;, &quot;cause&quot;: cause, &quot;at&quot;: now}}</code></pre>
+<p>No <code>$pop</code>, no <code>$pull</code> on history, no
+<code>$slice</code> anywhere in the service — the array only grows.</p>
+<p><code>record_dissent</code> is the exception. When an officer's
+dissent share crosses <code>DISSENT_RATIO</code>, it flips
+<code>status</code> to <code>dissented</code> with a bare
+<code>$set</code> and no history push. So the one transition that stops
+a clause being presented as a rule — the one caused by officers
+disagreeing in the field rather than by a curator or a monitor — is the
+one transition the trail does not record. Every other status writer in
+the file routes through <code>set_status</code>.</p>
+<h3
+id="retirement-and-why-the-same-lesson-comes-back-consolidationpy513">Retirement,
+and why the same lesson comes back
+(<code>consolidation.py:513</code>)</h3>
+<pre class="python"><code># Only a clause that is IN SERVICE may absorb new evidence. Skipping
+# just retired/superseded meant a parked clause — quarantined by an
+# admin, withdrawn on its results, orphaned — kept winning the match and
+# swallowing the corrections that should have formed its REPLACEMENT.
+if cl.get(&quot;status&quot;) not in cs.LIVE_STATUSES:
+    continue</code></pre>
+<p>The reasoning is sound for the case it was written for. A clause
+parked on its own bad results <em>should</em> release its corrections so
+a corrected replacement can form; leaving it eligible meant officers
+went on correcting the same cases and consolidation went on folding
+those corrections into a judgement nobody was using.</p>
+<p>The same branch covers <code>quarantined</code>, and the quarantine
+endpoint names its use case explicitly: <em>"The tool for 'that officer
+was dismissed — pull their teachings pending review'"</em>. Quarantining
+the clause withholds it. It does not touch that officer's corrections,
+and <code>create_clause</code> consults no record of what has been
+rejected, so the next consolidation run re-clusters the same evidence
+and authors the same rule under a fresh id, <code>active</code> or
+<code>candidate</code>, with no edge back to the clause a curator
+pulled.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The model is unusually complete for the questions this atlas asks —
+provenance, support, dissent, counters, version, history, and a graph of
+<code>refines</code>, <code>refined_by</code>, <code>contradicts</code>,
+<code>merged_from</code> and <code>superseded_by</code> edges.</p>
+<p>What it does not carry:</p>
+<ul>
+<li><strong>No validity time.</strong> <code>created_at</code>,
+<code>updated_at</code> and <code>last_confirmed_at</code> are all
+record time. There is nowhere to say a judgement held until the
+regulation changed in March, which for a compliance product is the axis
+a reader would expect. <code>bitemporal</code> is withheld on that.</li>
+<li><strong>No value-level key.</strong> Covered above; the content hash
+a rejected-value tombstone would need is never computed, and nothing on
+the write path asks whether this rule has been thrown out before.</li>
+<li><strong>Officer identifiers in the store.</strong>
+<code>support_officers</code> and <code>dissent_officers</code> hold
+identities, capped at 50, which is what makes a clause reviewable — and
+is also personal data in a system whose selling point is that the data
+never leaves.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>No embeddings anywhere in the clause path. Retrieval is subset
+containment on facets, then an n-gram specificity backoff as the primary
+sort, with <code>score_clause</code> breaking ties
+<strong>within</strong> a specificity tier from support count, precision
+against a <code>PRECISION_PRIOR</code> of 0.8, and recency on a 180-day
+half-life. Uncorroborated individual judgements are capped per case at
+<code>MAX_INDIVIDUAL_JUDGEMENTS</code>, on the reasoning that a case
+<em>"may consult a few uncorroborated opinions; it must never drown in
+twelve of them"</em>.</p>
+<p>Deciding that a facet-subset query over a Mongo multikey index is
+enough — and writing down that a graph database was considered and not
+needed — is the kind of sizing judgement this corpus usually gets wrong
+in the other direction.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Corrections accumulate; a consolidation job clusters them; roughly
+three clustered corrections author one clause through one LLM call. That
+is the only model call on the write path. Promotion is a headcount of
+distinct officers. Dissent is recorded and never resolved — <em>"a
+clause whose dissent share crosses <code>DISSENT_RATIO</code> stops
+being injected as a rule and becomes a disagreement notice plus a
+builder adjudication flag"</em> — which is a good answer to the case
+most stores handle by averaging.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three surfaces over one store: a decision app, a REST API, and an
+embeddable recommendation component, plus an MCP service. The curator
+endpoints under <code>/apps/{slug}/memory/clauses/{clause_id}/…</code>
+are the governance surface, each behind
+<code>_require_memory_curator</code> and each recording an actor and a
+cause.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>A status the read path filters on, with the ranking-versus-filtering
+distinction argued in the code as a bug the project fixed.</li>
+<li>A store that refuses an unprovenanced clause.</li>
+<li>Corroboration as a headcount, with a written argument against
+seniority weighting in an audit trail.</li>
+<li>Automatic parking on measured precision, by a monitor, with a
+written cause.</li>
+<li>An append-only per-clause history carrying actor and cause.</li>
+<li>A regression test for a privilege-escalation hole in the governance
+path.</li>
+<li>A published null result. Apache-2.0, nine CI workflows, 1,679 test
+functions.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No rejected-value tombstone</strong>, and retirement
+actively releases the evidence that would re-form the clause.</li>
+<li><strong><code>record_dissent</code> writes status without a history
+entry</strong>, so the field-driven transition is the one the trail
+misses.</li>
+<li><strong>No validity time</strong> in a product sold on regulatory
+defensibility.</li>
+<li><strong>The write path's only model call authors the text</strong>,
+so the paraphrase of a rule three officers taught is LLM-written even
+though the policy it encodes is not — mitigated by
+<code>match_tokens</code> and by never rewriting, not removed.</li>
+<li><strong>Nine days old.</strong> The first commit is 16 August 2026
+and the pinned commit is 25 August; 92 commits carry 116,582 source
+lines in one service, so most of this tree arrived in bulk rather than
+accreting in the open, and the lockfiles predate the repository's own
+first commit.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,679 test functions across 169 files, with 85 in
+<code>test_clause_store.py</code> and 24 in
+<code>test_judgement_hierarchy.py</code> covering the memory directly.
+The suites were not run: eight dependency surfaces sat inside the
+seven-day freshness cooldown at this pin, so nothing here was installed
+or executed.</p>
+<p>The negative cases are the good ones.
+<code>test_judgement_hierarchy.py:462-486</code> creates a clause,
+asserts it exists with <code>sop_conflict</code> status, asserts
+<code>hits == []</code> under the comment <em>"suspended judgements
+never fire as judgements"</em>, then resolves the conflict and asserts
+the clause returns to <code>active</code> — the positive control, the
+negative assertion and the restore over one fixture.
+<code>test_the_monitor_never_resurrects_a_curated_clause</code> runs the
+precision monitor over a hand-quarantined clause and asserts the hold
+survives.
+<code>test_dismissing_a_challenge_cannot_lift_an_admin_quarantine</code>
+documents a real laundering path — dismissing a challenge re-derived the
+tier from <code>support_count</code>, so challenge-then-dismiss promoted
+<strong>any</strong> parked clause to active, lifting an admin's hold —
+and asserts it is refused at the door.</p>
+<h3 id="the-run-which-recomputes">The run, which recomputes</h3>
+<p><code>docs/Citra-Decision-Memory-Credit-Note.pdf</code> reports a
+controlled experiment. Four judgements were seeded into a live loan
+triage application; three restate the written SOP and the fourth,
+<code>C-002</code>, appears in no document: <em>"DSA-sourced files get
+employment verified with the employer directly — the submitted document
+set is not enough."</em> Nineteen DSA-sourced applications were run
+twice with identical inputs, the only difference being whether
+<code>C-002</code> was active, plus a control arm of non-DSA files.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Reported</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14 vs 1</td>
+<td>cases where the judgement was used, memory on versus off</td>
+</tr>
+<tr>
+<td>19/19</td>
+<td>correctly targeted on DSA files</td>
+</tr>
+<tr>
+<td>0/2</td>
+<td>wrongly fired on control files</td>
+</tr>
+<tr>
+<td><code>p = 0.0005</code></td>
+<td>sign test over 15 discordant pairs</td>
+</tr>
+</tbody>
+</table></div>
+<p>The statistic recomputes. A one-sided sign test with 15 discordant
+pairs and at most one against gives
+<code>(1 + 15) / 2¹⁵ = 0.000488</code>, which is the reported
+<code>0.0005</code> and the README's <em>"about 1 in 2,000"</em> —
+<code>1 / 0.000488 = 2048</code>. The test is also the right one for the
+design: the arms are the same nineteen files run twice, so a paired test
+is correct and an unpaired one would overstate the result. Naming the
+test beside the number is what makes that checkable, and the PDF names
+it where the README gives only the figure.</p>
+<p><strong>Two disclosures are worth more than the result.</strong> The
+write-up states that not one final decision changed — fourteen of the
+nineteen were policy declines either way on bureau, FOIR or income floor
+— so <em>"this run measured a population where a verdict change was
+structurally impossible. The money sits in the right-hand branch of the
+diagram, which this run did not sample."</em> And the null result is
+published deliberately: the three judgements that restate the SOP
+<em>"changed nothing when retired… They fired, they were cited, they
+added no value"</em>, under the reasoning that <em>"Any vendor can tell
+you their system learns. Fewer will tell you which of their own features
+measurably does nothing."</em></p>
+<p>What is not committed is the run itself. There is no JSONL, CSV or
+fixture in the tree from which the 14-versus-1 could be regenerated; the
+artifact is a PDF and the numbers in it are the authors'. Against that,
+the README ships a five-step protocol for reproducing the design on the
+reader's own data, and states <em>"a result that only works in our hands
+is not a result."</em></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the status in the query.</strong> One tuple of live
+values in the <code>$in</code> is the entire difference between a state
+and a score, and it costs nothing.</li>
+<li><strong>Refuse the unprovenanced write.</strong> A store that raises
+rather than accept a rule citing no evidence is one schema constraint
+away, and it decides whose policy the store holds.</li>
+<li><strong>Derive scope from the intersection of the evidence</strong>,
+with a floor on how much the evidence must agree, instead of asking an
+author to declare it.</li>
+<li><strong>Count distinct humans, never weight them.</strong> The
+written argument against seniority tiers in an auditable trail is worth
+reading before you add a reputation score.</li>
+<li><strong>Act on a measured precision instead of ranking by
+it</strong>, and route the automatic transition through the same audited
+path a person uses.</li>
+<li><strong>Keep the teacher's vocabulary apart from the
+paraphrase</strong>, so later evidence matches what people wrote rather
+than what a model rendered.</li>
+<li><strong>Publish which of your features did nothing.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Releasing the evidence when you park the rule.</strong>
+Withdrawing a clause on its results and quarantining one taught by a
+dismissed officer need different answers; one branch gives both the same
+one.</li>
+<li><strong>A transition that skips the audit path.</strong> One
+<code>$set</code> beside a careful <code>set_status</code> is how a
+trail acquires a hole.</li>
+<li><strong>Record time only</strong>, in anything that has to answer to
+a regulator.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow the status tuple and the subset predicate directly — they are
+twenty lines and they carry two capability marks. Borrow the provenance
+refusal and the headcount promotion. Do not assume the governance model
+is settled: it is nine days of public history, and the most interesting
+comments in the file describe holes the project has already had to
+close.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should quarantining a clause also mark its corrections, so a
+judgement pulled because of who taught it cannot re-form from the same
+evidence?</li>
+<li>Should <code>record_dissent</code> write a history entry like every
+other transition?</li>
+<li>What is the intended answer when a judgement was right until the
+regulation changed?</li>
+<li>Is the officer identity in <code>support_officers</code> subject to
+the same retention rules as the case data?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>The store: <code>smart-app-service/clause_store.py</code>.</li>
+<li>Clustering, matching and authoring:
+<code>smart-app-service/consolidation.py</code>.</li>
+<li>Offline evaluation:
+<code>smart-app-service/clause_eval.py</code>.</li>
+<li>Curator endpoints: <code>smart-app-service/main.py</code>.</li>
+<li>Tests: <code>smart-app-service/tests/test_clause_store.py</code>,
+<code>test_judgement_hierarchy.py</code>,
+<code>e2e_clause_memory.py</code>.</li>
+<li>The reported run:
+<code>docs/Citra-Decision-Memory-Credit-Note.pdf</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6"><code class="commit-id" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">3106ce5f…</code></a>
+— first reading, at 92 commits and nine days of public history. Screened
+before reading: no auto-run surface, eight build-time execution
+surfaces, twenty-seven unpinned surfaces and <strong>eight dependency
+surfaces inside the seven-day freshness cooldown</strong>, so nothing
+was installed and nothing was run. Five marks. <code>tombstone</code> is
+withheld on a specific finding rather than an absence: retirement and
+quarantine withhold a clause and deliberately release its corrections
+back to the matcher, which is right for a clause withdrawn on its
+results and wrong for the dismissed-officer case the quarantine endpoint
+names in its own docstring. <code>bitemporal</code> is withheld on
+record-time-only timestamps. The reported <code>p = 0.0005</code>
+recomputes exactly as a one-sided sign test over 15 discordant pairs,
+and the paired design the PDF names is the correct one for two arms over
+the same nineteen files.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

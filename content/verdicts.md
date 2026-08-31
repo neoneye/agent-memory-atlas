@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 352 reports.**
+**This page covers all 353 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -234,6 +234,19 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: substantial platform with broad tests and transparent but preliminary BEAM artifacts.
 - Study when: agents need multimodal ingestion, typed knowledge graphs, ontologies, dataset permissions, and backend choice.
 - Do not copy when: a small local evidence store and lexical/vector retrieval satisfy the requirement.
+
+### [`citra`](../systems/citra/)
+
+- Best idea: **the status is in the query.** `LIVE_STATUSES = ("active", "candidate", "dissented")` goes straight into `candidates_for_facets` as `"status": {"$in": list(statuses)}`, so the seven other values — `retired`, `quarantined`, `challenged`, `underperforming`, `sop_conflict`, `orphaned`, `superseded` — are absent from the result set rather than ranked below it. The code argues the distinction as a defect it fixed: `PRECISION_FLOOR` once lived in a stats field, so *"a judgement officers had overruled on 4 of every 10 cases it fired kept firing, merely ranked a little lower. Measured wrongness with no consequence is the same failure as knowledge that looks present and is not."*
+- Second idea: **the store refuses an unprovenanced clause**, raising rather than inserting one that cites no corrections, *"an unprovenanced clause is LLM-authored policy, which this store does not accept"* — and scope is the intersection of the labels on every correction that formed it, floored so a clause is never narrower than what its evidence agreed on, applied on the read path as `$setIsSubset`.
+- Third idea: **corroboration is a headcount and the project explains why it is not a weight.** Promotion needs distinct officers; the argument against seniority tiers is written into the status comments — *"Weighting officers by seniority would encode org hierarchy into an audit trail a regulator reads, and seniority is not correctness."*
+- Biggest risk: **parking a clause releases the evidence that re-forms it.** The consolidation matcher skips every non-live clause deliberately, so a judgement withdrawn on its results can be replaced — correct — and one quarantined because *"that officer was dismissed"*, the use case its own endpoint names, re-clusters from the same corrections into a new clause with a new id and no edge back. Nothing is keyed on the content; `tombstone` withheld.
+- Second risk: **one transition skips the audit path.** `set_status` snapshots version, text, scope, status, actor and cause into an append-only `history`, and `apply_performance` routes through it. `record_dissent` flips a clause to `dissented` with a bare `$set` — the one status change caused by officers disagreeing in the field is the one the trail does not record.
+- Most reusable component: the twenty lines that earn `trust_state` and `scope_enforced` — the live-status tuple in the `$in`, and the `$setIsSubset` facet predicate — plus the provenance refusal.
+- Maturity impression: Apache-2.0, 92 commits, first commit 16 August 2026, 116,582 source lines in `smart-app-service` against 27,105 test lines there and 1,679 test functions across 169 files, nine CI workflows. Five of seven capability marks. Most of the tree arrived in bulk rather than accreting in the open, and the lockfiles predate the repository's first commit.
+- On the reported run: `p = 0.0005` recomputes exactly as a one-sided sign test over 15 discordant pairs, and the paired test is the right one for two arms over the same nineteen files. The write-up discloses that no final decision changed — fourteen of nineteen were policy declines either way — so *"this run measured a population where a verdict change was structurally impossible"*, and publishes a null result: three of the four seeded judgements *"changed nothing when retired"*. No run artifact is committed; the numbers are the authors', with a reproduction protocol beside them.
+- Study when: you need memory a regulator will read, or you have a status field and have not yet decided whether it filters or ranks.
+- Do not copy when: you need a correction that survives the next consolidation pass, or a judgement that was right until the regulation changed — timestamps here are record time only.
 
 ### [`claude-mem`](../systems/claude-mem/)
 - Best idea: durable hook queue, canonical SQLite commit, then best-effort semantic/cloud projections and bounded timeline injection.

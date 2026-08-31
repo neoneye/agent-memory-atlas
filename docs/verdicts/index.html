@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 352 reports.</strong></p>
+<p><strong>This page covers all 353 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -532,6 +532,75 @@ transparent but preliminary BEAM artifacts.</li>
 graphs, ontologies, dataset permissions, and backend choice.</li>
 <li>Do not copy when: a small local evidence store and lexical/vector
 retrieval satisfy the requirement.</li>
+</ul>
+<h3 id="citra"><a href="../systems/citra/"><code>citra</code></a></h3>
+<ul>
+<li>Best idea: <strong>the status is in the query.</strong>
+<code>LIVE_STATUSES = ("active", "candidate", "dissented")</code> goes
+straight into <code>candidates_for_facets</code> as
+<code>"status": {"$in": list(statuses)}</code>, so the seven other
+values — <code>retired</code>, <code>quarantined</code>,
+<code>challenged</code>, <code>underperforming</code>,
+<code>sop_conflict</code>, <code>orphaned</code>,
+<code>superseded</code> — are absent from the result set rather than
+ranked below it. The code argues the distinction as a defect it fixed:
+<code>PRECISION_FLOOR</code> once lived in a stats field, so <em>"a
+judgement officers had overruled on 4 of every 10 cases it fired kept
+firing, merely ranked a little lower. Measured wrongness with no
+consequence is the same failure as knowledge that looks present and is
+not."</em></li>
+<li>Second idea: <strong>the store refuses an unprovenanced
+clause</strong>, raising rather than inserting one that cites no
+corrections, <em>"an unprovenanced clause is LLM-authored policy, which
+this store does not accept"</em> — and scope is the intersection of the
+labels on every correction that formed it, floored so a clause is never
+narrower than what its evidence agreed on, applied on the read path as
+<code>$setIsSubset</code>.</li>
+<li>Third idea: <strong>corroboration is a headcount and the project
+explains why it is not a weight.</strong> Promotion needs distinct
+officers; the argument against seniority tiers is written into the
+status comments — <em>"Weighting officers by seniority would encode org
+hierarchy into an audit trail a regulator reads, and seniority is not
+correctness."</em></li>
+<li>Biggest risk: <strong>parking a clause releases the evidence that
+re-forms it.</strong> The consolidation matcher skips every non-live
+clause deliberately, so a judgement withdrawn on its results can be
+replaced — correct — and one quarantined because <em>"that officer was
+dismissed"</em>, the use case its own endpoint names, re-clusters from
+the same corrections into a new clause with a new id and no edge back.
+Nothing is keyed on the content; <code>tombstone</code> withheld.</li>
+<li>Second risk: <strong>one transition skips the audit path.</strong>
+<code>set_status</code> snapshots version, text, scope, status, actor
+and cause into an append-only <code>history</code>, and
+<code>apply_performance</code> routes through it.
+<code>record_dissent</code> flips a clause to <code>dissented</code>
+with a bare <code>$set</code> — the one status change caused by officers
+disagreeing in the field is the one the trail does not record.</li>
+<li>Most reusable component: the twenty lines that earn
+<code>trust_state</code> and <code>scope_enforced</code> — the
+live-status tuple in the <code>$in</code>, and the
+<code>$setIsSubset</code> facet predicate — plus the provenance
+refusal.</li>
+<li>Maturity impression: Apache-2.0, 92 commits, first commit 16 August
+2026, 116,582 source lines in <code>smart-app-service</code> against
+27,105 test lines there and 1,679 test functions across 169 files, nine
+CI workflows. Five of seven capability marks. Most of the tree arrived
+in bulk rather than accreting in the open, and the lockfiles predate the
+repository's first commit.</li>
+<li>On the reported run: <code>p = 0.0005</code> recomputes exactly as a
+one-sided sign test over 15 discordant pairs, and the paired test is the
+right one for two arms over the same nineteen files. The write-up
+discloses that no final decision changed — fourteen of nineteen were
+policy declines either way — so <em>"this run measured a population
+where a verdict change was structurally impossible"</em>, and publishes
+a null result: three of the four seeded judgements <em>"changed nothing
+when retired"</em>. No run artifact is committed; the numbers are the
+authors', with a reproduction protocol beside them.</li>
+<li>Study when: you need memory a regulator will read, or you have a
+status field and have not yet decided whether it filters or ranks.</li>
+<li>Do not copy when: you need a correction that survives the next
+consolidation pass, or a judgement that was right until the regulation
+changed — timestamps here are record time only.</li>
 </ul>
 <h3 id="claude-mem"><a
 href="../systems/claude-mem/"><code>claude-mem</code></a></h3>

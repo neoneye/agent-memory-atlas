@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **352 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **353 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -82,6 +82,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/cambium/"><span class="az-id">Cambium</span><span class="az-what">A standard, not a store</span><code class="az-repo">KimGLee/Cambium</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/camel/"><span class="az-id">CAMEL</span><span class="az-what">Message store with vector recall</span><code class="az-repo">camel-ai/camel</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/citra/"><span class="az-id">Citra Decision System</span><span class="az-what">Ten statuses, and only three of them fire</span><code class="az-repo">Trustedwear-Tech/citra-decision-system</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/claude-code-memory-setup/"><span class="az-id">claude-code-memory-setup</span><span class="az-what">A recipe that links notes on the way in</span><code class="az-repo">lucasrosati/claude-code-memory-setup</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/claude-mem/"><span class="az-id">Claude-Mem</span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">thedotmack/claude-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/claudest/"><span class="az-id">Claudest (claude-memory)</span><span class="az-what">A run that only adds is a failure mode</span><code class="az-repo">gupsammy/claudest</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
