@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "AreevAI/areev"
 source_url: https://github.com/AreevAI/areev
-revision: 663caa8b0897f82a59a29dba0a7232639c55bc1f
-revision_url: https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f
-analyzed_at: 2026-08-31
+revision: e31adeb23c28c207e1802a4927ca2f1ba86ff2db
+revision_url: https://github.com/AreevAI/areev/commit/e31adeb23c28c207e1802a4927ca2f1ba86ff2db
+analyzed_at: 2026-09-01
 capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite, postgres, files"
 stack_retrieval: "vector, lexical, graph"
@@ -16,28 +16,28 @@ stack_source: "reviewed"
 capability_evidence:
   bitemporal: "the store, as an axis the caller selects at query time | crates/areev-store/src/lib.rs:42-49,:85-93, crates/areev-core/src/types/grain.rs:170-175 | `GrainCommon` carries `valid_from`/`valid_to` beside `system_valid_from`/`system_valid_to`, and `entity_at` takes an `Axis`: `World` is documented *\"What was true in the world at T — valid_from/valid_to\"* and `Knowledge` is *\"What did the agent know at T — supersession chain walk\"*. Both spellings parse from the wire in every binding, so the question a caller is asking is a parameter rather than a convention. Supersession stamps `svt` in the same `UPDATE` that sets `superseded_by`, so the record-time interval is closed by the same write that opens the successor | crates/areev-conformance/src/cases/heads_forks.rs, supersede_forget.rs"
   scope_enforced: "the namespace column, on every read arm, under a fail-closed grant model | crates/areev-store/src/lib.rs:1184,:3749,:3777,:4264, crates/areev-core/src/authz.rs:1-16 | `ns` is a column on every grain and a predicate on every read: the vector query is `WHERE g.ns = ? [AND g.s = ?] [AND g.p = ?] ORDER BY <distance>`, `entity_latest`, `triples`, `osp` and the run index all carry it. Policy is data in the memory file — grant grains scoped per namespace — while credentials stay host-side holding *\"no policy and no raw secrets\"*, and the default is refusal: *\"A memory with no grant grains grants nothing to anyone but the owner session (fail closed).\"* | crates/areev-conformance/src/cases/ns_scope.rs:55-93 — a BM25 leg leaking outside the scope is asserted against by name, and an emptied namespace must stop matching prefix scopes"
-  audit_log: "two records, both append-only, both in the store's own file | crates/areev-store/src/lib.rs:1217,:5127,:5290,:5932,:6153,:8090,:8838,:9358, crates/areev-loop/src/recommendation.rs:385-435 | the store keeps `oplog(op_seq INTEGER PRIMARY KEY, hlc INTEGER, op INTEGER, hash BLOB)` with one row per mutation — including `OP_FORGET` — inserted at seven sites and never updated or deleted; `import_bundle` replays it, so an erasure replicates rather than diverging. Above it the loop writes one immutable Observation grain per recommendation transition, hash-chained through `previous_audit_hash`, carrying `from`/`to` status, a host-asserted `actor` such as `user:alice`, an `observer_type`, and a **mandatory** `because` capped at 500 characters — with `derived_from` chaining to the recommendation and the prior audit row | crates/areev-conformance/"
-  human_review: "the recommendation lifecycle, with the transition table enforcing it and the reason required to record it | crates/areev-loop/src/recommendation.rs:336-400, crates/areev-mcp/src/lib.rs:966-1056 | `RecStatus` is `Pending / Approved / Rejected / Applied / RolledBack / Expired` and `can_transition_to` is a real table, not a suggestion: `Pending → Approved` and `Pending → Rejected` are open, `Approved → Applied` is open, and `Pending → Applied` is permitted only when `by_policy` is set — *\"the auto-apply actor, the only one permitted the reasonless pending → applied jump\"*, which names the one path that skips a person and marks it. `ObserverType` distinguishes `Human` from `Agent`, the MCP server lists pending recommendations and accepts transitions by name, and every transition persists an `AuditRecord` whose `because` field is not optional | crates/areev-conformance/"
+  audit_log: "two records, both append-only, both in the store's own file | crates/areev-store/src/lib.rs:1217,:5127,:5290,:5932,:6153,:8090,:8838,:9358, crates/areev-loop/src/recommendation.rs:394-444 | the store keeps `oplog(op_seq INTEGER PRIMARY KEY, hlc INTEGER, op INTEGER, hash BLOB)` with one row per mutation — including `OP_FORGET` — inserted at seven sites and never updated or deleted; `import_bundle` replays it, so an erasure replicates rather than diverging. Above it the loop writes one immutable Observation grain per recommendation transition, hash-chained through `previous_audit_hash`, carrying `from`/`to` status, a host-asserted `actor` such as `user:alice`, an `observer_type`, and a **mandatory** `because` capped at 500 characters — with `derived_from` chaining to the recommendation and the prior audit row | crates/areev-conformance/"
+  human_review: "the recommendation lifecycle, with the transition table enforcing it and the reason required to record it | crates/areev-loop/src/recommendation.rs:345-418, crates/areev-mcp/src/lib.rs:966-1056 | `RecStatus` is `Pending / Approved / Rejected / Applied / RolledBack / Expired` and `can_transition_to` is a real table, not a suggestion: `Pending → Approved` and `Pending → Rejected` are open, `Approved → Applied` is open, and `Pending → Applied` is permitted only when `by_policy` is set — *\"the auto-apply actor, the only one permitted the reasonless pending → applied jump\"*, which names the one path that skips a person and marks it. `ObserverType` distinguishes `Human` from `Agent`, the MCP server lists pending recommendations and accepts transitions by name, and every transition persists an `AuditRecord` whose `because` field is not optional. A model-authored proposal is stamped `analyzer: \"loop.llm/1\"` with no manifest family, which `grants_auto_apply` cannot grant, and a code revision is refused an apply without the run id of an evaluation that executed the tool's own pinned evalset | crates/areev-conformance/, crates/areev-loop/src/integration.rs:2536-2572"
   negative_eval: "the conformance kit, run against more than one backend, asserting in both directions over one fixture | crates/areev-conformance/src/cases/supersede_forget.rs:24-45, ns_scope.rs:55-93 | `forget_clears_head_row` asserts `heads(...).len() == 1` **before** the forget, then asserts empty heads, no open forks, empty recall and an erroring `get` — the positive control and the negative assertion over the same fixture. `forget_new_head_does_not_resurrect_old` forgets the *newer* version and asserts the superseded predecessor is not resurrected — recall empty, `latest` none — while `get(&h1)` still succeeds under the message *\"old blob is still readable, just not live\"*, which pins the withheld-versus-deleted distinction most systems here leave implicit. `ns_scope` asserts by name that a BM25 hit from another namespace does not appear. Every case takes `b: &dyn Backend` and reports `b.name()`, so the same assertions run against the real store and the reference substrate | this is the test"
 matrix:
   memory_unit: "A typed grain — thirteen types under a versioned OMS spec, from Fact and Event to Skill, Recommendation and Trigger — content-addressed, carrying two validity intervals, provenance, a verification status and a supersession pointer"
   storage: "A content-addressed store over SQLite or Postgres, with attachments in a CAS and an append-only op log carrying a hybrid logical clock"
   retrieval: "CAL, one query language over hybrid recall — vector, BM25, graph traversal by relation and direction — with `entity_at` taking a world or knowledge time axis"
-  write: "Grains are added, superseded with a justification and an authorisation list, or forgotten; the learning loop proposes changes from recorded history, citing evidence by hash"
+  write: "Grains are added, superseded with a justification and an authorisation list, or forgotten; the learning loop proposes changes from recorded history, citing evidence by hash, and an optional model leg proposes from a closed vocabulary — a fact, a query rewrite, allowlisted plan-threshold edits, or new tool source — that can never auto-apply"
   update_delete: "Supersession keeps history and closes the record-time interval in the same write; `forget` erases from the hot store, clears the FTS text and the CAS bytes, and writes a replicating tombstone to the op log"
   scoping: "Namespace on every grain and every read predicate, with grant grains in the file and credentials host-side, failing closed when no grant exists"
   integration: "A CLI, an MCP server, JS and Python bindings, an HTTP server, a sandbox and a conformance kit third-party substrates can run"
   background: "None by default — the project states there is no daemon and everything runs when you run it; the learning loop is invoked"
   trust: "`verification_status` of unverified / verified / contested / retracted, kept apart from a `confidence` float — caller-authored, and consumed on the read path as a ranking penalty rather than an exclusion"
-  strengths: "World and knowledge time as a query parameter, a review record with a mandatory reason and a hash chain, a deletion that clears the text and the attachment bytes and replicates, and a conformance kit that runs the same negative cases against more than one backend"
+  strengths: "World and knowledge time as a query parameter, a review record with a mandatory reason and a hash chain, a deletion that clears the text and the attachment bytes and replicates, a conformance kit that runs the same negative cases against more than one backend, and committed benchmark runs whose manifests carry a SHA-256 of every transcript"
   risks: "`retract` means a demotion in the trait and an erasure in the real substrate, and no conformance case covers the divergence; the content hash a value-level tombstone would need is not consulted on re-add; and the fresh dependency surface means none of this was built or run here"
 ---
 
 ## 1. Executive Summary
 
 A content-addressed store of typed grains, one query language over it, and a
-governed learning loop on top. 181,665 lines of Rust across seventeen crates,
-dual-licensed MIT or Apache-2.0, 242 commits since 16 August 2026.
+governed learning loop on top. 184,611 lines of Rust across seventeen crates,
+dual-licensed MIT or Apache-2.0, 259 commits since 16 August 2026.
 
 The README states the problem in the terms this atlas uses: an agent that
 rewrites its own memory unsupervised *"fails every security review on the same
@@ -58,7 +58,12 @@ predecessor, carrying the from and to status, a host-asserted actor like
 characters. The transition table is enforced rather than advisory, and the one
 path that skips a person is named in a comment as it is allowed: `Pending →
 Applied` requires `by_policy`, *"the auto-apply actor, the only one permitted the
-reasonless pending → applied jump."*
+reasonless pending → applied jump."* A model may propose into that lifecycle
+and cannot shorten it: an LLM draft is stamped with an analyzer id that carries
+no manifest family, so the auto-apply policy has nothing to grant it, and a
+proposed rewrite of an executable tool is refused an apply without the run id
+of an evaluation that executed the evalset **the tool itself declared** — read
+from that run's journal rather than from the arguments of the apply.
 
 **Deletion is done properly, and the code says what that means.** `forget` erases
 the row, clears the free-text index — *"a tombstone that leaves the text findable
@@ -172,13 +177,16 @@ Seventeen crates, and the shape is a store with surfaces rather than a service.
   materialisation, an op log with a hybrid logical clock, a CAS for attachments.
 - **`areev-core`** (17,516) — the grain types, the OMS wire format, authz
   primitives, pseudonymisation.
-- **`areev-loop`** (12,095) — analyzers, recommendations, the audit record, and a
-  substrate trait third parties can implement.
+- **`areev-loop`** (13,633) — analyzers, recommendations, the audit record, the
+  optional model proposer, and a substrate trait third parties can implement.
 - **`areev-context`** (5,236) — budget-shaped context assembly and the priority
   model.
-- Surfaces: **`areev-cli`**, **`areev-mcp`**, **`areev-server`**, **`areev-js`**,
-  **`areev-py`**, plus **`areev-conformance`**, **`areev-bench`** and a
-  **`fuzz`** target.
+- **`areev-loop-adapter`** (2,506) — the loop's substrate trait implemented over
+  the real store. Small, and where the two definitions of `retract` meet.
+- Surfaces and runtime: **`areev-cli`**, **`areev-mcp`**, **`areev-server`**,
+  **`areev-js`**, **`areev-py`**, **`areev-llm`**, **`areev-run`**,
+  **`areev-run-core`**, **`areev-trigger`**, plus **`areev-conformance`**,
+  **`areev-bench`** (11,132) and a **`fuzz`** target.
 
 ### Deployment and ergonomics
 
@@ -192,10 +200,12 @@ Postgres is the alternative backend and is exercised by the conformance kit
 (`crates/areev-conformance/tests/pg.rs`), so the store's contract is tested
 against two engines rather than asserted to hold for both.
 
-**Nothing here was built or run.** Fourteen dependency surfaces sit inside the
+**Nothing here was built or run.** Twenty dependency surfaces sit inside the
 seven-day freshness cooldown at this commit, `Cargo.lock` among them, so the
-tree was read rather than compiled and every number in this report comes from
-the source. `AGENTS.md` and `CLAUDE.md` were read as data.
+tree was read rather than compiled and every number this report derives comes
+from the source. `AGENTS.md` and `CLAUDE.md` were read as data. The benchmark
+figures quoted in section 10 are the project's own, taken from files it
+commits.
 
 ## 4. Essential Implementation Paths
 
@@ -231,6 +241,17 @@ for outcome review"*, and an `evidence_query` in CAL that regenerates the full
 evidence set when the cited subset was truncated. A transition then writes the
 audit Observation.
 
+**The model leg** — optional, and additive by construction: with no backend
+attached the stages are the identity function, so the deterministic output stays
+*"a pure function of `(store, params, now)`"*. With one, `ANALYZE → DISCOVER →
+ENRICH → VALIDATE+DEDUP → STORE` gains a proposer, and a separate GROUND call
+and a separate VERIFY call — *"proposer ≠ grounder"*, and the adversarial pass is
+*"an independent adversarial pass (a separate call from the proposer — the
+anti-Goodhart rule)"*. A garbled response yields no drafts rather than failing
+the run; a garbled GROUND or VERIFY response yields no results, which drops every
+draft. What survives enters through the ordinary candidate path as a
+`Recommendation` grain, and nothing it proposes reaches memory without a person.
+
 ## 5. Memory Data Model
 
 `GrainCommon` is the widest common record in this atlas: namespace, user id,
@@ -249,12 +270,13 @@ widened from a boolean because the boolean could not say *contested*. What is
 missing is a producer and a consequence.
 
 The producer first, because it is not what the trait says it is.
-`crates/areev-loop/src/substrate.rs:174-181` documents `retract` as
+`crates/areev-loop/src/substrate.rs:210-217` documents `retract` as
 *"Index-layer retraction (`verification_status = retracted`) — the inverse of an
 applied ADD, used by rollback. Not destructive"*, and
-`crates/areev-loop/src/reference.rs:174-186` — the in-memory double — implements
+`crates/areev-loop/src/reference.rs:245-258` — the in-memory double — implements
 it, setting `superseded_by = "retracted"`, the status field and a
-`retract_reason`. The adapter over the real store declines:
+`retract_reason`. The adapter over the real store declines
+(`crates/areev-loop-adapter/src/substrate.rs:645-650`):
 
 ```rust
 fn retract_op(f: &AreevFacade, hash: &str) -> WResult<()> {
@@ -267,7 +289,7 @@ fn retract_op(f: &AreevFacade, hash: &str) -> WResult<()> {
 
 So `Engine::rollback` calling `sub.retract(h, …)` erases on the real store and
 demotes in tests, and the only automatic writer of `"retracted"` in the tree is
-the test double at `reference.rs:182`. On a real deployment the status is
+the test double at `reference.rs:253`. On a real deployment the status is
 caller-authored — the Python and JS bindings let a user set it — rather than
 engine-written.
 
@@ -290,8 +312,14 @@ place the status does bite is the corpus export, where
 `crates/areev-cli/src/corpus.rs:208-217` maps `retracted` to
 `("rejected", 0.0)` — but that emits the record with `"quality": "rejected",
 "loss_weight": 0.0` rather than dropping it, and it is a training artifact rather
-than the recall path. Stated so a reader can disagree on the evidence: the field
-is real, and no query in the tree excludes on it.
+than the recall path.
+
+Stated so a reader can disagree on the evidence: the field is real, CAL can
+express a predicate over it — a committed test writes `RECALL facts WHERE
+verification_status = "unverified"` — and the system's own recall and assembly
+paths do not. The capability to filter exists and is left to the caller, which
+is the narrower and more interesting version of the finding: the store can be
+asked to withhold a retracted grain, and nothing that assembles a prompt asks.
 
 **The divergence is untested.** `crates/areev-conformance/src/cases/` holds
 ten case modules and not one mentions `retract`. Every other correction verb is
@@ -356,6 +384,30 @@ recommendation rests on, for outcome review"*, which is what makes a later
 re-measurement possible; and its `evidence_query` regenerates the full evidence
 set when the citation was truncated, so a reviewer is never stuck with a sample.
 
+**What a model is allowed to propose is a closed enum, and the bounds are
+structural rather than advisory.** `DraftProposal` has five variants — a lesson,
+a fact under a model-chosen relation, a rewrite of a saved CAL query, field-level
+edits to a workflow plan, and new source for a tool — and the constraint worth
+copying is what each variant *cannot carry*: *"the subject of a `Fact`, the name
+of a `QueryRevision`, the hash of a `PlanRevision` and the tool of a
+`CodeRevision` all come from the draft's `target`, and the evalset a
+`CodeRevision` is gated against comes from the substrate — so the model names the
+change but never names its own scope or its own grader."*
+
+Three of those bounds are enforced in code rather than in a prompt.
+`plan_edit_allowed` matches only `edges.<i>.cond`, `edges.<i>.max_cycles` and
+`retries.<node>`, so `nodes`, edge endpoints and `bindings` *"are simply not
+matchable here"* — a topology change is not expressible by any proposal the model
+can write, and each edit carries a `from` that must equal the live value, which is
+the staleness check. `safe_definition_body` rejects a query body containing a
+brace or the tokens `FORGET`, `PURGE`, `DROP` or `DEFINE`, so a rewrite cannot
+close its own block or carry a destruction. And a definition rewrite is refused on
+the auto-apply path outright, in a comment that says why: *"it changes what every
+future context contains, so it requires a human APPROVE + APPLY with BECAUSE."*
+An unparseable proposal degrades the draft to advisory instead of falling back to
+whatever else it carried — *"applying an `ADD fact` when the model asked for
+something we could not read is doing something it never proposed."*
+
 **Every apply stores its inverse**, which is what makes the rollback path real
 rather than aspirational — and on the real store that inverse for an ADD is a
 `forget`, so an undone recommendation is erased rather than demoted.
@@ -418,7 +470,7 @@ term.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**2,525 test functions** across the seventeen crates, a fuzz target, a
+**2,564 test functions** across the seventeen crates, a fuzz target, a
 `deny.toml`, and a dedicated
 conformance crate — and the conformance kit is the artifact worth describing,
 because it is doing something most test suites here do not.
