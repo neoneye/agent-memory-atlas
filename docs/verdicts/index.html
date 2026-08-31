@@ -12115,25 +12115,37 @@ tombstone"</em> — and writes an op-log record <code>import_bundle</code>
 replays, so an erasure replicates instead of diverging replicas. Those
 are the two failure modes this atlas finds most often, named in the code
 that avoids them.</li>
-<li>Biggest risk: <strong>a status spent as a score.</strong>
+<li>Biggest risk: <strong>one verb, two meanings, and no case covering
+the difference.</strong> The <code>OmsSubstrate</code> trait documents
+<code>retract</code> as a non-destructive
+<em>"<code>verification_status = retracted</code>"</em> and the
+in-memory reference substrate implements it; the adapter over the real
+store rejects that mapping in a comment — <em>"the honest mapping for
+undoing an engine-created ADD is a tombstone of that grain"</em> — and
+calls <code>forget</code>. A rollback erases on a real deployment and
+demotes in tests, and none of the ten conformance case modules mentions
+<code>retract</code>, so the one operation whose backends disagree is
+the one the multi-backend kit does not exercise.</li>
+<li>Second risk: <strong>a status spent as a score.</strong>
 <code>verification_status</code> is
 <code>unverified / verified / contested / retracted</code>, held apart
 from a <code>confidence</code> float and widened from a boolean because
 the boolean could not say <em>contested</em> — and the read path adds
 <code>-0.3</code> for retracted, <code>-0.15</code> for contested, then
-clamps. A grain a person retracted ranks lower and still surfaces. The
-one place it bites is the training export, which labels it
-<code>"quality": "rejected", "loss_weight": 0.0</code> and keeps the
-record. <code>trust_state</code> is withheld on exactly that, and the
-distance to the mark is one predicate.</li>
-<li>Second risk: <strong>the key a refusal needs is computed and not
+clamps. Since the only automatic writer of <code>"retracted"</code> is
+the test double, the status is caller-authored in practice, it ranks
+rather than filters, and no query in the tree excludes on it.
+<code>trust_state</code> is withheld on exactly that, and the distance
+to the mark is one predicate.</li>
+<li>Third risk: <strong>the key a refusal needs is computed and not
 consulted.</strong> The store is content-addressed, so the hash is a
 function of the content and every <code>OP_FORGET</code> row already
-holds one. Nothing checks it on write, and <code>forget</code>'s own
-comment anticipates the case — <em>"a forget + re-add of identical
-content can move this hash to a new seq"</em> — handling the race rather
-than refusing the re-assertion. <code>tombstone</code> withheld one
-lookup short.</li>
+holds one. Nothing checks it on write. Three comments in the store name
+the scenario — <em>"a forget + re-add of identical content can move this
+hash to a NEW seq"</em> — and each solves the concurrency half of it
+under a row lock, so the case is anticipated carefully and the question
+of whether the re-assertion should be allowed is never put.
+<code>tombstone</code> withheld one lookup short.</li>
 <li>Maturity impression: MIT OR Apache-2.0, 181,665 lines of Rust across
 seventeen crates, 242 commits since 16 August 2026, 2,522 test
 functions, a fuzz target and a <code>deny.toml</code>. Five marks. The

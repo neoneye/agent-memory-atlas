@@ -6,23 +6,25 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A content-addressed grain store
 with world and knowledge time selectable at query time, a hash-chained
-review record carrying a mandatory reason, and a retraction that ranks
-rather than withholds.">
+review record carrying a mandatory reason, and one correction verb whose
+two implementations disagree about what it means.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Areev — Agent Memory Atlas">
     <meta property="og:description" content="A content-addressed grain
 store with world and knowledge time selectable at query time, a
-hash-chained review record carrying a mandatory reason, and a retraction
-that ranks rather than withholds.">
+hash-chained review record carrying a mandatory reason, and one
+correction verb whose two implementations disagree about what it
+means.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Areev — Agent Memory Atlas">
     <meta name="twitter:description" content="A content-addressed grain
 store with world and knowledge time selectable at query time, a
-hash-chained review record carrying a mandatory reason, and a retraction
-that ranks rather than withholds.">
+hash-chained review record carrying a mandatory reason, and one
+correction verb whose two implementations disagree about what it
+means.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Areev — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +46,7 @@ that ranks rather than withholds.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Areev",
-      "description": "A content-addressed grain store with world and knowledge time selectable at query time, a hash-chained review record carrying a mandatory reason, and a retraction that ranks rather than withholds.",
+      "description": "A content-addressed grain store with world and knowledge time selectable at query time, a hash-chained review record carrying a mandatory reason, and one correction verb whose two implementations disagree about what it means.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,8 +104,8 @@ that ranks rather than withholds.">
           <h1>Areev</h1>
           <p class="document-deck">A content-addressed grain store with
 world and knowledge time selectable at query time, a hash-chained review
-record carrying a mandatory reason, and a retraction that ranks rather
-than withholds.</p>
+record carrying a mandatory reason, and one correction verb whose two
+implementations disagree about what it means.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/AreevAI/areev">
               <span>Source</span>
@@ -117,7 +119,7 @@ than withholds.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-08-31</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -175,13 +177,33 @@ replicas instead of diverging them.</p>
 <p><strong>Two marks are withheld and they are the findings.</strong>
 <code>verification_status</code> is a four-value discrete status —
 unverified, verified, contested, retracted — held apart from a
-<code>confidence</code> float, written by the rollback path, and applied
-on the read path as <code>-0.3</code> added to a priority score that is
-then clamped. A retracted grain ranks lower and still surfaces. And the
-content hash that a value-level tombstone would key on is not consulted
-on write: <code>forget</code>'s own comment anticipates <em>"a forget +
-re-add of identical content"</em> and handles the race rather than
-refusing the re-assertion.</p>
+<code>confidence</code> float. It is authored by the caller rather than
+written by the engine, and it is consumed on the read path as
+<code>-0.3</code> added to a priority score that is then clamped. A
+retracted grain ranks lower and still surfaces, and no query in the tree
+excludes on it.</p>
+<p>The verb behind that status is the more interesting finding, because
+<strong>the codebase contains two incompatible definitions of
+it</strong>. The <code>OmsSubstrate</code> trait documents
+<code>retract</code> as <em>"Index-layer retraction
+(<code>verification_status = retracted</code>) — the inverse of an
+applied ADD, used by rollback. Not destructive"</em>, and the in-memory
+reference substrate implements exactly that. The adapter over the real
+store refuses the mapping in as many words — <em>"No index-only
+retraction primitive exists; the honest mapping for undoing an
+engine-created ADD is a tombstone of that grain"</em> — and calls
+<code>forget</code>. So on the real store a rollback
+<strong>erases</strong>; the demotion is what the trait promises and
+what the test double does. Nothing in the conformance kit covers
+<code>retract</code>, which is the one operation whose two backends
+disagree.</p>
+<p>And the content hash that a value-level tombstone would key on is not
+consulted on write. <code>forget</code> and its neighbours name the
+scenario three separate times — <em>"a forget + re-add of identical
+content can move this hash to a NEW seq"</em> — and each time solve the
+concurrency half of it under a row lock. The possibility is anticipated
+and its bookkeeping is correct; whether the re-assertion should be
+allowed is never asked.</p>
 <p>Five marks. The project states three limits itself, and they are
 accurate: it improves <em>"memory, never model weights"</em>,
 <em>"nothing applies itself"</em> without an explicit host grant, and
@@ -212,11 +234,13 @@ distinguishes them.</strong> <em>Supersede</em> writes a successor, sets
 <code>superseded_by</code>, closes the record-time interval, and carries
 a <code>supersession_justification</code> and a
 <code>supersession_auth</code> list — correction is an authorised act,
-not an overwrite. <em>Retract</em> marks
-<code>verification_status = retracted</code> without destroying anything
-— the loop uses it as the inverse of an applied ADD during rollback.
-<em>Forget</em> erases. Three verbs for three different situations is
-rarer here than it should be.</p>
+not an overwrite. <em>Retract</em> is the loop's inverse of an applied
+ADD, and it is the one whose meaning depends on which substrate answers:
+a non-destructive <code>verification_status = retracted</code> in the
+trait contract and the reference substrate, a <code>forget</code> in the
+adapter over the real store. <em>Forget</em> erases. Three verbs for
+three different situations is rarer here than it should be — but only
+two of them mean one thing.</p>
 <p><strong>And the loop above it is a proposal lifecycle.</strong> An
 analyzer proposes a <code>Recommendation</code> citing evidence by hash;
 a person approves or rejects with a reason; an apply stores its inverse;
@@ -224,9 +248,10 @@ a later re-measurement can propose its own revert.
 <code>RecStatus</code> moves
 <code>Pending → Approved → Applied → RolledBack</code>, with
 <code>Expired</code> computed from <code>valid_to</code>.</p>
-<p>The one thing the state machine does not do is stop a retracted grain
-being recalled, which is the gap the diagram draws.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — three correction verbs with three different read-path consequences — supersession is filtered out by `superseded_by IS NULL`, a forget is erased and replicated, and a retraction is a −0.3 priority penalty that still lets the grain surface</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three correction verbs with three different read-path consequences — supersession is filtered out by `superseded_by IS NULL`, a forget is erased and replicated, and a retraction is a −0.3 priority penalty that still lets the grain surface
+<p>What the state machine does not do is stop a caller-authored
+retraction from being recalled, which is the gap the diagram draws —
+along with the fork in what <code>retract</code> means.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — rollback's `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is only ever a priority penalty that still lets the grain surface</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: rollback&#39;s `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is only ever a priority penalty that still lets the grain surface
 flowchart TD
     A[&quot;analyzer proposes a Recommendation&lt;br/&gt;evidence cited by hash&quot;] --&gt; P{&quot;RecStatus, transition table enforced&quot;}
     P -- &quot;by_policy only&quot; --&gt; AP[&quot;Applied&quot;]
@@ -234,14 +259,18 @@ flowchart TD
     P -- &quot;a person&quot; --&gt; RJ[&quot;Rejected&quot;]
     AP --&gt; AUD[(&quot;Observation grain per transition&lt;br/&gt;actor · observer_type · because&lt;br/&gt;hash-chained to the previous one&quot;)]
     AP --&gt; INV[&quot;every apply stores its inverse&quot;]
-    INV --&gt;|rollback| RET[&quot;retract: verification_status = retracted&quot;]
+    INV --&gt;|rollback| RET{&quot;sub.retract — which substrate?&quot;}
+    RET --&gt;|&quot;adapter over the real store&quot;| FRG
+    RET --&gt;|&quot;trait default and reference substrate&quot;| DEM[&quot;verification_status = retracted&quot;]
     G[(&quot;grain: two validity intervals,&lt;br/&gt;confidence, verification_status,&lt;br/&gt;superseded_by&quot;)] --&gt; SUP[&quot;supersede&lt;br/&gt;justification + auth list&quot;]
     G --&gt; FRG[&quot;forget&quot;]
-    G --&gt; RET
+    G --&gt;|&quot;a caller sets the field&quot;| DEM
     SUP --&gt; Q1[&quot;read: AND superseded_by IS NULL&lt;br/&gt;— withheld&quot;]
     FRG --&gt; Q2[&quot;row erased, FTS text cleared, CAS bytes reclaimed,&lt;br/&gt;OP_FORGET replayed on replicas — gone&quot;]
-    RET --&gt; Q3[&quot;read: priority += -0.3, then clamp&lt;br/&gt;— ranked down, still returned&quot;]
-    Q3 -.-&gt;|&quot;and the training export keeps it&lt;br/&gt;at loss_weight 0.0&quot;| Q3</code></pre></details></figure>
+    DEM --&gt; Q3[&quot;read: priority += -0.3, then clamp&lt;br/&gt;— ranked down, still returned&quot;]
+    Q3 -.-&gt;|&quot;and the training export keeps it&lt;br/&gt;at loss_weight 0.0&quot;| Q3
+
+    style RET fill:#f5e6e0,stroke:#a35b3d</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Seventeen crates, and the shape is a store with surfaces rather than
 a service.</p>
@@ -338,12 +367,32 @@ from every binding.</p>
 <p><strong><code>verification_status</code> is the near miss, and it is
 a near miss for a specific reason.</strong> The field is right: four
 values, discrete, separate from <code>confidence</code>, widened from a
-boolean because the boolean could not say <em>contested</em>. The
-producer is right: <code>retract()</code> is documented as <em>"the
-inverse of an applied ADD, used by rollback"</em>. What is missing is
-the consequence. In
-<code>crates/areev-context/src/render.rs:237-241</code> the read path
-does:</p>
+boolean because the boolean could not say <em>contested</em>. What is
+missing is a producer and a consequence.</p>
+<p>The producer first, because it is not what the trait says it is.
+<code>crates/areev-loop/src/substrate.rs:174-181</code> documents
+<code>retract</code> as <em>"Index-layer retraction
+(<code>verification_status = retracted</code>) — the inverse of an
+applied ADD, used by rollback. Not destructive"</em>, and
+<code>crates/areev-loop/src/reference.rs:174-186</code> — the in-memory
+double — implements it, setting
+<code>superseded_by = "retracted"</code>, the status field and a
+<code>retract_reason</code>. The adapter over the real store
+declines:</p>
+<pre class="rust"><code>fn retract_op(f: &amp;AreevFacade, hash: &amp;str) -&gt; WResult&lt;()&gt; {
+    // No index-only retraction primitive exists; the honest mapping for undoing
+    // an engine-created ADD is a tombstone of that grain.
+    let h = Hash::from_hex(hash).map_err(we)?;
+    f.with_store(|m| m.forget(&amp;h)).map_err(we)
+}</code></pre>
+<p>So <code>Engine::rollback</code> calling
+<code>sub.retract(h, …)</code> erases on the real store and demotes in
+tests, and the only automatic writer of <code>"retracted"</code> in the
+tree is the test double at <code>reference.rs:182</code>. On a real
+deployment the status is caller-authored — the Python and JS bindings
+let a user set it — rather than engine-written.</p>
+<p>That makes the read-path treatment the whole of the consequence. In
+<code>crates/areev-context/src/render.rs:237-241</code>:</p>
 <pre class="rust"><code>let verification_penalty = match grain.get_str(&quot;verification_status&quot;) {
     Some(&quot;retracted&quot;) =&gt; -0.3,
     Some(&quot;contested&quot;) =&gt; -0.15,
@@ -359,18 +408,34 @@ export, where <code>crates/areev-cli/src/corpus.rs:208-217</code> maps
 emits the record with
 <code>"quality": "rejected", "loss_weight": 0.0</code> rather than
 dropping it, and it is a training artifact rather than the recall path.
-Stated so a reader can disagree on the evidence: the field is real, the
-rollback that writes it is real, and no query in the tree excludes on
-it.</p>
+Stated so a reader can disagree on the evidence: the field is real, and
+no query in the tree excludes on it.</p>
+<p><strong>The divergence is untested.</strong>
+<code>crates/areev-conformance/src/cases/</code> holds ten case modules
+and not one mentions <code>retract</code>. Every other correction verb
+is covered against <code>&amp;dyn Backend</code> in both directions —
+<code>supersede_forget.rs</code> and <code>erasure.rs</code> do the work
+the report credits under <code>negative_eval</code> — so the single
+operation whose two implementations mean different things is the single
+one the multi-backend kit does not exercise. A substrate author
+implementing the trait to its documentation gets the demotion, and
+nothing tells them the reference deployment does something else.</p>
 <p><strong>The tombstone is the other near miss, and it is closer than
 most.</strong> The store is content-addressed, so the hash <em>is</em> a
 function of the content — precisely the key a rejected-value tombstone
 needs, already computed and already in the op log. What is absent is the
-consult. <code>forget</code>'s comment anticipates the case in as many
-words: <em>"a forget + re-add of identical content can move this hash to
-a new seq"</em>. The system is built to handle the value coming back
-rather than to refuse it. One lookup against the forgotten set on the
-write path is the whole difference.</p>
+consult. Three separate comments in
+<code>crates/areev-store/src/lib.rs</code> — at the supersede recheck
+(<code>:5064</code>), inside <code>forget</code> itself
+(<code>:5176</code>) and at its delete recheck (<code>:5209</code>) —
+name the exact scenario: <em>"a forget + re-add of identical content can
+move this hash to a NEW seq — deleting the stale one would report
+success while erasing nothing (and diverge replicas via the
+tombstone)"</em>. Each re-resolves the row under a lock so the
+bookkeeping stays correct. The case is anticipated carefully and
+repeatedly, and the question the anticipation raises — whether the
+re-assertion should be allowed at all — is never put. One lookup against
+the forgotten set on the write path is the whole difference.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>One language over three arms. CAL compiles to a namespace-scoped
 vector query, a BM25 leg, and graph traversal with <code>Out</code>,
@@ -411,9 +476,9 @@ what makes a later re-measurement possible; and its
 <code>evidence_query</code> regenerates the full evidence set when the
 citation was truncated, so a reviewer is never stuck with a sample.</p>
 <p><strong>Every apply stores its inverse</strong>, which is what makes
-the rollback path real rather than aspirational — and
-<code>retract</code> is that inverse for an ADD, which is why the
-retraction status matters more here than the penalty treats it as.</p>
+the rollback path real rather than aspirational — and on the real store
+that inverse for an ADD is a <code>forget</code>, so an undone
+recommendation is erased rather than demoted.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <p>No embedding pass on write unless the caller supplies one —
 <code>EmbeddingRef</code> points at an external vector store rather than
@@ -505,6 +570,13 @@ none is — the assertion would fail. No case asserts that re-adding
 forgotten content is refused, for the same reason. Both absences are
 consistent with the code rather than oversights, which is worth saying
 plainly: this suite tests what the system does.</p>
+<p>The third absence is not consistent with the code.
+<code>retract</code> appears in none of the ten case modules, and it is
+the one verb whose two implementations disagree — an erasure through the
+adapter, a status demotion in the reference substrate the kit also runs
+against. A case that called <code>retract</code> and asserted the same
+post-condition on both backends would fail today, and that is the point
+of owning a conformance kit.</p>
 <p><strong>Benchmarks exist and their results do not ship.</strong>
 <code>areev-bench</code> is 10,141 lines and the pinned commit is a
 benchmark merge (<code>bench/2x2-llm-isolation</code>), but no committed
@@ -557,6 +629,12 @@ instead.</li>
 what counts.</strong> A retracted grain is weight 0.0 in the corpus
 builder and a ranked candidate at recall. Whichever is right, they
 should not be different.</li>
+<li><strong>Documenting a trait method as one thing and implementing it
+as another.</strong> The <code>retract</code> doc comment promises a
+non-destructive index-layer demotion; the adapter over the real store
+erases. The adapter's choice is the better one, and the trait it
+implements should say so — otherwise the next substrate author writes to
+the documentation.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This is a more complete correction model than most systems here
@@ -575,8 +653,9 @@ is high for this corpus and the two that are missing are the two about
 <em>belief</em>. What Areev governs extremely well is the
 <strong>process</strong> by which memory changes — who proposed, who
 approved, on what evidence, how to undo. What it does not yet do is stop
-a memory a person retracted from reaching the model on the next
-turn.</p>
+a caller-authored retraction from reaching the model on the next turn —
+though a recommendation rolled back through the loop is erased outright
+on the real store, which is the stronger answer.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li><strong>Is the retraction penalty deliberate?</strong> A
@@ -584,6 +663,10 @@ turn.</p>
 oversight, so the question is whether recall is meant to surface
 retracted grains in some circumstance — and if so, whether the caller
 can tell.</li>
+<li><strong>Which <code>retract</code> is the contract?</strong> The
+adapter erases and the trait documents a demotion. Whichever is
+intended, a conformance case would pin it and a third-party substrate
+would then have something to implement against.</li>
 <li><strong>Why does the corpus export weight what recall
 ranks?</strong> The two consumers make different decisions about the
 same field.</li>
@@ -646,6 +729,33 @@ export's quality label and loss weight.</li>
 <code>blobs_hybrid.rs</code>; <code>tests/pg.rs</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-31</strong> — <a
+href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
+— second reading at the same commit, correcting one claim about
+<code>retract</code>. The first reading traced the verb to the
+<code>OmsSubstrate</code> trait doc and the in-memory reference
+substrate, both of which define it as a non-destructive
+<code>verification_status = retracted</code>, and reported rollback as
+writing that status.
+<code>crates/areev-loop-adapter/src/substrate.rs:513-518</code>
+overrides it for the real store, rejecting the mapping in a comment —
+<em>"the honest mapping for undoing an engine-created ADD is a tombstone
+of that grain"</em> — and calling <code>forget</code>. A rollback on a
+real deployment therefore erases; the demotion is what the trait
+promises and what the test double does, and
+<code>crates/areev-loop/src/reference.rs:182</code> is the only
+automatic writer of <code>"retracted"</code> in the tree, which makes
+the status caller-authored in practice. <code>trust_state</code> stays
+withheld on the unchanged read-path evidence: the <code>-0.3</code>
+penalty at <code>crates/areev-context/src/render.rs:237-241</code> is
+still how the status is consumed and no query excludes on it. Two
+findings added: the trait and its production implementation disagree
+about what <code>retract</code> means, and no case in
+<code>crates/areev-conformance/src/cases/</code> exercises it, so the
+multi-backend kit does not cover the one operation whose backends
+diverge. The re-add finding is unchanged and sharpened — the store names
+the forget-then-re-add scenario at three sites and solves the
+concurrency half at each.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/AreevAI/areev/commit/663caa8b0897f82a59a29dba0a7232639c55bc1f"><code class="commit-id" title="663caa8b0897f82a59a29dba0a7232639c55bc1f">663caa8b…</code></a>
 — first reading, at 242 commits. Screened before reading: no auto-run
