@@ -8,6 +8,40 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-01-a-judgement-with-a-revisit-date.md](2026-09-01-a-judgement-with-a-revisit-date.md) —
+  `decision_log` in aimee, a store three previous readings missed, keeps a
+  decision under a status and flips `active` to `revisit_due` when a date its
+  author set arrives — an expiry on a *judgement* rather than on a fact, which is
+  neither bi-temporal validity nor usage decay nor quite a trust state, and which
+  reaches nothing the model sees. It shipped with a date bomb that detonated on
+  the day of the reading: a fixture dated eight months out became due and broke a
+  different test's whole-table count assertion. Closes on why three readings
+  missed the store — an appendix is a map of what the first reading found, and
+  re-reading from it re-finds the same things.
+- [2026-09-01-the-memory-subsystem-is-the-stillest-part.md](2026-09-01-the-memory-subsystem-is-the-stillest-part.md) —
+  three re-reads in two days, all landing the same way: Matrix OS moved 1,167
+  files and 104,120 insertions with all five memory files byte-identical, Areev
+  and aimee the same. Repository churn is a bad proxy for report staleness, in
+  the direction that wastes the most time. Argues the appendix file index should
+  be diffed before anything else in a re-read, and notes that all three still
+  cases produced findings — two of them failures of the *first* reading rather
+  than upstream movement.
+- [2026-09-01-five-papers-and-one-artifact.md](2026-09-01-five-papers-and-one-artifact.md) —
+  of five arXiv papers read into the atlas in two days, one ships something
+  runnable, so the standing question *does the headline recompute from the
+  artifact* is inapplicable to four. The one with code was also the one whose
+  title most misled, and reading it settled the placement in a single pass. The
+  sharp case is the harness-disclosure paper, which releases no implementation of
+  the disclosure standard it argues for — and the benchmarks page, which
+  specifies a deletion sequence it does not ship, is in the same position.
+- [2026-09-01-the-arrow-points-one-way.md](2026-09-01-the-arrow-points-one-way.md) —
+  one grep decides whether a skills or plugins directory is procedural memory:
+  does anything in the tree *write* one of those files? `anthropics/claude-code`
+  and `Tencent/UI-Mate` only read theirs, where Voyager, Verel and SESA each
+  write with an arguable policy. Refines the boundary taxonomy's first kind: a
+  read-only skills tree holds something that could be false and gives the system
+  no way to find out, which is a different sentence from "nothing here is a
+  claim" — and unlike that kind, it reverses on one release.
 - [2026-08-30-the-boundary-is-doing-most-of-the-work.md](2026-08-30-the-boundary-is-doing-most-of-the-work.md) —
   seven artifacts read in nine days that got no report, sorted by *why*: it
   stores nothing falsifiable (Self-GC, har, FP-AMB, Perseus); it is
