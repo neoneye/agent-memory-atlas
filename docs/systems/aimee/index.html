@@ -110,9 +110,9 @@ append-only store.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47" title="a75892e0ba335e23e1f54e85aa53795dae4abc47">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c" title="cccb1490560810a3da92691f381f9ab59040bb7c">
               <span>Analyzed revision</span>
-              <code>a75892e0…</code>
+              <code>cccb1490…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -311,6 +311,34 @@ time, a <code>resolved</code> flag and a free-text
 <code>fact_graph_changes</code> recording commits, and
 <code>fact_evidence</code> carrying a <code>stance</code> — a supporting
 or opposing citation is a row, not a score adjustment.</p>
+<p><strong>A third store holds decisions, and it schedules their
+re-examination.</strong> <code>decision_log</code>
+(<code>src/modules/db2/c/schema_sqlite.sql:93</code>, with the Postgres
+columns added by <code>ALTER TABLE … ADD COLUMN IF NOT EXISTS</code> at
+<code>schema.sql:526-531</code>) carries <code>subject</code>,
+<code>options</code>, <code>chosen</code>, <code>rationale</code>,
+<code>assumptions</code>, <code>outcome</code>, <code>author</code>,
+<code>linked_policy_id</code>, a <code>supersedes_id</code>, a
+<code>status</code> defaulting to <code>active</code>, and a
+<code>revisit_when</code>. Three transitions move it. Recording a
+decision on a subject flips the previous one:
+<code>UPDATE decision_log SET status = 'superseded' WHERE id = ?1 AND status = 'active' AND subject = ?2</code>
+(<code>decision_log.c:108</code>), so one decision is live per subject
+and the losers are kept rather than deleted. And
+<code>db2_decision_log_mark_revisit_due</code>
+(<code>decision_log.c:175</code>) sweeps
+<code>status = 'active' AND revisit_when != '' AND revisit_when &lt;= pg_now_text()</code>
+into <code>revisit_due</code>, backed by a partial index on exactly that
+predicate — a stored judgement that becomes <em>stale on a date its
+author chose</em> rather than on a later contradiction. The comment
+justifies the lexicographic comparison rather than assuming it: both
+sides are ISO-8601, so a date-only <code>revisit_when</code> sorts as
+due on the day it names.</p>
+<p>What the store does not do is reach the read path.
+<code>decision_log</code> is absent from
+<code>DB2_MEMORY_RECALL_FILTER_SQL</code> and from the assembled
+context, so a decision marked <code>revisit_due</code> announces itself
+to whatever queries the table and to nothing the model sees.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Dense recall routes through pgvector; the direct SQL collector was
 removed and the header says where it went. Around it sit a lexical lane,
@@ -941,6 +969,30 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-01</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c"><code class="commit-id" title="cccb1490560810a3da92691f381f9ab59040bb7c">cccb1490…</code></a>
+— re-pinned 15 commits on, and the memory mechanism did not move: the
+range touches five CI workflows, two release scripts,
+<code>cli_attention_guard.c</code>, <code>hook_session_token.c</code>,
+<code>windows/platform_ipc.c</code> and one test, and no file the marks
+rest on. Seven marks, unchanged. The reading did find a store the
+previous ones missed entirely — <code>decision_log</code>, described in
+section 5, which supersedes one decision per subject and sweeps
+<code>active</code> into <code>revisit_due</code> when a date the author
+set arrives. Its test carried a <strong>date bomb that detonated on the
+day of this reading</strong>: <code>test_record_is_active</code>
+recorded a fixture with <code>revisit_when</code> of
+<code>2026-09-01</code> while <code>test_revisit_sweep</code> asserts
+<code>flipped == 1</code> over the whole table, so once that date was
+reached the sweep flipped two rows and the count assertion failed;
+<code>771baba9</code> moved the fixture to <code>2999-01-01</code>, the
+idiom the sweep test already used for its not-yet-due row. The
+transition itself stays covered — <code>test_revisit_sweep</code>
+asserts the due row flips, the future and no-revisit rows do not, and a
+second sweep flips nothing. Screened again before reading: unchanged in
+kind — one auto-run surface, one build-time execution surface, three
+unpinned surfaces, five files inside the seven-day cooldown. Nothing was
+installed and nothing was built.</p>
 <p><strong>2026-09-01</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47"><code class="commit-id" title="a75892e0ba335e23e1f54e85aa53795dae4abc47">a75892e0…</code></a>
 — re-pinned 230 commits on, still on <code>testing</code>, 321 files and

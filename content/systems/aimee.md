@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: "RakuenSoftware/aimee"
 source_url: https://github.com/RakuenSoftware/aimee
-revision: a75892e0ba335e23e1f54e85aa53795dae4abc47
-revision_url: https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47
+revision: cccb1490560810a3da92691f381f9ab59040bb7c
+revision_url: https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c
 analyzed_at: 2026-09-01
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
@@ -214,6 +214,26 @@ created_at)`. `memory_conflicts` pairs two memory ids with a detection time, a
 The typed-fact side lives in `entity_edges` with `fact_graph_changes` recording
 commits, and `fact_evidence` carrying a `stance` — a supporting or opposing
 citation is a row, not a score adjustment.
+
+**A third store holds decisions, and it schedules their re-examination.** `decision_log` (`src/modules/db2/c/schema_sqlite.sql:93`,
+with the Postgres columns added by `ALTER TABLE … ADD COLUMN IF NOT EXISTS` at
+`schema.sql:526-531`) carries `subject`, `options`, `chosen`, `rationale`,
+`assumptions`, `outcome`, `author`, `linked_policy_id`, a `supersedes_id`, a
+`status` defaulting to `active`, and a `revisit_when`. Three transitions move it.
+Recording a decision on a subject flips the previous one:
+`UPDATE decision_log SET status = 'superseded' WHERE id = ?1 AND status = 'active'
+AND subject = ?2` (`decision_log.c:108`), so one decision is live per subject and
+the losers are kept rather than deleted. And `db2_decision_log_mark_revisit_due`
+(`decision_log.c:175`) sweeps `status = 'active' AND revisit_when != '' AND
+revisit_when <= pg_now_text()` into `revisit_due`, backed by a partial index on
+exactly that predicate — a stored judgement that becomes *stale on a date its author chose* rather than on a later contradiction. The comment justifies the
+lexicographic comparison rather than assuming it: both sides are ISO-8601, so a
+date-only `revisit_when` sorts as due on the day it names.
+
+What the store does not do is reach the read path. `decision_log` is absent from
+`DB2_MEMORY_RECALL_FILTER_SQL` and from the assembled context, so a decision
+marked `revisit_due` announces itself to whatever queries the table and to
+nothing the model sees.
 
 ## 6. Retrieval Mechanics
 
@@ -729,6 +749,8 @@ attributes it to the extractor rather than to an adversary.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-09-01** — [`cccb1490560810a3da92691f381f9ab59040bb7c`](https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c) — re-pinned 15 commits on, and the memory mechanism did not move: the range touches five CI workflows, two release scripts, `cli_attention_guard.c`, `hook_session_token.c`, `windows/platform_ipc.c` and one test, and no file the marks rest on. Seven marks, unchanged. The reading did find a store the previous ones missed entirely — `decision_log`, described in section 5, which supersedes one decision per subject and sweeps `active` into `revisit_due` when a date the author set arrives. Its test carried a **date bomb that detonated on the day of this reading**: `test_record_is_active` recorded a fixture with `revisit_when` of `2026-09-01` while `test_revisit_sweep` asserts `flipped == 1` over the whole table, so once that date was reached the sweep flipped two rows and the count assertion failed; `771baba9` moved the fixture to `2999-01-01`, the idiom the sweep test already used for its not-yet-due row. The transition itself stays covered — `test_revisit_sweep` asserts the due row flips, the future and no-revisit rows do not, and a second sweep flips nothing. Screened again before reading: unchanged in kind — one auto-run surface, one build-time execution surface, three unpinned surfaces, five files inside the seven-day cooldown. Nothing was installed and nothing was built.
 
 **2026-09-01** — [`a75892e0ba335e23e1f54e85aa53795dae4abc47`](https://github.com/RakuenSoftware/aimee/commit/a75892e0ba335e23e1f54e85aa53795dae4abc47) — re-pinned 230 commits on, still on `testing`, 321 files and roughly 13,000 added lines against 3,200 removed. Screened before reading: one auto-run surface (`.claude/hooks/`, four files, byte-identical to the previous pin and registered by no `settings.json`), one build-time execution surface (`src/Makefile`), three unpinned surfaces and five files inside the seven-day cooldown — one more than last time, because the four Go module files and the frontend lockfile all moved four days ago. No new `RUNS` finding. Nothing was installed, nothing was built and nothing was run. All seven marks re-verified and none moved; every file the marks rest on is byte-identical at this pin except for the line shifts recorded below.
 
