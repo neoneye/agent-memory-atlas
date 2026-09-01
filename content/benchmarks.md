@@ -565,6 +565,29 @@ But each comparison runs through a different integration adapter, and that
 report's open questions ask the obvious thing: *how much of the delta is the
 memory layer, and how much is prompt-shape changes in the adapter?* Nothing in
 the published artifacts separates the two.
+**A 2026 position paper makes that the general case and gives it a name.** *Stop
+Comparing LLM Agents Without Disclosing the Harness*
+([arXiv:2605.23950](https://arxiv.org/abs/2605.23950), Zhang, Wang, Ge, Xu, Hamm
+and Reddy, 7 May 2026) argues the **Binding Constraint Thesis**: for long-horizon
+tasks compared across models of roughly equal frontier capability, the execution
+harness — context construction, tool interaction, orchestration and verification
+— governs more of the performance variance than the choice of model, so
+evaluation protocols that leave it undisclosed systematically credit harness
+gains to the model. It formalises the harness as the controller of a closed-loop
+system and the model as the stochastic policy it governs, which is why a small
+harness change can move a score further than swapping the model does; reports
+that harness-induced variance can exceed model-induced variance to the point of
+**reversing model rankings**; and proposes a disclosure standard with a variance
+decomposition protocol, concluding that until harnesses are disclosed,
+leaderboard comparisons for long-horizon agents should be read as incomplete.
+
+Substitute *memory layer* for *model* and the thesis is this page's recurring
+complaint stated formally, which is why it earns a citation here rather than an
+entry: every memory comparison in this corpus is also a harness comparison, and
+the six-stage pipeline above is the harness. It is a position paper releasing no
+code, dataset or variance-decomposition implementation, so the protocol it
+proposes is an argument to adopt rather than an artifact to run — and this page,
+which asks that disclosure of everyone else, cannot check it either.
 
 **One system in this corpus cuts the pipeline in half rather than reporting
 through it.** [Engram Alpha](../systems/engram-alpha/) runs LongMemEval-S at

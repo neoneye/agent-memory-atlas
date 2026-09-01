@@ -3049,6 +3049,32 @@ LangChain's original `ConversationBufferMemory` are the same category — which 
 why this atlas reviews `langmem` and LlamaIndex's newer block-based `Memory`
 instead.
 
+**The 2026 form of this replaces the buffer with a state, and it sharpens the
+line rather than crossing it.** *SKILL.state: Scalable Long-Horizon Agent Skills*
+([arXiv:2608.26263](https://arxiv.org/abs/2608.26263), Badhe, Tiwari and Chung,
+v1 26 August 2026, v2 28 August) drops append-only history altogether: at each
+step the model is handed the immutable skill specification, the current
+structured execution state and the latest observation, and **intermediate
+reasoning is discarded as soon as it has produced a validated state update**. The
+reported effect is large — a 16.2x token reduction at a hundred steps, and 122k
+tokens against a *Memory* baseline's 6.1M at two hundred — beside accuracy gains
+on a warehouse task (0.94 against 0.84–0.91), InterCode CTF (54.2% pass@1, +7.8
+points on the strongest baseline) and both τ-Bench domains, across Gemini-3-Flash
+and two open-weight models.
+
+It belongs on this side of the line for the reason its own design states. The
+execution state is *overwritten* on each validated update, so it has no history a
+later reading could contradict: a state that is replaced does not turn out to
+have been false, it stops being current, and the reasoning that produced it is
+deliberately not kept. That is context engineering done well — the discarding is
+the contribution — and it is the opposite of the property this atlas counts,
+where the point of a memory is that something survives to be wrong later. Two
+things also make it uncheckable here: no code is released, and the headline
+`SkillExecBench` is the authors' own and unpublished, so every figure above is
+the paper's rather than one recomputed from an artifact. What it does supply is a
+number for the cost side of the boundary — 6.1M tokens to keep the conversation
+as the memory, against 122k to keep a state instead.
+
 Deciding what stays in the context window is a real problem. It is a different
 problem, and the test that separates it is **whether the store holds anything
 that could turn out to be false**. A system whose memory is a window has no
