@@ -106,14 +106,14 @@ scope, no status, and an export path that only tests call.</p>
               <strong>HamedMP/matrix-os</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860" title="22c488937763543901cad906e253286c54a32860">
+            <a class="meta-pill revision-pill" href="https://github.com/HamedMP/matrix-os/commit/44fc2c688be8c640d6e20f0cc54cb45151c472fa" title="44fc2c688be8c640d6e20f0cc54cb45151c472fa">
               <span>Analyzed revision</span>
-              <code>22c48893…</code>
+              <code>44fc2c68…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-09-01</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -132,10 +132,13 @@ scope, no status, and an export path that only tests call.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Matrix OS is an agent operating system — roughly 200,000 lines of
-TypeScript across a kernel, a gateway, a desktop app and a plugin
-system, 1,707 commits since 11 February 2026, AGPL-3.0. It has specs, a
-paper directory, three docker-compose topologies and a homebrew tap.</p>
+<p>Matrix OS is an agent operating system — 182,501 lines of TypeScript
+under <code>packages/</code>, across a kernel, a gateway, a desktop app
+and a plugin system, 1,809 commits since 11 February 2026, AGPL-3.0.
+Counting the whole tree, which carries a desktop shell, a mobile app,
+fixtures and six bundled demo apps, comes to 693,569 lines over 3,041
+files. It has specs, a paper directory, three docker-compose topologies
+and a homebrew tap.</p>
 <p>The memory subsystem is 328 lines.
 <code>packages/kernel/src/memory.ts</code> defines a
 <code>MemoryStore</code> with <code>remember</code>,
@@ -204,6 +207,16 @@ and cannot say about itself.</p>
     F -.-&gt;|&quot;nothing recorded&quot;| GONE[&quot;no tombstone,&lt;br/&gt;no audit event&quot;]
 
     EXP[&quot;exportToFiles(dir)&quot;] -.-&gt;|&quot;no caller outside tests&quot;| MD[&quot;markdown per memory&quot;]</code></pre></details></figure>
+<p><strong>Two other things in this tree are called memory and are
+not.</strong> <code>shell/src/lib/os-view-layout-memory.ts</code> and
+<code>desktop/src/renderer/src/features/desktop-shell/native-os-view-layout-memory.ts</code>
+hold an <code>OsViewLayoutMemory</code> — a
+<code>Record&lt;DesktopMode, WindowGeometryEntry[] | null&gt;</code>
+capturing window <code>x</code>, <code>y</code>, <code>width</code> and
+<code>height</code> so a desktop mode restores the layout it had. It is
+window geometry, keyed on nothing a correction could name, and it sits
+earlier in an alphabetical grep for <em>memory</em> than the store this
+report is about.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong><code>remember</code> is idempotent on exact
@@ -422,6 +435,41 @@ there</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-01</strong> — <a
+href="https://github.com/HamedMP/matrix-os/commit/44fc2c688be8c640d6e20f0cc54cb45151c472fa"><code class="commit-id" title="44fc2c688be8c640d6e20f0cc54cb45151c472fa">44fc2c68…</code></a>
+— re-pinned 102 commits on, and <strong>the memory subsystem did not
+move</strong>. <code>packages/kernel/src/memory.ts</code>,
+<code>packages/kernel/src/memory-search.ts</code>,
+<code>packages/gateway/src/memory-extractor.ts</code>,
+<code>tests/kernel/memory.test.ts</code> and
+<code>tests/gateway/memory-extractor.test.ts</code> are byte-identical
+to the previous pin, the <code>memories</code> table still carries the
+same six columns and no scope column, and no <code>sqliteTable</code>
+was added anywhere in the range. The producers are still wired:
+<code>extractMemoriesLocal</code> is called from
+<code>packages/gateway/src/server.ts:1528</code> and the
+<code>memory_search</code> tool is registered at
+<code>packages/kernel/src/ipc-server.ts:1045</code>;
+<code>exportToFiles</code> still has no caller outside
+<code>tests/kernel/memory.test.ts</code>. One mark, unchanged — the
+<code>negative_eval</code> case at
+<code>tests/kernel/memory.test.ts:122</code> still asserts the forgotten
+row is gone and names the survivor. The 328-line subsystem is carried by
+663 lines of test, the same two-to-one it had. Screened again before
+reading: two auto-run surfaces
+(<code>.claude/hooks/check-gstack.sh</code> and a
+<code>.claude/settings.json</code> registering SessionStart, PreToolUse
+and Stop hooks), two build-time execution surfaces (a
+<code>postinstall</code> running
+<code>scripts/fix-node-pty-perms.mjs</code>, and a
+<code>prepublishOnly</code>), twenty-seven unpinned surfaces, and
+<strong>fourteen files inside the seven-day cooldown against seven at
+the previous reading</strong>, ten of them changed the day it was read —
+nothing was installed and nothing was run. What did change in the range
+is 1,167 files and 104,120 insertions elsewhere: the desktop embed host,
+the chat provider adapters and an approval control, none of it touching
+the store. Two files added in that work are named for memory and hold
+window geometry, described in section 3.</p>
 <p><strong>2026-08-27</strong> — <a
 href="https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860"><code class="commit-id" title="22c488937763543901cad906e253286c54a32860">22c48893…</code></a>
 — first reading, roughly 200,000 lines of TypeScript, 1,707 commits

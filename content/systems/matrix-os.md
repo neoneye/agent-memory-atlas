@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "HamedMP/matrix-os"
 source_url: https://github.com/HamedMP/matrix-os
-revision: 22c488937763543901cad906e253286c54a32860
-revision_url: https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860
-analyzed_at: 2026-08-27
+revision: 44fc2c688be8c640d6e20f0cc54cb45151c472fa
+revision_url: https://github.com/HamedMP/matrix-os/commit/44fc2c688be8c640d6e20f0cc54cb45151c472fa
+analyzed_at: 2026-09-01
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the forget test, which pins the bystander as well as the removal | tests/kernel/memory.test.ts:122-129, packages/kernel/src/memory.ts:116-122 | `only removes the specified memory` writes two facts, forgets the first by id, then asserts `store.count()` is 1 **and** that the survivor's content is `\\\"fact 2\\\"`. Material that existed in the store is asserted absent from a read path, with a positive control on the same store — a delete that removed everything fails the count, one that removed nothing fails it too, and one that removed the wrong row fails the content check. The recall tests are the weaker cousin and are paired rather than vacuous: `recall(\\\"dark themes\\\")` is asserted non-empty with the query terms present, and `recall(\\\"quantum physics\\\")` is asserted `[]` against the same populated store. That second one asserts the index does not invent matches rather than that a boundary holds, which is the distinction this mark otherwise turns on | this is the test"
@@ -31,9 +31,11 @@ matrix:
 
 ## 1. Executive Summary
 
-Matrix OS is an agent operating system — roughly 200,000 lines of TypeScript
-across a kernel, a gateway, a desktop app and a plugin system, 1,707 commits
-since 11 February 2026, AGPL-3.0. It has specs, a paper directory, three
+Matrix OS is an agent operating system — 182,501 lines of TypeScript under
+`packages/`, across a kernel, a gateway, a desktop app and a plugin system,
+1,809 commits since 11 February 2026, AGPL-3.0. Counting the whole tree, which
+carries a desktop shell, a mobile app, fixtures and six bundled demo apps, comes
+to 693,569 lines over 3,041 files. It has specs, a paper directory, three
 docker-compose topologies and a homebrew tap.
 
 The memory subsystem is 328 lines. `packages/kernel/src/memory.ts` defines a
@@ -112,6 +114,14 @@ flowchart TD
 
     EXP["exportToFiles(dir)"] -.->|"no caller outside tests"| MD["markdown per memory"]
 ```
+
+**Two other things in this tree are called memory and are not.** `shell/src/lib/os-view-layout-memory.ts` and
+`desktop/src/renderer/src/features/desktop-shell/native-os-view-layout-memory.ts` hold an
+`OsViewLayoutMemory` — a `Record<DesktopMode, WindowGeometryEntry[] | null>` capturing
+window `x`, `y`, `width` and `height` so a desktop mode restores the layout it had.
+It is window geometry, keyed on nothing a correction could name, and it sits
+earlier in an alphabetical grep for *memory* than the store this report is
+about.
 
 ## 4. Essential Implementation Paths
 
@@ -318,5 +328,7 @@ ranks on it.
 | `specs/016-memory`, `specs/052-memory` | The written design, not read for this report |
 
 ## History
+
+**2026-09-01** — [`44fc2c688be8c640d6e20f0cc54cb45151c472fa`](https://github.com/HamedMP/matrix-os/commit/44fc2c688be8c640d6e20f0cc54cb45151c472fa) — re-pinned 102 commits on, and **the memory subsystem did not move**. `packages/kernel/src/memory.ts`, `packages/kernel/src/memory-search.ts`, `packages/gateway/src/memory-extractor.ts`, `tests/kernel/memory.test.ts` and `tests/gateway/memory-extractor.test.ts` are byte-identical to the previous pin, the `memories` table still carries the same six columns and no scope column, and no `sqliteTable` was added anywhere in the range. The producers are still wired: `extractMemoriesLocal` is called from `packages/gateway/src/server.ts:1528` and the `memory_search` tool is registered at `packages/kernel/src/ipc-server.ts:1045`; `exportToFiles` still has no caller outside `tests/kernel/memory.test.ts`. One mark, unchanged — the `negative_eval` case at `tests/kernel/memory.test.ts:122` still asserts the forgotten row is gone and names the survivor. The 328-line subsystem is carried by 663 lines of test, the same two-to-one it had. Screened again before reading: two auto-run surfaces (`.claude/hooks/check-gstack.sh` and a `.claude/settings.json` registering SessionStart, PreToolUse and Stop hooks), two build-time execution surfaces (a `postinstall` running `scripts/fix-node-pty-perms.mjs`, and a `prepublishOnly`), twenty-seven unpinned surfaces, and **fourteen files inside the seven-day cooldown against seven at the previous reading**, ten of them changed the day it was read — nothing was installed and nothing was run. What did change in the range is 1,167 files and 104,120 insertions elsewhere: the desktop embed host, the chat provider adapters and an approval control, none of it touching the store. Two files added in that work are named for memory and hold window geometry, described in section 3.
 
 **2026-08-27** — [`22c488937763543901cad906e253286c54a32860`](https://github.com/HamedMP/matrix-os/commit/22c488937763543901cad906e253286c54a32860) — first reading, roughly 200,000 lines of TypeScript, 1,707 commits since 11 February 2026, AGPL-3.0. Screened before anything was read: two auto-run surfaces, two build-time execution surfaces, twenty-seven unpinned surfaces and seven files inside the seven-day cooldown; `AGENTS.md` and `CLAUDE.md` are addressed to a reading agent and were treated as data. Nothing was installed and nothing was run. One mark. `negative_eval` rests on `only removes the specified memory`, which asserts the forgotten row is gone and names the survivor. `tombstone` is absent — `forget` is a row delete with nothing keyed on the value, and the regex extractor that created a memory will recreate it from the same sentence. `trust_state` is absent: `category` is a kind, not a status, and there is no confidence field, so a pattern hit on *"don't worry about it"* is stored as an instruction with the standing of a deliberate one. `bitemporal` is absent — both timestamps are record time. `scope_enforced` is absent — the table has no scope column and no read path filters on one. `audit_log` is absent; the top-level `audit/` directory is a dated one-off holding a prompt, and no memory write emits an event. `human_review` is absent. `exportToFiles` is implemented and tested with no caller outside the test suite. The reading covers the kernel memory store, the gateway extractor, the search module and their tests; the specs under `specs/016-memory` and `specs/052-memory`, the desktop app and the plugin system were not traced.
