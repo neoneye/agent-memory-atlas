@@ -140,6 +140,18 @@ effect, and memory a person authors are three different products with three
 different failure modes, and the distinction is usually invisible from the
 outside.
 
+**What the mark cannot see is whether anyone exercises it.** *AI Agents Push
+Humans Out of the Loop* ([arXiv:2608.23642](https://arxiv.org/abs/2608.23642),
+Mitchell, Ghosh and Passi, 24 August 2026) argues that current agent designs both
+impede oversight and erode the capacity to perform it: *"the cognitive capacities
+required for it are also themselves degraded by extended use of AI systems"*. A
+review queue approved through by reflex is then worse than no queue, because it
+launders an automatic write into a reviewed one and leaves the record saying a
+person agreed. Reading code establishes that the surface exists and who may act
+on it; it cannot establish that the acting is real. That is why this mark is
+worded as a *surface* rather than as oversight, and why the near-miss worth
+writing in a report is a queue nothing in the tree ever drains.
+
 ### Negative retrieval assertion
 
 **Present when:** committed evaluation cases assert that particular material must

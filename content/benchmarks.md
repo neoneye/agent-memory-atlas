@@ -435,6 +435,26 @@ and stated preferences), **LifelongAgentBench** and **StreamBench** (continual
 and online learning), **MemoryBank** (user memory updating). What that table does
 *not* contain is the subject of [section 6](#6-does-anything-benchmark-forgetting).
 
+**One 2026 paper measures whether accumulating experience pays, and measures the
+loop rather than the store.** *Chain-of-Experience for Continual LLM Improvement*
+([arXiv:2608.18027](https://arxiv.org/abs/2608.18027), Tu, Fang, Wang, Xie and
+Yan, 18 August 2026) runs eight models — GPT-5, Gemini-2.5 Pro and
+Claude-4.5 Sonnet among them — over math, coding and knowledge tasks, feeding
+each iteration's traces back in, with feedback drawn either from the model itself
+or from an environmental signal such as correctness or a public test pass rate.
+The abstract reports a **5.6% overall improvement and 19% lower API cost**
+against feedback-free baselines, gains from self-feedback alone, further gains
+when channels are combined, a positive correlation between a model's base ability
+and how much it improves, robustness under weak or spurious feedback, and most of
+the gain arriving early in the iterations. It is worth this page's attention
+because it supplies the number the [Reflexion](../systems/reflexion/) class never
+published — evidence that writing down what happened and reading it back is worth
+its tokens. Two limits keep it a citation rather than a benchmark entry: the
+experience lives inside one improvement loop, so nothing here is a store that
+survives a session or that a later reading could contradict, and **no code,
+dataset or harness is released**, so none of the figures above can be recomputed
+from an artifact the way the rest of this page insists on.
+
 **One 2026 benchmark builds the grading this page keeps asking for, and it is
 not a memory benchmark.** *Long-Horizon-Terminal-Bench: Testing the Limits of
 Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading*, Li et al.,
