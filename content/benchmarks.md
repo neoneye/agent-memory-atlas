@@ -1022,7 +1022,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and twenty-four of three hundred and fifty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and twenty-five of three hundred and fifty-six. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1407,7 +1407,7 @@ sits between the memory and the model.
 #### A harness paper publishes the harness and not the measurement
 
 *Prime Agent: A Self-Improving RLM Harness*
-([arXiv:2608.23552](https://arxiv.org/abs/2608.23552), 24 August 2026) reports
+([arXiv:2608.23562](https://arxiv.org/abs/2608.23562), 24 August 2026) reports
 raising *"ARC-AGI-3 RHAE Best@1 from 30% to 95.5%"* and matching or exceeding
 other harnesses across long-context coding, GPU-kernel generation, emulator
 construction and autonomous nanoGPT speedruns. The memory design it wraps comes
@@ -3136,7 +3136,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 354 repositories,
+  [comparative report](../compare/). It is a statement about 355 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

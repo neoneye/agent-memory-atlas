@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 355 reports.</strong></p>
+<p><strong>This page covers all 356 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4850,7 +4850,7 @@ discarded.</li>
 <li>Most reusable component: <code>quarantine_session</code> — one
 statement that removes an entire noisy session's learnings from vector
 search, BM25, associations and embedding refresh, reversibly.</li>
-<li>Maturity impression: ~188,000 lines of Go with 355 test files and a
+<li>Maturity impression: ~188,000 lines of Go with 356 test files and a
 LoCoMo run against a community-corrected dataset that also publishes the
 non-agentic score — beside a 55-column memory table carrying two more
 mechanisms wired in one direction only.</li>
@@ -8254,7 +8254,7 @@ reconstructs the executed action list from the log's own headers so
 plain-text artifact serves as the agent's memory and the harness's
 recovery journal, which means a format change that breaks the parser
 breaks the resume path immediately instead of rotting quietly.</li>
-<li>Maturity impression: 4,355 lines of Python, an MIT trove classifier
+<li>Maturity impression: 4,356 lines of Python, an MIT trove classifier
 in <code>pyproject.toml</code> with no <code>LICENSE</code> file in the
 tree, a paper (<a
 href="https://arxiv.org/abs/2607.20064">arXiv:2607.20064</a>), four
@@ -12374,6 +12374,55 @@ its per-agent cleanup deletes nothing, and the Lua bridge lets any
 in-process script name whichever agent it likes —
 <code>ToolExecutionService</code> overwrites <code>__agent_id</code>,
 and <code>LuaToolProxyCall</code> never calls it.</li>
+</ul>
+<h3 id="ragflow"><a
+href="../systems/ragflow/"><code>ragflow</code></a></h3>
+<ul>
+<li>Best idea: <strong>the access boundary is resolved before the query
+exists, and then forced again underneath it.</strong>
+<code>_filter_accessible_memories</code> turns the caller's requested
+memory ids into the permitted subset and returns empty rather than broad
+when none survive; each backend adapter then overwrites
+<code>condition["memory_id"]</code> by assignment, so a caller cannot
+construct a query that omits the predicate. A committed Go case asks for
+one owned memory and one owned by another user and asserts a single row
+comes back, on the request that reached the doc engine.</li>
+<li>Biggest risk: <strong>the four memory types are a label the
+retrieval path never reads.</strong> <code>memory_type</code> is a bit
+field advertising raw, semantic, episodic and procedural memory, but the
+type written on an entry is whatever top-level JSON key the extraction
+model returned —
+<code>for message_type, extracted_content_list in res_json.items()</code>
+— validated against nothing and branched on by no query. Beside it,
+<code>invalid_at</code> is prompted for, parsed, stored, indexed and
+rendered, and consulted by nothing; <code>storage_type: graph</code> has
+one reference in the tree, its own definition; and a failed extraction
+reports success at <code>progress: 1.0</code> with "No memory extracted
+from raw dialogue".</li>
+<li>Most reusable component: the capacity branch that <strong>refuses
+the write</strong> when it has no policy for choosing a victim — the
+<code>forgetting_policy</code> column advertises <code>LRU|FIFO</code>,
+the enum has only <code>FIFO</code>, and anything else fails closed
+rather than evicting arbitrarily. Beside it, a ranking-weight test
+written with deliberately asymmetric weights, because an even split
+cannot tell <code>[text, vector]</code> from
+<code>[vector, text]</code>.</li>
+<li>Maturity impression: Apache-2.0, 8,924 commits since 12 December
+2023, a Python service and a Go server being ported alongside it, four
+document-engine adapters and a Vue console. Three of seven capability
+marks. The two runtimes disagree about their own limits —
+<code>MEMORY_SIZE_LIMIT</code> is 10 MB in Python and
+<code>MemorySizeLimit</code> 5 MB in Go — and the Go path validates
+<code>memory_size</code> and <code>forgetting_policy</code> on write
+while enforcing neither.</li>
+<li>Study when: you want conversational recall an operator can inspect
+and switch off, or a worked example of pushing a scope predicate down
+into every storage adapter so no query can be written without it.</li>
+<li>Do not copy when: you need the store to represent that something in
+it is wrong. <code>forget</code> is keyed on a message id, re-running
+the same conversation re-extracts the same fact under a new one, and
+nothing records that an entry was disabled, forgotten or evicted, or by
+whom.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The first-class Memory feature
+inside a RAG engine: a per-tenant message index where an LLM splits
+every agent turn into raw plus typed extractions, retrieval is a hybrid
+weighted sum with a per-memory access filter forced into the query, and
+the only ways an entry ends are a human toggle, a human forget, and FIFO
+eviction that the Go server never performs.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RAGFlow
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="The first-class Memory
+feature inside a RAG engine: a per-tenant message index where an LLM
+splits every agent turn into raw plus typed extractions, retrieval is a
+hybrid weighted sum with a per-memory access filter forced into the
+query, and the only ways an entry ends are a human toggle, a human
+forget, and FIFO eviction that the Go server never performs.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RAGFlow
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="The first-class Memory
+feature inside a RAG engine: a per-tenant message index where an LLM
+splits every agent turn into raw plus typed extractions, retrieval is a
+hybrid weighted sum with a per-memory access filter forced into the
+query, and the only ways an entry ends are a human toggle, a human
+forget, and FIFO eviction that the Go server never performs.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RAGFlow Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RAGFlow Memory",
+      "description": "The first-class Memory feature inside a RAG engine: a per-tenant message index where an LLM splits every agent turn into raw plus typed extractions, retrieval is a hybrid weighted sum with a per-memory access filter forced into the query, and the only ways an entry ends are a human toggle, a human forget, and FIFO eviction that the Go server never performs.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Four types, one label</p>
+          <h1>RAGFlow Memory</h1>
+          <p class="document-deck">The first-class Memory feature inside
+a RAG engine: a per-tenant message index where an LLM splits every agent
+turn into raw plus typed extractions, retrieval is a hybrid weighted sum
+with a per-memory access filter forced into the query, and the only ways
+an entry ends are a human toggle, a human forget, and FIFO eviction that
+the Go server never performs.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/infiniflow/ragflow">
+              <span>Source</span>
+              <strong>infiniflow/ragflow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf" title="880876f60ff8c30e023e42360d13688a0a021fdf">
+              <span>Analyzed revision</span>
+              <code>880876f6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-01</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><strong>This report is not about retrieval-augmented
+generation.</strong> RAGFlow is best known as a RAG engine, and its
+knowledge bases, chunking pipeline and DeepDoc parsers are a document
+index — content that is ingested once and read back, with no notion of a
+belief that could later turn out to be wrong and need correcting. That
+is outside what this atlas compares. Since version 0.27 the same
+repository also ships a <strong>Memory</strong> feature with its own
+database table, its own REST resource, its own page in the web UI, its
+own SDK module and its own agent components: an agent's conversation
+turns are written into a store, an LLM splits them into typed entries,
+and those entries are retrieved into later turns, scoped, disabled and
+forgotten. That subsystem is what this report covers. The in-session
+<code>RetrievalMemory</code> in
+<code>rag/advanced_rag/harness/memory.py</code> and the
+<code>tool_call_summary</code> compaction in
+<code>agent/component/llm.py</code> share the word and are
+conversation-window management; they are also out of scope.</p>
+<p>The Memory feature landed on 10 December 2025
+(<code>a1164b9c8</code>, "Feat/memory", PR #11812) and has moved in 57
+commits since, the most recent of which is the pinned commit's own day.
+RAGFlow is Apache-2.0, at version 0.27.1, 8,924 commits and 5,932 files
+since 12 December 2023.</p>
+<p><strong>What is worth reading.</strong> The scoping is the good part
+and it is done twice.
+<code>api/apps/services/memory_api_service.py</code> resolves the
+caller's requested memory ids through
+<code>_filter_accessible_memories</code> before any query is built,
+returns an empty result rather than a broad one when nothing survives,
+and every doc-store adapter then <em>overwrites</em> the memory
+predicate with <code>condition["memory_id"] = memory_ids</code> so a
+caller cannot construct a query without it. The index name is
+<code>memory_{tenant_id}</code>, so a cross-tenant read needs the wrong
+index as well as the wrong id. Beside that, the capacity path fails
+closed: when a memory is full and its <code>forgetting_policy</code> is
+not <code>FIFO</code>, the write is refused with <em>"Memory size
+reached limit and cannot decide which to delete"</em> rather than an
+arbitrary eviction. Both are the right instincts, and both are rare
+enough in this corpus to name.</p>
+<p><strong>What is weakest is the type system the feature is sold
+on.</strong> <code>Memory.memory_type</code> is an integer bit field
+whose help text reads <em>"1=raw, 2=semantic, 4=episodic,
+8=procedural"</em>, and the docs describe four levels of memory. In the
+code the bits do exactly two things: they decide whether extraction runs
+at all, and they select which paragraphs go into the extraction system
+prompt. The <code>message_type</code> stored on an entry is the
+top-level JSON key the LLM happened to return —
+<code>for message_type, extracted_content_list in res_json.items()</code>
+at <code>api/db/joint_services/memory_message_service.py:205</code> —
+and nothing validates it against <code>MemoryType</code>, nothing checks
+it against the memory's own bits, and nothing on the read path branches
+on it. Four typed memories behind one integer is a strong claim; at this
+commit it is a label.</p>
+<p>Three marks: <code>scope_enforced</code>, <code>human_review</code>
+and <code>negative_eval</code>. <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code> and
+<code>audit_log</code> were each examined and withheld, and the
+near-misses are named in sections 2, 5 and 9 — <code>status</code> in
+particular is a discrete field that genuinely withholds an entry from
+retrieval, and is a two-valued switch the UI labels
+<code>Enable</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory in RAGFlow is a <strong>named container with an extraction
+policy</strong>, not a belief. The <code>memory</code> row holds a name,
+an embedding model, a chat model, a temperature, a system prompt, a user
+prompt, a byte cap, a forgetting policy and a <code>me|team</code>
+permission. Everything inside it is a <em>message document</em>.</p>
+<p>Each agent turn that reaches a configured <code>Message</code>
+component produces one <code>raw</code> document holding
+<code>f"User Input: {...}\nAgent Response: {...}"</code>, and then — if
+the memory's bit field is anything other than
+<code>MemoryType.RAW</code> alone — an LLM pass returns a JSON object
+whose keys become the <code>message_type</code> of zero or more child
+documents, each pointing back at the raw parent through
+<code>source_id</code>. The parent is the audit trail; the children are
+what a query is meant to hit.</p>
+<p><strong>How something becomes a memory.</strong> By being said. There
+is no gate. The extraction prompt at
+<code>memory/utils/prompt_util.py</code> asks the model for
+<code>content</code>, <code>valid_at</code> and <code>invalid_at</code>
+per item and caps it at five items per type, and whatever comes back is
+embedded and indexed. <code>get_json_result_from_llm_response</code>
+returns <code>{}</code> on a parse failure, which yields an empty
+extraction list, which <code>save_extracted_to_memory_only</code>
+reports as <em>"No memory extracted from raw dialogue"</em> at
+<code>progress: 1.0</code> — a <strong>success</strong>. A model that
+refused, rambled or emitted malformed JSON is indistinguishable from a
+turn that genuinely contained nothing worth keeping.</p>
+<p><strong>How something stops being a memory.</strong> Three exits, and
+a fourth that does not exist.</p>
+<ul>
+<li><strong>Disabled</strong> — <code>status</code> set to
+<code>0</code> through the Messages page or
+<code>PUT /messages/&lt;memory_id&gt;:&lt;message_id&gt;</code>.
+<code>MessageService.search_message</code> defaults
+<code>condition_dict["status"] = 1</code>, so the entry stops reaching
+agents and stays visible in the list. Reversible.</li>
+<li><strong>Forgotten</strong> — <code>forget_at</code> stamped through
+the Forget action or
+<code>DELETE /messages/&lt;memory_id&gt;:&lt;message_id&gt;</code>.
+Every adapter's <code>search</code> defaults
+<code>hide_forgotten=True</code> and adds
+<code>must_not exists forget_at</code>. Not reversible through any
+surface in the tree: nothing clears <code>forget_at</code>.</li>
+<li><strong>Evicted</strong> — hard deletion on the <em>next</em> write
+to a full memory.
+<code>MessageService.pick_messages_to_delete_by_fifo</code> drains
+forgotten documents first (ordered by <code>forget_at</code> ascending),
+then falls back to <code>valid_at</code> ascending. So "forget" is a
+soft delete that also volunteers the row for the next eviction, which is
+a better design than either half alone.</li>
+<li><strong>Corrected</strong> — nothing. There is no update path for an
+entry's content, no supersession pointer, no contradiction handling, no
+dedupe. <code>MessageService.update_message</code> has three callers in
+the tree: two write <code>forget_at</code> and <code>status</code>, and
+the third, <code>fix_missing_tokenized_memory</code>, rewrites
+<code>content</code> with the value it just read in order to re-trigger
+tokenization on Elasticsearch. Re-running the same conversation writes
+the same fact again as a new document with a new id.</li>
+</ul>
+<p>Nothing an agent does can move an entry between these states. The
+states are moved by a person on the Messages page, or by the capacity
+check on a write.</p>
+<p>The one field that looks epistemic is <code>status</code>, and it is
+worth being precise about. It is a real discrete field, it is genuinely
+used to <em>withhold</em> rather than to discount, and
+<code>docs/guides/memory/message_page.md</code> describes it accurately:
+<em>"Controls whether this message participates in subsequent retrieval.
+After it is disabled, the message is still retained, but it no longer
+affects Agent retrieval results."</em> It is also a boolean whose column
+header is <code>Enable</code>, with no vocabulary — it cannot separate
+"never checked" from "checked and rejected", and nothing records which
+of those a <code>0</code> means or who set it. That is why
+<code>trust_state</code> is withheld here and the near-miss is written
+down instead.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one agent turn becomes a raw document plus whatever JSON keys the LLM returned, and the only exits are a human toggle, a human forget, and an eviction the next write performs -- nothing in the tree corrects an entry, and neither forget nor disable follows source_id down to the extractions made from the parent</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one agent turn becomes a raw document plus whatever JSON keys the LLM returned, and the only exits are a human toggle, a human forget, and an eviction the next write performs -- nothing in the tree corrects an entry, and neither forget nor disable follows source_id down to the extractions made from the parent
+flowchart TB
+    TURN[&quot;Message component&lt;br/&gt;&lt;i&gt;agent turn&lt;/i&gt;&quot;] --&gt;|&quot;queue_save_to_memory_task&quot;| RAW[&quot;raw document&lt;br/&gt;&lt;i&gt;embedded and indexed inline&lt;/i&gt;&quot;]
+    TURN --&gt;|&quot;one Redis task per memory&quot;| TASK[&quot;task_executor&lt;br/&gt;&lt;i&gt;task_type = memory&lt;/i&gt;&quot;]
+    TASK --&gt; LLM[&quot;extract_by_llm&lt;br/&gt;&lt;i&gt;system prompt built from&lt;br/&gt;the memory_type bits&lt;/i&gt;&quot;]
+    LLM -. &quot;unparseable JSON&lt;br/&gt;&lt;b&gt;reported as progress 1.0&lt;/b&gt;&quot; .-&gt; OK((&quot;success&quot;))
+    LLM --&gt;|&quot;res_json.items()&lt;br/&gt;&lt;i&gt;key becomes message_type,&lt;br/&gt;unvalidated&lt;/i&gt;&quot;| CHILD[&quot;extracted documents&lt;br/&gt;&lt;i&gt;source_id = raw message_id&lt;/i&gt;&quot;]
+
+    RAW --&gt; STORE[(&quot;memory_{tenant_id}&lt;br/&gt;&lt;b&gt;status = 1, forget_at unset&lt;/b&gt;&quot;)]
+    CHILD --&gt; STORE
+
+    STORE --&gt; Q{&quot;search_message&lt;br/&gt;&lt;i&gt;status = 1&lt;/i&gt;&lt;br/&gt;&lt;i&gt;must_not exists forget_at&lt;/i&gt;&lt;br/&gt;&lt;i&gt;memory_id in accessible set&lt;/i&gt;&quot;}
+    Q --&gt; AGENT[&quot;memory_prompt&lt;br/&gt;&lt;i&gt;bare content strings,&lt;br/&gt;newline-joined&lt;/i&gt;&quot;]
+
+    PERSON[&quot;Messages page&quot;] --&gt;|&quot;Enable switch&quot;| DIS[&quot;status := 0&lt;br/&gt;&lt;i&gt;listed, not retrieved&lt;/i&gt;&quot;]
+    PERSON --&gt;|&quot;Forget&quot;| FOR[&quot;forget_at := now&lt;br/&gt;&lt;i&gt;hidden, evicted first&lt;/i&gt;&quot;]
+    DIS --&gt; STORE
+    FOR --&gt; STORE
+
+    STORE --&gt; CAP{&quot;embed_and_save:&lt;br/&gt;new + current &gt; memory_size?&quot;}
+    CAP --&gt;|&quot;FIFO&quot;| EVICT[&quot;delete forgotten first,&lt;br/&gt;then oldest valid_at&quot;]
+    CAP --&gt;|&quot;anything else&quot;| REFUSE[&quot;&lt;b&gt;write refused&lt;/b&gt;&lt;br/&gt;&lt;i&gt;cannot decide which to delete&lt;/i&gt;&quot;]
+
+    STORE -. &quot;no update path, no supersession,&lt;br/&gt;no dedupe, no tombstone&quot; .-&gt; CORR((&quot;correction&quot;))
+
+    style OK fill:#f5e6e0,stroke:#a35b3d
+    style CORR fill:#f5e6e0,stroke:#a35b3d
+    style REFUSE fill:#e6efe6,stroke:#3d7a4a</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Memory is not a library. It is a feature of a multi-service
+deployment, and the operator's cost is RAGFlow's cost, not the memory
+subsystem's.</p>
+<p><strong>What has to be running.</strong> The default
+<code>docker/docker-compose.yml</code> stack is a metadata database
+(MySQL by default; PostgreSQL and GaussDB are supported through
+<code>DB_TYPE</code>), Redis, MinIO, a doc-store engine, the API server,
+and at least one task executor. Memory uses four of those five and
+cannot run without any of them:</p>
+<ul>
+<li><strong>Metadata database</strong> — one Peewee model,
+<code>Memory</code> at <code>api/db/db_models.py:1809</code>, table
+<code>memory</code>. Configuration only; no message ever lands
+here.</li>
+<li><strong>Doc-store engine</strong> — the messages.
+<code>common/settings.py:426-440</code> selects a
+<code>msgStoreConn</code> beside the RAG <code>docStoreConn</code>, with
+four adapters under <code>memory/utils/</code>: <code>es_conn.py</code>
+(571 lines), <code>infinity_conn.py</code> (516),
+<code>ob_conn.py</code> (585) and <code>gaussdb_conn.py</code> (1,607).
+Elasticsearch is the default.</li>
+<li><strong>Redis</strong> —
+<code>REDIS_CONN.generate_auto_increment_id(namespace="memory")</code>
+is the only source of <code>message_id</code>, and
+<code>memory_{memory_id}</code> holds the running byte total that the
+capacity check reads. Redis is also the task queue.</li>
+<li><strong>Task executor</strong> —
+<code>rag/svr/task_executor.py:1415</code> dispatches
+<code>task_type == "memory"</code> to
+<code>handle_save_to_memory_task</code>. Without a worker, raw turns are
+stored and no extraction ever happens; the Messages page shows the task
+stuck.</li>
+</ul>
+<p><strong>A gap in that selection worth naming.</strong>
+<code>docStoreConn</code> is chosen from seven engines —
+<code>elasticsearch</code>, <code>infinity</code>,
+<code>opensearch</code>, <code>oceanbase</code>, <code>seekdb</code>,
+<code>gaussdb</code>, <code>serenedb</code> — using
+<code>lower_case_doc_engine</code>. <code>msgStoreConn</code> is chosen
+from five, and the first two branches compare the <em>unlowered</em>
+<code>DOC_ENGINE</code> directly:</p>
+<pre class="python"><code>if DOC_ENGINE == &quot;elasticsearch&quot;:
+    msgStoreConn = memory_es_conn.ESConnection()
+elif DOC_ENGINE == &quot;infinity&quot;:
+    ...
+elif lower_case_doc_engine in [&quot;oceanbase&quot;, &quot;seekdb&quot;]:</code></pre>
+<p>With <code>DOC_ENGINE=opensearch</code> or <code>serenedb</code>, or
+with <code>DOC_ENGINE=Elasticsearch</code> spelled with a capital,
+RAGFlow starts normally and <code>settings.msgStoreConn</code> stays
+<code>None</code>; the first memory operation fails on
+<code>None</code>. Nothing in the memory code checks for it.</p>
+<p><strong>Two runtimes, one API.</strong> RAGFlow is mid-port to Go.
+<code>cmd/ragflow_server.go</code> and
+<code>docker/docker-compose-go.yml</code> ship a second, complete
+implementation of the same memory surface —
+<code>internal/router/router.go:505-523</code> registers the identical
+<code>/memories</code> and <code>/messages</code> routes against
+<code>internal/handler/memory.go</code> (930 lines) over
+<code>internal/service/memory.go</code> (1,991) and
+<code>internal/dao/memory.go</code> (411). The two are not equivalent,
+and section 7 records where they diverge. The Go side is also where the
+memory tests worth having live.</p>
+<p><strong>Human-readable and repairable?</strong> Partly. The
+<code>memory</code> row is a normal SQL row. The messages are documents
+in a search index; on Elasticsearch they are readable and editable by
+hand, and <code>content_ltks</code> holds the original text alongside
+the tokenized copy. The Redis byte total is a bare integer with no TTL
+that is never deleted when a memory is, and no path recomputes it except
+a cold start with the key absent — and that recompute
+(<code>MessageService.calculate_memory_size</code>) reads at most
+<code>2048 * len(memory_ids)</code> documents, so a memory with more
+than 2,048 messages under-counts itself on every cold start.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture / write.</strong>
+<code>agent/component/message.py:579</code>
+<code>Message._save_to_memory</code> →
+<code>api/db/joint_services/memory_message_service.py:376</code>
+<code>queue_save_to_memory_task</code>. Per memory id: allocate
+<code>message_id</code> from Redis, build the raw document, call
+<code>embed_and_save</code> <strong>inline</strong>, insert a
+<code>Task</code> row with <code>task_type="memory"</code> and
+<code>digest=str(raw_message_id)</code>, push a task message onto
+<code>settings.get_svr_queue_name(priority=0)</code>.</p>
+<p><strong>Extraction / consolidation.</strong>
+<code>rag/svr/task_executor.py:1415</code> →
+<code>memory_message_service.py:445</code>
+<code>handle_save_to_memory_task</code> →
+<code>save_extracted_to_memory_only</code> → <code>extract_by_llm</code>
+(line 162) → <code>embed_and_save</code> (line 210).
+<code>extract_by_llm</code> assembles the system prompt from
+<code>PromptAssembler.assemble_system_prompt</code> unless
+<code>memory.system_prompt</code> is set, calls
+<code>llm.async_chat</code>, parses with
+<code>get_json_result_from_llm_response</code>, and flattens
+<code>res_json.items()</code> into
+<code>{content, valid_at, invalid_at, message_type}</code> records.
+There is no consolidation path; nothing ever re-reads what was
+written.</p>
+<p><strong>Retrieval.</strong> <code>agent/tools/retrieval.py:255</code>
+<code>Retrieval._retrieve_memory</code> or
+<code>api/apps/services/memory_api_service.py:359</code>
+<code>search_message</code> → <code>memory_message_service.py:261</code>
+<code>query_message</code> → <code>memory/services/query.py</code>
+(<code>MsgTextQuery.question</code>, <code>get_vector</code>) →
+<code>memory/services/messages.py:151</code>
+<code>MessageService.search_message</code> → the selected adapter's
+<code>search</code>.</p>
+<p><strong>Context assembly.</strong>
+<code>rag/prompts/generator.py:177</code>
+<code>memory_prompt(message_list, max_tokens)</code>. It walks the hits,
+counts tokens, stops at <code>max_tokens * 0.97</code>, and returns a
+list of bare <code>content</code> strings. <code>_retrieve_memory</code>
+calls it with a hardcoded <code>200000</code> and joins with newlines.
+Nothing about type, validity, source, agent or session reaches the
+model.</p>
+<p><strong>Update / delete / forget.</strong>
+<code>memory_api_service.py:340</code> <code>forget_message</code> and
+<code>:350</code> <code>update_message_status</code>, both through
+<code>MessageService.update_message</code>. Memory deletion is
+<code>:243</code> <code>delete_memory</code> →
+<code>MemoryService.delete_by_id</code> plus
+<code>MessageService.delete_message({"memory_id": memory_id}, ...)</code>.
+Eviction is <code>embed_and_save</code>'s capacity branch at
+<code>memory_message_service.py:237-247</code>.</p>
+<p><strong>Schema.</strong> <code>api/db/db_models.py:1809</code>
+(<code>Memory</code>); the message document shape is declared per
+adapter — <code>conf/message_infinity_mapping.json</code>,
+<code>memory/utils/gaussdb_conn.py:163-184</code>
+(<code>build_memory_table_ddl</code>),
+<code>memory/utils/ob_conn.py:30-60</code>, and implicitly by
+<code>ESConnection.map_message_to_es_fields</code> at
+<code>memory/utils/es_conn.py:52-77</code>.</p>
+<p><strong>API / SDK.</strong>
+<code>api/apps/restful_apis/memory_api.py</code> (337 lines, ten
+routes), <code>sdk/python/ragflow_sdk/modules/memory.py</code> plus
+seven methods on <code>RAGFlow</code>. <code>rg -ni 'memory' mcp/</code>
+returns nothing: no MCP tool touches this subsystem.</p>
+<p><strong>Tests.</strong>
+<code>internal/service/memory_message_test.go</code> (732 lines) is the
+substantial one;
+<code>test/testcases/test_web_api/test_message_app/</code> and
+<code>test/testcases/test_sdk_api/test_message_management/</code> are
+live-server integration suites. Section 10 separates them.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memory</code> row is configuration. The interesting object
+is the message document, whose backend-neutral field set is fixed by
+<code>memory/services/messages.py</code> and mapped per adapter:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>message_id</code></td>
+<td>Redis-allocated integer, globally sequential across all tenants and
+memories</td>
+<td>doc <code>_id</code> is
+<code>f"{memory_id}_{message_id}"</code></td>
+</tr>
+<tr>
+<td><code>message_type</code></td>
+<td><code>raw</code>, or whatever JSON key the LLM returned</td>
+<td>listing only, to select raw parents</td>
+</tr>
+<tr>
+<td><code>source_id</code></td>
+<td>parent <code>message_id</code>; <code>0</code> for a raw
+document</td>
+<td>listing only, to group extractions under their parent</td>
+</tr>
+<tr>
+<td><code>memory_id</code></td>
+<td>container</td>
+<td>forced into every query</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>canvas-supplied, may be a variable, may be <code>""</code></td>
+<td>optional query filter</td>
+</tr>
+<tr>
+<td><code>agent_id</code></td>
+<td>the canvas id</td>
+<td>optional query filter</td>
+</tr>
+<tr>
+<td><code>session_id</code></td>
+<td>the canvas task id</td>
+<td>optional filter, substring-matched</td>
+</tr>
+<tr>
+<td><code>content</code> / <code>content_embed</code></td>
+<td>the text and its vector</td>
+<td>the two retrieval arms</td>
+</tr>
+<tr>
+<td><code>valid_at</code></td>
+<td>LLM-asserted validity start, or write time for a raw document</td>
+<td>sort key, FIFO order key</td>
+</tr>
+<tr>
+<td><code>invalid_at</code></td>
+<td>LLM-asserted validity end</td>
+<td><strong>nothing</strong></td>
+</tr>
+<tr>
+<td><code>forget_at</code></td>
+<td>soft-delete stamp</td>
+<td><code>must_not exists</code>, and FIFO priority</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>1</code>/<code>0</code></td>
+<td>default retrieval filter</td>
+</tr>
+<tr>
+<td><code>zone_id</code></td>
+<td>—</td>
+<td><strong>nothing</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping.</strong> <code>tenant_id</code> sits on the memory,
+not the message, and it is the partition: the index is
+<code>memory_{tenant_id}</code>
+(<code>memory/services/query.py:29</code>). <code>permissions</code> is
+<code>me</code> or <code>team</code>, and <code>team</code> widens
+access to any user who shares a tenant with the owner —
+<code>_joined_tenant_ids(user_id)</code> returns
+<code>{user_id} ∪ {t["tenant_id"] for t in UserTenantService.get_user_tenant_relation_by_user_id(user_id)}</code>,
+and <code>_memory_accessible</code> requires <em>both</em>
+<code>permissions == "team"</code> and membership. <code>user_id</code>,
+<code>agent_id</code> and <code>session_id</code> are stored on every
+document and are optional query filters; they are not boundaries, and an
+agent that omits <code>user_id</code> reads every user's entries in the
+memory it was pointed at.</p>
+<p><strong>Temporal fields, and why <code>bitemporal</code> is
+withheld.</strong> <code>valid_at</code> and <code>invalid_at</code> are
+validity time and are explicitly described that way in the extraction
+prompt — <em>"valid_at: When the fact became true (e.g. law enactment,
+discovery)"</em>. There is no record-time column. The message table has
+no <code>created_at</code>, no <code>indexed_at</code>, nothing
+(<code>memory/utils/gaussdb_conn.py:163-184</code> lists every column).
+Instead <code>valid_at</code> is stamped with
+<code>timestamp_to_date(current_timestamp())</code> for raw documents
+and is simultaneously the FIFO eviction key, the recency sort key on
+every read, and the LLM's assertion about the world for extracted
+children. One column carrying both clocks is the specific confusion
+bitemporality exists to prevent, and a fact the model dates to 2019
+sorts and evicts as if it were written in 2019.</p>
+<p><code>invalid_at</code> is worse than absent: it is asked for in the
+prompt, parsed, normalized, stored in every backend, indexed in the
+GaussDB DDL, returned in every select list, and rendered in the UI — and
+no filter, sort or branch anywhere reads it.
+<code>rg -n 'invalid_at'</code> over the tree returns schema, mapping,
+prompt and select-list occurrences and nothing else. An entry the model
+marked expired is retrieved exactly like one that is still true.</p>
+<p><code>zone_id</code> is the same shape one step further along: it
+exists in all four adapter schemas and in the Go OceanBase schema, and
+every reference in the tree is <code>message.get("zone_id", 0)</code>.
+<code>rg -n 'zone_id.*[1-9]|ZoneID'</code> returns nothing. Nothing ever
+sets it.</p>
+<p><strong>Versioning, correction, contradiction.</strong> None.
+<code>rg -ni 'dedup|supersede|tombstone|conflict|revision|version' memory/ api/db/services/memory_service.py api/db/joint_services/memory_message_service.py api/apps/services/memory_api_service.py</code>
+returns one comment about deduplicating <em>memory names</em> within a
+tenant and one <code>replace_on_conflict=True</code> on the
+<code>Task</code> row. The message store has no notion of one entry
+replacing another.</p>
+<p><strong>Storage type.</strong> <code>Memory.storage_type</code> is
+<code>table|graph</code> per the column help text, and
+<code>common/constants.py:245</code> declares
+<code>MemoryStorageType { TABLE, GRAPH }</code>.
+<code>rg -n 'MemoryStorageType'</code> returns exactly one line — the
+class definition. Neither <code>create_memory</code> nor
+<code>update_memory</code> accepts the field, so nothing outside a
+direct <code>UPDATE</code> can set it; every memory is
+<code>table</code>. The web settings form declares
+<code>z.enum(['table', 'graph'])</code> and the hook that would submit
+it has the key commented out at
+<code>web/src/pages/memory/memory-setting/hook.ts:20</code>. The
+documentation is the honest surface here: <em>"Currently, Table
+(<code>table</code>) can be selected."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One hybrid pass, no reranker, no query rewriting beyond
+tokenization.</p>
+<p><code>query_message</code> at
+<code>memory_message_service.py:261</code> builds three expressions:</p>
+<ul>
+<li><strong>Lexical</strong> —
+<code>MsgTextQuery().question(question, min_match=similarity_threshold)</code>.
+This is RAGFlow's full-strength query builder reused for memory: term
+weights from <code>term_weight.Dealer</code>, WordNet synonym expansion
+through a Redis-backed <code>synonym.Dealer</code>, adjacent-pair phrase
+boosts at <code>max(w_left, w_right) * 2</code>, a Chinese branch with
+fine-grained tokenization, and a <code>minimum_should_match</code>
+derived from the caller's similarity threshold. The field searched is
+<code>tokenized_content_ltks</code>, written at index time as
+<code>fine_grained_tokenize(tokenize(content))</code>, so write-time and
+query-time tokenization match.</li>
+<li><strong>Dense</strong> — <code>get_vector</code> encodes the query
+with the memory's embedding model and emits
+<code>MatchDenseExpr(f"q_{dim}_vec", ..., "cosine", topk=10, {"similarity": threshold})</code>.
+Note <code>topk=10</code> is hardcoded in <code>get_vector</code>
+regardless of the caller's <code>top_n</code>.</li>
+<li><strong>Fusion</strong> —
+<code>FusionExpr("weighted_sum", top_n, {"weights": f"{k:g},{1-k:g}"})</code>
+where <code>k</code> is <code>keywords_similarity_weight</code> (default
+0.7). Slot order is <code>[text, vector]</code>; the comment in the
+source says so and names the two adapters that depend on it. This
+ordering is one day old at the pinned commit — <code>cd27ae4c6</code>,
+"fix(memory): put the keyword weight in the text slot of the fusion
+expression" (PR #18989), landed 1 September 2026, and the Go test that
+guards it says the pair was previously emitted reversed in both
+runtimes, <em>"which handed every memory search the inverse of the
+requested hybrid balance."</em> The test deliberately uses asymmetric
+weights because <em>"an even split cannot tell the two orders
+apart"</em> — a good habit, and one worth copying.</li>
+</ul>
+<p>Two filters are then added by the layers below rather than by the
+caller. <code>MessageService.search_message</code> sets
+<code>condition_dict["status"] = 1</code> unless the caller set it, and
+every adapter's <code>search</code> defaults
+<code>hide_forgotten=True</code> and appends
+<code>must_not exists forget_at</code>. Results are ordered
+<code>valid_at</code> descending, not by score — so the hybrid ranking
+decides <em>which</em> <code>top_n</code> documents come back and
+recency decides the order they are presented in.</p>
+<p><strong>What reaches the model.</strong> <code>memory_prompt</code>
+returns content strings and nothing else, newline-joined by the caller.
+No type, no dates, no session, no agent, no score, no separator. An
+agent given ten memories cannot tell a <code>procedural</code>
+instruction from a stale <code>episodic</code> note, cannot tell which
+turn produced which, and cannot cite. The <code>max_tokens</code>
+argument is <code>200000</code> at the only call site, so the real bound
+is <code>top_n</code> (default 8 on the tool, configurable per
+component).</p>
+<p><strong>Failure modes.</strong> Over-recall is the structural one:
+nothing filters by <code>message_type</code>, so a memory configured for
+all four types returns raw conversation transcripts alongside extracted
+facts, and the raw document is the concatenation of a whole turn —
+usually the longest and most lexically rich document in the store, which
+is exactly what BM25 rewards. Under-recall arrives through
+<code>topk=10</code> on the dense arm. Staleness arrives through
+<code>invalid_at</code> being inert. And <code>session_id</code>
+filtering is a wildcard <code>query_string</code> (<code>f"*{v}*"</code>
+with <code>analyze_wildcard=True</code>), which is a substring match,
+not an equality.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Does the agent block?</strong> Partly, and the split is
+deliberate. <code>Message._invoke_async</code> <code>await</code>s
+<code>_save_to_memory</code>, which awaits
+<code>queue_save_to_memory_task</code>, which calls
+<code>embed_and_save</code> for the raw document <strong>on the agent's
+turn</strong> — one embedding call, an index-existence check, a capacity
+check, and a bulk insert, per memory the component is pointed at. The
+LLM extraction is what gets deferred, onto the Redis queue. The
+synchronous <code>Message._invoke</code> path instead uses
+<code>asyncio.run_coroutine_threadsafe</code>, so there the whole write
+is fire-and-forget and its failure is invisible to the canvas.</p>
+<p><strong>Lag before retrievable.</strong> The raw document is
+retrievable as soon as the index refreshes —
+<code>ESConnection.insert</code> passes <code>refresh=False</code>, so
+it is the engine's own interval; the repository's own integration
+fixtures <code>time.sleep(2)</code> before searching. The extracted
+children wait for the queue: a task executor dequeue, one chat
+completion, one embedding call, one insert. Nothing measures this and
+nothing in the code bounds it.</p>
+<p><strong>Does any background pass rewrite the store?</strong> No.
+There is no consolidation, no decay, no summarization, no re-embedding,
+no nightly job. The only background work is the per-turn extraction
+task. That is a real strength for cost predictability — the token bill
+scales with the day's activity and never with the corpus — and the
+reason the store has no correction path.</p>
+<p><strong>Capacity accounting.</strong> <code>memory_size</code>
+defaults to 5,242,880 bytes.
+<code>MessageService.calculate_message_size</code> is
+<code>sys.getsizeof(content) + sys.getsizeof(embed[0]) * len(embed)</code>,
+and the two callers hand it different objects: on the write path
+<code>content_embed</code> is a row of the numpy array returned by
+<code>embedding_model.encode</code>, so element zero is a numpy scalar;
+on the cold-start recompute it is a decoded list of Python floats, whose
+<code>sys.getsizeof</code> is 24. Neither is the stored size — the
+vector is written as float32 — and the UI tooltip states a third figure,
+<em>"≈ Content + Dimensions × 8 Bytes"</em>, concluding that <em>"The 5
+MB default limit holds ~500 such messages."</em> The running total lives
+in Redis at <code>memory_{memory_id}</code>, incremented on insert and
+decremented on eviction. <code>forget_message</code> does not decrement
+it, which is correct — the document is still there — and no path deletes
+the key when the memory is deleted.</p>
+<p><strong>Eviction, and the fail-closed branch.</strong> At
+<code>memory_message_service.py:237</code>:</p>
+<pre class="python"><code>if new_msg_size + current_memory_size &gt; memory.memory_size:
+    size_to_delete = current_memory_size + new_msg_size - memory.memory_size
+    if memory.forgetting_policy == &quot;FIFO&quot;:
+        ...
+    else:
+        error_msg = &quot;Failed to insert message into memory. Memory size reached limit and cannot decide which to delete.&quot;
+        return False, error_msg</code></pre>
+<p>The <code>else</code> is currently unreachable through the API, and
+the reason is worth stating exactly because the column advertises
+otherwise. <code>Memory.forgetting_policy</code> carries
+<code>help_text="LRU|FIFO"</code>. <code>common/constants.py:250</code>
+declares <code>class ForgettingPolicy(StrEnum)</code> with
+<code>FIFO</code> as its <strong>only</strong> member, and
+<code>memory_api_service.py:188-192</code> validates the submitted value
+against <code>[e.value for e in ForgettingPolicy]</code>, so
+<code>LRU</code> is rejected at the API. The documentation agrees with
+the enum — <em>"Currently, First in, first out (FIFO) can be
+selected"</em> — so the stale claim is the column's help text, not the
+docs. What matters is the direction of the unreachable branch: it
+<strong>refuses the write</strong> rather than picking a victim it has
+no policy for. A future <code>LRU</code> member added to the enum
+without a matching branch here would fail closed, loudly, with a message
+naming the reason. That is the right default and this atlas credits
+it.</p>
+<p><strong>Where the two runtimes diverge, and it is not a small
+divergence.</strong> Go's
+<code>MemoryMessageService.embedAndSaveMessages</code> at
+<code>internal/service/memory_message_service.go:245</code> carries the
+comment <em>"Mirrors Python embed_and_save"</em> and implements the
+embedding, the index creation and the insert. It has no size accounting
+and no eviction — no Redis byte total, no
+<code>pick_messages_to_delete_by_fifo</code>, no capacity branch.
+<code>rg -ni 'forgotten' --glob '*.go'</code> returns two comment lines
+and no implementation. So on the Go server <code>memory_size</code> and
+<code>forgetting_policy</code> are both validated on write
+(<code>internal/service/memory.go:581-592</code>,
+<code>validForgettingPolicies</code>) and neither is ever enforced: a
+memory grows without bound. The two runtimes also disagree on the
+ceiling — Go's <code>MemorySizeLimit</code> is <code>5242880</code> and
+Python's <code>MEMORY_SIZE_LIMIT</code> at
+<code>api/constants.py:29</code> is <code>10 * 1024 * 1024</code> — and
+the documentation states the Go number.</p>
+<p><strong>Noisy or malicious input.</strong> Nothing is filtered. The
+content written is the agent's own turn, which by construction contains
+whatever the user typed. The extraction prompt is a plain instruction
+with no delimiter discipline around the conversation text, and
+<code>memory.user_prompt</code> — settable per memory through the API —
+is inserted as a <code>user</code> message <em>before</em> the
+conversation, so a memory's own configuration can rewrite what the
+extractor is looking for. Nothing validates the resulting
+<code>message_type</code> against the memory's bits, so a prompt can
+mint types the memory was never configured for.</p>
+<p><strong>Raw is written unconditionally.</strong> The docs state that
+<em>"Raw (<code>raw</code>) is required and cannot be removed"</em>, and
+the API does not enforce it — <code>create_memory</code> only checks
+membership in <code>MemoryType</code>, so
+<code>memory_type: ["semantic"]</code> is accepted. It makes no
+difference: both write paths construct the raw document before looking
+at the bit field at all. A memory configured without <code>raw</code>
+still stores every complete conversation turn verbatim.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Two canvas components, no model agency over
+memory.</strong></p>
+<p><em>Writing</em> is <code>agent/component/message.py</code>. A
+<code>Message</code> component with <code>memory_ids</code> configured
+calls <code>_save_to_memory</code> after every emission. The model is
+not asked, cannot decline, and cannot choose what is stored: the unit is
+the whole turn, <code>get_sys_query()</code> plus the rendered
+response.</p>
+<p><em>Reading</em> is <code>agent/tools/retrieval.py</code>.
+<code>Retrieval</code> is a <code>ToolBase</code>, so the model does
+choose <em>when</em> to call it — but its <code>ToolMeta</code> name is
+<code>search_my_dateset</code>, its description is <em>"This tool can be
+utilized for relevant content searching in the datasets"</em>, and its
+only parameter is <code>query</code>. Whether that call hits a knowledge
+base or a memory is decided by the component's
+<code>retrieval_from</code> and <code>memory_ids</code> in the canvas
+DSL. A model calling the tool has no way to know it is querying memory,
+and no way to name a memory, a user, a session or a type.</p>
+<p><strong>The agent path skips the permission filter, and the Go port
+says so in a test name.</strong> <code>_memory_accessible</code>,
+<code>_require_memory_access</code> and
+<code>_filter_accessible_memories</code> live in
+<code>api/apps/services/memory_api_service.py</code> and every reference
+to them is in that file. Both agent components call the joint service
+directly — <code>agent/tools/retrieval.py:277</code> calls
+<code>memory_message_service.query_message</code>, and
+<code>agent/component/message.py:592</code> calls
+<code>queue_save_to_memory_task</code> — with the raw
+<code>memory_ids</code> from the canvas. <code>query_message</code> then
+resolves the owning tenant from the memory rows themselves
+(<code>uids = [memory.tenant_id for memory in memory_list]</code>) and
+searches those tenants' indices. So the boundary that protects the REST
+surface is a property of the REST surface: a canvas DSL naming another
+tenant's memory id reads it.</p>
+<p>The Go implementation reproduces this and pins it with
+<code>TestSaveAgentMessageBypassesRequestAccessFilter</code>, which
+asserts that <code>AddMessage</code> with an empty current user returns
+<code>"Memory not found."</code> and that <code>saveAgentMessage</code>
+reaches the message store instead. The bypass is intentional — a
+background agent run has no request user — but the write side and the
+read side are not the same risk, and only the write side has a
+justification.</p>
+<p><strong>Session lifecycle.</strong> <code>session_id</code> is
+<code>self._canvas.task_id</code> and <code>agent_id</code> is
+<code>self._canvas._id</code>. Nothing closes a session, nothing
+summarizes at a boundary, and there is no compaction interaction: memory
+is retrieved by similarity, never injected automatically, and never
+assembled into a system prompt by the memory subsystem.</p>
+<p><strong>Portability.</strong> The REST surface is clean and the SDK
+is thin, so pointing another agent at this is a matter of
+<code>POST /messages</code> and <code>GET /messages/search</code>. What
+does not port is the extraction policy, which lives entirely in the
+memory row.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance.</strong> An entry knows the agent, the session,
+the optional user, and — for an extracted child — the raw parent it came
+from. That is better than most stores here, and
+<code>list_message</code> uses it well: the Messages page shows each raw
+turn with its extractions nested underneath and the extraction task's
+progress beside it, so a person can see what the LLM made of a given
+conversation. What is absent is any record of <em>changes</em>: nothing
+logs that a message was disabled, forgotten or evicted, or by whom.
+<code>rg -in 'audit|event_log|history' api/db/db_models.py</code>
+returns one comment about a retired artifact table across 37 models.
+<code>audit_log</code> is withheld with nothing close to it.</p>
+<p><strong>Prompt-injected false memories.</strong> The path is open and
+short. Text a user types reaches the agent's turn, the turn is written
+verbatim as a raw document, and the extraction LLM reads that text as
+part of its conversation input. A retrieved memory is then concatenated
+into a later prompt as an unlabelled content string with no delimiter
+and no provenance marker. Nothing scores, verifies or corroborates. The
+mitigation available to an operator is the Messages page — which is why
+<code>human_review</code> is the right mark for it and also why the
+review is after the fact.</p>
+<p><strong>Race conditions.</strong> Two writes to the same memory can
+both read the Redis total before either increments it, so the cap is
+advisory under concurrency; <code>increase_memory_size_cache</code> is
+an <code>INCRBY</code>, so the total self-corrects, but the eviction
+decision does not. <code>message_id</code> allocation is atomic in
+Redis. If the Redis key is lost, <code>init_message_id_sequence</code>
+re-derives the maximum from the store by sorting <code>message_id</code>
+descending with <code>hide_forgotten=False</code> — a genuine recovery,
+and the reason <code>get_max_message_id</code> passes that flag.</p>
+<p><strong>Data loss.</strong> The extraction task is the exposure.
+<code>queue_save_to_memory_task</code> inserts the <code>Task</code> row
+and then pushes to Redis; if the push fails the raw document is already
+stored and the memory is reported failed, which is the recoverable
+direction. If the executor dies mid-task, the row stays at its last
+progress and nothing retries. And <code>delete_memory</code> deletes the
+documents by <code>memory_id</code> but never drops the index —
+<code>MessageService.delete_index</code> has exactly one caller in the
+tree, <code>api/db/joint_services/user_account_service.py:220</code>, on
+account deletion.</p>
+<p><strong>Privacy and delete semantics.</strong> <code>forget_at</code>
+is a hide, not a delete: the content and the vector remain in the index
+and remain returned by <code>get_message_content</code>, by
+<code>calculate_memory_size</code> and by
+<code>pick_messages_to_delete_by_fifo</code>, all of which pass
+<code>hide_forgotten=False</code> or query for the flag directly. The UI
+string is careful about this — <em>"After forgetting, this message will
+not be retrieved by agents"</em> — and it is accurate. A person asking
+for erasure gets eviction only when the memory next fills up.</p>
+<p><strong>Representing uncertainty.</strong> It cannot.
+<code>status</code> is the only discrete field and it is a switch.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong>
+<code>rg -in 'arxiv|bibtex|@article|@misc|citation|doi:' README.md docs/</code>
+returns matches for RAGFlow's <em>product</em> citation feature
+(grounded answers citing source chunks) and nothing bibliographic; there
+is no <code>CITATION.cff</code>. No benchmark, ablation or eval harness
+for the memory subsystem is committed to this repository, and none is
+claimed in the docs.</p>
+<p><strong>The Go unit tests are the real coverage, and they are
+good.</strong> <code>internal/service/memory_message_test.go</code> (732
+lines) runs against an in-process <code>glebarez/sqlite</code>
+<code>:memory:</code> database with no skip path and no external
+service. Three cases carry weight:</p>
+<ul>
+<li><code>TestSearchMessageFiltersAccessibleMemoryAndDefaultsStatus</code>
+and
+<code>TestGetMessagesFiltersAccessibleMemoryAndBuildsRecentSearch</code>
+seed two memories — <code>mem-owned</code> on <code>user-1</code> and
+<code>mem-other</code> on <code>user-2</code> with
+<code>permissions: me</code> — call the service as <code>user-1</code>
+asking for both, and assert
+<code>reflect.DeepEqual(req.Filter["memory_id"], []string{"mem-owned"})</code>
+on the request that reached the doc engine, plus
+<code>IndexNames == [memory_user-1]</code>. The assertion is an exact
+one-element slice, so it fails both if the other tenant's memory
+survives and if the filter is empty; the fixture guarantees the
+contrasting row exists. This is the <code>negative_eval</code> mark, and
+it is a scope-boundary assertion rather than a corrected-value one.</li>
+<li><code>TestMemoryFusionWeightsPutTheKeywordWeightInTheTextSlot</code>
+pins the slot order the retrieval balance depends on, and its comment
+states the anti-vacuity reasoning explicitly: <em>"The weights below are
+asymmetric on purpose: an even split cannot tell the two orders
+apart."</em></li>
+<li><code>TestUpdateMemoryTeamMemberCannotChangePermissions</code>
+asserts a team member cannot widen a memory they do not own.</li>
+</ul>
+<p><strong>The Python suites are integration tests against a running
+deployment</strong>, and their coverage of the mechanisms this report
+cares about is weaker.
+<code>test/testcases/test_web_api/test_message_app/</code> and the SDK
+mirror exercise create, list, add, search, forget, status and content
+against <code>HOST_ADDRESS</code> with real embedding and chat models
+named in the fixtures (<code>BAAI/bge-small-en-v1.5@Builtin</code>,
+<code>glm-4-flash@ZHIPU-AI</code>). Two gaps stand out.</p>
+<p><code>test_forget_message</code> forgets a random message and then
+asserts <code>forget_at not in ["-", ""]</code> — that the field was
+written. It never searches afterwards.
+<code>test_update_message_status</code> does the same for
+<code>status</code>. So the two mechanisms that hold up every claim
+about withholding an entry from an agent are tested by reading back the
+field that was just set, on the same document, through an endpoint that
+passes <code>hide_forgotten=False</code>. The one-line repair is a
+<code>search_message</code> call after the forget asserting the message
+is absent from a populated result.</p>
+<p><code>test_query_with_agent_filter</code> looks like a scope
+assertion — it asserts <code>len(res["data"]) &gt; 0</code> and then
+<code>message["agent_id"] == agent_id</code> for every hit — but its
+fixture, <code>add_memory_with_multiple_type_message_func</code>, adds
+exactly one message under one <code>agent_id</code>. There is no
+contrasting material for the filter to exclude, so the loop passes
+against a retriever that ignores <code>agent_id</code> entirely. The
+sibling fixture <code>add_memory_with_5_raw_message_func</code> already
+seeds five messages across two agent ids and is used by
+<code>test_list_message.py</code>; pointing the search test at it would
+make the same assertion mean something.</p>
+<p><strong>Tests I would want before trusting this.</strong> A forgotten
+message absent from a populated search. A disabled message absent from a
+populated search. An entry whose <code>invalid_at</code> has passed —
+which would fail, and should. A second <code>user_id</code> in the same
+memory, asserting the filter separates them. And a capacity test that
+fills a memory and checks what FIFO chose.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the accessible set before you build the query, and
+force the predicate inside the adapter.</strong> RAGFlow does both:
+<code>_filter_accessible_memories</code> maps a requested id list to a
+permitted one at the service layer and returns <code>[]</code> rather
+than searching when nothing survives, and then
+<code>condition["memory_id"] = memory_ids</code> is an assignment, not a
+<code>setdefault</code>, in every one of the four backend adapters. The
+second half is what makes it hold when a new caller appears — and a new
+caller did appear, on the agent path, which is exactly why the
+belt-and-braces version is worth the duplication.</li>
+<li><strong>Make "forget" a soft hide that also volunteers the row for
+the next eviction.</strong> <code>pick_messages_to_delete_by_fifo</code>
+drains <code>forget_at IS NOT NULL</code> ordered by
+<code>forget_at</code> ascending before it touches anything else. A
+user's forget is honoured immediately at the read path and settled
+physically without a separate purge job. Two lines of ordering buy a
+deletion story.</li>
+<li><strong>When a policy branch cannot decide, refuse the
+write.</strong> The
+<code>else: return False, "...cannot decide which to delete."</code>
+branch is unreachable today and is the reason a future non-FIFO policy
+fails loudly instead of evicting arbitrarily. Write the branch before
+you need it, and make it the refusing one.</li>
+<li><strong>Write your ranking-weight test with asymmetric
+weights.</strong> RAGFlow's own comment is the lesson: an even split
+cannot distinguish <code>[text, vector]</code> from
+<code>[vector, text]</code>, and the reversed pair shipped in both
+runtimes until one day before this commit.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A type taxonomy that exists only in a prompt.</strong> Four
+memory types in a bit field, four blocks of extraction instructions, and
+a stored <code>message_type</code> that is whatever key the model
+returned. Nothing validates it, nothing reconciles it with the memory's
+configuration, and nothing on the read path branches on it — so the
+taxonomy costs prompt tokens and buys a string. If you declare types,
+validate them at the boundary and use them in retrieval, or do not
+declare them.</li>
+<li><strong>Asking a model for an expiry you never read.</strong>
+<code>invalid_at</code> is prompted for, parsed, normalized, stored,
+indexed and rendered, and no query consults it. A field with a producer
+and no consumer is worse than a missing field, because the UI shows it
+and a reader concludes the system honours it.</li>
+<li><strong>Reporting a failed extraction as success.</strong> A JSON
+parse failure yields <code>{}</code>, which yields an empty list, which
+is reported at <code>progress: 1.0</code> with <em>"No memory extracted
+from raw dialogue."</em> Separate "the model produced nothing" from "the
+model's output could not be read", or you will never see the second
+one.</li>
+<li><strong>Letting a port validate a constraint it does not
+implement.</strong> The Go server accepts <code>memory_size</code> and
+<code>forgetting_policy</code>, rejects invalid values, and enforces
+neither. The operator-visible surface says the cap exists.</li>
+<li><strong>One timestamp doing duty as both validity time and record
+time.</strong> <code>valid_at</code> is the model's claim about the
+world <em>and</em> the FIFO eviction key <em>and</em> the recency sort.
+Backdating a fact changes when it gets deleted.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is not a memory system you adopt; it is a feature you get if you
+are already running RAGFlow. That framing decides everything. If your
+agents live on RAGFlow's canvas and you want conversational recall
+across sessions with an operator who can look at what was stored and
+switch off the wrong bits, this is well-shaped for that and the
+deployment cost is zero marginal — the four services it needs are
+already up. The permission model is the strongest reason to use it: few
+systems in this corpus resolve scope before the query builds and
+re-force it underneath.</p>
+<p>If you are shopping for a memory layer to put behind a different
+agent, look elsewhere and read this for the two or three mechanisms
+above. The dependency footprint is a metadata database, Redis, a search
+cluster and a worker pool for a subsystem that stores flat text
+documents, the store cannot represent that anything it holds is wrong,
+and the object you actually retrieve is a bare string with no type, date
+or source attached. Anyone who needs correction — a fact superseded, a
+value rejected so extraction cannot re-assert it, an audit of who
+changed what — should walk away now rather than discover it at scale,
+because there is no field to add it to and no write path to hang it
+on.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Which runtime is deployed in practice.</strong> Both
+<code>docker-compose.yml</code> (Python) and
+<code>docker-compose-go.yml</code> (Go) ship. The eviction divergence in
+section 7 means the answer changes whether <code>memory_size</code> is a
+limit or a display value, and nothing in the tree states which is
+recommended.</li>
+<li><strong>What Elasticsearch's refresh interval actually is under
+RAGFlow's index template</strong>, and therefore how long a raw turn is
+invisible after being written. <code>refresh=False</code> on insert
+defers to the engine; the fixtures assume two seconds.</li>
+<li><strong>Whether <code>storage_type: graph</code> is in progress or
+abandoned.</strong> The enum, the column, the help text and the frontend
+schema all exist; the submit path is commented out and no graph code
+references memory. Issue history would settle it.</li>
+<li><strong>Whether <code>zone_id</code> is a placeholder for a sharding
+or partitioning scheme.</strong> It is carried through four backend
+schemas and the Go OceanBase schema with no producer.</li>
+<li><strong>Whether the OpenSearch and SereneDB
+<code>msgStoreConn</code> gap is known.</strong> Running the server with
+<code>DOC_ENGINE=opensearch</code> and touching memory would confirm the
+failure mode; it was not run here.</li>
+<li><strong>What the extraction quality is.</strong> No eval exists in
+the repository, and reading the prompt cannot tell you how often a
+five-item cap truncates something that mattered.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage / schema</strong> —
+<code>api/db/db_models.py:1809</code> (<code>Memory</code>),
+<code>common/constants.py:238-251</code> (<code>MemoryType</code>,
+<code>MemoryStorageType</code>, <code>ForgettingPolicy</code>),
+<code>conf/message_infinity_mapping.json</code>,
+<code>memory/utils/gaussdb_conn.py:60-184</code> (columns, field map,
+DDL), <code>memory/utils/ob_conn.py:30-60</code>,
+<code>memory/utils/es_conn.py:52-101</code>,
+<code>internal/entity/memory.go</code>,
+<code>internal/engine/oceanbase/schema.go</code>.</p>
+<p><strong>Write path</strong> —
+<code>api/db/joint_services/memory_message_service.py</code>
+(<code>save_to_memory</code>,
+<code>save_extracted_to_memory_only</code>, <code>extract_by_llm</code>,
+<code>embed_and_save</code>, <code>queue_save_to_memory_task</code>,
+<code>handle_save_to_memory_task</code>, the four
+<code>*_memory_size_cache</code> helpers),
+<code>memory/utils/prompt_util.py</code> (<code>PromptAssembler</code>),
+<code>memory/utils/msg_util.py</code>,
+<code>agent/component/message.py:579-592</code>,
+<code>rag/svr/task_executor.py:1415</code>,
+<code>internal/service/memory_message_service.go</code>,
+<code>internal/service/memory_extractor.go</code>.</p>
+<p><strong>Retrieval path</strong> —
+<code>memory/services/query.py</code> (<code>MsgTextQuery</code>,
+<code>get_vector</code>, <code>index_name</code>),
+<code>memory/services/messages.py</code> (<code>MessageService</code>),
+<code>memory/utils/es_conn.py:110-260</code>,
+<code>memory/utils/infinity_conn.py</code>,
+<code>memory/utils/ob_conn.py:200-400</code>,
+<code>memory/utils/gaussdb_conn.py:800-1100</code>,
+<code>api/db/joint_services/memory_message_service.py:261</code>
+(<code>query_message</code>).</p>
+<p><strong>Context assembly</strong> —
+<code>rag/prompts/generator.py:177</code> (<code>memory_prompt</code>),
+<code>agent/tools/retrieval.py:255-305</code>.</p>
+<p><strong>Background</strong> —
+<code>rag/svr/task_executor.py:135,285,1415</code>,
+<code>rag/svr/task_executor_refactor/task_handler.py:141,192</code>.</p>
+<p><strong>API / SDK / UI</strong> —
+<code>api/apps/restful_apis/memory_api.py</code>,
+<code>api/apps/services/memory_api_service.py</code>,
+<code>api/db/services/memory_service.py</code>,
+<code>api/utils/memory_utils.py</code>,
+<code>sdk/python/ragflow_sdk/modules/memory.py</code>,
+<code>internal/router/router.go:505-523</code>,
+<code>internal/handler/memory.go</code>,
+<code>internal/service/memory.go</code>,
+<code>internal/dao/memory.go</code>,
+<code>web/src/pages/memory/memory-message/message-table.tsx</code>,
+<code>web/src/pages/memory/memory-setting/</code>.</p>
+<p><strong>Tests</strong> —
+<code>internal/service/memory_message_test.go</code>,
+<code>internal/service/memory_message_service_test.go</code>,
+<code>internal/service/memory_extractor_test.go</code>,
+<code>test/testcases/test_web_api/test_message_app/</code>,
+<code>test/testcases/test_sdk_api/test_message_management/</code>,
+<code>test/unit_test/api/db/joint_services/test_memory_message_service.py</code>,
+<code>test/unit_test/memory/utils/</code>.</p>
+<p><strong>Configuration / deployment</strong> —
+<code>common/settings.py:395-440</code>,
+<code>api/constants.py:27-29</code>,
+<code>docker/docker-compose.yml</code>,
+<code>docker/docker-compose-go.yml</code>,
+<code>docker/oceanbase/init.d/vec_memory.sql</code> (a single
+<code>ALTER SYSTEM SET ob_vector_memory_limit_percentage = 30;</code> —
+an OceanBase tuning knob, unrelated to the Memory feature despite the
+filename).</p>
+<p><strong>Documentation</strong> —
+<code>docs/guides/memory/create_memory.md</code>,
+<code>configure_memory.md</code>, <code>connect_to_an_agent.md</code>,
+<code>message_page.md</code>,
+<code>docs/guides/team/sharing_scope_configuration/share_memories.md</code>.</p>
+<p><strong>Searches behind the absence claims in this report</strong>,
+run at the tree root so the next reading re-runs them rather than
+re-deriving them:</p>
+<pre class="sh"><code>rg -n &#39;MemoryStorageType&#39;
+rg -n &#39;storage_type.*graph|graph.*storage_type&#39; --glob &#39;!node_modules&#39;
+rg -n &#39;invalid_at&#39; --glob &#39;!web/**&#39;
+rg -n &#39;zone_id&#39; --glob &#39;*.py&#39; --glob &#39;*.go&#39;
+rg -n &#39;zone_id[&quot;\x27]?\s*[:=]\s*[1-9]|ZoneID&#39; --glob &#39;!node_modules&#39;
+rg -ni &#39;dedup|supersede|superseded|tombstone|conflict|revision|version&#39; memory/ \
+   api/db/services/memory_service.py api/db/joint_services/memory_message_service.py \
+   api/apps/services/memory_api_service.py api/utils/memory_utils.py
+rg -in &#39;audit|event_log|history&#39; api/db/db_models.py
+rg -n &#39;_filter_accessible_memories|_require_memory_access|_memory_accessible&#39; --glob &#39;*.py&#39;
+rg -n &#39;MemoryService.get_by_filter|MemoryService.get_by_ids&#39; --glob &#39;*.py&#39;
+rg -n &#39;delete_index|delete_idx&#39; --glob &#39;*.py&#39;
+rg -n &#39;message_type&#39; --glob &#39;*.py&#39; --glob &#39;!test/**&#39;
+rg -n &#39;hide_forgotten&#39; memory/utils/*.py common/doc_store/*.py
+rg -ni &#39;memory&#39; mcp/ -l
+rg -n &#39;MemorySize|memory_size|pickMessages|fifo|evict&#39; internal/service/*.go \
+   internal/dao/memory.go internal/handler/memory.go
+rg -ni &#39;forgotten&#39; --glob &#39;*.go&#39;
+rg -n &#39;SUMMARY4MEMORY|RANK_MEMORY|rank_memories_async&#39; --glob &#39;!node_modules&#39;
+rg -n &#39;save_to_memory&#39; --glob &#39;*.py&#39;
+rg -in &#39;arxiv|bibtex|@article|@misc|citation|doi:&#39; README.md docs/
+ls CITATION*
+rg -n &#39;Skip\(|t.Skip&#39; internal/service/memory_message_test.go</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-01</strong> — <a
+href="https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf"><code class="commit-id" title="880876f60ff8c30e023e42360d13688a0a021fdf">880876f6…</code></a>
+— first reading, at 8,924 commits and 5,932 files since 12 December
+2023, on a commit dated 1 September 2026. Screened before anything was
+read: <strong>1 auto-run surface</strong>
+(<code>.github/copilot-instructions.md</code> — a stale template still
+containing <code>(fill)</code> placeholders, an <code>app/</code> layout
+this repository does not have and a <code>requirements.txt</code> that
+does not exist in a tree managed by <code>pyproject.toml</code> and
+<code>uv.lock</code>), <strong>36 build-time execution surfaces, 8
+unpinned surfaces, and 9 files inside the seven-day cooldown</strong>,
+<code>go.mod</code> and <code>go.sum</code> among them, changed the day
+of reading. Nothing from the checkout was executed in consequence: no
+<code>docker</code>, no <code>docker compose</code>, no <code>uv</code>,
+no <code>pip</code>, no <code>make</code>, no <code>go build</code>, no
+<code>go test</code>, no <code>npm</code>, and no script under
+<code>scripts/</code> or <code>bin/</code>. Every finding here comes
+from reading files and from <code>git log</code>. <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> — the latter a symlink to the former — are
+addressed to a reading agent and open by telling it how to treat the
+codebase; both were read as data, neither directed this review, and
+their claims were checked against the tree rather than repeated. Scope
+was settled before writing: the retrieval-augmented-generation half of
+this repository is a document index and is not what the report covers;
+the Memory feature added on 10 December 2025 is. Three marks:
+<code>scope_enforced</code> on an accessible-id set resolved before the
+query and a <code>memory_id</code> predicate overwritten inside all four
+backend adapters, <code>human_review</code> on a Messages page whose
+<code>Enable</code> switch and <code>Forget</code> action both change
+what retrieval returns, and <code>negative_eval</code> on two Go cases
+asserting another tenant's memory never reaches the doc-engine filter
+over a fixture that seeds it. <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code> and
+<code>audit_log</code> were each examined and withheld —
+<code>status</code> is a two-valued switch labelled <code>Enable</code>,
+and <code>valid_at</code> is the only clock on a message document. Four
+mechanisms were traced from the field back to every assignment rather
+than from the symbol to its callers, and reported as unwired:
+<code>storage_type: graph</code>, <code>invalid_at</code>,
+<code>zone_id</code>, and the Go server's <code>memory_size</code> and
+<code>forgetting_policy</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
