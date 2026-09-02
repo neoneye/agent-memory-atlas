@@ -23856,6 +23856,69 @@ href="../capabilities/">human review</a> mark.</strong>
 person is approving a <em>proposal inside a run</em>, not adjudicating a
 stored claim, and the two are different surfaces however similar the
 word is.</li>
+<li><strong><a
+href="https://arxiv.org/abs/2608.25593"><code>arXiv:2608.25593</code></a>
+and <code>bingreeky/JIT</code> were examined together and have no
+report, and the one thing in the paper that persists across tasks is the
+one thing the release leaves out.</strong> <em>JIT-Agent: Scaling
+Harness Intelligence via Just-in-Time Harness Evolution</em> (26 August
+2026; Zhang, Lu, Xie and thirteen others) trains a 27B model to write an
+agent harness per task — memory, planning, action and capability
+orchestration as four Python files plus a prompt — for any off-the-shelf
+executor, and the repository is MIT, three commits over two days, at <a
+href="https://github.com/bingreeky/JIT/commit/ababa06c2f54d799fd9fbc356e5368f61a452260"><code class="commit-id" title="ababa06c2f54d799fd9fbc356e5368f61a452260">ababa06c…</code></a>,
+with the checkpoint and the training set on Hugging Face. Screened
+before reading: no auto-run surface, nothing inside the cooldown, three
+unpinned requirement files; nothing was built or run. The memory module
+is the boundary this page draws for SKILL.state and Self-GC, and the
+code says so in its own terms: <code>BaseMemory</code> is an
+<em>"inside-trial working memory manager"</em> whose
+<code>initialize</code> is <em>"called once at the start of each
+run"</em> and whose <code>update</code> may <em>"store, compress,
+summarize, or fold the step"</em>
+(<code>scripts/kernel/protocols.py:16-56</code>). The eleven seed
+implementations span the whole conversation-window repertoire — full
+history, ReSum-style summarisation at 90% of the context, HiAgent's
+value-scored sampling with <code>[Omitted]</code> placeholders,
+MemoBrain's reasoning graph, GAM's memory pages, AgentFold's folding —
+and none of them writes a file; a grep of <code>jit/</code>,
+<code>harness_factory/</code> and <code>scripts/</code> for
+<code>json.dump</code>, <code>sqlite</code>, <code>pickle</code> and
+<code>write_text</code> finds only run reports, traces and the best-of-N
+selection record. What the paper says <em>does</em> persist is a harness
+bank: each entry <em>(task, harness, metrics)</em> with reward, latency
+and cost, a candidate <em>"retained only if it matches or exceeds the
+current reward frontier and then strictly improves at least one frontier
+dimension"</em>, a reference set retrieved from it per task, and a
+streaming mode in which <em>"harnesses keep improving at test time while
+the generator itself stays frozen"</em> — the README's phrase. In the
+tree, <code>HARNESS_BANK_DIR</code> is
+<code>harness_factory/harnesses/</code>, the eleven hand-written seeds;
+the reference set is either the full description catalogue or three
+seeds drawn by <code>random.sample</code>
+(<code>jit/meta_agent.py:230-240</code>); nothing writes a generated
+harness back, no metrics are stored beside one, and
+<code>frontier</code>, <code>incumbent</code> and <code>stream</code>
+name nothing in the source. The archive that makes the paper's title an
+<em>evolution</em> is an experiment the release does not ship, so on its
+own artifact this is a per-task generator with a fixed seed bank. Two
+further gaps between paper and tree: Table 2 lists thirteen seed
+harnesses and the tree holds eleven, ReAct and AOrchestra absent; and
+the training pipeline — supervised fine-tuning, repair-trajectory
+imitation, and a group-decoupled policy optimisation over reward,
+latency and cost — is described and not released, though the data it
+consumed is. The discipline worth carrying out is in the runner: a
+harness is regenerated only when execution <em>raises</em>, and <em>"a
+harness that merely scores low is never repaired, since that would be
+optimising against the benchmark"</em>
+(<code>scripts/run_jit.py:310-312</code>); the seed baselines are run
+with <code>max_repairs=0</code> so the number describes the harness as
+written. The benchmark adapters, configs and task data ship in the
+repository, so the instrument is reproducible; no result file or run
+trace is committed, so the numbers are not. Placed on the <a
+href="../benchmarks/#the-number-measures-a-pipeline-not-a-memory-layer">benchmarks
+page</a> beside the Binding Constraint Thesis, whose controlled
+comparison its Table 4 is.</li>
 <li><strong><code>SKILL.state</code> was examined and has no report, and
 the boundary is the same one Self-GC draws.</strong> <em>SKILL.state:
 Scalable Long-Horizon Agent Skills</em> (<a

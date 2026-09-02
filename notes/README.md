@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-02-a-harness-generator-whose-memory-is-not-in-the-release.md](2026-09-02-a-harness-generator-whose-memory-is-not-in-the-release.md) —
+  JIT-Agent ([arXiv:2608.25593](https://arxiv.org/abs/2608.25593)) trains a 27B model to write a per-task agent
+  harness; its memory module is an in-process working memory and the one thing
+  the paper says persists across tasks — a reward-frontier harness archive that
+  grows at test time — is absent from the release, where the bank is eleven
+  hand-written seeds drawn by `random.sample`. The benchmark instrument ships
+  and no result file does. Records the runner's rule that a low-scoring harness
+  is never repaired, *"since that would be optimising against the benchmark"*.
 - [2026-09-01-a-judgement-with-a-revisit-date.md](2026-09-01-a-judgement-with-a-revisit-date.md) —
   `decision_log` in aimee, a store three previous readings missed, keeps a
   decision under a status and flips `active` to `revisit_due` when a date its

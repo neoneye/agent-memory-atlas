@@ -589,6 +589,32 @@ code, dataset or variance-decomposition implementation, so the protocol it
 proposes is an argument to adopt rather than an artifact to run — and this page,
 which asks that disclosure of everyone else, cannot check it either.
 
+**The constructive version of the thesis arrived three months later, and it runs
+the comparison the thesis asks for.** *JIT-Agent: Scaling Harness Intelligence
+via Just-in-Time Harness Evolution*
+([arXiv:2608.25593](https://arxiv.org/abs/2608.25593), Zhang, Lu, Xie and
+thirteen others, 26 August 2026) starts from the same premise — the harness
+*"can dominate the contribution of the underlying foundation model"* — and
+instead of asking for disclosure trains a 27B model to write the harness per
+task. Its Table 4 holds the executor fixed at DeepSeek-V4-Flash and varies only
+the harness, with cost: on DeepSearchQA the generated harness scores 85.1 at
+$0.066 against Claude Code's 79.6 at $0.088 and OpenCode's 75.9 at $0.258, and
+the abstract's headline — the same executor beating GPT-5.6 by 9.1 on that
+benchmark and 4.3 on OdysseyBench — is a model ranking reversed by a harness,
+which is the thesis's own prediction observed. The artifact is the half the
+disclosure paper lacked and half of what a reader needs: the repository ships
+the harness generator, the eleven seed harnesses, and every benchmark's adapter,
+config and task data, so the instrument can be run; it commits no result file
+and no run trace, so the numbers cannot be recomputed from anything in the tree.
+The seed baselines are run with repairs disabled, and a generated harness is
+regenerated only when execution raises — *"a harness that merely scores low is
+never repaired, since that would be optimising against the benchmark"* — which
+is a rule this page would like to see stated by more harnesses. What the release
+leaves out is recorded in the [scope section](../compare/#known-limitations): the
+cross-task harness archive that the paper's title calls evolution, and the
+training pipeline. The HTML version read here carries no ablation table and no
+limitations section.
+
 **One system in this corpus cuts the pipeline in half rather than reporting
 through it.** [Engram Alpha](../systems/engram-alpha/) runs LongMemEval-S at
 full population with no model anywhere: the haystack is ingested as-is, one
