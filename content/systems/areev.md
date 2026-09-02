@@ -1,22 +1,23 @@
 ---
 title: "Areev"
-eyebrow: "Two axes, and one of them is a penalty"
-description: "A content-addressed grain store with world and knowledge time selectable at query time, a hash-chained review record carrying a mandatory reason, and one correction verb whose two implementations disagree about what it means."
+eyebrow: "Two axes, and one of them withholds at one door"
+description: "A content-addressed grain store with world and knowledge time selectable at query time, a hash-chained review record carrying a mandatory reason, a retraction that withholds at context assembly and at no other read surface, and one correction verb whose two implementations disagree about what it means."
 root: ../..
 page_kind: system
 source_name: "AreevAI/areev"
 source_url: https://github.com/AreevAI/areev
-revision: e31adeb23c28c207e1802a4927ca2f1ba86ff2db
-revision_url: https://github.com/AreevAI/areev/commit/e31adeb23c28c207e1802a4927ca2f1ba86ff2db
-analyzed_at: 2026-09-01
-capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: 8b0f012671c1792204182fa2589426176a627ccf
+revision_url: https://github.com/AreevAI/areev/commit/8b0f012671c1792204182fa2589426176a627ccf
+analyzed_at: 2026-09-02
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite, postgres, files"
 stack_retrieval: "vector, lexical, graph"
 stack_source: "reviewed"
 capability_evidence:
+  trust_state: "context assembly only — not the store, CAL `ASSEMBLE`, the MCP recall tools or the bindings | crates/areev-core/src/verification.rs:19, crates/areev-context/src/assembly.rs:444-461, crates/areev-context/src/policy.rs:102 | `verification_status` is `unverified / verified / contested / retracted`, classified once by `Trust::from_field`; `is_actionable` is false for `Retracted` alone, and `ContextAssembler::format` withholds every non-actionable hit from the body and drops any supersession chain touching one before scoring, unless `FormatPolicy::include_retracted(true)` admits them for an audit read. The store keeps returning retracted grains on purpose, because the DSAR selector is shared with erasure. `contested` is demoted by 0.15 and never withheld | crates/areev-context/src/assembly.rs:3620 retracted_is_withheld_from_assembly_by_default, :3661 retracted_is_withheld_from_knowledge_updates_too; crates/areev-bench/src/bin/honesty_metrics.rs:321 M5; crates/areev-conformance/src/cases/recall_purity.rs:95 store_recall_still_returns_retracted_grains"
   bitemporal: "the store, as an axis the caller selects at query time | crates/areev-store/src/lib.rs:42-49,:85-93, crates/areev-core/src/types/grain.rs:170-175 | `GrainCommon` carries `valid_from`/`valid_to` beside `system_valid_from`/`system_valid_to`, and `entity_at` takes an `Axis`: `World` is documented *\"What was true in the world at T — valid_from/valid_to\"* and `Knowledge` is *\"What did the agent know at T — supersession chain walk\"*. Both spellings parse from the wire in every binding, so the question a caller is asking is a parameter rather than a convention. Supersession stamps `svt` in the same `UPDATE` that sets `superseded_by`, so the record-time interval is closed by the same write that opens the successor | crates/areev-conformance/src/cases/heads_forks.rs, supersede_forget.rs"
   scope_enforced: "the namespace column, on every read arm, under a fail-closed grant model | crates/areev-store/src/lib.rs:1184,:3749,:3777,:4264, crates/areev-core/src/authz.rs:1-16 | `ns` is a column on every grain and a predicate on every read: the vector query is `WHERE g.ns = ? [AND g.s = ?] [AND g.p = ?] ORDER BY <distance>`, `entity_latest`, `triples`, `osp` and the run index all carry it. Policy is data in the memory file — grant grains scoped per namespace — while credentials stay host-side holding *\"no policy and no raw secrets\"*, and the default is refusal: *\"A memory with no grant grains grants nothing to anyone but the owner session (fail closed).\"* | crates/areev-conformance/src/cases/ns_scope.rs:55-93 — a BM25 leg leaking outside the scope is asserted against by name, and an emptied namespace must stop matching prefix scopes"
-  audit_log: "two records, both append-only, both in the store's own file | crates/areev-store/src/lib.rs:1217,:5127,:5290,:5932,:6153,:8090,:8838,:9358, crates/areev-loop/src/recommendation.rs:394-444 | the store keeps `oplog(op_seq INTEGER PRIMARY KEY, hlc INTEGER, op INTEGER, hash BLOB)` with one row per mutation — including `OP_FORGET` — inserted at seven sites and never updated or deleted; `import_bundle` replays it, so an erasure replicates rather than diverging. Above it the loop writes one immutable Observation grain per recommendation transition, hash-chained through `previous_audit_hash`, carrying `from`/`to` status, a host-asserted `actor` such as `user:alice`, an `observer_type`, and a **mandatory** `because` capped at 500 characters — with `derived_from` chaining to the recommendation and the prior audit row | crates/areev-conformance/"
+  audit_log: "two records, both append-only, both in the store's own file | crates/areev-store/src/lib.rs:1217,:5127,:5290,:5932,:6153,:8090,:8851,:9374, crates/areev-loop/src/recommendation.rs:394-444 | the store keeps `oplog(op_seq INTEGER PRIMARY KEY, hlc INTEGER, op INTEGER, hash BLOB)` with one row per mutation — including `OP_FORGET` — inserted at seven sites and never updated or deleted; `import_bundle` replays it, so an erasure replicates rather than diverging. Above it the loop writes one immutable Observation grain per recommendation transition, hash-chained through `previous_audit_hash`, carrying `from`/`to` status, a host-asserted `actor` such as `user:alice`, an `observer_type`, and a **mandatory** `because` capped at 500 characters — with `derived_from` chaining to the recommendation and the prior audit row | crates/areev-conformance/"
   human_review: "the recommendation lifecycle, with the transition table enforcing it and the reason required to record it | crates/areev-loop/src/recommendation.rs:345-418, crates/areev-mcp/src/lib.rs:966-1056 | `RecStatus` is `Pending / Approved / Rejected / Applied / RolledBack / Expired` and `can_transition_to` is a real table, not a suggestion: `Pending → Approved` and `Pending → Rejected` are open, `Approved → Applied` is open, and `Pending → Applied` is permitted only when `by_policy` is set — *\"the auto-apply actor, the only one permitted the reasonless pending → applied jump\"*, which names the one path that skips a person and marks it. `ObserverType` distinguishes `Human` from `Agent`, the MCP server lists pending recommendations and accepts transitions by name, and every transition persists an `AuditRecord` whose `because` field is not optional. A model-authored proposal is stamped `analyzer: \"loop.llm/1\"` with no manifest family, which `grants_auto_apply` cannot grant, and a code revision is refused an apply without the run id of an evaluation that executed the tool's own pinned evalset | crates/areev-conformance/, crates/areev-loop/src/integration.rs:2536-2572"
   negative_eval: "the conformance kit, run against more than one backend, asserting in both directions over one fixture | crates/areev-conformance/src/cases/supersede_forget.rs:24-45, ns_scope.rs:55-93 | `forget_clears_head_row` asserts `heads(...).len() == 1` **before** the forget, then asserts empty heads, no open forks, empty recall and an erroring `get` — the positive control and the negative assertion over the same fixture. `forget_new_head_does_not_resurrect_old` forgets the *newer* version and asserts the superseded predecessor is not resurrected — recall empty, `latest` none — while `get(&h1)` still succeeds under the message *\"old blob is still readable, just not live\"*, which pins the withheld-versus-deleted distinction most systems here leave implicit. `ns_scope` asserts by name that a BM25 hit from another namespace does not appear. Every case takes `b: &dyn Backend` and reports `b.name()`, so the same assertions run against the real store and the reference substrate | this is the test"
 matrix:
@@ -28,16 +29,16 @@ matrix:
   scoping: "Namespace on every grain and every read predicate, with grant grains in the file and credentials host-side, failing closed when no grant exists"
   integration: "A CLI, an MCP server, JS and Python bindings, an HTTP server, a sandbox and a conformance kit third-party substrates can run"
   background: "None by default — the project states there is no daemon and everything runs when you run it; the learning loop is invoked"
-  trust: "`verification_status` of unverified / verified / contested / retracted, kept apart from a `confidence` float — caller-authored, and consumed on the read path as a ranking penalty rather than an exclusion"
-  strengths: "World and knowledge time as a query parameter, a review record with a mandatory reason and a hash chain, a deletion that clears the text and the attachment bytes and replicates, a conformance kit that runs the same negative cases against more than one backend, and committed benchmark runs whose manifests carry a SHA-256 of every transcript"
-  risks: "`retract` means a demotion in the trait and an erasure in the real substrate, and no conformance case covers the divergence; the content hash a value-level tombstone would need is not consulted on re-add; and the fresh dependency surface means none of this was built or run here"
+  trust: "`verification_status` of unverified / verified / contested / retracted, kept apart from a `confidence` float and classified once; caller-authored; `retracted` is withheld from context assembly by default and disclosed to an opt-in audit read and to the DSAR, while the store, CAL and the MCP tools still return it as a ranking penalty; `contested` is a demotion, never a withholding"
+  strengths: "World and knowledge time as a query parameter, a review record with a mandatory reason and a hash chain, a deletion that clears the text and the attachment bytes and replicates, a conformance kit that runs the same negative cases against more than one backend and pins recall as a pure read, and committed benchmark runs whose manifests carry a SHA-256 of every transcript"
+  risks: "`retract` means a demotion in the trait and an erasure in the real substrate, and no conformance case covers the divergence; the withholding lives in one crate that two CLI commands reach, so CAL `ASSEMBLE` and every MCP recall tool still hand a retracted grain to a model; the content hash a value-level tombstone would need is not consulted on re-add, blocked on a stated compliance question; and the fresh dependency surface means none of this was built or run here"
 ---
 
 ## 1. Executive Summary
 
 A content-addressed store of typed grains, one query language over it, and a
-governed learning loop on top. 184,611 lines of Rust across seventeen crates,
-dual-licensed MIT or Apache-2.0, 259 commits since 16 August 2026.
+governed learning loop on top. 185,265 lines of Rust across seventeen crates,
+dual-licensed MIT or Apache-2.0, 270 commits since 16 August 2026.
 
 The README states the problem in the terms this atlas uses: an agent that
 rewrites its own memory unsupervised *"fails every security review on the same
@@ -73,12 +74,19 @@ cleans the namespace registry, and writes an op-log tombstone that
 `import_bundle` replays, so an erasure reaches replicas instead of diverging
 them.
 
-**Two marks are withheld and they are the findings.** `verification_status` is a
-four-value discrete status — unverified, verified, contested, retracted — held
-apart from a `confidence` float. It is authored by the caller rather than written
-by the engine, and it is consumed on the read path as `-0.3` added to a priority
-score that is then clamped. A retracted grain ranks lower and still surfaces, and
-no query in the tree excludes on it.
+**`verification_status` withholds at one door and ranks at the others.** It is
+a four-value discrete status — unverified, verified, contested, retracted — held
+apart from a `confidence` float and classified once, in
+`areev_core::verification::Trust`, whose `is_actionable` is false for exactly
+one value. Context assembly withholds a retracted grain by default, from the
+main body and from the Knowledge Update section, and admits it only under an
+explicit `include_retracted` meant for audit reads. The store does not filter,
+on purpose: the DSAR `subject_report` shares one selector with erasure and must
+disclose exactly what an erasure would remove. Between those two sit the
+surfaces that hand grains to a model without the assembler — CAL's own
+`ASSEMBLE`, every MCP recall tool, the bindings and the HTTP server — and on all
+of them a retracted grain is still `-0.3` on a clamped priority, or nothing.
+The withholding earns the mark; its reach is the finding.
 
 The verb behind that status is the more interesting finding, because **the
 codebase contains two incompatible definitions of it**. The `OmsSubstrate` trait
@@ -95,11 +103,16 @@ whose two backends disagree.
 And the content hash that a value-level tombstone would key on is not consulted
 on write. `forget` and its neighbours name the scenario three separate times —
 *"a forget + re-add of identical content can move this hash to a NEW seq"* — and
-each time solve the concurrency half of it under a row lock. The possibility is
-anticipated and its bookkeeping is correct; whether the re-assertion should be
-allowed is never asked.
+each time solve the concurrency half of it under a row lock. Whether the
+re-assertion should be allowed is asked in the project's own guarantees
+document and answered: not yet, for a reason it calls a compliance decision
+rather than an engineering one — *"May a rejection ledger keep a hash of content
+we just erased for someone?"* Its GDPR note classes a content address as a
+pseudonymous identifier, so refusing a value later means remembering something
+about it. That is the sharpest statement in this corpus of why a rejected-value
+tombstone and an erasure guarantee pull against each other.
 
-Five marks. The project states three limits itself, and they are accurate:
+Six marks. The project states three limits itself, and they are accurate:
 it improves *"memory, never model weights"*, *"nothing applies itself"* without an
 explicit host grant, and there is *"no daemon"*.
 
@@ -139,12 +152,12 @@ reason; an apply stores its inverse; a later re-measurement can propose its own
 revert. `RecStatus` moves `Pending → Approved → Applied → RolledBack`, with
 `Expired` computed from `valid_to`.
 
-What the state machine does not do is stop a caller-authored retraction from
-being recalled, which is the gap the diagram draws — along with the fork in what
-`retract` means.
+What the state machine does not decide is where a caller-authored retraction
+stops: at the assembler, and on no read surface before it, which is the split
+the diagram draws — along with the fork in what `retract` means.
 
 ```mermaid
-%% caption: rollback's `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is only ever a priority penalty that still lets the grain surface
+%% caption: rollback's `retract` forks by substrate — an erasure on the real store, a demotion in the trait contract and the test double — while a caller-authored retracted status is withheld at context assembly and is only a priority penalty on every other read surface
 flowchart TD
     A["analyzer proposes a Recommendation<br/>evidence cited by hash"] --> P{"RecStatus, transition table enforced"}
     L["optional model leg: DISCOVER<br/>closed proposal vocabulary<br/>separate GROUND, separate VERIFY"] -->|"origin = llm — no manifest family,<br/>so auto-apply can grant it nothing"| P
@@ -161,8 +174,9 @@ flowchart TD
     G -->|"a caller sets the field"| DEM
     SUP --> Q1["read: AND superseded_by IS NULL<br/>— withheld"]
     FRG --> Q2["row erased, FTS text cleared, CAS bytes reclaimed,<br/>OP_FORGET replayed on replicas — gone"]
-    DEM --> Q3["read: priority += -0.3, then clamp<br/>— ranked down, still returned"]
-    Q3 -.->|"and the training export keeps it<br/>at loss_weight 0.0"| Q3
+    DEM --> Q3["context assembly: withheld<br/>— include_retracted opts in"]
+    DEM --> Q4["CAL ASSEMBLE, MCP recall, store:<br/>priority += -0.3, then clamp<br/>— ranked down, still returned"]
+    Q4 -.->|"and the training export keeps it<br/>at loss_weight 0.0"| Q4
 
     style RET fill:#f5e6e0,stroke:#a35b3d
 ```
@@ -173,21 +187,21 @@ Seventeen crates, and the shape is a store with surfaces rather than a service.
 
 - **`areev-cal`** (54,396 lines) — the query language. The largest crate, which
   says where the design's weight sits.
-- **`areev-store`** (22,185) — the content-addressed store over SQLite or
+- **`areev-store`** (22,201) — the content-addressed store over SQLite or
   Postgres: grains, triples, an OSP index for inbound traversal, `entity_latest`
   materialisation, an op log with a hybrid logical clock, a CAS for attachments.
-- **`areev-core`** (17,516) — the grain types, the OMS wire format, authz
+- **`areev-core`** (17,607) — the grain types, the OMS wire format, authz
   primitives, pseudonymisation.
-- **`areev-loop`** (13,633) — analyzers, recommendations, the audit record, the
+- **`areev-loop`** (13,756) — analyzers, recommendations, the audit record, the
   optional model proposer, and a substrate trait third parties can implement.
-- **`areev-context`** (5,236) — budget-shaped context assembly and the priority
+- **`areev-context`** (5,335) — budget-shaped context assembly and the priority
   model.
 - **`areev-loop-adapter`** (2,506) — the loop's substrate trait implemented over
   the real store. Small, and where the two definitions of `retract` meet.
 - Surfaces and runtime: **`areev-cli`**, **`areev-mcp`**, **`areev-server`**,
   **`areev-js`**, **`areev-py`**, **`areev-llm`**, **`areev-run`**,
   **`areev-run-core`**, **`areev-trigger`**, plus **`areev-conformance`**,
-  **`areev-bench`** (11,132) and a **`fuzz`** target.
+  **`areev-bench`** (11,294) and a **`fuzz`** target.
 
 ### Deployment and ergonomics
 
@@ -201,7 +215,7 @@ Postgres is the alternative backend and is exercised by the conformance kit
 (`crates/areev-conformance/tests/pg.rs`), so the store's contract is tested
 against two engines rather than asserted to hold for both.
 
-**Nothing here was built or run.** Twenty dependency surfaces sit inside the
+**Nothing here was built or run.** Nineteen dependency surfaces sit inside the
 seven-day freshness cooldown at this commit, `Cargo.lock` among them, so the
 tree was read rather than compiled and every number this report derives comes
 from the source. `AGENTS.md` and `CLAUDE.md` were read as data. The benchmark
@@ -250,7 +264,10 @@ and a separate VERIFY call — *"proposer ≠ grounder"*, and the adversarial pa
 *"an independent adversarial pass (a separate call from the proposer — the
 anti-Goodhart rule)"*. A garbled response yields no drafts rather than failing
 the run; a garbled GROUND or VERIFY response yields no results, which drops every
-draft. What survives is written through the ordinary candidate path as a
+draft — and the funnel counts the verdicts GROUND returned and flags a failed
+call separately, because *"a grounding pass that REFUSED every draft and one
+that never answered are the same number of survivors and opposite problems."*
+What survives is written through the ordinary candidate path as a
 `Recommendation` grain — so a model does put a grain in the store — but the
 change that grain *proposes* is never applied without a person.
 
@@ -295,36 +312,54 @@ the test double at `reference.rs:253`. On a real deployment the status is
 caller-authored — the Python and JS bindings let a user set it — rather than
 engine-written.
 
-That makes the read-path treatment the whole of the consequence. In
-`crates/areev-context/src/render.rs:237-241`:
+The consequence is split by surface, and the split is designed. One classifier,
+`Trust` (`crates/areev-core/src/verification.rs`), maps the field's four values
+plus the non-OMS `"rejected"` — which the corpus exporter had treated as
+retracted and the context renderer had ignored — and answers two questions:
+`is_actionable` (`:19`), false only for `Retracted`, and `priority_delta`
+(`:27`), `-0.3` for retracted and `-0.15` for contested. `areev-context`
+consults the first before the second. `assembly.rs:444-461` collects every hit
+whose status is not actionable into a withheld set, drops any supersession
+chain touching one — *"rendering the surviving half as an update would state
+the retracted value as the thing that changed"* — and filters the candidate
+list before scoring; `render.rs:239` then applies the delta to what survives.
+`FormatPolicy::include_retracted` (`policy.rs:102`) is off by default and
+exists for *"audit and forensic reads, which want the withdrawn record
+precisely because it was withdrawn."* `contested` keeps its penalty and is never
+withheld — *"that one genuinely is a degree."* The corpus export
+(`crates/areev-cli/src/corpus.rs:209-218`) maps the same classifier to
+`("rejected", 0.0)`, emitting the record rather than dropping it.
 
-```rust
-let verification_penalty = match grain.get_str("verification_status") {
-    Some("retracted") => -0.3,
-    Some("contested") => -0.15,
-    _ => 0.0,
-};
-(base + score_boost + confidence_boost + verification_penalty).clamp(0.0, 1.0)
-```
+The store does not filter, and a conformance case pins that it must not.
+`store_recall_still_returns_retracted_grains`
+(`crates/areev-conformance/src/cases/recall_purity.rs:95`) adds a retracted
+grain, asserts store recall returns it, and asserts the DSAR `subject_report`
+discloses it, because that report *"shares one selector with erasure, so
+filtering retraction inside the store would make a DSAR under-disclose"* — a
+right-of-access obligation that would have been created while fixing an
+epistemics one, which the project's design note names as the risk that gated
+the change.
 
-A retracted grain is a lower-priority grain, not an excluded one. The mark asks
-for *"at least one state that withholds a memory from being treated as true"* and
-draws the line at usage: a score gets ranked, a state gets filtered. The one
-place the status does bite is the corpus export, where
-`crates/areev-cli/src/corpus.rs:208-217` maps `retracted` to
-`("rejected", 0.0)` — but that emits the record with `"quality": "rejected",
-"loss_weight": 0.0` rather than dropping it, and it is a training artifact rather
-than the recall path.
-
-Stated so a reader can disagree on the evidence: the field is real, CAL can
-express a predicate over it — a committed test writes `RECALL facts WHERE
-verification_status = "unverified"` — and the system's own recall and assembly
-paths do not. The capability to filter exists and is left to the caller, which
-is the narrower and more interesting version of the finding: the store can be
-asked to withhold a retracted grain, and nothing that assembles a prompt asks.
+What lies between the two is the finding. The assembler is reached by two CLI
+commands, `recall --render` and `recall-hook`
+(`crates/areev-cli/src/main.rs:1769`, `:2407`), and by the bench. CAL's own
+`ASSEMBLE` is executed inside `areev-cal`, which displays the status as
+metadata and filters on nothing; the MCP server's `areev_recall`,
+`areev_search` and `areev_nearest` return store rows; the JS and Python
+bindings and the HTTP server never import `areev-context`. On every one of
+those a retracted grain still reaches a model, ranked down or not at all. The
+guarantees document anticipated exactly this — *"CAL queries returning
+retracted grains would change under step 2: that needs a CHANGELOG entry and
+probably `WITH include_retracted`"* — and `areev-cal` is byte-identical to the
+previous pin. The mark asks for at least one state that withholds a memory from
+being treated as true and draws the line at usage; one read path filters on the
+state, so the mark is earned, and the reach of that path is the narrower claim
+a reader should carry.
 
 **The divergence is untested.** `crates/areev-conformance/src/cases/` holds
-ten case modules and not one mentions `retract`. Every other correction verb is
+eleven case modules and none calls `retract`; the word appears only in
+`recall_purity.rs`, where a retracted *status* is written by hand to pin that
+the store returns it. Every other correction verb is
 covered against `&dyn Backend` in both directions — `supersede_forget.rs` and
 `erasure.rs` do the work the report credits under `negative_eval` — so the single
 operation whose two implementations mean different things is the single one the
@@ -341,10 +376,21 @@ What is absent is the consult. Three separate comments in
 scenario: *"a forget + re-add of identical content can move this hash to a NEW
 seq — deleting the stale one would report success while erasing nothing (and
 diverge replicas via the tombstone)"*. Each re-resolves the row under a lock so
-the bookkeeping stays correct. The case is anticipated carefully and repeatedly,
-and the question the anticipation raises — whether the re-assertion should be
-allowed at all — is never put. One lookup against the forgotten set on the write
-path is the whole difference.
+the bookkeeping stays correct. The question the anticipation raises — whether
+the re-assertion should be allowed at all — is put in `docs/memory-guarantees.md`
+under the heading *"real gap, deliberately not implemented"*, and the document
+is a better account of the mechanism than most implementations of it. It
+counts seven write paths and says a check that misses `import_bundle` *"is
+bypassed by replication and is decorative"*; it wants one normalizer shared
+with rendering, or look-alike characters evade the key; it notes the ledger
+cannot grow unbounded; and it names the blocker as the interaction with
+erasure, since retaining a hash of erased content retains a derivative of it.
+The nearest thing in the tree is `add_if_novel`, a write-path check on the
+`(ns, subject, relation, object)` key against live heads rather than a
+rejection ledger — the right key on the right path for one of seven entry
+points. The document also records that the roadmap item the honesty metrics
+cite for the paraphrase case, `SP-1`, *"is referenced there and defined
+nowhere in the repo"*, which a grep confirms.
 
 ## 6. Retrieval Mechanics
 
@@ -365,8 +411,23 @@ Grain-type overrides are policy.
 **The failure mode is the one section 5 names.** Everything the read path can
 withhold, it withholds by a predicate — a superseded grain by
 `superseded_by IS NULL`, a foreign namespace by `ns = ?`, a forgotten grain by
-not existing. The one axis that is a judgement about truth is the one applied as
-arithmetic.
+not existing, and a retracted grain by a set difference in the assembler, but
+only there. On every other arm the one axis that is a judgement about truth is
+applied as arithmetic.
+
+**Reading never changes belief, and a case pins it on both backends.**
+`recall_never_mutates_belief` (`recall_purity.rs:30`) snapshots every grain
+field that could drift — hash, confidence, status, success and failure counts,
+both validity bounds — runs seven read paths eight times each, and asserts the
+snapshot and the op-log length unchanged; a sibling case reopens the file so a
+write buffered until drop cannot pass. The module header gives the reason, which
+is the one this atlas's decay pattern argues: *"ranking by how often a memory is
+retrieved makes a popular error indistinguishable from a settled fact."*
+Recall's only write goes to a telemetry sidecar that never syncs and feeds
+nothing that ranks, and the project observes what holds that in place is
+stronger than intent — a ranking that read the sidecar would make the same
+query answer differently on different hosts, which the replication guarantee
+forbids.
 
 ## 7. Write Mechanics
 
@@ -374,6 +435,17 @@ Writes are synchronous and no model sits on the grain-write path — a grain is
 retrievable when the transaction commits. There is no background pass, and the
 project says so rather than leaving it to be discovered. A model reaches the
 store only through the loop, and only as a proposal.
+
+That held locally and not on a replica. Until 2 September 2026 the bundle-import
+path wrote the grain row without its BM25 postings, so a memory that had just
+imported answered `search_text` with nothing until its next open, when a
+self-heal written for files predating the text index rebuilt it — which is also
+why no test caught it, since every import case reopened before searching. A
+long-running follower importing and serving from one handle answered every
+free-text query empty for the life of the process, a failure the code's own
+comment calls *"indistinguishable from an honest empty result."* `insert_blob`
+(`crates/areev-store/src/lib.rs:8713`) writes the postings, and
+`imported_grains_are_text_searchable_without_reopen` pins it on both backends.
 
 **Supersession is authorised, not merely recorded.** `supersession_justification`
 and `supersession_auth` sit on the grain, so a correction carries who permitted
@@ -462,18 +534,29 @@ comments make the standard explicit twice, on text and on attachment bytes, and
 the file-level path is named as the strong one: *"File-level crypto-erasure
 remains the strong path."*
 
-**Uncertainty can be represented and is not enforced.** `contested` exists as a
-state and costs a grain 0.15 of priority. A system that can say *I have this on
-record and do not believe it* and then ranks it down is one predicate away from
-acting on it.
+**Uncertainty is represented in two registers and only the stronger one is
+enforced.** `contested` exists as a state and costs a grain 0.15 of priority,
+never a withholding, by decision. A system that can say *I have this on record
+and do not believe it* ranks that down; the stronger word, *retracted*, is the
+one it acts on at assembly.
 
-**Two marks withheld**, both in section 5 with their evidence. `tombstone` — the
-content hash is not consulted on re-add. `trust_state` — the status is a ranking
-term.
+**The withholding is measured in both directions.** `honesty_metrics` M5
+(`crates/areev-bench/src/bin/honesty_metrics.rs:259-333`) stores twelve live
+and four retracted grains, asserts the store returns all sixteen, and reports
+two counts from assembly — retracted grains surfaced, live grains dropped —
+*"because they move in opposite directions: tighten withholding and the second
+number rises."* M6 asserts six write-to-readable legs — structural, text and
+vector, locally and on a replica after import — each readable on the next call
+with no reopen and no reindex, and says why the unit is a boolean: synchronous
+capture makes a latency distribution zero by construction. The replica text leg
+is the regression guard for the import defect in section 7.
+
+**One mark withheld.** `tombstone` — the content hash is not consulted on
+re-add, and the project has written down why not yet.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**2,564 test functions** across the seventeen crates, a fuzz target, a
+**2,575 test functions** across the seventeen crates, a fuzz target, a
 `deny.toml`, and a dedicated
 conformance crate — and the conformance kit is the artifact worth describing,
 because it is doing something most test suites here do not.
@@ -501,14 +584,17 @@ And `crates/areev-conformance/tests/pg.rs:192` asserts
 `telemetry_access_stats(...).is_empty()` under the message *"scrubbed on
 forget"*, so the erasure standard is checked against telemetry too.
 
-**What is not tested is the gap this report names.** No case asserts that a
-retracted grain is excluded from a recall, because none is — the assertion would
-fail. No case asserts that re-adding forgotten content is refused, for the same
-reason. Both absences are consistent with the code rather than oversights, which
-is worth saying plainly: this suite tests what the system does.
+**The gap this report names is tested in the direction the code takes.** Three
+unit tests in `assembly.rs` (`:3620`, `:3646`, `:3661`) assert that a retracted
+grain is withheld from the body and from the Knowledge Update section, that the
+opt-in admits it, and that a contested grain is demoted and never withheld; the
+conformance case asserts the store does *not* filter. No case asserts that
+re-adding forgotten content is refused, because none is — an absence consistent
+with the code, which is worth saying plainly: this suite tests what the system
+does.
 
-The third absence is not consistent with the code. `retract` appears in none of
-the ten case modules, and it is the one verb whose two implementations disagree
+The one absence not consistent with the code is unchanged. `retract` is called
+in none of the eleven case modules, and it is the one verb whose two implementations disagree
 — an erasure through the adapter, a status demotion in the reference substrate
 the kit also runs against. A case that called `retract` and asserted the same
 post-condition on both backends would fail today, and that is the point of
@@ -546,6 +632,51 @@ against the instrument that produced them is rare enough to be worth naming.
 The figures above are the project's, read from files it commits rather than
 reproduced here.
 
+### A real workflow, paired, and three null results it exposed
+
+`crates/areev-bench/EXPENSE.md` measures governed self-improvement on a private
+corpus — one company's supplier invoices and the spreadsheet a person fills in
+from them, 206 rows, none of which are in the repository. Only counts travel.
+The design is the reason to read it. Eight exploratory whole-run comparisons
+were discarded because two runs differing only by a prompt header scored 13.0%
+and 0.9%: *"the noise between runs was larger than the effect being looked
+for."* So each held-out invoice is its own control, read twice under prompts
+byte-identical except that the learned rules are present or rolled back — and
+the rollback travels the governance path rather than skipping the render,
+because the claim is that the governed apply is the lever.
+
+| Seed | Rules on vs rolled back | Noise floor, same state twice | p |
+| --- | --- | --- | --- |
+| 1 | 21 wins, 0 losses | 1 | <0.0001 |
+| 2 | 32 wins, 0 losses | 1 | <0.0001 |
+| 3 | 30 wins, 0 losses | 0 | <0.0001 |
+
+Thirty invoices, 210 field trials per arm, McNemar's exact test over the
+discordant pairs. The learning curve is a step: nearly all of the gain arrives
+in the first ten corrections and the curve is flat after. The document reports
+against itself in three places — absolute accuracy is low, 17% exact; three of
+seven fields never move; and the running score *during* learning falls, which
+it explains as the accountant adding required fields so the denominator grows,
+and declines to present as a curve.
+
+The three engine defects the run exposed are the sharper result, because each
+*"produced a plausible null result rather than an error"* and survived a
+synthetic benchmark. Every human note in every memory reached the model as an
+empty string: the renderer's fact-triple branch needed a relation, an
+Observation has none, and the fallback never checked `object`, where the store
+puts the text — *"the single highest-value evidence in a memory was the one
+shape that rendered to nothing."* The test helper had encoded the same mistake.
+A lesson could only prevent, never start doing something: the contract asked for
+a rule preventing a recurring mistake, so when the agent simply never produced a
+field the model reached for *"validate all required fields before
+submission"*, which *"passed DISCOVER, GROUND, VERIFY, human review, apply and
+render, and changed nothing"* — 0 of 30 coverage against 6 of 6 under a rule
+naming the action. And a failing grader was indistinguishable from a model with
+nothing to say. The general form is the one worth carrying out of this
+repository: **a proposal can clear every gate the engine has and still be a
+no-op, because no gate asks whether the wording names an action the agent can
+take.** The contract was reworded; no gate was added.
+
 ## 11. For Your Own Build
 
 ### Steal
@@ -580,6 +711,19 @@ reproduced here.
   revision can only touch `edges.<i>.cond`, `edges.<i>.max_cycles` and
   `retries.<node>`, so rewiring a graph is not a rejected proposal — it is a
   proposal the vocabulary cannot express.
+- **Withhold where the model reads and disclose where the person does.** One
+  classifier answers "may this be acted on"; the assembler filters on it and
+  the DSAR selector is required, by a conformance case, not to. The same state
+  hides a grain from a prompt and shows it to a data-subject request, and the
+  case that pins the second is what makes the first safe to ship.
+- **Report abstention in both directions.** Grains surfaced that the state said
+  to withhold, and grains withheld that were held, move in opposite directions.
+  One number can improve while the system gets worse in use; print both on
+  every run.
+- **Pin that reading never writes.** Snapshot every field a read could drift,
+  run every read path, assert the snapshot and the op-log length unchanged, and
+  reopen the file so a buffered write cannot pass. It is the cheapest case in a
+  suite and systems get it wrong in both directions.
 - **Checksum the evidence under the number, and let a run say it is stale.**
   Every transcript is hashed in a generated manifest, and a hand-written note
   under the title survives regeneration so a published run can record that the
@@ -588,18 +732,19 @@ reproduced here.
 
 ### Avoid
 
-- **Spending a status as a score.** Four discrete values, a rollback path that
-  writes the strongest one, and a read path that turns it into `-0.3` before a
-  clamp. If a state cannot exclude, it is a confidence number with words for
-  values — and the whole reason to have both axes was that they answer different
-  questions.
+- **Withholding in one crate and calling it a guarantee.** The assembler
+  withholds; CAL `ASSEMBLE`, the MCP tools and the bindings hand the same grain
+  to a model with `-0.3` on its priority. A state that filters on one path and
+  ranks on the others is a guarantee with an asterisk, and the asterisk is the
+  path an agent actually calls.
 - **Computing the key a refusal needs and not consulting it.** A content-addressed
   store already knows whether the exact value coming in is one that was thrown
   out. Not asking is a choice; here it is made in a comment that anticipates the
   re-add and handles the race instead.
-- **Letting a training export and a recall path disagree about what counts.** A
-  retracted grain is weight 0.0 in the corpus builder and a ranked candidate at
-  recall. Whichever is right, they should not be different.
+- **Parsing one field in two places.** The corpus exporter and the context
+  renderer each parsed `verification_status` on their own and disagreed about
+  the non-OMS value `"rejected"` — excluded by one, ignored by the other — until
+  a single `Trust::from_field` replaced both. One enum, one parse, every reader.
 - **Documenting a trait method as one thing and implementing it as another.** The
   `retract` doc comment promises a non-destructive index-layer demotion; the
   adapter over the real store erases. The adapter's choice is the better one, and
@@ -619,37 +764,46 @@ review, and anyone who has written `superseded_by` into a schema and not yet
 decided what a *retraction* is as distinct from it. The three-verb vocabulary —
 supersede, retract, forget — is worth taking on its own.
 
-Who should be careful: adopters who read the marks as a summary. Five is high for
-this corpus and the two that are missing are the two about *belief*. What Areev
+Who should be careful: adopters who read the marks as a summary. Six is high
+for this corpus, and the one that is missing is about *belief*. What Areev
 governs extremely well is the **process** by which memory changes — who proposed,
-who approved, on what evidence, how to undo. What it does not yet do is stop a
-caller-authored retraction from reaching the model on the next turn — though a
-recommendation rolled back through the loop is erased outright on the real store,
-which is the stronger answer.
+who approved, on what evidence, how to undo. The retraction it withholds at the
+assembler still reaches a model through CAL, the MCP tools and the bindings —
+though a recommendation rolled back through the loop is erased outright on the
+real store, which is the stronger answer.
 
 ## 12. Open Questions
 
-- **Is the retraction penalty deliberate?** A `-0.3` on a clamped priority is a
-  designed number, not an oversight, so the question is whether recall is meant
-  to surface retracted grains in some circumstance — and if so, whether the
-  caller can tell.
+- **Will the withholding reach CAL and the MCP tools?** The guarantees
+  document names `WITH include_retracted` as the likely CAL shape. Nothing in
+  `areev-cal` or `areev-mcp` reads `Trust`, and the MCP recall tools are the
+  path an agent calls.
 - **Which `retract` is the contract?** The adapter erases and the trait documents
   a demotion. Whichever is intended, a conformance case would pin it and a
-  third-party substrate would then have something to implement against.
-- **Why does the corpus export weight what recall ranks?** The two consumers make
-  different decisions about the same field.
-- **Would the forgotten set be consulted on write if it were cheap?** It is: the
-  op log already holds every `OP_FORGET` hash.
+  third-party substrate would then have something to implement against. The
+  design note that rejected the demotion as a rollback inverse did so because
+  *"retracted grains are only demoted in recall, not excluded"*; at the
+  assembler that premise no longer describes the code, and the note stands.
+- **May a rejection ledger keep a hash of erased content?** The project's own
+  question, and the one blocking the tombstone. The op log already holds every
+  `OP_FORGET` hash, so the mechanism is cheap; what is unsettled is whether a
+  pseudonymous identifier of erased content may be kept to refuse it.
 - **Do the self-improvement numbers survive the scorer that replaced theirs?**
   Three published runs carry a note saying they were measured against a
   six-rule environment that has since gained three silent rules, and no run
-  against the current scorer is committed. The honest position is the one the
-  manifests take; the open question is what the re-run says.
+  against the current scorer is committed. The expense measurement is a
+  different instrument on a private corpus and does not answer this.
 - **Would a model proposal survive a reviewer who is not the author of the
-  fixture?** The two model-proposing examples run keyless in CI against a
-  committed draft, which the project says *"proves the governed path and
-  deliberately claims nothing about what a model would propose."* That is the
-  right disclaimer and it leaves the interesting number unmeasured.
+  fixture?** On the expense workflow the reviewer is a model applying a fixed
+  rubric, agreeing with pre-registered expectations on 10 of 11 cases and not
+  deterministic. The two model-proposing examples run keyless in CI against a
+  committed draft, which *"proves the governed path and deliberately
+  claims nothing about what a model would propose."* A person has not reviewed
+  a measured run.
+- **Does any gate ask whether a lesson names an action?** The expense run showed
+  a rule can clear DISCOVER, GROUND, VERIFY, human review, apply and render and
+  change nothing. The prompt contract was reworded to demand an action; no
+  gate checks for one.
 - **How much of the authorisation model is exercised in the single-user path?**
   The owner session is the implicit superuser, so the grant machinery may be
   reached mostly by tests.
@@ -663,6 +817,8 @@ which is the stronger answer.
 - `crates/areev-core/src/types/recommendation.rs` — the recommendation grain.
 - `crates/areev-core/src/authz.rs:1-16` — the grant model and the fail-closed
   default.
+- `crates/areev-core/src/verification.rs` — `Trust`, the one classifier of
+  `verification_status`; `:19` `is_actionable`, `:27` `priority_delta`.
 
 **Store**
 - `crates/areev-store/src/lib.rs:40-49` — `OP_FORGET` and the `Axis` enum;
@@ -684,9 +840,10 @@ which is the stronger answer.
 - `crates/areev-loop/src/llm.rs:164-207` — `DraftProposal`, the closed
   vocabulary and what each variant does not carry; `:39-55` — the caps;
   `:209-226` — `parsed_proposal` and the advisory degradation.
-- `crates/areev-loop/src/engine.rs:2233-2244` — `safe_definition_body`;
-  `:2290-2306` — `plan_edit_allowed` and the structural exclusion of topology;
-  `:2598-2680` — stamping a draft as `Origin::Llm`.
+- `crates/areev-loop/src/engine.rs:2265-2276` — `safe_definition_body`;
+  `:2331-2347` — `plan_edit_allowed` and the structural exclusion of topology;
+  `:2634-2692` — stamping a draft as `Origin::Llm`; `:160-171` — the funnel's
+  `ground_verdicts` and `ground_call_failed`.
 - `crates/areev-loop/src/reference.rs:1-12` — the reference substrate;
   `:245-258` — `retract` as a demotion.
 - `crates/areev-loop-adapter/src/substrate.rs:645-650` — `retract_op` mapping
@@ -695,21 +852,31 @@ which is the stronger answer.
   live definition.
 
 **Read path**
-- `crates/areev-context/src/render.rs:232-243` — `adjusted_priority` and the
+- `crates/areev-context/src/assembly.rs:444-461` — the withheld set and the
+  chain filter; `policy.rs:102-123` — `include_retracted`.
+- `crates/areev-context/src/render.rs:234-241` — `adjusted_priority` and the
   verification penalty.
-- `crates/areev-cli/src/corpus.rs:208-217,:251-260` — the export's quality label
+- `crates/areev-cli/src/corpus.rs:209-218,:251-260` — the export's quality label
   and loss weight.
+- `crates/areev-cli/src/main.rs:1769,:2407` — the two commands that run the
+  assembler.
 
 **Tests and published evidence**
 - `crates/areev-conformance/src/cases/supersede_forget.rs`, `ns_scope.rs`,
-  `heads_forks.rs`, `blobs_hybrid.rs`; `tests/pg.rs`.
+  `heads_forks.rs`, `blobs_hybrid.rs`, `recall_purity.rs`,
+  `oplog_import.rs:141`; `tests/pg.rs`.
+- `crates/areev-context/src/assembly.rs:3620-3690` — the withholding tests.
+- `crates/areev-bench/src/bin/honesty_metrics.rs:259-395` — M5 and M6.
+- `crates/areev-bench/EXPENSE.md` — the paired expense measurement and the
+  three defects it found; `docs/memory-guarantees.md` — the five decisions,
+  including the two deliberately not built.
 - `crates/areev-loop-adapter/tests/proposal_substrate.rs` — the plan validator
   and the evalset pin, asserted in the refusal direction:
   `an_unreachable_node_is_refused`, `an_unbounded_cycle_is_refused`,
   `a_malformed_edge_fails_instead_of_being_skipped`,
   `an_execution_record_never_supplies_the_pin`,
   `a_session_without_the_grant_resolves_no_pin`.
-- `crates/areev-loop/src/integration.rs:2536-2572` — an apply with no gating
+- `crates/areev-loop/src/integration.rs:2601-2637` — an apply with no gating
   edge, a wrong pin and a failing run all refused before a clean one applies.
 - `crates/areev-bench/RESULTS.md`, `crates/areev-bench/results/README.md`, and
   the three `results/selfimprove-*/MANIFEST.md` files carrying the checksums and
@@ -723,9 +890,13 @@ Run from the checkout root. Each returns nothing at this commit.
 # "the op log is never updated or deleted"
 rg -n 'UPDATE oplog|DELETE FROM oplog' .
 
-# "no conformance case covers the fork"
-rg -n retract crates/areev-conformance/
-ls crates/areev-conformance/src/cases/*.rs        # ten case modules plus mod.rs
+# "no conformance case calls the verb"
+rg -n 'retract\(|fn retract|\.retract\b' crates/areev-conformance/
+ls crates/areev-conformance/src/cases/*.rs        # eleven case modules plus mod.rs
+
+# "nothing outside areev-context filters on the status"
+rg -n 'verification::Trust|include_retracted' crates/ -g '*.rs' -l   # context, corpus, bench only
+rg -n 'retracted|Trust' crates/areev-mcp/src/lib.rs crates/areev-cal/src/executor.rs
 ```
 
 These return the counts the report states:
@@ -737,11 +908,21 @@ rg -n 'INSERT INTO oplog' crates/areev-store/src/lib.rs
 # "never analyzer prose" / "never author-chosen"
 rg -n 'never analyzer prose|never author-chosen' crates/
 
-# 2,564 test functions across crates/, 2,586 tree-wide
+# 2,575 test functions across crates/, 2,597 tree-wide
 rg -n --no-heading '^\s*#\[(test|tokio::test)' crates/ -g '*.rs' | wc -l
 ```
 
 ## History
+
+**2026-09-02** — [`8b0f012671c1792204182fa2589426176a627ccf`](https://github.com/AreevAI/areev/commit/8b0f012671c1792204182fa2589426176a627ccf) — re-pinned 11 commits on, through v1.7.1. Screened before reading: no auto-run surface, two build-time execution surfaces, three unpinned surfaces, and nineteen dependency surfaces inside the seven-day cooldown, `Cargo.lock` and `Cargo.toml` at zero days. Nothing was built and nothing was run; `AGENTS.md` and `CLAUDE.md` were read as data.
+
+**`trust_state` moves from withheld to awarded — five marks to six.** `areev_core::verification::Trust` classifies `verification_status` once, `is_actionable` is false for `retracted` alone, and `ContextAssembler::format` withholds every non-actionable hit by default, from the body and from the Knowledge Update section, under an opt-in `include_retracted` for audit reads. The mark's own line is usage — a state gets filtered — and one read path filters. The reach is the finding the report carries in its place: the assembler is reached by two CLI commands and the bench, while CAL `ASSEMBLE`, the MCP recall tools, the bindings and the server still hand a retracted grain to a model, and `areev-cal` is byte-identical to the previous pin. The store keeps returning retracted grains by design and a conformance case pins it, because the DSAR selector is shared with erasure.
+
+The change arrived with `docs/memory-guarantees.md`, which works through five findings and records the two it deliberately did not build. Three of the five are the ones this report published — the ranked retraction, the unconsulted content hash, the abstention that was not measured — stated in the document's own words rather than the atlas's, which cites nothing. The tombstone stays withheld on the ground the document gives: a content hash of erased content is a pseudonymous identifier, so a refusal ledger may not survive an erasure obligation, and that is a compliance decision the maintainer declines to guess.
+
+Also in range: `recall_purity.rs` pins on both backends that no read path writes a field or an op-log row; `insert_blob` writes BM25 postings, closing a replica text leg that answered empty until the next open; `honesty_metrics` gained M5, withholding reported in both directions, and M6, six write-to-readable legs; and `EXPENSE.md` publishes a paired McNemar measurement on a private invoice corpus that exposed three engine defects producing plausible null results, one of them that every human note had reached the model as an empty string.
+
+Absence claims re-run. `rg -n retract crates/areev-conformance/` returns hits at this pin, all of them the *status* in `recall_purity.rs`; the claim was re-scoped to the verb and its command rewritten, and no case calls `retract`. The op-log greps hold; the seven insert sites moved to 5127, 5290, 5932, 6153, 8090, 8851, 9374. Counts: 185,265 Rust lines across seventeen crates, 270 commits, 2,575 test functions in `crates/` and 2,597 tree-wide, eleven conformance case modules. Line citations in `engine.rs`, `integration.rs`, `render.rs` and `corpus.rs` were re-resolved; the trait, reference substrate, adapter, grain and authz files did not move.
 
 **2026-09-01** — [`e31adeb23c28c207e1802a4927ca2f1ba86ff2db`](https://github.com/AreevAI/areev/commit/e31adeb23c28c207e1802a4927ca2f1ba86ff2db) — re-pinned 17 commits on. Screened before reading: **no auto-run surface**, two build-time execution surfaces (`crates/areev-js/build.rs`, `crates/areev-py/build.rs`), three unpinned surfaces, and **twenty dependency surfaces inside the seven-day cooldown** — up from fourteen, and all but one at zero days, because a release landed the day before. Nothing was built and nothing was run; `AGENTS.md` and `CLAUDE.md` were read as data.
 
