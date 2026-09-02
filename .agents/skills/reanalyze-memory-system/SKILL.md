@@ -188,12 +188,17 @@ behind it. Collect the report's absence claims with:
 
 ```sh
 sed '/^## History$/q' content/systems/<slug>.md \
-  | rg -n -i '\bno\b.{0,40}(exists?|found|committed|implemented|anywhere)|\bnothing\b|\bnever\b|\bonly a\b|is not in this (tree|repository)'
+  | rg -n -i '\bno\b.{0,40}(exists?|found|committed|implemented|anywhere|asserts?|tests?|covers?)|\bnothing\b|\bnever\b|\bonly a\b|is not in this (tree|repository)'
 ```
 
 Each hit needs a command that still returns nothing at the new commit. A hit
 whose grounding search is not in the appendix is a claim nobody can re-verify —
-rewrite it as a scoped claim you can run, or delete it.
+rewrite it as a scoped claim you can run, or delete it. The pattern is a
+floor, not a fence: *"no test asserts it"* shipped in the daimon report for two
+pins without matching the original pattern, over a test that existed at both —
+`asserts?|tests?|covers?` were added for it. Sentences of the shape *"there
+are tests that X, and none that Y"* are absence claims too, and the grep will
+not see them; read section 10 for them by hand.
 
 **The mechanism is unchanged and the context is not.** The report's findings
 hold and something else has appeared — a second entry point, a new mode, a

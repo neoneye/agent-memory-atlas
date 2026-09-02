@@ -110,14 +110,14 @@ stored.</p>
               <strong>Daily-Nerd/daimon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">
+            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217" title="dce182cd95ce759a381ce58a58e811ac5a730217">
               <span>Analyzed revision</span>
-              <code>90dc82ea…</code>
+              <code>dce182cd…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-26</strong>
+              <strong>2026-09-02</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -149,7 +149,7 @@ loop.</p>
 not taken on the model's word.</strong> The extraction prompt asks for
 <code>trust: "verbatim"</code> plus an exact <code>quote</code>, and
 then <code>serializer.verify_quotes</code>
-(<code>plugin/daimon_briefing/serializer.py:1064</code>) greps that
+(<code>plugin/daimon_briefing/serializer.py:1207</code>) greps that
 quote against the rendered transcript. A miss is not a warning — the
 item is <em>downgraded</em> to <code>inferred</code>, the failure is
 logged, and a pointer to it is appended to a rejection ledger. Plenty of
@@ -160,7 +160,7 @@ falsified before it is stored.</p>
 Quote verification certifies <em>transcription</em>, not truth: the
 model can conclude "the tests pass", be wrong, and the transcript will
 faithfully record it saying so. <code>ground_outcomes</code>
-(<code>serializer.py:1380</code>) narrows that gap by lexicon — if an
+(<code>serializer.py:1593</code>) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green)
 and the item cites no tool-result message as evidence, the item is
 downgraded to <code>inferred</code> even though its quote verified. The
@@ -244,7 +244,7 @@ drifted, and one field was silently skipping first-seen stamping.</p>
 <h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the extraction downgrades to inferred when a quote is not found verbatim in the transcript, or when a claimed outcome cites no tool result — grounding is a deterministic gate, not a model's self-report</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the extraction downgrades to inferred when a quote is not found verbatim in the transcript, or when a claimed outcome cites no tool result — grounding is a deterministic gate, not a model&#39;s self-report
 flowchart TB
-    T[&quot;transcript span&quot;] --&gt; EX[&quot;LLM extraction, D-016 prompt&quot;]
+    T[&quot;transcript span&quot;] --&gt; EX[&quot;LLM extraction, D-019 prompt&quot;]
     EX --&gt;|&quot;claims verbatim + quote&quot;| S[&quot;sanitize_source_ids&lt;br/&gt;pin_imperatives&quot;]
     EX --&gt;|&quot;claims inferred&quot;| INF[&quot;trust: inferred&lt;br/&gt;grounded: false&quot;]
 
@@ -268,10 +268,26 @@ clean it. Read the two diamonds as the design: <strong>the model's own
 trust claim is the input to a test, not the verdict.</strong> Nothing
 promotes an item — the only movement between lanes is downward, and it
 is code that moves it.</p>
+<p>The check is a flat scan over the rendered transcript, so a quote
+assembled from two messages, or from a user line and an assistant line,
+verifies as long as its fragments appear in order. The extraction prompt
+forbids exactly that — <em>"Never stitch text from different speakers or
+turns into one quote"</em> — and the verified receipt records whether it
+happened anyway. <code>quote_provenance.stitching</code> carries
+<code>cross_message</code> and <code>cross_role</code>, each true only
+when <em>no</em> single message, or no single role's messages joined in
+transcript order, can account for every matched fragment
+(<code>_stitching_flags</code>, <code>serializer.py:1018</code>). The
+necessity semantics are the careful part: a flat scan that happened to
+satisfy a fragment across a boundary it did not need to cross is not a
+stitch. It is recording only. The verification outcome is untouched, the
+format version moved from D-018 to D-019 because the receipt shape
+changed, and the comment gates any refusal on the rate this measures. A
+doctrine in a prompt became a number before it became a rule.</p>
 <p>The item's identity is content-derived:
 <code>id = &lt;kind-initial&gt;-sha1("&lt;field&gt;:&lt;text&gt;")</code>
 truncated to a hex slice, minted by <code>policy.stamp_item_ids</code>
-(<code>policy.py:205</code>, re-exported as
+(<code>policy.py:211</code>, re-exported as
 <code>store._stamp_item_ids</code>). Two sessions that extract the same
 sentence into the same field produce the same id. That single decision
 is what makes the tombstone work, and also what bounds it.</p>
@@ -296,8 +312,8 @@ could not break it.</p>
 append-only in practice — <code>last_verified</code> is stamped in
 exactly one place and the docstring forbids any other writer — and
 liveness is a <strong>fold over an event log at read time</strong>
-(<code>store.resolutions</code>, <code>store.py:2110</code>;
-<code>store.is_resolved</code>, <code>store.py:2151</code>):</p>
+(<code>store.resolutions</code>, <code>store.py:2359</code>;
+<code>store.is_resolved</code>, <code>store.py:2400</code>):</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -334,20 +350,20 @@ index</strong></td>
 unknown status resolves rather than vanishes — the writer bothered to
 record a lifecycle fact. Same-second ties break on event
 <em>content</em>, never file order, so a reordered log folds identically
-(<code>_tie_wins</code>, <code>store.py:2098</code>).</p>
+(<code>_tie_wins</code>, <code>store.py:2347</code>).</p>
 <p>Three actors can move an item, and the code is explicit about which
 is which. <strong>Code</strong> downgrades trust classes and emits
 supersede <em>candidates</em>. <strong>The model</strong> proposes items
 and typed <code>supersedes</code> links but never writes the code-owned
 fields — <code>strip_code_owned_keys</code>
-(<code>serializer.py:2029</code>) deletes any the model emits. <strong>A
+(<code>serializer.py:2258</code>) deletes any the model emits. <strong>A
 human</strong> resolves, forgets, and re-opens — and re-opening a
 resolved item requires evidence: either the item's code anchor still
 checks out live, or an explicit <code>--evidence</code> string.
 <code>_cmd_reverify</code> refuses otherwise, with the reason stated in
 the source: <em>"re-stamping without evidence would mark an unchecked
 claim verified — the one thing this tool must never do to its own audit
-trail"</em> (<code>cli/lifecycle.py:749</code>).</p>
+trail"</em> (<code>cli/lifecycle.py:754</code>).</p>
 <p>The system therefore treats memory as <strong>attested transcription
 plus explicitly labelled inference</strong>, never as ground truth. The
 briefing's own top section is called
@@ -484,7 +500,7 @@ violation pattern with an expiry condition: the scar retires when
 <code>listing</code> grows a <em>required</em> polarity parameter,
 making an unscoped call impossible to write.</p>
 <h3 id="a-third-store-and-a-fourth">A third store and a fourth</h3>
-<p><code>relations.py</code> (637 lines) is a project-scoped
+<p><code>relations.py</code> (640 lines) is a project-scoped
 <strong>typed relation ledger</strong> — <code>revision-of</code>,
 <code>answers</code>, <code>supersedes</code>,
 <code>reclassified-from</code> — folded from
@@ -502,7 +518,7 @@ text</strong>. And there is no mechanical channel at all in v1,
 <em>"because Phase 1 proved no evidence rail qualifies for automatic
 confirmation"</em> — a negative experimental result spent on removing a
 capability rather than on qualifying it.</p>
-<p><code>amendments.py</code> (523 lines) records that a briefed item's
+<p><code>amendments.py</code> (526 lines) records that a briefed item's
 state advanced while the item stays open — approved, unblocked, rescoped
 — <em>"the verb between"</em> a resolution and a reverify. Its header is
 an argument against reusing the store that was already there:
@@ -536,11 +552,13 @@ flowchart TD
     GATES --&gt; STORE[&quot;checkpoint_dir/&lt;br/&gt;&amp;lt;session&amp;gt;.json + &amp;lt;slug&amp;gt;/latest.json&quot;]
     STORE --&gt; EV[&quot;events.jsonl&lt;br/&gt;verification.jsonl&quot;]
     STORE --&gt; IDX[&quot;recall.db (SQLite FTS5)&lt;br/&gt;disposable, rebuilt on drift&quot;]
+    EV --&gt;|&quot;folded at rebuild&quot;| IDX
     SS --&gt; BRIEF[&quot;daimon brief&quot;]
     STORE --&gt; BRIEF
     EV --&gt; BRIEF
     BRIEF --&gt; INJ[&quot;injected briefing text&quot;]
     UPS --&gt; SUG[&quot;recall.suggest&quot;]
+    UPS -.-&gt;|&quot;opt-in&quot;| DLV[&quot;request-inject&quot;]
     IDX --&gt; SUG
     STORE -.-&gt;|&quot;opt-in&quot;| TEAM[&quot;team sidecar&lt;br/&gt;(private git remote)&quot;]
     STORE -.-&gt;|&quot;opt-in&quot;| RCPT[&quot;vitni Ed25519 receipt&quot;]</code></pre></details></figure>
@@ -552,7 +570,7 @@ flowchart TD
 <code>os.replace</code>, and the check-rotate-write pointer sequence is
 serialized by an <code>flock</code> on a sidecar dotfile that
 <strong>fails open</strong> on contention
-(<code>store._pointer_lock</code>, <code>store.py:98</code>). A
+(<code>store._pointer_lock</code>, <code>store.py:131</code>). A
 monotonicity guard rejects a write whose session is older than the
 pointer's. Per-session files are garbage-collected to the newest 100 by
 default, never pruning one a live pointer references.</p>
@@ -610,10 +628,10 @@ rows carrying only <code>tool_result</code> blocks are surfaced as
 <code>role: "tool"</code> with a capped payload, which is what makes
 outcome grounding possible on that host and nowhere else.</p>
 <p><strong>Extraction.</strong> <code>serializer.serialize_strict</code>
-(<code>serializer.py:2174</code>) gates on <code>min_messages</code> (10
+(<code>serializer.py:2415</code>) gates on <code>min_messages</code> (10
 by default; tool rows do not count), renders the transcript, and chunks
 it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
-through the D-016 prompt, each cached by content hash under
+through the D-019 prompt, each cached by content hash under
 <code>(EXTRACTION_VERSION, lane)</code>, then merge through a second
 prompt. One schema validation failure earns exactly one resample, with
 an appended note — because a byte-identical retry against a caching
@@ -622,8 +640,9 @@ gateway replays the same bad body.</p>
 deterministic: <code>sanitize_importance</code> →
 <code>sanitize_scene</code> → <code>sanitize_source_ids</code> (drop
 cited message ids the transcript cannot vouch for) →
-<code>pin_imperatives</code> → <code>verify_quotes</code> →
-<code>ground_outcomes</code> → <code>_stamp_llm_provenance</code>.</p>
+<code>derive_stated_by</code> → <code>pin_imperatives</code> →
+<code>verify_quotes</code> → <code>ground_outcomes</code> →
+<code>_stamp_llm_provenance</code>.</p>
 <p><strong>Carry.</strong> <code>carry.merge</code>
 (<code>carry.py:295</code>) folds the previous checkpoint's unresolved
 items into the new one <strong>by exact copy, in code</strong>. The
@@ -635,12 +654,25 @@ salient-term overlap with a per-kind generic-term filter computed per
 merge — no static stoplist, so it stays language-neutral — plus a
 <code>_quantity_conflict</code> guard that stops "ten" and "twelve" from
 merging.</p>
+<p>Both write paths carry. Until 29 August 2026 the introspection path —
+<code>daimon end</code>, which writes a checkpoint from what the agent
+reports rather than from a transcript — rotated the pointer chain
+without calling <code>carry.merge</code>, and because <code>brief</code>
+renders <code>latest</code> alone and never walks the
+<code>prev-N</code> chain, two sessions sharing a bucket left the
+earlier session's record unreachable (#811). The fix moved carry beside
+the rotation it has to accompany, so a third write path would inherit
+the behaviour rather than the bug; on that path it runs after the
+provenance strips on purpose, since carry's freeze prefers
+<code>verbatim</code> and a model-claimed verbatim this path can never
+check must not beat genuinely extracted prior content.</p>
 <p><strong>Retrieval.</strong> <code>recall.search</code>
-(<code>recall.py:754</code>) runs an FTS5 <code>MATCH</code>, AND-joined
-first, retrying OR-joined when AND matches nothing, ordered by
+(<code>recall.py:1012</code>) runs an FTS5 <code>MATCH</code>,
+AND-joined first, retrying OR-joined when AND matches nothing, ordered
+by <code>invalidated_by IS NOT NULL</code>, then
 <code>superseded_by IS NOT NULL</code>, then bm25, then a silent
 <code>frontier</code> recency tiebreak. <code>recall.suggest</code>
-(<code>recall.py:1099</code>) is the proactive path behind
+(<code>recall.py:1408</code>) is the proactive path behind
 <code>UserPromptSubmit</code>, gated hard toward silence: unknown
 project, fewer than two salient terms, or fewer than two distinct shared
 terms with a matched session all return <code>[]</code>.</p>
@@ -657,18 +689,19 @@ dropped whole, never rewritten.</p>
 <code>store.append_event</code>. Nothing rewrites the log.</p>
 <p><strong>MCP.</strong> <code>mcp_server.py</code> is a hand-rolled
 stdio JSON-RPC server — no SDK, because zero runtime dependencies is a
-product claim — exposing four read-only tools
+product claim — exposing five read-only tools
 (<code>daimon_recall</code>, <code>daimon_brief</code>,
-<code>daimon_projects</code>, <code>daimon_status</code>) through thin
-shims in <code>mcp_tools.py</code>.</p>
-<p><strong>Tests.</strong> 3,929 test functions across ~62,300 lines
-under <code>plugin/tests/</code>, against ~30,800 lines of source in
+<code>daimon_projects</code>, <code>daimon_status</code>,
+<code>requests_inbox</code>) through thin shims in
+<code>mcp_tools.py</code>.</p>
+<p><strong>Tests.</strong> 4,388 test functions across ~70,800 lines
+under <code>plugin/tests/</code>, against ~34,600 lines of source in
 <code>plugin/daimon_briefing/</code>.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The checkpoint is a single JSON document:</p>
 <pre class="json"><code>{
   &quot;session_id&quot;: &quot;...&quot;, &quot;created&quot;: &quot;2026-07-29T12:00:00Z&quot;,
-  &quot;format_version&quot;: &quot;D-016&quot;, &quot;project_slug&quot;: &quot;-Users-x-proj&quot;,
+  &quot;format_version&quot;: &quot;D-019&quot;, &quot;project_slug&quot;: &quot;-Users-x-proj&quot;,
   &quot;transcript_hash&quot;: &quot;...&quot;, &quot;redactions&quot;: {&quot;api_key&quot;: 1},
   &quot;working_context&quot;: {&quot;active_topic&quot;: {...}, &quot;open_questions&quot;: [...],
                       &quot;recent_decisions&quot;: [...]},
@@ -678,13 +711,54 @@ under <code>plugin/tests/</code>, against ~30,800 lines of source in
 }</code></pre>
 <p>An item carries: <code>text</code>, <code>trust</code>
 (<code>verbatim</code> | <code>inferred</code>), <code>quote</code>,
-<code>importance</code> (1–10), <code>id</code>,
+<code>because</code>, <code>importance</code> (1–10), <code>id</code>,
 <code>first_seen</code>, <code>last_verified</code>,
-<code>quote_verified</code>, <code>grounded</code>,
-<code>source_message_ids</code>, <code>external_state</code>,
+<code>quote_verified</code>, <code>quote_provenance</code>,
+<code>grounded</code>, <code>source_message_ids</code>,
+<code>stated_by</code>, <code>external_state</code>,
 <code>carried_from</code>, <code>pinned</code>,
 <code>anchored_to</code>, and typed <code>links</code> of the form
 <code>{type: "supersedes", target}</code>.</p>
+<p><strong>The contract for every one of those fields is one
+table.</strong> <code>field_table.py</code> (725 lines) declares, per
+field of the envelope and of an item, the JSON type, whether it may be
+absent or null, who owns it — model or code — and what happens to an
+out-of-contract value: reject, clamp, drop, pass or strip
+(<code>ITEM_RULES</code>, <code>field_table.py:402</code>). The
+serializer's validator and its normalizers are generated from that
+table, and the same table renders
+<code>docs/checkpoint-schema.json</code> (681 lines), versioned by
+<code>format_version</code>, so a consumer that cannot import daimon can
+test its own normalizers against the producer's contract. The module
+header records the incident: consumer-side normalizers had been guesses
+about the producer shape, and two of them silently deleted real data —
+importance clamped to 1–5 against a producer that writes 1–10, and
+<code>quote_provenance.verifier</code> read as a string where the
+producer writes an object. Row order is load-bearing, because the
+generated validator applies reject rows in table order and so reproduces
+which reason a multiply-invalid input is refused with; two test files
+pin the table to the live serializer constants and to the real on-disk
+corpus.</p>
+<p><strong><code>stated_by</code> is the tenth code-owned field, and the
+one the model is least allowed to touch.</strong> It records whose
+statement an item is, distinct from <code>author</code>, the machine
+identity that wrote the checkpoint, and it is derived by code from the
+host's per-message speaker joined through the item's validated
+<code>source_message_ids</code> (<code>derive_stated_by</code>,
+<code>serializer.py:773</code>). The rule is unanimity: bindings naming
+two speakers, or one speaker and one unattributed message, yield
+nothing, because <em>"picking a winner would manufacture exactly the
+misattribution the field exists to prevent."</em> A host that owns a
+whole session to one person may declare that out of band, and the
+default fills user rows only — a verbatim quote is usually the
+assistant's words, and a blind default would put the human's name on
+them. Absent means unknown, never the reader: the index stores NULL
+rather than defaulting to <code>author</code>, since a default
+<em>"would make every legacy item a first-person claim."</em> The
+comment on the code-owned list gives the reason a model-supplied value
+is stripped: <em>"a model naming who said something is an agent
+asserting an identity it cannot verify, and the field would carry more
+authority than any other while being the least checkable."</em></p>
 <p><strong>Provenance</strong> is layered: <code>transcript_hash</code>
 binds the checkpoint to its source bytes;
 <code>source_message_ids</code> binds an individual quote to the exact
@@ -699,16 +773,72 @@ blob against the raw transcript.</p>
 <code>created</code> is the checkpoint's. There is no validity interval
 — no "this was true from X to Y" — so this is <strong>not</strong>
 bi-temporal, and the atlas's bi-temporal systems (Graphiti, Gini) answer
-a question daimon cannot.</p>
-<p><strong>Scope</strong> is the project slug: the cwd munged Claude
-Code style (<code>/Users/x/proj</code> → <code>-Users-x-proj</code>). It
-is a directory name, a stamped column in the index, and a read-path
-filter in both. <code>store.read_latest(fallback=False)</code> is used
-by every caller that <em>persists</em> what it reads, so a
-global-pointer fallback can never leak another project's state into
-carry. On the display path the fallback exists but its body is
-suppressed by default — the user gets a header saying activity is
-elsewhere, not a hundred foreign lines under a warning.</p>
+a question daimon cannot. The nearest thing, <code>invalidated_by</code>
+on the recall index, holds the latest contradiction evidence with its
+timestamp rather than an interval (section 6).</p>
+<p><strong>Scope</strong> is the project slug: every character outside
+Python's Unicode <code>\w</code> and <code>-</code> becomes
+<code>-</code> (<code>/Users/x/proj</code> →
+<code>-Users-x-proj</code>). The docstring is explicit that this is
+<em>not</em> the scheme the Claude CLI uses for its own project
+directories, which it claimed until #884: the two diverge on
+underscores, measured over 711 directories rather than inferred, and the
+divergence has to stay because this function names checkpoint buckets
+and re-slugging would orphan every bucket whose path carries one —
+<em>"Two slugs is the correct end state, not one."</em> Nothing joins on
+the CLI's slug, so the defect was in the documentation and not the store
+(<code>store.py:50</code>).</p>
+<p>The slug is a directory name, a stamped column in the index, and a
+read-path filter in both. <strong>Every latest-read names two
+things</strong>: a <code>Route</code> — the project's own pointer only,
+or own-then-global — and an <code>Admit</code> rule — any payload, or
+only one whose stamp is this project's or nobody's
+(<code>store.py:1406</code>, <code>:1414</code>). Both are required
+keywords with no default, <em>"so an omitted argument is a TypeError
+instead of a silently unsafe answer"</em>, and the one reader the
+persist path uses, <code>read_own_stream_latest</code>
+(<code>store.py:1521</code>), takes no policy argument at all: nothing
+an environment variable can reach may change what carry writes. The
+comment where the previous single <code>fallback</code> flag was deleted
+names the reason: <em>"fallback named a mechanism while callers reasoned
+about a policy; four defects shipped from its default."</em> One of the
+four was the session-start injection — a project with no bucket of its
+own was briefed with another project's checkpoint on its first session,
+on the one path with no human reader (#784). The injection route falls
+back to the global pointer only when the project is unknown or the
+operator opted in with <code>DAIMON_BRIEF_GLOBAL_FALLBACK</code>
+(<code>briefing.injection_read_route</code>,
+<code>briefing.py:347</code>), and a refused foreign payload leaves
+behind a <code>Marker</code> of exactly two header fields, slug and
+created, <em>"and NOTHING more"</em> — because stdout inside an agent
+session is checkpoint input, a wider marker would copy foreign content
+into this project's checkpoint (scar 0055). The contract is a forty-cell
+table, ten store states by four route-and-admit pairs, each cell marked
+by <em>why</em> it holds — forced by shipped behaviour, definitional, or
+additive — in <code>test_read_contract.py</code>, and a manifest test
+pins that own-then-global never appears in the four modules that persist
+what they read or hand out ids (scar 0063). The display path keeps its
+old shape: a header saying activity is elsewhere, never a hundred
+foreign lines under a warning.</p>
+<p><strong>Tenant scope is a host decision, not a caller's.</strong>
+<code>DAIMON_TENANT_SCOPED</code> (<code>config.py:390</code>) makes
+every caller-chosen cross-project address a refusal —
+<code>--slug</code> and <code>--all-projects</code> on the CLI,
+<code>slug</code> and <code>all_projects</code> on the MCP tools, and
+<code>daimon projects</code> lists only the caller's own bucket — on the
+reasoning that for a host running one daimon home with a project
+directory per person, those surfaces are <em>"cross-tenant read and
+enumerate primitives, one prompt injection away from every tenant's
+memory."</em> <code>DAIMON_EXTRA_READ_SLUGS</code>
+(<code>config.py:411</code>) is the host declaring, out of band, which
+other buckets a session may read ambiently; an entry that is not
+slug-shaped is dropped rather than widened into a path, and no write
+path takes a slug. The refusal is loud by design: <em>"a caller who
+asked for a scope and silently got their own instead would read the
+answer as complete."</em> What this is not is isolation — one process,
+one home, one <code>author</code> string — and the flag is read from the
+process environment, so it is exactly as strong as the host's control of
+that environment.</p>
 <p><strong>Team memory</strong> (opt-in) adds a second axis: checkpoints
 mirror into
 <code>&lt;team_dir&gt;/&lt;remote&gt;/projects/&lt;segments&gt;/authors/&lt;author&gt;/*.json</code>.
@@ -716,7 +846,7 @@ Only immutable per-author files sync — no mutable pointer ever lands in
 the sidecar — which makes the git merges conflict-free by construction.
 Teammates' items are attributed and never merged into yours.</p>
 <p><strong>Staleness</strong> has a dedicated read-time signal.
-<code>briefing.stale_carried</code> (<code>briefing.py:602</code>) flags
+<code>briefing.stale_carried</code> (<code>briefing.py:622</code>) flags
 carried items whose effective last-verified age exceeds seven days, and
 the docstring states the reasoning precisely: a fresh checkpoint
 restating a carried item <strong>is not corroboration</strong>, because
@@ -735,7 +865,78 @@ There are no embeddings anywhere in the codebase and no reranking model.
 <code>_dedupe_rows</code> collapses the same item appearing once per
 checkpoint that carried it, with a 4x overfetch so dedup does not
 under-fill the limit. Superseded items rank down but are <strong>never
-hidden</strong> — "an old decision is still evidence".</p>
+hidden</strong> — "an old decision is still evidence" — and contradicted
+items rank below them, on the same terms. Both <code>search</code> and
+<code>suggest</code> read the project's own slug plus any host-declared
+extra slugs; an explicit slug is the scope and <code>all_projects</code>
+is everything, and a hit from another scope names its origin project in
+the rendered line.</p>
+<p><strong>A contradiction is a rank input with one writer.</strong> The
+index has two Graphiti-inspired slots, <code>superseded_by</code> and
+<code>invalidated_by</code>, and the module docstring is careful about
+what the second holds: evidence, not a verdict.
+<code>_apply_verification_invalidations</code>
+(<code>recall.py:663</code>) folds each bucket's own
+<code>verification.jsonl</code> at rebuild and stamps the latest
+worldcheck receipt contradiction per item as
+<code>"&lt;check&gt;:&lt;reason&gt;@&lt;ts&gt;"</code>, latest by
+timestamp and never by line order, bound to this install's
+<code>author</code> so machine-local receipt evidence can never brand a
+teammate's mirrored copy. Only derived world evidence may write it:
+capture-time rejection rows describe the capture rather than later
+disproof, and a model-flagged contradiction has no path to the slot at
+all — <em>"derived world evidence writes the slot, or nothing
+does."</em> <code>search</code> sorts a contradicted row below a merely
+superseded one; <code>suggest</code> multiplies the weight by 0.4 for
+contradiction and 0.7 for supersession, stacking because the axes are
+independent — a replaced decision was still right at the time, whereas
+contradiction says a check disagreed with the claim itself
+(<code>_suggest_weight</code>, <code>recall.py:1389</code>). Neither
+filters, on the ground that the evidence is machine-local and
+<em>"burial must remain visible and reversible rather than
+silent."</em></p>
+<p>The cure is the better half. A passing probe on an item that
+currently stands contradicted appends a <code>receipt-ok</code> row, and
+the fold clears <code>invalidated_by</code> while writing
+<code>cured_by</code>, because clearing alone had made <em>"challenged
+and survived"</em> indistinguishable from <em>"never questioned"</em>.
+The cure row is written only when it changes something
+(<code>append_receipt_cure</code>, <code>store.py:2034</code>), so the
+rejection ledger stays a ledger of problems found rather than work done,
+and <code>verification_counts</code> excludes it — <em>"a cure is not a
+catch."</em> One resolution of "where does this item currently stand",
+<code>latest_receipt_verdicts</code> (<code>store.py:1982</code>), is
+shared by the fold that writes the mark and the gate that decides
+whether a cure is worth recording, because <em>"a recorder deriving from
+a different view than the verifier is the failure this codebase keeps
+paying for."</em> <code>superseded_by</code> gained the same discipline
+in a <code>superseded_source</code> column — <code>link</code> when the
+model's typed link wrote it, <code>resolution</code> when a human's
+event did, the second overwriting the first — because both writers
+produce a bare id and the column is a rank input, so the ambiguity was
+acted on rather than merely displayed.</p>
+<p>The writer set is one entry long. A file, branch, PR or dependency
+contradiction stamps a transient annotation the briefing renders and
+persists nothing, so the four claim classes a person can most easily
+check are the four that never move a rank. The comment names the other
+missing half and keeps it missing on purpose: a human ruling channel
+<em>"stays deliberately unbuilt, because that WOULD widen the
+model."</em></p>
+<p><strong>The weight is published with its arithmetic.</strong>
+<code>scoring.explain</code> (<code>scoring.py:147</code>) returns the
+same ordering key <code>effective_weight</code> returns, together with
+the inputs and factors that produced it and a <code>computed_at</code>
+stamp, because a weight decays and a stored one <em>"still looks
+authoritative."</em> The bar it sets is that a consumer can redo the
+multiplication and land on the published number. Two rules in the
+payload are the reusable part: a substituted importance is labelled
+<code>default</code>, since an unscored item is not an importance-5
+item, and an unstamped item publishes <code>age_days: None</code>, never
+0.0, because unknown age and brand new are different facts. The factors
+are derived independently of <code>effective_weight</code> and pinned to
+their product by test, since a delegating wrapper would make the obvious
+equality assertion a tautology. <code>daimon why &lt;item-id&gt;</code>
+renders the same receipt for a person.</p>
 <p><strong>Proactive recall</strong> at <code>UserPromptSubmit</code> is
 the one place ranking gets interesting: FTS5 relevance multiplied by
 <code>scoring.effective_weight</code>, which is
@@ -756,7 +957,12 @@ cross-project reads require an explicit slug.</p>
 <p>Writes are <strong>deferred and detached</strong>. The
 <code>SessionEnd</code> hook returns immediately; the child does the LLM
 work and writes when it finishes. Nothing on the agent's critical path
-blocks.</p>
+blocks. A spawn is skipped when a serialize for the same transcript stem
+is already in flight — two runs of one transcript were measured earlier
+as last-writer-wins and uncorrelated with quality, and the case that
+reaches it is Codex, where a <code>Stop</code> child can still be
+running when <code>SessionEnd</code> fires (#813); the guard fails open,
+since <em>"a broken guard must not cost a capture."</em></p>
 <p><strong>Lag before a memory is retrievable:</strong> the duration of
 the serialize call — tens of seconds for a short session, minutes for a
 chunked long one — and, in practice, until the <em>next</em> session
@@ -783,7 +989,7 @@ the live checkpoint, the checkpoint is rewritten and its receipt
 re-minted, and a <code>forgotten:&lt;sha256[:12]&gt;</code> event is
 appended carrying a content hash and never the text. On the next index
 rebuild, <code>_apply_event_resolutions</code>
-(<code>recall.py:437</code>) <em>deletes</em> every row with that item
+(<code>recall.py:505</code>) <em>deletes</em> every row with that item
 id across every historical checkpoint, including the FTS5
 contentless-delete dance. Because ids are content-derived, an identical
 re-extraction in a future session lands on the same id and is suppressed
@@ -828,20 +1034,50 @@ start.</p>
 <li><strong>Claude Code:</strong> a plugin
 (<code>.claude-plugin/</code>, <code>hooks/hooks.json</code>) wiring
 <code>SessionStart</code>, <code>UserPromptSubmit</code>, and
-<code>SessionEnd</code>. Described as live-validated daily.</li>
+<code>SessionEnd</code>. Described as live-validated daily. The prompt
+hook carries two injections in one interpreter — an opt-in delivery of
+undecided cross-project asks (<code>DAIMON_LIVE_DELIVERY</code>, default
+off, given a 1.5-second slice of the hook's budget) and then proactive
+recall — rather than two hook entries, because a second entry would
+spawn a second interpreter per prompt for every user to serve a feature
+that ships off (measured at ~36 ms). Their noise gates are separate on
+purpose: recall skips slash commands, while <em>"an ask addressed to
+this project is owed regardless of what the user typed."</em></li>
 <li><strong>Windsurf:</strong> live-validated. <strong>Codex:</strong>
-adapter shipped, awaiting first live run. <strong>Gemini:</strong>
-blocked on an upstream issue, and the README says so.</li>
-<li><strong>MCP:</strong> opt-in, read-only, four tools.
+live-validated capture since 6 August 2026, per the README.
+<strong>Gemini:</strong> blocked on an upstream issue, and the README
+says so. A Hermes path shares the brief hook's render.</li>
+<li><strong>MCP:</strong> opt-in, read-only, five tools.
 <code>daimon_brief</code> deliberately serves the deterministic render —
 "a machine consumer wants stable bytes" — and refuses to fall back to
 another project's checkpoint, returning an orientation message instead.
 That refusal is labelled in the source as contamination, not
-convenience.</li>
-<li><strong>Skills:</strong> two, in <code>plugin/skills/</code>,
-teaching the agent when to call <code>resolve</code> and how to end a
-session. They are procedural instructions <em>about</em> daimon, not
-procedural memory in the Voyager sense.</li>
+convenience, and on a tenant-scoped home even the project <em>count</em>
+in that message is zeroed, because <em>"even the count is
+enumeration."</em></li>
+<li><strong>Skills:</strong> two, in <code>skills/</code>, teaching the
+agent when to call <code>resolve</code> and how to end a session. They
+are procedural instructions <em>about</em> daimon, not procedural memory
+in the Voyager sense.</li>
+<li><strong>The human's half has a surface.</strong>
+<code>daimon decide</code> lists what is waiting on a person — undecided
+asks, quote-verified amendments awaiting confirmation, agent-proposed
+rulings and refutations awaiting ratification — and its composer
+(<code>pending.py</code>, 415 lines) is a pure reader with a structural
+admission rule: <em>"A record belongs here only when some verb's write
+path REFUSES a non-human channel… No guard, no entry."</em> That test is
+checkable, and it is why an agent's own proposal cannot promote itself
+onto the queue. It writes no <code>surfaced</code> stamp, because that
+stamp is what staleness is measured against and a composer that stamped
+would make the person reading their queue the mechanism that ages asks
+out of the agent's panel — <em>"decay inverted into deletion."</em>
+Other projects' queues appear as integers only, their text behind
+<code>--all-projects</code>, for the scar-0055 reason that inside an
+agent session CLI stdout is checkpoint input, so printing another
+bucket's text copies it where the origin project's <code>forget</code>
+cannot reach. Ordering is blocking first, then oldest first — <em>"this
+is a backlog, and the oldest undecided item is the one
+rotting."</em></li>
 </ul>
 <p>Model agency over memory is deliberately low. The model proposes
 items and typed supersession links inside one constrained JSON emission;
@@ -932,7 +1168,7 @@ system, and it does it in four registers: the trust class, the
 pass.</p>
 <p><strong><code>worldcheck</code> is where a stored claim is checked
 against the world</strong>, and it covers five claim classes
-(<code>worldcheck.py:89-99</code>):</p>
+(<code>worldcheck.py:98-108</code>):</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -994,16 +1230,26 @@ aggregate <code>BUDGET_SECONDS = 0.8</code> and one
 in checkpoint order</em> rather than consumed first-come, so a burst of
 <code>gh</code> claims at the top of a checkpoint cannot starve the
 cheap local probes below them. A contradicted item is flagged and never
-dropped; nothing the pass learns is persisted.</p>
+dropped. The pass itself writes nothing to disk: what it learns about
+the four text-derived classes is a transient annotation on the in-memory
+checkpoint, and only the receipt class leaves a record — a
+pointer-and-reason row the CLI appends to the rejection ledger at the
+write boundary, which is the row the recall index folds into
+<code>invalidated_by</code> (section 6). The aggregate counts once per
+item under a precedence rollup, contradicted over confirmed over
+skipped, because a probe-cap-starved claim's <code>skipped</code> used
+to swallow a real answer on the item's other axis — an undercount that
+<em>"fired exactly when the probe cap bound, i.e. on the largest
+checkpoints"</em> (#830, #833).</p>
 <p>The local probes read like code written by someone bitten by each of
 these cases, and the reasoning sits beside the mechanism:</p>
 <ul>
-<li><code>_probe_branch</code> (<code>:433</code>) consults <strong>both
+<li><code>_probe_branch</code> (<code>:451</code>) consults <strong>both
 halves of git's ref storage</strong> — a loose
 <code>refs/heads/&lt;name&gt;</code> file <em>and</em>
 <code>packed-refs</code> — because <em>"every fresh clone packs its
 refs, so missing this would contradict on sight."</em></li>
-<li><code>_git_common_dir</code> (<code>:409</code>) follows the
+<li><code>_git_common_dir</code> (<code>:427</code>) follows the
 linked-<strong>worktree</strong> indirection, <code>.git</code> as a
 file to <code>gitdir:</code> to <code>commondir</code>, absolute or
 relative, because reading the worktree dir instead <em>"would report
@@ -1011,12 +1257,12 @@ every branch gone for anyone working out of a worktree."</em> Absent
 <code>refs/heads</code> returns <code>None</code> — a skip — rather than
 <code>MISSING</code>, since <em>"answering MISSING there would fabricate
 a contradiction for every claim."</em></li>
-<li><code>_probe_path</code> (<code>:397</code>) resolves the target and
+<li><code>_probe_path</code> (<code>:415</code>) resolves the target and
 <strong>refuses when it escapes the project root</strong>, on the
 grounds that a symlink out of the tree <em>"answers about ANOTHER
 checkout"</em> — the same stance as the cross-repo refusal that keeps
 <code>owner/repo#12</code> out of the <code>gh</code> path.</li>
-<li><code>_MANIFESTS</code> (<code>:455</code>) is ordered
+<li><code>_MANIFESTS</code> (<code>:473</code>) is ordered
 lockfiles-first because a lock records a resolved version and a manifest
 usually records a range, and consulting both <em>"would leave every real
 project with two conflicting answers and nothing to say."</em></li>
@@ -1027,7 +1273,7 @@ project with two conflicting answers and nothing to say."</em></li>
 <code>test_check_file_exists_symlink_escape_is_skipped</code> — as do
 the budget rules, in
 <code>test_shared_probe_cap_is_allocated_in_item_order</code> and
-<code>test_exhausted_budget_skips_local_probes</code>. 119 tests cover
+<code>test_exhausted_budget_skips_local_probes</code>. 124 tests cover
 the module.</p>
 <p>One of them is worth naming for its method.
 <code>test_check_file_exists_never_spawns_a_subprocess</code> patches
@@ -1035,11 +1281,11 @@ the module.</p>
 then asserts the check still answers — an architectural constraint
 expressed as an executable assertion rather than a comment, which is
 rarer in this atlas than it should be.</p>
-<p>The manifest ordering is the exception: the lockfile-before-manifest
-precedence is reasoned in the comment and no test asserts it. There are
-tests that a dependency claim reads <code>package.json</code>, and none
-that a project carrying both a lockfile and a manifest resolves to the
-lockfile — which is the case the ordering exists for.</p>
+<p>The manifest ordering is covered too:
+<code>test_check_dependency_version_lockfile_wins_over_manifest</code>
+writes a <code>uv.lock</code> beside a <code>pyproject.toml</code> whose
+range would otherwise read as a contradiction, and asserts the lockfile
+answers.</p>
 <p><strong>The gap the system names itself.</strong> Trust classes
 certify that a quote was <em>said</em>, not that it was <em>true</em>.
 <code>worldcheck</code> answers the truth question for claims with a
@@ -1084,20 +1330,47 @@ event"</em> — so asking again means a new request citing
 visible lineage. And revision is capped at three per record lifetime, on
 the ground that <em>"without it, revise is a nag loop the recipient
 cannot stop."</em></p>
-<p><strong>Nine item fields are code-owned and stripped from anything a
+<p>The join is wider than two buckets in one case, without any write
+reaching a foreign one. A human decides from whatever directory they are
+standing in, so a verdict can land in a <em>third</em> bucket holding no
+<code>opened</code> row for the id; the recipient's join keeps such
+orphan groups when the id is addressed to it, discards a bucket's rows
+for ids the project is not party to, and <em>"a row claiming an agent
+channel is still refused by the fold's authority re-check, so widening
+the read adds no write reach anywhere."</em> An ask reaches a running
+session at its next turn boundary when <code>DAIMON_LIVE_DELIVERY</code>
+is on, rather than at that session's next start, deduplicated by a
+<code>delivered</code> row keyed on revision epoch <em>and</em> session
+id — a brief renders an ask once per epoch, while live delivery owes it
+to every session running in that epoch. The verdict travels back the
+same way. An accepted ask moves to an <em>owed</em> lane with its own
+event name, kept apart from <code>delivered</code> because accepting
+never bumps the revision, so reusing that key <em>"would drop the
+accepted card with no error and no log line"</em>
+(<code>_RECIPIENT_OWED</code>, <code>owed_renderable</code>,
+<code>requests.py:1041</code>); and staleness deliberately does not
+reach it, since <em>"work does not expire by being ignored."</em> The
+predicate deciding whether an ask still deserves ambient attention is
+one function shared by the panel and the live path
+(<code>_deserves_attention</code>, <code>requests.py:1014</code>), named
+once because <em>"the day the two filters disagree, one of them is
+nudging about an ask the other already decided was not worth
+attention."</em></p>
+<p><strong>Ten item fields are code-owned and stripped from anything a
 model authors.</strong> <code>_CODE_OWNED_ITEM_KEYS</code> is
 <code>origin_session</code>, <code>origin_author</code>,
 <code>quote_verified</code>, <code>last_verified</code>,
 <code>quote_provenance</code>, <code>pinned</code>, <code>id</code>,
-<code>carried_from</code> and <code>first_seen</code>, removed by
-<code>strip_code_owned_keys</code> on both capture doors before the code
-stamps its own values. The reasoning behind <code>id</code> is the
-sharpest of them: the id stamper treats any present id as authoritative,
-so a model-supplied one is either an identity the code never derived or,
-on collision, <strong>a silent inheritance of another item's entire
-lifecycle and corroboration history</strong> — and item ids key the
-recall index, the forget tombstones, the supersede candidates, the
-corroboration references and the relation-ledger endpoints.</p>
+<code>carried_from</code>, <code>first_seen</code> and
+<code>stated_by</code>, removed by <code>strip_code_owned_keys</code> on
+both capture doors before the code stamps its own values. The reasoning
+behind <code>id</code> is the sharpest of them: the id stamper treats
+any present id as authoritative, so a model-supplied one is either an
+identity the code never derived or, on collision, <strong>a silent
+inheritance of another item's entire lifecycle and corroboration
+history</strong> — and item ids key the recall index, the forget
+tombstones, the supersede candidates, the corroboration references and
+the relation-ledger endpoints.</p>
 <p>The function's docstring carries two qualifications that are the
 reusable part. It is <em>"fail-safe, not fail-fast: a model that names
 one of these fields is not an error worth failing an otherwise-good
@@ -1109,7 +1382,7 @@ disk, because that would erase the code's real stamps and let a later
 of input and destructive on another, and the docstring says which.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>3,929 tests across 135 files, better than twice the source in lines.
+<p>4,388 tests across 140 files, better than twice the source in lines.
 Coverage tracks the design claims closely:
 <code>test_quote_verification.py</code>, <code>test_carry.py</code>,
 <code>test_briefing.py</code> (withhold semantics, including
@@ -1119,8 +1392,8 @@ never raise, candidates never mark, typed links never guess),
 <code>test_redact_leak_gaps.py</code>, <code>test_receipts.py</code>,
 <code>test_isolation.py</code> (every path escapes the real
 <code>$HOME</code> under test). I did not run the suite.</p>
-<p><strong>The refutation ledger carries 106 of those across four files
-— 51 in <code>test_refutations.py</code>, 33 in
+<p><strong>The refutation ledger carries 107 of those across four files
+— 52 in <code>test_refutations.py</code>, 33 in
 <code>test_forget_refutations.py</code>, 15 in
 <code>test_refutation_privacy.py</code>, 7 in
 <code>test_refutation_authority.py</code> — and they are adversarial
@@ -1174,7 +1447,7 @@ code removed and the comment left in place. Scar 0053 is the polarity
 inversion above, whose test mirrored the caller's unfiltered call.</p>
 <p>Both were exposed by mutation testing rather than by review reading,
 which is the same lesson one level up from the suite: a test that cannot
-be shown to fail is a claim nobody has checked, and 3,929 of them do not
+be shown to fail is a claim nobody has checked, and 4,388 of them do not
 change that for any individual one.</p>
 <p><strong>The benchmark is the notable part.</strong>
 <code>benchmark/</code> runs LongMemEval-S through the <em>real</em>
@@ -1363,6 +1636,62 @@ silence cost it is structurally blind to. And its
 the thing this atlas asks of benchmark publishers and has found almost
 nowhere. Here it is applied by a project to a feature it then
 removed.</p>
+<h3 id="the-ungated-arm-and-what-zero-means">The ungated arm, and what
+zero means</h3>
+<p><code>research/experiments/ungated-arm/</code> answers a question the
+benchmark README had carried as an assertion — that daimon <em>"trades
+some raw recall for verifiability"</em> — by replaying the frozen
+per-question stores behind the 54-question interim file with zero LLM
+calls. The gated arm rebuilds the index from each store's checkpoints as
+written; the ungated arm reverts every trust-gate downgrade in a copy,
+rebuilds, and re-runs the same searches. An item is flipped back to
+<code>verbatim</code> only when it carries a code-owned marker no model
+output produces — <code>quote_verified: false</code> or
+<code>grounded: false</code> — so a natively inferred item is never
+touched. The prediction was frozen before the run: identical rankings,
+because the gates rewrite labels, <code>text</code> and
+<code>quote</code> are the only fields FTS5 indexes, and
+<code>search</code> does not rank on trust.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Questions</th>
+<th>Scored</th>
+<th>Items flipped</th>
+<th>Recall@5 gated</th>
+<th>Recall@5 ungated</th>
+<th>Rankings identical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>54</td>
+<td>52</td>
+<td>726</td>
+<td>0.581</td>
+<td>0.581</td>
+<td>all 54</td>
+</tr>
+</tbody>
+</table></div>
+<p>The README states the result with its scope: on this instrument the
+trade <em>"is paid in metadata honesty, not recall"</em>, the 726 flips
+are 2.9% of indexed items, and what stays unmeasured is whether a
+lenient serializer would accept or phrase sessions differently, which
+needs model runs.</p>
+<p>Two readings of the zero are worth separating. The prediction was a
+reading of the code — a label the index does not index cannot move a
+bm25 ranking — so the experiment establishes that the gate's cost on
+<code>search</code> is structurally nil rather than empirically small,
+and the benchmark, which answers only from <code>daimon recall</code>,
+was never going to see it. The path where trust <em>is</em> a rank input
+was not replayed. <code>suggest</code> multiplies relevance by
+<code>effective_weight</code>, whose trust ceiling lids an inferred item
+at 0.7 against a verbatim item's 3.0, and the briefing orders its
+sections by the same weight and exempts verbatim text from truncation.
+Whatever the gate costs in retrieval terms, it costs on the proactive
+and briefing surfaces, and the rig that measured zero on
+<code>search</code> is the same shape needed to measure it there.</p>
 <p><strong>What is missing</strong> is a completed paired A/B on the
 150-question LongMemEval sample. The replay rig answers a different
 question — precision of what <em>is</em> injected on the maintainer's
@@ -1415,6 +1744,18 @@ render on any loss.</li>
 <li><strong>Let staleness mean "unresolved" for some types.</strong> An
 open question past its expected lifespan should rise, not sink. One
 inverted decay rule buys a real behaviour.</li>
+<li><strong>Measure a doctrine's violation rate before enforcing
+it.</strong> The prompt forbids a stitched quote and the verifier
+accepts one. Rather than refuse, the receipt records
+<code>cross_message</code> and <code>cross_role</code> with necessity
+semantics, and the refusal is gated on the rate. A rule enforced before
+it is measured is a rule whose cost nobody knows.</li>
+<li><strong>Give a contradiction its own axis, one writer, and a
+recorded cure.</strong> Replacement and contradiction are different
+facts, so demote by both and filter by neither; let only derived
+evidence write the mark, so a model cannot bury an item by claiming it
+was contradicted; and when the mark clears, write what cleared it, or
+"challenged and survived" collapses into "never questioned".</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -1457,10 +1798,14 @@ The maintenance budget it assumes is essentially zero — but the
 commentary is extraordinary and most of the interesting invariants live
 in comments rather than types.</p>
 <p>Walk away if you need memory <em>within</em> a session, semantic
-retrieval, a shared service, or multi-tenant boundaries — none of those
-are here and none are being built toward. Walk away also if you cannot
-afford an LLM call per session end, which is the one recurring cost the
-offline-first framing can obscure.</p>
+retrieval, or a shared service; none of those is here. Multi-tenancy is
+the one of the usual four with a foothold, and it is a narrow one: a
+host-set flag makes a shared daimon home refuse caller-chosen scope,
+which closes the enumerate-and-read primitives without adding isolation
+— one process, one <code>author</code> string, one environment the flag
+is read from. Walk away also if you cannot afford an LLM call per
+session end, which is the one recurring cost the offline-first framing
+can obscure.</p>
 <p>The strongest reason to read this repository even if you never
 install it is the verification chain. Most of the atlas has to be argued
 into caring whether a memory is true. This one starts there, ships the
@@ -1484,15 +1829,26 @@ field?</strong> <code>store.verification_counts</code> exists precisely
 to answer this per install (<em>"has verification ever caught anything
 on THIS install"</em>), but no aggregate is published. The downgrade
 rate is the single most interesting unpublished statistic in this
-repository.</li>
-<li><strong>How much does the trust machinery cost in retrieval
-terms?</strong> The benchmark README frames verifiability as a trade
-against raw recall but does not measure the ungated arm, so the size of
-the trade is asserted rather than shown. This is the question the new
-replay rig is closest to and does not answer: its arms vary <em>recall
-scoring</em>, not whether the trust gate ran, so an unverified-items arm
-remains unbuilt. It is the one experiment the instrument is already
-shaped to run.</li>
+repository, and the counter is kept honest for it — a cure row is
+excluded, so it counts catches and not work done.</li>
+<li><strong>What does the trust gate cost where trust is a rank
+input?</strong> The ungated arm settled the <code>search</code> half at
+exactly zero, by construction: a label FTS5 does not index cannot move a
+bm25 ranking. <code>suggest</code> and the briefing order by
+<code>effective_weight</code>, whose trust ceiling is the one place the
+label changes a rank, and the replay rig is already shaped to run that
+arm.</li>
+<li><strong>How often does a quote stitch?</strong>
+<code>quote_provenance.stitching</code> exists to measure the violation
+rate of a prompt rule before enforcing it. No rate is committed, so the
+rule stays doctrine.</li>
+<li><strong>Should the text-derived classes write the contradiction
+slot?</strong> A file, branch, PR or dependency contradiction is the
+kind a person can check by hand, and it is the kind that never reaches
+<code>invalidated_by</code>. The receipt class writes it because its
+evidence is machine-local and its cure is the same probe; the other four
+would need a cure channel, and the one candidate, a human ruling, is the
+channel the comment keeps unbuilt.</li>
 <li><strong>Does the exact-copy carry freeze accumulate wrong
 items?</strong> A verbatim item frozen against rewording, carried for
 weeks, world-checked by nobody, is exactly what
@@ -1502,17 +1858,21 @@ expires it.</li>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Storage and schema</strong></p>
 <ul>
-<li><code>plugin/daimon_briefing/schema.py</code> — the item-field table
-every consumer derives from</li>
+<li><code>plugin/daimon_briefing/schema.py</code> — the section-field
+table every consumer derives from</li>
+<li><code>plugin/daimon_briefing/field_table.py</code> — the per-field
+contract the validator, the normalizers and
+<code>docs/checkpoint-schema.json</code> are generated from</li>
 <li><code>plugin/daimon_briefing/store.py</code> — checkpoint files,
-pointers, ids, redaction, events</li>
+pointers, the route-and-admit latest-read, ids, redaction, events, the
+verification ledger and its cure gate</li>
 <li><code>plugin/daimon_briefing/config.py</code> — every
 <code>DAIMON_*</code> knob and default</li>
 </ul>
 <p><strong>Write path</strong></p>
 <ul>
-<li><code>plugin/daimon_briefing/serializer.py</code> — D-016 prompt,
-chunking, and all deterministic gates</li>
+<li><code>plugin/daimon_briefing/serializer.py</code> — D-019 prompt,
+chunking, all deterministic gates, and the stitching receipt</li>
 <li><code>plugin/daimon_briefing/carry.py</code> — exact-copy
 cross-session carry, dedup, supersession links</li>
 <li><code>plugin/daimon_briefing/transcript.py</code> — host transcript
@@ -1523,9 +1883,9 @@ scrubbing</li>
 <p><strong>Retrieval path</strong></p>
 <ul>
 <li><code>plugin/daimon_briefing/recall.py</code> — FTS5 index, search,
-proactive suggest</li>
+proactive suggest, the contradiction fold</li>
 <li><code>plugin/daimon_briefing/scoring.py</code> — importance x
-recency x decay, with overdue escalation</li>
+recency x decay, with overdue escalation, and <code>explain</code></li>
 </ul>
 <p><strong>Context assembly</strong></p>
 <ul>
@@ -1549,6 +1909,11 @@ relation ledger, shadow mode</li>
 <li><code>plugin/daimon_briefing/amendments.py</code> —
 evidence-carrying state transitions on briefed items, on its own
 append-only stream</li>
+<li><code>plugin/daimon_briefing/requests.py</code> — the cross-project
+request ledger, its read-time joins, live delivery and the owed
+lane</li>
+<li><code>plugin/daimon_briefing/pending.py</code> — the
+<code>decide</code> queue composer, a pure reader</li>
 <li><code>plugin/daimon_briefing/receipts.py</code> — vitni Ed25519
 provenance receipts</li>
 <li><code>plugin/daimon_briefing/ledger.py</code> — serialize log,
@@ -1562,9 +1927,9 @@ per-host adapters and the shared stdlib helper</li>
 <code>mcp_tools.py</code> — read-only stdio MCP</li>
 <li><code>plugin/daimon_briefing/cli/</code> — a package of subcommand
 family modules: <code>lifecycle.py</code> (<code>resolve</code>,
-<code>forget</code>, <code>reverify</code>), <code>refute.py</code>,
-<code>ruling.py</code>, <code>amend.py</code>, <code>audit.py</code>,
-<code>team.py</code>, <code>skill.py</code>,
+<code>forget</code>, <code>reverify</code>, <code>decide</code>),
+<code>refute.py</code>, <code>ruling.py</code>, <code>amend.py</code>,
+<code>audit.py</code>, <code>team.py</code>, <code>skill.py</code>,
 <code>_ledger.py</code></li>
 <li><code>plugin/daimon_briefing/render.py</code> — the single output
 seam every lifecycle, report and ledger verb routes through</li>
@@ -1578,17 +1943,79 @@ scar-candidate drafting</li>
 </ul>
 <p><strong>Tests and evals</strong></p>
 <ul>
-<li><code>plugin/tests/</code> — 3,929 tests across 135 files</li>
+<li><code>plugin/tests/</code> — 4,388 tests across 140 files</li>
 <li><code>benchmark/</code> — LongMemEval-S harness, reporting policy,
 committed results</li>
 <li><code>research/experiments/recall-replay-ab/</code> — the replay A/B
 rig, its placebo arm and its self-verification</li>
+<li><code>research/experiments/ungated-arm/</code> — the zero-LLM replay
+that measured the trust gate's cost on <code>search</code>, with its
+pre-registered prediction</li>
 <li><code>research/</code>, <code>.scars/</code> — the project's own
 decision and negative-knowledge trail, including
 <code>gate-491/measurements.json</code>, a committed refutation of a
 shipped feature</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-02</strong> — <a
+href="https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217"><code class="commit-id" title="dce182cd95ce759a381ce58a58e811ac5a730217">dce182cd…</code></a>
+— re-pinned 98 commits on, through releases 0.34.0 to 0.38.0. Screened
+before reading: three auto-run surfaces (the plugin manifests and
+<code>hooks/hooks.json</code>, unchanged since the previous pin apart
+from version numbers), three build-time execution paths, one unpinned
+website manifest, and three files inside the seven-day cooldown —
+<code>plugin/pyproject.toml</code> and <code>plugin/uv.lock</code>
+changed the same day, <code>website/package-lock.json</code> three days
+before; nothing was built or run. No mark moved — six of seven.
+<code>bitemporal</code> stays absent: the grep for
+<code>valid_from</code>, <code>valid_to</code>,
+<code>valid_until</code>, <code>event_time</code>,
+<code>occurred_at</code> and <code>as_of</code> still returns nothing,
+and the one slot that came alive, <code>invalidated_by</code>, holds
+contradiction evidence with a timestamp rather than an interval.</p>
+<p>Five mechanisms moved. The store's single
+<code>read_latest(fallback=)</code> was deleted for a <code>Route</code>
+and an <code>Admit</code> enum, both required, after four defects
+shipped from the flag's default, one of them a foreign briefing injected
+into a project's first session; a forty-cell contract table and a
+manifest test pin the replacement. The recall index's
+<code>invalidated_by</code> slot, a placeholder at the previous pin, is
+populated from worldcheck receipt contradictions and demotes in both
+<code>search</code> and <code>suggest</code>, with a conditional cure
+row and a <code>cured_by</code> column so a cleared mark is not erased.
+The ungated arm the previous open question called unbuilt was built and
+run: 726 flips across 54 questions, every ranking identical, a result
+the pre-registered prediction derived from the <code>ORDER BY</code>
+clause before the run. <code>stated_by</code> became the tenth
+code-owned field, derived by code from the host's per-message speaker
+under a unanimity rule. And a <code>quote_provenance.stitching</code>
+verdict records, without enforcing, whether a verified quote needed more
+than one message or one role. Around them: a declarative field table
+that generates the validator and a published schema document, an opt-in
+live delivery of cross-project asks at the turn boundary with an owed
+lane and a third-bucket verdict join, a <code>daimon decide</code> queue
+whose admission rule is structural, and a host-set tenant-scoped mode
+that refuses caller-chosen slugs without adding isolation.</p>
+<p>Six claims were wrong at the previous pin rather than overtaken by
+it, and the three that hurt were absences. Section 9 said no test
+asserted the lockfile-before-manifest precedence;
+<code>test_check_dependency_version_lockfile_wins_over_manifest</code>
+was in the tree at that commit. Section 9 said nothing the worldcheck
+pass learns is persisted; the CLI had appended receipt-class rows to the
+rejection ledger since #439. Section 8 said the Codex adapter was
+awaiting its first live run; the README at that pin dated live-validated
+capture to 6 August 2026. The MCP served five tools, not four —
+<code>requests_inbox</code> was present. The skills lived in
+<code>skills/</code>, not <code>plugin/skills/</code>. The prompt was
+D-018, not D-016, and is D-019 at this pin.</p>
+<p>Counts: 4,388 <code>def test</code> across 140 files, ~70,800 test
+lines against ~34,600 source lines; 124 worldcheck tests; 52 in
+<code>test_refutations.py</code>; 67 numbered scars, eleven of them
+since the previous pin, two — 0055 and 0063 — on the read surface above.
+Nineteen line citations had drifted and were re-resolved,
+<code>_pointer_lock</code> at 131 and <code>verify_quotes</code> at 1207
+among them; every test-file citation and the <code>schema.py</code>
+block held.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code class="commit-id" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">90dc82ea…</code></a>
 — audited at the same pin; no mark moved and no matrix field changed.

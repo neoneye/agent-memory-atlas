@@ -299,20 +299,30 @@ this atlas would like to see more often.
 
 [Daimon](../../systems/daimon/) contributes the distinction the others leave
 implicit: **scope strictness should depend on what the caller does with the
-result.** Its store exposes one read with a `fallback` flag, and the rule is that
-callers which *display* what they read may fall back to another project's
-pointer, while callers which *persist* what they read may not — so the code path
-that folds prior state into a new durable checkpoint always reads with the
-fallback off. A leak into a rendering is a confusing screen; a leak into the
-write path is a permanent cross-project memory.
+result.** Callers which *display* what they read may fall back to another
+project's pointer, while callers which *persist* what they read may not — so
+the code path that folds prior state into a new durable checkpoint reads
+through a function that takes no policy argument at all. A leak into a
+rendering is a confusing screen; a leak into the write path is a permanent
+cross-project memory. The shape of the rule is the instructive part. It began
+as one read with a `fallback` flag, and four defects shipped from that flag's
+default — one of them a foreign briefing injected into a project's first
+session — before the flag was replaced by two required enums, a `Route` naming
+which pointers a read may consult and an `Admit` naming which payloads it may
+return, decided by the payload's own project stamp rather than by which pointer
+produced it. The comment on the deletion says why a boolean was the wrong
+type: *"fallback named a mechanism while callers reasoned about a policy."*
 
 Its handling of the permitted fallback is the second idea. Rather than printing
 a foreign project's briefing under a warning line, the body is suppressed and
 only an orientation header appears, on the reasoning that one warning line above
-a hundred foreign lines does not read as a warning. The same instinct governs
-its MCP surface, which refuses the fallback outright and returns a message
-naming the explicit command instead — an agent tool result carrying another
-project's memory is contamination, not convenience.
+a hundred foreign lines does not read as a warning; a refused payload leaves
+behind exactly two header fields and nothing more, because inside an agent
+session stdout is checkpoint input and a wider marker would copy foreign text
+into the local store. The same instinct governs its MCP surface, which refuses
+the fallback outright and returns a message naming the explicit command instead
+— an agent tool result carrying another project's memory is contamination, not
+convenience.
 
 [CSM](../../systems/csm/) contributes two moves and one warning. The first move
 is that **the scope is not an argument**: every public memory tool is

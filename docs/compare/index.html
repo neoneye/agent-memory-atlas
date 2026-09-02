@@ -7010,17 +7010,22 @@ uncertainty</td>
 <td>Per-project JSON checkpoints plus a disposable SQLite FTS5
 index</td>
 <td>Automatic session-start injection; FTS5/BM25 for
-<code>recall</code>, ranked by importance x decay</td>
+<code>recall</code>, ranked by importance x decay, with contradiction
+and supersession as demotion keys and never as filters</td>
 <td>Detached LLM extraction at session end, then deterministic quote and
 outcome gates</td>
 <td>A value-keyed tombstone appended before the rewrite, consulted by
 the supersede-candidate emitter, resolved by content key on rebuild, and
 reaching the serializer chunk cache and the second negative store</td>
-<td>Per-project bucket applied on the read path; cross-project reads
-only by explicit slug</td>
-<td>Host hooks (Claude Code plugin, Windsurf, Codex), a CLI split into
-subcommand family modules behind one render seam, a read-only stdio MCP,
-and a local read-only viewer with search-as-recall</td>
+<td>Per-project bucket on every read, each latest-read naming a route
+and an admit rule; cross-project reads only by explicit slug or a
+host-declared allowlist, and a tenant-scoped flag refuses the caller's
+slug outright</td>
+<td>Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of
+cross-project asks into a running session at its next turn boundary, a
+CLI split into subcommand family modules behind one render seam, a
+read-only stdio MCP, and a local read-only viewer with
+search-as-recall</td>
 <td>Detached serialize child, retry ledger with self-heal, index
 rebuild</td>
 <td>verbatim vs inferred as a stored field, verified by code against the
@@ -7028,8 +7033,10 @@ transcript, with corroboration as a separate axis that can never become
 a trust class; a candidate/active/overturned ledger carrying both
 polarities, whose authority is read off the observed write channel and
 whose polarity is derived from the founding event name rather than any
-writable field; and a candidate/confirmed/rejected relation ledger in
-shadow mode with no mechanical channel at all</td>
+writable field; a candidate/confirmed/rejected relation ledger in shadow
+mode with no mechanical channel at all; and a contradiction slot on the
+recall index that only derived world evidence may write, whose cure is
+recorded rather than erased</td>
 <td>Authority derived from the observed write channel rather than a
 caller-set flag, with the strongest channels unreachable from the CLI; a
 surface registry where every file shape declares its delete strategy and
@@ -7039,7 +7046,9 @@ the project's own features</td>
 <td>One live checkpoint per project; the chunk cache is purged wholesale
 because it is keyed by chunk text and cannot be searched by value; the
 negative-knowledge guard is agent-invoked and advisory, and nothing
-reaps its ledger by age</td>
+reaps its ledger by age; the contradiction slot on the index has one
+writer, the receipt probe, so a stale file, branch or PR claim is
+flagged in a briefing but never demoted in search</td>
 </tr>
 <tr>
 <td><code>deepcode</code></td>
@@ -16299,7 +16308,7 @@ access-control work rather than from memory research, and one, N.E.K.O.,
 from a companion app where re-raising something the user asked you to
 drop is a product failure rather than a data-quality one.</p>
 <p><a href="../systems/daimon/">Daimon</a> is the near-miss that shows
-how narrow the bar is: 3,929 tests, a committed LongMemEval harness,
+how narrow the bar is: 4,388 tests, a committed LongMemEval harness,
 unit tests asserting that a resolved item is withheld and that an
 id-bearing item is never fuzzy-matched into suppression — and still no
 case that forgets a value, re-extracts it, and asserts it stayed gone.
@@ -18736,8 +18745,8 @@ best idea.</li>
 <li><code>openclaw</code>: test lines far exceed implementation — 4,256
 for the LanceDB extension and 2,814 for the memory-core doctor contract;
 no committed retrieval benchmark.</li>
-<li><code>daimon</code>: 2,612 tests across roughly 40,300 lines against
-18,200 lines of source, with dedicated quote-verification, carry,
+<li><code>daimon</code>: 4,388 tests across roughly 70,800 lines against
+34,600 lines of source, with dedicated quote-verification, carry,
 withhold, redaction-leak, receipt, and host-isolation suites. Its
 <code>benchmark/</code> runs LongMemEval-S through the real serializer
 and answers only from <code>daimon recall</code>, under a written
@@ -20895,9 +20904,9 @@ at <a
 href="https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6"><code class="commit-id" title="8c196e84199dec64761870a16949b8089a0c0bf6">8c196e84…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
-href="https://github.com/Daily-Nerd/daimon/commit/90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614"><code class="commit-id" title="90dc82eaa6aa6741a9e6dc8bb3ba76c2a3cff614">90dc82ea…</code></a>
+href="https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217"><code class="commit-id" title="dce182cd95ce759a381ce58a58e811ac5a730217">dce182cd…</code></a>
 — read only; three auto-run surfaces, three build-time execution paths,
-one unpinned surface and two files inside the seven-day cooldown.
+one unpinned surface and three files inside the seven-day cooldown.
 Nothing was built and nothing was run. Apache-2.0</li>
 <li><a href="https://github.com/Mirix-AI/MIRIX">Mirix-AI/MIRIX</a> at <a
 href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a></li>
@@ -26293,6 +26302,32 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-02</strong> — <strong>An open question that asks for
+an experiment may be a reading the report did not finish.</strong> The
+<a href="../systems/daimon/">Daimon</a> report carried, through three
+pins, an open question asking for an ungated arm — a replay with the
+trust gate's downgrades reverted — to size the recall the gate costs.
+The project ran it, with a prediction registered before the run that was
+derived from the code the report had already cited: identical rankings,
+because the gate rewrites a label and the index indexes only
+<code>text</code> and <code>quote</code>, and <code>search</code> orders
+by supersession, bm25 and recency with no trust term. The answer was in
+the <code>ORDER BY</code> clause, and the question worth asking was the
+adjacent one, about <code>suggest</code>, where the trust ceiling
+<em>is</em> a rank input. Before publishing an open question that asks
+for a measurement, check whether the tree already fixes the answer; the
+atlas's job is to read, and a question whose answer is a reading is a
+reading left undone.</p>
+<p>The same re-read found the absence-claim grep from the entry below
+has a hole the shape of its own vocabulary. <em>"No test asserts
+it"</em> was published for two pins over a test that existed at both,
+and the pattern — built around <code>exists</code>, <code>found</code>,
+<code>committed</code>, <code>implemented</code> — did not match it. The
+pattern in the <code>reanalyze-memory-system</code> skill gained
+<code>asserts?|tests?|covers?</code>, and the note beside it says what
+the grep still cannot see: a sentence of the shape <em>"there are tests
+that X, and none that Y"</em>, which is an absence claim in the second
+clause and reads as a positive one in the first.</p>
 <p><strong>2026-08-31</strong> — <strong>A claim that something is
 absent is the weakest kind this atlas publishes, and it is the kind the
 rubric is built from.</strong> A sweep that re-read twenty-six of them

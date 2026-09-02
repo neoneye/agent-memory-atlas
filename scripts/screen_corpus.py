@@ -73,7 +73,10 @@ def load_state() -> dict:
 
 def save_state(state: dict) -> None:
     STATE.parent.mkdir(parents=True, exist_ok=True)
-    STATE.write_text(json.dumps(state, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    # indent=2 and raw UTF-8 match the committed file; the default ASCII
+    # escaping and indent=1 rewrote all 14,000 lines to change one record.
+    STATE.write_text(json.dumps(state, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+                     encoding="utf-8")
 
 
 def run(cmd: list[str], timeout: int = 600) -> subprocess.CompletedProcess:

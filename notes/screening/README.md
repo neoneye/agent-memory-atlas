@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 205 of 353 screened at the report's current pin.**
+**Progress: 208 of 356 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 74 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 79 |
-| Repositories with build-time execution (`EXEC`) | 158 |
+| Repositories with an auto-run surface (`RUNS`) | 75 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 80 |
+| Repositories with build-time execution (`EXEC`) | 159 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -92,6 +92,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`ragflow`](../../content/systems/ragflow.md) | `.github/copilot-instructions.md` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
