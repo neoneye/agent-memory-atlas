@@ -4659,30 +4659,47 @@ nothing implements.</li>
 <h3 id="iai-pme"><a
 href="../systems/iai-pme/"><code>iai-pme</code></a></h3>
 <ul>
-<li>Best idea: a head-to-head against <a
-href="../systems/mempalace/">MemPalace</a> run in one harness on
-identical data, with a matched-embedder row isolating the retrieval
-design from the embedding model, published as <em>"an <strong>exact
-tie</strong> … <strong>No win claimed</strong> — an honest tie is the
-strong, defensible statement"</em> — and followed by naming what the
-benchmark it just used does not measure.</li>
-<li>Biggest risk: no trust state, no provenance and no tombstone, so a
-wrong memory and a stale one are indistinguishable and the only remedies
-are fade and re-teach.</li>
-<li>Most reusable component: fade-and-rescue — forgetting is a queued
-intention with a visible undo window rather than a confirmation dialog,
-measured at Rescue@10 1.000 with superseded wording still
-retrievable.</li>
-<li>Maturity impression: 702 test files against 264 source files, a Rust
-core beside the Python one, AES-256-GCM at rest with no telemetry,
-committed PyTorch-versus-Rust embedder comparisons with an environment
-snapshot, and preflight and checkpoint tests around the benchmark runner
-itself.</li>
-<li>Study when: you want the benchmark posture — one harness, a matched
-control, a published tie, a stated limitation of the instrument — or an
-interface where forgetting can be taken back.</li>
-<li>Do not copy when: memory is shared by more than one person; the
-project says so itself and points elsewhere.</li>
+<li>Best idea: <strong>supersession that keeps both versions and derives
+validity from the corrector.</strong> <code>memory_contradict</code>
+inserts the correction as a new row and a <code>contradicts</code> edge,
+never edits the original, and the read path sets the old row's
+<code>valid_to</code> to the corrector's <code>created_at</code>, halves
+its score and caps it just below the corrector — while a
+<code>historical_verbatim</code> cue gets the old wording back first.
+Beside it, forgetting as a queue with an undo and a tombstone with a
+TTL, every step writing an insert-only, encrypted <code>events</code>
+row.</li>
+<li>Biggest risk: <strong>the README's head-to-head sentence is
+contradicted by the project's own benchmarks page.</strong>
+<em>"Validated in a single harness against mempalace"</em> sits above a
+table whose MemPalace row <code>BENCHMARKS.md</code> describes as
+<em>"published and config-matched (not re-run on this host)"</em>, and
+<code>bench/longmemeval_blind.py</code> has no competitor mode; the
+matched-embedder row is a control against a published number. The
+committed contradiction runs, meanwhile, record a FAIL on the classical
+ranking gate that neither document mentions.</li>
+<li>Most reusable component: the erasure step's one predicate —
+centrality below threshold, not reviewed in the window, older than the
+age cutoff, not <code>pinned</code>, not <code>never_decay</code>, not
+already tombstoned — applied in a single <code>UPDATE</code> that sets
+<code>tombstoned_at</code> and <code>live = 0</code>, followed by a TTL
+drop the tests pin by fast-forwarding a frozen clock. Beside it, a
+quarantine test that asserts the row absent from recall and, in the next
+case, present on the recency rail.</li>
+<li>Maturity impression: MIT, 132,421 lines of Python, Rust and
+TypeScript with 725 test files and 5,954 test functions run in CI
+against both a SQLite driver and the project's own Rust SQL engine; nine
+releases in sixteen days of August 2026 whose changelog names its own
+resurrection bugs and a run at production scale that found four
+dead-daemon defects every health surface missed. Three of seven
+capability marks.</li>
+<li>Study when: you want correction as supersession with both versions
+served, forgetting a person can take back, or a results directory that
+commits the losing gate with its environment.</li>
+<li>Do not copy when: memory is shared by more than one person, a
+correction must survive the same fact being restated — the 0.95 dedup
+gate folds it back into the stale row — or you need the README's
+comparison to mean what its sentence says.</li>
 </ul>
 <h3 id="ostk-recall"><a
 href="../systems/ostk-recall/"><code>ostk-recall</code></a></h3>

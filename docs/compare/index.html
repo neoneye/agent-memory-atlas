@@ -8693,38 +8693,80 @@ invariant the code names but does not assert</td>
 </tr>
 <tr>
 <td><code>iai-pme</code></td>
-<td>An episode captured verbatim, with superseded versions archived
-rather than replaced and retrievable afterwards, joined into a graph the
-sleep cycle clusters</td>
-<td>Local SQLite with AES-256-GCM at rest, a Rust
-<code>lillibrain</code> crate beside the Python core, and no
-telemetry</td>
-<td>Embedding recall over the episode graph with a memory pack assembled
-at session start; the README reports it costs roughly 88% less than the
-agent search it displaces</td>
-<td>Verbatim capture — the stated style is <em>"verbatim over
-paraphrase, precise cues, rare events kept rare"</em> — with a queue
-that audits what it drops</td>
-<td>Pin protects a memory from ever being forgotten, fade queues one for
-the sleep cycle to dissolve, and rescue cancels the fade while the ring
-is still flashing; superseded wording stays retrievable</td>
-<td>None. Single-user and local by design, and the README says to use
-another system if you need multi-tenant memory</td>
-<td>MCP over stdio, named against fifteen clients, with a desktop app in
-Tauri and a doctor command that verifies the install</td>
-<td>Sleep cycles — community detection over episodes, semantic
-summaries, decay of unreinforced links, reinforcement of co-retrieved
-paths — with at most one model call per night through the user's
-existing subscription</td>
-<td>None as a state. Pinning is a user's protection rather than a
-system's judgement</td>
-<td>A head-to-head benchmark against a named system in this atlas, run
-in one harness with a matched-embedder control and published as a tie;
-superseded wording measured as retrievable; a nightly pass capped at 1%
-of the user's own quota</td>
-<td>Everything rests on one person's machine — no scope key, no
-multi-user story, and the project says so rather than implying
-otherwise</td>
+<td>A verbatim <code>records</code> row in one of five tiers, carrying
+an embedding, a hypervector, community and centrality,
+<code>pinned</code> and <code>never_decay</code>,
+<code>last_reviewed</code> and <code>labile_until</code>,
+<code>tombstoned_at</code> and <code>live</code>, a JSON provenance list
+of every capture, recall, hint and rescue that touched it, tags
+including <code>entity:</code> anchors, a <code>language</code>, and an
+<code>s5_trust_score</code> float; typed <code>edges</code> between
+rows, <code>contradicts</code> and <code>invariant_anchor</code> among
+them</td>
+<td>SQLite by default with every text field AES-256-GCM-encrypted under
+the record id as associated data, or the project's own
+<code>lilliengine</code> — a SQL parser, executor, catalog, pager and
+WAL in Rust that CI runs the suite against — behind one
+<code>hippo</code> table layer; an encrypted capture spool; an
+in-process exact-cosine matrix and an HNSW index that are caches, never
+the source of truth</td>
+<td>An exact-cosine authority over a resident matrix beside an HNSW
+lane, a warm BM25 lane fused by rank, the community graph and Hebbian
+edges as rank inputs, anti-hits read off <code>contradicts</code> edges,
+a stale downweight of 0.5 for a hit whose derived <code>valid_to</code>
+has passed and a cap just below its best served corrector;
+<code>memory_search</code> is reciprocal-rank fusion of BM25 and cosine;
+<code>memory_temporal_recall</code> bounds rows by
+<code>created_at</code> and <code>tombstoned_at</code> at an
+<code>as_of</code></td>
+<td><code>memory_capture</code> stores a turn verbatim and folds a
+near-duplicate at cosine 0.95 into the existing row as a reinforcement;
+per-client hooks capture turns through an encrypted spool a daemon
+drains; <code>memory_contradict</code> inserts the corrector as a new
+row and a <code>contradicts</code> edge and never edits the original;
+sleep cycles cluster, summarise, decay, tombstone, re-score and
+re-tune</td>
+<td>No in-place edit of a memory's text. Supersession keeps both rows
+and derives <code>valid_to</code> at read time. <code>forget_hint</code>
+queues a row and <code>rescue</code> cancels it; the nightly erasure
+step tombstones rows by centrality, idle time and age, sparing
+<code>pinned</code> and <code>never_decay</code>, and the optimize step
+hard-deletes tombstones past a TTL; <code>blob-quarantine</code> and
+<code>idem-dedup</code> tombstone with <code>live = 0</code>; a hard
+delete marks the HNSW label deleted and journals it</td>
+<td>None. One store per person, <code>episodes_recent</code> is
+<em>"GLOBAL across all projects"</em>, and <code>session_id</code> lives
+only in provenance and event rows</td>
+<td>MCP over stdio through a TypeScript wrapper exposing fourteen tools;
+capture and recall hooks installed per client for fifteen named hosts; a
+Tauri desktop BrainView; an <code>iai</code> CLI with a 33-check
+<code>doctor</code></td>
+<td>Sleep cycles timed from OS idle with a 48-hour starvation backstop:
+cluster replay, summaries, dream decay, erasure, an LLM reconsolidation
+critic, curiosity mining, entity linking, knob tuning; at most one
+<code>claude -p</code> call per REM cycle, capped at 1% of the
+subscription's daily quota</td>
+<td>A float. <code>s5_trust_score</code> defaults to 0.5, is bound into
+the structural hypervector as a <code>CERTAINTY</code> role, and gates
+an identity-tier write at 0.9 behind a three-of-five consensus and an
+injection shield; <em>stale</em> is derived from a corrector's record
+time and spent as a 0.5 multiplier and a rank cap, never as a refusal;
+<code>labile_until</code> opens a window after every retrieval in which
+reconsolidation may rewrite the row</td>
+<td>Supersession that keeps both versions and can serve either on
+request; a forgetting queue with a visible undo and a tombstone with a
+TTL before the hard delete; an events table that only grows and encrypts
+its payloads; seven committed contradiction-benchmark runs whose
+Markdown records a failing gate beside the passing ones; a doctor row
+asserting the paid SDK is absent</td>
+<td>The README's <em>"validated in a single harness against
+mempalace"</em> is contradicted by the project's own BENCHMARKS.md,
+which says the baseline is a published number not re-run, and the
+harness has no competitor mode; a restated stale fact is folded into the
+stale row as a reinforcement; the store, the keys and the encrypted
+spool all sit under one home directory with no scope of any kind; the
+sleep cycle's LLM critic can rewrite a row inside its labile window
+unattended</td>
 </tr>
 <tr>
 <td><code>icarus</code></td>
@@ -15958,7 +16000,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>111 of 357:</em> <a
+<p><em>112 of 357:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -15998,6 +16040,7 @@ href="../systems/habitus-ai/"><code>habitus-ai</code></a>, <a
 href="../systems/hexis/"><code>hexis</code></a>, <a
 href="../systems/hindsight/"><code>hindsight</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
+href="../systems/iai-pme/"><code>iai-pme</code></a>, <a
 href="../systems/icarus/"><code>icarus</code></a>, <a
 href="../systems/jumbo/"><code>jumbo</code></a>, <a
 href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
@@ -21373,7 +21416,16 @@ href="https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca
 <li><a
 href="https://github.com/CodeAbra/iai-personal-memory-engine">CodeAbra/iai-personal-memory-engine</a>
 at <a
-href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/f555013dfccfc2c3d17ea78c15e038f7c8abd6a6"><code class="commit-id" title="f555013dfccfc2c3d17ea78c15e038f7c8abd6a6">f555013d…</code></a></li>
+href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd"><code class="commit-id" title="1043a41f025b64a2fea51634a56c1ee5bdf95edd">1043a41f…</code></a>
+— read only; the screen found one auto-run surface
+(<code>.claude-plugin/marketplace.json</code>, a Claude Code plugin
+manifest), four build-time execution paths (<code>setup.py</code>, the
+Tauri <code>build.rs</code>, two <code>conftest.py</code>) and two
+unpinned manifests, with every lockfile at least thirteen days old, so
+nothing was installed, built or run. The LongMemEval figures were read
+from the README and the harness; the seven committed
+contradiction-benchmark runs were read from their own Markdown and JSON.
+MIT</li>
 <li><a
 href="https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents">Zenghuang-Fu/SESA-Self-Evolving-Search-Agents</a>
 at <a
@@ -23313,6 +23365,32 @@ can be true or false, and there is nothing for a correction to be about.
 Recorded rather than dropped because it is the cleanest example yet of
 the boundary this atlas draws between a harness that persists and a
 memory that believes.</li>
+<li><strong>Four published claims about <a
+href="../systems/iai-pme/">iai-pme</a> were wrong when published, and
+are corrected.</strong> Until 3 September 2026 the report described the
+LongMemEval head-to-head as run <em>"in a single harness"</em> with
+MemPalace and praised the matched-embedder row as the control that made
+it rigorous; the project's own <code>BENCHMARKS.md</code>, present at
+the pinned commit, said the baseline numbers <em>"are published and
+config-matched (not re-run on this host)"</em>, and
+<code>bench/longmemeval_blind.py</code> has never had a competitor mode
+— the row is a control against a published figure. The report said the
+system had <em>"no trust state, no tombstone, no provenance beyond the
+episode itself"</em> and <em>"no epistemic status field"</em>; the
+<code>records</code> schema at that commit carried
+<code>s5_trust_score</code>, <code>provenance_json</code>,
+<code>tombstoned_at</code> and <code>labile_until</code>, and the read
+path derived <code>valid_to</code> from <code>contradicts</code> edges
+and discounted stale hits. It said the committed JSON <em>"covers the
+embedder comparisons"</em>; <code>bench/results/</code> held seven
+contradiction-benchmark runs with environment tables. And it withheld
+<code>audit_log</code> from an insert-only, encrypted
+<code>events</code> table that records every forgetting-side mutation.
+The direction is consistent: the benchmark posture was overstated and
+the mechanisms understated, because the first reading worked from the
+README and the file index rather than the schema and the results
+directory. The report now carries three marks and names the failing gate
+the committed artifacts record.</li>
 <li><strong>A published claim about <a
 href="../systems/cambium/">Cambium</a> was wrong and is
 retracted.</strong> The report stated the repository had "no worked
@@ -26664,6 +26742,23 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-03</strong> — <strong>When a project ships two
+benchmark documents, read both, and let the harness decide between
+them.</strong> The <a href="../systems/iai-pme/">iai-pme</a> re-read
+found the README describing a head-to-head <em>"validated in a single
+harness"</em> against a named competitor, and <code>BENCHMARKS.md</code>
+— in the tree at the same commit — describing the same table as a
+comparison against <em>"published and config-matched (not re-run on this
+host)"</em> numbers. The first reading quoted the README and built its
+praise on it; a grep of <code>bench/</code> for the competitor's name
+settles which document is right in one line. The same reading found four
+absence claims wrong at the pin they were published for, every one of
+them a sentence the report's appendix carried no search for. Two rules
+follow. A README's benchmark prose is a claim like any other and is
+checked against the benchmarks page and the harness before it is quoted.
+And a report whose absence claims have no recorded search is not a
+report that can be re-read — it is one that has to be read again from
+the schema.</p>
 <p><strong>2026-09-02</strong> — <strong>The tombstone mark assumes a
 retained hash is free, and one project has now said why it is
 not.</strong> The rubric treats a rejected-value tombstone as one lookup
