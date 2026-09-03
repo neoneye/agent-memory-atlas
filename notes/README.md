@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-03-a-search-layer-that-can-be-stale-but-not-wrong.md](2026-09-03-a-search-layer-that-can-be-stale-but-not-wrong.md) —
+  `zvec-ai/zvec-grep`, a local-first ripgrep-BM25-vector search layer built to be
+  handed to coding agents, examined and given no report: what it persists is a
+  derived index of the workspace's own files whose one epistemic state is
+  `fresh` / `possibly_stale`, computed from mtime and content hash and repaired
+  by re-reading the file — a cache with a coherence protocol, stale but never
+  wrong, and no MCP tool takes content to keep. Records the two things worth
+  taking anyway: a signed, per-workspace consent surface in front of any text
+  leaving for a hosted embedder, and a per-miss retrieval diagnosis that says
+  why a named entity did not come back. Its two benchmarks split on what is
+  committed — one run report, one set of string literals in an SVG generator.
 - [2026-09-02-a-harness-generator-whose-memory-is-not-in-the-release.md](2026-09-02-a-harness-generator-whose-memory-is-not-in-the-release.md) —
   JIT-Agent ([arXiv:2608.25593](https://arxiv.org/abs/2608.25593)) trains a 27B model to write a per-task agent
   harness; its memory module is an in-process working memory and the one thing

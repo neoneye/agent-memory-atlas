@@ -646,6 +646,36 @@ measurements. A harness you can run and a result you can reproduce are
 different things, and repositories routinely ship the first while the numbers
 in the README came from the second.
 
+**The shape done carefully is still the shape, and `zvec-ai/zvec-grep` is the
+instance to read for what careful looks like.** It is a workspace search layer
+rather than a memory system — [out of scope](../compare/#known-limitations)
+here, read at
+[`81a80f478f2d3ec76556cd3c993d0d064cc9580a`](https://github.com/zvec-ai/zvec-grep/commit/81a80f478f2d3ec76556cd3c993d0d064cc9580a)
+— but its `benchmarks/README.md` is the most explicit statement in this corpus
+of the "them plus us" protocol's terms: paired runs in which *"the only intended
+difference between paired runs is access to zvec-grep"*, the same model, prompt,
+environment and limits on both arms, index preparation timed separately, a judge
+kept blind to the arm, reference answers held outside the indexed corpus, and a
+warning against guidance that forces the tool, because *"rules that force or
+forbid either tool bias the evaluation toward particular scenarios"*. The
+BrowseComp-Plus half commits its run report at
+`benchmarks/browse-comp-plus/LATEST_REPORT.md`: 100 cases, three trials per arm,
+accuracy 98.67% against 99.00%, so the claim is not quality but cost — input
+tokens −37.56%, tool calls −43.52%, agent time −38.58% — and it reports the
+both-correct subset separately, the per-case split (67 cases improved on tokens,
+33 regressed), a leakage check (zero baseline invocations of the tool), and the
+index build the agent metrics exclude, 9,721 seconds and 7.9 GB for 100,195
+documents. The SWE-QA half commits the harness, the pinned task selection and the
+isolated references, and no result: its headline — judge 80.42 → 81.92, tokens
+−47.3%, tool calls −58.6% — exists in the tree only as string literals in
+`.github/scripts/generate-benchmark-overall.mjs`, whose BrowseComp-Plus panel is
+captioned *"80 cases · 2 trials/profile"* over numbers that recompute from the
+100-case, three-trial report, and the root README says the Codex arm ran at
+medium reasoning effort where `benchmark.toml` and the report both say `high`.
+One artifact that recomputes and one that does not, in one repository, under one
+protocol page — which is why the rule on this page is per number and not per
+project.
+
 ### The one that published a loss
 
 [Palazzo](../systems/palazzo/) is the counter-example to the section above, and

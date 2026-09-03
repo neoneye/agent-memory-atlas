@@ -23919,6 +23919,100 @@ trace is committed, so the numbers are not. Placed on the <a
 href="../benchmarks/#the-number-measures-a-pipeline-not-a-memory-layer">benchmarks
 page</a> beside the Binding Constraint Thesis, whose controlled
 comparison its Table 4 is.</li>
+<li><strong><code>zvec-ai/zvec-grep</code> was examined and has no
+report, and it is the corpus's cleanest case of a store that can be
+stale and cannot be wrong.</strong> Apache-2.0, 38,327 lines of
+TypeScript under <code>src/</code> with 19,890 lines of tests, 229
+commits since 10 July 2026 from eight authors, <code>v0.2.1</code>
+tagged 1 September 2026, read at <a
+href="https://github.com/zvec-ai/zvec-grep/commit/81a80f478f2d3ec76556cd3c993d0d064cc9580a"><code class="commit-id" title="81a80f478f2d3ec76556cd3c993d0d064cc9580a">81a80f47…</code></a>.
+Screened before reading: no auto-run surface, <code>package.json</code>
+and its lockfile changed inside the seven-day cooldown, fifteen floating
+ranges under a lockfile; nothing was installed, built or run. It is a
+local-first search layer over a workspace — ripgrep, BM25 and vector
+search behind one CLI and one loopback MCP endpoint — built to be handed
+to a coding agent, and it never calls itself memory: a grep of
+<code>src/</code> for <code>remember</code>, <code>forget</code> and
+<code>memorize</code> finds nothing, and every <code>recall</code> is a
+per-candidate retrieval trace. What it persists is a derived index of
+the workspace's own files, under <code>&lt;root&gt;/.zvec-grep/</code>:
+a <code>files.zvec</code> collection keyed on <code>file_id</code>
+carrying <code>content_hash</code>, <code>last_modified_time</code>,
+<code>indexed_time</code> and <code>entity_ids_json</code>; an
+<code>index.zvec</code> collection of fragments with a jieba-tokenised
+FTS field and an HNSW vector; and a <code>manifest.json</code> written
+at mode <code>0600</code> because it may hold an embedding API key
+(<code>src/engine/storage/zvec.ts:593-643</code>, <code>:891-944</code>;
+<code>src/engine/manifest.ts:12</code>, <code>:40-47</code>). Nothing an
+agent says enters that store. The default MCP toolset registers one
+tool, <code>zvec_grep_search</code>; the <code>full</code> toolset adds
+five, and none of the six takes content to keep —
+<code>zvec_grep_index</code> takes a root and re-reads the files
+(<code>src/mcp/tools.ts:327-633</code>). The one epistemic state in the
+system is <code>fresh</code> / <code>possibly_stale</code>, computed per
+hit by comparing <code>indexed_time</code> against the file's mtime and
+then its SHA-256 against <code>content_hash</code>
+(<code>src/engine/service/zvec-grep.ts:2141-2166</code>), and per search
+from whether the watcher has pending events or a known-change job is
+queued (<code>src/daemon/backend.ts:557-562</code>). That is the whole
+of what can go wrong with an entry, and the repair is the read that
+built it: a watcher with a 750 ms debounce and a 5 s ceiling, a full
+reconcile every hour and after a 90 s gap in the clock, bursts above
+1,000 exact events widened to directory scopes rather than escalated to
+a rescan, and a <code>computeDiffFromFiles</code> that promotes a file
+from unchanged to modified only when size, mtime and then content hash
+all disagree (<code>src/daemon/watch-manager.ts:65</code>,
+<code>:124</code>, <code>:198</code>, <code>:204</code>;
+<code>src/daemon/change-set.ts:28</code>;
+<code>src/engine/pipeline/indexing/index.ts:647-698</code>). A stale
+fragment is not a false belief; it is a cache miss wearing a status
+label, which is the line the <a
+href="#not-in-scope-the-kv-cache">KV-cache</a> entry draws — a loss that
+costs latency rather than correctness — and the committed
+BrowseComp-Plus report prices the latency: 9,721 seconds and 7.9 GB to
+rebuild the index for 100,195 documents. The integration suite's
+stale-record case asserts the same thing from the other side — after
+<code>rm(goodPath)</code> it checks <code>filesDeleted</code> is 1 and
+<code>filesIndexed</code> is 1, counts on the index, and never searches
+for the deleted file's needle, because there is no reader for whom its
+absence would be a correctness claim
+(<code>test/integration/service.test.mjs:386-469</code>). <strong>Two
+things transfer to memory systems anyway.</strong> The remote-embedding
+consent surface is the one to copy. A search or index that would send
+text to a <code>qwen</code> provider is first planned into a disclosure
+— <code>queryText</code> true or false, <code>workspaceContent</code> of
+<code>none</code>, <code>changed</code> or <code>full</code> — and,
+absent a standing grant, the MCP server answers with
+<code>inputRequired</code> carrying a signed, single-use
+<code>requestState</code> and a form offering <em>allow once</em>,
+<em>allow for this workspace</em>, <em>use FTS only</em> or
+<em>cancel</em>, defaulting to cancel; a workspace grant is
+HMAC-SHA256-signed with a key at
+<code>~/.zvec-grep/authorization-signing.key</code>, fingerprinted on
+the canonical roots, provider, model and endpoint, and kept in the
+workspace's own <code>.zvec-grep/authorization.json</code>
+(<code>src/authorization/planner.ts</code>,
+<code>src/authorization/store.ts:46-94</code>,
+<code>src/mcp/tools.ts:694-825</code>). A memory system that ships its
+embeddings to a hosted provider faces the same question about the
+memories themselves, and the shape here — a plan that names what leaves,
+a default of refusal, a grant bound to a fingerprint and signed by the
+machine that made it — is the answer. And <code>trackEntityId</code>
+forces a named entity into the candidate set and records, per route,
+<em>why it did not come back</em> — <em>"Target entity did not match the
+FTS query"</em>, <em>"Target entity file was excluded by the path
+filters"</em>, <em>"Target entity could not be scored by vector
+search"</em> — a per-miss retrieval diagnosis of the kind the <a
+href="../benchmarks/#the-one-repository-that-scores-its-own-retrieval">benchmarks
+page</a> asks memory systems for and one repository there supplies
+(<code>src/engine/pipeline/search/index.ts:761-968</code>). Its own
+benchmarks are read on that <a
+href="../benchmarks/#vendor-run-comparisons-compare-them-with-them-plus-us">page</a>:
+of two, one commits its run report and one exists as string literals in
+an SVG generator. The exclusion will not reverse on a release. A search
+index becomes memory only by storing something other than the files it
+indexes, and the roadmap's four directions — more formats, graph
+retrieval, a GUI, mobile — add none.</li>
 <li><strong><code>SKILL.state</code> was examined and has no report, and
 the boundary is the same one Self-GC draws.</strong> <em>SKILL.state:
 Scalable Long-Horizon Agent Skills</em> (<a
