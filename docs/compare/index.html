@@ -24122,6 +24122,59 @@ an SVG generator. The exclusion will not reverse on a release. A search
 index becomes memory only by storing something other than the files it
 indexes, and the roadmap's four directions — more formats, graph
 retrieval, a GUI, mobile — add none.</li>
+<li><strong><code>robert-mcdermott/ai-knowledge-graph</code> was
+examined and has no report: it is the extraction half of a graph memory,
+run once, with no reader.</strong> Apache-2.0, 2,040 lines of Python, 64
+commits from 22 March 2025 to 27 December 2025 by three authors, read at
+<a
+href="https://github.com/robert-mcdermott/ai-knowledge-graph/commit/40b701978e41c64ee4e787a5b1c5b833b5e0e8e8"><code class="commit-id" title="40b701978e41c64ee4e787a5b1c5b833b5e0e8e8">40b70197…</code></a>;
+tags <code>0.6.1</code>, <code>0.6.2</code> and <code>0.6.3</code> all
+carry <code>version = "0.6.1"</code> in <code>pyproject.toml</code>.
+Screened before reading: no auto-run surface, no build-time execution,
+no unpinned manifest, <code>uv.lock</code> unchanged for 478 days;
+nothing was installed or run. The pipeline is a CLI that takes one text
+file, splits it into 100-word chunks with a 20-word overlap, asks an
+OpenAI-compatible endpoint for lower-cased subject–predicate–object
+triples with predicates of three words or fewer, standardises entity
+names, infers further edges, and writes one JSON file and one HTML page
+(<code>src/knowledge_graph/main.py:195-276</code>). Nothing reads the
+JSON back but <code>json_to_html.py</code>, which re-renders it —
+<code>rg -n 'json.load|read_json' src json_to_html.py</code> finds that
+one call — so there is no query, no merge of a second document into a
+first, no scope, no correction and no deletion: the graph is an
+artifact, not a store, and the word <em>memory</em> does not occur in
+the code. <strong>Two things in it are worth carrying to the
+graph-memory systems that do keep a store.</strong> First, the one
+epistemic distinction it makes is <em>stated versus inferred</em>: every
+edge the inference phase adds carries <code>inferred: True</code>, drawn
+dashed and filterable in the page
+(<code>src/knowledge_graph/visualization.py:109-120</code>,
+<code>templates/graph_template.html:724-727</code>), and the README's
+own run says what that flag hides — 209 stated edges and <strong>355
+inferred</strong> of 564, so 63% of the delivered graph is the inference
+phase's. Second, where those edges come from: transitive composition
+mints a predicate from the path (<code>A → B → C</code> becomes
+<code>&lt;pred&gt; via B</code>,
+<code>entity_standardization.py:344</code>), so the run's second and
+third most common relations are <em>"advances via Artificial
+Intelligence"</em> and <em>"pioneered via computing"</em>; and lexical
+similarity mints <code>relates to</code>, <code>related to</code> or
+<code>is type of</code> between any two entities that share a word of
+four letters or more or contain one another (<code>:708-749</code>),
+which is where the run's most common relation, <em>"related to"</em> at
+65 occurrences, comes from. Standardisation collapses entities whose
+first-four-letter stems overlap by more than half
+(<code>:141-151</code>). None of this is wrong for a visualisation;
+every one of it would be a false belief in a store an agent recalls
+from, and a system that borrows this extraction stage inherits the flag
+and nothing behind it. Two smaller notes: the console line <em>"Added
+-22 inferred relationships"</em> in the README is
+<code>len(filtered) - len(triples)</code> printed after deduplication
+and self-reference removal (<code>:270</code>), and the README's
+configuration block says <code>chunk_size = 200</code> and
+<code>temperature = 0.2</code> where <code>config.toml</code> says 100
+and 0.8. This exclusion will not reverse on a release: a store and a
+reader would make it a different program.</li>
 <li><strong><code>SKILL.state</code> was examined and has no report, and
 the boundary is the same one Self-GC draws.</strong> <em>SKILL.state:
 Scalable Long-Horizon Agent Skills</em> (<a

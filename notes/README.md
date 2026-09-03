@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-03-the-extraction-half-run-once.md](2026-09-03-the-extraction-half-run-once.md) —
+  `robert-mcdermott/ai-knowledge-graph`, a one-shot text-to-knowledge-graph CLI,
+  examined and given no report: it writes a JSON graph and an HTML page that
+  nothing reads back but a re-renderer, so there is no store, no query, no scope
+  and no correction. Worth carrying to the graph memories that do keep a store:
+  every inferred edge is flagged and drawn dashed, and the README's own run is
+  63% inferred — transitive composition mints predicates like *"pioneered via
+  computing"* and lexical overlap mints *"related to"* 65 times.
 - [2026-09-03-a-search-layer-that-can-be-stale-but-not-wrong.md](2026-09-03-a-search-layer-that-can-be-stale-but-not-wrong.md) —
   `zvec-ai/zvec-grep`, a local-first ripgrep-BM25-vector search layer built to be
   handed to coding agents, examined and given no report: what it persists is a
