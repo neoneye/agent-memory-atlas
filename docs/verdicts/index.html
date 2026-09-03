@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 356 reports.</strong></p>
+<p><strong>This page covers all 357 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -12427,6 +12427,58 @@ it is wrong. <code>forget</code> is keyed on a message id, re-running
 the same conversation re-extracts the same fact under a new one, and
 nothing records that an entry was disabled, forgotten or evicted, or by
 whom.</li>
+</ul>
+<h3 id="openvurp"><a
+href="../systems/openvurp/"><code>openvurp</code></a></h3>
+<ul>
+<li>Best idea: <strong>a correction becomes a test case, replayed
+against the lessons that were supposed to absorb it.</strong>
+<code>Mirror.harvest</code> turns every
+<code>correction</code>-signalled or negatively rated feedback event
+into a case keyed on the SHA-1 of its text; the nightly run poses the
+same situation with the relevant active lessons in the prompt and a
+second call judges PASS or FAIL, so <em>"no longer repeated"</em> is
+measured per correction with a streak rather than asserted.</li>
+<li>Biggest risk: <strong>the memory is per agent and the learning is
+not.</strong> <code>remember</code> and recall are keyed on a
+context-variable scope and a committed test proves one agent cannot read
+another's store; but a direct chat with a roster agent goes
+<code>Swarm.ask</code> → <code>_speak</code> → the model and never
+through <code>Agent.run</code>, so the user-correction hook
+<code>_record_learning_signal</code> fires only for the platform's own
+chat and writes to the platform's unscoped <code>LearningLoop</code>. A
+per-agent mirror therefore replays only corrections the agent recorded
+about itself with <code>learning_feedback</code>, and
+<code>_relevant_lessons</code> reads <code>memory/lessons/</code>, the
+platform's directory, whatever the scope.</li>
+<li>Most reusable component: <code>verify_candidate</code> — a promotion
+gate that refuses a lesson under 0.6 confidence or two pieces of
+evidence, over 4,000 characters, containing anything the secret redactor
+would rewrite, or whose slug already exists, and writes the provenance
+line into the lesson header; beside it, a <code>contextvars</code> scope
+so parallel agents in a thread pool cannot overwrite each other's
+identity.</li>
+<li>Maturity impression: MIT, 34,897 lines of Python outside tests and
+594 test functions across 69 files run on Python 3.10 and 3.12 in CI
+with no model key, 32 commits from two authors since 30 June 2026 with
+fourteen of them on 2 and 3 September. Four of seven capability marks.
+The per-agent scoping landed on 2 September 2026 and its seams show: the
+nightly fade is wired to <code>agent.memory</code> only,
+<code>VectorMemory.forget</code> and <code>MemoryManager.forget</code>
+have no caller, <code>memory_consolidate</code> is named in seven lists
+and registered nowhere, and <code>pyproject.toml</code> still describes
+<em>"a personal AI agent that is born, grows with you"</em> that the
+README says was removed.</li>
+<li>Study when: you want a small, readable instance of
+correction-as-regression-test, a promotion gate with a written
+provenance line, or a scope carried as a context variable rather than an
+attribute.</li>
+<li>Do not copy when: you need forgetting that reaches every store or a
+correction that reaches the agent it was given to. Fading and lesson
+expiry run on the platform's directory alone, <code>cleanup()</code>
+deletes lesson files older than 90 days by mtime with no archive, and in
+<code>auto</code> mode the promotion gate is pre-approved for every
+caller, the heartbeat included.</li>
 </ul>
         </article>
       </div>

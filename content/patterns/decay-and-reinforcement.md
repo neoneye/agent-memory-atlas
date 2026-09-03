@@ -302,6 +302,17 @@ the system retains *"access to folded context"*, and resumed branches reopen, so
 the compaction is reversible by construction — the property the corpus usually
 finds missing on the *other* side of a fold.
 
+[openvurp](../../systems/openvurp/) shows the clock-plus-recall rule with one
+constant set where it cannot do its job. A row fades only if it is older than
+45 days, unrecalled for 45 days, **and** recalled fewer than twice in its life;
+every `search` that returns a row bumps its `access_count`, and retrieval runs
+on every turn. So two incidental appearances in a top-five — not two uses —
+make a memory permanent, and a memory that was wrong twice can never fade. The
+same store exempts the `lesson`, `identity` and `pact` categories by name, and
+the fade itself is wired to the platform's store alone, so the per-agent stores
+it was built for never run it. Archive on fade is done right: every removed row
+is appended to `.faded/faded.jsonl` with a timestamp before the delete.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

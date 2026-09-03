@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 356 reports.**
+**This page covers all 357 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3185,3 +3185,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want conversational recall an operator can inspect and switch off, or a worked example of pushing a scope predicate down into every storage adapter so no query can be written without it.
 - Do not copy when: you need the store to represent that something in it is wrong. `forget` is keyed on a message id, re-running the same conversation re-extracts the same fact under a new one, and nothing records that an entry was disabled, forgotten or evicted, or by whom.
 
+### [`openvurp`](../systems/openvurp/)
+- Best idea: **a correction becomes a test case, replayed against the lessons that were supposed to absorb it.** `Mirror.harvest` turns every `correction`-signalled or negatively rated feedback event into a case keyed on the SHA-1 of its text; the nightly run poses the same situation with the relevant active lessons in the prompt and a second call judges PASS or FAIL, so *"no longer repeated"* is measured per correction with a streak rather than asserted.
+- Biggest risk: **the memory is per agent and the learning is not.** `remember` and recall are keyed on a context-variable scope and a committed test proves one agent cannot read another's store; but a direct chat with a roster agent goes `Swarm.ask` → `_speak` → the model and never through `Agent.run`, so the user-correction hook `_record_learning_signal` fires only for the platform's own chat and writes to the platform's unscoped `LearningLoop`. A per-agent mirror therefore replays only corrections the agent recorded about itself with `learning_feedback`, and `_relevant_lessons` reads `memory/lessons/`, the platform's directory, whatever the scope.
+- Most reusable component: `verify_candidate` — a promotion gate that refuses a lesson under 0.6 confidence or two pieces of evidence, over 4,000 characters, containing anything the secret redactor would rewrite, or whose slug already exists, and writes the provenance line into the lesson header; beside it, a `contextvars` scope so parallel agents in a thread pool cannot overwrite each other's identity.
+- Maturity impression: MIT, 34,897 lines of Python outside tests and 594 test functions across 69 files run on Python 3.10 and 3.12 in CI with no model key, 32 commits from two authors since 30 June 2026 with fourteen of them on 2 and 3 September. Four of seven capability marks. The per-agent scoping landed on 2 September 2026 and its seams show: the nightly fade is wired to `agent.memory` only, `VectorMemory.forget` and `MemoryManager.forget` have no caller, `memory_consolidate` is named in seven lists and registered nowhere, and `pyproject.toml` still describes *"a personal AI agent that is born, grows with you"* that the README says was removed.
+- Study when: you want a small, readable instance of correction-as-regression-test, a promotion gate with a written provenance line, or a scope carried as a context variable rather than an attribute.
+- Do not copy when: you need forgetting that reaches every store or a correction that reaches the agent it was given to. Fading and lesson expiry run on the platform's directory alone, `cleanup()` deletes lesson files older than 90 days by mtime with no archive, and in `auto` mode the promotion gate is pre-approved for every caller, the heartbeat included.

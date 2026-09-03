@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python wallet of user-created
+agents where each agent keeps its own SQLite FTS5 memory, lessons and
+replayed corrections under memory/agents/<id>/, with a nightly fade that
+runs only on the platform store, a lesson-promotion gate a person
+approves in safe mode and the runtime pre-approves in auto mode, and
+user corrections that reach the platform's learning log rather than the
+agent's.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="openvurp — Agent Memory Atlas">
+    <meta property="og:description" content="A Python wallet of
+user-created agents where each agent keeps its own SQLite FTS5 memory,
+lessons and replayed corrections under memory/agents/<id>/, with a
+nightly fade that runs only on the platform store, a lesson-promotion
+gate a person approves in safe mode and the runtime pre-approves in auto
+mode, and user corrections that reach the platform's learning log rather
+than the agent's.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="openvurp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python wallet of
+user-created agents where each agent keeps its own SQLite FTS5 memory,
+lessons and replayed corrections under memory/agents/<id>/, with a
+nightly fade that runs only on the platform store, a lesson-promotion
+gate a person approves in safe mode and the runtime pre-approves in auto
+mode, and user corrections that reach the platform's learning log rather
+than the agent's.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>openvurp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "openvurp",
+      "description": "A Python wallet of user-created agents where each agent keeps its own SQLite FTS5 memory, lessons and replayed corrections under memory/agents/<id>/, with a nightly fade that runs only on the platform store, a lesson-promotion gate a person approves in safe mode and the runtime pre-approves in auto mode, and user corrections that reach the platform's learning log rather than the agent's.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Per-agent memory in a wallet of agents</p>
+          <h1>openvurp</h1>
+          <p class="document-deck">A Python wallet of user-created
+agents where each agent keeps its own SQLite FTS5 memory, lessons and
+replayed corrections under memory/agents/<id>/, with a nightly fade that
+runs only on the platform store, a lesson-promotion gate a person
+approves in safe mode and the runtime pre-approves in auto mode, and
+user corrections that reach the platform's learning log rather than the
+agent's.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openvurp/openvurp">
+              <span>Source</span>
+              <strong>openvurp/openvurp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c" title="e3fbf01d28b2e7a293a431c45cd96d45e609985c">
+              <span>Analyzed revision</span>
+              <code>e3fbf01d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-03</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>openvurp is an MIT-licensed Python "wallet of agents": a local web
+page on which a person creates named agents, each with a job sentence
+and an engine, and talks to them one at a time or all together, from the
+browser or from Telegram, Discord, Slack and WhatsApp through one
+conversation core. 34,897 lines of Python outside <code>tests/</code>,
+11,087 lines of tests across 69 files, 32 commits from two authors since
+30 June 2026, read at <a
+href="https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c"><code class="commit-id" title="e3fbf01d28b2e7a293a431c45cd96d45e609985c">e3fbf01d…</code></a>,
+dated 3 September 2026. Fourteen of the 32 commits are from 2 and 3
+September, and the memory this report describes was reshaped in them: on
+2 September 2026 the project removed the platform's own character —
+<em>"openvurp is the place, not a character"</em> — and moved memory,
+lessons and the correction mirror from one shared store into a directory
+per agent.</p>
+<p>The memory has three parts, and the interesting question is whether
+they meet. <strong>Semantic memory</strong> is a SQLite table per agent
+with an FTS5 index and optional embeddings, written by a
+<code>remember</code> tool and read back into the agent's prompt, with a
+nightly fade that archives rows nobody recalled.
+<strong>Lessons</strong> are Markdown files promoted from a learning log
+through a verification gate and a human approval, retired with a reason,
+and indexed into the same vector store. <strong>The Mirror</strong>
+turns each owner correction into a test case: at night the agent is put
+back in the same situation with its relevant lessons in the prompt, a
+second model call judges PASS or FAIL, and the result is a
+per-correction pass streak. That last mechanism is the project's best
+idea and its README's central promise — <em>"A correction you give an
+agent becomes a test case, replayed later to check it does not come
+back"</em>.</p>
+<p><strong>The scoping is real for memory and absent for learning, and
+the seam runs through the middle of the promise.</strong>
+<code>remember</code> and recall are keyed on a <code>contextvars</code>
+scope and a committed test proves one agent cannot read another's store.
+But the hook that turns <em>"hai sbagliato"</em> into a learning event
+lives in <code>Agent.run</code>, and a direct chat with a roster agent
+never calls <code>Agent.run</code> — it goes <code>Swarm.ask</code> →
+<code>_speak</code> → the model. So the correction the README describes
+is recorded only when it is typed to the platform's own chat, into the
+platform's unscoped log; an agent's Mirror has cases only if the agent
+filed feedback about itself with the <code>learning_feedback</code>
+tool; and when it does replay, the lessons it is shown come from the
+platform's <code>memory/lessons/</code>, not its own. Two further
+consequences of the same move: the nightly fade is wired to the
+platform's <code>MemoryManager</code> alone, so a roster agent's
+memories never fade, and the daily note that every scoped feedback
+appends lands in the platform's top-level memory directory, where the
+platform's retrieval reads it.</p>
+<p>Four marks. <code>scope_enforced</code> on the directory-as-key.
+<code>audit_log</code> on an append-only, redacted
+<code>events.jsonl</code> per scope that records promotions and
+rollbacks, plus a <code>faded.jsonl</code> for every row the fade
+removed. <code>human_review</code> on a promotion gate the runtime asks
+a person to approve in the default mode, with an <em>always</em> answer
+becoming an eight-hour lease. <code>negative_eval</code> on the
+two-agent test, with two caveats named in section 10. Withheld:
+<code>tombstone</code> (a retired lesson can be re-promoted under a new
+hash), <code>trust_state</code> (the lesson states are directories, and
+the one status field written into a lesson is read by nothing),
+<code>bitemporal</code> (record time only).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is one of four things, and they have different
+lives.</p>
+<p><strong>A remembered sentence.</strong> A row an agent chose to keep
+— <em>"Il Crucial P3 Plus da 1TB costa 74 euro"</em> — with a category
+the model picked from a suggested list (<code>user</code>,
+<code>project</code>, <code>lesson</code>, <code>decision</code>,
+<code>general</code>). It is treated as true from the moment it is
+written. It has no state beyond its access statistics: every retrieval
+that surfaces it bumps <code>access_count</code> and
+<code>accessed_at</code>, and the nightly fade removes a row only if it
+is older than 45 days, has not been recalled in 45 days,
+<strong>and</strong> has been recalled fewer than twice in its life
+(<code>core/vector_memory.py:319-334</code>). Two recalls, ever, make a
+row permanent. Rows in the categories <code>lesson</code>,
+<code>identity</code> and <code>pact</code> never fade. Faded rows go to
+<code>.faded/faded.jsonl</code>, which nothing reads back. There is no
+correction path: no tool updates or deletes a row, and the two
+<code>forget</code> methods that would (<code>core/memory.py:210</code>,
+<code>core/vector_memory.py:371</code>) have no caller in the tree.</p>
+<p><strong>A learning event.</strong> An append-only line: an owner's
+<em>"ricorda"</em>, <em>"hai sbagliato"</em> or <em>"la prossima
+volta"</em> detected by whole-word markers, a feedback the agent filed
+with a rating, a tool failure, or a completed task with its tool
+sequence (<code>core/learning.py:102-208</code>). Events are evidence,
+not beliefs; nothing reads them into a prompt.</p>
+<p><strong>A lesson.</strong> The promoted form.
+<code>learning_review</code> groups events into candidates with a
+confidence — a preference is <code>0.55 + 0.12 × occurrences</code>, a
+recurring tool error <code>0.45 + 0.1 × n</code>, a recurring procedure
+<code>0.5 + 0.1 × n</code> (<code>core/learning.py:398-480</code>) — and
+<code>learning_promote</code> writes a Markdown file if the candidate
+clears <code>verify_candidate</code>: confidence ≥ 0.6, evidence ≥ 2, 20
+to 4,000 characters, nothing the secret redactor would rewrite, no
+existing file with the same slug
+(<code>core/learning.py:244-289</code>). <code>force=True</code> writes
+it anyway and stamps <code>verificata=forzata</code>. The file is also
+inserted into the vector store under category <code>lesson</code>, where
+it is exempt from fading. It dies by <code>learning_rollback</code>,
+which moves it into <code>lessons/.retired/</code> with a dated reason,
+or — for the platform's lessons only — by
+<code>MemoryManager.cleanup()</code> at start-up, which
+<code>os.remove</code>s any lesson file older than 90 days by mtime with
+no archive (<code>core/memory.py:485-501</code>, called at
+<code>core/agent.py:204</code>). The vector row for a cleaned-up lesson
+survives it.</p>
+<p><strong>A mirror case.</strong> A correction, keyed on the SHA-1 of
+its lower-cased text, kept to the last 40
+(<code>core/mirror.py:22,:89-132</code>). It holds no truth of its own;
+it holds a question — <em>would you make this mistake again?</em> — and
+a history of up to ten answers. It never dies except by falling off the
+end of the list.</p>
+<p>Who moves things: the model writes remembered sentences and files
+feedback; the runtime records the owner's markers; the model reviews and
+proposes; a person approves a promotion in <code>safe</code> mode and
+the runtime approves it in <code>auto</code>; the model retires; the
+clock fades. Nothing ever marks a remembered sentence wrong.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a correction becomes a nightly test case only on the platform's side of the line — a direct chat with a roster agent bypasses Agent.run and its learning hook, the agent's own Mirror has cases only when the agent files feedback about itself, and even then it is shown the platform's lessons; the agent's remembered rows are scoped correctly and never fade</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a correction becomes a nightly test case only on the platform&#39;s side of the line — a direct chat with a roster agent bypasses Agent.run and its learning hook, the agent&#39;s own Mirror has cases only when the agent files feedback about itself, and even then it is shown the platform&#39;s lessons; the agent&#39;s remembered rows are scoped correctly and never fade
+flowchart TB
+    subgraph P[&quot;platform chat — Agent.run&quot;]
+        U1[&quot;owner types &#39;hai sbagliato&#39;&quot;] --&gt; H[&quot;_record_learning_signal&lt;br/&gt;self.learning, scope &#39;&#39;&quot;]
+        H --&gt; E0[(&quot;memory/learning/events.jsonl&quot;)]
+        H --&gt; D0[(&quot;memory/YYYY-MM-DD.md&lt;br/&gt;&lt;i&gt;daily note&lt;/i&gt;&quot;)]
+    end
+    subgraph A[&quot;direct chat with a roster agent — Swarm._speak&quot;]
+        U2[&quot;owner types &#39;hai sbagliato&#39;&quot;] --&gt; LLM[&quot;model turn&lt;br/&gt;&lt;i&gt;no learning hook&lt;/i&gt;&quot;]
+        LLM --&gt;|&quot;remember&quot;| VM[(&quot;memory/agents/id/vector_memory.db&quot;)]
+        LLM --&gt;|&quot;learning_feedback (self-filed)&quot;| E1[(&quot;memory/agents/id/learning/events.jsonl&quot;)]
+        E1 --&gt; D0
+        VM --&gt;|&quot;_memories, next turn&quot;| LLM
+    end
+    E1 --&gt; R[&quot;learning_review → candidates.json&quot;]
+    E0 --&gt; R
+    R --&gt;|&quot;learning_promote&lt;br/&gt;&lt;i&gt;verify_candidate, then a person in safe mode,&lt;br/&gt;preapproved in auto mode&lt;/i&gt;&quot;| L[(&quot;lessons/*.md&lt;br/&gt;+ vector row, category lesson&quot;)]
+    L --&gt;|&quot;learning_rollback&quot;| RET[(&quot;lessons/.retired/&quot;)]
+    E1 --&gt;|&quot;harvest: correction or rating &lt; 0&quot;| M[&quot;Mirror per agent&lt;br/&gt;cases.json, last 40&quot;]
+    M --&gt;|&quot;nightly, 5 cases, probe + judge&quot;| V{&quot;PASS / FAIL&quot;}
+    PL[(&quot;memory/lessons/&lt;br/&gt;&lt;i&gt;the platform&#39;s directory&lt;/i&gt;&quot;)] -.-&gt;|&quot;_relevant_lessons, whatever the scope&quot;| M
+    FADE[&quot;nightly fade&lt;br/&gt;heartbeat.memory_manager = agent.memory&quot;] -.-&gt;|&quot;platform store only&quot;| PVM[(&quot;memory/vector_memory.db&quot;)]
+    FADE -.-x VM
+
+    style H fill:#f5e6e0,stroke:#a35b3d
+    style PL fill:#f5e6e0,stroke:#a35b3d
+    style D0 fill:#f5e6e0,stroke:#a35b3d</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python process. <code>main.py</code> (1,154 lines) builds an
+<code>Agent</code> (<code>core/agent.py</code>, 3,325 lines), starts the
+web dashboard on <code>127.0.0.1:8420</code> (<code>dashboard.py</code>,
+1,462 lines, HTML included), the inbound channels, an optional HTTP
+gateway on 8421, the heartbeat thread, and a sentinel that probes
+internet and Ollama. Every turn from every door holds one
+<code>threading.Lock</code> (<code>main.py:51,:428</code>), so the
+wallet is single-threaded at the agent, with the swarm's
+<code>broadcast</code> fanning agents out on a thread pool underneath
+it.</p>
+<p><strong>Components that hold memory</strong>, all under
+<code>memory/</code> beside the code:</p>
+<ul>
+<li><code>core/memory.py</code> (547 lines) —
+<code>MemoryManager</code>, rooted at <code>memory/</code> for the
+platform or <code>memory/agents/&lt;id&gt;/</code> for a scope. Owns the
+JSON files (<code>profilo.json</code>, <code>environment.json</code>,
+<code>patterns.json</code>, <code>projects/*.json</code>), the
+<code>lessons/</code> and <code>sessions/</code> directories, and a
+<code>VectorMemory</code>.</li>
+<li><code>core/vector_memory.py</code> (402 lines) —
+<code>VectorMemory</code>: one SQLite file, <code>memories</code> plus
+<code>memories_fts</code>, embeddings as float32 BLOBs, cosine in
+Python.</li>
+<li><code>core/learning.py</code> (576 lines) —
+<code>LearningLoop</code>: <code>learning/events.jsonl</code>,
+<code>learning/candidates.json</code>, <code>lessons/</code>, the daily
+<code>YYYY-MM-DD.md</code> note.</li>
+<li><code>core/mirror.py</code> (241 lines) — <code>Mirror</code>:
+<code>mirror/cases.json</code>, harvest, replay.</li>
+<li><code>core/scope.py</code> (51 lines) — the <code>ContextVar</code>
+and the two path helpers.</li>
+<li><code>core/chat_store.py</code> (602 lines) —
+<code>chats/chats.db</code>: chats, messages, agents, chat membership,
+runs. WAL, one connection per thread, <code>busy_timeout</code> 15
+s.</li>
+<li><code>core/session_store.py</code>,
+<code>core/task_journal.py</code>, <code>core/agent_state.py</code>,
+<code>core/continuity.py</code> — per-route conversation history (40
+messages, 60,000 characters), a journal of turns and reflections, open
+loops, and an autonomy state machine, all JSON or JSONL under
+<code>memory/</code>.</li>
+<li><code>core/security/audit.py</code> (309 lines) —
+<code>AuditLog</code>, a hash-chained <code>audit/audit.jsonl</code> of
+tool calls, shell commands, permission decisions.</li>
+<li><code>core/heartbeat.py</code> (655 lines) — the timer that runs the
+nightly cycle.</li>
+</ul>
+<p><strong>Search stack.</strong> SQLite FTS5 with an external-content
+table for the lexical arm; for the vector arm,
+<code>SELECT id, embedding FROM memories WHERE embedding IS NOT NULL</code>
+and a Python loop computing cosine similarity against every row
+(<code>core/vector_memory.py:222-234</code>). Embeddings come from
+Ollama's <code>/api/embed</code> (<code>nomic-embed-text</code> by
+default) or OpenAI's embeddings API, chosen by
+<code>EMBEDDING_PROVIDER</code>; availability is probed once per process
+with a test embedding, and if the probe fails the store is FTS-only for
+the rest of the run.</p>
+<p><strong>Background.</strong> <code>HeartbeatRunner</code> fires every
+30 minutes between 08:00 and 23:00 by default. It is two-tier:
+mechanical checks run every tick at zero tokens, and the model is called
+only when an event is queued, the workspace state fingerprint changed, a
+manual trigger fired, or four hours passed
+(<code>core/heartbeat.py:102-118,:275-299</code>). Once a day, before
+the beat, it fades the platform's memory and runs every scope's Mirror
+(<code>:548-606</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -e .</code> and <code>openvurp</code>; Node only
+for the WhatsApp bridge. Nothing else has to run: SQLite is the only
+store, and the model is whatever the owner points at — Ollama, any
+OpenAI-compatible local server, the Codex or Claude subscription CLIs
+with <code>OPENAI_API_KEY</code> stripped from their environment, or a
+hosted API. Fully offline is possible with a local model and Ollama
+embeddings; without Ollama the semantic arm silently degrades to FTS5.
+No API key is needed to store anything.
+<code>docker compose up -d</code> mounts <code>memory/</code> as a
+volume; a systemd unit is provided. The store is human-readable and
+repairable: Markdown lessons, JSON state, JSONL logs, and two SQLite
+files a person can open with <code>sqlite3</code>. The one file a person
+should not lose is <code>memory/uploads</code>, which the roadmap
+singles out as the only thing under <code>memory/</code> that cannot be
+rebuilt.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="write-remember-coreagentpy677-6991328-1340">Write:
+<code>remember</code>
+(<code>core/agent.py:677-699,:1328-1340</code>)</h3>
+<p>The tool takes <code>content</code> and a <code>category</code>.
+<code>_remember_handler</code> reads <code>current_scope()</code> and
+calls <code>memory_for(scope).remember(content, category)</code>;
+<code>memory_for</code> caches one <code>MemoryManager</code> per scope
+(<code>:1309-1326</code>). <code>MemoryManager.remember</code>
+(<code>core/memory.py:61-70</code>) is a thin call to
+<code>VectorMemory.add</code>
+(<code>core/vector_memory.py:138-166</code>): if the embedding probe
+succeeded, one embedding request on the hot path; then
+<code>INSERT INTO memories</code>, then
+<code>INSERT INTO memories_fts</code>, then <code>commit</code>.
+Synchronous; retrievable on the next turn. A failed embedding is
+swallowed and the row is stored without one.</p>
+<h3
+id="scope-how-a-tool-learns-whose-store-it-is-in-corescopepy-coreswarmpy557-567">Scope:
+how a tool learns whose store it is in (<code>core/scope.py</code>,
+<code>core/swarm.py:557-567</code>)</h3>
+<p><code>_SCOPE = contextvars.ContextVar("agent_scope", default="")</code>.
+The swarm's <code>run_tool</code> wrapper does
+<code>token = set_scope(member.id)</code> around
+<code>parent._execute_tool(...)</code> and
+<code>reset_scope(token)</code> in a <code>finally</code>. The module
+docstring says why it is a context variable and not an attribute: agents
+run in parallel on a thread pool, and <em>"a shared attribute would be
+overwritten by the colleague who starts a moment later"</em>.
+<code>scoped_dir(memory_dir, name, scope)</code> and
+<code>agent_home(memory_dir, scope)</code> turn the id into
+<code>memory/agents/&lt;id&gt;/…</code>; with an empty scope both return
+the platform's paths, so nothing already on disk moved.</p>
+<h3 id="read-context-assembly">Read: context assembly</h3>
+<p>Two readers, and they differ.</p>
+<p><em>The platform's own turn</em>
+(<code>core/agent.py:1613-1639</code>):
+<code>resolve_session_type</code> decides <code>main</code>,
+<code>group</code>, <code>subagent</code>, <code>cron</code> or
+<code>heartbeat</code>; for <code>main</code> only,
+<code>self.memory.get_relevant(user_input, budget_chars=MEMORY_RETRIEVAL_CHARS)</code>
+(default 3,000) is placed into the system prompt under
+<code>## MEMORIA FILE</code> together with the memory directory path
+(<code>core/context.py:271-275</code>).</p>
+<p><em>A roster agent's turn</em>
+(<code>core/swarm.py:691-706,:757-769</code>):
+<code>Swarm._memories</code> calls
+<code>memory_for(member.id).get_relevant(prompt, budget_chars=…, session_type="main")</code>
+and, if the text is not the <em>"(nessun ricordo ancora)"</em> sentinel,
+appends a system message <em>"Quello che hai imparato finora:"</em> with
+it. The commit that added this line says what came before: <em>"nobody
+read anything back — <code>remember</code> wrote into a common archive
+that only the platform consulted"</em>.</p>
+<p><code>get_relevant</code> itself
+(<code>core/memory.py:218-285</code>) scores every memory file by
+keyword hits, takes files in score order under the budget with a
+2,000-character cap per file, and then appends a
+<code>### ricordi semantici</code> section of up to five vector hits
+(<code>:287-312</code>).</p>
+<h3 id="learning-who-records-what-coreagentpy19693265-3301">Learning:
+who records what (<code>core/agent.py:1969,:3265-3301</code>)</h3>
+<p><code>Agent.run</code> calls
+<code>_record_learning_signal(user_input, source, actor_id)</code> on
+every turn. It returns early for <code>source == "heartbeat"</code> —
+with the reason that a heartbeat prompt once got classified as an
+explicit memory and <em>"consolidated at night into MEMORY.md as a
+fact"</em> — and when <code>_learning_enabled</code> is false, which is
+when the source is not <code>cli</code> <strong>and</strong> the actor
+is not <code>cli_owner</code>. The page's own chat passes
+<code>source="dashboard", actor_id="cli_owner"</code>
+(<code>dashboard.py:338-341</code>), so it qualifies. The call is
+<code>self.learning.record_user_signal(...)</code>, and
+<code>self.learning</code> is <code>LearningLoop(MEMORY_DIR)</code> with
+no scope (<code>:188</code>). Tool failures and completed tasks go the
+same way (<code>:3259,:3293</code>).</p>
+<p>A direct chat with a roster agent takes another road entirely
+(<code>dashboard.py:212-241</code>):
+<code>swarm.ask(direct_id, message, ...)</code> →
+<code>Swarm._speak</code> → <code>_run_with_tools</code> →
+<code>client.call</code>. <code>Agent.run</code> is not on it, and
+<code>rg -n 'record_user_signal|learning' core/swarm.py core/multiplayer.py core/conversation.py</code>
+returns nothing. The only writer into an agent's own
+<code>learning/events.jsonl</code> is the <code>learning_feedback</code>
+tool, when the agent calls it under its scope
+(<code>tools/learning.py:17-25</code>).</p>
+<h3
+id="review-promote-retire-corelearningpy227-378-toolslearningpy">Review,
+promote, retire (<code>core/learning.py:227-378</code>,
+<code>tools/learning.py</code>)</h3>
+<p><code>learning_review</code> reads the last 200 events, groups
+feedback by a fingerprint of kind, signal, topic and the first 220
+characters, tool failures by tool and error type, completed tasks by
+their first five tools, and writes <code>candidates.json</code>.
+<code>learning_promote</code> loads a candidate by id or takes a manual
+<code>topic</code> and <code>content</code>, runs
+<code>verify_candidate</code>, writes
+<code>lessons/&lt;date&gt;_&lt;slug&gt;_&lt;8-hex&gt;.md</code> with a
+header of <code>data</code>, <code>versione: 1</code>, <code>tags</code>
+and a <code>provenienza:</code> line, records a <code>promotion</code>
+event, and returns <em>"[OK] Lezione verificata e promossa"</em> or
+<em>"promossa con force"</em>. <code>learning_rollback</code> moves the
+file into <code>.retired/</code> with <code>ritirata:</code> and
+<code>motivo:</code> appended and records a <code>rollback</code> event.
+The two mutating tools carry <code>requires_approval=True</code>; the
+review tool does not.</p>
+<h3 id="mirror-harvest-and-replay-coremirrorpy89-211">Mirror: harvest
+and replay (<code>core/mirror.py:89-211</code>)</h3>
+<p><code>harvest</code> reads the scope's <code>events.jsonl</code>,
+keeps <code>user_feedback</code>/<code>feedback</code> events whose
+<code>signal</code> is <code>correction</code> or whose rating is
+negative and whose content is at least 15 characters, and adds a
+<code>MirrorCase</code> per new SHA-1. <code>run</code> sorts cases
+never run first, then oldest, takes five, and for each makes two calls:
+<code>PROBE_PROMPT</code> — <em>"In the past the owner corrected you
+like this … Now you are in a situation of the same kind. Describe in 2-4
+sentences what you concretely do"</em> — with
+<code>_relevant_lessons(correction)</code> prepended, and
+<code>JUDGE_PROMPT</code> — <em>"Answer with ONE word: PASS or
+FAIL"</em>. <code>ok</code> is
+<code>"PASS" in verdict.upper()[:20]</code>; the case's
+<code>runs</code>, <code>last_pass</code>, <code>pass_streak</code> and
+a ten-entry history are updated. <code>_relevant_lessons</code> opens
+<code>os.path.join(self.memory_dir, "lessons")</code>
+(<code>:139</code>), and <code>self.memory_dir</code> is the base
+directory passed in, not <code>self.dir</code>, so a scoped Mirror
+scores the platform's lessons by word overlap with the correction and
+shows the top three.</p>
+<h3
+id="fade-corevector_memorypy319-369-coreheartbeatpy562-571-mainpy354">Fade
+(<code>core/vector_memory.py:319-369</code>,
+<code>core/heartbeat.py:562-571</code>, <code>main.py:354</code>)</h3>
+<p><code>_maybe_consolidate_memory</code> runs once per calendar day and
+calls <code>self.memory_manager.fade_memories()</code>.
+<code>main.py</code> sets
+<code>heartbeat.memory_manager = agent.memory</code> — the platform's
+manager. The Mirror block directly below it iterates
+<code>[("", "openvurp")] + [(a["id"], a["name"]) for a in store.list_agents()]</code>;
+the fade block does not. <code>fade</code> selects up to 30 rows per run
+by the three-part predicate above, appends each to
+<code>faded.jsonl</code>, deletes it from both tables, commits.</p>
+<h3
+id="approval-coresecuritypolicypy50-96-coreexecutorpy84-174-coreagentpy2779-2887">Approval
+(<code>core/security/policy.py:50-96</code>,
+<code>core/executor.py:84-174</code>,
+<code>core/agent.py:2779-2887</code>)</h3>
+<p><code>_execute_tool</code> sets
+<code>preapproved = mode == "auto"</code>, checks pacts, egress and
+RBAC, then hands to <code>Executor.execute</code>. The policy engine
+returns <code>REQUIRE_APPROVAL</code> for any tool with
+<code>requires_approval</code>. If not preapproved and no valid
+<code>CapabilityLease</code> matches actor, source, tool and risk, the
+executor asks the UI; <em>always</em> grants a lease for the tool with
+<code>ttl_seconds=8*3600, max_uses=50</code>. In the heartbeat the UI is
+a <code>ResponseCollector</code> whose <code>confirm</code> returns
+<code>False</code> (<code>main.py:263-266</code>), so an autonomous
+promotion is refused in <code>safe</code> mode — and pre-approved in
+<code>auto</code> mode, because <code>preapproved</code> is decided
+before the source is looked at.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> (<code>core/vector_memory.py:62-89</code>):</p>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    category TEXT DEFAULT &#39;general&#39;,
+    embedding BLOB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    accessed_at TIMESTAMP,
+    access_count INTEGER DEFAULT 0,
+    metadata TEXT
+);
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts
+    USING fts5(content, category, content=&#39;memories&#39;, content_rowid=&#39;id&#39;)</code></pre>
+<p>No scope column: the scope is which file you opened. No
+<code>updated_at</code>, <code>valid_from</code>,
+<code>superseded_by</code>, <code>status</code> or provenance beyond the
+optional <code>metadata</code> JSON, which <code>store_lesson</code>
+fills with <code>tags</code> and <code>file</code> and
+<code>remember</code> leaves null. Record time only.</p>
+<p><code>lessons/&lt;date&gt;_&lt;slug&gt;_&lt;hash&gt;.md</code>
+header, written at <code>core/learning.py:509-535</code>:</p>
+<pre class="text"><code># &lt;topic&gt;
+data: 2026-09-03
+versione: 1
+tags: feedback, correction
+provenienza: candidato=&lt;id|manual&gt;; evidenze=&lt;n&gt;; confidenza=&lt;f&gt;; verificata=sì|forzata|no</code></pre>
+<p><code>versione</code> is always 1 — nothing increments it.
+<code>verificata</code> is set from the gate's verdict;
+<code>rg -n 'verificata|forzata|provenienza' core tools dashboard.py</code>
+finds only the writer, its return message, and the tool description. A
+manual promotion (topic and content, no <code>candidate_id</code>) skips
+the confidence and evidence checks because
+<code>candidate is None</code>, and is therefore stamped
+<code>verificata=sì</code> — the verification mark is strongest on the
+path the machine proposed and weakest on the path the model wrote by
+hand.</p>
+<p><code>learning/events.jsonl</code> —
+<code>timestamp, kind, topic, content, signal, actor, source, metadata</code>,
+every string through <code>redact</code>, content capped at 1,000
+characters. <code>learning/candidates.json</code> — rewritten on every
+review. The daily <code>YYYY-MM-DD.md</code> — one line per user signal
+or feedback, appended to <code>self.memory_dir</code>
+(<code>core/learning.py:536-551</code>), which for a scoped loop is
+still the base <code>memory/</code>.</p>
+<p><code>mirror/cases.json</code> —
+<code>id, correction (400 chars), created, source_ts, runs, last_run, last_pass, pass_streak, history[10]</code>.</p>
+<p><code>chats/chats.db</code> (<code>core/chat_store.py:56-115</code>)
+—
+<code>chats(id, title, mode solo|team, backend, model, archived, direct_agent_id, last_read_at, …)</code>,
+<code>messages(id, chat_id, role, content, author_type, author_id, author_name, recipient_id, run_id, created_at, metadata_json)</code>,
+<code>agents(id, name, role, instructions, backend, model, enabled)</code>,
+<code>chat_agents</code>, <code>runs</code>. Deleting an agent archives
+its chat and deletes its <code>agents</code> row
+(<code>:409-424</code>); its <code>memory/agents/&lt;id&gt;/</code>
+directory is not touched by that path.</p>
+<p><strong>Scoping model.</strong> One axis, the agent id, expressed as
+a path. The platform is the empty scope. There is no user or tenant
+dimension: every allowed Telegram user writing to the same agent shares
+its thread and its memory, and the roadmap lists <em>"one conversation
+per agent and per person"</em> as not done. <code>session_type</code> is
+a second gate on the read path — <code>main</code> gets memory,
+<code>group</code> does not — so a group chat on any channel never sees
+the owner's profile or memories
+(<code>core/bootstrap.py:19-47</code>).</p>
+<p><strong>Separation of kinds.</strong> Episodic:
+<code>sessions/*.json</code>, <code>task_journal/</code>,
+<code>reflections/</code>, the chat store. Semantic:
+<code>memories</code>. Procedural: <code>lessons/</code> and the
+Markdown <code>skills/</code>. Profile: <code>profilo.json</code>. Rules
+the runtime enforces: <code>pacts.json</code>
+(<code>core/pacts.py</code>). All of them except the chat store and the
+audit log are inside <code>_iter_searchable_memories</code>
+(<code>core/memory.py:359-410</code>) and can be injected.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Automatic, once per turn, only in <code>main</code> sessions, into
+the system prompt.</p>
+<p><strong>Keyword arm</strong> (<code>core/memory.py:218-285</code>):
+split the input into words of three or more letters minus a stopword
+list, score each memory file by occurrence count plus 5 for a filename
+hit, plus 10 for <code>profilo.json</code> and 2 for a session file,
+sort, and take files under the budget; files scoring zero are skipped
+once 30% of the budget is used. Session files are the eight most recent,
+rendered as <code>role: text</code> lines from the saved
+conversation.</p>
+<p><strong>Semantic arm</strong>
+(<code>core/vector_memory.py:190-287</code>): the query becomes an OR of
+its words of three or more characters, each quoted, twelve at most
+(<code>_fts_query</code>, <code>:168-188</code>) — the docstring records
+that the earlier AND form <em>"demanded all three words … so the search
+came back empty almost always, and <code>remember</code> kept answering
+'saved' for something nobody then found"</em>, and that an apostrophe
+used to raise and be swallowed to zero results. FTS5 bm25 is normalised
+so the best hit is 1.0 and the top <code>2 × top_k</code> rows are
+taken. If embeddings are on, the query is embedded and cosine similarity
+is computed against every embedded row. Fusion is
+<code>0.7 × vector + 0.3 × fts</code> when a query embedding exists,
+else fts alone; then <code>× (0.7 + 0.3 × 0.5^(age_days/30))</code>, so
+a memory loses at most 30% of its score to age; then
+<code>min_score</code> 0.3; then MMR with <code>diversity=0.3</code>
+where similarity is Jaccard over whitespace tokens; top 5. Every
+returned row's <code>accessed_at</code> and <code>access_count</code>
+are updated in the same call — retrieval is reinforcement, and there is
+no read that does not reinforce.</p>
+<p><strong>Budget and formatting.</strong> 3,000 characters by default,
+half-consumed by the file arm before the semantic section is considered
+(<code>budget_chars - used_chars</code>, minimum 200); each semantic hit
+is <code>- (category, score 0.xxxx) content[:500]</code>. For a roster
+agent the same text goes into a second system message. Both readers
+rebuild the system prompt after any tool that touches memory
+(<code>core/agent.py:2388-2409</code>), which the comment says is done
+sparingly because a rebuild <em>"invalidates the backend's prompt
+caching"</em>.</p>
+<p><strong>Failure modes.</strong> The vector arm is a full table scan
+in Python per query; fine for one person's memories, quadratic in
+ambition. The file arm ranks <code>profilo.json</code> above everything
+regardless of relevance. A memory recalled twice is permanent, and the
+recall that makes it permanent may have been an incidental top-5
+appearance rather than a use. <code>session_type != "main"</code>
+returns the <em>"(nessun ricordo ancora)"</em> sentinel, so a DM on
+Telegram is <code>main</code> and gets the owner's private memory while
+a group does not — the right split, made by a string compare on
+<code>chat_type</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Creation</strong> is by the model — <code>remember</code>,
+<code>learning_feedback</code>, <code>task_journal</code>,
+<code>reflection_note</code>, <code>open_loop</code>, <code>pact</code>
+— and by the runtime: user-signal detection on every platform turn,
+tool-failure events, task-completion events, turn-start and turn-finish
+journal events, autonomy-state transitions. There is no LLM extraction
+pass over transcripts: what enters semantic memory is what the model
+chose to <code>remember</code>, verbatim.</p>
+<p><strong>Hot path or deferred.</strong> <code>remember</code> is
+synchronous and, when embeddings are available, makes one network call
+to the embedding provider per write with a 10-second timeout. Learning
+events are appended synchronously and cost nothing. Lessons are written
+when a person approves. Nothing is deferred except fading and the
+Mirror, which run once a day.</p>
+<p><strong>Deduplication and consolidation.</strong> None on
+<code>memories</code>: two identical <code>remember</code> calls are two
+rows. Candidates dedupe by fingerprint; lessons dedupe by slug substring
+against the live <code>lessons/</code> listing — not against
+<code>.retired/</code>, so a retired lesson's topic can be promoted
+again under a fresh hash. The consolidation pass that once rewrote
+<code>MEMORY.md</code> is gone: the name <code>memory_consolidate</code>
+survives in seven lists — the refresh trigger, the memory touch check,
+the tool router's <code>memory</code> pack, the RBAC table, the doctor,
+the method prompt, the journal's <code>memory_touched</code> — and
+<code>rg -n 'name="memory_consolidate"'</code> finds no
+registration.</p>
+<p><strong>Update, delete, TTL.</strong> Covered in section 2: no
+update; <code>forget</code> unwired; fade on the platform store with a
+45-day idle rule and a two-recall immunity; <code>cleanup()</code> on
+the platform's lessons at 90 days and sessions beyond 50, at process
+start, by deletion.</p>
+<p><strong>Conflict.</strong> None. A remembered sentence and its
+contradiction are two rows with two scores.</p>
+<p><strong>Agent-generated facts</strong> are the only kind. The one
+filter is <code>redact</code> on learning events, journal lines,
+agent-state notes and audit records, which rewrites API keys, tokens,
+JWTs, <code>password=</code> pairs and bearer headers.
+<code>remember</code> does not redact:
+<code>rg -n 'redact' core/memory.py core/vector_memory.py</code> returns
+nothing, so a secret the model chooses to remember is stored as typed
+and recalled into every later prompt. Web and document content reaches
+the model wrapped as untrusted data
+(<code>core/security/untrusted.py</code>), but nothing stops the model
+from <code>remember</code>ing a sentence it read there.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> synchronous; one embedding call when
+available; retrievable on the next turn with no lag.</li>
+<li><strong>Read:</strong> one FTS5 query, one embedding call, one full
+scan of embedded rows, five <code>SELECT * WHERE id=?</code>, and up to
+<code>top_k</code> <code>UPDATE</code>s, per turn, per reader; a roster
+agent consulting a colleague triggers the colleague's read too. Bounded
+at 3,000 characters by default, placed in the system prompt where it
+changes with the query and so defeats prefix caching on every turn.</li>
+<li><strong>Background:</strong> the fade is <code>LIMIT 30</code> per
+day on one store. The Mirror is up to 10 model calls per agent per day,
+every day, forever — cases never expire, and a case that passes ten
+nights running is replayed on the eleventh. Nothing rewrites the whole
+store.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One page and four messaging channels, all through
+<code>make_chat_fn</code> (<code>dashboard.py:137-345</code>) under the
+same lock. The tool surface for memory:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Approval</th>
+<th>Scope-aware</th>
+<th>Writes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>remember</code></td>
+<td>no</td>
+<td>yes, via <code>memory_for(current_scope())</code></td>
+<td><code>memories</code></td>
+</tr>
+<tr>
+<td><code>learning_feedback</code></td>
+<td>no</td>
+<td>yes, via <code>_learning()</code></td>
+<td><code>events.jsonl</code>, daily note</td>
+</tr>
+<tr>
+<td><code>learning_review</code></td>
+<td>no (plan-safe)</td>
+<td>yes</td>
+<td><code>candidates.json</code></td>
+</tr>
+<tr>
+<td><code>learning_promote</code></td>
+<td><strong>yes</strong></td>
+<td>yes</td>
+<td><code>lessons/*.md</code>, <code>memories</code>,
+<code>events.jsonl</code></td>
+</tr>
+<tr>
+<td><code>learning_rollback</code></td>
+<td><strong>yes</strong></td>
+<td>yes</td>
+<td><code>lessons/.retired/</code>, <code>events.jsonl</code></td>
+</tr>
+<tr>
+<td><code>task_journal</code>, <code>reflection_note</code>,
+<code>open_loop</code></td>
+<td>no</td>
+<td><strong>no</strong> — <code>TaskJournal(MEMORY_DIR)</code></td>
+<td>platform journal</td>
+</tr>
+<tr>
+<td><code>pact</code></td>
+<td>no</td>
+<td>no</td>
+<td><code>pacts.json</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The agent is told about memory in prose: the system prompt names the
+memory directory and says the agent may read and modify it, and the tool
+descriptions tell it what <code>remember</code> is for. There is no
+prompt asking the model to review or promote at a fixed point; the
+heartbeat prompt lists <code>learning_review</code> as one of the things
+it may do in a cycle.</p>
+<p>Session lifecycle: conversations persist in <code>chats.db</code>;
+the model's context is rebuilt from the route's saved history (last 40
+user/assistant messages) plus a fresh system prompt; compaction is an
+LLM summary when the context manager says so. Nothing at a compaction
+boundary writes memory.</p>
+<p>Human surfaces: <code>/specchio</code> (<code>main.py:150-154</code>)
+harvests and renders the platform Mirror's status; <code>/memory</code>
+lists files with sizes; <code>/api/memory</code>
+(<code>dashboard.py:512</code>) returns
+<code>collect_memory_overview</code>; approvals appear inside the
+conversation on the page with a 180-second timeout, unanswered meaning
+no. The roadmap marks <em>"lessons visible in the page, per agent, with
+their evidence"</em> as not done, and the tree agrees:
+<code>rg -n -i 'lesson|mirror' dashboard.py</code> returns nothing.</p>
+<p>Adapting this elsewhere means adopting the whole wallet; the memory
+classes have no interface beyond their constructors and can be lifted as
+three Python files.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance.</strong> Learning events carry <code>actor</code>
+and <code>source</code>; a lesson carries its candidate id, evidence
+count, confidence and verdict; a journal line carries its turn. A
+remembered row carries nothing but a category the model chose.</p>
+<p><strong>The scope leaks, in three places, all on the learning
+side.</strong></p>
+<ol type="1">
+<li><em>Corrections do not reach the agent.</em> Established in section
+4. The README's sentence <em>"What you teach the one who hunts deals
+does not end up with the one who writes code"</em> is true of
+<code>remember</code> and false of the correction it describes, which
+ends up with the platform.</li>
+<li><em>The daily note crosses the boundary.</em>
+<code>_append_daily_note</code> writes to <code>self.memory_dir</code>,
+the base path, for every scope (<code>core/learning.py:536</code>). The
+platform's <code>_iter_searchable_memories</code> reads every
+<code>YYYY-MM-DD.md</code> at the top level
+(<code>core/memory.py:363-372</code>), so feedback an agent files about
+itself appears in the platform's <code>## MEMORIA FILE</code> on the
+next <code>main</code> turn, and
+<code>test_a_lesson_of_one_is_not_read_by_the_other</code> cannot see it
+because it reads <code>events.jsonl</code>.</li>
+<li><em>The Mirror is shown the wrong lessons.</em>
+<code>_relevant_lessons</code> reads <code>memory/lessons/</code> for
+every scope (<code>core/mirror.py:139</code>), so the nightly probe of
+agent A is prefaced with the platform's lessons, and A's own are never
+in the prompt. The module docstring says the Mirror <em>"tests the
+system (lessons + model), not the bare model"</em>; for a roster agent
+it tests the platform's lessons with the agent's correction.</li>
+</ol>
+<p><strong>Forgetting reaches one store.</strong>
+<code>heartbeat.memory_manager = agent.memory</code>
+(<code>main.py:354</code>). The scoped <code>MemoryManager</code>s built
+by <code>memory_for</code> are never faded, and <code>cleanup()</code>
+is called once, on the platform's manager
+(<code>core/agent.py:204</code>). An agent's memories accumulate without
+bound; the platform's lessons are deleted at 90 days.</p>
+<p><strong>Prompt-injected memories.</strong> A web page can tell the
+model to <code>remember</code> something and the runtime has no rule
+against it; the untrusted-content wrapper labels the page, not the tool
+call that follows. Lessons are the harder target — a promotion needs a
+candidate with two pieces of evidence or a manual
+<code>topic</code>/<code>content</code>, and a person's approval in
+<code>safe</code> mode — but the approval prompt shows
+<code>learning_promote({...})</code> truncated to 100 characters of JSON
+(<code>core/executor.py:414</code>), which is the topic and the first
+few words of the content. A person approving what they can see is
+approving a title.</p>
+<p><strong>Auto mode.</strong> <code>preapproved = mode == "auto"</code>
+is computed before the source is examined
+(<code>core/agent.py:2781</code>), so in <code>auto</code> the heartbeat
+can promote a lesson with no person present. Pacts are checked first and
+outrank the mode (<code>:2746-2763</code>), but the two pact types are a
+protected path and an external action; neither covers the memory
+directory unless the owner names it.</p>
+<p><strong>Concurrency.</strong> One lock per turn at the agent; SQLite
+with <code>check_same_thread=False</code> and no lock in
+<code>VectorMemory</code>, opened once per <code>MemoryManager</code>
+and shared by the swarm's thread pool during a broadcast — each agent
+has its own file, so the sharing is per scope. <code>chats.db</code> is
+WAL with a 15-second busy timeout.</p>
+<p><strong>Data loss.</strong> JSON state files are written through a
+temp file and <code>os.replace</code>; the lesson file is written
+directly; <code>events.jsonl</code> is appended.
+<code>.faded/faded.jsonl</code> is the only archive of anything the
+system removes, and <code>cleanup()</code> removes without one.</p>
+<p><strong>Privacy.</strong> <code>PRIVACY_MODE=strict</code> routes
+<code>main</code> turns to a local model when the main backend is cloud,
+so <em>"the personal memory does not leave the machine"</em>
+(<code>core/privacy.py:58-63</code>) — for the chat completion. The
+embedding provider is chosen separately, and with
+<code>EMBEDDING_PROVIDER=openai</code> every <code>remember</code> and
+every query embedding is sent to OpenAI regardless of the privacy mode;
+<code>rg -n 'PRIVACY' core/vector_memory.py core/memory.py</code>
+returns nothing.</p>
+<p><strong>Uncertainty.</strong> Not representable. There is no field
+for <em>not sure</em>, <em>rejected</em> or <em>superseded</em> on a
+row; the closest thing is a lesson in <code>.retired/</code>, which no
+read path consults and no promotion path checks.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>594 <code>def test_</code> functions across 69 files under
+<code>tests/</code>, run by GitHub Actions on push and pull request on
+Python 3.10 and 3.12 with <code>OPENVURP_OFFLINE_TESTS=1</code> and the
+workflow comment <em>"no key in CI: tests must never call a real
+model"</em>. The workflow's own header says 443 tests; the tree holds
+594. Nothing was run for this report.</p>
+<p><strong>What is tested well.</strong>
+<code>tests/test_memory_fade.py</code> (83 lines, five cases) pins the
+fade predicate from both sides: an old unrecalled row fades and lands in
+the archive with <code>faded_at</code>; a fresh row survives; a row
+backdated 90 days with <code>access_count=5</code> and a recent
+<code>accessed_at</code> survives; three rows in the protected
+categories backdated 400 days survive; a search bumps
+<code>access_count</code>. <code>tests/test_memory_per_agent.py</code>
+and <code>tests/test_learning_per_agent.py</code> (ten cases between
+them) are written as regression tests for the 2 September change, and
+their docstrings are the project's best documentation: <em>"FTS5 puts
+words in AND, and that made recall fail almost always"</em>, <em>"the
+tool has no idea who is calling: the scope is how it is told"</em>,
+<em>"a shared attribute would be overwritten by whoever starts a moment
+later"</em> with a three-thread test.
+<code>tests/test_learning_loop.py</code> checks that a Telegram token in
+a signal is redacted in both the event log and the daily note, that two
+identical tool failures make a promotable candidate, and that
+<em>"ricordando perché contava"</em> is not a <em>"ricorda"</em>.</p>
+<p><strong>Two things to know before quoting those suites.</strong></p>
+<p><em>The scope test can skip itself.</em>
+<code>test_what_one_remembers_the_other_does_not_find</code> opens with
+<code>if not amanda.remember(...): pytest.skip("memoria semantica non disponibile")</code>.
+<code>remember</code> returns <code>False</code> only when
+<code>VectorMemory</code> failed to construct, so on a Python with FTS5
+the test runs — but on one without it, the suite is green with the
+atlas's <code>negative_eval</code> case unexecuted.</p>
+<p><em>Three of the ten per-agent cases test the source, not the
+behaviour.</em>
+<code>test_remember_writes_into_the_store_of_whoever_calls</code>,
+<code>test_an_agent_gets_its_own_memories_back</code> and
+<code>test_the_swarm_declares_who_is_learning</code> use
+<code>inspect.getsource</code> and assert that
+<code>"current_scope()"</code>, <code>"_memories("</code>,
+<code>"recupera(member.id)"</code>, <code>"set_scope(member.id)"</code>
+appear in the text. They pin that the wiring exists; they cannot fail if
+the wiring is wrong. And
+<code>test_the_mirror_replays_only_its_own_corrections</code> asserts
+<code>altrui.harvest() == 0</code> beside <code>presi &gt;= 0</code> —
+the positive control is vacuous, so the case passes when neither Mirror
+harvests anything.</p>
+<p><strong>What is not tested.</strong> Nothing exercises
+<code>Mirror.run</code>
+(<code>rg -n '\.run\(' tests/test_learning_per_agent.py</code> returns
+nothing, and no other test imports <code>Mirror</code>). Nothing asserts
+a faded memory is absent from a subsequent <code>search</code>. Nothing
+tests <code>_relevant_lessons</code>, <code>cleanup()</code>,
+<code>learning_rollback</code>, the <code>force=True</code> path, or
+that a promoted lesson reaches a prompt. No retrieval quality test
+exists: <code>search</code> is asserted non-empty, never ranked. No eval
+harness, no benchmark, no committed run, and no paper:
+<code>rg -n -i 'arxiv|bibtex|citation|doi\.org' README.md ROADMAP.md docs</code>
+returns nothing.</p>
+<p>What a reader would want before trusting it: a test that types a
+correction to a roster agent through <code>make_chat_fn</code> and
+asserts it appears in that agent's <code>events.jsonl</code>; a test
+that fades a scoped store; a test that a Mirror probe for agent A is
+shown A's lessons; and one that a retired lesson cannot be promoted
+again.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Turn each correction into a replayed test with a
+streak.</strong> Key the case on the correction's text, put the lessons
+that should have absorbed it into the probe, judge with a second call,
+and report <em>"N of M no longer repeated"</em>. It is cheap — ten calls
+a night — and it converts <em>"the agent learned"</em> from a claim into
+a number that can go down.</li>
+<li><strong>Gate promotion on evidence you can count, and write the
+verdict into the artifact.</strong> Two occurrences, a confidence floor,
+a length band, a secret scan, a duplicate check, and a
+<code>provenienza:</code> line in the file's header. Then read the line
+back somewhere — this project does not, and section 5 shows what that
+costs.</li>
+<li><strong>Carry the scope in a context variable, not on the
+object.</strong> Parallel agents in one process will otherwise overwrite
+each other's identity. Set it around the tool call, reset it in a
+<code>finally</code>, and make the store's root a function of it.</li>
+<li><strong>Make the scope a path.</strong> A query cannot forget a
+<code>WHERE</code> clause that is not there; opening the wrong file is a
+harder mistake to make than omitting a predicate.</li>
+<li><strong>Redact on every append.</strong> One <code>redact</code>
+over tokens, keys, JWTs and <code>password=</code> pairs, applied by the
+event writer rather than by each caller.</li>
+<li><strong>Let a pact outrank the mode.</strong> A rule the owner set
+in conversation, checked by the runtime before the approval mode is
+consulted, is the only thing here that <code>auto</code> cannot switch
+off.</li>
+<li><strong>Fade on recall, archive on fade.</strong> Idle-time plus
+recall-count is a better forgetting rule than age alone, and an
+append-only archive of what was removed costs one line per row.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Scoping the store and not the hooks.</strong> If the
+identity of the writer is established by a context variable around tool
+execution, every writer that runs outside a tool — a turn hook, a daily
+note, a nightly job — needs the same treatment, and a test that reads
+the store cannot see the ones that missed it. Enumerate the writers
+before declaring the boundary done.</li>
+<li><strong>A verification stamp with no reader.</strong>
+<code>verificata=sì</code> that nothing consults is a comment. Worse, it
+is <em>sì</em> on the path with the least verification.</li>
+<li><strong>Reinforcement on every read.</strong> If retrieval bumps
+<code>access_count</code>, then appearing in a top-5 twice is
+immortality, and a memory that was wrong twice can never fade.</li>
+<li><strong>An approval prompt that truncates the thing being
+approved.</strong> A hundred characters of JSON is a title. Show the
+content, or do not call it review.</li>
+<li><strong>A mode flag decided before the caller is known.</strong>
+<code>preapproved = mode == "auto"</code> at the top of the function
+means an autonomous cycle inherits the owner's convenience setting.</li>
+<li><strong>Two lifetimes for one lesson.</strong> A file deleted at 90
+days and a vector row that never fades is a lesson that is gone from the
+place people look and present in the place the model looks.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a one-person system, and it says so: a wallet on your own
+machine, your agents, your files, no tenant, no team. Its maintenance
+budget is a single Python process and a <code>memory/</code> directory a
+person can read; the model is whatever you already pay for. The memory
+design is small enough to understand in an afternoon and the correction
+mirror is worth that afternoon. Adopt it as a personal operator whose
+agents you will correct through the platform chat and whose lessons you
+will approve by hand in <code>safe</code> mode; that is the path the
+code actually completes. Walk away if you need more than one person, if
+you need an agent's memory to forget anything, if you will run
+<code>auto</code> mode with the heartbeat on, or if you need a
+correction given to an agent to be a correction that agent learns from —
+as of the pinned commit it is not, and the tests that would tell the
+author are the ones that read source text instead of behaviour.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a direct chat with a roster agent meant to record the owner's
+corrections? The README says a correction becomes a test case; the route
+the page takes has no hook. If it is meant to, the fix is one call in
+<code>Swarm._speak</code> under the scope.</li>
+<li>Should <code>_relevant_lessons</code> read <code>self.dir</code>'s
+sibling <code>lessons/</code> rather than <code>self.memory_dir</code>?
+The Mirror docstring's promise depends on it.</li>
+<li>Is the daily note meant to be per scope? It is the one learning
+artifact the platform's retrieval reads, and it mixes every agent's
+feedback.</li>
+<li>Is the fade meant to run on agent stores?
+<code>_maybe_consolidate_memory</code> already enumerates scopes for the
+Mirror and not for the fade.</li>
+<li>Is <code>cleanup()</code>'s 90-day deletion of lesson files intended
+to coexist with the vector store's permanent <code>lesson</code>
+category?</li>
+<li>Were <code>VectorMemory.forget</code> and
+<code>MemoryManager.forget</code> ever reachable, and is a forget tool
+planned? The roadmap's memory section does not mention one.</li>
+<li>Does the <code>auto</code> mode intend to pre-approve
+<code>learning_promote</code> for the heartbeat, or should
+<code>requires_approval</code> tools be excluded from pre-approval when
+<code>source</code> is autonomous?</li>
+<li>Why does <code>pyproject.toml</code> still describe <em>"a personal
+AI agent that is born, grows with you, and can prove it"</em> at version
+5.0.0 after the 2 September commit <em>"openvurp è il posto, non
+qualcuno"</em>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage / schema</strong> —
+<code>core/vector_memory.py</code> (schema <code>:62-89</code>,
+<code>add</code> <code>:138-166</code>, <code>search</code>
+<code>:190-287</code>, <code>fade</code> <code>:319-369</code>,
+<code>forget</code> <code>:371-379</code>), <code>core/memory.py</code>
+(<code>MemoryManager</code>, <code>get_relevant</code>
+<code>:218-285</code>, <code>_iter_searchable_memories</code>
+<code>:359-410</code>, <code>cleanup</code> <code>:485-524</code>),
+<code>core/chat_store.py</code> (<code>_init_db</code>
+<code>:56-159</code>, <code>delete_agent</code> <code>:409-424</code>),
+<code>core/session_store.py</code>, <code>core/task_journal.py</code>,
+<code>core/agent_state.py</code>, <code>core/pacts.py</code>,
+<code>core/security/capability_lease.py</code>.</p>
+<p><strong>Scope</strong> — <code>core/scope.py</code>
+(<code>set_scope</code> <code>:24</code>, <code>scoped_dir</code>
+<code>:37</code>, <code>agent_home</code> <code>:49</code>),
+<code>core/swarm.py</code> (<code>run_tool</code> scope
+<code>:557-567</code>, <code>_memories</code> <code>:691-706</code>,
+<code>_speak</code> <code>:757-828</code>), <code>core/agent.py</code>
+(<code>memory_for</code> <code>:1309-1326</code>,
+<code>_remember_handler</code> <code>:1328-1340</code>).</p>
+<p><strong>Write path</strong> — <code>core/agent.py</code>
+(<code>remember</code> tool <code>:677-699</code>,
+<code>_record_learning_signal</code> <code>:3268-3284</code>,
+<code>_record_tool_learning</code> <code>:3286-3301</code>,
+<code>_finish_journal_turn</code> <code>:3232-3263</code>),
+<code>core/learning.py</code> (<code>detect_user_signal</code>
+<code>:102-126</code>, <code>record_event</code> <code>:193-208</code>,
+<code>verify_candidate</code> <code>:247-289</code>,
+<code>promote_candidate</code> <code>:291-343</code>,
+<code>rollback_lesson</code> <code>:345-378</code>,
+<code>_write_lesson</code> <code>:509-534</code>,
+<code>_append_daily_note</code> <code>:536-551</code>),
+<code>tools/learning.py</code>, <code>tools/journal.py</code>.</p>
+<p><strong>Retrieval / context assembly</strong> —
+<code>core/agent.py</code> (<code>_build_system_prompt</code> memory
+block <code>:1613-1639</code>, refresh triggers
+<code>:2388-2409</code>), <code>core/context.py</code>
+(<code>build_system_prompt</code> <code>:232-294</code>),
+<code>core/bootstrap.py</code> (<code>resolve_session_type</code>
+<code>:19-47</code>), <code>core/continuity.py</code>.</p>
+<p><strong>Background</strong> — <code>core/heartbeat.py</code>
+(<code>HeartbeatConfig</code> <code>:102-143</code>,
+<code>_run_heartbeat</code> <code>:249-338</code>,
+<code>_maybe_consolidate_memory</code> <code>:548-606</code>),
+<code>core/mirror.py</code> (<code>harvest</code> <code>:89-132</code>,
+<code>_relevant_lessons</code> <code>:136-161</code>, <code>run</code>
+<code>:163-211</code>), <code>main.py</code>
+(<code>start_heartbeat_background</code> <code>:272-364</code>).</p>
+<p><strong>Approval / audit</strong> —
+<code>core/security/policy.py</code> (<code>evaluate</code>
+<code>:50-96</code>), <code>core/executor.py</code>
+(<code>execute</code> <code>:28-184</code>,
+<code>_describe_action</code> <code>:402-414</code>),
+<code>core/agent.py</code> (<code>_execute_tool</code>
+<code>:2723-2901</code>), <code>core/security/audit.py</code>
+(<code>AuditLog</code>), <code>core/approvals.py</code>.</p>
+<p><strong>Integration</strong> — <code>dashboard.py</code>
+(<code>make_chat_fn</code> <code>:137-345</code>), <code>main.py</code>
+(<code>render_command</code> <code>:132-180</code>),
+<code>core/conversation.py</code>, <code>channels/</code>.</p>
+<p><strong>Tests</strong> — <code>tests/test_memory_fade.py</code>,
+<code>tests/test_memory_per_agent.py</code>,
+<code>tests/test_learning_per_agent.py</code>,
+<code>tests/test_learning_loop.py</code>,
+<code>tests/test_chat_store.py</code>,
+<code>tests/test_heartbeat.py</code>,
+<code>tests/test_policy_engine.py</code>,
+<code>tests/test_capability_leases.py</code>,
+<code>.github/workflows/tests.yml</code>.</p>
+<p><strong>Searches behind the absence claims in this report</strong>,
+run at the tree root:</p>
+<pre class="sh"><code>rg -n &#39;\.forget\(&#39; --type py . | grep -v &#39;^./tests&#39;
+rg -n &#39;name=&quot;memory_consolidate&quot;&#39; core tools main.py dashboard.py
+rg -n &#39;memory_consolidate&#39; core tools main.py dashboard.py
+rg -n &#39;verificata|forzata|provenienza&#39; core tools dashboard.py
+rg -n &#39;record_user_signal|learning&#39; core/swarm.py core/multiplayer.py core/conversation.py
+rg -n &#39;memory_manager =|agent_ref =&#39; main.py core dashboard.py
+rg -n &#39;redact&#39; core/memory.py core/vector_memory.py
+rg -n &#39;PRIVACY&#39; core/vector_memory.py core/memory.py
+rg -n -i &#39;lesson|mirror&#39; dashboard.py
+rg -n &#39;Mirror|\.run\(&#39; tests/test_learning_per_agent.py
+rg -n -i &#39;arxiv|bibtex|citation|doi\.org&#39; README.md ROADMAP.md docs
+grep -c &#39;def test_&#39; tests/*.py | awk -F: &#39;{s+=$2} END {print s}&#39;</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-03</strong> — <a
+href="https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c"><code class="commit-id" title="e3fbf01d28b2e7a293a431c45cd96d45e609985c">e3fbf01d…</code></a>
+— first reading, at 32 commits, on a commit dated 3 September 2026.
+Screened before anything was read: <strong>0 auto-run surfaces, 0
+build-time execution paths, 2 unpinned manifests</strong>
+(<code>pyproject.toml</code> and
+<code>channels/wa-bridge/package.json</code>, neither with a lockfile),
+both changed inside the seven-day cooldown, <code>pyproject.toml</code>
+on the day of the pinned commit. Nothing was installed and no
+<code>pip</code>, <code>npm</code>, <code>pytest</code> or
+<code>openvurp</code> command was run; the shell was blocked for part of
+the reading and the source was read file by file. Four marks:
+<code>scope_enforced</code> on the agent id as a directory resolved from
+a context variable on both arms; <code>audit_log</code> on the per-scope
+<code>events.jsonl</code> with <code>promotion</code> and
+<code>rollback</code> kinds and the <code>faded.jsonl</code> archive;
+<code>human_review</code> on the approval-gated
+<code>learning_promote</code> and <code>learning_rollback</code> in the
+default mode; <code>negative_eval</code> on the two-agent recall test
+with its positive control in the same case. <code>tombstone</code>,
+<code>trust_state</code> and <code>bitemporal</code> examined and
+withheld — the near-misses are named in sections 2 and 5. Three scope
+leaks on the learning side were established by reading the call graph
+from the page's direct-chat route, the daily-note writer and the
+Mirror's lesson reader; none is covered by a test.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

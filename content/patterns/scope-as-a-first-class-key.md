@@ -720,6 +720,20 @@ is the ordinary choice, and it is how a scoped store quietly serves one tenant's
 row to another. A key that is optional on one read path is worth exactly this
 much: a refusal when the ambiguity it was meant to prevent actually occurs.
 
+[openvurp](../../systems/openvurp/) is the case for enumerating the writers
+before declaring the key done. Its scope is an agent id held in a
+`contextvars.ContextVar`, set around every tool a roster agent runs and used as
+a directory — `memory/agents/<id>/` — so `remember` and recall cannot name
+another agent's rows, and a committed case proves that what one agent remembers
+the other does not find. Three writers run outside a tool and missed the key:
+the hook that turns an owner's *"hai sbagliato"* into a learning event lives
+in the platform's own turn loop, which a direct chat with an agent never enters,
+so corrections land in the platform's unscoped log; the daily note each feedback
+appends goes to the top-level memory directory, where the platform's retrieval
+reads it; and the nightly Mirror scores the *platform's* lessons into an agent's
+probe. A test that reads the scoped store passes on all three, because the leak
+is in the paths the store's key does not govern.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
