@@ -91,7 +91,7 @@ halen"* (`:1634`). `SemanticConceptsModule.teach` (`:2154`) is the layer with th
 chat bus, and it splits on the source. A non-user source — `wikipedia`,
 `auto_extract` — is only reported, never applied. A re-assertion by the user
 becomes a `pending_reactivation` and a spoken question: *"I had already rejected
-'<word>' → '<definition>'. Do you really want to confirm this again?"* Answering
+'`<word>`' → '`<definition>`'. Do you really want to confirm this again?"* Answering
 `nee` leaves the rejection standing. Answering `ja` sets `confirmed` and writes a
 `sense_reactivated` audit entry carrying the previous status and the reason
 *"Kevin bevestigde expliciet opnieuw"* (`:2207`).

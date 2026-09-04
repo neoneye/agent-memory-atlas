@@ -1,7 +1,7 @@
 ---
 title: "openvurp"
 eyebrow: "Per-agent memory in a wallet of agents"
-description: "A Python wallet of user-created agents where each agent keeps its own SQLite FTS5 memory, lessons and replayed corrections under memory/agents/<id>/, with a nightly fade that runs only on the platform store, a lesson-promotion gate a person approves in safe mode and the runtime pre-approves in auto mode, and user corrections that reach the platform's learning log rather than the agent's."
+description: "A Python wallet of user-created agents where each agent keeps its own SQLite FTS5 memory, lessons and replayed corrections under memory/agents/{id}/, with a nightly fade that runs only on the platform store, a lesson-promotion gate a person approves in safe mode and the runtime pre-approves in auto mode, and user corrections that reach the platform's learning log rather than the agent's."
 root: ../..
 page_kind: system
 source_name: "openvurp/openvurp"

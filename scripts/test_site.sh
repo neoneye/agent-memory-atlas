@@ -331,6 +331,18 @@ if ! python3 "$project_dir/scripts/check_heads.py" "$project_dir"; then
   exit 1
 fi
 
+# A placeholder written bare in prose — `<title>`, `<id>` — is valid markdown
+# and valid HTML, and the browser parses it as a tag: an unknown one renders as
+# nothing, and a body <title> swallows every section after it. Reported from
+# the live Engram Alpha page once already. Checked on the built HTML, which is
+# what the browser sees.
+if ! python3 "$project_dir/scripts/check_raw_tags.py" --self-test; then
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_raw_tags.py" "$site_dir"; then
+  exit 1
+fi
+
 # A mermaid diagram that fails to parse renders as "Syntax error in text" on the
 # published page and is invisible to every other check here — the markdown is
 # valid, the HTML is valid, and only the browser knows. Reported from the live

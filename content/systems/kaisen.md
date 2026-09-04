@@ -192,7 +192,7 @@ validation — snapshotting before every mutation.
 **KAI** is the interesting surface: a line-oriented stdio protocol
 (`python main.py --kai`) where another LLM sends `BASELINE`, `GOAL`, and then
 `ACCEPT <id>` to instantiate. The prompt for that step is *"review the spec JSON,
-then ACCEPT <id> (or CREATE <id> <spec-json> to edit it first)"* — a
+then ACCEPT `<id>` (or CREATE `<id>` `<spec-json>` to edit it first)"* — a
 draft-then-confirm gate before a project exists. It is a gate on configuration
 rather than on memory content, and the party reviewing is the calling model
 rather than a person, so the human-review mark does not apply; but the shape —

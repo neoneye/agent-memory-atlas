@@ -111,7 +111,7 @@ shape [resolve, don't just detect](../../patterns/resolve-not-just-detect/) asks
 for.
 
 **Deletion leaves a tombstone, and the tombstone is a note, not a gate.** A hard delete from the pane or
-the HTTP surface mints a `Tombstone`-role note — *"Removed: <title>"*, with
+the HTTP surface mints a `Tombstone`-role note — *"Removed: `<title>`"*, with
 the victim's type, id and the person's reason in the body — so the removal is
 on the record. What it does not do is stop the record being contradicted: the
 write boundary consults no tombstone, and the sweep that nominates look-alike
@@ -589,8 +589,8 @@ audit journal.
 **Deletion leaves a trace.** `delete_node_with_tombstone`
 (`engine.rs:1936-1983`) is the pane's default delete and the HTTP surface's
 `DELETE /nodes/{id}?tombstone=true&reason=…`: it mints a note of the first type
-carrying the `tombstone` role — title *"Removed: <victim title>"*, body
-*"Deleted <type> "<title>" (id …)"* with the reason under **Why** — and then
+carrying the `tombstone` role — title *"Removed: `<victim title>`"*, body
+*"Deleted `<type>` "`<title>`" (id …)"* with the reason under **Why** — and then
 cascades the victim. The tombstone is `Source::User`, stable durability so it
 never decays, carries no edge to the victim — *"the victim is gone and edges never
 dangle"* — and skips required-field enforcement. When the ontology declares no tombstone type
