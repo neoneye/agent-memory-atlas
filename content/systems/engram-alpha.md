@@ -6,15 +6,15 @@ root: ../..
 page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
-revision: f13d45a90391aa0d7a8986cfd79f8246ac607f9c
-revision_url: https://github.com/techtheist/engram/commit/f13d45a90391aa0d7a8986cfd79f8246ac607f9c
+revision: 9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
+revision_url: https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
 analyzed_at: 2026-09-04
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "the node record and the suspects queue | crates/engram-core/src/schema.rs, engine.rs | three durable anchors on `nodes` — `confirmed_at` (*\"last deliberate act; the unapproved trust anchor\"*), `approved_at` (*\"last explicit approval; trust anchors here\"*) and `demoted_at` (*\"when contradicting evidence landed\"*) — plus `trust_override`, a pin that holds trust constant and turns decay off, and a `suspects.status` of suspected/confirmed/dismissed carrying an `nli_label` hint of contradiction/entailment/neutral beside it. Trust is computed at read time from the anchors rather than stored as a score | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `decay_archives_only_stale_unapproved_claude_episodic_nodes`"
   bitemporal: "the node and edge records, and a graph-declared event clock on search | crates/engram-core/src/schema.rs, engine.rs:1850-1853,:1754-1790, timespec.rs:84-98, store.rs:562-567 | `valid_from` and `valid_until` on both tables, distinct from `created_at`: the record axis says when the store learned it, the validity axis when it held as canon. Setting `valid_until` is the supersede flow and nothing else — the comment says so at the call — and the audit action becomes `archived`; retrieval retains only rows whose `valid_until` is none. A second validity axis is the owner's: `search` reads its `after`/`before` window against `created_at` by default, and a `date_field` selector re-aims the same window at a date-kind custom field, or at a `from..to` pair with interval-overlap semantics, so a note captured today about something that held in 2019 answers a 2019 question. `check_clock` refuses an undeclared field or a clock with no window as an error rather than a dropped filter | crates/engram-core/src/tests.rs `resolve_replaces_archives_the_older_node`, `audit_logs_supersede_and_decay_as_archived`, `date_field_clock_filters_on_the_event_clock`, `date_field_clock_is_validated_loudly`, `sealed_indexed_fields_and_event_clock_still_work`"
   audit_log: "the store | crates/engram-core/src/schema.rs:66-81 | an insert-only `audit` table — *\"Rows are only ever inserted; `seq` is the pagination cursor\"* — one row per node or edge mutation over an eleven-value action vocabulary (created, updated, approved, unapproved, pinned, unpinned, demoted, undemoted, archived, deleted, imported), with full `before_json` and `after_json` snapshots, a `title` label that survives deletion, and the writing process stamped on the row: `origin` of pane/mcp/daemon/cli/library, `session_id`, `cwd`, `pid`, `version` | crates/engram-core/src/tests.rs `audit_journals_node_lifecycle_with_context`, `audit_journals_edges_with_sentence_labels`, `audit_logs_supersede_and_decay_as_archived`, `audit_page_keyset_pagination`, `audit_origin_stamp_and_session_fallback`, `audit_import_writes_one_summary_row`"
-  human_review: "the suspects queue, the pane and the pin | crates/engram-core/src/engine.rs (`resolve_suspect`, `approve`, `set_trust_override`, `nli_agreement`) | a write returns the look-alike pairs it queued so the assistant judges them in the same turn, and `resolve_suspect` records the verdict as conflict, replaces or dismiss. Pinning is a human act by construction — no MCP tool writes `trust_override` — and a pinned node ignores contradicting evidence until a person unpins it; approval is not: `approve_node` (crates/engram-mcp/src/lib.rs:1073-1080) restarts trust at 100% from the assistant's side, and its only restriction is the sentence in its description. The pane is the surface: stale nodes queue for a decision, conflicts are judged there, and the browser demo exercises all of it. `nli_agreement` scores the model hint against the human verdict and is deliberately excluded from the auto-tune inputs | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `audit_answered_nominates_but_never_resolves`"
+  human_review: "the suspects queue, the pane and the pin | crates/engram-core/src/engine.rs (`resolve_suspect`, `approve`, `set_trust_override`, `nli_agreement`) | a write returns the look-alike pairs it queued so the assistant judges them in the same turn, and `resolve_suspect` records the verdict as conflict, replaces or dismiss. Pinning is a human act by construction — no MCP tool writes `trust_override` — and a pinned node ignores contradicting evidence until a person unpins it; approval is not: `approve_node` (crates/engram-mcp/src/lib.rs:1102-1109) restarts trust at 100% from the assistant's side, and its only restriction is the sentence in its description. The pane is the surface: stale nodes queue for a decision, conflicts are judged there, and the browser demo exercises all of it. `nli_agreement` scores the model hint against the human verdict and is deliberately excluded from the auto-tune inputs | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `audit_answered_nominates_but_never_resolves`"
   negative_eval: "the offline evaluation harness | eval/src/generate.rs, eval/src/arms.rs, eval/results/floor-100.json, floor-500.json, floor-1500.json | the generated corpus carries a control arm of *\"questions about subjects that were never written\"* — one control subject per four tested facts, with chains generated before the controls so a phantom subject can never collide with a real one — and `controls_declined` is reported at every threshold in the committed floor sweeps, so a precision gain is never published without the recall it cost | the harness is the mechanism, and the three committed floor sweeps are its runs"
 stack_storage: "tepindb, sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -24,7 +24,7 @@ matrix:
   storage: "TepinDB — one self-describing `graph.tepin` file holding documents, keyword index and vectors, the birth format of every new graph since v0.6.2 — with the SQLite driver kept behind the same trait as a migration source; nodes and edges plus a suspects table, an append-only audit journal and a meta row that records the store's own encryption state"
   retrieval: "Vectors with a reranker that votes rather than decides, a keyword weight of 0.15 over a blind BM25 index that ranks identically sealed or plain, calibrated delivery — a score floor and a knee cut whose whole tradeoff curve is committed, with the abstention line fitted per graph from unanswerable probes built out of the graph's own vocabulary — a rank demotion at the cut for a second hit from a session already delivered, and one-hop neighbours attached to every hit"
   write: "A write returns the look-alike pairs it just queued, so the assistant judges them in the same turn — detection is local, judgment is the assistant's"
-  update_delete: "`replaces` and `conflicts-with` edges, `valid_until` for archival, an atomic `merge_nodes` that rehomes edges and archives victims behind a supersession, a suspects table resolved as conflict, replaces or dismiss, a human pin that disables decay, and a hard delete that mints a `Tombstone` note naming what was removed and why"
+  update_delete: "`replaces` and `conflicts-with` edges, `valid_until` for archival, an atomic `merge_nodes` that rehomes edges and archives victims behind a supersession, a suspects table resolved as conflict, replaces or dismiss, a human pin that disables decay, and a hard delete that mints a `Tombstone` note carrying what was removed, its text and why — a later write near it lands with a `tombstoned` warning and is never refused"
   scoping: "None inside a graph. Separation is one store per project, and a single machine-wide core process holds them all — so which project a session reads is a five-rung binding decision, not a predicate"
   integration: "An MCP server that is always a bridge to the machine core, a JetBrains plugin and a VS Code extension published to three marketplaces, plus a standalone pane with a live browser demo; `brief` called with a `project` rebinds a session whose client will not say where it is, and `setup` writes session-start brief hooks for Claude Code, Codex, Devin CLI and Bob"
   background: "Trust is computed at read time, so no pass has to have run for a read to be correct; a session-boundary `validate_graph` archives, retires, re-fits the two auto-tune dials and rescans, and drift scans surface for review while deliberately never demoting"
@@ -110,26 +110,37 @@ assistant's)."* Deterministic local detection, model judgment, in one turn — t
 shape [resolve, don't just detect](../../patterns/resolve-not-just-detect/) asks
 for.
 
-**Deletion leaves a tombstone, and the tombstone is a note, not a gate.** A hard delete from the pane or
-the HTTP surface mints a `Tombstone`-role note — *"Removed: `<title>`"*, with
-the victim's type, id and the person's reason in the body — so the removal is
-on the record. What it does not do is stop the record being contradicted: the
-write boundary consults no tombstone, and the sweep that nominates look-alike
-pairs skips tombstones by design. Section 9 prices that.
+**Deletion leaves a tombstone, and every write is checked against it.** A
+hard delete from the pane or the HTTP surface mints a `Tombstone`-role note —
+*"Removed: `<title>`"*, with the victim's type, id, the person's reason and, by
+default, the removed text in the body — and an assistant can author one and
+link it `replaces` a still-live victim. `write_warnings` then reports any
+tombstone-role node within the warning similarity of a new note, across types,
+as `{reason: "tombstoned", note: <why it was removed>}`; `search` names its
+tombstone hits, and `check_claim` files them under `retracted`. The write is
+never refused — *"models nominate, people judge"* — which is where section 9
+draws the line.
 
-**And the benchmark data is the most self-incriminating in the corpus.**
-`eval/results/bench-100.json` is a thirteen-row ablation with a full config stamp
-(`"embeddings_are_fake": false`, seed, embedder, reranker), a corpus profile, and
-a phrasing mix. The shipped configuration is labelled *in the data*:
-`"kw 0.15 · reranker VOTES   <- ships today"`. And it does not win:
+**And the benchmark data labels its own shipped row and publishes the columns
+it loses.** The current headline is the eval README's *Against every baseline*
+table, measured on 22 August 2026 on the shipped 0.8.10 stack over the enriched
+corpus, receipts `arms-0810-100-1500.json` and `posttune-0810-100-1500.json`.
+At 1,500 notes with every fact questioned:
 
 ```text
-rag (pure vectors)   weighted_recall 0.992   oblique 0.92   tokens_mean 2268.8
-engram (shipped)     weighted_recall 0.989   oblique 0.89   tokens_mean  373.1
+arm                  R@1    R@5   oblique   focus   noise   tok/query   FP
+rag (pure vectors)   0.66   0.79    0.45     0.10    0.91     2,721     1.00
+engram (shipped)     0.69   0.79    0.39     0.52    0.55       297     0.01
 ```
 
-They publish the row where plain RAG beats them on recall, and let the six-fold
-token reduction make the argument. `contradictions-500.json` separates the two
+Weighted for how often each phrasing occurs, engram reads 0.93 to rag's 0.91;
+pure vectors keep the oblique column at both sizes (0.45 to 0.39 here, 0.87 to
+0.85 at 100 notes) and tie or edge R@5, and the README prints those cells
+beside the nine-fold token gap rather than instead of it. The habit is older
+than the table: `bench-100.json`, the first committed run (3 August 2026, the
+0.7.2 instrument on the pre-enrichment corpus), labels its shipped row *in the
+data* — `"kw 0.15 · reranker VOTES   <- ships today"` — and records rag ahead of
+it on weighted recall, 0.992 to 0.989. `contradictions-500.json` separates the two
 ways contradiction detection fails — *"missed_by_retrieval": 0,
 "missed_by_judgment": 3* out of 100 — which is a diagnostic decomposition almost
 nobody reports, and `floor-500.json` sweeps twenty-one score floors with
@@ -362,7 +373,7 @@ and refuted.
   returning `suspects`, `MergeOutcome`.
 - **Ontology and per-graph config:** `crates/engram-core/src/config.rs` —
   `GraphConfig`, `OntologyConfig`, `TypeRoles` / `VerbRoles` (the `tombstone`
-  role at `:298-302`), `FieldDef` / `FieldKind` (`:51-96`), the `engram`,
+  role at `:298-307`), `FieldDef` / `FieldKind` (`:51-96`), the `engram`,
   `research`, `minimal` and `general` presets, `describe_ontology`.
 - **Trust:** `crates/engram-core/src/policy.rs` — the two principles, the
   anchors, `STALE_TRUST`, `trust_override`, the `AUTO_TUNE_*` bounds.
@@ -371,16 +382,18 @@ and refuted.
 - **Contradiction:** `crates/engram-core/src/nli.rs`;
   `hub.rs:104` gates on a live edge carrying the graph's contradiction role
   with `valid_until` unset.
-- **Consolidation:** `engine.rs` — `merge_nodes` (`:3040`).
-- **Deletion:** `engine.rs` — `delete_node` (`:1915`) and
-  `delete_node_with_tombstone` (`:1936`).
+- **Consolidation:** `engine.rs` — `merge_nodes` (`:3090`).
+- **Deletion and tombstones:** `engine.rs` — `delete_node` (`:1915`),
+  `delete_node_with_tombstone` (`:1947`), `write_warnings` (`:3308`),
+  `is_tombstone` (`:4854`), `tombstone_note` (`:4863`); `check_claim`'s
+  `retracted` bucket (`:3763`).
 - **Stores:** `store.rs`, `store_sqlite.rs`, `store_tepin.rs`, `migrate.rs`;
   `seal.rs` for the at-rest codec.
 - **Retrieval and delivery:** `rag.rs`, `cortex.rs`, `digest.rs`;
-  `Engine::search` (`engine.rs:2535`) applies the delivery floor, the knee cut
+  `Engine::search` (`engine.rs:2581`) applies the delivery floor, the knee cut
   and the session-diverse selection, then attaches one-hop neighbours
-  (`:2616`); `search_confidence` (`:2751`) returns `none | weak | strong`;
-  `time_filter_clocked` (`:2692`) and `check_clock` (`:1754`) are the temporal
+  (`:2662`); `search_confidence` (`:2797`) returns `none | weak | strong`;
+  `time_filter_clocked` (`:2738`) and `check_clock` (`:1754`) are the temporal
   grammar's boundary.
 - **Redaction:** `redact.rs` — `scrub` and, for custom fields, `scrub_fields`.
 - **Surfaces:** `crates/engram-mcp/`, `crates/engram-http/`, `frontend/`,
@@ -446,17 +459,17 @@ threshold constants, and the brief composition — and three of its rules are
 worth naming because each closes a way the reshape could strand data.
 
 - **A rename is the migration gesture, not a relabel.** `rename_type` and
-  `rename_verb` (`engine.rs:2427`) move the stored rows along with the name, and
+  `rename_verb` (`engine.rs:2473`) move the stored rows along with the name, and
   the editor's card shows how many nodes will follow.
 - **A save cannot drop a vocabulary that still holds data.** Removing a type
   that has nodes fails with *"type … still has N node(s) — rename it (bulk
-  retype) or retype them first"* (`engine.rs:2299`), and the same for verbs on
+  retype) or retype them first"* (`engine.rs:2345`), and the same for verbs on
   edges. There is no path where an edit orphans knowledge.
 - **The hard invariants survive every configuration.** Exactly one supersession
   verb and one contradiction verb must exist, or validation refuses the
   document — the graph cannot be configured into inertness. A type carrying the
   `tombstone` role may not also carry `worklist` or `anchor`
-  (`config.rs:1461-1466`), because *"a tombstone is a closed record of a
+  (`config.rs:1466-1471`), because *"a tombstone is a closed record of a
   removal — it can't be open."*
 
 Two smaller per-graph features sit in the same document. **Version tracking**
@@ -476,7 +489,8 @@ node type.
 Vectors from `bge-small-en-v1.5`, a keyword weight of 0.15, and a reranker
 (`jina-reranker-v1-turbo-en`) that **votes rather than decides** — a distinction
 the ablation measures rather than asserts. Across every keyword weight in
-`bench-100.json`, `reranker VOTES` beats `reranker DECIDES` on weighted recall
+`bench-100.json` — the 3 August 2026 ablation on the first instrument's 100-note
+corpus — `reranker VOTES` beats `reranker DECIDES` on weighted recall
 (0.991 vs 0.980 at the shipped 0.15) and on oblique questions (0.91 vs 0.80). A
 reranker allowed to overrule the retriever loses obliquely-phrased hits; one that
 contributes a vote does not.
@@ -493,7 +507,7 @@ Trust multiplies the score, so a stale node is buried rather than filtered — i
 stays findable, which is what makes the review queue meaningful.
 
 **Delivery is a second stage with two cuts, both reranker-gated.** `search`
-(`engine.rs:2535`) fetches wide, reranks, drops everything under
+(`engine.rs:2581`) fetches wide, reranks, drops everything under
 `policy.delivery_floor`, truncates to the limit, then applies a *knee* cut: sort
 the delivered score curve, find the largest relative drop over
 `policy.knee_cliff`, and discard the tail below it. The reasoning for gating
@@ -586,18 +600,26 @@ Correction is a family of moves rather than a delete: a `replaces` edge, a
 approving, pinning, or dismissing a suspect. Every one of them appends to the
 audit journal.
 
-**Deletion leaves a trace.** `delete_node_with_tombstone`
-(`engine.rs:1936-1983`) is the pane's default delete and the HTTP surface's
-`DELETE /nodes/{id}?tombstone=true&reason=…`: it mints a note of the first type
-carrying the `tombstone` role — title *"Removed: `<victim title>`"*, body
-*"Deleted `<type>` "`<title>`" (id …)"* with the reason under **Why** — and then
-cascades the victim. The tombstone is `Source::User`, stable durability so it
-never decays, carries no edge to the victim — *"the victim is gone and edges never
-dangle"* — and skips required-field enforcement. When the ontology declares no tombstone type
-the call degrades to a plain delete — *"the config decides, never the
-caller"* — and there is no MCP path to either delete. The role's own definition
-says what it is for: *"records that knowledge was deliberately removed so it
-isn't re-learned."* Whether anything enforces that is section 9's question.
+**Deletion leaves a trace, and the trace carries the text.**
+`delete_node_with_tombstone` (`engine.rs:1947-2029`) is the pane's default
+delete and the HTTP surface's `DELETE /nodes/{id}?tombstone=true&reason=…`: it
+mints a note of the first type carrying the `tombstone` role — title
+*"Removed: `<victim title>`"*, body *"Deleted `<type>` "`<title>`" (id …)"* with
+the reason under **Why** and, with `keep_text` (the default), the victim's body
+under **Removed text**, its tags and its code refs — and then cascades the
+victim. The comment says why the text rides along: a mint that embedded *"only
+the victim's title plus the reason"* meant *"a paraphrase of the buried CONTENT
+landed nowhere near it"*, so the marker *"guarded the headline, not the
+knowledge."* `keep_text=false` is the purge shape, identity and reason only.
+The tombstone is `Source::User`, stable durability so it never decays, takes
+over the victim's `about` edges to anchor nodes so the removal stays attached to
+the code subject it happened under, carries no other edge — *"edges never
+dangle"* — and skips required-field enforcement. When the ontology declares no
+tombstone type the call degrades to a plain delete, *"the config decides, never
+the caller"*. Hard delete has no MCP path; the assistant's version is to
+`add_note` a `Tombstone` and `link` it `replaces` the victim, which archives the
+victim behind the marker through the ordinary supersession machinery
+(`an_authored_tombstone_that_replaces_its_victim_buries_it_traceably`).
 
 **`merge_nodes` is the consolidation move**, and its edge cases are where the
 design shows. Several notes stating one truth collapse into one survivor: tags
@@ -653,7 +675,7 @@ process model. A session that cannot establish its workspace does not fail; it
 reads and writes somebody else's graph — specifically the home one. The
 mitigation is `brief` called with a `project`: a name, an id or any absolute
 path inside a registered root rebinds the running session and returns that
-project's brief in one call (`crates/engram-mcp/src/lib.rs:844-870`), refusing
+project's brief in one call (`crates/engram-mcp/src/lib.rs:871-897`), refusing
 an unregistered selector *with the known roster* and leaving the binding
 untouched when it refuses, so a hallucinated path can never birth a graph.
 Sessions stranded on rungs four or five get a one-line hint above their brief
@@ -677,7 +699,7 @@ place by construction and in another by instruction. It writes nodes and edges,
 and it judges the suspects the write hands back. Pinning is human-only in the
 code: no MCP tool writes `trust_override`, retrieval moves nothing, and a pinned
 node ignores the assistant's evidence entirely until a human unpins it.
-Approval is not: `approve_node` is an MCP tool (`lib.rs:1073-1080`) that
+Approval is not: `approve_node` is an MCP tool (`lib.rs:1102-1109`) that
 restarts trust at 100%, `Engine::approve` (`engine.rs:1873`) takes no source and
 gates on nothing, and the whole restraint is the tool description — *"ONLY on
 explicit user demand or after word-by-word verification against current
@@ -724,35 +746,48 @@ the answerable questions lost at each threshold. The LongMemEval run extends the
 same discipline onto a corpus the project did not write: 30 labelled
 never-answerable questions, scored on whether an answer went out unwarned.
 
-**`tombstone` — withheld, and this is the near-miss worth reading.** The
-`Tombstone` type is a durable, user-minted record of a removal, keyed on the
-victim's title in its own title, stable so it never decays, and its role
-definition states the purpose this mark exists for: *"so it isn't re-learned."*
-What withholds the mark is that nothing on the write path reads it. The
-near-duplicate short-circuit in `add_node_checked` (`engine.rs:2843-2888`)
-matches only a live node *of the same type*, so a re-authored `Decision` never
-lands on its `Tombstone`; `write_warnings` (`:3247`) warns only about superseded
-or in-conflict neighbours, which a tombstone is neither; the conflict sweep
-iterates `scannable_nodes` (`store.rs:406-418`), which excludes tombstones by
-design — *"a tombstone contradicts its victim by DESIGN — that's its job, not a
-conflict to surface"* — and `tombstones_sit_out_the_conflict_scan` asserts
-exactly that. The one accidental path is the write-time nomination:
-`suspects_near` (`engine.rs:4118`) filters anchors, archived rows, linked and
-already-queued pairs and not the tombstone role, so a re-assertion whose
-embedding clears `conflict_suspect_similarity` against *"Removed: …"* plus a
-body beginning *"Deleted Decision"* is handed back to the assistant as a
-look-alike pair to judge. That is a nomination that depends on cosine distance,
-not a refusal keyed on the value; and the brief never shows tombstones
-(`hidden_brief()` on the type), so the only other channel is a search hit and
-the assistant's obedience to *"don't resurrect it"*. A dismissed suspect and a
-`replaces` edge remain keyed on ids. The design has the record and not the gate.
+**`tombstone` — withheld, on one word of the definition, and the near-miss is
+the narrowest in this report.** The `Tombstone` type is a durable record of a
+removal that carries the removed text, tags and code refs, stable so it never
+decays, and it is consulted on every write: `write_warnings`
+(`engine.rs:3308-3340`) walks the new note's nearest neighbours above
+`policy.warn_similarity` (0.70) and reports any tombstone-role node among them,
+across types, as a `tombstoned` warning carrying the tombstone's own account of
+why — the comment names the gap it closes, *"a Decision re-deriving a
+tombstoned Decision sailed through"*. `search` counts tombstone-role hits and
+appends a `tombstone_note` so a compact scan cannot read *"Removed: X"* as a
+memory of X; `check_claim` sorts tombstone hits out by role before the NLI runs
+and files them under `retracted` (`:3763`); the write-time canon check and the
+suspect recorder skip tombstones on both sides so a `replaces` verdict can never
+archive the marker (`:2997`, `:4216`). Seven committed tests cover the 0.9.2 behaviour, and the one
+that matters here asserts the boundary in its own words:
+`writes_near_a_tombstone_warn_tombstoned_across_types` panics on anything but
+`Created` — *"a tombstone never blocks a write — it warns."* The definition this
+atlas applies asks for a record keyed on the value *"so later extraction cannot
+re-assert it"*; here the re-assertion is created as live canon, ranked, briefed
+and delivered like any other note, with a warning on the write result that the
+writer may act on or not. The changelog states the choice as a principle —
+*"The write is never blocked: models nominate, people judge"* — and it is
+coherent with the rest of the trust model, where the assistant judges and a
+person decides. It is not the mark. Two shapes the project already has would
+earn it without touching that principle: the same-type near-duplicate
+short-circuit, extended to a tombstone neighbour, would return `Matched` with
+the tombstone's reason instead of creating — the collided form, a nomination
+that leaves nothing live to judge later; or a note created with a `tombstoned`
+warning could be held out of the brief and ranked as stale until a person
+confirms it — the suppressed form. What is *not* a near-miss any more: the
+brief never shows tombstones (`hidden_brief()`), and the key is an embedding
+neighbourhood, so a paraphrase below 0.70 lands with no warning — a threshold
+the purge shape (`keep_text=false`) makes easier to fall under, because it
+embeds the headline alone. A dismissed suspect and a `replaces` edge remain
+keyed on ids.
 
 **`scope_enforced` — not found.** No scope key on either table.
 
 Other observations:
 
 - **`redact.rs` drives the write path.** `redact::scrub` runs on title and body
-  in the node write paths (`engine.rs:290-291`, `:2844-2845`) and `scrub_fields`
+  in the node write paths (`engine.rs:290-291`, `:2890-2891`) and `scrub_fields`
   on every string-valued custom field: named patterns
   (PEM/AWS/JWT/GitHub/Slack/OpenAI/`key=value`) plus a high-entropy backstop
   judged per separator-delimited segment (segments under twelve chars abstain) so
@@ -808,6 +843,9 @@ configurations with a runtime stamp (`"embeddings_are_fake": false`, seed,
 embedder, reranker), a corpus profile down to the verb mix and code-ref
 distribution, and a phrasing mix of 45% lexical, 45% paraphrase, 10% oblique. One
 row reads `"kw 0.15 · reranker VOTES   <- ships today"`, and pure RAG beats it on
+recall. It is the first committed run, 3 August 2026, on the pre-enrichment
+corpus; the current headline is the 22 August table in section 1, where the
+shipped row wins the weighted headline and R@1 and pure vectors keep oblique
 recall. Publishing the row you lose, beside the row you ship, in the machine-
 readable artifact, is the strongest form of the discipline this atlas credits
 [Perseus Vault](../perseus-vault/) and [memsem](../memsem/) for.
@@ -1178,9 +1216,15 @@ which signals are allowed to change what an agent believes.
 - **What does the dial-three floor fit read on the chat register?** The project
   names the missing artifact itself — a LongMemEval floor sweep with raw score
   curves — and has said the auto-tune dial waits for it.
-- **How often is a tombstoned claim re-learned?** The role's purpose is that it
-  is not, nothing on the write path enforces it, and no committed test or
-  receipt writes a claim, tombstones it and re-asserts it.
+- **How often does a `tombstoned` warning stop a re-assertion?** The write
+  lands either way; whether the writer then deletes, rewrites or ignores it is
+  the model's decision and nothing in the tree counts it. The audit journal has
+  the material — a `created` row with a `tombstoned` warning followed by a
+  `deleted` row or not — so the number is computable from a live graph.
+- **What fraction of resurrections fall under the warning line?** The key is
+  cosine similarity to the tombstone at 0.70, and a rewrite that keeps the
+  claim and changes the words is exactly the case a value key exists for; no
+  committed probe measures the miss rate.
 - **What happens to a pinned node that is genuinely wrong?** Evidence events skip
   it by design; contradictions surface for review, and nothing forces the review.
 
@@ -1248,10 +1292,11 @@ which signals are allowed to change what an agent believes.
 - `scripts/mem-probe.sh`, `scripts/screenshots.sh`
 
 **Searches that ground the absence claims above** (run at the pinned commit):
-- `rg -n 'roles.tombstone' crates/engram-core/src/` — hits in `config.rs`,
-  `store.rs:415`, `store_sqlite.rs:1142` and `engine.rs:3874` (answer
-  candidacy) only; none in `add_node_checked`, `write_warnings` or
-  `suspects_near`.
+- `rg -n 'is_tombstone|roles.tombstone' crates/engram-core/src/engine.rs` —
+  `write_warnings` (`:3325`), the canon check (`:2997`), `check_claim`
+  (`:3769`), answer candidacy (`:3965`), `suspects_near` (`:4216`, `:4232`),
+  and the helper (`:4854`); no site refuses, collides or hides a write on a
+  tombstone match — every consumer warns, labels, or skips.
 - `rg -n 'trust_override|set_trust_override' crates/engram-mcp/src/lib.rs` —
   one hit, the read-only `pinned` filter in `list_nodes`; no tool sets it.
 - `rg -n 'async fn approve_node' crates/engram-mcp/src/lib.rs` — one hit.
@@ -1263,10 +1308,15 @@ which signals are allowed to change what an agent believes.
 - `rg -n -i 'arxiv|bibtex|@article|doi\.org' README.md docs/ eval/` — the
   TAA-k citation in the eval README and LongMemEval; no paper for engram
   itself, and no `CITATION.cff`.
-- `rg -n 'tombstone' crates/engram-core/src/tests.rs` — four cases, none of
-  which writes a claim after its tombstone and asserts on the outcome.
+- `rg -n '^fn .*tombston' crates/engram-core/src/tests.rs` — twelve cases;
+  the two that write a claim after its tombstone
+  (`writes_near_a_tombstone_warn_tombstoned_across_types`,
+  `an_authored_tombstone_that_replaces_its_victim_buries_it_traceably`) assert
+  `Created` with a `tombstoned` warning, never a refusal.
 
 ## History
+
+**2026-09-04** — [`9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357`](https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357) — re-pinned the same day at release v0.9.2, three commits on. Screened again: three auto-run surfaces, five files inside the seven-day cooldown, two unpinned surfaces; nothing installed or run. v0.9.2 is the write-path half of the tombstone role: `write_warnings` reports any tombstone-role neighbour of a new note, across types, as `tombstoned` with the removal's reason; the delete mint carries the victim's body, tags and code refs by default and rehomes its `about` edges; `search` names its tombstone hits; `check_claim` gains a `retracted` bucket; the suspect recorder skips tombstones on both sides; and the assistant's bury gesture — author a `Tombstone`, `link` it `replaces` the victim — is documented and tested. `tombstone` stays withheld on the one clause the project declines by design: the write is created and never refused, so the record is consulted and the re-assertion is not prevented. The section 9 paragraph now names the two shapes already in the engine that would earn it. The benchmark paragraph in section 1 is rewritten around the eval README's *Against every baseline* table and its 22 August receipts; `bench-100.json` is kept as the 3 August first run where the shipped-row label appears, dated as such, and the corpus superlative is dropped. Sections 6 and 10 date the same file.
 
 **2026-09-04** — [`f13d45a90391aa0d7a8986cfd79f8246ac607f9c`](https://github.com/techtheist/engram/commit/f13d45a90391aa0d7a8986cfd79f8246ac607f9c) — re-pinned at release v0.9.1 (142 commits, ~31,000 lines of Rust across four crates, ~45,000 with their test modules). Screened again first: three auto-run surfaces (`.claude-plugin/`, `.claude/settings.json`, `hooks/`), four files inside the seven-day cooldown, two unpinned surfaces, a `CLAUDE.md` addressed to a reading agent; nothing was installed, built or run. No capability mark moves. What moved upstream: a `tombstone` type role and a delete that mints one, custom fields with a graph-declared event clock on search (`date_field`), at-rest encryption as two machine switches with a blind keyword index that keeps BM25 identical, session-diverse delivery at the cut, `brief` absorbing `set_project`, installers that stop after fetching the binary, setup writers for Devin CLI, Codex, Windsurf and Bob, three end-to-end suites over the real binary, and the sessions bench, the delivery-floor bake-off and the 0.9.0 regression receipts under `eval/results/`. The `bitemporal` evidence gains the second axis; `tombstone` is withheld with the near-miss named — the record exists and the write path does not read it. Three published claims were wrong at every earlier pin and are corrected in the body: approval was described as an act the assistant cannot perform, and `approve_node` has been an MCP tool since the first reading with no source gate behind it; storage was described as SQLite with a TepinDB backend beside it, and every new graph has been born on TepinDB since v0.6.2 (21 July 2026), with the SQLite driver a migration source — the project's own docs said `graph.db` until the v0.9.1 sweep, which is where the reading took it from; and the open question *"does the TepinDB backend match the SQLite one … no parity comparison found"* named a `store_battery` conformance test that has run both backends since v0.6.0. The stack row is promoted from seeded to reviewed with a graph arm for the one-hop neighbours every hit carries.
 

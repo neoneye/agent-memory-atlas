@@ -120,9 +120,9 @@ write.</p>
               <strong>techtheist/engram</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/f13d45a90391aa0d7a8986cfd79f8246ac607f9c" title="f13d45a90391aa0d7a8986cfd79f8246ac607f9c">
+            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357" title="9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357">
               <span>Analyzed revision</span>
-              <code>f13d45a9…</code>
+              <code>9a24db99…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -232,26 +232,39 @@ assistant's)."</em> Deterministic local detection, model judgment, in
 one turn — the shape <a
 href="../../patterns/resolve-not-just-detect/">resolve, don't just
 detect</a> asks for.</p>
-<p><strong>Deletion leaves a tombstone, and the tombstone is a note, not
-a gate.</strong> A hard delete from the pane or the HTTP surface mints a
-<code>Tombstone</code>-role note — <em>"Removed:
-<code>&lt;title&gt;</code>"</em>, with the victim's type, id and the
-person's reason in the body — so the removal is on the record. What it
-does not do is stop the record being contradicted: the write boundary
-consults no tombstone, and the sweep that nominates look-alike pairs
-skips tombstones by design. Section 9 prices that.</p>
-<p><strong>And the benchmark data is the most self-incriminating in the
-corpus.</strong> <code>eval/results/bench-100.json</code> is a
-thirteen-row ablation with a full config stamp
-(<code>"embeddings_are_fake": false</code>, seed, embedder, reranker), a
-corpus profile, and a phrasing mix. The shipped configuration is
-labelled <em>in the data</em>:
-<code>"kw 0.15 · reranker VOTES   &lt;- ships today"</code>. And it does
-not win:</p>
-<pre class="text"><code>rag (pure vectors)   weighted_recall 0.992   oblique 0.92   tokens_mean 2268.8
-engram (shipped)     weighted_recall 0.989   oblique 0.89   tokens_mean  373.1</code></pre>
-<p>They publish the row where plain RAG beats them on recall, and let
-the six-fold token reduction make the argument.
+<p><strong>Deletion leaves a tombstone, and every write is checked
+against it.</strong> A hard delete from the pane or the HTTP surface
+mints a <code>Tombstone</code>-role note — <em>"Removed:
+<code>&lt;title&gt;</code>"</em>, with the victim's type, id, the
+person's reason and, by default, the removed text in the body — and an
+assistant can author one and link it <code>replaces</code> a still-live
+victim. <code>write_warnings</code> then reports any tombstone-role node
+within the warning similarity of a new note, across types, as
+<code>{reason: "tombstoned", note: &lt;why it was removed&gt;}</code>;
+<code>search</code> names its tombstone hits, and
+<code>check_claim</code> files them under <code>retracted</code>. The
+write is never refused — <em>"models nominate, people judge"</em> —
+which is where section 9 draws the line.</p>
+<p><strong>And the benchmark data labels its own shipped row and
+publishes the columns it loses.</strong> The current headline is the
+eval README's <em>Against every baseline</em> table, measured on 22
+August 2026 on the shipped 0.8.10 stack over the enriched corpus,
+receipts <code>arms-0810-100-1500.json</code> and
+<code>posttune-0810-100-1500.json</code>. At 1,500 notes with every fact
+questioned:</p>
+<pre class="text"><code>arm                  R@1    R@5   oblique   focus   noise   tok/query   FP
+rag (pure vectors)   0.66   0.79    0.45     0.10    0.91     2,721     1.00
+engram (shipped)     0.69   0.79    0.39     0.52    0.55       297     0.01</code></pre>
+<p>Weighted for how often each phrasing occurs, engram reads 0.93 to
+rag's 0.91; pure vectors keep the oblique column at both sizes (0.45 to
+0.39 here, 0.87 to 0.85 at 100 notes) and tie or edge R@5, and the
+README prints those cells beside the nine-fold token gap rather than
+instead of it. The habit is older than the table:
+<code>bench-100.json</code>, the first committed run (3 August 2026, the
+0.7.2 instrument on the pre-enrichment corpus), labels its shipped row
+<em>in the data</em> —
+<code>"kw 0.15 · reranker VOTES   &lt;- ships today"</code> — and
+records rag ahead of it on weighted recall, 0.992 to 0.989.
 <code>contradictions-500.json</code> separates the two ways
 contradiction detection fails — <em>"missed_by_retrieval": 0,
 "missed_by_judgment": 3</em> out of 100 — which is a diagnostic
@@ -501,7 +514,7 @@ returning <code>suspects</code>, <code>MergeOutcome</code>.</li>
 <code>crates/engram-core/src/config.rs</code> —
 <code>GraphConfig</code>, <code>OntologyConfig</code>,
 <code>TypeRoles</code> / <code>VerbRoles</code> (the
-<code>tombstone</code> role at <code>:298-302</code>),
+<code>tombstone</code> role at <code>:298-307</code>),
 <code>FieldDef</code> / <code>FieldKind</code> (<code>:51-96</code>),
 the <code>engram</code>, <code>research</code>, <code>minimal</code> and
 <code>general</code> presets, <code>describe_ontology</code>.</li>
@@ -519,22 +532,27 @@ anchors, <code>STALE_TRUST</code>, <code>trust_override</code>, the
 gates on a live edge carrying the graph's contradiction role with
 <code>valid_until</code> unset.</li>
 <li><strong>Consolidation:</strong> <code>engine.rs</code> —
-<code>merge_nodes</code> (<code>:3040</code>).</li>
-<li><strong>Deletion:</strong> <code>engine.rs</code> —
-<code>delete_node</code> (<code>:1915</code>) and
-<code>delete_node_with_tombstone</code> (<code>:1936</code>).</li>
+<code>merge_nodes</code> (<code>:3090</code>).</li>
+<li><strong>Deletion and tombstones:</strong> <code>engine.rs</code> —
+<code>delete_node</code> (<code>:1915</code>),
+<code>delete_node_with_tombstone</code> (<code>:1947</code>),
+<code>write_warnings</code> (<code>:3308</code>),
+<code>is_tombstone</code> (<code>:4854</code>),
+<code>tombstone_note</code> (<code>:4863</code>);
+<code>check_claim</code>'s <code>retracted</code> bucket
+(<code>:3763</code>).</li>
 <li><strong>Stores:</strong> <code>store.rs</code>,
 <code>store_sqlite.rs</code>, <code>store_tepin.rs</code>,
 <code>migrate.rs</code>; <code>seal.rs</code> for the at-rest
 codec.</li>
 <li><strong>Retrieval and delivery:</strong> <code>rag.rs</code>,
 <code>cortex.rs</code>, <code>digest.rs</code>;
-<code>Engine::search</code> (<code>engine.rs:2535</code>) applies the
+<code>Engine::search</code> (<code>engine.rs:2581</code>) applies the
 delivery floor, the knee cut and the session-diverse selection, then
-attaches one-hop neighbours (<code>:2616</code>);
-<code>search_confidence</code> (<code>:2751</code>) returns
+attaches one-hop neighbours (<code>:2662</code>);
+<code>search_confidence</code> (<code>:2797</code>) returns
 <code>none | weak | strong</code>; <code>time_filter_clocked</code>
-(<code>:2692</code>) and <code>check_clock</code> (<code>:1754</code>)
+(<code>:2738</code>) and <code>check_clock</code> (<code>:1754</code>)
 are the temporal grammar's boundary.</li>
 <li><strong>Redaction:</strong> <code>redact.rs</code> —
 <code>scrub</code> and, for custom fields,
@@ -617,19 +635,19 @@ reshape could strand data.</p>
 <ul>
 <li><strong>A rename is the migration gesture, not a relabel.</strong>
 <code>rename_type</code> and <code>rename_verb</code>
-(<code>engine.rs:2427</code>) move the stored rows along with the name,
+(<code>engine.rs:2473</code>) move the stored rows along with the name,
 and the editor's card shows how many nodes will follow.</li>
 <li><strong>A save cannot drop a vocabulary that still holds
 data.</strong> Removing a type that has nodes fails with <em>"type …
 still has N node(s) — rename it (bulk retype) or retype them first"</em>
-(<code>engine.rs:2299</code>), and the same for verbs on edges. There is
+(<code>engine.rs:2345</code>), and the same for verbs on edges. There is
 no path where an edit orphans knowledge.</li>
 <li><strong>The hard invariants survive every configuration.</strong>
 Exactly one supersession verb and one contradiction verb must exist, or
 validation refuses the document — the graph cannot be configured into
 inertness. A type carrying the <code>tombstone</code> role may not also
 carry <code>worklist</code> or <code>anchor</code>
-(<code>config.rs:1461-1466</code>), because <em>"a tombstone is a closed
+(<code>config.rs:1466-1471</code>), because <em>"a tombstone is a closed
 record of a removal — it can't be open."</em></li>
 </ul>
 <p>Two smaller per-graph features sit in the same document.
@@ -649,7 +667,8 @@ session-to-session memory without a new node type.</p>
 0.15, and a reranker (<code>jina-reranker-v1-turbo-en</code>) that
 <strong>votes rather than decides</strong> — a distinction the ablation
 measures rather than asserts. Across every keyword weight in
-<code>bench-100.json</code>, <code>reranker VOTES</code> beats
+<code>bench-100.json</code> — the 3 August 2026 ablation on the first
+instrument's 100-note corpus — <code>reranker VOTES</code> beats
 <code>reranker DECIDES</code> on weighted recall (0.991 vs 0.980 at the
 shipped 0.15) and on oblique questions (0.91 vs 0.80). A reranker
 allowed to overrule the retriever loses obliquely-phrased hits; one that
@@ -668,7 +687,7 @@ filtered — it stays findable, which is what makes the review queue
 meaningful.</p>
 <p><strong>Delivery is a second stage with two cuts, both
 reranker-gated.</strong> <code>search</code>
-(<code>engine.rs:2535</code>) fetches wide, reranks, drops everything
+(<code>engine.rs:2581</code>) fetches wide, reranks, drops everything
 under <code>policy.delivery_floor</code>, truncates to the limit, then
 applies a <em>knee</em> cut: sort the delivered score curve, find the
 largest relative drop over <code>policy.knee_cliff</code>, and discard
@@ -774,24 +793,33 @@ validate."</em> A probability is a hint, not a ruling.</p>
 stamps <code>demoted_at</code>, closing <code>valid_until</code> to
 archive, approving, pinning, or dismissing a suspect. Every one of them
 appends to the audit journal.</p>
-<p><strong>Deletion leaves a trace.</strong>
-<code>delete_node_with_tombstone</code>
-(<code>engine.rs:1936-1983</code>) is the pane's default delete and the
+<p><strong>Deletion leaves a trace, and the trace carries the
+text.</strong> <code>delete_node_with_tombstone</code>
+(<code>engine.rs:1947-2029</code>) is the pane's default delete and the
 HTTP surface's
 <code>DELETE /nodes/{id}?tombstone=true&amp;reason=…</code>: it mints a
 note of the first type carrying the <code>tombstone</code> role — title
 <em>"Removed: <code>&lt;victim title&gt;</code>"</em>, body <em>"Deleted
 <code>&lt;type&gt;</code> "<code>&lt;title&gt;</code>" (id …)"</em> with
-the reason under <strong>Why</strong> — and then cascades the victim.
-The tombstone is <code>Source::User</code>, stable durability so it
-never decays, carries no edge to the victim — <em>"the victim is gone
-and edges never dangle"</em> — and skips required-field enforcement.
-When the ontology declares no tombstone type the call degrades to a
-plain delete — <em>"the config decides, never the caller"</em> — and
-there is no MCP path to either delete. The role's own definition says
-what it is for: <em>"records that knowledge was deliberately removed so
-it isn't re-learned."</em> Whether anything enforces that is section 9's
-question.</p>
+the reason under <strong>Why</strong> and, with <code>keep_text</code>
+(the default), the victim's body under <strong>Removed text</strong>,
+its tags and its code refs — and then cascades the victim. The comment
+says why the text rides along: a mint that embedded <em>"only the
+victim's title plus the reason"</em> meant <em>"a paraphrase of the
+buried CONTENT landed nowhere near it"</em>, so the marker <em>"guarded
+the headline, not the knowledge."</em> <code>keep_text=false</code> is
+the purge shape, identity and reason only. The tombstone is
+<code>Source::User</code>, stable durability so it never decays, takes
+over the victim's <code>about</code> edges to anchor nodes so the
+removal stays attached to the code subject it happened under, carries no
+other edge — <em>"edges never dangle"</em> — and skips required-field
+enforcement. When the ontology declares no tombstone type the call
+degrades to a plain delete, <em>"the config decides, never the
+caller"</em>. Hard delete has no MCP path; the assistant's version is to
+<code>add_note</code> a <code>Tombstone</code> and <code>link</code> it
+<code>replaces</code> the victim, which archives the victim behind the
+marker through the ordinary supersession machinery
+(<code>an_authored_tombstone_that_replaces_its_victim_buries_it_traceably</code>).</p>
 <p><strong><code>merge_nodes</code> is the consolidation move</strong>,
 and its edge cases are where the design shows. Several notes stating one
 truth collapse into one survivor: tags and <code>code_refs</code> union,
@@ -849,7 +877,7 @@ does not fail; it reads and writes somebody else's graph — specifically
 the home one. The mitigation is <code>brief</code> called with a
 <code>project</code>: a name, an id or any absolute path inside a
 registered root rebinds the running session and returns that project's
-brief in one call (<code>crates/engram-mcp/src/lib.rs:844-870</code>),
+brief in one call (<code>crates/engram-mcp/src/lib.rs:871-897</code>),
 refusing an unregistered selector <em>with the known roster</em> and
 leaving the binding untouched when it refuses, so a hallucinated path
 can never birth a graph. Sessions stranded on rungs four or five get a
@@ -877,7 +905,7 @@ Pinning is human-only in the code: no MCP tool writes
 <code>trust_override</code>, retrieval moves nothing, and a pinned node
 ignores the assistant's evidence entirely until a human unpins it.
 Approval is not: <code>approve_node</code> is an MCP tool
-(<code>lib.rs:1073-1080</code>) that restarts trust at 100%,
+(<code>lib.rs:1102-1109</code>) that restarts trust at 100%,
 <code>Engine::approve</code> (<code>engine.rs:1873</code>) takes no
 source and gates on nothing, and the whole restraint is the tool
 description — <em>"ONLY on explicit user demand or after word-by-word
@@ -928,42 +956,56 @@ the answerable questions lost at each threshold. The LongMemEval run
 extends the same discipline onto a corpus the project did not write: 30
 labelled never-answerable questions, scored on whether an answer went
 out unwarned.</p>
-<p><strong><code>tombstone</code> — withheld, and this is the near-miss
-worth reading.</strong> The <code>Tombstone</code> type is a durable,
-user-minted record of a removal, keyed on the victim's title in its own
-title, stable so it never decays, and its role definition states the
-purpose this mark exists for: <em>"so it isn't re-learned."</em> What
-withholds the mark is that nothing on the write path reads it. The
-near-duplicate short-circuit in <code>add_node_checked</code>
-(<code>engine.rs:2843-2888</code>) matches only a live node <em>of the
-same type</em>, so a re-authored <code>Decision</code> never lands on
-its <code>Tombstone</code>; <code>write_warnings</code>
-(<code>:3247</code>) warns only about superseded or in-conflict
-neighbours, which a tombstone is neither; the conflict sweep iterates
-<code>scannable_nodes</code> (<code>store.rs:406-418</code>), which
-excludes tombstones by design — <em>"a tombstone contradicts its victim
-by DESIGN — that's its job, not a conflict to surface"</em> — and
-<code>tombstones_sit_out_the_conflict_scan</code> asserts exactly that.
-The one accidental path is the write-time nomination:
-<code>suspects_near</code> (<code>engine.rs:4118</code>) filters
-anchors, archived rows, linked and already-queued pairs and not the
-tombstone role, so a re-assertion whose embedding clears
-<code>conflict_suspect_similarity</code> against <em>"Removed: …"</em>
-plus a body beginning <em>"Deleted Decision"</em> is handed back to the
-assistant as a look-alike pair to judge. That is a nomination that
-depends on cosine distance, not a refusal keyed on the value; and the
-brief never shows tombstones (<code>hidden_brief()</code> on the type),
-so the only other channel is a search hit and the assistant's obedience
-to <em>"don't resurrect it"</em>. A dismissed suspect and a
-<code>replaces</code> edge remain keyed on ids. The design has the
-record and not the gate.</p>
+<p><strong><code>tombstone</code> — withheld, on one word of the
+definition, and the near-miss is the narrowest in this report.</strong>
+The <code>Tombstone</code> type is a durable record of a removal that
+carries the removed text, tags and code refs, stable so it never decays,
+and it is consulted on every write: <code>write_warnings</code>
+(<code>engine.rs:3308-3340</code>) walks the new note's nearest
+neighbours above <code>policy.warn_similarity</code> (0.70) and reports
+any tombstone-role node among them, across types, as a
+<code>tombstoned</code> warning carrying the tombstone's own account of
+why — the comment names the gap it closes, <em>"a Decision re-deriving a
+tombstoned Decision sailed through"</em>. <code>search</code> counts
+tombstone-role hits and appends a <code>tombstone_note</code> so a
+compact scan cannot read <em>"Removed: X"</em> as a memory of X;
+<code>check_claim</code> sorts tombstone hits out by role before the NLI
+runs and files them under <code>retracted</code> (<code>:3763</code>);
+the write-time canon check and the suspect recorder skip tombstones on
+both sides so a <code>replaces</code> verdict can never archive the
+marker (<code>:2997</code>, <code>:4216</code>). Seven committed tests
+cover the 0.9.2 behaviour, and the one that matters here asserts the
+boundary in its own words:
+<code>writes_near_a_tombstone_warn_tombstoned_across_types</code> panics
+on anything but <code>Created</code> — <em>"a tombstone never blocks a
+write — it warns."</em> The definition this atlas applies asks for a
+record keyed on the value <em>"so later extraction cannot re-assert
+it"</em>; here the re-assertion is created as live canon, ranked,
+briefed and delivered like any other note, with a warning on the write
+result that the writer may act on or not. The changelog states the
+choice as a principle — <em>"The write is never blocked: models
+nominate, people judge"</em> — and it is coherent with the rest of the
+trust model, where the assistant judges and a person decides. It is not
+the mark. Two shapes the project already has would earn it without
+touching that principle: the same-type near-duplicate short-circuit,
+extended to a tombstone neighbour, would return <code>Matched</code>
+with the tombstone's reason instead of creating — the collided form, a
+nomination that leaves nothing live to judge later; or a note created
+with a <code>tombstoned</code> warning could be held out of the brief
+and ranked as stale until a person confirms it — the suppressed form.
+What is <em>not</em> a near-miss any more: the brief never shows
+tombstones (<code>hidden_brief()</code>), and the key is an embedding
+neighbourhood, so a paraphrase below 0.70 lands with no warning — a
+threshold the purge shape (<code>keep_text=false</code>) makes easier to
+fall under, because it embeds the headline alone. A dismissed suspect
+and a <code>replaces</code> edge remain keyed on ids.</p>
 <p><strong><code>scope_enforced</code> — not found.</strong> No scope
 key on either table.</p>
 <p>Other observations:</p>
 <ul>
 <li><strong><code>redact.rs</code> drives the write path.</strong>
 <code>redact::scrub</code> runs on title and body in the node write
-paths (<code>engine.rs:290-291</code>, <code>:2844-2845</code>) and
+paths (<code>engine.rs:290-291</code>, <code>:2890-2891</code>) and
 <code>scrub_fields</code> on every string-valued custom field: named
 patterns (PEM/AWS/JWT/GitHub/Slack/OpenAI/<code>key=value</code>) plus a
 high-entropy backstop judged per separator-delimited segment (segments
@@ -1030,10 +1072,14 @@ reranker), a corpus profile down to the verb mix and code-ref
 distribution, and a phrasing mix of 45% lexical, 45% paraphrase, 10%
 oblique. One row reads
 <code>"kw 0.15 · reranker VOTES   &lt;- ships today"</code>, and pure
-RAG beats it on recall. Publishing the row you lose, beside the row you
-ship, in the machine- readable artifact, is the strongest form of the
-discipline this atlas credits <a href="../perseus-vault/">Perseus
-Vault</a> and <a href="../memsem/">memsem</a> for.</p>
+RAG beats it on recall. It is the first committed run, 3 August 2026, on
+the pre-enrichment corpus; the current headline is the 22 August table
+in section 1, where the shipped row wins the weighted headline and R@1
+and pure vectors keep oblique recall. Publishing the row you lose,
+beside the row you ship, in the machine- readable artifact, is the
+strongest form of the discipline this atlas credits <a
+href="../perseus-vault/">Perseus Vault</a> and <a
+href="../memsem/">memsem</a> for.</p>
 <p><strong>Contradiction detection is decomposed, not scored.</strong>
 <code>contradictions-500.json</code>: 100 contradictions, 97 caught,
 <code>"missed_by_retrieval": 0</code>,
@@ -1441,10 +1487,18 @@ observable from the tree.</li>
 register?</strong> The project names the missing artifact itself — a
 LongMemEval floor sweep with raw score curves — and has said the
 auto-tune dial waits for it.</li>
-<li><strong>How often is a tombstoned claim re-learned?</strong> The
-role's purpose is that it is not, nothing on the write path enforces it,
-and no committed test or receipt writes a claim, tombstones it and
-re-asserts it.</li>
+<li><strong>How often does a <code>tombstoned</code> warning stop a
+re-assertion?</strong> The write lands either way; whether the writer
+then deletes, rewrites or ignores it is the model's decision and nothing
+in the tree counts it. The audit journal has the material — a
+<code>created</code> row with a <code>tombstoned</code> warning followed
+by a <code>deleted</code> row or not — so the number is computable from
+a live graph.</li>
+<li><strong>What fraction of resurrections fall under the warning
+line?</strong> The key is cosine similarity to the tombstone at 0.70,
+and a rewrite that keeps the claim and changes the words is exactly the
+case a value key exists for; no committed probe measures the miss
+rate.</li>
 <li><strong>What happens to a pinned node that is genuinely
 wrong?</strong> Evidence events skip it by design; contradictions
 surface for review, and nothing forces the review.</li>
@@ -1550,11 +1604,13 @@ adapter), <code>chains.rs</code> (supersession chains),
 <p><strong>Searches that ground the absence claims above</strong> (run
 at the pinned commit):</p>
 <ul>
-<li><code>rg -n 'roles.tombstone' crates/engram-core/src/</code> — hits
-in <code>config.rs</code>, <code>store.rs:415</code>,
-<code>store_sqlite.rs:1142</code> and <code>engine.rs:3874</code>
-(answer candidacy) only; none in <code>add_node_checked</code>,
-<code>write_warnings</code> or <code>suspects_near</code>.</li>
+<li><code>rg -n 'is_tombstone|roles.tombstone' crates/engram-core/src/engine.rs</code>
+— <code>write_warnings</code> (<code>:3325</code>), the canon check
+(<code>:2997</code>), <code>check_claim</code> (<code>:3769</code>),
+answer candidacy (<code>:3965</code>), <code>suspects_near</code>
+(<code>:4216</code>, <code>:4232</code>), and the helper
+(<code>:4854</code>); no site refuses, collides or hides a write on a
+tombstone match — every consumer warns, labels, or skips.</li>
 <li><code>rg -n 'trust_override|set_trust_override' crates/engram-mcp/src/lib.rs</code>
 — one hit, the read-only <code>pinned</code> filter in
 <code>list_nodes</code>; no tool sets it.</li>
@@ -1568,11 +1624,37 @@ value for <code>nli_agreement</code>.</li>
 <li><code>rg -n -i 'arxiv|bibtex|@article|doi\.org' README.md docs/ eval/</code>
 — the TAA-k citation in the eval README and LongMemEval; no paper for
 engram itself, and no <code>CITATION.cff</code>.</li>
-<li><code>rg -n 'tombstone' crates/engram-core/src/tests.rs</code> —
-four cases, none of which writes a claim after its tombstone and asserts
-on the outcome.</li>
+<li><code>rg -n '^fn .*tombston' crates/engram-core/src/tests.rs</code>
+— twelve cases; the two that write a claim after its tombstone
+(<code>writes_near_a_tombstone_warn_tombstoned_across_types</code>,
+<code>an_authored_tombstone_that_replaces_its_victim_buries_it_traceably</code>)
+assert <code>Created</code> with a <code>tombstoned</code> warning,
+never a refusal.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-04</strong> — <a
+href="https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357"><code class="commit-id" title="9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357">9a24db99…</code></a>
+— re-pinned the same day at release v0.9.2, three commits on. Screened
+again: three auto-run surfaces, five files inside the seven-day
+cooldown, two unpinned surfaces; nothing installed or run. v0.9.2 is the
+write-path half of the tombstone role: <code>write_warnings</code>
+reports any tombstone-role neighbour of a new note, across types, as
+<code>tombstoned</code> with the removal's reason; the delete mint
+carries the victim's body, tags and code refs by default and rehomes its
+<code>about</code> edges; <code>search</code> names its tombstone hits;
+<code>check_claim</code> gains a <code>retracted</code> bucket; the
+suspect recorder skips tombstones on both sides; and the assistant's
+bury gesture — author a <code>Tombstone</code>, <code>link</code> it
+<code>replaces</code> the victim — is documented and tested.
+<code>tombstone</code> stays withheld on the one clause the project
+declines by design: the write is created and never refused, so the
+record is consulted and the re-assertion is not prevented. The section 9
+paragraph now names the two shapes already in the engine that would earn
+it. The benchmark paragraph in section 1 is rewritten around the eval
+README's <em>Against every baseline</em> table and its 22 August
+receipts; <code>bench-100.json</code> is kept as the 3 August first run
+where the shipped-row label appears, dated as such, and the corpus
+superlative is dropped. Sections 6 and 10 date the same file.</p>
 <p><strong>2026-09-04</strong> — <a
 href="https://github.com/techtheist/engram/commit/f13d45a90391aa0d7a8986cfd79f8246ac607f9c"><code class="commit-id" title="f13d45a90391aa0d7a8986cfd79f8246ac607f9c">f13d45a9…</code></a>
 — re-pinned at release v0.9.1 (142 commits, ~31,000 lines of Rust across
