@@ -7410,18 +7410,26 @@ when the same text is saved again, and a test asserts it</td>
 </tr>
 <tr>
 <td><code>engram-alpha</code></td>
-<td>A typed node joined by typed edges — but the type set is per-graph
-config, not a Rust enum: engine logic keys on the roles a type or verb
-carries (<code>supersession</code>, <code>contradiction</code>,
-<code>worklist</code>), so a renamed or replaced ontology keeps every
+<td>A typed node joined by typed edges, carrying a <code>fields</code>
+map of graph-declared custom values beside its tags — but the type set
+is per-graph config, not a Rust enum: engine logic keys on the roles a
+type or verb carries (<code>supersession</code>,
+<code>contradiction</code>, <code>worklist</code>,
+<code>tombstone</code>), so a renamed or replaced ontology keeps every
 behaviour</td>
-<td>SQLite (with a TepinDB backend beside it), nodes and edges plus a
-suspects table and an append-only audit journal</td>
+<td>TepinDB — one self-describing <code>graph.tepin</code> file holding
+documents, keyword index and vectors, the birth format of every new
+graph since v0.6.2 — with the SQLite driver kept behind the same trait
+as a migration source; nodes and edges plus a suspects table, an
+append-only audit journal and a meta row that records the store's own
+encryption state</td>
 <td>Vectors with a reranker that votes rather than decides, a keyword
-weight of 0.15, and calibrated delivery — a score floor and a knee cut
-whose whole tradeoff curve is committed, with the abstention line fitted
-per graph from unanswerable probes built out of the graph's own
-vocabulary</td>
+weight of 0.15 over a blind BM25 index that ranks identically sealed or
+plain, calibrated delivery — a score floor and a knee cut whose whole
+tradeoff curve is committed, with the abstention line fitted per graph
+from unanswerable probes built out of the graph's own vocabulary — a
+rank demotion at the cut for a second hit from a session already
+delivered, and one-hop neighbours attached to every hit</td>
 <td>A write returns the look-alike pairs it just queued, so the
 assistant judges them in the same turn — detection is local, judgment is
 the assistant's</td>
@@ -7429,15 +7437,17 @@ the assistant's</td>
 <code>valid_until</code> for archival, an atomic
 <code>merge_nodes</code> that rehomes edges and archives victims behind
 a supersession, a suspects table resolved as conflict, replaces or
-dismiss, and a human pin that disables decay</td>
+dismiss, a human pin that disables decay, and a hard delete that mints a
+<code>Tombstone</code> note naming what was removed and why</td>
 <td>None inside a graph. Separation is one store per project, and a
 single machine-wide core process holds them all — so which project a
 session reads is a five-rung binding decision, not a predicate</td>
 <td>An MCP server that is always a bridge to the machine core, a
 JetBrains plugin and a VS Code extension published to three
-marketplaces, plus a standalone pane with a live browser demo; a
-<code>set_project</code> tool lets a session rebind itself when its
-client will not say where it is</td>
+marketplaces, plus a standalone pane with a live browser demo;
+<code>brief</code> called with a <code>project</code> rebinds a session
+whose client will not say where it is, and <code>setup</code> writes
+session-start brief hooks for Claude Code, Codex, Devin CLI and Bob</td>
 <td>Trust is computed at read time, so no pass has to have run for a
 read to be correct; a session-boundary <code>validate_graph</code>
 archives, retires, re-fits the two auto-tune dials and rescans, and
@@ -7450,10 +7460,10 @@ confirmed or dismissed</td>
 because exposure would otherwise let a broad recurring query certify its
 own outputs</td>
 <td>No scope key of any kind, and a session whose workspace cannot be
-determined binds the home graph rather than failing; the retrieval half
-of LongMemEval is graded at session level, and the one number the
-external run does not price is how often an answerable question gets
-warned</td>
+determined binds the home graph rather than failing; approval is an MCP
+call whose only guard is its own description; the retrieval half of
+LongMemEval is graded at session level, and the one number the external
+run does not price is how often an answerable question gets warned</td>
 </tr>
 <tr>
 <td><code>engram-provable</code></td>
@@ -21383,7 +21393,7 @@ at <a
 href="https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1"><code class="commit-id" title="cd196704bb3dd148c314a81a32d96752204be5c1">cd196704…</code></a></li>
 <li><a href="https://github.com/techtheist/engram">techtheist/engram</a>
 at <a
-href="https://github.com/techtheist/engram/commit/2605d84246c44c258b0d0f12a555980eb6a7456f"><code class="commit-id" title="2605d84246c44c258b0d0f12a555980eb6a7456f">2605d842…</code></a></li>
+href="https://github.com/techtheist/engram/commit/f13d45a90391aa0d7a8986cfd79f8246ac607f9c"><code class="commit-id" title="f13d45a90391aa0d7a8986cfd79f8246ac607f9c">f13d45a9…</code></a></li>
 <li><a
 href="https://github.com/munch2u-a11y/Helix-AGI">munch2u-a11y/Helix-AGI</a>
 at <a
@@ -23365,6 +23375,29 @@ can be true or false, and there is nothing for a correction to be about.
 Recorded rather than dropped because it is the cleanest example yet of
 the boundary this atlas draws between a harness that persists and a
 memory that believes.</li>
+<li><strong>Three published claims about <a
+href="../systems/engram-alpha/">Engram Alpha</a> were wrong at every pin
+since the first reading, and are corrected.</strong> Until 4 September
+2026 the report said approval and pinning were <em>"human acts the
+assistant cannot perform"</em>; <code>approve_node</code> has been an
+MCP tool since the commit the first reading pinned,
+<code>Engine::approve</code> takes no source and gates on nothing, and
+the only restraint is the tool's own description — pinning is
+human-only, approval is human-only by request. The report described
+storage as <em>"SQLite (with a TepinDB backend beside it)"</em>; every
+new graph has been born on TepinDB since v0.6.2 on 21 July 2026, two
+weeks before the first reading, and the SQLite driver is a migration
+source — the project's own documentation named <code>graph.db</code> as
+the default until its v0.9.1 sweep, and the reading repeated the
+documentation instead of reading <code>resolve_db_path</code>. And the
+open question <em>"does the TepinDB backend match the SQLite one … no
+parity comparison found"</em> had an answer in the tree at every pin: a
+<code>store_battery</code> conformance test has run one sequence against
+both backends since v0.6.0. The direction is the one the corpus keeps
+producing: a boundary the documentation draws was credited as one the
+code draws, and an absence was published without the search that would
+have refuted it. The report now names which of the two human-only lines
+is enforced and which is asked for.</li>
 <li><strong>Four published claims about <a
 href="../systems/iai-pme/">iai-pme</a> were wrong when published, and
 are corrected.</strong> Until 3 September 2026 the report described the
@@ -26742,6 +26775,29 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-04</strong> — <strong>When a report says an actor
+cannot do something, list the actor's tools and grep for the
+verb.</strong> The <a href="../systems/engram-alpha/">Engram Alpha</a>
+re-read found <em>"approval and pinning are human acts the assistant
+cannot perform"</em> published through four pins, over an MCP crate that
+had exposed <code>approve_node</code> at every one of them. The claim
+was half right — no tool writes the pin — and the half that was wrong
+was never checked, because the reading took the boundary from the
+documentation's drawer metaphor and the tool description's <em>"ONLY on
+explicit user demand"</em>, both of which describe a request rather than
+a gate. The check is mechanical and cheap: enumerate the tool surface
+(<code>rg -n '#\[tool\(' -A3</code> on an MCP crate, the route table on
+an HTTP one), and for every sentence of the form <em>the agent cannot
+X</em>, search that list for X and read whether the engine call beneath
+it asks who is calling. A boundary that exists only in prose addressed
+to the model is a fact about the prompt, and the report has to say so in
+those words. The same reading produced the cheaper lesson twice more:
+the storage default and the backend-parity test were both wrong when
+published, and both had a one-line search behind them that was never run
+— <code>resolve_db_path</code> names the birth format of a new store,
+and <code>rg 'conformance' tests.rs</code> finds the battery. Every
+absence in section 12 is an absence claim too, and the appendix's search
+list has to cover the open questions as well as the criticisms.</p>
 <p><strong>2026-09-03</strong> — <strong>When a project ships two
 benchmark documents, read both, and let the harness decide between
 them.</strong> The <a href="../systems/iai-pme/">iai-pme</a> re-read

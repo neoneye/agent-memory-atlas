@@ -67,7 +67,7 @@ END = "<!-- END GENERATED STACK -->"
 STORAGE_VOCAB = [
     "sqlite", "postgres", "files", "graph", "chroma", "qdrant", "lancedb",
     "milvus", "weaviate", "pinecone", "faiss", "elastic", "redis", "mongo",
-    "duckdb", "kv", "memory", "delegated",
+    "duckdb", "kv", "memory", "delegated", "tepindb",
 ]
 ARM_VOCAB = ["lexical", "vector", "graph"]
 
@@ -78,6 +78,7 @@ STORAGE_LABELS = {
     "pinecone": "Pinecone", "faiss": "FAISS", "elastic": "Elasticsearch",
     "redis": "Redis", "mongo": "MongoDB", "duckdb": "DuckDB",
     "kv": "Embedded key-value", "memory": "In-process only",
+    "tepindb": "TepinDB",
     "delegated": "Delegated to the adopter",
 }
 ARM_LABELS = {"lexical": "Lexical", "vector": "Vector", "graph": "Graph"}
@@ -100,6 +101,7 @@ STORAGE_RULES: list[tuple[str, str]] = [
     ("redis", r"redis|valkey"),
     ("mongo", r"mongo"),
     ("duckdb", r"duckdb"),
+    ("tepindb", r"tepindb|tepin"),
     ("kv", r"badger|pebble|rocksdb|leveldb|lmdb|key-value"),
     ("files", r"\bjson\b|jsonl|markdown|flat file|plain file|yaml file|"
               r"filesystem|file-backed|file backend|\bvault\b|git repositor|"
