@@ -110,14 +110,14 @@ automatic extraction does not use.</p>
               <strong>RBKunnela/ALMA-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9" title="e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9">
+            <a class="meta-pill revision-pill" href="https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d" title="91a352f25fa1060c25c414770ecdfc57fb49f52d">
               <span>Analyzed revision</span>
-              <code>e2178ad4…</code>
+              <code>91a352f2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-09-04</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -138,8 +138,9 @@ automatic extraction does not use.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>ALMA — Agent Learning Memory Architecture — is a <strong>five-table
 memory for agents that learn from their own outcomes</strong>, MIT with
-a <code>LICENSE</code> file in the tree, 104,360 lines of Python under
-42,467 lines of tests across 93 files, published to PyPI and npm.</p>
+a <code>LICENSE</code> file in the tree, 103,832 lines of Python of
+which 41,848 are tests across 91 files, 193 commits, release v0.11.0
+published to PyPI and npm.</p>
 <p>The design divides memory by <em>what it is for</em> rather than by
 recency or type:</p>
 <div class="table-wrap"><table>
@@ -295,9 +296,23 @@ open automatically are among them.</p>
 (<code>alma/storage/sqlite_local.py</code>). Indexes are declared on
 <code>(project_id, agent)</code> — the scope pair — which is the right
 composite for the queries the system issues.</p>
-<p>An MCP server exposes retrieval tools, and there is a CLI and a PyPI
+<p>An MCP server exposes 31 tools, and there is a CLI and a PyPI
 distribution, with <code>benchmarks/</code> and <code>Clara_docs/</code>
-alongside.</p>
+alongside. Beside the five-table store sits a knowledge-graph package,
+<code>alma/graph/</code>, with in-memory, Kùzu, Memgraph and Neo4j
+backends and an LLM extractor; nothing in <code>alma/core.py</code>, the
+MCP tools, the CLI or the package root imports it, so it is a module the
+adopter wires rather than part of the memory path.</p>
+<p>The project's history was rewritten on 4 September 2026. The
+changelog's <em>Unreleased</em> section records the removal of
+<em>"Company fleet adapter and internal presentation deck. ALMA-memory
+stays memory-only OSS"</em>; the commit that had added the adapter
+(<code>082c64e</code>, <em>"Maia Phase-1 ALMA adapter"</em>) reaches
+<code>main</code> as a change to the changelog alone, no commit
+reachable from <code>main</code> contains an <code>integrations/</code>
+directory, and the release tag <code>v0.11.0</code> points at a
+rewritten commit. Two earlier commits of this repository are recorded in
+the History section below and are no longer served by GitHub.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>The dual Postgres/SQLite path is the operational cost, and it is
 managed by migration:
@@ -352,6 +367,19 @@ inserting into <code>alma_forget_audit</code>.</li>
 <code>alma/ingestion/file_miner.py</code> and
 <code>conversation_miner.py</code> — heuristics and anti-patterns
 extracted from repository files and conversations.</li>
+<li><strong>Decay and rescue:</strong>
+<code>alma/learning/decay.py</code> — <code>MemoryStrength</code>,
+<code>StrengthState</code>, <code>DecayManager</code>
+(<code>:317</code>); called from
+<code>alma/mcp/tools/learning.py:405-518</code> by
+<code>alma_reinforce</code>, <code>alma_get_weak_memories</code> and
+<code>alma_smart_forget</code>.</li>
+<li><strong>Graph validity interval:</strong>
+<code>alma/graph/store.py:51-54</code> — <code>valid_from</code> and
+<code>valid_to</code> on <code>Relationship</code>, read by
+<code>get_relationships_as_of</code>
+(<code>alma/graph/backends/memory.py:180-201</code>); no writer in
+<code>alma/</code>.</li>
 <li><strong>MCP surface:</strong>
 <code>alma/mcp/tools/retrieval.py</code>,
 <code>alma/mcp/tools/learning.py</code>.</li>
@@ -381,7 +409,25 @@ insert-only on both backends, written before the delete.</p>
 <p><code>alma_domain_knowledge</code> carries <code>source</code> and
 <code>last_verified</code>, which is provenance plus a re-verification
 timestamp. <code>last_verified</code> is record time — when the check
-ran — not validity time, so there is no bi-temporal pair.</p>
+ran — not validity time, and none of the five tables carries a validity
+interval.</p>
+<p><strong>The one validity interval in the tree is on a record nothing
+writes.</strong> The knowledge graph's <code>Relationship</code>
+(<code>alma/graph/store.py:44-54</code>) carries <code>created_at</code>
+and, beside it, <code>valid_from</code> — <em>"when this relationship
+became true"</em> — and <code>valid_to</code>, <code>None</code> meaning
+still valid; <code>get_relationships_as_of</code> filters an entity's
+edges to those whose interval contains a point in time. That is the
+bi-temporal shape. What is absent is every producer and most of the
+consumers: <code>GraphExtractor</code> builds a
+<code>Relationship</code> from id, endpoints, type and properties and
+never sets either field (<code>alma/graph/extraction.py:172-178</code>);
+the Kùzu, Neo4j and Memgraph backends neither persist nor read the two
+columns; <code>get_relationships_as_of</code> is implemented on the
+in-memory backend and exercised by
+<code>tests/unit/test_graph_temporal.py</code>, which constructs the
+intervals by hand; and no surface in the package imports
+<code>alma.graph</code> at all.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Per-table SQL with <code>WHERE project_id = ?</code> and, for
 heuristics, a <code>confidence &gt;= ?</code> floor, alongside vector
@@ -391,6 +437,14 @@ query rather than filtered after it, on all five tables. That is the
 strict form the rubric asks for, and is why the mark is earned without
 the caveat that attaches to post-filtered implementations elsewhere in
 this corpus.</p>
+<p><code>RetrievalEngine</code> scores the candidates by similarity,
+recency, success rate and confidence, and accepts an optional
+<code>FeedbackAwareScorer</code> that re-ranks by accumulated retrieval
+feedback; no caller in the package passes one. A
+<code>HybridSearchEngine</code> — BM25S or TF-IDF fused with the vector
+list by reciprocal rank — is exported from <code>alma.retrieval</code>
+and called by nothing in the engine, so the product path has one
+arm.</p>
 <p>The verification pass then sorts results into the four statuses
 before returning them, and the MCP tool documents
 <code>contradicted</code> as "Needs review (may be stale)" — surfacing
@@ -419,6 +473,20 @@ further per-row deletes at <code>:484</code>, <code>:512</code>,
 <code>:822</code> and <code>:848</code> remove without recording. There
 is no archive tier and no supersession pointer — a heuristic replaced by
 a better one is not linked to its replacement.</p>
+<p><strong>Decay is a computed strength with a rescue step.</strong>
+<code>DecayManager</code> (<code>alma/learning/decay.py:317</code>)
+scores a memory as base decay by half-life since last access, plus a
+logarithmic access bonus, plus a reinforcement bonus, scaled by explicit
+importance, and buckets the number as <code>strong</code>,
+<code>normal</code>, <code>weak</code> or <code>forgettable</code>. The
+MCP tools <code>alma_get_weak_memories</code> and
+<code>alma_reinforce</code> list the weak ones and restart their clock,
+and <code>alma_smart_forget</code> removes the forgettable ones —
+<em>"weak memories can be rescued before deletion,"</em> as the module's
+header puts it. The state is derived from the number at read time, so it
+is a ranking, not a persisted judgement, which is why
+<code>trust_state</code> rests on <code>verification_status</code>
+rather than here.</p>
 <p><strong>The audit row holds the value it removed.</strong>
 <code>record_forget_audit</code> stores the pruned heuristic's
 <code>strategy</code> alongside the reason. That is a durable record of
@@ -443,9 +511,11 @@ on one write: an agent calling <code>learn()</code> with a strategy that
 matches a known anti-pattern receives an exception, not a silent no-op.
 Refusing loudly is the right choice — a filtered write teaches the
 caller nothing.</p>
-<p><code>integrations/maia/</code> adds a gateway adapter with its own
-tests, which is a second consumer of the same core rather than a second
-implementation of it.</p>
+<p>The package ships no second consumer of its own:
+<code>integrations/</code> does not exist in any commit reachable from
+<code>main</code>, and the changelog's <em>Unreleased</em> entry says
+the company adapter was removed so that <em>"ALMA-memory stays
+memory-only OSS."</em></p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong><code>scope_enforced</code> — earned, in its strict
@@ -479,11 +549,17 @@ and <strong>nothing in the tree consumes either.</strong> The queue is
 calculated and never shown to anyone. With the status persisted and
 <code>alma_list_verification</code> able to list by it, a review surface
 is closer than the missing mark suggests.</p>
-<p><strong><code>bitemporal</code> — not found.</strong>
+<p><strong><code>bitemporal</code> — withheld, on a producer that does
+not exist.</strong> The five memory tables carry record time only —
 <code>last_validated</code>, <code>last_verified</code>,
 <code>created_at</code>, <code>last_seen</code>,
-<code>verified_at</code> and <code>pruned_at</code> are all record time.
-No validity interval exists.</p>
+<code>verified_at</code>, <code>pruned_at</code>. The knowledge graph's
+<code>Relationship</code> carries <code>valid_from</code> and
+<code>valid_to</code> beside <code>created_at</code> with an as-of
+reader, which is the shape, and nothing in <code>alma/</code> assigns
+either field, the three database-backed graph stores ignore them, and no
+surface imports the graph package. A validity axis that only a test
+populates is declared, not tracked.</p>
 <p><strong><code>negative_eval</code> — not found.</strong> The nearest
 case is <code>tests/unit/test_budget_retrieval.py:377</code>, which
 asserts a <code>MUST_SEE</code> item does not appear in the
@@ -496,7 +572,7 @@ shape one subject away from the mark.</p>
 <p><strong>Fail-open by construction.</strong>
 <code>check_write_guard</code> returns unblocked when the storage
 backend has no <code>get_anti_patterns</code>, when the lookup raises,
-and when the env var is off. Every one of the eight shipped backends
+and when the env var is off. Every one of the seven shipped backends
 implements <code>get_anti_patterns</code>, so the docstring's
 <em>"non-SQLite"</em> caveat understates its own reach — but a custom
 backend, or a transient database error, silently degrades refusal to
@@ -504,12 +580,12 @@ permission. For a guard, that is the correct direction to fail and the
 one worth logging louder than <code>logger.warning</code>.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>93 test files, 42,467 lines.
-<code>tests/unit/test_atlas_gaps_561.py</code> covers the new mechanisms
-directly: the guard's env default, substring matching, a blocked learn
-and an allowed unrelated one, verification persistence on an outcome, a
-forget audit row, the verified retriever's persistence, and SQLite
-column parity.</p>
+<p>91 test files, 41,848 lines.
+<code>tests/unit/test_atlas_gaps_561.py</code> covers the v0.11.0
+mechanisms directly: the guard's env default, substring matching, a
+blocked learn and an allowed unrelated one, verification persistence on
+an outcome, a forget audit row, the verified retriever's persistence,
+and SQLite column parity.</p>
 <p><strong>The benchmark artifacts are the part worth citing.</strong>
 <code>benchmarks/results-v1.0-phase1.json</code> holds a 500-question
 LongMemEval run with a config stamp — <code>"mode": "session"</code>,
@@ -535,13 +611,20 @@ href="../memsem/">memsem</a> for.</p>
 whether a correct session id appears in the top <em>k</em> of a
 retrieval over a haystack, so it measures the retrieval arm alone and is
 not comparable to LongMemEval QA scores quoted elsewhere in this atlas.
-Nothing here was run — two dependency surfaces changed the day of this
-reading, inside the seven-day cooldown — so the recomputation above is
-arithmetic over committed records, not a re-execution of the
-benchmark.</p>
+The recomputation above is arithmetic over committed records, not a
+re-execution of the benchmark.</p>
 <p>The invariant missing a test is cross-dialect parity: SQLite columns
 are asserted, the Postgres side is not, and nothing compares the
 two.</p>
+<p>The repository records where v0.11.0 came from. Section 7 of the
+README, <em>"Hardened after external code review (2026-08)"</em>, links
+this atlas's report on commit <code>164d2e3e</code> and tables the five
+changes against it; the migration's description string reads
+<em>"Persist verification + forget_audit (Agent Memory Atlas
+gaps)"</em>; the test file's docstring and four planning documents under
+<code>docs/plans/</code> carry the same reference. Those documents are
+the project's own account of its August changes, and the README's table
+is accurate to the code at every row.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -594,8 +677,8 @@ the anti-pattern material is the point and a Python or JS integration is
 wanted. The five-way typed split is legible, the scope predicate is
 strict, and the correction machinery refuses rather than merely
 advises.</p>
-<p>The judgement to make is about maintenance surface. 104,360 lines
-with eight storage backends, an MCP server, a CLI, two package
+<p>The judgement to make is about maintenance surface. 103,832 lines
+with seven storage backends, an MCP server, a CLI, two package
 ecosystems and a benchmark suite is a large thing to depend on for a
 five-table idea, and the parts a reader will actually use — the
 anti-pattern columns, the guard, the audit row — are a few hundred lines
@@ -662,6 +745,17 @@ persist call at <code>:502</code></li>
 <li><code>alma/learning/forgetting.py</code> —
 <code>ForgettingEngine</code>, <code>_audit_forget</code>
 (<code>:306</code>)</li>
+<li><code>alma/learning/decay.py</code> — <code>DecayManager</code>,
+<code>MemoryStrength</code>, <code>StrengthState</code></li>
+</ul>
+<p><strong>Graph (unwired)</strong></p>
+<ul>
+<li><code>alma/graph/store.py</code> — <code>Relationship</code> with
+<code>valid_from</code>/<code>valid_to</code>;
+<code>alma/graph/backends/memory.py</code> —
+<code>get_relationships_as_of</code>;
+<code>alma/graph/extraction.py</code> — the extractor that sets neither
+field</li>
 </ul>
 <p><strong>Write path</strong></p>
 <ul>
@@ -670,19 +764,80 @@ persist call at <code>:502</code></li>
 <li><code>alma/learning/heuristic_extractor.py</code>,
 <code>alma/consolidation/engine.py</code></li>
 </ul>
-<p><strong>MCP, integrations</strong></p>
+<p><strong>MCP</strong></p>
 <ul>
 <li><code>alma/mcp/tools/retrieval.py</code>,
 <code>alma/mcp/tools/learning.py</code></li>
-<li><code>integrations/maia/alma_gateway_adapter.py</code></li>
 </ul>
 <p><strong>Tests and benchmarks</strong></p>
 <ul>
-<li><code>tests/unit/test_atlas_gaps_561.py</code></li>
+<li><code>tests/unit/test_atlas_gaps_561.py</code>,
+<code>tests/unit/test_graph_temporal.py</code></li>
 <li><code>benchmarks/results-v1.0-phase1.json</code> and the two
 feedback-learning result files</li>
 </ul>
+<p><strong>Searches that ground the absence claims above</strong> (run
+at the pinned commit):</p>
+<ul>
+<li><code>rg -n check_write_guard alma/</code> — the definition and one
+call site, <code>alma/learning/protocols.py:97-99</code>.</li>
+<li><code>rg -n needs_review alma/</code> — two definitions in
+<code>alma/retrieval/verification.py</code>, no caller.</li>
+<li><code>rg -n '_audit_forget|delete_' alma/learning/forgetting.py</code>
+— three audited sites (<code>:294</code>, <code>:384</code>,
+<code>:429</code>) and five silent deletes (<code>:232</code>,
+<code>:484</code>, <code>:512</code>, <code>:822</code>,
+<code>:848</code>).</li>
+<li><code>rg -n 'valid_from\s*=|valid_to\s*=' alma/</code> — no
+assignment outside the dataclass defaults;
+<code>rg -n valid_from alma/graph/backends/</code> — the in-memory
+backend only.</li>
+<li><code>rg -n 'alma\.graph' alma/__init__.py alma/core.py alma/mcp/ alma/cli.py</code>
+— empty.</li>
+<li><code>rg -n 'feedback_scorer=' alma/</code> — empty;
+<code>rg -n -i hybrid alma/retrieval/engine.py alma/core.py</code> —
+empty.</li>
+<li><code>rg -l -i 'parity|dialect' tests/</code> —
+<code>test_atlas_gaps_561.py</code> only, which asserts the SQLite
+columns.</li>
+<li><code>git log --all --name-status -- integrations/</code> — empty;
+<code>git fetch origin e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9</code> —
+<em>"not our ref"</em>.</li>
+<li><code>rg -n -i 'arxiv|bibtex|doi\.org' README.md docs/</code> —
+nothing beyond the LongMemEval citation; no
+<code>CITATION.cff</code>.</li>
+</ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-04</strong> — <a
+href="https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d"><code class="commit-id" title="91a352f25fa1060c25c414770ecdfc57fb49f52d">91a352f2…</code></a>
+— re-pinned at the head of a rewritten <code>main</code>, 193 commits.
+The two commits this report was previously pinned to,
+<code class="commit-id" title="e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9">e2178ad4…</code> and
+<code class="commit-id" title="164d2e3e3c67f3ce1c33d2b9ccd9acaa65f9ad7a">164d2e3e…</code>, are no longer
+served by GitHub — a fetch by SHA answers <em>"not our ref"</em> —
+because the project rewrote its history on 4 September 2026 to remove a
+company integration adapter and a presentation deck; the tag
+<code>v0.11.0</code> points at a rewritten commit and no reachable
+commit contains <code>integrations/</code>. Screened again first: six
+build-time execution paths, three unpinned surfaces, nothing inside the
+seven-day cooldown, no auto-run surface; nothing was installed or run.
+The memory mechanism is unchanged and every absence search re-run at
+this commit returns what it returned before: the write guard has one
+call site, <code>needs_review()</code> has no consumer, three of eight
+delete sites are audited, nothing compares the two dialects. No mark
+moves. One published claim was wrong at both earlier pins and is
+corrected: <em>"No validity interval exists"</em> — the knowledge
+graph's <code>Relationship</code> has carried <code>valid_from</code>
+and <code>valid_to</code> beside <code>created_at</code>, with an as-of
+reader, since v0.9.0; the mark stays withheld because nothing in the
+package assigns the fields, the database-backed graph stores ignore
+them, and no surface imports the graph package. Two mechanisms present
+at both earlier pins and unreported are added:
+<code>DecayManager</code>'s computed strength with the reinforce and
+list-weak-memories tools, and the exported, uncalled
+<code>HybridSearchEngine</code>. The Maia adapter paragraph is removed
+with its file. The stack row is promoted from seeded to reviewed with
+the shipped store backends named where the vocabulary allows.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9"><code class="commit-id" title="e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9">e2178ad4…</code></a>
 — 8 commits on, tagged v0.11.0. Four published criticisms went stale,

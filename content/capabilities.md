@@ -236,25 +236,25 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| Files on disk | 166 | 84 | | Vector | 203 | 74 |
-| SQLite | 159 | 65 | | Lexical | 191 | 90 |
-| Postgres | 68 | 26 | | Graph | 71 | 28 |
+| Files on disk | 167 | 85 | | Vector | 203 | 75 |
+| SQLite | 159 | 66 | | Lexical | 191 | 90 |
+| Postgres | 68 | 27 | | Graph | 71 | 28 |
 | Delegated to the adopter | 33 | 10 | | No arm named in the review | 85 | 29 |
-| Chroma | 24 | 10 | |  |  |  |
+| Chroma | 25 | 11 | |  |  |  |
 | In-process only | 23 | 7 | |  |  |  |
 | Graph database | 18 | 7 | |  |  |  |
-| Qdrant | 16 | 5 | |  |  |  |
+| Qdrant | 17 | 6 | |  |  |  |
 | Redis | 13 | 4 | |  |  |  |
 | LanceDB | 9 | 2 | |  |  |  |
 | Milvus | 7 | 4 | |  |  |  |
 | MongoDB | 5 | 3 | |  |  |  |
 | Embedded key-value | 5 | 0 | |  |  |  |
 | FAISS | 5 | 2 | |  |  |  |
+| Pinecone | 2 | 1 | |  |  |  |
 | Elasticsearch | 2 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
-| Pinecone | 1 | 0 | |  |  |  |
 | DuckDB | 1 | 0 | |  |  |  |
 
-Counted across 357 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 143 of 357 reports have been read that way, and the other 214 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 357 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 144 of 357 reports have been read that way, and the other 213 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

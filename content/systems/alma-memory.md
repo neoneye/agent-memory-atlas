@@ -6,22 +6,26 @@ root: ../..
 page_kind: system
 source_name: "RBKunnela/ALMA-memory"
 source_url: https://github.com/RBKunnela/ALMA-memory
-revision: e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9
-revision_url: https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9
-analyzed_at: 2026-08-06
+revision: 91a352f25fa1060c25c414770ecdfc57fb49f52d
+revision_url: https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d
+analyzed_at: 2026-09-04
 capabilities: "trust_state, scope_enforced, audit_log"
-stack_storage: "sqlite, postgres"
+capability_evidence:
+  trust_state: "the verification block on every memory row | alma/retrieval/verification.py:28-60,:317,:502, alma/storage/verification_store.py, alma/storage/sqlite_local.py:1764, alma/storage/postgresql.py:2103 | `VerificationStatus` is `verified | uncertain | contradicted | unverifiable`, and `VerificationMethod` names whether the verdict came from ground truth, cross-verification against other memories or a confidence fallback. `VerifiedRetriever` calls `persist_verification` by default, which writes status, method, confidence, reason, contradicting source and `verified_at` through `update_memory_verification` on both shipped SQL backends. The status is written on the read path, so a row nobody retrieves carries none | tests/unit/test_atlas_gaps_561.py `test_persist_verification_on_outcome`, `test_verified_retriever_persists`"
+  scope_enforced: "`project_id` as a SQL predicate on every table's read path | alma/storage/sqlite_local.py:957,:1008,:1086,:1139,:1194,:1243, alma/cli.py:300-375 | each `get_*` composes `WHERE project_id = ?` into the query — with `AND agent IN (…)` on the per-agent variants — rather than filtering after it, and the Postgres DDL indexes `(project_id, agent)` on all five tables | none: `rg -n 'def test_\\w*(scope|isolat|other_project|cross_project)' tests/` finds only domain-scope and cache-namespace cases; no committed test writes under one project and asserts a read under another misses it"
+  audit_log: "an insert-only prune record in the system's own store | alma/learning/forgetting.py:294,:306,:384,:429, alma/storage/sqlite_local.py:1820, alma/storage/postgresql.py:2153 | `_audit_forget` calls `record_forget_audit` — id, project, memory type and id, agent, reason, the pruned heuristic's strategy, `pruned_at`, metadata — before the delete at three of the engine's eight delete sites; the bulk `delete_outcomes_older_than` (`:232`) and the per-row deletes at `:484`, `:512`, `:822` and `:848` are unrecorded | tests/unit/test_atlas_gaps_561.py `test_forget_audit_recorded`"
+stack_storage: "sqlite, postgres, chroma, qdrant, pinecone, files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "One of five typed rows — a heuristic, an outcome, a domain fact, an anti-pattern or a preference — each with its own columns and a 384-dimension embedding"
-  storage: "Postgres with pgvector in the hosted schema and a local SQLite mirror; five tables plus indexes on `(project_id, agent)`"
+  storage: "Postgres with pgvector in the hosted schema and a local SQLite mirror, with Chroma, Qdrant, Pinecone, Azure Cosmos and a file backend behind the same interface; five tables plus indexes on `(project_id, agent)`"
   retrieval: "Per-table SQL with `WHERE project_id = ?` and a confidence floor, plus vector similarity; a verification pass classifies results before returning them"
   write: "Outcomes recorded per task; heuristics accumulate occurrence and success counts; a file miner extracts heuristics and anti-patterns from a repository"
-  update_delete: "A `ForgettingEngine` prunes by age and by confidence, writing an `alma_forget_audit` row before three of its eight deletes; no supersession pointer"
+  update_delete: "A `ForgettingEngine` prunes by age and by confidence, writing an `alma_forget_audit` row before three of its eight deletes; a `DecayManager` computes a per-memory strength from access age, access count, reinforcement and importance, and the MCP surface lists weak memories and reinforces them before they become forgettable; no supersession pointer"
   scoping: "`project_id` and `agent` on every one of the five tables, applied as a SQL predicate on the read path and indexed together"
-  integration: "An MCP server whose tools include a verified retrieve and a list-by-verification-status, plus a CLI, a PyPI package and a JS package"
-  background: "The forgetting engine's pruning strategies and a file-mining ingestion pass"
+  integration: "An MCP server of 31 tools, including a verified retrieve, a list-by-verification-status, reinforce and list-weak-memories, plus a CLI, a PyPI package and a JS package"
+  background: "The forgetting engine's pruning strategies, decay-based strength that is recomputed on demand rather than swept, and a file-mining ingestion pass"
   trust: "Four verification states — verified, uncertain, contradicted, unverifiable — derived by ground truth, cross-verification or confidence, and written to a `verification_status` column on both backends"
   strengths: "An anti-pattern table storing the reason something was wrong and the better alternative beside it, a persisted epistemic status, and a LongMemEval recall curve that recomputes exactly from committed per-question records"
   risks: "The anti-pattern write guard sits on `learn()` alone, so the heuristic extractor, the consolidation pass, the conversation miner and two MCP write paths reach the store without passing it"
@@ -31,8 +35,8 @@ matrix:
 
 ALMA — Agent Learning Memory Architecture — is a **five-table memory for agents
 that learn from their own outcomes**, MIT with a `LICENSE` file in the tree,
-104,360 lines of Python under 42,467 lines of tests across 93 files, published
-to PyPI and npm.
+103,832 lines of Python of which 41,848 are tests across 91 files, 193 commits,
+release v0.11.0 published to PyPI and npm.
 
 The design divides memory by *what it is for* rather than by recency or type:
 
@@ -157,8 +161,21 @@ and `TIMESTAMPTZ` defaults (`alma/cli.py`), and a local SQLite mirror
 (`alma/storage/sqlite_local.py`). Indexes are declared on `(project_id, agent)` —
 the scope pair — which is the right composite for the queries the system issues.
 
-An MCP server exposes retrieval tools, and there is a CLI and a PyPI
-distribution, with `benchmarks/` and `Clara_docs/` alongside.
+An MCP server exposes 31 tools, and there is a CLI and a PyPI distribution,
+with `benchmarks/` and `Clara_docs/` alongside. Beside the five-table store sits
+a knowledge-graph package, `alma/graph/`, with in-memory, Kùzu, Memgraph and
+Neo4j backends and an LLM extractor; nothing in `alma/core.py`, the MCP tools,
+the CLI or the package root imports it, so it is a module the adopter wires
+rather than part of the memory path.
+
+The project's history was rewritten on 4 September 2026. The changelog's
+*Unreleased* section records the removal of *"Company fleet adapter and internal
+presentation deck. ALMA-memory stays memory-only OSS"*; the commit that had
+added the adapter (`082c64e`, *"Maia Phase-1 ALMA adapter"*) reaches `main` as
+a change to the changelog alone, no commit reachable from `main` contains an
+`integrations/` directory, and the release tag `v0.11.0` points at a rewritten
+commit. Two earlier commits of this repository are recorded in the History
+section below and are no longer served by GitHub.
 
 ### Deployment and ergonomics
 
@@ -199,6 +216,13 @@ added to one file and not the other drifts silently.
 - **Migration:** `alma/storage/migrations/versions/v1_2_0_atlas_gaps.py`.
 - **Ingestion:** `alma/ingestion/file_miner.py` and `conversation_miner.py` —
   heuristics and anti-patterns extracted from repository files and conversations.
+- **Decay and rescue:** `alma/learning/decay.py` — `MemoryStrength`,
+  `StrengthState`, `DecayManager` (`:317`); called from
+  `alma/mcp/tools/learning.py:405-518` by `alma_reinforce`,
+  `alma_get_weak_memories` and `alma_smart_forget`.
+- **Graph validity interval:** `alma/graph/store.py:51-54` — `valid_from` and
+  `valid_to` on `Relationship`, read by `get_relationships_as_of`
+  (`alma/graph/backends/memory.py:180-201`); no writer in `alma/`.
 - **MCP surface:** `alma/mcp/tools/retrieval.py`, `alma/mcp/tools/learning.py`.
 
 ## 5. Memory Data Model
@@ -226,7 +250,20 @@ Beside the five tables sits `alma_forget_audit` — `id`, `project_id`,
 
 `alma_domain_knowledge` carries `source` and `last_verified`, which is provenance
 plus a re-verification timestamp. `last_verified` is record time — when the check
-ran — not validity time, so there is no bi-temporal pair.
+ran — not validity time, and none of the five tables carries a validity interval.
+
+**The one validity interval in the tree is on a record nothing writes.** The
+knowledge graph's `Relationship` (`alma/graph/store.py:44-54`) carries
+`created_at` and, beside it, `valid_from` — *"when this relationship became
+true"* — and `valid_to`, `None` meaning still valid; `get_relationships_as_of`
+filters an entity's edges to those whose interval contains a point in time. That
+is the bi-temporal shape. What is absent is every producer and most of the
+consumers: `GraphExtractor` builds a `Relationship` from id, endpoints, type and
+properties and never sets either field (`alma/graph/extraction.py:172-178`); the
+Kùzu, Neo4j and Memgraph backends neither persist nor read the two columns;
+`get_relationships_as_of` is implemented on the in-memory backend and exercised
+by `tests/unit/test_graph_temporal.py`, which constructs the intervals by hand;
+and no surface in the package imports `alma.graph` at all.
 
 ## 6. Retrieval Mechanics
 
@@ -238,6 +275,13 @@ embeddings.
 after it, on all five tables. That is the strict form the rubric asks for, and is
 why the mark is earned without the caveat that attaches to post-filtered
 implementations elsewhere in this corpus.
+
+`RetrievalEngine` scores the candidates by similarity, recency, success rate and
+confidence, and accepts an optional `FeedbackAwareScorer` that re-ranks by
+accumulated retrieval feedback; no caller in the package passes one. A
+`HybridSearchEngine` — BM25S or TF-IDF fused with the vector list by reciprocal
+rank — is exported from `alma.retrieval` and called by nothing in the engine, so
+the product path has one arm.
 
 The verification pass then sorts results into the four statuses before returning
 them, and the MCP tool documents `contradicted` as "Needs review (may be stale)"
@@ -265,6 +309,17 @@ and anti-pattern prunes (`:294`, `:384`, `:429`); the bulk
 archive tier and no supersession pointer — a heuristic replaced by a better one
 is not linked to its replacement.
 
+**Decay is a computed strength with a rescue step.** `DecayManager`
+(`alma/learning/decay.py:317`) scores a memory as base decay by half-life since
+last access, plus a logarithmic access bonus, plus a reinforcement bonus, scaled
+by explicit importance, and buckets the number as `strong`, `normal`, `weak` or
+`forgettable`. The MCP tools `alma_get_weak_memories` and `alma_reinforce` list
+the weak ones and restart their clock, and `alma_smart_forget` removes the
+forgettable ones — *"weak memories can be rescued before deletion,"* as the
+module's header puts it. The state is derived from the number at read time, so
+it is a ranking, not a persisted judgement, which is why `trust_state` rests on
+`verification_status` rather than here.
+
 **The audit row holds the value it removed.** `record_forget_audit` stores the
 pruned heuristic's `strategy` alongside the reason. That is a durable record of
 a removed value, keyed near enough to the value to be matchable — sitting one
@@ -288,8 +343,9 @@ write: an agent calling `learn()` with a strategy that matches a known
 anti-pattern receives an exception, not a silent no-op. Refusing loudly is the
 right choice — a filtered write teaches the caller nothing.
 
-`integrations/maia/` adds a gateway adapter with its own tests, which is a second
-consumer of the same core rather than a second implementation of it.
+The package ships no second consumer of its own: `integrations/` does not exist
+in any commit reachable from `main`, and the changelog's *Unreleased* entry says
+the company adapter was removed so that *"ALMA-memory stays memory-only OSS."*
 
 ## 9. Reliability, Safety, and Trust
 
@@ -323,9 +379,13 @@ calculated and never shown to anyone. With the status persisted and
 `alma_list_verification` able to list by it, a review surface is closer than the
 missing mark suggests.
 
-**`bitemporal` — not found.** `last_validated`, `last_verified`, `created_at`,
-`last_seen`, `verified_at` and `pruned_at` are all record time. No validity
-interval exists.
+**`bitemporal` — withheld, on a producer that does not exist.** The five memory
+tables carry record time only — `last_validated`, `last_verified`, `created_at`,
+`last_seen`, `verified_at`, `pruned_at`. The knowledge graph's `Relationship`
+carries `valid_from` and `valid_to` beside `created_at` with an as-of reader,
+which is the shape, and nothing in `alma/` assigns either field, the three
+database-backed graph stores ignore them, and no surface imports the graph
+package. A validity axis that only a test populates is declared, not tracked.
 
 **`negative_eval` — not found.** The nearest case is
 `tests/unit/test_budget_retrieval.py:377`, which asserts a `MUST_SEE` item does
@@ -337,7 +397,7 @@ which is the right shape one subject away from the mark.
 
 **Fail-open by construction.** `check_write_guard` returns unblocked when the
 storage backend has no `get_anti_patterns`, when the lookup raises, and when the
-env var is off. Every one of the eight shipped backends implements
+env var is off. Every one of the seven shipped backends implements
 `get_anti_patterns`, so the docstring's *"non-SQLite"* caveat understates its own
 reach — but a custom backend, or a transient database error, silently degrades
 refusal to permission. For a guard, that is the correct direction to fail and the
@@ -345,8 +405,8 @@ one worth logging louder than `logger.warning`.
 
 ## 10. Tests, Evals, and Benchmarks
 
-93 test files, 42,467 lines. `tests/unit/test_atlas_gaps_561.py` covers the new
-mechanisms directly: the guard's env default, substring matching, a blocked learn
+91 test files, 41,848 lines. `tests/unit/test_atlas_gaps_561.py` covers the
+v0.11.0 mechanisms directly: the guard's env default, substring matching, a blocked learn
 and an allowed unrelated one, verification persistence on an outcome, a forget
 audit row, the verified retriever's persistence, and SQLite column parity.
 
@@ -371,12 +431,20 @@ is the reporting discipline this atlas credits
 What the numbers are not: end-to-end QA accuracy. The metric is whether a correct
 session id appears in the top *k* of a retrieval over a haystack, so it measures
 the retrieval arm alone and is not comparable to LongMemEval QA scores quoted
-elsewhere in this atlas. Nothing here was run — two dependency surfaces changed
-the day of this reading, inside the seven-day cooldown — so the recomputation
-above is arithmetic over committed records, not a re-execution of the benchmark.
+elsewhere in this atlas. The recomputation above is arithmetic over committed
+records, not a re-execution of the benchmark.
 
 The invariant missing a test is cross-dialect parity: SQLite columns are
 asserted, the Postgres side is not, and nothing compares the two.
+
+The repository records where v0.11.0 came from. Section 7 of the README,
+*"Hardened after external code review (2026-08)"*, links this atlas's report on
+commit `164d2e3e` and tables the five changes against it; the migration's
+description string reads *"Persist verification + forget_audit (Agent Memory
+Atlas gaps)"*; the test file's docstring and four planning documents under
+`docs/plans/` carry the same reference. Those documents are the project's own
+account of its August changes, and the README's table is accurate to the code
+at every row.
 
 ## 11. For Your Own Build
 
@@ -423,7 +491,7 @@ is the point and a Python or JS integration is wanted. The five-way typed split
 is legible, the scope predicate is strict, and the correction machinery refuses
 rather than merely advises.
 
-The judgement to make is about maintenance surface. 104,360 lines with eight
+The judgement to make is about maintenance surface. 103,832 lines with seven
 storage backends, an MCP server, a CLI, two package ecosystems and a benchmark
 suite is a large thing to depend on for a five-table idea, and the parts a reader
 will actually use — the anti-pattern columns, the guard, the audit row — are a
@@ -477,20 +545,49 @@ rather than yours to configure.
 
 **Lifecycle**
 - `alma/learning/forgetting.py` — `ForgettingEngine`, `_audit_forget` (`:306`)
+- `alma/learning/decay.py` — `DecayManager`, `MemoryStrength`, `StrengthState`
+
+**Graph (unwired)**
+- `alma/graph/store.py` — `Relationship` with `valid_from`/`valid_to`;
+  `alma/graph/backends/memory.py` — `get_relationships_as_of`;
+  `alma/graph/extraction.py` — the extractor that sets neither field
 
 **Write path**
 - `alma/ingestion/file_miner.py`, `alma/ingestion/conversation_miner.py`
 - `alma/learning/heuristic_extractor.py`, `alma/consolidation/engine.py`
 
-**MCP, integrations**
+**MCP**
 - `alma/mcp/tools/retrieval.py`, `alma/mcp/tools/learning.py`
-- `integrations/maia/alma_gateway_adapter.py`
 
 **Tests and benchmarks**
-- `tests/unit/test_atlas_gaps_561.py`
+- `tests/unit/test_atlas_gaps_561.py`, `tests/unit/test_graph_temporal.py`
 - `benchmarks/results-v1.0-phase1.json` and the two feedback-learning result files
 
+**Searches that ground the absence claims above** (run at the pinned commit):
+- `rg -n check_write_guard alma/` — the definition and one call site,
+  `alma/learning/protocols.py:97-99`.
+- `rg -n needs_review alma/` — two definitions in `alma/retrieval/verification.py`,
+  no caller.
+- `rg -n '_audit_forget|delete_' alma/learning/forgetting.py` — three audited
+  sites (`:294`, `:384`, `:429`) and five silent deletes (`:232`, `:484`,
+  `:512`, `:822`, `:848`).
+- `rg -n 'valid_from\s*=|valid_to\s*=' alma/` — no assignment outside the
+  dataclass defaults; `rg -n valid_from alma/graph/backends/` — the in-memory
+  backend only.
+- `rg -n 'alma\.graph' alma/__init__.py alma/core.py alma/mcp/ alma/cli.py` —
+  empty.
+- `rg -n 'feedback_scorer=' alma/` — empty; `rg -n -i hybrid
+  alma/retrieval/engine.py alma/core.py` — empty.
+- `rg -l -i 'parity|dialect' tests/` — `test_atlas_gaps_561.py` only, which
+  asserts the SQLite columns.
+- `git log --all --name-status -- integrations/` — empty; `git fetch origin
+  e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9` — *"not our ref"*.
+- `rg -n -i 'arxiv|bibtex|doi\.org' README.md docs/` — nothing beyond the
+  LongMemEval citation; no `CITATION.cff`.
+
 ## History
+
+**2026-09-04** — [`91a352f25fa1060c25c414770ecdfc57fb49f52d`](https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d) — re-pinned at the head of a rewritten `main`, 193 commits. The two commits this report was previously pinned to, `e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9` and `164d2e3e3c67f3ce1c33d2b9ccd9acaa65f9ad7a`, are no longer served by GitHub — a fetch by SHA answers *"not our ref"* — because the project rewrote its history on 4 September 2026 to remove a company integration adapter and a presentation deck; the tag `v0.11.0` points at a rewritten commit and no reachable commit contains `integrations/`. Screened again first: six build-time execution paths, three unpinned surfaces, nothing inside the seven-day cooldown, no auto-run surface; nothing was installed or run. The memory mechanism is unchanged and every absence search re-run at this commit returns what it returned before: the write guard has one call site, `needs_review()` has no consumer, three of eight delete sites are audited, nothing compares the two dialects. No mark moves. One published claim was wrong at both earlier pins and is corrected: *"No validity interval exists"* — the knowledge graph's `Relationship` has carried `valid_from` and `valid_to` beside `created_at`, with an as-of reader, since v0.9.0; the mark stays withheld because nothing in the package assigns the fields, the database-backed graph stores ignore them, and no surface imports the graph package. Two mechanisms present at both earlier pins and unreported are added: `DecayManager`'s computed strength with the reinforce and list-weak-memories tools, and the exported, uncalled `HybridSearchEngine`. The Maia adapter paragraph is removed with its file. The stack row is promoted from seeded to reviewed with the shipped store backends named where the vocabulary allows.
 
 **2026-08-06** — [`e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9`](https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9) — 8 commits on, tagged v0.11.0. Four published criticisms went stale, all in the same direction: the project closed them. `verification_status` and five companion columns are written to both backends by `v1_2_0_atlas_gaps.py`, so `trust_state` is earned. `alma_forget_audit` is an insert-only prune record on both backends, so `audit_log` is earned. A `LICENSE` file is in the tree. And `alma/learning/write_guard.py` refuses a write matching a stored anti-pattern — the wiring the report described as one decision away.
 

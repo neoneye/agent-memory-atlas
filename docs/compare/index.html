@@ -5444,7 +5444,8 @@ delete anywhere, and zero tests over the memory package</td>
 anti-pattern or a preference — each with its own columns and a
 384-dimension embedding</td>
 <td>Postgres with pgvector in the hosted schema and a local SQLite
-mirror; five tables plus indexes on
+mirror, with Chroma, Qdrant, Pinecone, Azure Cosmos and a file backend
+behind the same interface; five tables plus indexes on
 <code>(project_id, agent)</code></td>
 <td>Per-table SQL with <code>WHERE project_id = ?</code> and a
 confidence floor, plus vector similarity; a verification pass classifies
@@ -5454,14 +5455,18 @@ success counts; a file miner extracts heuristics and anti-patterns from
 a repository</td>
 <td>A <code>ForgettingEngine</code> prunes by age and by confidence,
 writing an <code>alma_forget_audit</code> row before three of its eight
-deletes; no supersession pointer</td>
+deletes; a <code>DecayManager</code> computes a per-memory strength from
+access age, access count, reinforcement and importance, and the MCP
+surface lists weak memories and reinforces them before they become
+forgettable; no supersession pointer</td>
 <td><code>project_id</code> and <code>agent</code> on every one of the
 five tables, applied as a SQL predicate on the read path and indexed
 together</td>
-<td>An MCP server whose tools include a verified retrieve and a
-list-by-verification-status, plus a CLI, a PyPI package and a JS
-package</td>
-<td>The forgetting engine's pruning strategies and a file-mining
+<td>An MCP server of 31 tools, including a verified retrieve, a
+list-by-verification-status, reinforce and list-weak-memories, plus a
+CLI, a PyPI package and a JS package</td>
+<td>The forgetting engine's pruning strategies, decay-based strength
+that is recomputed on demand rather than swept, and a file-mining
 ingestion pass</td>
 <td>Four verification states — verified, uncertain, contradicted,
 unverifiable — derived by ground truth, cross-verification or
@@ -20756,7 +20761,7 @@ href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c
 <li><a
 href="https://github.com/RBKunnela/ALMA-memory">RBKunnela/ALMA-memory</a>
 at <a
-href="https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9"><code class="commit-id" title="e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9">e2178ad4…</code></a></li>
+href="https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d"><code class="commit-id" title="91a352f25fa1060c25c414770ecdfc57fb49f52d">91a352f2…</code></a></li>
 <li><a
 href="https://github.com/deepractice/promptx">deepractice/promptx</a> at
 <a
@@ -23375,6 +23380,22 @@ can be true or false, and there is nothing for a correction to be about.
 Recorded rather than dropped because it is the cleanest example yet of
 the boundary this atlas draws between a harness that persists and a
 memory that believes.</li>
+<li><strong>One published claim about <a
+href="../systems/alma-memory/">ALMA</a> was wrong at both earlier pins,
+and is corrected.</strong> Until 4 September 2026 the report said
+<em>"No validity interval exists"</em>; the knowledge graph's
+<code>Relationship</code> dataclass has carried <code>valid_from</code>
+and <code>valid_to</code> beside <code>created_at</code>, with a
+<code>get_relationships_as_of</code> reader, since v0.9.0 in April 2026,
+four months before the first reading. The mark is still withheld, on the
+producer test rather than on absence: nothing in the package assigns
+either field, the Kùzu, Neo4j and Memgraph backends neither persist nor
+read them, and no surface imports the graph package — so the report's
+verdict was right and its reason was wrong, and a reason that is wrong
+is a search that was never run. The same re-read found the two commits
+the report had been pinned to no longer served by GitHub, because the
+project rewrote its history to remove a company adapter; the History
+section keeps both hashes and says so.</li>
 <li><strong>Three published claims about <a
 href="../systems/engram-alpha/">Engram Alpha</a> were wrong at every pin
 since the first reading, and are corrected.</strong> Until 4 September
@@ -26824,6 +26845,23 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-04</strong> — <strong>A pin can be deleted upstream,
+not only orphaned, and the report has to say which.</strong> <a
+href="../systems/alma-memory/">ALMA</a>'s two previous pins were not
+merely unreachable from a branch, which is the case
+<code>scripts/check_freshness.py</code> learned to name on 28 July;
+GitHub refused them by SHA — <em>"not our ref"</em> — because the
+project rewrote its history to purge a company adapter, and every
+<code>revision_url</code> the atlas had published for that system now
+resolves to nothing. The report's History keeps the hashes, because the
+atlas's own record of what it read is the only place they survive, and
+states in one sentence why they no longer resolve. The reading also
+confirmed the direction the freshness check cannot see: a rewritten
+history can leave the <em>mechanism</em> untouched — every absence
+search returned what it had returned before — while removing from the
+past a file the report had described, so a re-read after a rewrite has
+to check the report's claims about files as well as its claims about
+code.</p>
 <p><strong>2026-09-04</strong> — <strong>When a report says an actor
 cannot do something, list the actor's tools and grep for the
 verb.</strong> The <a href="../systems/engram-alpha/">Engram Alpha</a>
