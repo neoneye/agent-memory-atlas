@@ -6,10 +6,15 @@ root: ../..
 page_kind: system
 source_name: "sweetsophia/noosphere"
 source_url: https://github.com/sweetsophia/noosphere
-revision: 8bb93ee67d46e661f47ab16a23d03c84a0bb08de
-revision_url: https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de
-analyzed_at: 2026-08-09
+revision: feb04e0d07a48ae988095bd9631307f6fcfd47bc
+revision_url: https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc
+analyzed_at: 2026-09-05
 capabilities: "tombstone, scope_enforced, human_review, audit_log"
+capability_evidence:
+  tombstone: "capture lineage | src/lib/memory/capture/repository.ts:244 | memoryTombstone.findFirst then MemoryCaptureError 409 | none"
+  scope_enforced: "capture lineage | prisma/schema.prisma:231 | RestrictedScope plus privateScopeTag on capture and article rows | none"
+  human_review: "capture lineage | src/lib/memory/capture/lifecycle.ts:378 | memoryPrivacyReview.upsert status OPEN | none"
+  audit_log: "capture lineage | src/lib/memory/capture/lifecycle.ts:398 | memoryTombstone.upsert and memoryDurableJob.upsert with reasonCode | none"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -20,7 +25,7 @@ matrix:
   write: "A serializable transaction that locks the lineage, refuses a revoked digest, then creates the capture"
   update_delete: "Revocation writes a tombstone keyed on an HMAC subject hash and enqueues a durable cleanup job"
   scoping: "privateScopeTag on the principal and on every row, plus a RestrictedScope table and restricted tags"
-  integration: "Plugins for OpenClaw, OpenCode, Kilo Code and Hermes, plus an injected-memory package and a web wiki"
+  integration: "Plugins for OpenClaw, OpenCode, Kilo Code, Hermes and Codex (MCP), plus an injected-memory package, a checksum-pinned installer, and a web wiki"
   background: "Durable jobs with idempotency keys for cleanup, embedding and backfill, plus TTL expiry"
   trust: "A candidate status ladder from ephemeral upward, with occurrence and retrieval counters driving promotion"
   strengths: "The tombstone is checked across every retained HMAC key version, so rotating the key cannot resurrect a revocation"
@@ -31,8 +36,9 @@ matrix:
 
 Noosphere is a self-hosted knowledge and memory layer where the same data is an
 agent's memory and a human's browsable Markdown wiki — topics, revisions and
-scopes. Apache-2.0, roughly 68,000 lines of TypeScript on Next.js and Postgres
-through Prisma, with plugins for OpenClaw, OpenCode, Kilo Code and Hermes.
+scopes. Apache-2.0, roughly 71,000 lines of TypeScript on Next.js and Postgres
+through Prisma, with plugins for OpenClaw, OpenCode, Kilo Code, Hermes and
+Codex (MCP).
 
 **It carries a rejected-value tombstone of the *consulted* kind, and it is the
 most rigorous one in this atlas.**
@@ -128,10 +134,11 @@ cache epoch and — notably — an `embedding_consent` table. Embedding is treat
 as a consent-bearing operation rather than an implementation detail.
 
 Four editor plugins ship as sibling packages, plus an `noosphere-injected-memory`
-package and an OpenClaw install script.
+package, a Codex MCP server (`noosphere-mcp`), and a checksum-pinned installer.
 
-An operator needs Postgres and a Node runtime; Docker Compose files are
-provided.
+An operator needs Postgres, Docker, and a Node runtime. Docker Compose files
+and a guided installer are provided. Optional hybrid retrieval is off by
+default; the documented local embedding path is llama.cpp.
 
 ## 4. Essential Implementation Paths
 
@@ -217,9 +224,10 @@ whether or not the job has run.
 
 ## 8. Agent Integration
 
-Four plugin packages (OpenClaw, OpenCode, Kilo Code, Hermes), an injected-memory
-package, an install script, and the web wiki. The agent and the human read the
-same store through different surfaces, which is the product.
+Five integration packages (OpenClaw, OpenCode, Kilo Code, Hermes, and Codex via
+`noosphere-mcp`), an injected-memory package, a checksum-pinned installer, and
+the web wiki. The agent and the human read the same store through different
+surfaces, which is the product.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -257,13 +265,13 @@ tests around capture races come close in spirit.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper.** 84 test files, including `capture-integration.test.ts` and
-`capture-race-integration.test.ts` — the second of which exists because the
-tombstone check and the capture creation must be correct under concurrency, and
-it is the right test to have written.
+**No paper.** 87 files under `src/__tests__`, including
+`capture-integration.test.ts` and `capture-race-integration.test.ts` — the
+second of which exists because the tombstone check and the capture creation must
+be correct under concurrency, and it is the right test to have written.
 
 **I ran nothing.** The screen flagged `.github/copilot-instructions.md` as an
-auto-run surface and ten dependency manifests inside the seven-day cooldown.
+auto-run surface and twelve dependency manifests inside the seven-day cooldown.
 
 No retrieval benchmark is committed and none is claimed. For a system whose
 distinguishing work is revocation correctness rather than ranking, the tests
@@ -360,11 +368,13 @@ vocabulary), the privacy-review and durable-job upserts `:385-425`
 
 **Integration** — `openclaw-noosphere-memory/`, `opencode-noosphere-memory/`,
 `kilocode-noosphere-memory/`, `hermes-noosphere-memory/`,
-`noosphere-injected-memory/`
+`noosphere-injected-memory/`, `noosphere-mcp/`, `install.sh`
 
 **Tests** — `src/__tests__/memory/capture-integration.test.ts`,
 `capture-race-integration.test.ts`
 
 ## History
+
+**2026-09-05** — [`feb04e0d07a48ae988095bd9631307f6fcfd47bc`](https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc) — 207 commits on. Capture tombstone, HMAC keyring, schema models and capability marks unchanged; cited line numbers still hold. TypeScript/JavaScript source ~70,500 lines (65,100 at the previous pin). Integration surface adds `@sweetsophia/noosphere-mcp` (Codex) and a checksum-pinned installer. Screened before reading: one auto-run surface (`.github/copilot-instructions.md`), no build-time execution, twelve dependency manifests inside the seven-day cooldown. The tree was read, never installed, and no test was run.
 
 **2026-08-09** — [`8bb93ee67d46e661f47ab16a23d03c84a0bb08de`](https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de) — first reading. Screened before reading: one auto-run surface (`.github/copilot-instructions.md`), no build-time execution, ten dependency manifests inside the seven-day cooldown. The tree was read, never installed, and no test was run.

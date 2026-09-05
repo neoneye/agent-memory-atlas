@@ -110,14 +110,14 @@ key used to compute its own key.</p>
               <strong>sweetsophia/noosphere</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de" title="8bb93ee67d46e661f47ab16a23d03c84a0bb08de">
+            <a class="meta-pill revision-pill" href="https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc" title="feb04e0d07a48ae988095bd9631307f6fcfd47bc">
               <span>Analyzed revision</span>
-              <code>8bb93ee6…</code>
+              <code>feb04e0d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-05</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -138,9 +138,9 @@ key used to compute its own key.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Noosphere is a self-hosted knowledge and memory layer where the same
 data is an agent's memory and a human's browsable Markdown wiki —
-topics, revisions and scopes. Apache-2.0, roughly 68,000 lines of
+topics, revisions and scopes. Apache-2.0, roughly 71,000 lines of
 TypeScript on Next.js and Postgres through Prisma, with plugins for
-OpenClaw, OpenCode, Kilo Code and Hermes.</p>
+OpenClaw, OpenCode, Kilo Code, Hermes and Codex (MCP).</p>
 <p><strong>It carries a rejected-value tombstone of the
 <em>consulted</em> kind, and it is the most rigorous one in this
 atlas.</strong></p>
@@ -231,10 +231,12 @@ embedding state, an embedding job queue, a search cache epoch and —
 notably — an <code>embedding_consent</code> table. Embedding is treated
 as a consent-bearing operation rather than an implementation detail.</p>
 <p>Four editor plugins ship as sibling packages, plus an
-<code>noosphere-injected-memory</code> package and an OpenClaw install
-script.</p>
-<p>An operator needs Postgres and a Node runtime; Docker Compose files
-are provided.</p>
+<code>noosphere-injected-memory</code> package, a Codex MCP server
+(<code>noosphere-mcp</code>), and a checksum-pinned installer.</p>
+<p>An operator needs Postgres, Docker, and a Node runtime. Docker
+Compose files and a guided installer are provided. Optional hybrid
+retrieval is off by default; the documented local embedding path is
+llama.cpp.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Capture</strong> —
@@ -317,10 +319,11 @@ is to make the transaction's conflict detection see something.</p>
 the cleanup can be retried without double-executing, and the tombstone
 stands whether or not the job has run.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>Four plugin packages (OpenClaw, OpenCode, Kilo Code, Hermes), an
-injected-memory package, an install script, and the web wiki. The agent
-and the human read the same store through different surfaces, which is
-the product.</p>
+<p>Five integration packages (OpenClaw, OpenCode, Kilo Code, Hermes, and
+Codex via <code>noosphere-mcp</code>), an injected-memory package, a
+checksum-pinned installer, and the web wiki. The agent and the human
+read the same store through different surfaces, which is the
+product.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Tombstone — awarded, consulted kind.</strong> Value-keyed on
@@ -358,14 +361,14 @@ inspected, though the integration tests around capture races come close
 in spirit.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>No paper.</strong> 84 test files, including
-<code>capture-integration.test.ts</code> and
+<p><strong>No paper.</strong> 87 files under <code>src/__tests__</code>,
+including <code>capture-integration.test.ts</code> and
 <code>capture-race-integration.test.ts</code> — the second of which
 exists because the tombstone check and the capture creation must be
 correct under concurrency, and it is the right test to have written.</p>
 <p><strong>I ran nothing.</strong> The screen flagged
 <code>.github/copilot-instructions.md</code> as an auto-run surface and
-ten dependency manifests inside the seven-day cooldown.</p>
+twelve dependency manifests inside the seven-day cooldown.</p>
 <p>No retrieval benchmark is committed and none is claimed. For a system
 whose distinguishing work is revocation correctness rather than ranking,
 the tests that matter are the concurrency ones, and they exist.</p>
@@ -476,11 +479,22 @@ conflict-detection read <code>:256-267</code></p>
 <code>opencode-noosphere-memory/</code>,
 <code>kilocode-noosphere-memory/</code>,
 <code>hermes-noosphere-memory/</code>,
-<code>noosphere-injected-memory/</code></p>
+<code>noosphere-injected-memory/</code>, <code>noosphere-mcp/</code>,
+<code>install.sh</code></p>
 <p><strong>Tests</strong> —
 <code>src/__tests__/memory/capture-integration.test.ts</code>,
 <code>capture-race-integration.test.ts</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc"><code class="commit-id" title="feb04e0d07a48ae988095bd9631307f6fcfd47bc">feb04e0d…</code></a>
+— 207 commits on. Capture tombstone, HMAC keyring, schema models and
+capability marks unchanged; cited line numbers still hold.
+TypeScript/JavaScript source ~70,500 lines (65,100 at the previous pin).
+Integration surface adds <code>@sweetsophia/noosphere-mcp</code> (Codex)
+and a checksum-pinned installer. Screened before reading: one auto-run
+surface (<code>.github/copilot-instructions.md</code>), no build-time
+execution, twelve dependency manifests inside the seven-day cooldown.
+The tree was read, never installed, and no test was run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de"><code class="commit-id" title="8bb93ee67d46e661f47ab16a23d03c84a0bb08de">8bb93ee6…</code></a>
 — first reading. Screened before reading: one auto-run surface
