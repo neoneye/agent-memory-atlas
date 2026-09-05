@@ -238,6 +238,21 @@ chaining — and documents the retrofit explicitly
 (<code>valid_from = legacy.updated_at</code>), so the point at which
 bi-temporality was added stays recoverable rather than silently
 assumed.</p>
+<p><a href="../../systems/magicore/">MagiCore</a> puts the instant form
+in a .NET library: <code>reference_time</code> in a memory's metadata
+beside <code>CreatedAt</code> and <code>UpdatedAt</code>, a range filter
+applied before ranking, a dedup key that includes the instant so one
+sentence at two dates is two rows, and a deterministic interpreter that
+turns an ISO date, a year or <em>last month</em> into a range with a
+confidence and gives up below a threshold —
+<code>TemporalSearchFailsOpenWhenInterpretationConfidenceIsLow</code>
+asserts a vague question returns both memories rather than the wrong
+one. Its record axis is queryable too: <code>GetAllAtAsync</code>
+replays the history to a timestamp. What it lacks is the end of the
+interval, so the period a fact held is recoverable only from the
+record-time history of its supersession — Gini's
+<code>occurred_end</code> and GENOME's <code>valid_until</code> are the
+missing column.</p>
 <p><a href="../../systems/hindsight/">Hindsight</a> extracts temporal
 spans alongside facts. <a href="../../systems/metaclaw/">MetaClaw</a>
 and <a href="../../systems/redis-agent-memory-server/">Redis Agent
