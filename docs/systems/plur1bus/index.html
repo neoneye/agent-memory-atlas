@@ -110,14 +110,14 @@ has to make on purpose.</p>
               <strong>Cyb3rb1ade/openclaw-plur1bus-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231" title="3479373f87dc8f70d460d09ddeb20ffb83355231">
+            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/399bfba7fc81d0becf35794f4895992bf54bc33f" title="399bfba7fc81d0becf35794f4895992bf54bc33f">
               <span>Analyzed revision</span>
-              <code>3479373f…</code>
+              <code>399bfba7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-09-05</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -137,38 +137,38 @@ has to make on purpose.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release
-7.4.0 — around 10,900 lines in <code>index.js</code>, 61,000 across
-<code>lib/</code>, and more again in <code>tests/</code> and
+7.11.0 — 12,418 lines in <code>index.js</code>, 73,743 across 254 files
+in <code>lib/</code>, and more again in <code>tests/</code> and
 <code>test/</code>, which is the first unusual thing about it: the test
 suite is larger than the implementation it covers, across 361 test
 files.</p>
 <p>The second unusual thing is the ratio of care to surface.
-<code>openclaw.plugin.json</code> declares forty-seven top-level
-configuration groups, covering dreaming, emotional state, persona voice,
-an Obsidian vault bridge, skill mining, reminders, a semantic lens,
-conversation reactivation, and a proactive governor. Underneath that is
-a correction path — <code>lib/safe-update.js</code>, 414 lines — that is
-more disciplined than most of the dedicated memory systems in this
-atlas: a content change is refused unless the caller supplies both an
-update source and a quoted piece of evidence, the replacement row is
-written and made durable <em>before</em> the old row is marked
-superseded, and the whole transition is appended to a reconsolidation
-event log keyed by an idempotency hash.</p>
+<code>openclaw.plugin.json</code> declares fifty top-level configuration
+groups, covering dreaming, emotional state, persona voice, an Obsidian
+vault bridge, skill mining, reminders, a semantic lens, conversation
+reactivation, and a proactive governor. Underneath that is a correction
+path — <code>lib/safe-update.js</code>, 414 lines — that is more
+disciplined than most of the dedicated memory systems in this atlas: a
+content change is refused unless the caller supplies both an update
+source and a quoted piece of evidence, the replacement row is written
+and made durable <em>before</em> the old row is marked superseded, and
+the whole transition is appended to a reconsolidation event log keyed by
+an idempotency hash.</p>
 <p>The most interesting single line in the repository is
-<code>safe-update.js:357</code>. Before a content change is accepted,
+<code>safe-update.js:398</code>. Before a content change is accepted,
 the new embedding is compared against the old one and the update is
 rejected if the cosine distance exceeds 0.45 — a machine refusing to let
 a "correction" quietly replace a memory with something that means
-something else. It is a genuinely novel gate, and the only caller in the
-tree, the user-facing <code>/correct</code> command at
-<code>index.js:6422</code>, passes <code>skipDriftGate: true</code> —
-deliberately, with the reasoning written at the call site: the gate
-throws rather than degrades, a large correction is exactly what a user
-typing <code>/correct</code> intends, and the confirmation dialog shows
-the old and new text in full before anything is written. The measured
-drift is still recorded on the reconsolidation event. A gate that is off
-by argument is a different thing from a gate that is off by accident,
-and this is the first.</p>
+something else. It is a genuinely novel gate, and the one caller outside
+the automated conflict apply, the user-facing <code>/correct</code>
+command at <code>index.js:8995</code>, passes
+<code>skipDriftGate: true</code> — deliberately, with the reasoning
+written at the call site: the gate throws rather than degrades, a large
+correction is exactly what a user typing <code>/correct</code> intends,
+and the confirmation dialog shows the old and new text in full before
+anything is written. The measured drift is still recorded on the
+reconsolidation event. A gate that is off by argument is a different
+thing from a gate that is off by accident, and this is the first.</p>
 <p>Where it is strongest: scope. <code>checkAccess</code>
 (<code>lib/acl-middleware.js:103</code>) denies by default, denies on a
 missing owner, denies on a conflicting ownership tuple, and is applied
@@ -181,8 +181,8 @@ third <strong>on a measurement rather than an omission</strong>.
 has demoted cannot reach the prompt at all; the claim-level epistemic
 status does the same for <code>invalidated</code> at all three read
 layers (<code>recall-pipeline.js:157</code>,
-<code>neo-arch.js:1385</code>, and the SQL clause at
-<code>db-adapter.js:519</code>). <code>conflict</code> is still a
+<code>neo-arch.js:1464</code>, and the SQL clause at
+<code>db-adapter.js:562</code>). <code>conflict</code> is still a
 ranking penalty, and the comment that keeps it one is the interesting
 part — the detector is <em>"an unvalidated LLM"</em>, a live probe on 16
 August 2026 found 4,017 newest-revision records carrying
@@ -210,20 +210,20 @@ be silently re-stored.</p>
 per agent, a row per card. A card's life is short to describe: it is
 <code>active</code>, or it has been superseded by a newer version that
 names it in <code>previousVersion</code>. Retrieval is unforgiving about
-this. <code>lib/recall-pipeline.js:137</code> drops any entry whose
+this. <code>lib/recall-pipeline.js:153</code> drops any entry whose
 status is set and is not <code>active</code>, so a superseded card is
 not ranked down, it is gone from the read path.</p>
 <p><strong>Neo records</strong> are the JSONL layer — turn journal,
 memory candidates, behaviour cards, graph edges, dream diary, episodes —
 and they carry the epistemics. Each record has a <code>status</code>
-from <code>NEO_STATUSES</code> (<code>lib/neo-arch.js:62</code>):</p>
+from <code>NEO_STATUSES</code> (<code>lib/neo-arch.js:65</code>):</p>
 <pre class="js"><code>[&quot;candidate&quot;, &quot;active&quot;, &quot;promoted&quot;, &quot;demoted&quot;, &quot;conflict&quot;, &quot;pruned&quot;, &quot;tombstoned&quot;]</code></pre>
 <p>and an <code>origin.trustLevel</code> from
-<code>NEO_TRUST_LEVELS</code> (<code>lib/neo-arch.js:52</code>), running
+<code>NEO_TRUST_LEVELS</code> (<code>lib/neo-arch.js:55</code>), running
 <code>untrusted → user_asserted → assistant_asserted → tool_observed → validated → curated</code>.</p>
 <p>What moves a record between states is a person.
 <code>/plur1bus memory promote|demote|prune|tombstone &lt;id&gt;</code>
-(<code>index.js:5961</code>) requires authorization, calls
+(<code>index.js:8248</code>) requires authorization, calls
 <code>transitionRecordStatus</code>, and appends the transitioned record
 back to the JSONL. There is no automatic promoter; a candidate becomes
 promoted because someone typed the command.</p>
@@ -245,14 +245,14 @@ const penalties = (item.origin?.role === &quot;assistant&quot; ? 0.2 : 0)
 narrow, which is the right shape for a status a model assigns.</strong>
 Two subcommands sit behind the same authorization check as
 <code>promote</code>/<code>demote</code>/<code>prune</code>/<code>tombstone</code>
-(<code>index.js:5867</code>).
+(<code>index.js:6853</code>).
 <code>/plur1bus curation resolve &lt;id&gt; keep|drop</code>
 (<code>lib/curation-resolve.js</code>, dispatched at
-<code>index.js:6940</code>) moves one record and appends a
+<code>index.js:8065</code>) moves one record and appends a
 <code>curation.resolve</code> event.
 <code>/plur1bus curation drop-injected</code>
 (<code>lib/drop-injected-conflicts.js</code>,
-<code>index.js:6959</code>) is the bulk form, and it is bounded twice
+<code>index.js:8082</code>) is the bulk form, and it is bounded twice
 rather than trusted: <code>previewDropInjected</code> shows the set
 before <code>applyDropInjected</code> touches it, and the apply path
 refuses any record whose <code>status !== "conflict"</code> or whose
@@ -280,8 +280,8 @@ explicitly orthogonal to <em>who</em> asserted a memory
 (<code>trusted +0.25 … disputed −0.4</code>), but
 <code>invalidated</code> is a hard filter, dropped on the read path at
 <code>recall-pipeline.js:157</code>, given <code>-Infinity</code> at
-<code>neo-arch.js:1385</code>, and excluded in SQL at
-<code>db-adapter.js:519</code>
+<code>neo-arch.js:1464</code>, and excluded in SQL at
+<code>db-adapter.js:562</code>
 (<code>epistemicStatus != 'invalidated'</code>). It withholds rather
 than ranks, as <code>demoted</code> now does on the neo axis, and the
 transitions into <code>trusted</code> and <code>invalidated</code>
@@ -296,7 +296,7 @@ mean anything.</strong> The JSONL stores are append-only event logs:
 <code>transitionRecordStatus</code> appends a fresh line under the same
 id rather than replacing the old one, so a record that has moved to
 <code>demoted</code> exists on disk twice, once in each state.
-<code>routeNeoRecall</code> (<code>lib/neo-arch.js:1419</code>)
+<code>routeNeoRecall</code> (<code>lib/neo-arch.js:1459</code>)
 deduplicates by id and keeps the <strong>newest revision</strong>,
 ordered by <code>updatedAt</code> — the field a transition sets — while
 preserving first-appearance order so the <code>itemIndex</code> tiebreak
@@ -331,8 +331,8 @@ because it protects the whole loop. Text that PLUR1BUS itself injected
 into a prompt — recall blocks, temporal context, status reminders, cron
 output — is matched against a marker list and refused as a capture
 candidate (<code>isInjectedContextText</code>,
-<code>lib/neo-arch.js:176</code>, applied at
-<code>neo-arch.js:1199</code> and <code>:1242</code>). Without it,
+<code>lib/neo-arch.js:189</code>, applied at
+<code>neo-arch.js:1213</code> and <code>:1256</code>). Without it,
 recall output becomes next turn's memory, which the comment above the
 marker list dates to a performance analysis on 29 May 2026.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession is dropped at one line of the recall pipeline while conflict and demotion are only ranked down and still injected, so three lifecycle states have three different read-path treatments</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession is dropped at one line of the recall pipeline while conflict and demotion are only ranked down and still injected, so three lifecycle states have three different read-path treatments
@@ -357,10 +357,10 @@ up: LanceDB is embedded, the neo store is JSONL on disk, and the caches
 use the <code>node:sqlite</code> module built into Node rather than a
 dependency.</p>
 <ul>
-<li><strong><code>index.js</code></strong> (9,292 lines) — plugin entry,
-hook registration, chat commands, and the wiring between every subsystem
-below.</li>
-<li><strong><code>lib/</code></strong> (206 files, 54,781 lines) —
+<li><strong><code>index.js</code></strong> (12,418 lines) — plugin
+entry, hook registration, chat commands, and the wiring between every
+subsystem below.</li>
+<li><strong><code>lib/</code></strong> (254 files, 73,743 lines) —
 <code>recall-pipeline.js</code> (1,903), <code>neo-arch.js</code>
 (2,356), <code>obsidian-control-room.js</code> (3,918) and
 <code>obsidian-bridge.js</code> (2,035) dominate;
@@ -374,20 +374,22 @@ reflection.</li>
 <li><strong><code>lib/dreaming/</code></strong> —
 <code>light-dream.js</code>, <code>rem-dream.js</code>,
 <code>dream-narrative.js</code>.</li>
-<li><strong><code>patches/apply-cron-plugin-direct-dispatch.mjs</code></strong>
-— see below.</li>
+<li><strong><code>lib/setup/feature-cron-plan.js</code></strong>,
+<strong><code>scripts/setup-feature-crons.mjs</code></strong> — cron
+registration through the host's public plugin API; see below.</li>
+<li><strong><code>lib/providers/local-model-artifacts.js</code></strong>
+— the pinned local model artifacts.</li>
 </ul>
 <p><strong>Storage.</strong> LanceDB tables per agent under
-<code>{baseDbPath}/{agentId}/</code>
-(<code>lib/db-adapter.js:312</code>), so agent isolation is a directory
-boundary before it is a query filter. Alongside: eleven JSONL files and
-four JSON files per workspace in the neo store, an optional SQLite
-embedding cache and LLM result cache, and an optional Obsidian vault the
-bridge keeps in sync as Markdown.</p>
+<code>{baseDbPath}/{agentId}/</code> (<code>lib/db-adapter.js</code>),
+so agent isolation is a directory boundary before it is a query filter.
+Alongside: eleven JSONL files and four JSON files per workspace in the
+neo store, an optional SQLite embedding cache and LLM result cache, and
+an optional Obsidian vault the bridge keeps in sync as Markdown.</p>
 <p><strong>Retrieval stack.</strong> Vector search over LanceDB with a
 lexical fallback when the embedder is not ready, graph hydration of
 neighbouring cards (<code>hydrateGraphResults</code>,
-<code>recall-pipeline.js:816</code>), and two additive passes — a
+<code>recall-pipeline.js:942</code>), and two additive passes — a
 precomputed semantic lens and conversation reactivation — that append to
 a recall result and, per <code>AGENTS.md</code>, must never replace it.
 Both are off by default and both carry a 50 ms hard timeout.</p>
@@ -399,27 +401,37 @@ memory: the adapter falls back to text search when embedding fails.</p>
 and this is where an operator should look before anything else.
 <code>package.json</code> declares:</p>
 <pre class="json"><code>&quot;postinstall&quot;: &quot;node scripts/setup-feature-crons.mjs || true&quot;</code></pre>
-<p>That script does not only register cron jobs. Before reading or
-mutating any cron it calls
-<code>applyCronPluginDirectDispatchPatch</code>, which resolves the
-<em>host's</em> OpenClaw dist directory and patches it, because the
-plugin needs a dispatch path the host does not offer. The script's own
-header states the contract — it must never fail an install, and it exits
-0 whatever happens — so a patch of another package's installed code
-happens during <code>npm install</code>, best-effort, and reports
-success either way. It is not concealed: the file is 300 lines of
-readable planning code, it is listed in <code>package.json</code>'s
-<code>files</code>, and
-<code>tests/cron-plugin-direct-dispatch-patch.test.js</code> covers it.
-It is still a memory plugin editing its host at install time — and it
-can now be told not to. <code>PLUR1BUS_SKIP_HOST_PATCH=1</code> is
-honoured by both <code>scripts/setup-feature-crons.mjs</code> and
-<code>scripts/install-memory-system.sh</code>, has its own test
-(<code>tests/host-patch-skip.test.js</code>), and is documented in the
-README as completing the install <em>"without writing into the OpenClaw
-dist tree"</em>. The patch remains the default, so the reader who
-installs without reading still gets it; what changed is that a reader
-who objects has a switch rather than a fork.</p>
+<p>That script registers the plugin's feature crons and nothing else in
+the host. Since release 7.5.0 on 3 September 2026 it probes OpenClaw's
+public plugin capabilities — <code>registerGatewayMethod</code>,
+<code>registerCli</code> and
+<code>openclaw/plugin-sdk/gateway-runtime</code> — and builds native
+<code>cron add</code> invocations against the host's own dispatcher
+(<code>lib/setup/feature-cron-plan.js</code>); a capability that is
+missing leaves the job unregistered rather than patched in, and the
+header still states the install contract — it <em>"must NEVER fail an
+install"</em> and exits 0 whatever happens. Three committed tests pin
+the retreat:
+<code>tests/cron-plugin-direct-dispatch-wiring.test.js</code> asserts
+the source no longer names the dispatch patch or
+<code>PLUR1BUS_SKIP_HOST_PATCH</code>,
+<code>tests/host-patch-skip.test.js</code> asserts the flag is gone, and
+<code>tests/release-750-compat.test.js</code> asserts
+<code>package.json</code>'s <code>files</code> excludes
+<code>patches/</code> and that the patch file does not exist. What
+remains under <code>patches/</code> is
+<code>apply-memory-patches.sh</code>, a set of gateway hotfixes applied
+from a systemd <code>ExecStartPre</code> in one deployment, shipped in
+no package and referenced by no installer.</p>
+<p>Local inference is pinned rather than resolved.
+<code>lib/providers/local-model-artifacts.js</code> freezes each model —
+E5, Jina v3, the Jina and BGE rerankers, and from 7.11.0 Jina v5 Text
+Nano — at an immutable Hugging Face revision with every artifact's path,
+size and SHA-256, checked before Transformers.js sees a file; the two
+Jina profiles carry <code>license: "CC-BY-NC-4.0"</code> and
+<code>assertPinnedModelLicenseAccepted</code> refuses to load them
+without an explicit operator acceptance. BGE is the wizard's recommended
+reranker since 7.10.0, with the reasoning written into the README.</p>
 <p>The store is human-readable and repairable by hand: JSONL and
 Markdown for everything except the LanceDB tables, which is a real
 operational advantage when a background job has done something
@@ -427,15 +439,15 @@ unexpected. <code>scripts/repair-installed-plugin.mjs</code> and
 <code>lib/memory-doctor.js</code> exist for when it has.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<h3 id="capture--indexjs6754">Capture — <code>index.js:6754</code></h3>
+<h3 id="capture--indexjs9537">Capture — <code>index.js:9537</code></h3>
 <p><code>api.on("agent_end", …)</code> hands the turn to
 <code>runtimeScheduler.enqueueCapture(agentId, …)</code> with an abort
 signal. Capture is per-agent queued and runs after the turn ends, so the
 model's reply is never waiting on it. Background turns are flagged and
 treated differently, which is what stops a cron-triggered agent run from
 writing memories about itself.</p>
-<h3 id="correction--libsafe-updatejs246">Correction —
-<code>lib/safe-update.js:246</code></h3>
+<h3 id="correction--libsafe-updatejs287">Correction —
+<code>lib/safe-update.js:287</code></h3>
 <p>The most carefully built path in the repository, in order:</p>
 <ol type="1">
 <li><strong>Refuse non-active rows.</strong> A superseded memory cannot
@@ -455,10 +467,10 @@ version.</li>
 new content."</em> This closes the failure where a corrected memory
 keeps ranking under the old text's query.</li>
 <li><strong>Gate on semantic drift</strong>
-(<code>safe-update.js:355</code>) — cosine distance over 0.45 is
+(<code>safe-update.js:395</code>) — cosine distance over 0.45 is
 rejected outright.</li>
 <li><strong>Store the new version first, supersede second</strong>
-(<code>:373</code>, <code>:377</code>). The comment is worth reading in
+(<code>:414</code>, <code>:418</code>). The comment is worth reading in
 full: storing first means a crash leaves both versions active — "a
 recoverable fork, never a loss" — whereas superseding first would point
 the old row at an id that was never written.</li>
@@ -467,8 +479,8 @@ the old row at an id that was never written.</li>
 evidence, the confidence and the measured drift.</li>
 </ol>
 <h3
-id="the-drift-gates-two-callers--indexjs7653-and-libjobsapply-conflict-resolutionjs">The
-drift gate's two callers — <code>index.js:7653</code> and
+id="the-drift-gates-two-callers--indexjs8995-and-libjobsapply-conflict-resolutionjs">The
+drift gate's two callers — <code>index.js:8995</code> and
 <code>lib/jobs/apply-conflict-resolution.js</code></h3>
 <p><code>/correct &lt;old&gt; to &lt;new&gt;</code> runs a confirmation
 token exchange, then calls <code>safeUpdate</code> with
@@ -516,9 +528,9 @@ id, an invalid or conflicting ownership tuple, a private row with no
 owner, a workspace row with no workspace, and a user row whose principal
 is not a <code>user:v1:&lt;sha256&gt;</code> string. Every path that is
 not an explicit match is a denial.</p>
-<p>It is applied on the read path at <code>lib/db-adapter.js:361</code>,
-<code>:454</code> and <code>:474</code> (query, search, get), at
-<code>lib/recall-pipeline.js:173</code>, in the shared-memory pool, the
+<p>It is applied on the read path at <code>lib/db-adapter.js:526</code>,
+<code>:626</code> and <code>:646</code> (query, search, get), at
+<code>lib/recall-pipeline.js:240</code>, in the shared-memory pool, the
 wiki command, both dream passes, and the Telegram query and edit
 commands. <code>filterMemoriesByAcl</code> (<code>:226</code>) is the
 batch form, with optional violation logging to
@@ -527,7 +539,7 @@ batch form, with optional violation logging to
 <code>agent-private | workspace | user</code> and the neo store's
 <code>agent_private | workspace_shared | global_user</code>, reconciled
 by <code>normalizeNeoScope</code>. Neo records are filtered by
-<code>isNeoRecordAccessible</code> (<code>lib/neo-arch.js:1364</code>)
+<code>isNeoRecordAccessible</code> (<code>lib/neo-arch.js:1378</code>)
 rather than by <code>checkAccess</code>, and the comment at
 <code>neo-arch.js:1704</code> is candid about the limit: dreams,
 episodes, graph edges and patterns carry no scope field at all, so
@@ -596,7 +608,7 @@ status filter, so a corrected memory could resurface as current
 evidence.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>A LanceDB card, from <code>buildUpdateEntry</code>
-(<code>lib/safe-update.js:79</code>), carries roughly fifty fields. The
+(<code>lib/safe-update.js:80</code>), carries roughly fifty fields. The
 ones that matter:</p>
 <ul>
 <li><strong>Identity and lineage</strong> — <code>id</code>,
@@ -633,7 +645,7 @@ eventually reach the memories the user cared most about.</p>
 both are the value-keyed kind the atlas keeps asking for:</p>
 <ul>
 <li><strong>A validity window.</strong> <code>validFrom</code> and
-<code>validUntil</code> (<code>lib/db-adapter.js:404</code>) record when
+<code>validUntil</code> (<code>lib/db-adapter.js:447</code>) record when
 a claim was true in the world, <code>0</code> meaning "no known bound"
 rather than the epoch. They are separate from
 <code>createdAt</code>/<code>updatedAt</code>, and the file header
@@ -652,14 +664,14 @@ caller-supplied only, never guessed from text: a vague phrase resolves
 to <code>0</code>/unknown rather than a fabricated date.</li>
 <li><strong>A rejected-value tombstone.</strong> <code>/forget</code>
 soft-deletes the row (<code>tombstoneCard</code>,
-<code>db-adapter.js:659</code> — <code>status="deleted"</code>,
+<code>db-adapter.js:702</code> — <code>status="deleted"</code>,
 <code>epistemicStatus="invalidated"</code>) and writes a durable
 tombstone keyed on a <strong>content fingerprint</strong>, a SHA-256 of
 the NFKC-normalized text and never the plaintext
 (<code>lib/tombstone.js:69</code>), to an append-only registry that
 survives restore, migration and re-embedding.
 <code>findBlockingTombstoneForCapture</code> runs as step zero of both
-capture callsites (<code>index.js:5218</code>, <code>:8605</code>) and
+capture callsites (<code>index.js:6411</code>, <code>:10667</code>) and
 refuses a re-store of the forgotten value; corrupt or unreadable
 registry lines fail closed. This is the value-keyed mechanism the <a
 href="../../patterns/rejected-value-tombstone/">rejected-value
@@ -736,7 +748,7 @@ output is a <code>conflict</code> status and a listing under
 <code>/plur1bus curation conflicts</code> — a queue for a person, not a
 resolution.</p>
 <p><strong>Malicious input</strong> is filtered at capture.
-<code>PROMPT_INJECTION_RE</code> (<code>lib/neo-arch.js:103</code>)
+<code>PROMPT_INJECTION_RE</code> (<code>lib/neo-arch.js:106</code>)
 matches the familiar overrides plus chat-template delimiters, and a turn
 marked <code>quality.promptInjectionSuspected</code> is excluded from
 the recallable set at <code>neo-arch.js:1242</code>. The
@@ -781,6 +793,28 @@ authorized human commands. The destructive ones check
 <code>checkAuth(..., { destructive: true })</code> first, and
 <code>/forget</code> requires a confirmation token issued by a prior
 call.</p>
+<p>The critical-review surface grew a bulk form and a claim on the
+host's dispatch. <code>/plur1bus critical accept all</code>,
+<code>reject all</code> and several references in one command work every
+pending review in the authorised scope; a quoted reply to a push —
+<em>"accept all"</em>, <em>"alle ablehnen"</em> — is answered on the
+host's <code>before_dispatch</code> and <code>before_agent_reply</code>
+hooks before the agent sees it (<code>index.js:9254-9310</code>), with
+the references taken from the quoted push's fixed header, the decision
+from the reply, and the same destructive authorisation as the command;
+groups are refused and anything ambiguous falls through to the agent. A
+reject never deletes: <code>markCriticalRejected</code>
+(<code>lib/db-adapter.js:1067</code>) sets
+<code>confirmed = 1, type = "note"</code>. The operator dashboard is
+read-only unless <code>controlUi.writeActions</code> is set —
+<code>off</code> by default, <code>reranker</code> for a runtime switch,
+<code>all</code> for the embedding target and the re-embedding migration
+— with a single-use form token per page load and a nonce-bound CSP
+(<code>lib/setup/control-ui-write.js</code>). Light and REM dream
+narratives are written into the workspace <code>DREAMS.md</code> inside
+the host's managed block and announced as a
+<code>memory.dream.completed</code> event
+(<code>lib/dreaming/dream-diary.js</code>).</p>
 <p>The Obsidian bridge is the second integration and the more unusual
 one. Memory is mirrored into a vault as Markdown, a person edits or
 annotates it there, and the bridge syncs changes back — under an
@@ -790,11 +824,18 @@ vault text is untrusted input, and apply never mutates memory without
 explicit approval plus immediate revalidation. Deleting a vault file
 does not delete a memory; it raises an
 <code>approval_required_tombstone</code> action
-(<code>lib/obsidian-bridge.js:1528</code>).</p>
+(<code>lib/obsidian-bridge.js:1631</code>).</p>
+<p>A write into a vault needs more than the bridge's approval flow:
+<code>lib/obsidian-vault-authority.js</code> binds a confirmation
+receipt to the agent, the workspace pool and a SHA-256 of the vault's
+real path under
+<code>&lt;baseDbPath&gt;/.plur1bus-authority/obsidian-vaults/…</code>,
+and <code>obsidianServiceMutationPolicy</code>
+(<code>index.js:6586</code>) requires that receipt plus an action
+confirmation, with scheduled discovery carrying an explicit plan.</p>
 <p>Adapting this to another agent host would be substantial work. The
 plugin is written against OpenClaw's plugin API, its cron dispatch, its
-agent workspace resolution and its command registration, and one of its
-install steps patches that host.</p>
+agent workspace resolution and its command registration.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -838,17 +879,26 @@ the audit record cannot be written.</li>
 layers, and transitions into
 <code>trusted</code>/<code>invalidated</code> require an authorized
 actor, so a memory cannot condemn or promote itself.</li>
+<li><strong>A direct chat resolves to an identity-bound
+context.</strong> <code>resolveSessionOwnerMemoryContext</code>
+(<code>lib/memory-request-context.js:730</code>) turns a direct-chat
+session key into the user, channel, account and conversation principal
+the chat commands see, while main, heartbeat, cron and group sessions
+keep the agent-and-workspace context; shared workspace and user pools
+are named from host configuration and never expose the user
+identifier.</li>
+<li><strong>Pinned model artifacts</strong> — revision, size and SHA-256
+per file, and a licence acceptance gate on the CC BY-NC models.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>Neo doubt still does not withhold.</strong>
-<code>conflict</code>, <code>demoted</code> and <code>untrusted</code>
-remain ranking penalties rather than filters, so a memory the system
-records as contradicted can still reach the prompt labelled with its
-status, moving the decision to the model. The new epistemic
-<code>invalidated</code> state is the exception that withholds, but it
-sits on a separate axis and the neo statuses that flag
-<em>contradiction</em> are not it.</li>
+<li><strong>Contradiction does not withhold.</strong>
+<code>conflict</code> and the trust ladder remain ranking arithmetic —
+<code>conflict</code> a 0.3 penalty at <code>lib/neo-arch.js:1483</code>
+— so a memory the system records as contradicted can still reach the
+prompt labelled with its status, moving the decision to the model.
+<code>demoted</code> and the epistemic <code>invalidated</code> state
+withhold; the status that flags <em>contradiction</em> does not.</li>
 <li><strong>The drift gate is skipped on the confirmed human correction
 and enforced on the automated conflict apply</strong>, where exceeding
 it downgrades the write to a review rather than blocking with an
@@ -856,12 +906,28 @@ exception.</li>
 <li><strong>Derived records are unscoped</strong> — dreams, episodes,
 graph edges, patterns — and the code says the reader was left unfiltered
 rather than filtering everything to nothing.</li>
-<li><strong><code>postinstall</code> patches the host</strong> and is
-contractually unable to fail.</li>
+<li><strong>A tombstoned card reached a push.</strong> Until release
+7.9.2 on 5 September 2026 the classify-recent cron treated rows removed
+by <code>memory_forget</code> — <code>type</code> still
+<code>memory</code>, <code>status</code> <code>deleted</code> — as fresh
+candidates, typed them and named them in a critical push, while the
+review path read only active rows and could not resolve the references;
+<code>findRecentUnclassified</code> (<code>lib/db-adapter.js:849</code>)
+pushes an active-status clause into the LanceDB query and
+<code>runClassifier</code> reports what it skipped as
+<code>skippedInactive</code>
+(<code>lib/jobs/critical-classifier.js:111-138</code>), with
+<code>tests/critical-classifier-double-push.test.js</code> covering it.
+The tombstone held at the capture chokepoints and leaked at a read path
+nobody had listed, which is the shape a value-keyed tombstone's
+remaining risk takes.</li>
+<li><strong><code>postinstall</code> still cannot fail by
+contract</strong>, though what it does is now bounded to the host's
+public API.</li>
 <li><strong>A prompt-facing value can be produced by four different
 mapping paths</strong>, and correctness has to be established at each
 one rather than at the store.</li>
-<li><strong>The feature surface is the risk.</strong> Forty-seven config
+<li><strong>The feature surface is the risk.</strong> Fifty config
 groups, fifteen background jobs and two dream passes over one memory
 store means the number of paths that can write to a card is large, and
 only one of them goes through <code>safeUpdate</code>.</li>
@@ -881,7 +947,7 @@ discriminate rather than merely pass. At this pin the dependency surface
 was again inside the seven-day cooldown, so nothing was installed or
 run; the new behaviour was read from the source and its committed
 tests.</p>
-<p>339 test files under <code>tests/</code> and <code>test/</code> —
+<p>436 test files under <code>tests/</code> and <code>test/</code> —
 larger than the implementation, and the twelve largest additions since
 the previous pin are the new subsystems: <code>valid-time.test.js</code>
 (1,721 lines), <code>epistemic-status.test.js</code> (974),
@@ -927,6 +993,14 @@ anything in the repository. <strong>No paper, arXiv reference or
 citation file exists in this tree</strong>; the documentation is a 51 KB
 README, an 87 KB changelog, and a 97 KB
 <code>how-to-memory-perfect.md</code>.</p>
+<p>Three tests pin the removal of the host patch and one pins the
+classifier's tombstone respect, and they are the right shape — each
+asserts an absence against the source or the package manifest with a
+positive control beside it:
+<code>tests/cron-plugin-direct-dispatch-wiring.test.js</code>,
+<code>tests/host-patch-skip.test.js</code>,
+<code>tests/release-750-compat.test.js</code> and
+<code>tests/critical-classifier-double-push.test.js</code>.</p>
 <p><code>tests/neo-status-transition-dedupe.test.js</code> is worth
 reading for its shape as much as its subject: it pins the arithmetic to
 numbers — <code>active=0.371</code> against <code>demoted=-0.116</code>
@@ -954,7 +1028,7 @@ memory that keeps its old vector ranks under the old query forever, and
 nothing about it looks wrong.</li>
 <li><strong>Store the replacement before superseding the
 original</strong>, and write down why. The crash window is real, the
-comment at <code>safe-update.js:368</code> is the artifact, and the
+comment at <code>safe-update.js:411</code> is the artifact, and the
 resulting failure — both versions active — is one a person can fix.</li>
 <li><strong>Key an idempotency hash on the correction, not the
 record</strong>, so a retried correction cannot fork a version
@@ -999,7 +1073,10 @@ cannot.</li>
 <li><strong>Patching your host at <code>postinstall</code>.</strong>
 However well-tested and however necessary, an install step that rewrites
 another package's shipped code — and cannot fail by contract — is a
-support burden and a supply-chain surface.</li>
+support burden and a supply-chain surface. The way out here is worth
+copying too: probe the host's public capabilities, use its own
+dispatcher, and let a missing capability leave the feature unregistered
+rather than patched in.</li>
 <li><strong>Per-feature injection caps with no global budget.</strong>
 Seven bounded features can still fill a context window.</li>
 </ul>
@@ -1034,8 +1111,9 @@ background write routes through that check is not asserted.</li>
 <li>How much does the full feature set inject per turn in aggregate, and
 at what point do the per-feature caps collectively exceed a sensible
 budget?</li>
-<li>Is the host patch upstreamed or proposed to OpenClaw, or does each
-release re-apply it?</li>
+<li>Which other read paths besides classify-recent touch cards without
+the active-status clause? The 7.9.2 fix listed one; nothing in the tree
+enumerates the rest.</li>
 <li>How many other prompt-facing fields are produced by more than one
 mapping path, and is there a check that all of them agree?</li>
 </ul>
@@ -1081,9 +1159,19 @@ mapping path, and is there a check that all of them agree?</li>
 <code>lib/telegram-commands/</code>.</li>
 <li>Background work: <code>lib/jobs/</code>, <code>lib/dreaming/</code>,
 <code>lib/runtime-scheduler.js</code>.</li>
-<li>Install-time host patch:
+<li>Cron registration through the host's public API:
 <code>scripts/setup-feature-crons.mjs</code>,
-<code>patches/apply-cron-plugin-direct-dispatch.mjs</code>.</li>
+<code>lib/setup/feature-cron-plan.js</code>; the retained systemd hotfix
+script <code>patches/apply-memory-patches.sh</code> ships in no
+package.</li>
+<li>Critical review: <code>lib/critical-review.js</code>,
+<code>lib/critical-reply-intent.js</code>,
+<code>lib/jobs/critical-classifier.js</code>.</li>
+<li>Local model pinning:
+<code>lib/providers/local-model-artifacts.js</code>. Dashboard writes:
+<code>lib/setup/control-ui-write.js</code>. Vault authority:
+<code>lib/obsidian-vault-authority.js</code>. Dream diary:
+<code>lib/dreaming/dream-diary.js</code>.</li>
 <li>Tests cited: <code>tests/crr-status-filter.test.js</code>,
 <code>tests/b13-acl-callsite-adapters.test.js</code>,
 <code>tests/gc-neverforget-guard.test.js</code>,
@@ -1092,9 +1180,49 @@ mapping path, and is there a check that all of them agree?</li>
 <code>tests/tombstone-e2e.test.js</code>,
 <code>tests/correct-tombstone-guard.test.js</code>,
 <code>tests/semantic-lens-status-filter.test.js</code>,
-<code>tests/rem-dream-acl-partition.test.js</code>.</li>
+<code>tests/rem-dream-acl-partition.test.js</code>,
+<code>tests/cron-plugin-direct-dispatch-wiring.test.js</code>,
+<code>tests/host-patch-skip.test.js</code>,
+<code>tests/release-750-compat.test.js</code>,
+<code>tests/critical-classifier-double-push.test.js</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/399bfba7fc81d0becf35794f4895992bf54bc33f"><code class="commit-id" title="399bfba7fc81d0becf35794f4895992bf54bc33f">399bfba7…</code></a>
+— re-pinned at release 7.11.0, prompted by the maintainer's request in
+<a
+href="https://github.com/neoneye/agent-memory-atlas/issues/20">neoneye/agent-memory-atlas#20</a>
+for 7.10.0 (<code class="commit-id" title="b4138df52781b6d51bc2baa0659e67325dbd5fa9">b4138df5…</code>); the
+head of <code>main</code> is one release on, adding the pinned Jina v5
+Text Nano artifacts. <strong>The previous pin no longer resolves from
+the default branch:</strong>
+<code>git cat-file -t 3479373f87dc8f70d460d09ddeb20ffb83355231</code>
+fails in a fresh clone, GitHub still serves the commit, and the
+<code>v7.4.0</code> tag now points at
+<code class="commit-id" title="533fa93a77c7e71b69b772916de3f3811fdf2a12">533fa93a…</code>, dated two hours
+after it — the history was rewritten below the tag, so the commit count
+between pins cannot be stated. Screened again: the same
+<code>postinstall</code>, both manifests inside the seven-day cooldown,
+four floating ranges behind the lockfile, an <code>AGENTS.md</code>
+treated as data; nothing installed or run, and every claim below was
+read from the source and its committed tests rather than from the issue.
+Marks unchanged at seven. Every line citation in the body was
+re-verified and re-mapped, because <code>index.js</code> grew from
+10,867 to 12,418 lines. Corrected as stale rather than wrong: the host
+patch and its skip flag were removed in 7.5.0, and the three tests that
+pin the removal are named in section 3; the configuration count is
+fifty; the matrix's <em>"drift gate still has no live caller"</em>
+contradicted the 17 August entry below and is rewritten. New and
+described: the classify-recent cron's leak of tombstoned cards into
+critical pushes, fixed in 7.9.2; the bulk and quoted-reply forms of
+critical review claimed on the host's dispatch hooks; identity-bound
+context for direct chats; pinned local model artifacts with a licence
+gate; the dashboard's opt-in write actions; vault confirmation receipts;
+dream narratives on the host page. Each row of the issue's table was
+checked against the file it names and held; the two <em>"still
+true"</em> lines — <code>conflict</code> at 0.3
+(<code>lib/neo-arch.js:1483</code>) and <code>/correct</code> skipping
+the gate (<code>index.js:8995</code>) — hold too.</p>
 <p><strong>2026-08-18</strong> — <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
 — same pin, three mechanisms added after a re-read prompted by the
@@ -1102,7 +1230,7 @@ upstream author. The authorized exits from <code>conflict</code> were
 missing from this report: <code>/plur1bus curation resolve</code> and
 <code>/plur1bus curation drop-injected</code> sit behind the same
 authorization gate as the status transitions
-(<code>index.js:5867</code>), and the bulk form is doubly bounded — a
+(<code>index.js:6853</code>), and the bulk form is doubly bounded — a
 preview before the apply, and a refusal of any record that is not
 <code>status === "conflict"</code> and does not satisfy
 <code>isInjectedContextText</code>
@@ -1129,7 +1257,7 @@ a threshold whose only caller disabled it had no live consumer.
 high"</em> throw, and returns <code>review_only</code> instead of
 writing — so the automated conflict apply is gated where the confirmed
 human correction is not. <code>/correct</code> keeps the skip, and
-<code>index.js:7653</code> is the only non-test
+<code>index.js:8995</code> is the only non-test
 <code>skipDriftGate</code> left.</li>
 <li><strong><code>demoted</code> withholds.</strong> The report recorded
 the neo doubt states as ranking penalties rather than filters.
@@ -1153,7 +1281,7 @@ closing both.</li>
 install can complete <em>"without writing into the OpenClaw dist
 tree"</em> — the patch is still the default, and the objection now has a
 switch rather than a fork. A global injection budget lands at
-<code>index.js:10740</code> (<code>recall.globalInjectMaxChars</code>,
+<code>index.js:12249</code> (<code>recall.globalInjectMaxChars</code>,
 default 17,000 characters across the joined prompt block). Tombstone
 coverage extends across the bulk writers, with
 <code>tests/tombstone-bulk-writers.test.js</code> and
@@ -1192,7 +1320,7 @@ parameter, with validity caller-supplied rather than guessed. That earns
 record on <code>/forget</code> — SHA-256 of the normalized text, never
 the plaintext — to an append-only registry that survives restore,
 migration and re-embedding, checked as step zero of every capture
-(<code>index.js:5218</code>, <code>:8605</code>) and gated on a binding
+(<code>index.js:6411</code>, <code>:10667</code>) and gated on a binding
 audit. That earns <code>tombstone</code> and supersedes the record-keyed
 <code>tombstoned</code> neo status. <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/d25e101ff8bfee80b6cefe043912ceab6f88b847"><code class="commit-id" title="d25e101ff8bfee80b6cefe043912ceab6f88b847">d25e101f…</code></a>
@@ -1200,8 +1328,8 @@ stops a correction from reviving a tombstoned card.</li>
 <li><strong>A claim-level epistemic status</strong>
 (<code>lib/epistemic-status.js</code>) whose <code>invalidated</code>
 value hard-filters on the read path
-(<code>recall-pipeline.js:157</code>, <code>neo-arch.js:1385</code>,
-<code>db-adapter.js:519</code>) — the first doubt-adjacent state in the
+(<code>recall-pipeline.js:157</code>, <code>neo-arch.js:1464</code>,
+<code>db-adapter.js:562</code>) — the first doubt-adjacent state in the
 system that withholds rather than ranks. Transitions into
 <code>trusted</code>/<code>invalidated</code> require an authorized
 actor, and a conservative merge rule refuses to launder a weak memory up

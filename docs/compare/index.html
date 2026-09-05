@@ -1531,16 +1531,20 @@ superseding the original so a crash leaves a recoverable fork rather
 than a hole, and appends the transition to an event log keyed by an
 idempotency hash. It also carries the atlas's only <em>semantic drift
 gate</em> — a correction is rejected outright if the new embedding sits
-more than 0.45 cosine from the old — and the only caller in the tree
-disables it, which is the sharpest example available of a safety default
-that belongs to nobody. Its trust vocabulary is the second lesson: seven
-record statuses and a six-level trust ladder, wired into a ranking
-score, so <code>conflict</code> and <code>untrusted</code> cost a memory
-0.3 and it reaches the prompt anyway. Only the deletion states filter. A
-plugin free to invent everything invents the states before it decides
-what they <em>do</em> — and the append-only store underneath makes that
-decision twice, because a status change appends a second copy of the
-record and something has to choose which copy the ranker scores.</p>
+more than 0.45 cosine from the old — and the one human caller in the
+tree skips it while the automated conflict apply fires it and downgrades
+an exceeded gate to a review, which is the sharpest example available of
+a safety default whose owner had to be decided. Its trust vocabulary is
+the second lesson: seven record statuses and a six-level trust ladder,
+wired into a ranking score, so <code>conflict</code> and
+<code>untrusted</code> cost a memory 0.3 and it reaches the prompt
+anyway. The deletion states, <code>demoted</code> and the epistemic
+<code>invalidated</code> filter; the status that flags a contradiction
+does not, on a measurement the code records. A plugin free to invent
+everything invents the states before it decides what they <em>do</em> —
+and the append-only store underneath makes that decision twice, because
+a status change appends a second copy of the record and something has to
+choose which copy the ranker scores.</p>
 <p>Tradeoff: users choose a backend that fits their privacy and scale
 needs, but trust state, scope, and above all deletion must cross the
 host/provider boundary. <strong>MateClaw</strong> is the partial
@@ -13503,7 +13507,9 @@ and user scopes, applied as a read filter in the adapter and the recall
 pipeline; derived dream records stamp a <code>visibility</code> and
 their readers are handed a requester triple</td>
 <td>OpenClaw plugin — chat commands, an <code>agent_end</code> capture
-hook, background crons, and an Obsidian review vault</td>
+hook, background crons registered through the host's public plugin
+capabilities, an operator dashboard with opt-in write actions, and an
+Obsidian review vault behind per-agent confirmation receipts</td>
 <td>Daily consolidation, garbage collection, skill mining, critical-push
 classification, and two dream passes</td>
 <td>Seven-state record status and a six-level trust ladder scored off
@@ -13513,11 +13519,11 @@ and <code>conflict</code> deliberately left as a penalty, plus an
 append-only reconsolidation event log</td>
 <td>A correction path that demands evidence, records the event, and
 orders its writes so a crash cannot lose the memory</td>
-<td>Forty-seven config groups over one careful core;
-<code>conflict</code> remains a ranking penalty rather than a filter,
-and the code says why — the detector is an unvalidated LLM and a live
-probe found 4,017 newest-revision records carrying it; and the drift
-gate still has no live caller</td>
+<td>Fifty config groups over one careful core; <code>conflict</code>
+remains a ranking penalty rather than a filter, and the code says why —
+the detector is an unvalidated LLM and a live probe found 4,017
+newest-revision records carrying it; and the drift gate is skipped on
+the one human caller and fires only on the automated one</td>
 </tr>
 <tr>
 <td><code>polyphony-arc</code></td>
@@ -22443,16 +22449,10 @@ them</li>
 <li><a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">Cyb3rb1ade/openclaw-plur1bus-memory</a>
 at <a
-href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3479373f87dc8f70d460d09ddeb20ffb83355231"><code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code></a>
-— release 7.4.0; both manifests inside the cooldown and the package's
-<code>postinstall</code> still patches the host OpenClaw's dist
-directory by default, so nothing was installed or run this reading —
-<code>PLUR1BUS_SKIP_HOST_PATCH=1</code> now skips that step. The
-drift-gated conflict apply, the <code>demoted</code> withholding rule
-and the extended tombstone coverage were read from
-<code>lib/jobs/apply-conflict-resolution.js</code>,
-<code>lib/neo-arch.js</code> and <code>lib/tombstone.js</code> against
-the committed tests</li>
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/399bfba7fc81d0becf35794f4895992bf54bc33f"><code class="commit-id" title="399bfba7fc81d0becf35794f4895992bf54bc33f">399bfba7…</code></a>
+— release 7.11.0; read only, both manifests inside the cooldown; the
+previous pin <code>3479373f</code> no longer resolves from the default
+branch</li>
 <li><a
 href="https://github.com/OmniNode-ai/omniintelligence">OmniNode-ai/omniintelligence</a>
 at <a
