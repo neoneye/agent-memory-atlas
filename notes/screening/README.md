@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 213 of 359 screened at the report's current pin.**
+**Progress: 215 of 361 screened at the report's current pin.**
 
 16 further record(s) describe a revision the report has since moved
 off, and 130 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 76 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 81 |
-| Repositories with build-time execution (`EXEC`) | 161 |
+| Repositories with an auto-run surface (`RUNS`) | 78 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 82 |
+| Repositories with build-time execution (`EXEC`) | 163 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -52,6 +52,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
+| [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`ecc`](../../content/systems/ecc.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json` |
 | [`engram`](../../content/systems/engram.md) | `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
@@ -68,6 +69,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
+| [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |

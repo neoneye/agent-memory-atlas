@@ -225,6 +225,15 @@ prefix sits outside the charset every API-created peer must match, and the
 authoritative `kind` marker lives in a JSONB column that appears in no API
 schema, so neither a name squatter nor a crafted payload can manufacture one.
 
+Its workspace-level chat, added on 24 August 2026, is where the boundary meets an
+aggregate. A peer card is one cross-session summary, so a card for an in-scope peer
+can carry a fact from a session outside the scope; under a scope the agent drops
+every card and routes on counts alone, the `get_peer_card` tool refuses the same
+way, and an empty scope union answers nothing rather than everything. A committed
+case puts one fact in a scoped session and another outside it, asserts the scoped
+answer contains neither of the outside terms, and asks again unscoped as the
+control.
+
 Retroactivity is where most scope retrofits quietly fail, and Honcho makes it two
 queue jobs. Joining a scope that already has messages copies the session's
 *explicit* documents into the scope's collection with **no model call** — sound

@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A numpy-only Python library that
+turns object detections into a single-file SQLite scene graph — a
+deterministic fusion arbiter that merges, creates or rejects each
+observation, regions and geometric relations over the result, decay,
+split, consolidate and cross-store merge for hygiene — where a rejected
+observation is kept as a row nothing reads and a forgotten node leaves
+no record at all.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Chronotope — Agent Memory Atlas">
+    <meta property="og:description" content="A numpy-only Python library
+that turns object detections into a single-file SQLite scene graph — a
+deterministic fusion arbiter that merges, creates or rejects each
+observation, regions and geometric relations over the result, decay,
+split, consolidate and cross-store merge for hygiene — where a rejected
+observation is kept as a row nothing reads and a forgotten node leaves
+no record at all.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chronotope — Agent Memory Atlas">
+    <meta name="twitter:description" content="A numpy-only Python
+library that turns object detections into a single-file SQLite scene
+graph — a deterministic fusion arbiter that merges, creates or rejects
+each observation, regions and geometric relations over the result,
+decay, split, consolidate and cross-store merge for hygiene — where a
+rejected observation is kept as a row nothing reads and a forgotten node
+leaves no record at all.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Chronotope — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Chronotope",
+      "description": "A numpy-only Python library that turns object detections into a single-file SQLite scene graph \u2014 a deterministic fusion arbiter that merges, creates or rejects each observation, regions and geometric relations over the result, decay, split, consolidate and cross-store merge for hygiene \u2014 where a rejected observation is kept as a row nothing reads and a forgotten node leaves no record at all.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A scene graph that fuses before it
+persists</p>
+          <h1>Chronotope</h1>
+          <p class="document-deck">A numpy-only Python library that
+turns object detections into a single-file SQLite scene graph — a
+deterministic fusion arbiter that merges, creates or rejects each
+observation, regions and geometric relations over the result, decay,
+split, consolidate and cross-store merge for hygiene — where a rejected
+observation is kept as a row nothing reads and a forgotten node leaves
+no record at all.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/wikieden/tempomem">
+              <span>Source</span>
+              <strong>wikieden/tempomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa" title="92181fbbae7f5e66714aa5e91f61ba9558b1f1aa">
+              <span>Analyzed revision</span>
+              <code>92181fbb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-05</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Chronotope is a <strong>spatial memory library for embodied
+agents</strong>: Apache-2.0, 56 commits by one author between 29 May and
+3 July 2026, 3,635 lines of Python in the <code>tempomem</code> package
+under 2,101 lines of tests with 154 test functions, released on PyPI as
+<code>0.1.0a1</code> and described by its own README as <em>"Pre-alpha.
+Public design phase."</em> The core install depends on numpy alone; CLIP
+text encoding, a sqlite-vec index and a Replica dataset reader sit
+behind extras. The package was called <code>spatialmem</code> until 11
+June 2026 and the class <code>SpatialMemory</code> until 2 July; the
+CHANGELOG records both renames and that nothing shipped under the old
+names. Two companion packages the docs describe —
+<code>worldsense</code> for perception and <code>mindloop</code> for the
+reasoning loop — are named in <code>docs/en/DEV-PLAN.md</code> and in
+one <code>tools.py</code> docstring and are not in this tree.</p>
+<p>The pitch is <em>"Mem0 for 3D space"</em>: perception produces
+labelled 3D boxes with feature vectors, and the library turns a stream
+of those into a persistent scene graph an LLM can query. The mechanism
+that earns the description is the <strong>fusion arbiter</strong>
+(<code>src/tempomem/fusion.py</code>). Each committed observation is
+scored against every node whose box overlaps its own dilated box —
+geometry, 3D IoU, feature cosine and a lexical label match, weighted
+0.2, 0.2, 0.5 and 0.1 — and the result is one of three things: a merge
+into the best node at or above 0.62, a rejection when the observation's
+own confidence is under 0.30, or a new node. The arbiter is
+deterministic for a fixed configuration and stream, ties go to the
+lowest node id, and <code>tests/unit/test_fusion.py</code>
+<code>test_determinism</code> asserts it.</p>
+<p><strong>The invariant worth reading the code for is
+fuse-before-persist.</strong> <code>add_detections</code> writes
+observation rows immediately and stages their ids; <code>commit()</code>
+is the only thing that drains the stage. Every other mutator —
+<code>decay</code>, <code>resplit</code>, <code>consolidate</code>,
+<code>forget</code>, <code>update</code>, <code>define_region</code>,
+<code>relate</code>, <code>add_edge</code> — calls
+<code>_flush_pending()</code> first, and so does <code>close()</code>,
+so a <code>.smem</code> file is never committed holding an observation
+that no node accounts for.
+<code>tests/unit/test_pending_consistency.py</code> interleaves decay
+and consolidate between an add and its commit and then asserts on disk
+that no orphan exists. The docstring on <code>_flush_pending</code>
+(<code>__init__.py:273-291</code>) explains why: the SQLite connection
+runs in implicit-transaction mode, so a maintenance commit would
+otherwise flush the staged rows unfused.</p>
+<p><strong>Where it is weakest is everything after a belief is
+wrong.</strong> A rejected observation is not deleted —
+<code>ingest_observation</code> returns <code>None</code>
+(<code>fusion.py:246-247</code>) and the row it was inserted from stays
+in <code>observations</code> with no <code>node_obs</code> link. Nothing
+reads an unlinked observation: the only join is
+<code>observations_for_node</code>, and there is no
+<code>DELETE FROM observations</code> anywhere in the package. So the
+rejection is durable and useless — keyed on nothing, consulted by
+nothing, and re-scored from scratch when the same sighting arrives
+again. <code>forget(node_id)</code> produces the same orphans, deletes
+the node, and records nothing. <code>update(node_id, label=)</code>
+overwrites the canonical label and replaces the accumulated label
+distribution with <code>[(label, 1.0)]</code>, so the evidence for the
+previous label is gone; the feature vector is untouched, so a relabelled
+node keeps embedding as whatever it was before. And
+<code>answer()</code> hands the verbalizer the <em>entire</em> scene
+through <code>serialize.to_prompt(self._conn)</code> with no budget and
+no subgraph, although both options exist on <code>serialize()</code> —
+the CHANGELOG says the subgraph form <em>"Powers
+<code>Brain.ask</code>'s retrieval context"</em>, and <code>Brain</code>
+lives in the absent <code>mindloop</code>.</p>
+<p>One mark, <code>negative_eval</code>, on committed cases that ingest
+the thing that must stay out and assert an exact result. No paper: the
+README, <code>docs/en</code> and <code>spec/</code> carry no arXiv
+identifier, BibTeX block or DOI.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>node</strong>: the library's belief that one
+physical object exists at a centroid, inside a box, with a label it has
+accumulated more confidence mass for than any other, and a confidence
+that fusion pushes toward 1 and decay pulls toward 0. An
+<strong>observation</strong> is one frame's claim about one object. A
+node is the fused residue of its observations, and
+<code>history(node_id)</code> returns them in order — position and
+timestamp per sighting — which is how the library answers <em>where was
+it over time</em> and <em>when was it last seen</em>.</p>
+<p>The belief is born by fusion, never by assertion: there is no
+<code>add_node</code> for an object. A caller can assert a
+<strong>region</strong> (<code>define_region</code>), which adopts every
+object whose centroid falls inside a box and holds a confidence of 1.0
+that decay never touches. A belief changes by merging in another
+observation (EMA on centroid and feature, bbox union, label mass added,
+confidence saturating as
+<code>conf + (1 − conf) × obs_conf × 0.5</code>), by <code>update</code>
+overwriting fields in place, by <code>resplit</code> discovering that
+its observations form two clusters more than a metre apart, or by
+<code>consolidate</code> deciding it and another node were the same
+thing all along. It dies by <code>decay</code> pruning it under the
+floor, by <code>forget</code>, or by being the <code>drop</code> side of
+a merge. Nothing supersedes a node, nothing marks one doubtful, and
+nothing remembers that one died.</p>
+<p>The one temporal axis is observation time. <code>t_first</code> and
+<code>t_last</code> are the timestamps of the first and latest sighting,
+<code>changes(since_ts)</code> splits nodes into <em>new</em> and
+<em>seen again</em> on them, <code>stale(before_ts)</code> lists what
+has not been seen — the library's own docstring calls these
+<em>"candidates for 'gone'"</em>, and that is the correct reading:
+absence of a sighting is evidence for a decision the caller has to make.
+There is no record time; nothing stores when the library learned
+something, only when the world showed it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every observation is written before it is judged; the arbiter links it to a node, creates one, or leaves it — and a rejected or forgotten observation stays in the file as a row no query can reach</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every observation is written before it is judged; the arbiter links it to a node, creates one, or leaves it — and a rejected or forgotten observation stays in the file as a row no query can reach
+flowchart TB
+    D[&quot;Detection&lt;br/&gt;label · feature · bbox · confidence · ts&quot;] --&gt;|&quot;add_detections: INSERT observations, stage id&quot;| S[&quot;observations row&lt;br/&gt;(staged, unlinked)&quot;]
+    S --&gt;|&quot;commit(): score vs overlapping nodes&quot;| A{&quot;fusion arbiter&quot;}
+    A --&gt;|&quot;score ≥ 0.62&quot;| M[&quot;merge: EMA centroid + feature,&lt;br/&gt;bbox union, label mass, conf saturates&quot;]
+    A --&gt;|&quot;conf &lt; 0.30&quot;| R[&quot;rejected — returns None&quot;]
+    A --&gt;|&quot;else&quot;| N[&quot;new node · n_obs 1&quot;]
+    M --&gt; Node[(&quot;nodes + node_obs&quot;)]
+    N --&gt; Node
+    R -.-&gt;|&quot;row stays, no node_obs link,&lt;br/&gt;no reader, no key&quot;| O[&quot;orphan observation&quot;]
+    Node --&gt;|&quot;decay(): conf × 0.5^(age/half-life), prune &lt; floor&quot;| Node
+    Node --&gt;|&quot;resplit / consolidate / merge(other.smem)&quot;| Node
+    Node --&gt;|&quot;forget(id): delete node, edges, links&quot;| O</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, not a service.
+<code>TempoMem.open(path, embedding_dim=…)</code> opens or creates one
+SQLite file (<code>persist/__init__.py:22-45</code>): WAL journal,
+foreign keys on, a <code>meta</code> table carrying
+<code>schema_version</code>, <code>embedding_dim</code> and
+<code>creator_version</code>, and two forward-only migrations —
+<code>001_init</code> for <code>episodes</code>,
+<code>observations</code>, <code>nodes</code>, <code>edges</code> and
+<code>node_obs</code>, <code>002_semantic</code> for
+<code>semantic_edges</code>, <code>node_properties</code> and the
+append-only <code>smem_events</code> log. Opening a store whose
+<code>embedding_dim</code> differs from the request raises
+<code>SchemaMismatchError</code>; so does a store newer than the
+library. Feature vectors are float32 BLOBs on <code>observations</code>
+and <code>nodes</code>; with the <code>[vec]</code> extra, a sqlite-vec
+<code>node_vec</code> virtual table mirrors <code>nodes.feature</code>
+and is maintained on insert, update and delete (<code>vec.py</code>),
+and <code>semantic_vec</code> uses it when present and scans the BLOBs
+otherwise. The BLOB is the source of truth and the index is
+rebuildable.</p>
+<p>Everything above the file is in-process Python: <code>store.py</code>
+is row-level CRUD, <code>fusion.py</code> the arbiter,
+<code>relations.py</code> the geometric edge pass,
+<code>query/__init__.py</code> the router and retrievers,
+<code>serialize.py</code> the JSON dump and the prompt tree,
+<code>tools.py</code> the function-calling layer,
+<code>verbalize.py</code> the <code>answer()</code> prompt and the
+<code>Verbalizer</code> protocol, <code>perception.py</code> the
+<code>PerceptionAdapter</code> protocol and <code>encoders.py</code> the
+<code>Encoder</code> protocol with an <code>OpenClipEncoder</code>
+behind <code>[clip]</code>. <code>datasets/</code> streams synthetic
+scenes and, behind <code>[replica]</code>, Replica ground-truth masks
+into the same <code>Detection</code> shape. <code>bench.py</code> is the
+evaluation harness and <code>viz.py</code> the HTML export.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running. <code>pip install tempomem</code> brings
+numpy; a store is one file, readable with any SQLite client, and
+<code>tempomem inspect store.smem</code> prints its contents. Semantic
+search over natural language needs an encoder the adopter supplies,
+<code>answer()</code> needs a verbalizer, and <code>add_frame</code>
+needs a perception adapter — the README marks the ConceptGraphs adapter
+<em>"WIP (CUDA)"</em> and the roadmap says the M2 demo is <em>"blocked
+on a CUDA box."</em> No API key is needed to store or query anything. CI
+runs the unit suite on Ubuntu and macOS across Python 3.10 to 3.12 plus
+separate <code>[clip]</code> and <code>[vec]</code> lanes. The
+<code>[vec]</code> and <code>[clip]</code> extras are declared as
+<code>&gt;=</code> ranges with no lockfile beside
+<code>pyproject.toml</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>TempoMem.add_detections</code>
+(<code>__init__.py:179-220</code>) validates dimension, resolves the
+episode row for the session string, inserts one
+<code>observations</code> row per detection through
+<code>store.insert_observation</code>, and appends the id to
+<code>_pending</code>. <code>add_frame</code> (<code>:222-242</code>)
+runs a <code>PerceptionAdapter.process_frame</code> and calls the same
+path. With <code>ChronotopeConfig.max_pending_obs</code> set, reaching
+the threshold calls <code>commit()</code> and logs a WARNING.</li>
+<li><strong>Fusion.</strong> <code>commit</code> (<code>:244-271</code>)
+re-reads each staged row and calls
+<code>fusion.ingest_observation</code> (<code>fusion.py:220-248</code>):
+<code>store.candidates_near</code> scans every node for a dilated AABB
+overlap (0.25 m), <code>score</code> (<code>:56-67</code>) combines the
+four terms, <code>_merge</code> (<code>:70-109</code>) or
+<code>_new_node</code> (<code>:112-128</code>) applies the verdict and
+links the observation. The threshold constants live in
+<code>config.py:10-37</code>, whose <code>__post_init__</code> refuses
+weights that do not sum to 1.</li>
+<li><strong>Retrieval.</strong> <code>query</code>
+(<code>__init__.py:293-308</code>) tries <code>relational</code>
+(<code>query/__init__.py:115-135</code>) first; then
+<code>detect_intent</code> (<code>:55-64</code>) routes to
+<code>recent</code> (<code>:67-72</code>), <code>spatial</code>
+(<code>:138-157</code>), <code>semantic_vec</code>
+(<code>:160-184</code>) or <code>semantic_keyword</code>
+(<code>:187-201</code>). <code>answer</code>
+(<code>__init__.py:319-332</code>) calls <code>semantic</code>,
+serialises the whole scene and hands <code>build_answer_prompt</code>
+(<code>verbalize.py:29-42</code>) to the verbalizer.</li>
+<li><strong>Context assembly.</strong> <code>serialize.to_prompt</code>
+(<code>serialize.py:67-169</code>): a header with the latest timestamp,
+one indented line per node with label, centroid, <code>t_last</code> and
+confidence, a <code>| on table#3, near kettle#2</code> suffix when edges
+exist, children nested under regions most-recent-first, whole subtrees
+dropped under <code>max_tokens</code> with an explicit
+<code>… (N more omitted)</code> marker, and <code>node_ids</code>
+restricting to the requested nodes, their one-hop neighbours and their
+ancestors.</li>
+<li><strong>Update, delete, forget.</strong> <code>update</code>
+(<code>__init__.py:589-634</code>), <code>forget</code>
+(<code>:371-374</code>) over <code>store.delete_node</code>
+(<code>store.py:260-275</code>), <code>decay</code>
+(<code>:376-393</code>) over <code>store.decay_and_prune</code>
+(<code>store.py:339-363</code>), <code>resplit</code>
+(<code>:395-413</code>) over <code>fusion.split_node</code>
+(<code>fusion.py:195-217</code>), <code>consolidate</code>
+(<code>:415-424</code>) over <code>fusion.consolidate</code>
+(<code>:289-328</code>), <code>merge</code>
+(<code>:636-668</code>).</li>
+<li><strong>Hierarchy and relations.</strong> <code>define_region</code>
+(<code>:457-535</code>), <code>contents</code> (<code>:537-551</code>),
+<code>relate</code> over <code>relations.infer</code>
+(<code>relations.py:32-64</code>), <code>related</code>,
+<code>add_edge</code>, <code>set_property</code>,
+<code>add_event</code>, <code>query_events</code>,
+<code>last_changed</code> (<code>:750-905</code>).</li>
+<li><strong>Schema.</strong> <code>persist/schema.sql</code>,
+<code>persist/migrations/002_semantic.py</code>.</li>
+<li><strong>Tools.</strong> <code>ChronotopeTools</code>
+(<code>tools.py:192-267</code>) with the six schemas at
+<code>:103-189</code> and the argument validators at
+<code>:58-98</code>.</li>
+<li><strong>Tests.</strong> <code>tests/unit/</code>, 29 files; the
+arbiter in <code>test_fusion.py</code>, the invariant in
+<code>test_pending_consistency.py</code>, the harness in
+<code>test_bench.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> (<code>persist/schema.sql:33-50</code>):
+<code>id</code>, <code>type</code>, <code>label</code>,
+<code>labels_json</code>, <code>confidence</code>, centroid and bbox as
+nine REAL columns, <code>feature</code> BLOB, <code>n_obs</code>,
+<code>t_first</code>, <code>t_last</code>,
+<code>parent_id REFERENCES nodes(id) ON DELETE SET NULL</code>.
+<code>labels_json</code> is a list of <code>(label, mass)</code> pairs
+where mass is the raw cumulative confidence of every observation that
+carried that label — the comment in <code>_merge</code> explains the
+choice: addition commutes, so the distribution does not drift with
+ingest order, and <code>test_label_mass_is_raw_cumulative</code> pins
+that it is not renormalised. The canonical <code>label</code> is the
+heaviest.</p>
+<p><code>observations</code> (<code>:18-31</code>):
+<code>episode_id</code>, <code>ts</code>, <code>label</code>,
+<code>confidence</code>, centre, bbox, <code>feature</code>, an optional
+RLE mask and a JSON <code>aux</code>. <code>node_obs</code> links a node
+to its observations. <code>episodes</code> carries a
+<code>session</code> string and start and end timestamps;
+<code>ensure_episode</code> reuses the latest episode for a session name
+and nothing on the read path filters by it.</p>
+<p><code>edges</code> (<code>:52-61</code>) are geometric —
+<code>near</code>, <code>on</code>, <code>under</code>, unique on
+<code>(src, dst, type)</code>, with a confidence and a
+<code>t_last</code>. <code>semantic_edges</code> are typed directed
+edges a caller writes by label or id. <code>node_properties</code> is a
+key-value bag per node, latest value wins. <code>smem_events</code> is
+append-only: <code>type</code>, an optional <code>location</code> node,
+<code>ts</code>, <code>payload</code>; <code>delete_node</code> nulls
+the location rather than deleting the event.</p>
+<p>There is no scope key, no owner, no tenant, no record timestamp, no
+status and no provenance beyond the observation trail. The unit of
+identity is the node id, which <code>update</code> preserves and
+<code>resplit</code>, <code>consolidate</code> and <code>merge</code> do
+not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Every retriever is a linear scan. <code>spatial</code> computes the
+distance from every node to the query point, drops those outside the
+radius, sorts by distance then id, and scores <code>1 − d/span</code>.
+<code>semantic_keyword</code> counts query terms that are substrings of
+the label and adds the confidence. <code>semantic_vec</code> is cosine
+over the feature BLOBs, or the sqlite-vec index when it exists.
+<code>recent</code> orders by <code>t_last</code>.
+<code>relational</code> parses a phrase — <code>on top of</code>,
+<code>next to</code>, <code>close to</code>,
+<code>under</code>/<code>below</code>/<code>beneath</code>,
+<code>near</code>/<code>beside</code>/<code>by</code>, <code>on</code> —
+takes the text after it as the anchor, strips an article, and finds an
+object node whose label matches as a whole word, preferring the longest
+label; <code>test_relational_anchor_word_boundary</code> exists because
+<code>able</code> used to match <code>table</code>. Hits come from
+<code>edges_to(anchor, rel)</code>, so <em>what's on the table</em>
+returns the sources of <code>on</code> edges into the table — which
+requires a prior <code>relate()</code> pass, and the
+<code>whats_on</code> tool schema says so.</p>
+<p><code>detect_intent</code> is two regexes over the lowercased text,
+including Chinese tokens for near, recent and last time. Spatial intent
+without coordinates in the text falls back to keyword over labels and
+then to all nodes. <code>salient</code> ranks by
+<code>(0.5 + 0.5 × recency) × confidence × (1 + 0.1 × n_obs)</code>.
+<code>last_seen</code> returns
+<code>(region_label, age_s, confidence)</code> for the most recently
+observed object with an exact label, and its docstring states a policy —
+<em>"&lt; 0.7 ⇒ hedge, not assert"</em> — that no code enforces.</p>
+<p>Retrieval is application-driven or tool-mediated; nothing injects
+automatically. The <code>answer()</code> prompt is the failure mode to
+know: the <code>_SYSTEM</code> line says <em>"Use only the SCENE facts
+below"</em> and <em>"If the scene does not contain the answer, say you
+don't know"</em>, and the scene below it is every node in the store,
+unbudgeted, with raw labels — <code>_clean_label</code> is applied in
+<code>tools.py</code> and nowhere in <code>serialize.py</code> or
+<code>verbalize.py</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and cheap until <code>commit()</code>, which
+is synchronous and scales as observations × overlapping candidates, each
+candidate costing a <code>node_feature</code> read and a dot product.
+<code>commit</code> returns <code>CommitStats</code> with the elapsed
+milliseconds. No LLM touches the write path; labels and features come
+from the adopter's perception, and the library treats them as data.</p>
+<p>Dedup is the arbiter. Consolidation exists twice: inside fusion at
+ingest, and as <code>consolidate()</code>, which re-scores every pair of
+object nodes by treating one as an observation of the other and merges
+at the same 0.62, keeping the lower id, iterating until nothing merges —
+quadratic in nodes and rerun from scratch each call.
+<code>resplit</code> is the inverse: deterministic 2-means seeded with
+the farthest pair over a node's observation centroids, split if both
+clusters have at least two members and the centroids are more than a
+metre apart; the node is deleted and two are created, so the id changes.
+<code>merge(other.smem)</code> opens the other file read-only, turns
+each of its object nodes into a <code>Detection</code> at its
+<code>t_last</code>, and ingests them under the episode
+<code>merged</code>; regions are not merged. <code>relate()</code>
+deletes every automatic edge and recomputes the whole set from geometry
+— <code>near</code> within 0.6 m in both directions, <code>on</code>
+when footprints overlap and the bottom of one sits within 8 cm of the
+top of the other, <code>under</code> as the inverse — with edge
+confidence the minimum of the two nodes'.</p>
+<p>Deletion is <code>forget</code> and <code>decay</code>. Both go
+through <code>store.delete_node</code>, which reparents children to the
+grandparent so the foreign key never dangles, deletes
+<code>node_obs</code>, both edge tables and the properties, nulls event
+locations, deletes the node and its vector — and leaves
+<code>observations</code> alone. <code>decay</code> skips regions and
+rooms. Neither writes anything about what it removed. There is no TTL,
+no background pass and no conflict path: two observations that disagree
+are two nodes if they fail to fuse and one averaged node if they
+succeed.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks on <code>commit()</code>; a memory is retrievable
+the moment it returns. No pass runs unbidden. <code>consolidate</code>,
+<code>relate</code>, <code>resplit</code> and <code>decay</code> each
+read the whole store, and <code>consolidate</code> is O(n²) per
+iteration. On the read path <code>serialize</code> is bounded only when
+the caller passes <code>max_tokens</code>, and <code>answer()</code>
+never does.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>ChronotopeTools(mem).schemas()</code> returns six OpenAI-shaped
+tool specs — <code>semantic_search</code>, <code>spatial_query</code>,
+<code>whats_in</code>, <code>whats_on</code>,
+<code>recent_changes</code>, <code>serialize_scene</code> — and
+<code>.call(name, arguments)</code> dispatches them. Every argument is
+treated as untrusted: <code>k</code> is bounded to 1–1000,
+<code>max_tokens</code> to 1–100,000, coordinates must be three finite
+numbers, a radius must be positive, and any failure surfaces as
+<code>ToolError</code> with a generic message so interpreter text never
+reaches the model (<code>tools.py:206-221</code>). Hits carry
+<code>node_id</code> so the model can cite what it used. The module
+docstring names the threat exactly — <em>"a sticky note reading 'ignore
+previous instructions…' becomes a node label"</em> — strips control
+characters and caps labels at 120 characters, and tells integrators to
+present scene text inside a delimited untrusted-data block and to anchor
+citations on <code>node_id</code> rather than prose. That advice is not
+followed by the library's own <code>answer()</code>.</p>
+<p>There is no MCP server, no hook and no automatic injection.
+<code>examples/</code> holds five runnable scripts, two of which CI
+executes. The agent is expected to call tools or the SDK explicitly; the
+library has no notion of a session boundary beyond the episode string it
+never reads back.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance</strong> is the observation trail: every node can
+name the frames that made it, with positions and timestamps. That is
+real and useful, and it stops at the boundary of the node — an
+observation that was rejected, or that belonged to a forgotten node, is
+unreachable.</p>
+<p><strong>No tombstone.</strong> The near-miss is the orphan row
+described in section 1: a rejected observation is durable, but the key
+that would let the arbiter recognise the same rejected sighting again
+does not exist, and no read path reaches an unlinked observation. A
+caller who forgets a mislabelled node will see it recreated from the
+next frame.</p>
+<p><strong>No trust state.</strong> Confidence is a float and every read
+uses it as a score; the one threshold in the tree,
+<code>last_seen</code>'s 0.7, is documentation.</p>
+<p><strong>No scope.</strong> <code>episodes.session</code> is written
+by <code>add_detections</code> and read only by
+<code>serialize.to_json</code>; <code>query</code>,
+<code>spatial</code>, <code>semantic</code>, <code>recent</code>,
+<code>contents</code> and <code>changes</code> take no session
+argument.</p>
+<p><strong>No audit.</strong> <code>update</code>, <code>forget</code>,
+<code>decay</code>, <code>resplit</code> and <code>consolidate</code>
+change rows and write nothing else; <code>smem_events</code> is a
+caller-facing event API, not a mutation log.</p>
+<p><strong>Prompt injection</strong> is handled at the tool boundary and
+not at the <code>answer()</code> boundary, as above.</p>
+<p><strong>Consistency.</strong> The fuse-before-persist invariant is
+the library's strongest reliability property and is tested on disk. A
+<code>.smem</code> file is one SQLite database, so backup is a file
+copy; a store opened read-only refuses every mutator. There is no
+concurrency story — one connection, no locking beyond SQLite's.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>154 test functions in 29 files under <code>tests/unit/</code>, run in
+CI on six OS-and-Python combinations with coverage. What they cover, by
+file: the arbiter's four verdicts and its determinism
+(<code>test_fusion.py</code>); the on-disk invariant under interleaved
+maintenance (<code>test_pending_consistency.py</code>); decay, prune,
+split, consolidate and <code>salient</code>
+(<code>test_m2_vtrack.py</code>, <code>test_split.py</code>,
+<code>test_consolidate.py</code>); regions, including that decay leaves
+a room and that forgetting a region with children does not raise
+(<code>test_hierarchy.py</code>); relations, including that far objects
+get no <code>near</code> edge and that <code>relate</code> is idempotent
+(<code>test_relations.py</code>); the relational parser and its fallback
+(<code>test_query_relational.py</code>); the prompt budget, the omission
+marker and the <code>node_ids</code> subgraph
+(<code>test_serialize_budget.py</code>); update and the observation
+trail (<code>test_update_history.py</code>); <code>moved</code>,
+<code>changes</code> and <code>stale</code>
+(<code>test_changes.py</code>); cross-store merge
+(<code>test_merge.py</code>); the tool layer's argument validation
+(<code>test_tools.py</code>); the sqlite-vec index and its fallback
+(<code>test_vec.py</code>); the auto-flush threshold
+(<code>test_max_pending_obs.py</code>); the Replica adapter's geometry
+against synthetic frames (<code>test_replica_adapter.py</code>).
+<code>test_audit_fixes.py</code> pins three past defects — label mass
+clamped at 1, the <code>able</code>/<code>table</code> anchor, and a
+budget that kept an empty region.</p>
+<p>The exclusion cases are what earn the mark:
+<code>test_spatial_near</code> asserts the result is exactly
+<code>["near"]</code> with <code>far</code> in the store; the region
+test asserts exactly three of four; the subgraph test asserts
+<code>obj0</code> and <code>obj5</code> are absent while the requested
+node is present. Each can fail against a retriever that returns
+everything and against one that returns nothing.</p>
+<p><strong>The evaluation harness is <code>bench.py</code>, and it is a
+smoke test with a metric's name.</strong> <code>recall_at_k</code> runs
+scripted <code>(query, expected_label)</code> cases and counts a hit
+when the expected label and any top-k label are substrings of one
+another — the docstring warns that <code>tab</code> would match
+<code>table</code>. <code>persistence_after_reopen</code> reopens a file
+and runs the same cases; <code>decay_forget</code> reports the lifecycle
+counts. <code>test_bench.py</code> runs them over a two-object kitchen
+and asserts recall 1.0 and the expected prune count. There is no
+precision metric, no false-positive case, no dataset run and no
+committed result: the roadmap's M2 demo metric — <em>"ask 5 questions,
+get 4 right"</em> — is a target, and the Replica reader is, in the
+CHANGELOG's words, <em>"unvalidated against real data in CI"</em>.
+<code>docs/en/03-ROADMAP.md</code> states 155 tests across three
+packages on 8 June 2026, 120 of them in this one; the tree at this
+commit has 154 in this one.</p>
+<p>No paper exists to check the code against. The design is in
+<code>docs/en/</code> and <code>spec/</code> — a vision, a positioning
+document against ConceptGraphs, Hydra and Mem0, and normative specs for
+the API, schema, arbiter, router and engineering rules — and the code
+cites those specs by section in its docstrings.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fuse before you persist, and test it on disk.</strong> One
+drain function, called by every mutator and by <code>close()</code>, is
+the whole mechanism; the test that reopens the file and looks for
+orphans is what makes it a property rather than a habit.</li>
+<li><strong>Accumulate label mass rather than renormalising it.</strong>
+Order-independent by construction, and the canonical label is a
+<code>max</code> over it — no drift, no special case for a late
+relabel.</li>
+<li><strong>Validate model-supplied arguments at the tool boundary and
+mask exceptions.</strong> Bounded integers, finite floats, a generic
+error string, and a citation anchor that is an id rather than a
+label.</li>
+<li><strong>Return the observation trail.</strong>
+<code>history(node_id)</code> is a small join and it answers the
+questions a spatial memory gets asked.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keeping rejected evidence you cannot find.</strong> Either
+delete the rejected row or key it — a hash of label and cell would do —
+so the next identical sighting can be recognised instead of
+re-scored.</li>
+<li><strong>Deleting a belief without a record.</strong>
+<code>forget</code> and <code>decay</code> remove a node and leave the
+file unable to say it was ever there or why it went.</li>
+<li><strong>Shipping an <code>answer()</code> that ignores your own
+budget and sanitiser.</strong> The subgraph serialiser and the label
+cleaner both exist in this package; the question-answering path uses
+neither.</li>
+<li><strong>Calling a substring match recall.</strong> A harness whose
+hit test is <code>exp in lab or lab in exp</code> measures something,
+and it is not the number its name promises.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A single-file, dependency-free spatial memory for a robot or an
+embodied simulation where an adopter already has perception producing
+labelled 3D boxes with features, and wants deterministic, inspectable
+fusion plus a scene-graph prompt for an LLM. The install and operating
+cost are as low as they get, the arbiter is readable in an afternoon,
+and the tool layer is a model of how to expose a store to a
+function-calling model.</p>
+<p>Not a memory to trust across corrections: nothing here represents
+doubt, retracts a belief durably or scopes a store to an owner, and the
+library's own roadmap places real perception, a robot demo and hardening
+at milestones M2 to M4, none complete at this commit. A team that needs
+to answer <em>is this object still there</em> rather than <em>where was
+it last seen</em> has to build the first question on top of the
+second.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Do <code>worldsense</code> and <code>mindloop</code>
+exist?</strong> The dev plan and one docstring describe a three-package
+workspace; only this package is in this tree, and the
+<code>answer()</code> gap reads as a path that was moved to a sibling
+and not back.</li>
+<li><strong>What does fusion do with a moved object?</strong>
+<code>moved()</code> measures the displacement between first and last
+observation of one node, but the arbiter's geometry term makes a
+sighting far from the old centroid score low, so a relocated object is
+likelier to become a new node than to move the old one — and the old one
+then decays. Neither outcome is tested.</li>
+<li><strong>Is the <code>on</code> relation stable under
+<code>relate()</code> recomputation?</strong> Every call deletes and
+rebuilds all automatic edges from current geometry; a node whose bbox
+grew by union may lose or gain edges between calls.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/tempomem/__init__.py</code></td>
+<td>906</td>
+<td><code>TempoMem</code>: ingest, commit, query, maintenance,
+hierarchy, relations, update, merge, history, change detection, semantic
+layer</td>
+</tr>
+<tr>
+<td><code>src/tempomem/store.py</code></td>
+<td>543</td>
+<td>Row-level CRUD, <code>delete_node</code>,
+<code>decay_and_prune</code>, <code>candidates_near</code>, semantic
+edges, properties, events</td>
+</tr>
+<tr>
+<td><code>src/tempomem/fusion.py</code></td>
+<td>328</td>
+<td>Score, merge, new node, split, <code>merge_nodes</code>,
+<code>consolidate</code></td>
+</tr>
+<tr>
+<td><code>src/tempomem/tools.py</code></td>
+<td>267</td>
+<td>Six function-calling tools with argument validation and label
+sanitisation</td>
+</tr>
+<tr>
+<td><code>src/tempomem/datasets/__init__.py</code></td>
+<td>262</td>
+<td>Synthetic and Replica detection streams</td>
+</tr>
+<tr>
+<td><code>src/tempomem/query/__init__.py</code></td>
+<td>213</td>
+<td>Intent router, relational parser, spatial, semantic and keyword
+retrievers</td>
+</tr>
+<tr>
+<td><code>src/tempomem/serialize.py</code></td>
+<td>173</td>
+<td>JSON dump; prompt tree with budget and subgraph</td>
+</tr>
+<tr>
+<td><code>src/tempomem/bench.py</code></td>
+<td>110</td>
+<td><code>recall_at_k</code>, <code>persistence_after_reopen</code>,
+<code>decay_forget</code></td>
+</tr>
+<tr>
+<td><code>src/tempomem/persist/__init__.py</code></td>
+<td>105</td>
+<td>Open, migrate, dimension check</td>
+</tr>
+<tr>
+<td><code>src/tempomem/frame.py</code></td>
+<td>99</td>
+<td><code>Detection</code> and <code>Observation</code> value
+objects</td>
+</tr>
+<tr>
+<td><code>src/tempomem/vec.py</code></td>
+<td>96</td>
+<td>sqlite-vec index with linear fallback</td>
+</tr>
+<tr>
+<td><code>src/tempomem/relations.py</code></td>
+<td>63</td>
+<td>Geometric <code>near</code>/<code>on</code>/<code>under</code>
+inference</td>
+</tr>
+<tr>
+<td><code>src/tempomem/config.py</code></td>
+<td>52</td>
+<td>Fusion thresholds and weights</td>
+</tr>
+<tr>
+<td><code>src/tempomem/verbalize.py</code></td>
+<td>42</td>
+<td><code>Verbalizer</code> protocol and the answer prompt</td>
+</tr>
+<tr>
+<td><code>src/tempomem/persist/schema.sql</code></td>
+<td>68</td>
+<td>The v1 schema</td>
+</tr>
+<tr>
+<td><code>tests/unit/</code></td>
+<td>2,101</td>
+<td>154 tests in 29 files</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;DELETE FROM observations&#39; src/            # none: rejected and forgotten observations stay
+rg -n &#39;session&#39; src/tempomem/                    # written in add_detections, read only by serialize.to_json
+rg -n &#39;_clean_label|isprintable&#39; src/tempomem/serialize.py src/tempomem/verbalize.py   # none
+rg -n -i &#39;arxiv|bibtex|@article|@misc|citation|doi&#39; README.md docs/en/ spec/           # no paper
+rg -n &#39;mindloop|worldsense&#39; src/ docs/en/        # named, not present</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa"><code class="commit-id" title="92181fbbae7f5e66714aa5e91f61ba9558b1f1aa">92181fbb…</code></a>
+— first reading, at the head of <code>main</code>. Screened first: no
+auto-run surface, one build-time execution path (a pytest
+<code>conftest.py</code>), one unpinned surface
+(<code>pyproject.toml</code> ranges with no lockfile), nothing inside
+the seven-day cooldown. Nothing was installed or run; the tests were
+read, not executed. One mark, <code>negative_eval</code>, on
+exact-result exclusion tests with the excluded material ingested in the
+same case. <code>tombstone</code> withheld on the orphan-row near-miss,
+<code>scope_enforced</code> on a session string no query reads,
+<code>audit_log</code> on mutators that write nothing,
+<code>trust_state</code> on a confidence float. Found in the same pass
+and recorded above: <code>update(label=)</code> erasing the label
+distribution, and <code>answer()</code> bypassing the budget and the
+sanitiser the package ships.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

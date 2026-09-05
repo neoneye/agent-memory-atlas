@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 359 reports.</strong></p>
+<p><strong>This page covers all 361 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -2681,53 +2681,51 @@ key, no trust state, no authorship, no delete — and the AGPL makes
 embedding it in a proprietary product a licensing decision rather than a
 dependency choice.</li>
 </ul>
-<h3 id="mem0sharp"><a
-href="../systems/mem0sharp/"><code>mem0sharp</code></a></h3>
+<h3 id="magicore"><a
+href="../systems/magicore/"><code>magicore</code></a></h3>
 <ul>
-<li>Best idea: an <code>event, old_memory, new_memory</code> row written
-on every mutation, in an append-only <code>_history</code> table with no
-<code>UPDATE</code> and no targeted <code>DELETE</code> against it — the
-audit most systems here document and do not build.</li>
-<li>Biggest risk: a <code>MemoryBehavior</code> enum —
-<code>Normal</code>, <code>Dreaming</code>, <code>RandomThoughts</code>,
-<code>PersonalMemory</code> — swaps the extraction and
-conflict-resolution prompts, and <code>Dreaming</code> asks the model
-for imaginative associations <em>phrased as possibilities rather than
-facts</em>. The behaviour reaches the extractor, the resolver and the
-telemetry span, and is written to neither the memory nor its metadata,
-so a speculative association is a row of exactly the same shape as a
-stated fact.</li>
-<li>Second idea: <strong>an admission gate consulted before the dedupe
-hash</strong>, with four shipped implementations — a prompt-injection
-screen matching thirteen default signatures such as <em>"reveal your
-system prompt"</em> and <em>"exfiltrate"</em>, a novelty gate refusing
-excessive overlap, an authority gate refusing an untrusted role writing
-to a user scope, and a composite that chains them. Screening a candidate
-memory for injection strings at the write boundary is a defence a
-minority of this corpus has. It is null by default, and
-<code>MemoryAdmissionDecision.Reason</code> is read only as
-<code>IsAdmitted</code> — a refused candidate becomes
-<code>MemoryAction.None</code> and the reason is discarded, so the
-history table records every mutation that happened and nothing about the
-write that was turned away.</li>
-<li>Most reusable component: the owner column as <code>NOT NULL</code>
-rather than a convention, and delete-by-scope beside delete-by-id.</li>
-<li>Maturity impression: 1,968 lines of tests beside eleven committed
-evaluation runs scoring twelve ablation scenarios — with Wilson 95%
-intervals, retrieval hit rate reported apart from answer accuracy, and
-the honest caveat that the intervals <em>"do not measure provider or
-model variance"</em>. At 22 questions every arm overlaps every other, so
-the ablations are wired and cannot separate. Testcontainers integration
-suites for Postgres and Qdrant, with Testcontainers integration suites
-for Postgres and Qdrant — including
-<code>PostgresHistoryIntegrationTests</code>, which creates a legacy
-history table, migrates it, and asserts the add-update-delete sequence
-survives. Very few audit logs in this atlas are tested at all.</li>
+<li>Best idea: <strong>an event time beside the record time, read by a
+filter that refuses to guess.</strong> <code>reference_time</code> rides
+in every memory's metadata, the dedup key includes it so one sentence at
+two dates is two rows, a range drops candidates before ranking, and the
+deterministic interpreter turns an ISO date, a year or <em>last
+month</em> into a range with a confidence and returns nothing under the
+caller's threshold — a vague question gets both memories, not the wrong
+one.</li>
+<li>Biggest risk: <strong>the history collection is written on every
+mutation and read by nothing.</strong> The VectorData store upserts each
+entry into <code>magicore_history</code> and enqueues it in a
+process-local queue; <code>GetHistoryAsync</code>, point-in-time reads
+and rollback consult the queue, so none survives a restart, the
+project's own persistence document says so, the Qdrant store keeps no
+history at all, and <code>RollbackAsync</code> restores and deletes rows
+without writing an entry.</li>
+<li>Second idea: <strong>robot evidence replayed by capture time into a
+belief that says why not to trust it.</strong> Immutable observations
+with a source, a frame revision, an error radius and a visibility; per
+entity the latest positive sighting sets the position, the confidence
+halves per half-life, and a ladder yields Conflicted, Missing, Occluded,
+Uncertain, Stale or Observed with <code>NeedsObservation</code> for a
+planner to respect — derived at every recall and stored nowhere, which
+is why <code>trust_state</code> is withheld.</li>
+<li>Most reusable component: the admission gate consulted before the
+dedupe hash — injection signatures, a novelty threshold, an authority
+check on the writer's role — whose refusal reason the service still
+discards.</li>
+<li>Maturity impression: Apache-2.0, 46 commits since 13 July 2026 under
+two names, 5,496 lines of C# under 2,956 lines of tests with 108
+attributes, a committed 40-question LOCOMO-style harness with Wilson
+intervals and a 26-check capability suite of which 22 pass and 4 are
+skipped with reasons, seven samples and a Godot robot. Four of seven
+capability marks. The storage layer was replaced six days before the pin
+and the audit's reader did not move with it.</li>
 <li>Study when: you are building .NET agents and want Mem0's shape
-natively rather than through a REST client.</li>
-<li>Do not copy when: you expect epistemics the original also lacks. It
-stores LLM-extracted text as fact and offers no way to mark a memory
-doubtful; the history table is a forensic tool, not a trust model.</li>
+natively, a temporal plane the original lacks, or a worked example of
+belief reconstruction from immutable sensor evidence.</li>
+<li>Do not copy when: you need the audit to survive a restart, the
+Qdrant backend to keep history, or the text plane to represent doubt — a
+memory there is a fact until a model overwrites it, and
+<code>Behavior</code> is a genre fixed at write that nothing moves.</li>
 </ul>
 <h3 id="memary"><a
 href="../systems/memary/"><code>memary</code></a></h3>
@@ -7909,15 +7907,13 @@ storage <em>before</em> superseding the original, with the crash window
 named in a comment and resolved in favour of a recoverable fork over a
 possible loss.</li>
 <li>Biggest risk: the doubt that flags a <em>contradiction</em> is still
-arithmetic. The neo statuses <code>conflict</code>, <code>demoted</code>
-and <code>untrusted</code> enter recall as penalties of 0.3, 0.35 and
-0.3 rather than as filters, so a memory recorded as contradicting
-another ranks lower and reaches the prompt, labelled with its status,
-which moves the judgement to the model. Release 7.3.0 does add one doubt
-state that withholds — a claim-level epistemic <code>invalidated</code>
-status is a hard filter at all three read layers — but it sits on a
-separate axis from the contradiction flag, so the specific "I recorded a
-conflict and injected it anyway" path remains.</li>
+arithmetic. The neo status <code>conflict</code> enters recall as a 0.3
+penalty rather than a filter, so a memory recorded as contradicting
+another ranks lower and reaches the prompt anyway; <code>demoted</code>
+and the epistemic <code>invalidated</code> state withhold, and the code
+keeps <code>conflict</code> out of that set on a measurement — an
+unvalidated detector and thousands of live records carrying the flag
+with no path that clears it.</li>
 <li>Most reusable component: the injected-context guard. Text PLUR1BUS
 itself put into a prompt is marker-matched and refused as a capture
 candidate, which closes the recall-becomes-memory loop the code traces
@@ -7927,17 +7923,14 @@ append dedupe key is computed so a status transition is never mistaken
 for a content duplicate, and the recall path deduplicates by <em>newest
 revision</em> rather than first appearance, because in an append-only
 log the first copy of a record is the one from before the decision.</li>
-<li>Maturity impression: MIT, release 7.3.0, ~68,000 lines of JavaScript
-with ~80,000 more across 339 test files — a test suite larger than the
-implementation, and the denials rather than the permissions are what it
-asserts. v7.3.0 added a bi-temporal validity window, a
-content-fingerprint rejected-value tombstone, and a hard-filtering
-epistemic status, each with a large committed suite
-(<code>valid-time.test.js</code> alone is 1,721 lines), plus scope fixes
-to the dream reader and the <code>/critical</code> surface. Against
-that, forty-seven configuration groups, fifteen background jobs, and a
-<code>postinstall</code> that patches the host OpenClaw's shipped code
-and is contractually unable to fail.</li>
+<li>Maturity impression: MIT, release 7.11.0 with eighteen releases
+between 3 and 5 September 2026, 12,418 lines in <code>index.js</code>
+and 73,743 across <code>lib/</code> under 436 test files — a suite
+larger than the implementation whose assertions are denials, absences
+and removals rather than permissions. Seven of seven capability marks.
+The install-time host patch is gone since 7.5.0, local models are pinned
+by revision, size and SHA-256, and the previous atlas pin was rewritten
+out of the branch's history.</li>
 <li>Study when: you are designing a correction path and want the most
 complete worked answer in this atlas to "change a memory without losing
 the old one" — or you are putting state transitions into an append-only
@@ -12573,6 +12566,75 @@ review.</li>
 lifecycle records visibility, not truth — or a record of who changed
 what: mutations bump a timestamp and write to a process log, and the
 archive reason never reaches the row.</li>
+</ul>
+<h3 id="tempomem"><a
+href="../systems/tempomem/"><code>tempomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>fuse before you persist, and prove it on
+disk.</strong> Observations are written the moment they arrive and
+staged; <code>commit()</code> runs the deterministic arbiter — merge
+above 0.62 on distance, box overlap, feature cosine and label, reject
+below confidence 0.30, else a new node — and every other mutator drains
+the stage first, so a <code>.smem</code> file never holds an observation
+no node accounts for, and a test reopens the file to check.</li>
+<li>Biggest risk: <strong>evidence the arbiter refuses stays in the file
+and nothing can find it.</strong> A rejected observation keeps its row
+with no link, no key and no reader, so the same sighting is re-scored
+from scratch each time; <code>forget</code> leaves the same orphans and
+no record; <code>update(label=)</code> erases the label distribution;
+and <code>answer()</code> hands the verbalizer the whole scene,
+unbudgeted and unsanitised, though the package ships both a budget and a
+sanitiser.</li>
+<li>Most reusable component: <code>ChronotopeTools</code> — six
+function-calling tools whose every argument is bounded and
+finite-checked, whose labels are control-stripped and capped, whose
+errors are generic, and whose hits carry a <code>node_id</code> for
+citation, with a docstring that names a sticky note as an injection
+vector.</li>
+<li>Maturity impression: Apache-2.0, 56 commits by one author between 29
+May and 3 July 2026, <code>0.1.0a1</code>, <em>"Pre-alpha. Public design
+phase"</em> by its own README, 3,635 lines of numpy-only Python under
+154 tests on six CI lanes, no paper, and two companion packages named in
+the docs and absent from the tree. One of seven capability marks.</li>
+<li>Study when: you have perception that already produces labelled 3D
+boxes with features and want deterministic, inspectable fusion into a
+single file, plus a scene-graph prompt and a tool layer that treats
+labels as data.</li>
+<li>Do not copy when: you need to know whether an object is still there
+rather than where it was last seen, or to retract a belief so it stays
+retracted — nothing here represents doubt, records a removal, or scopes
+a store to an owner.</li>
+</ul>
+<h3 id="dovsg"><a href="../systems/dovsg/"><code>dovsg</code></a></h3>
+<ul>
+<li>Best idea: <strong>repair the map by depth disagreement,
+locally.</strong> After every pick and place the robot relocalises,
+projects its remembered voxels into the new views and deletes those the
+new depth places more than two centimetres behind the remembered surface
+— or one centimetre and a different colour — then drops any object that
+lost over half its voxels, cuts its subtree from the scene graph and
+lets the builder fill in what is missing.</li>
+<li>Biggest risk: <strong>the graph is maintained and never
+consulted.</strong> The planner sends GPT-4o-mini the instruction and
+five examples with the graph argument commented out, navigation resolves
+<em>A on B</em> by CLIP similarity and the nearest pair of centroids,
+and the only reader of a node's relations outside the module that builds
+them is the visualiser — while a survivor keeps whatever parent it had
+and a re-detected object gets a new identity.</li>
+<li>Most reusable component: <code>find_need_to_delete_indexes</code> —
+a conservative, purely geometric deletion test that never needs the
+detector to agree — and the loss-ratio pruning that lets a partially
+seen object keep its identity and merged features.</li>
+<li>Maturity impression: the RA-L 2025 paper's code, nineteen commits
+between 30 October 2024 and 17 April 2025, 7,647 lines of Python around
+six uninitialised submodules and two committed shared objects, no tests,
+no licence file, a detector vocabulary that names the demo's objects in
+the source, and three evaluation scripts that generate the GPT-4o
+baseline rather than a score. No capability mark.</li>
+<li>Study when: you are building a persistent map for a robot and want a
+worked, readable example of local repair after the world changes.</li>
+<li>Do not copy when: you need a library, a memory API, tests, a
+licence, or a graph a planner actually reads.</li>
 </ul>
         </article>
       </div>

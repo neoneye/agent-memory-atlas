@@ -104,14 +104,14 @@ that turns message streams into derived peer representations.</p>
               <strong>plastic-labs/honcho</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944" title="ddbb90e36f2d148c7982f6ed85b09d31cabf5944">
+            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685" title="be54355545b64ddb10203829d323861f52423685">
               <span>Analyzed revision</span>
-              <code>ddbb90e3…</code>
+              <code>be543555…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-22</strong>
+              <strong>2026-09-05</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -146,7 +146,23 @@ workspace. It has:</p>
 <li>pgvector or external vector-store paths.</li>
 <li>Session context/search APIs.</li>
 <li>Bench/eval harnesses for LoCoMo, LongMem, BEAM, Oolong, etc.</li>
+<li>A workspace-level chat that routes across every peer before
+recalling through the pair machinery.</li>
 </ul>
+<p>Version 3.1.1 is dated 2 September 2026; 50,294 lines of Python under
+<code>src/</code> beside 211 test files. Two things arrived in the 3.1
+line that the sections below describe: a workspace-level dialectic
+(<code>POST /v3/workspaces/{id}/chat</code>) that answers across all
+peers in a workspace and honours <code>scope</code>, and a Qdrant
+adapter as a fourth vector backend. Two things were fixed that had been
+losing data silently: until 2 September 2026 two concurrent writers to
+one <code>(workspace, observer, observed)</code> collection could
+deadlock on <code>times_derived</code> reinforcement updates, the error
+was swallowed per document, the batch was lost and the queue item marked
+processed — 682 events in 90 days by the project's own count in the fix
+— and until 31 August a NUL byte in a model-generated observation raised
+a Postgres <code>DataError</code> in the dedup pre-fetch and dropped the
+whole observer batch.</p>
 <p>The strongest idea is the separation between raw messages and
 inferred representations. The main risk is eventual consistency and
 trust: derived observations are LLM-generated and embedded, but the code
@@ -205,7 +221,11 @@ generation.</li>
 batching, stale cleanup.</li>
 <li><code>honcho/src/dialectic/chat.py</code>,
 <code>honcho/src/dialectic/core.py</code>: query answering over peer
-memory.</li>
+memory; <code>honcho/src/dialectic/workspace.py</code>: the
+workspace-level agent.</li>
+<li><code>honcho/src/vector_store/</code>: one <code>VectorStore</code>
+interface with Turbopuffer, LanceDB and Qdrant adapters;
+<code>pgvector</code> is the ORM path.</li>
 <li><code>honcho/src/reconciler/*</code>: vector reconciliation.</li>
 </ul>
 <p>Architecture:</p>
@@ -368,6 +388,25 @@ splits the observation budget:</p>
 </ul>
 <p>This is a useful pattern: it avoids pure semantic recall and includes
 low-latency, stable representation context.</p>
+<p><strong>Workspace-level chat routes first and recalls
+second.</strong> <code>WorkspaceDialecticAgent</code>
+(<code>src/dialectic/workspace.py</code>) subclasses the pair agent with
+an empty observer and observed. Its prefetch is orientation rather than
+retrieval — workspace stats, the five most active peers and their self
+peer cards — because, in the module's words, <em>"a workspace-flat
+observation top-k would be dominated by the most verbose peers."</em>
+Observation search then stays pair-scoped, with the pair supplied as
+tool arguments, and message search is workspace-flat to reveal which
+peers discussed a topic. A <code>scope</code> on the route resolves to a
+session allowlist as the union of the named scopes, fails closed when
+the union is empty, and changes what the prefetch may show: a peer card
+is a single cross-session aggregate, so <em>"an in-scope peer's card can
+still carry facts derived from sessions outside the scope"</em>, and the
+agent drops cards entirely under an allowlist and routes on stats alone
+— the same rule the <code>get_peer_card</code> tool enforces. Message
+search itself is ILIKE over <code>messages.content</code> or an
+embedding query, with <code>top_k</code> floored at one after a zero
+reached Turbopuffer.</p>
 <p><strong>A <code>scope</code> on a read is an observer swap, not a
 filter.</strong> Passing <code>scope</code> to chat, representation,
 context or search resolves the scope peer and reads from the
@@ -426,6 +465,19 @@ handles persistence.</li>
 <p>This is operationally sound for service latency: message ingestion
 does not wait on derivation. The tradeoff is stale reads immediately
 after writes.</p>
+<p><strong>Concurrent writers to one collection are serialised by
+id-ordered row locks.</strong> <code>create_documents</code> collects
+reinforcement and replacement operations during the batch, locks the
+target rows with <code>SELECT … ORDER BY id FOR UPDATE</code>, and
+applies them; a <code>SQLAlchemyError</code> aborts the batch instead of
+continuing through an aborted transaction, and transient errors are
+classified (<code>src/utils/retryable_errors.py</code>) and retried
+through a bounded in-process counter rather than marking the item
+errored. The fix commit records the alternative it rejected — an
+advisory lock, because that is database-scoped and would serialise every
+writer to a collection across tenants sharing a name.
+<code>_normalized_observation</code> strips NUL bytes from model output
+at the same point ingress already stripped them from user content.</p>
 <p><strong>Membership is retroactive, and reconciling it costs no model
 call.</strong> <code>src/deriver/scope_backfill.py</code> adds two queue
 handlers. <code>scope_backfill</code> runs when a session joins a scope
@@ -437,13 +489,17 @@ re-derivation</strong>, and the reason is an invariant the module names
 — explicit-level documents are session-pure and identical across
 observer collections — so retroactive membership is <em>"pure row
 copying"</em>. The only external call is an embedding lookup for source
-rows whose embedding column is null. An idempotency marker
+rows whose embedding column is null, and since 1 September 2026 the copy
+runs in chunks of 500 specs with vectors hydrated per chunk, after
+several concurrent backfills of a 14,000-document session were
+OOM-killed at the deriver's memory limit. An idempotency marker
 (<code>copied_from</code> in <code>internal_metadata</code>) links each
 copy to its origin, and the handlers run in phases — plan, embed, write,
 sync — each opening its own short-lived session, so a database session
 is never held across an embedding or vector-store call.</p>
-<p>That invariant is load-bearing and is stated rather than asserted. If
-an explicit observation ever became observer-dependent, the backfill
+<p>That invariant is load-bearing and is stated rather than asserted:
+<code>rg -n -i 'observer-independent' src tests</code> returns nothing.
+If an explicit observation ever became observer-dependent, the backfill
 would silently copy the wrong text into a scope, and nothing in the tree
 would notice.</p>
 <p><strong><code>scope_removal</code> is the more interesting half,
@@ -490,7 +546,14 @@ Trust</h2>
 <li>Raw messages preserved separately from derived observations.</li>
 <li>Queue ownership and stale cleanup exist.</li>
 <li>Advisory locks prevent session sequence races.</li>
-<li>Soft deletes on documents.</li>
+<li>Soft deletes on conclusions, with the reconciler doing the hard
+delete and the vector cleanup; sessions and workspaces hard-cascade in
+the background and answer <code>202</code> before the cascade runs, and
+the documentation says what that means — no soft delete, no trash, no
+restore, and no endpoint that reports when the cascade finished. Peers
+and individual messages cannot be deleted; a peer's data goes with its
+sessions. A soft-deleted scope copy is a restore candidate the next time
+the session joins the scope.</li>
 <li>Vector sync state tracks migration/reconciliation.</li>
 <li>Tests cover migrations, queueing, deriver, routes, SDKs, and
 benchmarks.</li>
@@ -514,6 +577,10 @@ handle freshness.</li>
 misconfigure.</li>
 <li>Prompt injection in messages can influence derived
 observations.</li>
+<li>Until 2 September 2026 a deadlock between two writers to one
+collection dropped the batch silently and marked its queue item
+processed; the row-lock fix and the retry classifier close it, and
+nothing re-derives what those 682 events lost.</li>
 <li>Trust is partly implicit in "explicit" vs "deductive" and
 <code>times_derived</code>, not a full epistemic state.</li>
 <li>A scope sees only what was ingested after the session joined it,
@@ -536,13 +603,14 @@ scenarios, configuration inheritance, and scope confinement.</li>
 <li>Benchmark harnesses under <code>tests/bench</code> for BEAM, LoCoMo,
 LongMem, Oolong, etc.</li>
 </ul>
-<p>I did not run these tests. 194 Python test files sit beside a case
+<p>I did not run these tests. 211 Python test files sit beside a case
 harness with its own runner (<code>python -m tests.unified.run</code>)
-and 40-odd JSON scenarios.</p>
+and 41 JSON scenarios, 19 of which carry a <code>not_contains</code>
+assertion.</p>
 <p><strong>The unified cases are where the negative assertions live, and
 they are the reason <code>negative_eval</code> is marked.</strong>
-Seventeen case files carry a <code>not_contains</code> assertion. Most
-of them assert <em>emptiness</em> — no <code>## Explicit</code> or
+Nineteen case files carry a <code>not_contains</code> assertion. Most of
+them assert <em>emptiness</em> — no <code>## Explicit</code> or
 <code>## Deductive</code> header in a representation that should not
 exist, which proves a pair was never observed rather than that material
 was withheld. Two do the harder thing.</p>
@@ -555,6 +623,28 @@ and works, asserting <code>contains: Seattle</code> and
 <code>not_contains: startup</code>. A value that was ingested, embedded
 and later replaced must not come back. That is a correction test, and
 correction tests are close to absent from this corpus.</p>
+<p><strong>The suite's own history at this commit is the caveat on that
+mark.</strong> Until 26 August 2026 the <code>unified-tests</code>
+workflow was skipped on every merge to <code>main</code>, because its
+gate job ran only on a labelled pull request and a skipped ancestor
+propagates down the needs chain — the fix commit says the suite <em>"has
+been skipped on every merge to main while still burning a Fly
+machine."</em> And until 3 September 2026 the dream case above could not
+pass as written: its <code>get_representation</code> step named a
+session id, a bare session id becomes a one-element allowlist, and an
+allowlist narrows the levels served to <code>explicit</code>, so the
+deductive and inductive observations it asserted on were excluded by
+design. The repair dropped the session id and, in the same commit,
+deleted a <code>flush</code> field that <em>"never had an effect despite
+being set in 47 places"</em>, raised two summary budgets no conforming
+summary could fit, and made <code>results.json</code> carry the failing
+step and the judge's reasoning instead of a bare status. The scope case
+needed none of that. Two cases arrived with workspace chat:
+<code>workspace_chat_scope.json</code> puts Alice's fact in a scoped
+session and Bob's outside it, asserts a scoped workspace chat contains
+neither of Bob's terms, and then asks unscoped as the control;
+<code>peer_isolation_test.json</code> asserts a peer outside a session
+cannot chat its way to the session's content.</p>
 <p><code>scope_confines_recall.json</code> is the visibility version and
 it is built the way this atlas keeps asking for. Alice says one thing in
 a session inside the <code>work</code> scope and something else in a
@@ -655,7 +745,13 @@ complete one to a normal caller?</li>
 <li>Deriver: <code>honcho/src/deriver/deriver.py</code>,
 <code>honcho/src/deriver/enqueue.py</code>,
 <code>honcho/src/deriver/queue_manager.py</code>.</li>
-<li>Dialectic chat: <code>honcho/src/dialectic/</code>.</li>
+<li>Dialectic chat: <code>honcho/src/dialectic/</code>
+(<code>workspace.py</code> for the workspace-level agent).</li>
+<li>Vector stores: <code>honcho/src/vector_store/</code>
+(<code>qdrant.py</code>, <code>turbopuffer.py</code>,
+<code>lancedb.py</code>).</li>
+<li>Dream scheduling: <code>honcho/src/dreamer/dream_due.py</code> (a
+read-only due count exported as a metric).</li>
 <li>Reconciler: <code>honcho/src/reconciler/</code>.</li>
 <li>Scopes: <code>honcho/src/utils/scopes.py</code> (the prefix and the
 <code>kind</code> marker), <code>honcho/src/routers/scopes.py</code>
@@ -668,11 +764,45 @@ complete one to a normal caller?</li>
 <li>Tests/evals: <code>honcho/tests/</code>; the case harness is
 <code>honcho/tests/unified/</code> (<code>runner.py</code>,
 <code>run.py</code>, <code>test_cases/</code>), with
-<code>scope_confines_recall.json</code> and
+<code>scope_confines_recall.json</code>,
+<code>workspace_chat_scope.json</code> and
 <code>dream_knowledge_updates_and_patterns.json</code> carrying the
-negative retrieval assertions.</li>
+negative retrieval assertions with controls.</li>
 </ul>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n -i &#39;observer-independent|observer_independent&#39; src tests   # the backfill invariant is stated, not tested
+rg -n &#39;flush&#39; tests/unified/runner.py tests/unified/schema.py     # the dead knob is gone
+rg -rn -i &#39;audit|mutation_log|event_log&#39; src -l                   # config, prometheus, telemetry trace only</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685"><code class="commit-id" title="be54355545b64ddb10203829d323861f52423685">be543555…</code></a>
+— 52 commits on, at 3.1.1 plus the Qdrant adapter. Screened again first:
+two auto-run surfaces (the <code>.vscode</code> files), twelve
+build-time execution points, six unpinned surfaces, a
+<code>CLAUDE.md</code> treated as data, and <strong>four files inside
+the seven-day cooldown</strong> — <code>pyproject.toml</code> and
+<code>uv.lock</code> changed the day of reading — so nothing was
+installed and no test was run. The mechanism is unchanged and the
+context is not: workspace-level chat with a fail-closed
+<code>scope</code> and a peer-card rule that drops cards under an
+allowlist; a Qdrant backend; a chunked backfill; and two silent-loss
+fixes, the collection deadlock that dropped batches until 2 September
+and the NUL byte that dropped observer batches until 31 August. Both
+marks hold, <code>audit_log</code> re-checked and withheld. <strong>One
+thing published on 22 August rested on a case that could not
+pass:</strong> <code>dream_knowledge_updates_and_patterns.json</code>
+asked for its representation with a session id, which narrowed the read
+to explicit level and excluded the observations it asserted on, and the
+whole unified suite had been skipped on merges to <code>main</code>
+since its gate job was added; both were fixed upstream on 26 August and
+3 September and are recorded in section 10. The mark did not rest on
+that case alone — <code>scope_confines_recall.json</code> carried it and
+is unchanged. Also: the stack census promoted from seeded to reviewed
+with a lexical arm added for the ILIKE message search, and the deletion
+semantics rewritten from the code and the new documentation — sessions
+hard-cascade, conclusions soft-delete, peers and messages cannot be
+deleted.</p>
 <p><strong>2026-08-22</strong> — <a
 href="https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944"><code class="commit-id" title="ddbb90e36f2d148c7982f6ed85b09d31cabf5944">ddbb90e3…</code></a>
 — 32 commits on. Screened again first: two auto-run surfaces, eleven

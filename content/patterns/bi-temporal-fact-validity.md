@@ -129,6 +129,18 @@ the audit timestamp, with `supersedes`/`superseded_by` chaining — and document
 the retrofit explicitly (`valid_from = legacy.updated_at`), so the point at which
 bi-temporality was added stays recoverable rather than silently assumed.
 
+[MagiCore](../../systems/magicore/) puts the instant form in a .NET library: `reference_time`
+in a memory's metadata beside `CreatedAt` and `UpdatedAt`, a range filter applied before
+ranking, a dedup key that includes the instant so one sentence at two dates is two rows,
+and a deterministic interpreter that turns an ISO date, a year or *last month* into a
+range with a confidence and gives up below a threshold —
+`TemporalSearchFailsOpenWhenInterpretationConfidenceIsLow` asserts a vague question
+returns both memories rather than the wrong one. Its record axis is queryable too:
+`GetAllAtAsync` replays the history to a timestamp. What it lacks is the end of the
+interval, so the period a fact held is recoverable only from the record-time history of
+its supersession — Gini's `occurred_end` and GENOME's `valid_until` are the missing
+column.
+
 [Hindsight](../../systems/hindsight/) extracts temporal spans alongside facts.
 [MetaClaw](../../systems/metaclaw/) and
 [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) carry
