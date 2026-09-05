@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted AI workspace whose
+cross-conversation memory is a per-user table of up to fifty sentences
+prepended to every system prompt — written through a REST form,
+optionally extracted by regex or by one model call per message with both
+switches off by default, soft-deleted by the person, and never audited,
+never tested on its read path, and labelled with a provenance vocabulary
+the extractor uses backwards.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenMake
+LLM — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted AI workspace
+whose cross-conversation memory is a per-user table of up to fifty
+sentences prepended to every system prompt — written through a REST
+form, optionally extracted by regex or by one model call per message
+with both switches off by default, soft-deleted by the person, and never
+audited, never tested on its read path, and labelled with a provenance
+vocabulary the extractor uses backwards.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenMake
+LLM — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted AI workspace
+whose cross-conversation memory is a per-user table of up to fifty
+sentences prepended to every system prompt — written through a REST
+form, optionally extracted by regex or by one model call per message
+with both switches off by default, soft-deleted by the person, and never
+audited, never tested on its read path, and labelled with a provenance
+vocabulary the extractor uses backwards.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenMake LLM — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenMake LLM",
+      "description": "A self-hosted AI workspace whose cross-conversation memory is a per-user table of up to fifty sentences prepended to every system prompt \u2014 written through a REST form, optionally extracted by regex or by one model call per message with both switches off by default, soft-deleted by the person, and never audited, never tested on its read path, and labelled with a provenance vocabulary the extractor uses backwards.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Fifty sentences in front of every
+prompt</p>
+          <h1>OpenMake LLM</h1>
+          <p class="document-deck">A self-hosted AI workspace whose
+cross-conversation memory is a per-user table of up to fifty sentences
+prepended to every system prompt — written through a REST form,
+optionally extracted by regex or by one model call per message with both
+switches off by default, soft-deleted by the person, and never audited,
+never tested on its read path, and labelled with a provenance vocabulary
+the extractor uses backwards.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openmake/openmake_llm">
+              <span>Source</span>
+              <strong>openmake/openmake_llm</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openmake/openmake_llm/commit/ed74251e8d463eaf9d461bbde8023585c7ad29b3" title="ed74251e8d463eaf9d461bbde8023585c7ad29b3">
+              <span>Analyzed revision</span>
+              <code>ed74251e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenMake LLM is a <strong>self-hosted AI workspace</strong> — a
+Next.js front end over an Express API serving a local model through vLLM
+and LiteLLM, with autonomous agents in Docker sandboxes, deep research,
+an artifact pipeline, twenty-two built-in MCP tools, custom agents, a
+skill library, native macOS and CLI clients and a Discord gateway. MIT,
+2,110 commits by nine authors since 12 February 2026,
+<code>1.44.0</code> at this commit, 112,443 lines of TypeScript in the
+API alone beside 340 test files. The README is in four languages and the
+code comments are in Korean.</p>
+<p>Its memory is 531 lines of that. <code>user_memories</code> is one
+table — a sentence per row, a <code>user_id</code>, a
+<code>source</code>, an <code>is_active</code> flag — and every chat
+turn prepends the user's newest fifty active rows to the system prompt
+as a numbered list under a 2,000-token cap
+(<code>user-context-blocks.ts:19-46</code>). The rows arrive three ways:
+a person types one into the settings tab
+(<code>POST /api/users/me/memories</code>, capped at fifty per user); a
+regex extractor matches Korean sentences of the form <em>remember
+this</em> or <em>my name is</em>; or an LLM extractor spends one model
+call per user message asking for durable facts and accepting at most
+three lines. The two extractors are separate environment switches,
+<code>USER_MEMORY_AUTO_EXTRACT</code> and
+<code>USER_MEMORY_LLM_EXTRACT</code>, and both default to off
+(<code>config/memory-extraction.ts:9-12</code>), so an installation that
+never sets them has a memory that costs the local model nothing and
+holds exactly what the person wrote.</p>
+<p>The table's own history is the most informative thing in the
+migrations. A <code>MemoryService</code> with <code>category</code>,
+<code>key</code>, <code>value</code> and <code>importance</code> columns
+was deleted from the code on 19 May 2026, and migration 020 dropped its
+table with six rows in it under a comment that the operator chose
+<em>"remove all (6 rows permanently lost)"</em>; a week later migration
+034 reintroduced the table as <em>"a lightweight re-introduction of the
+MemoryService abandoned on 2026-05-19 — explicit only, no
+auto-extraction, zero vLLM load"</em>; migration 011, which built
+trigram indexes on the old <code>key</code> and <code>value</code>
+columns, then broke bootstrap on fresh databases until a 31 July note
+taught it to skip itself when <code>key</code> is absent; and migration
+046 swept the orphaned <code>memory_tags</code>. Auto-formation and the
+backfill arrived on 22 July 2026 in one pull request. Three comments in
+the tree say the chat-side <code>/remember</code> slash command the
+schema was designed around is not implemented.</p>
+<p><strong>What is wrong with it is small and specific.</strong> The
+extractor writes <code>source</code> backwards: the schema defines
+<code>candidate</code> as a model-emitted
+<code>&lt;memory-candidate&gt;</code> tag and <code>batch</code> as bulk
+extraction, and <code>autoFormMemories</code> stores a regex hit as
+<code>candidate</code> and an LLM hit as <code>batch</code>
+(<code>memory-extraction.ts:90</code>), so the one provenance field the
+row carries misreports how it was made. The memory-learning toggle that
+gates both injection and formation is read from the request the client
+sent — <code>msg.memoryLearning !== false</code> in the WebSocket
+handler — while the same preference is also stored server-side and read
+by nothing on the chat path. No test touches the repository, the
+controller, the prompt block or the scope predicate; the thirteen
+committed cases cover two pure functions. And the platform's
+<code>AuditService</code>, which the README advertises beside its
+alerts, records nothing about a memory being created or deleted.</p>
+<p>One mark, <code>scope_enforced</code>, on a <code>user_id</code>
+predicate that every query carries. No paper.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a sentence a person wants every future conversation to
+start with. It becomes one by being typed into the settings tab, by
+matching one of four regular expressions, by being one of at most three
+lines a model returns when asked for durable facts, or by being
+extracted from up to thirty past sessions when an operator runs the
+backfill. Once a row exists and is active it is a belief with no
+gradation: the newest fifty are prepended, in full, to every prompt,
+whatever the question, and the block is the same for the chat and for an
+agent task.</p>
+<p>It stops being one in exactly one way — the person deletes it, singly
+or all at once, which flips <code>is_active</code>. Nothing supersedes a
+memory, nothing expires or decays one, nothing consults
+<code>accessed_at</code> after <code>touchAccessed</code> writes it, and
+a memory that was deleted is not remembered as deleted: the duplicate
+check compares a candidate against the <em>active</em> rows, so the same
+sentence can be re-extracted from the next message that states it, or
+re-added from the tab. The cap is fifty per user and first-come — the
+fifty-first candidate is skipped, whatever it says.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers feed one flat table, the newest fifty active rows are prepended to every prompt, and a delete flips a flag that the duplicate check never reads — so a deleted sentence can come back through any writer</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers feed one flat table, the newest fifty active rows are prepended to every prompt, and a delete flips a flag that the duplicate check never reads — so a deleted sentence can come back through any writer
+flowchart TB
+    T[&quot;settings tab — POST /api/users/me/memories&lt;br/&gt;(cap 50, ≤2,000 chars)&quot;] --&gt; R[(&quot;user_memories&lt;br/&gt;user_id · content · source · is_active&quot;)]
+    H[&quot;regex extractor&lt;br/&gt;USER_MEMORY_AUTO_EXTRACT (off)&quot;] --&gt;|&quot;dedup vs active rows&lt;br/&gt;labelled &#39;candidate&#39;&quot;| R
+    L[&quot;LLM extractor — one call per message&lt;br/&gt;USER_MEMORY_LLM_EXTRACT (off)&quot;] --&gt;|&quot;≤3 lines, labelled &#39;batch&#39;&quot;| R
+    B[&quot;CLI backfill-memories userId&lt;br/&gt;--dry-run · 30 sessions&quot;] --&gt;|&quot;labelled &#39;batch&#39;&quot;| R
+    R --&gt;|&quot;newest 50 active · 2,000-token cap · touchAccessed&quot;| P[&quot;## 🧠 User Memory block&lt;br/&gt;prepended to the system prompt&quot;]
+    P --&gt; C[&quot;chat pipeline&quot;]
+    P --&gt; A[&quot;agent-task system prompt&quot;]
+    D[&quot;delete from the tab&quot;] --&gt;|&quot;is_active = false&quot;| R
+    R -.-&gt;|&quot;dedup ignores inactive rows&quot;| H
+    G[&quot;client message: memoryLearning=false&quot;] -.-&gt;|&quot;skips injection and formation&quot;| P</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A monorepo: <code>apps/api</code> (Express, 112,443 lines),
+<code>apps/web</code> (Next.js 16), Swift clients, shared packages,
+<code>db/</code> with 128 SQL migrations and an init schema,
+<code>infra/</code> with the MCP runtime and vendored servers. The
+application runs under PM2; PostgreSQL, Redis, and the agent, MCP and
+artifact sandboxes run in Docker; a local model runs under vLLM behind
+LiteLLM, with external providers routed per functional role.</p>
+<p>The memory is seven files in the API and one component in the web
+app:</p>
+<ul>
+<li><code>db/migrations/034_user_memories.sql</code> — the table and its
+partial index.</li>
+<li><code>apps/api/src/data/repositories/user-memory-repository.ts</code>
+(82 lines) — create, list active, count active, soft delete, delete all,
+touch.</li>
+<li><code>apps/api/src/controllers/user-memories.controller.ts</code>
+(112) — the four routes under <code>/api/users/me/memories</code>.</li>
+<li><code>apps/api/src/services/chat-service/user-context-blocks.ts</code>
+(80) — the prompt block, beside the custom-instructions block.</li>
+<li><code>apps/api/src/config/memory-extraction.ts</code> (44) — the
+switches, the cap, the four regexes and the extraction prompt.</li>
+<li><code>apps/api/src/services/chat-service/memory-extraction.ts</code>
+(100) — the extractors, the dedup and the orchestrator.</li>
+<li><code>apps/api/src/services/chat-service/memory-backfill.ts</code>
+(82) — the CLI backfill.</li>
+<li><code>apps/web/components/settings/memory-section.tsx</code> (154) —
+the tab; the old <code>/memory</code> page is a six-line redirect to it
+since 11 July 2026.</li>
+</ul>
+<p><code>apps/api/src/storage/memory-store.ts</code> is a different
+thing under a similar name: an in-process key-value store with TTL
+timers, the single-instance backend for rate limits and caches,
+unrelated to <code>user_memories</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing beyond what the workspace already runs: Postgres holds the
+table, the REST routes need the workspace's JWT session, and the block
+costs one indexed query per turn. Turning the LLM extractor on adds one
+model call per user message on the same inference path the chat uses;
+the regex extractor adds none. The store is one table readable with any
+SQL client, and the rows are the sentences themselves.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Explicit write.</strong> <code>router.post('/')</code> in
+the controller: <code>requireAuth</code>, a zod schema of
+<code>content</code> from 1 to
+<code>USER_MEMORY_MAX_CONTENT_CHARS</code> (2,000),
+<code>countActiveByUser</code> against
+<code>USER_MEMORY_MAX_COUNT</code> (50) with a 400 above it, then
+<code>repo.create(uuid, userId, content.trim())</code> with the default
+source <code>explicit</code>.</li>
+<li><strong>Automatic write.</strong>
+<code>message-pipeline.ts:352-359</code>: after the agent selection and
+skill bindings,
+<code>buildUserContextBlocks(userId, req.memoryLearning !== false)</code>
+and then, under the same flag,
+<code>void autoFormMemories({ userId, message: req.message, client })</code>.
+<code>autoFormMemories</code> (<code>memory-extraction.ts:70-100</code>)
+returns at once for a guest or when both switches are off; otherwise
+<code>extractHeuristicMemories</code> (<code>:15-27</code>) and
+<code>extractLLMMemories</code> (<code>:30-50</code>), a union, the
+active rows loaded once, <code>isDuplicateMemory</code> per candidate
+(<code>:56-62</code>), the cap, and <code>repo.create</code> with
+<code>source = heur.includes(c) ? 'candidate' : 'batch'</code>.</li>
+<li><strong>Backfill.</strong> <code>cli.ts:147-168</code>
+<code>backfill-memories &lt;userId&gt;</code> →
+<code>backfillUserMemories</code>
+(<code>memory-backfill.ts:29-81</code>): user messages aggregated per
+session for the newest thirty sessions with at least forty characters,
+<code>extractLLMMemories</code> per session at concurrency three, dedup
+against active rows and the batch, <code>--dry-run</code> returning the
+fresh list without writing.</li>
+<li><strong>Read.</strong> <code>buildUserMemoryBlock</code>
+(<code>user-context-blocks.ts:19-46</code>):
+<code>listActiveByUser(userId, 50)</code>, a loop adding
+<code>estimateTokens(content) + 4</code> until
+<code>USER_CTX_MAX_MEMORY_TOKENS</code> (2,000) would be exceeded, a
+numbered list under <code>## 🧠 User Memory (cross-conversation)</code>,
+and a fire-and-forget <code>touchAccessed</code>. Called from the chat
+pipeline and from <code>agent-task/skill-block.ts:47</code>.</li>
+<li><strong>Delete.</strong> <code>router.delete('/:id')</code> →
+<code>softDeleteForUser</code>; <code>router.delete('/')</code> →
+<code>deleteAllForUser</code>; both
+<code>UPDATE … SET is_active = FALSE</code> under
+<code>user_id</code>.</li>
+<li><strong>Schema.</strong> <code>034_user_memories.sql</code>;
+<code>020_drop_memory_documents.sql</code> and
+<code>046_drop_dead_tables.sql</code> for what came before.</li>
+<li><strong>Tests.</strong> <code>memory-extraction.test.ts</code> —
+thirteen cases over <code>extractHeuristicMemories</code> and
+<code>isDuplicateMemory</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<pre class="sql"><code>id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+content TEXT NOT NULL,
+source TEXT NOT NULL DEFAULT &#39;explicit&#39; CHECK (source IN (&#39;explicit&#39;,&#39;candidate&#39;,&#39;batch&#39;)),
+is_active BOOLEAN NOT NULL DEFAULT TRUE, accessed_at TIMESTAMPTZ,
+created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()</code></pre>
+<p>with
+<code>idx_user_memories_user_active ON (user_id, is_active, created_at DESC) WHERE is_active = TRUE</code>.
+Scope is the user and only the user; there is no project, agent or
+workspace key, and a custom agent shares the same block as every other
+conversation. <code>source</code> is the whole provenance model, and its
+three values are defined in the table comment as <em>user-entered</em>,
+<em>model-detected tag (future)</em> and <em>bulk extraction
+(future)</em>; the code that arrived later populates the second with
+regex hits and the third with per-message LLM hits, and the backfill
+populates the third correctly. <code>accessed_at</code> is documented as
+<em>"for a future LRU policy"</em> and is written by
+<code>touchAccessed</code> and read by nothing. There is no version, no
+supersession, no validity window, no confidence and no status beyond
+<code>is_active</code>.</p>
+<p>The user-preferences table (<code>060_user_preferences.sql</code>)
+stores a <code>memoryLearning</code> boolean beside
+<code>saveHistory</code>; the web settings page reads and writes it and
+sends the value on each chat message, and the API reads it from the
+message.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval. The block is the newest fifty active rows,
+whatever the query, truncated to 2,000 tokens by dropping the oldest of
+the fifty when the budget runs out — the loop stops at the first row
+that would exceed it, so the cut is by recency, not by relevance. The
+same list is injected into every turn as a prefix of the system prompt,
+which places it where a provider's prompt-prefix cache would be
+invalidated by any change to it. Retrieval is automatic; the model has
+no tool to fetch or search a memory, and no way to ask for one that fell
+outside the fifty.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The explicit path blocks on one insert. The automatic path is
+<code>void</code>-called from the pipeline before dispatch and never
+throws — a failure is logged at debug level and the response is
+unaffected — so a memory formed from turn <em>n</em> is in the table
+before turn <em>n + 1</em> is assembled, and the lag is the extractor's
+own model call when that switch is on. The LLM prompt asks for
+<em>"user-specific facts that stay useful in the next conversation"</em>
+— names, preferences, occupation, language, projects, repeated requests
+— excludes one-off questions and time-dependent information, and demands
+exactly <code>NONE</code> when there is nothing; the response is split
+on lines, stripped of bullets and quotes, bounded to three and to 300
+characters each. Temperature is fixed at 0.</p>
+<p>Dedup is <code>norm(a) == norm(b)</code> or either containing the
+other after lower-casing and stripping punctuation, against the active
+rows and the batch so far. That catches a restatement and misses a
+paraphrase, and because it consults active rows only, a sentence the
+person deleted is eligible again from the next message that states it.
+Conflict is not represented: <em>I prefer Python</em> and <em>I prefer
+Java</em> are two rows, both injected. Malicious input is not filtered
+on this path — the extractors read the user's own message, so the
+injection risk is the prompt's, not a third party's — and the LLM
+extractor's output is stored without a check beyond length.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The explicit path is one insert. With
+<code>USER_MEMORY_LLM_EXTRACT=true</code> every user message costs one
+additional model call before the reply is dispatched, on the same local
+model. No background pass exists. The read path injects up to 2,000
+tokens per turn, unbounded by relevance and placed at the front of the
+system prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The person's surface is the settings tab: a textarea with a character
+and count indicator, an add button, a list with a delete button per row,
+a delete-all, and a limit message at fifty. The model's surface is the
+block alone; no tool, command or hook lets it write or read a memory,
+and the <code>/remember</code> command the schema comment describes does
+not exist — the slash-command module matches skills only, as the
+repository comment, the route comment and the block's own header each
+state. The memory-learning toggle in the privacy settings is honoured
+per message from the payload the client sends, and turning it off stops
+both the injection and the formation, which the pipeline comment
+justifies as a privacy requirement: <em>"if saving continued while the
+user had it off, it would act opposite to what they chose."</em></p>
+<p>Adapting the mechanism to another host is trivial, because there is
+almost nothing to adapt: a table, a numbered list and a cap.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> <code>user_id</code> on every
+query, from the session, with guests excluded before the query is
+built.</p>
+<p><strong>No tombstone.</strong> Soft delete is keyed on the row and
+the duplicate check reads active rows only, so a deleted value returns
+through any writer.</p>
+<p><strong>No trust state.</strong> <code>source</code> is provenance,
+and inverted.</p>
+<p><strong>No audit.</strong> <code>AuditService.ts</code> mentions no
+memory event; a create or delete leaves an application log line and
+nothing in the store.</p>
+<p><strong>No human review.</strong> The tab is where a person writes
+and deletes their own sentences; when an extractor is on, its rows land
+active and the same delete button is the only way to disagree with one.
+Nothing marks a row reviewed, pending or rejected.</p>
+<p><strong>No bitemporal axis, no negative evaluation.</strong> The one
+exclusion the tests assert is that a weather question yields no regex
+match — a property of the extractor, not of retrieval.</p>
+<p><strong>The toggle trusts the client.</strong> A preference exists in
+the database and the chat path reads the flag from the message, so a
+client that omits or forges it decides whether memories are injected and
+formed for that turn. Within the workspace's own web client the two
+agree; a second client is free to differ.</p>
+<p><strong>Data loss is in the history, not the code.</strong> Migration
+020 records the drop of six users' rows as a deliberate choice; the
+current table has no export and no backup path of its own beyond the
+database's.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>340 test files run under <code>npm test</code> in CI beside build,
+lint, and two evaluation scripts, <code>eval:routing</code> and
+<code>eval:response</code>, neither of which concerns memory. One file
+concerns it: <code>memory-extraction.test.ts</code>, thirteen cases —
+four positive regex extractions, two negatives (<em>"what's the weather
+today?"</em> and <em>"review this code"</em> yield nothing), an empty
+input, and three dedup cases including a partial-containment positive
+and an unrelated-pair negative. Each can fail; the negatives have
+positive controls in the same file.</p>
+<p>Nothing tests the repository's queries, the controller's cap and
+authorisation, the prompt block's token loop, the
+<code>touchAccessed</code> write, the backfill, or that one user's rows
+never reach another's prompt. The <code>isDuplicateMemory</code> cases
+prove the normalisation; no case proves that a deleted sentence stays
+out, because it does not.</p>
+<p>No benchmark and no claim. The README's numbers are about model
+routing and hardware fit, measured on a separate bench site, and say
+nothing about memory.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Default the expensive extractor to off and say what it
+costs.</strong> Two switches, each named with its load on the local
+model, and a memory that works with both off.</li>
+<li><strong>Gate formation with the same toggle that gates
+injection.</strong> The pipeline comment says why: a memory that keeps
+forming after the person turned memory off is the opposite of what they
+chose.</li>
+<li><strong>Ship the backfill with a dry run.</strong> Thirty sessions
+of a user's history through an extractor is exactly the write a person
+should preview.</li>
+<li><strong>Cap by count and by tokens, and log the cut.</strong> Fifty
+rows and 2,000 tokens, with the truncation reported, is a bound most
+prompt-prefix memories in this atlas do not state.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A provenance vocabulary the writer misreads.</strong> Three
+<code>source</code> values with definitions in the schema and a mapping
+in the code that puts the regex under the model's label and the model
+under the batch's; whoever filters by <code>source</code> later gets the
+wrong answer.</li>
+<li><strong>Reading a privacy preference from the client's
+message.</strong> Store it, and read the store.</li>
+<li><strong>A duplicate check that forgets what was deleted.</strong>
+One <code>is_active</code> filter is the difference between <em>the
+person removed this</em> and <em>nobody has said this yet</em>.</li>
+<li><strong>Injecting the newest fifty whatever the question.</strong>
+No search, no ranking and a recency cut means the memory grows less
+relevant the more it holds.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a team that runs this workspace anyway, the memory is a sane
+minimum: explicit sentences a person controls, prepended in full, with
+extraction available behind switches that an operator has to choose. It
+is the shape claude.ai and ChatGPT memory take at the surface, which is
+what the migration says it set out to be, and it costs nothing to
+run.</p>
+<p>It is not a memory system to study for its own sake, and the
+platform's scale should not be read as the memory's: 531 lines of a
+112,000-line API, untested on every path that matters, with one field of
+provenance and that one inverted. A team wanting memory that ranks,
+expires, records its deletions or survives a second client's
+disagreement about the toggle will build all of it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Will the <code>&lt;memory-candidate&gt;</code> tag
+arrive?</strong> The schema reserved <code>candidate</code> for a
+model-emitted tag in a <em>"Phase K"</em>, and the extractor took the
+label for regex hits instead; whether the tag is still planned, the
+label will need reassigning first.</li>
+<li><strong>Does the stored <code>memoryLearning</code> preference reach
+any server path?</strong> It is written by the preferences controller
+and, on the chat path, the request's copy wins; a WebSocket client that
+sends nothing gets the default of on.</li>
+<li><strong>What happens at the cap in an installation with extraction
+on?</strong> The fifty-first durable fact is dropped silently and the
+oldest fifty stay; nothing in the tree evicts.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/api/src/controllers/user-memories.controller.ts</code></td>
+<td>112</td>
+<td>List, create with cap, soft delete, delete all</td>
+</tr>
+<tr>
+<td><code>apps/api/src/services/chat-service/memory-extraction.ts</code></td>
+<td>100</td>
+<td>Regex and LLM extractors, dedup, orchestrator</td>
+</tr>
+<tr>
+<td><code>apps/api/src/services/chat-service/user-context-blocks.ts</code></td>
+<td>80</td>
+<td>The prompt block and its token cap</td>
+</tr>
+<tr>
+<td><code>apps/api/src/data/repositories/user-memory-repository.ts</code></td>
+<td>82</td>
+<td>The six queries</td>
+</tr>
+<tr>
+<td><code>apps/api/src/services/chat-service/memory-backfill.ts</code></td>
+<td>82</td>
+<td>CLI backfill with dry run</td>
+</tr>
+<tr>
+<td><code>apps/api/src/config/memory-extraction.ts</code></td>
+<td>44</td>
+<td>Switches, cap, regexes, extraction prompt</td>
+</tr>
+<tr>
+<td><code>apps/api/src/services/chat-service/memory-extraction.test.ts</code></td>
+<td>41</td>
+<td>Thirteen cases over the pure functions</td>
+</tr>
+<tr>
+<td><code>db/migrations/034_user_memories.sql</code></td>
+<td>—</td>
+<td>The table, its index and its history in comments</td>
+</tr>
+<tr>
+<td><code>db/migrations/020_drop_memory_documents.sql</code>,
+<code>011_memory_search_index.sql</code>,
+<code>046_drop_dead_tables.sql</code></td>
+<td>—</td>
+<td>The predecessor's removal</td>
+</tr>
+<tr>
+<td><code>apps/web/components/settings/memory-section.tsx</code></td>
+<td>154</td>
+<td>The settings tab</td>
+</tr>
+<tr>
+<td><code>apps/api/src/services/chat-service/message-pipeline.ts:350-359</code></td>
+<td>—</td>
+<td>Where the block and the extractor are called</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -l &#39;user_memories|UserMemoryRepository|buildUserMemoryBlock&#39; -g &#39;*.test.ts&#39;   # none
+rg -n -i &#39;memor&#39; apps/api/src/services/AuditService.ts                            # none
+rg -n &#39;accessed_at&#39; apps/api/src                                                  # written by touchAccessed, read by nothing
+rg -n &#39;memory-candidate|/remember&#39; apps/api/src apps/web                          # three comments saying it is unimplemented
+rg -n &#39;memoryLearning&#39; apps/api/src                                               # request flag on the chat path; preference stored, not read there
+rg -n -i &#39;arxiv|bibtex|citation|doi&#39; README.md docs                               # no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/openmake/openmake_llm/commit/ed74251e8d463eaf9d461bbde8023585c7ad29b3"><code class="commit-id" title="ed74251e8d463eaf9d461bbde8023585c7ad29b3">ed74251e…</code></a>
+— first reading, at the head of <code>main</code>. Screened first: no
+auto-run surface, one build-time execution path, eight unpinned surfaces
+(three package manifests without lockfiles and a vendored MCP server
+among them), and eight files inside the seven-day cooldown, so nothing
+was installed and no test was run. One mark,
+<code>scope_enforced</code>; <code>tombstone</code>,
+<code>trust_state</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code> and
+<code>bitemporal</code> each looked for and each absent, with the
+near-misses in section 9. The findings recorded are the inverted
+<code>source</code> labels, the client-read toggle, and an untested read
+path.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

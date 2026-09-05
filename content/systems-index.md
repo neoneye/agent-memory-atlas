@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **361 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **362 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -355,6 +355,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/openhands-sdk/"><span class="az-id">OpenHands SDK</span><span class="az-what">Six thousand characters, oldest lines first</span><code class="az-repo">OpenHands/software-agent-sdk</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/openhuman/"><span class="az-id">OpenHuman</span><span class="az-what">Taint-gated memory</span><code class="az-repo">tinyhumansai/openhuman</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/openkb/"><span class="az-id">OpenKB</span><span class="az-what">The index is the retriever</span><code class="az-repo">VectifyAI/OpenKB</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/openmake-llm/"><span class="az-id">OpenMake LLM</span><span class="az-what">Fifty sentences in front of every prompt</span><code class="az-repo">openmake/openmake_llm</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/openmemory/"><span class="az-id">OpenMemory</span><span class="az-what">Twenty-five numbers nobody derived</span><code class="az-repo">CaviraOSS/OpenMemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/opensre/"><span class="az-id">OpenSRE</span><span class="az-what">Grounding as the write gate</span><code class="az-repo">Tracer-Cloud/opensre</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/openviking/"><span class="az-id">OpenViking</span><span class="az-what">Filesystem context database</span><code class="az-repo">volcengine/OpenViking</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

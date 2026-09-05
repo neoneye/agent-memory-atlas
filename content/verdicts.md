@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 361 reports.**
+**This page covers all 362 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -692,7 +692,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: `provenance_guard` — every memory records which write path created it, ranked `user_stated` 3, `consolidated` 2, `model_inferred` 1, unknown 0, and a write is refused unless the actor ranks at or above its target. A model-inferred claim cannot overwrite a fact the user stated, and the label belongs to the path rather than the payload, so the model cannot nominate its own output as user-stated.
 - Biggest risk: the guard governs authority, not truth. Supersession is record-keyed, so a value already adjudicated wrong can be re-asserted by any path with adequate rank — including the user restating a claim they previously corrected.
 - Most reusable component: about fifteen lines of `_SOURCE_PRIORITY` and `provenance_guard` in `memory/types.py`, plus the audit call on the *refused* write path that lets you verify the guard is running.
-- Maturity impression: 76,594 lines under 360 test files, eighteen memory modules named for the problems this atlas tracks, and a graph layer added at migrations 6 and 8 rather than designed in. Primary documentation and several load-bearing comments are Chinese.
+- Maturity impression: 76,594 lines under 361 test files, eighteen memory modules named for the problems this atlas tracks, and a graph layer added at migrations 6 and 8 rather than designed in. Primary documentation and several load-bearing comments are Chinese.
 - Study when: you need to answer "whose claim wins" structurally rather than by prompting, or you want contradiction that adjudicates instead of flagging.
 - Do not copy when: you want a memory library — this is an agent, with no MCP or HTTP surface for the memory layer — or when correction has to survive re-assertion.
 
@@ -3223,3 +3223,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: the RA-L 2025 paper's code, nineteen commits between 30 October 2024 and 17 April 2025, 7,647 lines of Python around six uninitialised submodules and two committed shared objects, no tests, no licence file, a detector vocabulary that names the demo's objects in the source, and three evaluation scripts that generate the GPT-4o baseline rather than a score. No capability mark.
 - Study when: you are building a persistent map for a robot and want a worked, readable example of local repair after the world changes.
 - Do not copy when: you need a library, a memory API, tests, a licence, or a graph a planner actually reads.
+
+### [`openmake-llm`](../systems/openmake-llm/)
+- Best idea: **extraction behind two switches that both default to off, with the cost of each written next to it.** `USER_MEMORY_AUTO_EXTRACT` is regex and free; `USER_MEMORY_LLM_EXTRACT` is one model call per user message on the same local model the chat uses; an installation that sets neither has a memory of exactly what the person typed, and the toggle that stops injection stops formation too, because *"saving while the user had it off would act opposite to what they chose."*
+- Biggest risk: **the read path is untested and unaudited, and the toggle trusts the client.** No test touches the repository, the routes, the prompt block or the `user_id` predicate; the platform's audit service records no memory event; and the memory-learning flag is read from the message the client sent while the stored preference is read by nothing on the chat path.
+- Most reusable component: the backfill CLI — thirty past sessions through the extractor with `--dry-run` returning the candidates before a single row is written, and dedup against what is already there.
+- Maturity impression: MIT, 2,110 commits by nine authors since February 2026 at `1.44.0`, a 112,443-line API under 340 test files, and a 531-line memory whose migrations record a predecessor dropped with six rows of user data and reintroduced a week later as *"explicit only, zero vLLM load"*. One of seven capability marks. The one provenance field is written the opposite way from the schema's own definition of it.
+- Study when: you want the smallest defensible cross-conversation memory for a chat product — a capped table, a numbered list, a per-turn toggle — and want to see what it costs to leave extraction off.
+- Do not copy when: you need memory that ranks, expires, records its deletions or remembers what a person removed; a deleted sentence here is eligible for re-extraction from the next message that states it.
