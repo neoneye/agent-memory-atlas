@@ -6,24 +6,24 @@ root: ../..
 page_kind: system
 source_name: plastic-labs/honcho
 source_url: https://github.com/plastic-labs/honcho
-revision: ddbb90e36f2d148c7982f6ed85b09d31cabf5944
-revision_url: https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944
-analyzed_at: 2026-08-22
+revision: be54355545b64ddb10203829d323861f52423685
+revision_url: https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685
+analyzed_at: 2026-09-05
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the collection key, and a second boundary inside a peer | src/models.py, src/utils/scopes.py, src/routers/scopes.py, src/dialectic/chat.py | `workspace_name` is a column on almost every table and a collection is keyed `(observer, observed, workspace_name)`, so every document read is bounded by who is observing whom. A **scope** adds a boundary one level down — a named grouping of member sessions inside a peer, implemented as a peer named `scope.<name>` that observes its members and never speaks. Passing `scope` to chat, representation, context or search swaps the observer to the scope peer, so recall comes from the `(scope_peer, P)` collection and message recall from the scope's membership. Identity requires both halves and neither is forgeable: the `scope.` prefix sits outside `RESOURCE_NAME_PATTERN` so no API-created peer can occupy the namespace, and the authoritative `{kind: scope}` marker lives in `internal_metadata`, which appears in no API schema | tests/unified/test_cases/scope_confines_recall.json, tests/routes/test_scope_reads.py, tests/routes/test_scope_route_policy.py, tests/dialectic/test_scope_preflight.py"
   negative_eval: "the unified case harness | tests/unified/test_cases/, tests/unified/runner.py | JSON cases with a `not_contains` assertion type, run by a committed runner (`python -m tests.unified.run`). Seventeen case files carry them. Two kinds, and the second is the one the mark is for: most assert a representation is *empty* by the absence of its `## Explicit` / `## Deductive` headers, while `dream_knowledge_updates_and_patterns.json` supersedes Maya's job and city across a conversation and then asserts `contains: Seattle`, `contains: Google`, `not_contains: Austin`, `not_contains: startup` — a value that was ingested and later replaced must not come back. `scope_confines_recall.json` adds the visibility case, asserting `not_contains: marathon` and `not_contains: bass` on a scoped read | both carry their own control: the positive assertions in the same set prove the pipeline ran, and the scope case ends with the same question asked unscoped, described as proof that the scoped result is ' + Q('the scope working, not the deriver simply having failed to record the personal session') + '"
 stack_storage: "postgres, delegated"
-stack_retrieval: "vector"
-stack_source: "seeded"
+stack_retrieval: "lexical, vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Message, document/observation, representation"
-  storage: "Postgres/SQLAlchemy, pgvector or vector adapter"
-  retrieval: "Working representation blends semantic, recent, most-derived; message search with windows"
+  storage: "Postgres/SQLAlchemy with pgvector, or a Turbopuffer, LanceDB or Qdrant adapter behind one `VectorStore` interface"
+  retrieval: "Working representation blends semantic, recent, most-derived; message search by ILIKE or embedding with context windows; a workspace-level dialectic that prefetches stats, active peers and peer cards, then recalls through pair-scoped observation search"
   write: "Message ingestion plus queued derivation"
-  update_delete: "Soft delete, representation reconciliation, and a scope-removal cascade that soft-deletes the session's explicit documents and then walks `source_ids` to a fixpoint so every deduction resting on removed evidence leaves with it"
+  update_delete: "Sessions and workspaces hard-cascade in the background; a conclusion is soft-deleted and hard-deleted by the reconciler; peers and single messages cannot be deleted; representation reconciliation, and a scope-removal cascade that soft-deletes the session's explicit documents and then walks `source_ids` to a fixpoint so every deduction resting on removed evidence leaves with it"
   scoping: "Workspace, peer, session, collection — plus a scope, a named grouping of sessions that bounds visibility inside a peer, carried as an option on chat, representation, context and search"
-  integration: "Hosted API/service model"
+  integration: "Hosted API/service model, Python and TypeScript SDKs, an MCP server with HTTP and stdio hosts, a shared harness-plugin core, a committed mock provider and sandbox"
   background: "Deriver queues and workers, plus two membership-reconciliation jobs — backfill by copy when a session joins a scope, cascade removal when it leaves — that call no LLM at all"
   trust: "Source IDs, derived observations, peer/session provenance"
   strengths: "Strong event-to-representation pipeline, and a deletion path that follows derivation rather than stopping at the row it was pointed at"
@@ -43,6 +43,20 @@ This is one of the more serious service architectures in the workspace. It has:
 - pgvector or external vector-store paths.
 - Session context/search APIs.
 - Bench/eval harnesses for LoCoMo, LongMem, BEAM, Oolong, etc.
+- A workspace-level chat that routes across every peer before recalling through the pair machinery.
+
+Version 3.1.1 is dated 2 September 2026; 50,294 lines of Python under `src/`
+beside 211 test files. Two things arrived in the 3.1 line that the sections
+below describe: a workspace-level dialectic (`POST /v3/workspaces/{id}/chat`)
+that answers across all peers in a workspace and honours `scope`, and a Qdrant
+adapter as a fourth vector backend. Two things were fixed that had been losing
+data silently: until 2 September 2026 two concurrent writers to one
+`(workspace, observer, observed)` collection could deadlock on `times_derived`
+reinforcement updates, the error was swallowed per document, the batch was
+lost and the queue item marked processed — 682 events in 90 days by the
+project's own count in the fix — and until 31 August a NUL byte in a
+model-generated observation raised a Postgres `DataError` in the dedup
+pre-fetch and dropped the whole observer batch.
 
 The strongest idea is the separation between raw messages and inferred representations. The main risk is eventual consistency and trust: derived observations are LLM-generated and embedded, but the code reviewed does not show a hard verification gate before they become queryable memory.
 
@@ -93,7 +107,8 @@ Core files:
 - `honcho/src/deriver/deriver.py`: LLM-derived observation processing.
 - `honcho/src/deriver/enqueue.py`: queue record generation.
 - `honcho/src/deriver/queue_manager.py`: worker polling, batching, stale cleanup.
-- `honcho/src/dialectic/chat.py`, `honcho/src/dialectic/core.py`: query answering over peer memory.
+- `honcho/src/dialectic/chat.py`, `honcho/src/dialectic/core.py`: query answering over peer memory; `honcho/src/dialectic/workspace.py`: the workspace-level agent.
+- `honcho/src/vector_store/`: one `VectorStore` interface with Turbopuffer, LanceDB and Qdrant adapters; `pgvector` is the ORM path.
 - `honcho/src/reconciler/*`: vector reconciliation.
 
 Architecture:
@@ -233,6 +248,23 @@ Honcho has several retrieval paths:
 
 This is a useful pattern: it avoids pure semantic recall and includes low-latency, stable representation context.
 
+**Workspace-level chat routes first and recalls second.**
+`WorkspaceDialecticAgent` (`src/dialectic/workspace.py`) subclasses the pair
+agent with an empty observer and observed. Its prefetch is orientation rather
+than retrieval — workspace stats, the five most active peers and their self
+peer cards — because, in the module's words, *"a workspace-flat observation
+top-k would be dominated by the most verbose peers."* Observation search then
+stays pair-scoped, with the pair supplied as tool arguments, and message search
+is workspace-flat to reveal which peers discussed a topic. A `scope` on the
+route resolves to a session allowlist as the union of the named scopes, fails
+closed when the union is empty, and changes what the prefetch may show: a peer
+card is a single cross-session aggregate, so *"an in-scope peer's card can
+still carry facts derived from sessions outside the scope"*, and the agent
+drops cards entirely under an allowlist and routes on stats alone — the same
+rule the `get_peer_card` tool enforces. Message search itself is ILIKE over
+`messages.content` or an embedding query, with `top_k` floored at one after a
+zero reached Turbopuffer.
+
 **A `scope` on a read is an observer swap, not a filter.** Passing `scope` to
 chat, representation, context or search resolves the scope peer and reads from
 the `(scope_peer, observed)` collection, with message recall following the
@@ -286,6 +318,18 @@ Derived write:
 
 This is operationally sound for service latency: message ingestion does not wait on derivation. The tradeoff is stale reads immediately after writes.
 
+**Concurrent writers to one collection are serialised by id-ordered row
+locks.** `create_documents` collects reinforcement and replacement operations
+during the batch, locks the target rows with `SELECT … ORDER BY id FOR
+UPDATE`, and applies them; a `SQLAlchemyError` aborts the batch instead of
+continuing through an aborted transaction, and transient errors are classified
+(`src/utils/retryable_errors.py`) and retried through a bounded in-process
+counter rather than marking the item errored. The fix commit records the
+alternative it rejected — an advisory lock, because that is database-scoped and
+would serialise every writer to a collection across tenants sharing a name.
+`_normalized_observation` strips NUL bytes from model output at the same point
+ingress already stripped them from user content.
+
 **Membership is retroactive, and reconciling it costs no model call.**
 `src/deriver/scope_backfill.py` adds two queue handlers. `scope_backfill` runs
 when a session joins a scope that already has messages: it copies the session's
@@ -295,12 +339,15 @@ scope's higher-order layer. **Zero LLM re-derivation**, and the reason is an
 invariant the module names — explicit-level documents are session-pure and
 identical across observer collections — so retroactive membership is *"pure row
 copying"*. The only external call is an embedding lookup for source rows whose
-embedding column is null. An idempotency marker (`copied_from` in
+embedding column is null, and since 1 September 2026 the copy runs in chunks of
+500 specs with vectors hydrated per chunk, after several concurrent backfills of
+a 14,000-document session were OOM-killed at the deriver's memory limit. An idempotency marker (`copied_from` in
 `internal_metadata`) links each copy to its origin, and the handlers run in
 phases — plan, embed, write, sync — each opening its own short-lived session, so
 a database session is never held across an embedding or vector-store call.
 
-That invariant is load-bearing and is stated rather than asserted. If an explicit
+That invariant is load-bearing and is stated rather than asserted:
+`rg -n -i 'observer-independent' src tests` returns nothing. If an explicit
 observation ever became observer-dependent, the backfill would silently copy the
 wrong text into a scope, and nothing in the tree would notice.
 
@@ -352,7 +399,7 @@ Strengths:
 - Raw messages preserved separately from derived observations.
 - Queue ownership and stale cleanup exist.
 - Advisory locks prevent session sequence races.
-- Soft deletes on documents.
+- Soft deletes on conclusions, with the reconciler doing the hard delete and the vector cleanup; sessions and workspaces hard-cascade in the background and answer `202` before the cascade runs, and the documentation says what that means — no soft delete, no trash, no restore, and no endpoint that reports when the cascade finished. Peers and individual messages cannot be deleted; a peer's data goes with its sessions. A soft-deleted scope copy is a restore candidate the next time the session joins the scope.
 - Vector sync state tracks migration/reconciliation.
 - Tests cover migrations, queueing, deriver, routes, SDKs, and benchmarks.
 
@@ -370,6 +417,7 @@ Risks:
 - Background reasoning creates eventual consistency; API users must handle freshness.
 - Multi-peer observation configuration is powerful but easy to misconfigure.
 - Prompt injection in messages can influence derived observations.
+- Until 2 September 2026 a deadlock between two writers to one collection dropped the batch silently and marked its queue item processed; the row-lock fix and the retry classifier close it, and nothing re-derives what those 682 events lost.
 - Trust is partly implicit in "explicit" vs "deductive" and `times_derived`, not a full epistemic state.
 - A scope sees only what was ingested after the session joined it, unless a
   backfill job runs and completes. `get_scope_status` exposes the state, which is
@@ -388,11 +436,12 @@ Honcho has the richest test/eval footprint among these repos:
 - Unified JSON test cases for observation topology, LongMem-style scenarios, configuration inheritance, and scope confinement.
 - Benchmark harnesses under `tests/bench` for BEAM, LoCoMo, LongMem, Oolong, etc.
 
-I did not run these tests. 194 Python test files sit beside a case harness with
-its own runner (`python -m tests.unified.run`) and 40-odd JSON scenarios.
+I did not run these tests. 211 Python test files sit beside a case harness with
+its own runner (`python -m tests.unified.run`) and 41 JSON scenarios, 19 of
+which carry a `not_contains` assertion.
 
 **The unified cases are where the negative assertions live, and they are the
-reason `negative_eval` is marked.** Seventeen case files carry a `not_contains`
+reason `negative_eval` is marked.** Nineteen case files carry a `not_contains`
 assertion. Most of them assert *emptiness* — no `## Explicit` or `## Deductive`
 header in a representation that should not exist, which proves a pair was never
 observed rather than that material was withheld. Two do the harder thing.
@@ -404,6 +453,25 @@ and `contains: Google` alongside `not_contains: Austin` and `not_contains:
 startup`. A value that was ingested, embedded and later replaced must not come
 back. That is a correction test, and correction tests are close to absent from
 this corpus.
+
+**The suite's own history at this commit is the caveat on that mark.** Until
+26 August 2026 the `unified-tests` workflow was skipped on every merge to
+`main`, because its gate job ran only on a labelled pull request and a
+skipped ancestor propagates down the needs chain — the fix commit says the
+suite *"has been skipped on every merge to main while still burning a Fly
+machine."* And until 3 September 2026 the dream case above could not pass as
+written: its `get_representation` step named a session id, a bare session id
+becomes a one-element allowlist, and an allowlist narrows the levels served to
+`explicit`, so the deductive and inductive observations it asserted on were
+excluded by design. The repair dropped the session id and, in the same commit,
+deleted a `flush` field that *"never had an effect despite being set in 47
+places"*, raised two summary budgets no conforming summary could fit, and made
+`results.json` carry the failing step and the judge's reasoning instead of a
+bare status. The scope case needed none of that. Two cases arrived with
+workspace chat: `workspace_chat_scope.json` puts Alice's fact in a scoped
+session and Bob's outside it, asserts a scoped workspace chat contains neither
+of Bob's terms, and then asks unscoped as the control; `peer_isolation_test.json`
+asserts a peer outside a session cannot chat its way to the session's content.
 
 `scope_confines_recall.json` is the visibility version and it is built the way
 this atlas keeps asking for. Alice says one thing in a session inside the `work`
@@ -494,7 +562,9 @@ Avoid if your goal is a small local memory layer. Honcho is closer to memory inf
 - Documents: `honcho/src/crud/document.py`.
 - Representation: `honcho/src/crud/representation.py`.
 - Deriver: `honcho/src/deriver/deriver.py`, `honcho/src/deriver/enqueue.py`, `honcho/src/deriver/queue_manager.py`.
-- Dialectic chat: `honcho/src/dialectic/`.
+- Dialectic chat: `honcho/src/dialectic/` (`workspace.py` for the workspace-level agent).
+- Vector stores: `honcho/src/vector_store/` (`qdrant.py`, `turbopuffer.py`, `lancedb.py`).
+- Dream scheduling: `honcho/src/dreamer/dream_due.py` (a read-only due count exported as a metric).
 - Reconciler: `honcho/src/reconciler/`.
 - Scopes: `honcho/src/utils/scopes.py` (the prefix and the `kind` marker),
   `honcho/src/routers/scopes.py` (CRUD, membership, `get_scope_status`),
@@ -504,10 +574,21 @@ Avoid if your goal is a small local memory layer. Honcho is closer to memory inf
 - Filter DSL: `honcho/src/utils/filter.py`.
 - Tests/evals: `honcho/tests/`; the case harness is
   `honcho/tests/unified/` (`runner.py`, `run.py`, `test_cases/`), with
-  `scope_confines_recall.json` and `dream_knowledge_updates_and_patterns.json`
-  carrying the negative retrieval assertions.
+  `scope_confines_recall.json`, `workspace_chat_scope.json` and
+  `dream_knowledge_updates_and_patterns.json` carrying the negative retrieval
+  assertions with controls.
+
+Searches behind the absence claims above, run from the repository root:
+
+```sh
+rg -n -i 'observer-independent|observer_independent' src tests   # the backfill invariant is stated, not tested
+rg -n 'flush' tests/unified/runner.py tests/unified/schema.py     # the dead knob is gone
+rg -rn -i 'audit|mutation_log|event_log' src -l                   # config, prometheus, telemetry trace only
+```
 
 ## History
+
+**2026-09-05** — [`be54355545b64ddb10203829d323861f52423685`](https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685) — 52 commits on, at 3.1.1 plus the Qdrant adapter. Screened again first: two auto-run surfaces (the `.vscode` files), twelve build-time execution points, six unpinned surfaces, a `CLAUDE.md` treated as data, and **four files inside the seven-day cooldown** — `pyproject.toml` and `uv.lock` changed the day of reading — so nothing was installed and no test was run. The mechanism is unchanged and the context is not: workspace-level chat with a fail-closed `scope` and a peer-card rule that drops cards under an allowlist; a Qdrant backend; a chunked backfill; and two silent-loss fixes, the collection deadlock that dropped batches until 2 September and the NUL byte that dropped observer batches until 31 August. Both marks hold, `audit_log` re-checked and withheld. **One thing published on 22 August rested on a case that could not pass:** `dream_knowledge_updates_and_patterns.json` asked for its representation with a session id, which narrowed the read to explicit level and excluded the observations it asserted on, and the whole unified suite had been skipped on merges to `main` since its gate job was added; both were fixed upstream on 26 August and 3 September and are recorded in section 10. The mark did not rest on that case alone — `scope_confines_recall.json` carried it and is unchanged. Also: the stack census promoted from seeded to reviewed with a lexical arm added for the ILIKE message search, and the deletion semantics rewritten from the code and the new documentation — sessions hard-cascade, conclusions soft-delete, peers and messages cannot be deleted.
 
 **2026-08-22** — [`ddbb90e36f2d148c7982f6ed85b09d31cabf5944`](https://github.com/plastic-labs/honcho/commit/ddbb90e36f2d148c7982f6ed85b09d31cabf5944) — 32 commits on. Screened again first: two auto-run surfaces, eleven build-time execution points, five unpinned surfaces, no file inside the seven-day cooldown, and a `CLAUDE.md` addressed to a reading agent; nothing was installed and no test was run. **`negative_eval` is added, and it was earned at the previous pin** — `dream_knowledge_updates_and_patterns.json`, which supersedes a peer's job and city and then asserts the old values are absent while the new ones are present, was committed before it and was not read. Sixteen of the seventeen case files carrying `not_contains` predate this pin. The new work is Scopes, in three phases: scope-kind peers with an unforgeable two-part identity and CRUD routes, a `scope` option on chat, representation, context and search that resolves to an observer swap, and two queue jobs that reconcile membership retroactively — a backfill that copies explicit documents with no model call, and a removal that soft-deletes them and then walks `source_ids` to a fixpoint so derived documents resting on removed evidence go too. `scope_confines_recall.json` arrives with the scope option and carries its own unscoped control. Beside it, the filter DSL was made to fail closed with two generic guards and an invariant test over a generated matrix of shapes, after a fuzz found five families of body that produced unhandled 500s; and one write path was found hardcoding `deduplicate=True`, so `DERIVER_DEDUPLICATE=false` could not disable deduplication for observations created through the agent tool.
 
