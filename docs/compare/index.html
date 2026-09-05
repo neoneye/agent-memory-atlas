@@ -27309,6 +27309,56 @@ The search: <code>rg -o 'github\.com/[A-Za-z0-9_./-]*'</code> and
 <code>rg -o 'https?://[^ ]*'</code> over the extracted text of each. A
 paper is read here only through the artifact it publishes as its
 implementation; without one there is nothing to pin.</li>
+<li><strong><a
+href="https://arxiv.org/abs/2609.02042"><code>arXiv:2609.02042</code></a>
+was examined and has no report: it releases no code, and the skill
+library it builds is a training-time teacher the deployed policy never
+consults.</strong> <em>Act More, Decide Less: Skill-Guided Adaptive
+Action Chunking for Long-Horizon LLM Agents</em> (Yang, Jin, Zhao, Wu,
+Zhou, Wang, Wang, Zhou and Metaxas; Rutgers, Toronto, Hong Kong
+Polytechnic, Amazon, Microsoft; submitted 2 September 2026, EMNLP 2026
+camera-ready) trains an agent to emit variable-length action chunks
+instead of one ReAct action per round, and the mechanism it takes the
+chunk boundaries from is memory-shaped. Successful trajectories are
+segmented by the model into a composite skill of ordered subskill calls,
+each subskill a Python routine that emits one action chunk; every
+generated skill passes syntax, compilation and signature checks, is
+canonicalised to its AST and deduplicated against the library before
+insertion; the library starts from three hand-written skills on ALFWorld
+and five on ScienceWorld, caps composite skills at 20 per task category
+and periodically prunes those <em>"whose long-term success rate remains
+zero"</em>; and at the start of a skill-augmented rollout retrieval is
+category-first — composite skills for the task category ranked by a
+UCB-style score over success rate and usage count, the top three listed
+with those statistics — with a fallback to the seven most diverse
+subskills by description similarity. The induction prompt wraps its
+output in <code>&lt;memory&gt;</code> tags and asks for <em>"compact
+key_value knowledge items, e.g. object type -&gt; common locations"</em>
+beside the code. Then the boundary: half of the rollouts on ALFWorld and
+three quarters on ScienceWorld never see the library, its only product
+is chunk-boundary supervision distilled into the policy by off-policy
+regression, and <em>"at evaluation, the model uses only the primitive
+multi-action interface (no skill access)."</em> That is optimizer state
+that produces a policy — the line drawn for <a
+href="#weights-as-memory-at-adapter-granularity">AtlasVA</a> — and the
+paper says so itself: <em>"skills serve only as training-time
+scaffolds."</em> The results are large: on ALFWorld with Qwen3-4B, 99.2
+% seen and 96.9 % unseen against GiGPO's 85.2 % and 72.7 %, at 3.7 and
+4.4 LLM rounds per episode against 15.9 and 21.7; on ScienceWorld with
+Llama-3.1-8B-Instruct, 67.2 % and 61.7 % against 35.9 % and 34.4 %. The
+ablation on ALFWorld with Llama-3.1-8B puts the skills at 9.4 points on
+the seen split (96.1 % to 86.7 %) and the chunk-aware advantage at 5.5,
+and plain GRPO handed the same skills at rollout time gains 5.5 points
+while keeping 19 rounds — the paper's own evidence that the library
+matters as supervision, not as a retrieval aid. Over 11,899 words of
+extracted text, <em>github</em> occurs zero times and there is no
+data-availability statement; the limitations section names <em>"stronger
+exploration, retrieval, or validation mechanisms"</em> for the induction
+stage as future work. With a release, the thing to read first would be
+the pruning rule, because a skill whose success rate falls to zero is
+the one place this paper's memory can turn out false and be retired —
+and whether a retired skill can be re-induced from the next successful
+trajectory is the tombstone question, unanswered in the text.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
