@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 358 reports.**
+**This page covers all 359 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3199,3 +3199,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, six commits by one author between 14 and 21 August 2026, a 1,006-line specification at v0.2, 2,181 lines of Python under 1,037 lines of tests that run without a network, four committed bundles, and an attester with no caller and no test.
 - Study when: you are designing the frontmatter for an agent-written knowledge base and want the provenance, verification and staleness fields worked out — or you want the smallest statement of an attestation contract between a memory and the computation it sanctions.
 - Do not copy when: you need the store to refuse, rank or warn on its own trust state, or a runtime an agent reads from. Both are the consumer's job here, and this repository ships no consumer that does either.
+
+### [`omnimem`](../systems/omnimem/)
+- Best idea: **the graveyard, checked by keyword before anything is embedded.** An episodic memory carries effort, outcome and a list of abandoned approaches; every recall scans that list against the query first and returns a hit at full score ahead of everything else, an abandoned outcome is weighted ×0.1 whatever it cost, and an approach abandoned at effort 4 or 5 is suppressed as a topic without being asked.
+- Biggest risk: **a contradiction is recorded on both rows and cleared by nothing.** The negation heuristic links the pair, the briefing warns on every active memory carrying a link, the dashboard's only resolution is to archive one side, and the survivor keeps the link — while the reason given to `archive` is discarded and `force=True` disables the duplicate check, the contradiction check and fact extraction together.
+- Most reusable component: `compile_skill_flow` — a propose step that stashes a draft with the sha of the body it was diffed against, and a write step that commits only that stash and refuses when the base moved; no model in the loop, and the web UI runs the same function.
+- Maturity impression: MIT, 262 commits since March 2026 at v6.4.2, 14,919 lines of Python across an MCP server, a web UI and an RSS worker under 16,621 lines of tests in 62 files that run against fakes, a `curl | bash` installer, OAuth 2.1 for claude.ai, a committed build prompt, and a changelog that records the project auditing its own suite for tests that asserted nothing.
+- Study when: you want a memory that remembers what failed and why, weighted by how much it cost, or a worked example of a suppression consulted on the read path and of a skill write that cannot bypass review.
+- Do not copy when: you need the store to say what it believes — the lifecycle records visibility, not truth — or a record of who changed what: mutations bump a timestamp and write to a process log, and the archive reason never reaches the row.

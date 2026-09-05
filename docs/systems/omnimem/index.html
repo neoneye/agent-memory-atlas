@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP memory server on
+Valkey whose episodic memories carry effort, outcome and a graveyard of
+abandoned approaches — with a four-state visibility lifecycle,
+write-time duplicate and contradiction checks, topic suppression that
+hides matching memories from every recall, and a skill compiler behind a
+propose-and-accept gate.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OmniMem — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP memory
+server on Valkey whose episodic memories carry effort, outcome and a
+graveyard of abandoned approaches — with a four-state visibility
+lifecycle, write-time duplicate and contradiction checks, topic
+suppression that hides matching memories from every recall, and a skill
+compiler behind a propose-and-accept gate.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OmniMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP memory
+server on Valkey whose episodic memories carry effort, outcome and a
+graveyard of abandoned approaches — with a four-state visibility
+lifecycle, write-time duplicate and contradiction checks, topic
+suppression that hides matching memories from every recall, and a skill
+compiler behind a propose-and-accept gate.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OmniMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OmniMem",
+      "description": "A self-hosted MCP memory server on Valkey whose episodic memories carry effort, outcome and a graveyard of abandoned approaches \u2014 with a four-state visibility lifecycle, write-time duplicate and contradiction checks, topic suppression that hides matching memories from every recall, and a skill compiler behind a propose-and-accept gate.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Dead ends that stay dead</p>
+          <h1>OmniMem</h1>
+          <p class="document-deck">A self-hosted MCP memory server on
+Valkey whose episodic memories carry effort, outcome and a graveyard of
+abandoned approaches — with a four-state visibility lifecycle,
+write-time duplicate and contradiction checks, topic suppression that
+hides matching memories from every recall, and a skill compiler behind a
+propose-and-accept gate.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/richarvey/OmniMem">
+              <span>Source</span>
+              <strong>richarvey/OmniMem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364" title="50fde316a1fcdd53a75a66d982b7bdee987ba364">
+              <span>Analyzed revision</span>
+              <code>50fde316…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-05</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OmniMem is a <strong>self-hosted MCP memory server for coding
+agents</strong>, MIT, 262 commits since 9 March 2026 at release v6.4.2:
+14,919 lines of Python across an MCP server, a web UI and an RSS worker,
+under 16,621 lines of tests in 62 files with 1,284 test functions. It
+runs as four containers — Valkey with valkey-search, a FastMCP server, a
+Starlette dashboard and a feed ingester — with embeddings computed
+locally by sentence-transformers and the Anthropic API used only for the
+optional extras. Development happens on Codeberg; the GitHub repository
+this report pins is a mirror, and the committed
+<code>OMNIMEM_BUILD_PROMPT.md</code> is the prompt the project says it
+was built from, <em>"Hand this file to Claude Code and run it from an
+empty project directory."</em></p>
+<p>The idea the README leads with is the graveyard. An episodic memory
+can carry <code>effort_score</code>, <code>outcome</code> and a JSON
+list of <code>abandoned_approaches</code> — name, type, reason — and
+every <code>recall</code> begins, before embedding anything, with a
+keyword scan of that list against the query
+(<code>memory/recall.py:166-183</code>, <code>:573-598</code>). A hit is
+returned first, at score 1.0, as <em>"Abandoned approach: onnxruntime —
+SIGILL crash on Alpine musl libc"</em>. Effort amplifies successes and
+never failures: <code>compute_experience_weight</code> gives a
+battle-hardened success ×1.8 and an abandoned outcome ×0.1 regardless of
+effort (<code>:77-84</code>). And an approach abandoned at effort 4 or 5
+is automatically suppressed as a topic
+(<code>tools/experience.py:97-108</code>), after which any memory whose
+content mentions it is dropped from every recall until a person lifts
+the suppression.</p>
+<p><strong>That suppression is a tombstone in the read-path form, and
+this report credits it.</strong> <code>topics:suppressed</code> is a
+Valkey set; <code>recall</code> fetches it once per call and discards
+any candidate whose content contains a member
+(<code>recall.py:192</code>, <code>:216-221</code>). A re-remembered
+claim about a suppressed approach is stored and never surfaces — the
+shape <a href="../provem/">Provem</a> earns the mark with. The key is
+the approach's name, written by an agent, a person or the effort rule,
+and the caveats are the key's breadth and the record's location: a
+substring match hides everything that mentions the word, including the
+memory that recorded why the approach died, and the reason lives on that
+memory's graveyard entry, not on the suppression.</p>
+<p><strong>Memory here is visibility, not belief.</strong> The lifecycle
+is <code>active → deprioritised → archived → deleted</code> with a
+<code>surface_score</code> per state — 1.0, 0.2, 0.0, gone — multiplied
+into the score (<code>memory/lifecycle.py:22-34</code>). Archived rows
+are excluded in the search filter itself (<code>recall.py:26</code>) and
+again in Python; a deprioritised row carries a reason and
+<code>reinstate_hints</code>, and a query matching a hint pins the row
+to 0.6 with a flag so the agent can ask whether to bring it back
+(<code>:278-284</code>). What no state records is whether a memory is
+<em>true</em>. Contradictions are detected — a negation-pattern
+heuristic over semantically similar rows at write time, an optional
+Claude Haiku pass on demand — and recorded as links appended to both
+rows (<code>memory/contradiction.py:199-241</code>). Nothing removes a
+link. The briefing warns on every active memory that carries one
+(<code>tools/briefing.py:63-74</code>); the web UI's resolution is to
+archive one side, and the survivor keeps the link and the warning. That
+is why <code>trust_state</code> is withheld: the states answer <em>may
+this surface</em>, the links answer <em>these disagree</em>, and no
+field answers <em>which one is right</em>.</p>
+<p><strong>Two things the lifecycle drops on the floor.</strong>
+<code>MemoryLifecycle.transition</code> takes a <code>reason</code> for
+every transition and stores it only when the new state is
+<code>deprioritised</code> (<code>lifecycle.py:141-142</code>); the
+maintenance pass archives the older members of a duplicate cluster with
+the reason <em>"auto-maintenance: duplicate of
+<code>&lt;key&gt;</code>"</em>
+(<code>memory/maintenance.py:117-121</code>) and the string goes to the
+log and nowhere else. And <code>remember(force=True)</code>, documented
+as the way to keep two versions past the duplicate check, also skips the
+contradiction check and the fact-extraction queue
+(<code>tools/core.py:123</code>, <code>:131</code>, <code>:150</code>),
+which the docstring calls <em>"raw bypass write"</em> and the 6.4.1
+changelog found had silently hollowed out its own test.</p>
+<p><strong>The skill compiler is the most careful writer in the
+tree.</strong> A skill is compiled from a domain's lessons —
+breakthroughs become <em>do</em> rules, gotchas <em>watch</em> rules,
+graveyard entries <em>don't</em> rules — with no model in the loop,
+clustered by embedding and gated on reinforcement across distinct source
+memories. <code>propose</code> renders the body, diffs it against the
+stored skill and stashes the draft under a TTL with the sha of the body
+it was diffed against; <code>write</code> commits only that stash and
+refuses when the stored body has moved
+(<code>memory/skill_compiler.py:293-311</code>, <code>:347-365</code>).
+The web UI runs the same function. It is the one write path in the
+system where a person's acceptance is structurally required rather than
+requested.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a hash with a state, a score multiplier, and the record
+of what it cost. It enters <code>active</code> through
+<code>remember</code>, which first asks two questions of its nearest
+neighbours: is one of them the same claim (cosine ≥ 0.92 — refuse,
+return the existing key), and does one of them say the opposite (cosine
+≥ 0.7 and a negation pair such as <em>avoid</em>/<em>use</em> — store,
+and return a warning). It leaves the active state by a person's or an
+agent's verb — deprioritise with a reason, archive, forget with
+confirmation — or by the maintenance pass, which archives duplicates and
+expired articles. It returns from deprioritised when a query matches a
+hint someone left, and from archived only by an explicit reinstate.</p>
+<p>Around that loop sits the experience layer.
+<code>record_experience</code> writes effort, outcome, iterations,
+abandoned approaches, a breakthrough and gotchas onto an episodic row;
+the weight it computes multiplies every later recall; the abandoned
+names feed the fast-path warning and, at high effort, the suppression
+set. The skill compiler reads the same fields and turns recurring
+lessons into a document an agent can load.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the visibility lifecycle with its multipliers, the suppression set consulted before scoring, and the contradiction link that is appended on both sides and removed by nothing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the visibility lifecycle with its multipliers, the suppression set consulted before scoring, and the contradiction link that is appended on both sides and removed by nothing
+stateDiagram-v2
+    [*] --&gt; Active: remember, unless a near-duplicate refuses it
+    Active --&gt; Deprioritised: deprioritise with reason and hints (x0.2)
+    Deprioritised --&gt; Active: reinstate, or a query matches a hint (pinned 0.6)
+    Active --&gt; Archived: archive, or maintenance finds a duplicate or an expired article (x0)
+    Deprioritised --&gt; Archived: archive
+    Archived --&gt; Active: reinstate
+    Active --&gt; Deleted: forget with confirm
+    Deprioritised --&gt; Deleted: forget with confirm
+    Archived --&gt; Deleted: forget with confirm
+    Deleted --&gt; [*]
+    Active --&gt; Active: contradiction link appended on both rows, never removed
+    Active --&gt; Suppressed: content contains a suppressed topic
+    Suppressed --&gt; Active: unsuppress the topic
+    note right of Suppressed
+        not a state on the row
+        a set read before scoring
+        auto-added at effort 4 or 5 abandoned
+    end note</code></pre></details></figure>
+<p>The self-loop is the finding. A contradiction changes nothing about
+either row's state or score; it is a warning that persists until a
+person archives one side, and outlives that on the other.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Four containers, one memory package.</strong>
+<code>mcp_server/</code> holds the engine (<code>memory/</code>) and the
+tools; <code>web_ui/</code> imports the same package and talks to the
+same Valkey; <code>rss_worker/</code> writes knowledge articles on a
+schedule. The README's claim that there is <em>"one engine and two front
+doors"</em> holds in the imports: the dashboard's lifecycle, duplicate,
+contradiction and skill routes call <code>memory.lifecycle</code>,
+<code>memory.dedup</code> and <code>memory.skill_compiler</code>
+directly.</p>
+<p><strong>Valkey as the only store.</strong> Every memory is a hash;
+every namespace has one HNSW cosine index over the 384-dimension vector
+plus its tag and numeric fields (<code>memory/store.py:74-177</code>).
+<code>_VALID_KEY_PREFIXES</code> (<code>:19-23</code>) refuses a write
+to any key outside the memory, topic, log, meta, query-expansion and
+queue prefixes; <code>_NAMESPACE_RETURN_FIELDS</code>
+(<code>:37-72</code>) is a per-namespace whitelist of what a search
+returns, and the comment above it records the bug that shape produced —
+a field missing from the tuple made project-filtered recall drop every
+knowledge result <em>"without a trace (issue #20)"</em>. A startup
+migration drops and recreates any index whose field count fell behind
+the definition (<code>:242-262</code>), and <code>reindex</code>
+rebuilds one whose document count drifted from the key count after
+deletes the search module did not observe.</p>
+<p><strong>The search filter is pushed down, with the quirks written
+next to it.</strong> <code>recall.py:23-34</code> records two properties
+of valkey-search verified live: in-brace alternation matches nothing, so
+the state filter is a clause-level OR; and tag values must be
+interpolated raw, so a project name is pushed into the query only when
+it passes the tools' character allowlist. A filtered search that errors
+degrades to an unfiltered one and the Python loop re-filters, which is
+why every filter exists twice.</p>
+<p><strong>Models.</strong> Embeddings are <code>all-MiniLM-L6-v2</code>
+on CPU, chosen so the stack runs on a Raspberry Pi. Claude Haiku is
+optional and used in four places: fact extraction at ingest, RSS
+summaries, query expansion, and the tier-2 contradiction check. Every
+one of them fails open — no key, no extraction, raw storage.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A <code>curl | bash</code> installer generates passwords, writes
+<code>.env</code>, binds the MCP port to localhost unless asked
+otherwise, and starts the four containers from Docker Hub images. Remote
+use goes through a reverse proxy with OAuth 2.1 for claude.ai and a
+login page on the dashboard. Backups are one MCP call to a JSON dump;
+restore merges by <code>updated_at</code>, newer wins
+(<code>store.py:693-762</code>). The operational surface is real — a
+<code>/metrics</code> endpoint, telemetry pages, a health tool — and the
+cost is a Valkey with the search module as a hard dependency: there is
+no file mode and no SQLite.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store and indexes:</strong>
+<code>mcp_server/memory/store.py</code> — prefixes
+(<code>:19-23</code>), return whitelist (<code>:37-72</code>),
+<code>INDEX_DEFINITIONS</code> (<code>:74-177</code>),
+<code>upsert</code> (<code>:286-294</code>), <code>search</code> with
+the filter fallback (<code>:296-372</code>), <code>restore_all</code>
+(<code>:693-762</code>).</li>
+<li><strong>Recall:</strong> <code>mcp_server/memory/recall.py</code> —
+<code>_STATE_FILTER</code> (<code>:26</code>),
+<code>_build_filter_expr</code> (<code>:50-60</code>),
+<code>compute_experience_weight</code> (<code>:77-84</code>), the
+pipeline (<code>:137-385</code>): fast path (<code>:166-183</code>),
+suppression (<code>:216-221</code>), the score (<code>:256-260</code>),
+reinstate pin (<code>:278-284</code>), fact-to-source collapse
+(<code>:353-377</code>), the recall log (<code>:600-626</code>).</li>
+<li><strong>Lifecycle:</strong>
+<code>mcp_server/memory/lifecycle.py</code> — transitions and surface
+scores (<code>:22-34</code>), <code>transition</code>
+(<code>:119-179</code>), suppression (<code>:181-210</code>), reinstate
+hints (<code>:212-251</code>), <code>bulk_transition_project</code>
+(<code>:40-107</code>).</li>
+<li><strong>Write:</strong> <code>mcp_server/tools/core.py</code> —
+<code>remember</code> (<code>:91-190</code>),
+<code>remember_document</code> (<code>:193-301</code>),
+<code>forget</code> (<code>:617-658</code>), topic tools
+(<code>:661-696</code>); <code>memory/dedup.py</code> —
+<code>check_duplicate</code> (<code>:28-80</code>),
+<code>find_all_duplicates</code> (<code>:83-226</code>).</li>
+<li><strong>Contradiction:</strong>
+<code>mcp_server/memory/contradiction.py</code> — patterns
+(<code>:24-42</code>), heuristic (<code>:69-129</code>), API tier
+(<code>:132-196</code>), <code>link_contradiction</code>
+(<code>:199-241</code>);
+<code>tools/contradiction.py:27-168</code>.</li>
+<li><strong>Experience:</strong>
+<code>mcp_server/tools/experience.py</code> —
+<code>record_experience</code> (<code>:29-120</code>),
+<code>log_abandoned</code> (<code>:123-177</code>),
+<code>warn_if_abandoned</code> (<code>:336-352</code>).</li>
+<li><strong>Maintenance:</strong>
+<code>mcp_server/memory/maintenance.py</code> — knowledge expiry
+(<code>:27-67</code>), <code>run_maintenance</code>
+(<code>:70-216</code>); triggered from
+<code>tools/briefing.py:213-235</code>.</li>
+<li><strong>Enrichment:</strong>
+<code>mcp_server/memory/enrichment.py</code> — the queue worker and
+<code>_enrich</code> (<code>:93-200</code>);
+<code>memory/extraction.py</code> — the prompt (<code>:24-41</code>) and
+<code>extract_facts</code> (<code>:91-139</code>).</li>
+<li><strong>Temporal:</strong>
+<code>mcp_server/memory/temporal.py</code> —
+<code>parse_query_date</code> (<code>:47-81</code>),
+<code>temporal_boost</code> (<code>:84-103</code>).</li>
+<li><strong>Skills:</strong>
+<code>mcp_server/memory/skill_compiler.py</code> —
+<code>compile_skill_flow</code> (<code>:133-179</code>),
+<code>_propose</code> (<code>:182-335</code>),
+<code>_commit_proposal</code> (<code>:338-416</code>);
+<code>memory/skills.py</code> — lessons, clustering, rendering.</li>
+<li><strong>Audit tools:</strong> <code>mcp_server/tools/audit.py</code>
+— <code>memory_audit</code> (<code>:24-128</code>),
+<code>why_did_you_mention</code> (<code>:131-195</code>),
+<code>explain_memory</code> (<code>:198-250</code>).</li>
+<li><strong>Review surface:</strong>
+<code>web_ui/routes/contradictions.py</code>,
+<code>duplicates.py</code>, <code>lifecycle.py</code>,
+<code>suppressions.py</code>, <code>skills.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Five namespaces share one shape and differ in fields. Every row
+carries <code>content</code> (50,000 characters at most),
+<code>state</code>, <code>surface_score</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>tags</code>, <code>recall_count</code>,
+<code>last_recalled</code> and the binary <code>vector</code>. Episodic
+rows add <code>project</code>, <code>effort_score</code>,
+<code>outcome</code>, <code>iterations</code>,
+<code>experience_weight</code>, <code>abandoned_approaches</code>,
+<code>breakthrough</code>, <code>gotchas</code>,
+<code>deprioritised_reason</code>, <code>reinstate_hints</code>,
+<code>contradictions</code>, <code>event_date</code>, and
+<code>blessed</code> for skill eligibility. Knowledge rows add
+<code>source_url</code>, <code>feed_name</code>,
+<code>published_at</code>, <code>topics</code>, <code>expires_at</code>,
+<code>skill_domains</code> and <code>skill_rules</code>; extracted facts
+add <code>enriched_from</code> and <code>source_doc_id</code>.
+Preference rows add <code>scope</code>. Project rows are keyed by name.
+Skills are whole documents with a <code>body</code>, a rule manifest and
+a source manifest, indexed on their discovery text only.</p>
+<p><strong>Record time and event time, with a boost between
+them.</strong> <code>created_at</code> is when the row was written;
+<code>event_date</code> is when the thing happened, set by the extractor
+when a fact names a date and inherited down a fallback chain — the
+fact's own date, else the source memory's, else the source's ingest time
+(<code>enrichment.py:179-189</code>), the chain the issue-20 tests pin
+after temporal recall <em>"fell from 53.4% to 7.5%"</em> when extraction
+stripped the anchor. A query that mentions a date is parsed and every
+candidate with an <code>event_date</code> within seven days is
+multiplied by 1.5, falling to 1.0 at sixty
+(<code>temporal.py:32-37</code>, <code>:84-103</code>). That is an event
+axis used for ranking, not a validity interval and not an as-of read,
+which is why <code>bitemporal</code> is withheld with the axis
+named.</p>
+<p><strong>What is recorded about a removal.</strong> A deprioritised
+row keeps its reason and hints. An archived row keeps nothing about why.
+A deleted row is gone, with its graveyard entries and its contradiction
+links; the suppression set that its abandonment may have written
+survives it, and the recall log (<code>log:recall:*</code>, 30-day TTL)
+still names the key.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall</code> runs one pipeline
+(<code>recall.py:137-385</code>). Before the query is embedded,
+<code>warn_if_abandoned</code> scans a cached parse of every episodic
+row's graveyard for a name contained in the query or containing it, and
+any hit becomes a result of type <code>abandoned_warning</code> at score
+1.0, so it sorts first. Then the query is embedded once and each
+requested namespace is searched with a KNN of at least twenty candidates
+— fifty under a project filter, so the Python re-filter has something
+left — and the state and project predicates in the query. Per candidate:
+archived and deleted are dropped; any content containing a suppressed
+topic is dropped; the project is re-checked; and the score is
+<code>similarity × surface_score × recency × experience_weight × temporal</code>,
+where recency is 1.0 for ninety days and then loses 0.05 per month to a
+floor of 0.3. A deprioritised row whose reinstate hints match the query
+is pinned to 0.6 and flagged. Optional query expansion asks Haiku for
+variants and unions the results by key.</p>
+<p>Two collapses follow. Results are deduplicated by
+<code>(key, result_type)</code>, keyed so that a graveyard warning never
+collapses into the memory carrying it. Then an extracted fact whose
+verbatim source also matched is dropped and its score handed to the
+source (<code>:353-377</code>): <em>"facts supplement, they don't
+compete."</em> The top <em>k</em> are returned, the recall is logged
+with its result keys and scores, and each returned row's
+<code>recall_count</code> and <code>last_recalled</code> are bumped in
+the same pipeline — so recall is observability here, feeding telemetry
+and the <em>gone cold</em> view, and does not enter the score.</p>
+<p><code>why_did_you_mention</code>
+(<code>tools/audit.py:131-195</code>) closes the loop from the other
+side: it searches the last fifty recall logs by keyword, then by
+embedding, and returns the query and result keys that surfaced a
+topic.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong><code>remember</code> is synchronous, refuses duplicates and
+warns on contradictions.</strong> It embeds the content, asks the
+namespace's index for the five nearest live rows in the same project and
+returns <code>duplicate_found</code> with the existing key if one is
+within cosine 0.92 (<code>core.py:131-145</code>); then asks for the ten
+nearest and returns a <code>contradiction_warning</code> beside the new
+key if one within 0.7 contains the opposite half of a negation pair
+(<code>:150-160</code>, <code>contradiction.py:24-42</code>). The row is
+written in one <code>HSET</code> with its vector and is searchable
+immediately. In <code>full</code> mode a job is then queued for a
+background thread that asks Haiku for atomic facts and writes each as
+its own row in the knowledge or preference namespace at
+<code>surface_score</code> 0.5, linked back by
+<code>enriched_from</code>, after its own duplicate check
+(<code>enrichment.py:142-193</code>). <code>force=True</code> skips the
+duplicate check, the contradiction check and the queue.</p>
+<p><strong>The negation heuristic is cheap and broad.</strong> Seventeen
+pairs — <em>don't</em>/<em>do</em>, <em>never</em>/<em>always</em>,
+<em>avoid</em>/<em>use</em>, <em>without</em>/<em>with</em>,
+<em>remove</em>/<em>add</em>, <em>failed</em>/ <em>succeeded</em> — fire
+when one text has the negative and the other the positive. Gating on
+similarity is what keeps it usable, and the 3.12.1 fix the tool comment
+cites is exactly that: without the 0.5 floor the scan <em>"flagged AND
+cross-linked"</em> unrelated memories that shared <em>use</em> or
+<em>with</em>. The API tier is a single Haiku call asked for JSON; a
+failed call returns <em>not a contradiction</em> with confidence 0.0,
+which the tool then treats as a reason to skip the pair.</p>
+<p><strong>Links are written and never unwritten.</strong>
+<code>link_contradiction</code> appends
+<code>{key, explanation, detected_at}</code> to both rows'
+<code>contradictions</code> field, deduplicated by key. No tool, route
+or maintenance step removes an entry:
+<code>rg -n '"contradictions"' mcp_server web_ui</code> finds readers
+and this one writer. The briefing lists every active memory with a
+non-empty list as a warning, without checking whether the other side is
+still active, and the contradictions page offers to archive either
+side.</p>
+<p><strong>Maintenance archives without a record.</strong> Every tenth
+<code>briefing</code> for a project
+(<code>AUTO_MAINTENANCE_INTERVAL</code>) runs
+<code>run_maintenance</code>: duplicate clusters over the stored
+vectors, the older members archived; a negation-pattern scan over up to
+200 active rows, results reported but not linked; and RSS articles past
+<code>expires_at</code> archived. The archive transition accepts a
+reason and stores none, so a row archived as a duplicate is
+indistinguishable afterwards from one archived by hand.</p>
+<p><strong>Deletion asks first.</strong> <code>forget</code> resolves a
+key or a query — the query path takes the top three recalls above 0.85 —
+and returns a preview unless <code>confirm=True</code>; on confirm the
+key is removed and the graveyard cache invalidated
+(<code>core.py:617-658</code>). <code>delete_project</code> scans every
+namespace and deletes in pipelined batches after a preview.</p>
+<p><strong>Skills are written through a gate.</strong> Section 1
+describes it; the detail worth adding is <code>bless</code>, which marks
+a single memory skill-eligible past the reinforcement threshold, and
+<code>promote_knowledge</code>, which makes an RSS article a reference
+rule and clears its expiry — both are vetting acts a person or agent
+performs so the compiler, which never calls a model, has something to
+compile.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Forty-four MCP tools, registered in <code>server.py:170-260</code>,
+over Streamable HTTP or SSE with bearer or OAuth 2.1 authentication. The
+server delivers a 199-line instruction block on connect
+(<code>instructions.py</code>), mirrored as a <code>CLAUDE.md</code>,
+and it is unusually prescriptive: call <code>briefing</code> first, ask
+the human which side of a contradiction is current <em>"before
+proceeding with any work"</em>, call <code>warn_if_abandoned</code>
+before suggesting <em>or agreeing to</em> any library — <em>"Do not skip
+this check because the human suggested the approach"</em> — and
+<em>"store memories proactively"</em>. The tool set follows the
+lifecycle: <code>remember</code>, <code>recall</code>,
+<code>recall_index</code> with <code>recall_detail</code> for a two-step
+token-saving read, <code>deprioritise</code>, <code>archive</code>,
+<code>reinstate</code>, <code>retag</code>, <code>forget</code>; project
+context tools including <code>compile_project_context</code>; experience
+tools; suppression tools; <code>check_contradictions</code>;
+<code>briefing</code>; the four skill tools; backup and restore;
+<code>queue_status</code> for the enrichment backlog; and the audit
+trio.</p>
+<p>The agent's authority is broad. It can write to four namespaces,
+transition any row through every state, delete with a confirmation flag
+it sets itself, suppress topics, and bless memories. What it cannot do
+is write a skill without a stashed proposal, and the instruction block
+asks it not to accept one silently. The web UI is where a person does
+the same things with buttons and a login.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>tombstone</code> — earned, in the read-path form, and
+the caveats are the key.</strong> The record is a set of strings; the
+consultation is on every recall; the producer is a person, an agent or
+the effort rule. What it is keyed on is a substring of content rather
+than a normalised value, so <em>"docker"</em> hides every memory about
+Docker, and what it records is the name alone — the reason stays on the
+episodic row that logged the abandonment, which the suppression hides
+from recall like anything else that mentions the word.</p>
+<p><strong><code>scope_enforced</code> — earned.</strong>
+<code>project</code> is a tag pushed into the vector search for
+episodic, preference and knowledge rows and re-checked in Python for all
+four; the project namespace is never pushed down because a row written
+mid-session may carry only <code>project</code> until the startup
+migration backfills <code>project_name</code>. A project name with a
+character outside the allowlist is filtered in Python only.</p>
+<p><strong><code>human_review</code> — earned.</strong> The
+contradictions page is an adjudication surface with two verbs, the
+duplicates page a review of what maintenance will archive, every row has
+lifecycle actions, and the skill gate makes acceptance structural. The
+near-miss inside the mark: the only resolution the contradictions page
+offers is <em>archive one side</em>, and the link on the other side
+stays.</p>
+<p><strong><code>negative_eval</code> — earned.</strong> Exclusion cases
+for archived, deleted and suppressed material, each with a positive
+control in the same suite, and a no-false-positive case for the
+graveyard warning. Two of the recall tests are guarded by
+<code>if candidates:</code> and <code>if results:</code> and pass on an
+empty result, which the 6.4.1 changelog's own audit of vacuous tests did
+not reach.</p>
+<p><strong><code>trust_state</code> — withheld.</strong>
+<code>state</code> is a visibility lifecycle with a stored reason and a
+filter behind it — the functional half of the mark — and no state on the
+row says a memory is believed, unverified or wrong. Contradiction links
+are the nearest thing to an epistemic record and they are symmetric,
+unresolved and never cleared.</p>
+<p><strong><code>bitemporal</code> — withheld.</strong>
+<code>event_date</code> beside <code>created_at</code> is a real event
+axis, extracted and inherited with care, and it is used as a ranking
+boost within a window; there is no interval and no as-of read.</p>
+<p><strong><code>audit_log</code> — withheld.</strong>
+<code>log:recall:*</code> records reads for thirty days and
+<code>why_did_you_mention</code> reads it back, which is a rarer thing
+than a mutation log and not one. Mutations bump <code>updated_at</code>
+and write to the process log; the archive reason is discarded; nothing
+in the store says who or what transitioned a row.</p>
+<p>Other observations:</p>
+<ul>
+<li><strong>The duplicate check refuses; the contradiction check
+warns.</strong> A near-duplicate is not stored and the caller gets the
+existing key. A contradiction is stored with a warning. That asymmetry
+is defensible — a contradiction may be the correction — and it means the
+store holds both sides until a person acts.</li>
+<li><strong>Fail-open is the pattern for every model call</strong>, and
+the contradiction tool's tier-2 path inherits a specific consequence: an
+API failure returns <em>not a contradiction</em>, and the tool skips the
+pair as cleared.</li>
+<li><strong>Restore merges by <code>updated_at</code></strong>, so a
+backup cannot overwrite a newer row; it also cannot delete, so a row
+forgotten after the backup returns.</li>
+<li><strong>Keys are prefix-guarded</strong> on write and on restore,
+and the search filter rejects a handful of characters and otherwise
+trusts the allowlist that project names and tags already pass.</li>
+<li><strong>The instruction block is the largest trust mechanism in the
+system</strong>, and it is prose: whether the agent checks the graveyard
+before agreeing with a person is a sentence, not a gate.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Sixty-two test files, 1,284 test functions, 16,621 lines, run against
+in-memory fakes of Valkey and the embedder
+(<code>tests/conftest.py</code>, <code>test_fakes.py</code>) with the
+Anthropic client faked, so the suite needs no service. The README's
+coverage badge and the 6.4.1 changelog claim 99.9% line coverage; what
+can be read here is what the tests assert. The lifecycle table is
+asserted transition by transition, including that archived cannot
+deprioritise and deleted is terminal. The recall suite asserts the
+ordering effects of every multiplier, the exclusions in section 9, the
+reinstate pin, the graveyard fast path, and the counters. The
+contradiction suite asserts each negation pair, symmetry, deduplication
+of links and the archived exclusion. The issue-20 suite pins the
+fact-routing, the <code>event_date</code> fallback chain and the
+fact-to-source collapse. The web routes are driven through the real
+Starlette app.</p>
+<p>The changelog for 6.4.1 records the project auditing its own suite
+and finding tests that <em>"were passing while asserting nothing"</em> —
+a <code>remember()</code> contradiction test that called with
+<code>force=True</code> and so skipped the check, and three scan tests
+whose wording matched no negation pattern — and fixing them. Two guarded
+assertions remain in <code>test_recall.py</code> (<code>:182-193</code>,
+<code>:232-248</code>): the reinstate-candidate case asserts the 0.6 pin
+only <code>if candidates</code>, and the warnings-first case only
+<code>if results</code> and <code>if warnings</code>.</p>
+<p>No benchmark and no evaluation against a corpus. The project's one
+performance claim is qualitative — a Raspberry Pi runs it — and the one
+retrieval-quality number in the tree is the issue-20 note that temporal
+recall fell from 53.4% to 7.5% before the fallback chain, which names a
+measurement without committing it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A graveyard checked by keyword before the
+embedding.</strong> The cheapest possible check, run on every recall,
+surfaced first. A dead end costs one substring comparison to
+remember.</li>
+<li><strong>Effort amplifies wins and never losses.</strong> A ×1.8 for
+a battle-hardened success and a flat ×0.1 for anything abandoned,
+whatever it cost, keeps expensive failures from ranking like expensive
+successes.</li>
+<li><strong>Auto-suppress what cost the most to abandon.</strong> The
+rule that turns an effort-4 abandonment into a topic suppression is the
+one place the system acts on its own record without being asked, and it
+is the right place.</li>
+<li><strong>Refuse the duplicate, warn on the contradiction.</strong>
+Two different answers to <em>this looks like something we have</em>,
+because only one of them might be a correction.</li>
+<li><strong>Commit only the draft that was reviewed.</strong> A proposal
+stashed with the sha of what it was diffed against, and a write that
+refuses when the base moved, is a gate a model cannot talk its way
+through.</li>
+<li><strong>Keep a recall log and a tool that reads it.</strong> <em>Why
+did you mention that</em> is the question a person asks first when a
+memory system surprises them.</li>
+<li><strong>Push the filter into the index and keep the Python
+check.</strong> The comment says why: the filtered search can fall back
+to unfiltered.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Links that nothing clears.</strong> A contradiction recorded
+on both rows with no resolution verb becomes a permanent warning; give
+the adjudication a place to land.</li>
+<li><strong>A transition that accepts a reason and drops it.</strong> If
+the archive path takes a reason, store it; the maintenance pass is
+writing one nobody will ever read.</li>
+<li><strong>A suppression keyed on a substring.</strong> It is the right
+mechanism with the wrong key; normalise the value, or scope it to the
+approach field the graveyard already has.</li>
+<li><strong>One flag that turns off three checks.</strong>
+<code>force</code> should skip the duplicate check it is documented for
+and nothing else.</li>
+<li><strong>A model-call failure that reads as a negative
+verdict.</strong> A tier-2 check that cannot run should say so, not
+clear the pair.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who wants one memory across Claude Code,
+Cursor, Copilot and the rest, on their own hardware, with a dashboard
+they can act in and a graveyard that speaks up. The lifecycle vocabulary
+— deprioritise with hints rather than delete — matches how people
+actually change their minds about advice, and the skill compiler is a
+serious answer to <em>how does this become policy</em>.</p>
+<p>It is a single-user system with project scoping and no tenancy, it
+needs Valkey with the search module, and its trust story ends at
+<em>these two disagree</em>. A team that needs a memory to say what it
+believes, or an audit of who changed what, will find the fields to add
+and the places to add them; a team that wants an agent's dead ends to
+stay dead can run it as it is.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How is a contradiction meant to be resolved?</strong> The
+instruction block asks the agent to ask the human which side is current;
+the store has no verb for the answer, and the page's two buttons archive
+a side without clearing the survivor's link.</li>
+<li><strong>How many memories does a suppression hide?</strong> A
+substring over content is measured nowhere; a suppression of a common
+word could hide most of a project.</li>
+<li><strong>What does the tier-2 contradiction check
+contribute?</strong> It runs only on demand and only on pairs the
+heuristic already flagged; no committed run shows what it confirms or
+rejects.</li>
+<li><strong>Where is the coverage receipt?</strong> The badge and
+changelog claim 99.9%; the number is not in the tree.</li>
+<li><strong>Does the GitHub mirror lag Codeberg?</strong> Development is
+stated to happen elsewhere; the pinned commit is the mirror's head.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Engine</strong></p>
+<ul>
+<li><code>mcp_server/memory/store.py</code> — Valkey client, prefixes,
+return whitelist, index definitions, search with fallback, dump and
+restore</li>
+<li><code>mcp_server/memory/recall.py</code> — the pipeline, the
+graveyard fast path, the recall log</li>
+<li><code>mcp_server/memory/lifecycle.py</code> — states, transitions,
+suppression, reinstate hints, bulk project transitions</li>
+<li><code>mcp_server/memory/contradiction.py</code>,
+<code>dedup.py</code>, <code>maintenance.py</code></li>
+<li><code>mcp_server/memory/enrichment.py</code>,
+<code>extraction.py</code>, <code>chunking.py</code>,
+<code>query_expansion.py</code>, <code>temporal.py</code>,
+<code>tags.py</code>, <code>migrations.py</code></li>
+<li><code>mcp_server/memory/skills.py</code>,
+<code>skill_compiler.py</code>, <code>skill_scan.py</code>,
+<code>skill_transfer.py</code></li>
+</ul>
+<p><strong>Tools and server</strong></p>
+<ul>
+<li><code>mcp_server/server.py</code> — registration
+(<code>:170-260</code>), auth, startup migrations, the enrichment
+worker</li>
+<li><code>mcp_server/tools/core.py</code>, <code>project.py</code>,
+<code>experience.py</code>, <code>contradiction.py</code>,
+<code>briefing.py</code>, <code>knowledge.py</code>,
+<code>skills.py</code>, <code>audit.py</code>, <code>backup.py</code>,
+<code>queue.py</code></li>
+<li><code>mcp_server/instructions.py</code>,
+<code>claude_config/CLAUDE.md</code> — the on-connect guide, read here
+as data</li>
+</ul>
+<p><strong>Web UI and worker</strong></p>
+<ul>
+<li><code>web_ui/routes/</code> — <code>contradictions.py</code>,
+<code>duplicates.py</code>, <code>lifecycle.py</code>,
+<code>suppressions.py</code>, <code>skills.py</code>,
+<code>memories.py</code>, <code>detail.py</code>,
+<code>backups.py</code>, <code>telemetry.py</code>,
+<code>metrics.py</code></li>
+<li><code>rss_worker/ingester.py</code>, <code>summariser.py</code>,
+<code>worker.py</code></li>
+</ul>
+<p><strong>Documentation</strong></p>
+<ul>
+<li><code>docs/memory-types.md</code>, <code>memory-episodic.md</code>,
+<code>memory-knowledge.md</code>, <code>memory-preference.md</code>,
+<code>memory-project.md</code>, <code>memory-skill.md</code>,
+<code>features.md</code>, <code>architecture.md</code>,
+<code>skill-compiler.md</code>, <code>mcp-tools.md</code></li>
+<li><code>CHANGELOG.md</code>, <code>OMNIMEM_BUILD_PROMPT.md</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>mcp_server/tests/</code> — 62 files;
+<code>test_recall.py</code>, <code>test_lifecycle.py</code>,
+<code>test_contradiction.py</code>,
+<code>test_contradiction_tool.py</code>, <code>test_dedup.py</code>,
+<code>test_issue20_temporal.py</code>, <code>test_temporal.py</code>,
+<code>test_audit.py</code>, <code>test_skills.py</code>,
+<code>test_web_*.py</code></li>
+</ul>
+<p><strong>Searches that ground the absence claims above</strong> (run
+at the pinned commit):</p>
+<ul>
+<li><code>rg -n '"contradictions"' mcp_server web_ui --glob '!**/tests/**'</code>
+— one writer, <code>memory/contradiction.py:237</code>, and readers
+only; no removal.</li>
+<li><code>rg -n 'deprioritised_reason|archive_reason|archived_reason' mcp_server/memory/lifecycle.py</code>
+— the reason is stored at <code>:103</code> and <code>:142</code>, both
+under the deprioritised branch only.</li>
+<li><code>rg -n 'verified|believed|epistemic|truth' mcp_server/memory/</code>
+— no field.</li>
+<li><code>rg -n 'as_of|valid_from|valid_until' mcp_server/</code> —
+empty; <code>event_date</code> is read only by
+<code>temporal_boost</code>.</li>
+<li><code>grep -c 'mcp.tool()(' mcp_server/server.py</code> — 44.</li>
+<li><code>rg -n -i 'arxiv|bibtex|doi\.org' README.md docs/</code> — no
+paper.</li>
+<li><code>git ls-files | rg -i 'bench|eval'</code> — no benchmark or
+evaluation artifact.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364"><code class="commit-id" title="50fde316a1fcdd53a75a66d982b7bdee987ba364">50fde316…</code></a>
+— first reading, at the merge of the v6.4.x branch on the GitHub mirror.
+Screened first: no auto-run surface, one build-time execution path (a
+pytest <code>conftest.py</code>), three unpinned requirement files,
+nothing inside the seven-day cooldown, and a <code>CLAUDE.md</code>
+addressed to a reading agent, treated as data. Nothing was installed or
+run; the tests were read, not executed. Four marks —
+<code>tombstone</code> in the read-path form on topic suppression,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code> — with <code>trust_state</code> withheld on a
+lifecycle that records visibility and never belief,
+<code>bitemporal</code> on an event axis used as a boost, and
+<code>audit_log</code> on a recall log that records reads. The findings
+recorded are the contradiction link that nothing clears, the archive
+reason that nothing stores, and the one flag that disables three
+checks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

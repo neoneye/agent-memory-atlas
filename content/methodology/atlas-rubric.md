@@ -54,7 +54,7 @@ status on a row. Those are all keyed on a *record*; re-extraction produces a new
 record and walks straight past them.
 
 **Why it is on the list:** it is the widest gap *this corpus has found* —
-twenty-six systems of 358, and the corpus is an opportunistic collection rather
+twenty-seven systems of 359, and the corpus is an opportunistic collection rather
 than a sample, so that is a fact about what has been read and not a prevalence
 figure for the field. It is invisible on every published benchmark, and it is the mechanism
 that decides whether "forget that" survives the next background pass.
@@ -161,8 +161,8 @@ writing in a report is a queue nothing in the tree ever drains.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. The negative
-retrieval assertion is carried by one hundred and twenty-six repositories
-of three hundred and fifty-eight, and they are not all
+retrieval assertion is carried by one hundred and twenty-seven repositories
+of three hundred and fifty-nine, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a
@@ -187,8 +187,8 @@ it also names the one mark that cites no case at all and should probably be
 dropped.
 
 **Three numbers appear above and they are not the same kind of number.** The
-negative retrieval assertion count — one hundred and twenty-six systems of three
-hundred and fifty-eight — is live, checked against report frontmatter on every build. Thirty-seven
+negative retrieval assertion count — one hundred and twenty-seven systems of three
+hundred and fifty-nine — is live, checked against report frontmatter on every build. Thirty-seven
 and twenty-seven are dated: what the corpus held, and what the re-score found in it,
 on 2026-08-08. Every mark awarded since was judged against the strict definition
 at the top of this section, but **the read-path share has not been recomputed** —
