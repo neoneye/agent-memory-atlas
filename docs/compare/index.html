@@ -11973,17 +11973,22 @@ digest, then creates the capture</td>
 enqueues a durable cleanup job</td>
 <td>privateScopeTag on the principal and on every row, plus a
 RestrictedScope table and restricted tags</td>
-<td>Plugins for OpenClaw, OpenCode, Kilo Code, Hermes and Codex (MCP),
-plus an injected-memory package, a checksum-pinned installer, and a web
-wiki</td>
+<td>Plugins for OpenClaw, OpenCode, Kilo Code and Hermes, a five-tool
+stdio MCP server installed into Codex, an injected-memory package, an
+installer that pins its backend script and Hermes bundle by SHA-256, and
+a web wiki</td>
 <td>Durable jobs with idempotency keys for cleanup, embedding and
 backfill, plus TTL expiry</td>
-<td>A candidate status ladder from ephemeral upward, with occurrence and
-retrieval counters driving promotion</td>
+<td>A candidate status enum — ephemeral, pending review, rejected,
+promoted, expired, quarantined — of which only quarantined has a writer,
+set by lineage revocation; the promotion review is an in-memory type
+nothing persists, and recall reads articles, never candidates</td>
 <td>The tombstone is checked across every retained HMAC key version, so
 rotating the key cannot resurrect a revocation</td>
 <td>The tombstone expires after ninety days by design, so the refusal is
-durable for a bounded window</td>
+durable for a bounded window; the candidate tier and its five usage
+counters are schema with one writer, so the promotion ladder the enum
+describes is not a mechanism the code runs</td>
 </tr>
 <tr>
 <td><code>nornicdb</code></td>
@@ -21899,7 +21904,8 @@ href="https://github.com/quixiai/hexis/commit/fdf24f317ad81db7be2315c23e711a9538
 <li><a
 href="https://github.com/sweetsophia/noosphere">sweetsophia/noosphere</a>
 at <a
-href="https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc"><code class="commit-id" title="feb04e0d07a48ae988095bd9631307f6fcfd47bc">feb04e0d…</code></a></li>
+href="https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc"><code class="commit-id" title="feb04e0d07a48ae988095bd9631307f6fcfd47bc">feb04e0d…</code></a>
+— release 1.13.3; read only, twelve manifests inside the cooldown</li>
 <li><a
 href="https://github.com/prefrontal-systems/cortexgraph">prefrontal-systems/cortexgraph</a>
 at <a
@@ -27369,6 +27375,25 @@ the pruning rule, because a skill whose success rate falls to zero is
 the one place this paper's memory can turn out false and be retired —
 and whether a retired skill can be re-induced from the next successful
 trajectory is the tombstone question, unanswered in the text.</li>
+<li><strong>A ladder that was schema, and the producer test that would
+have caught it.</strong> The <a
+href="../systems/noosphere/">Noosphere</a> report of 9 August 2026
+described a candidate tier whose status <em>"starts at
+<code>EPHEMERAL</code> and promotes on usage"</em> with five counters
+driving promotion, and its matrix row said so. At that pin and at the
+current one, nothing in <code>src/</code> creates a
+<code>MemoryCandidate</code> row, nothing sets <code>PROMOTED</code>,
+<code>PENDING_REVIEW</code> or <code>REJECTED</code>, four of the five
+counters are selected and never incremented, the promotion module's
+review status is a type no table holds, and recall reads articles. The
+enum, the counters and the module were read as a mechanism; the check
+the <code>add-memory-system</code> skill asks for — work backwards from
+the field to every assignment — was not run on them. The mark this bears
+on, <code>trust_state</code>, was withheld on a vocabulary argument and
+stays withheld on the right one. Found while confirming a re-pin the
+maintainer submitted as <a
+href="https://github.com/neoneye/agent-memory-atlas/pull/21">#21</a>,
+whose own claims all held.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>

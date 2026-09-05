@@ -9,16 +9,16 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 215 of 361 screened at the report's current pin.**
+**Progress: 216 of 361 screened at the report's current pin.**
 
 16 further record(s) describe a revision the report has since moved
-off, and 130 report(s) have no record at all.
+off, and 129 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 78 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 82 |
+| Repositories with an auto-run surface (`RUNS`) | 79 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 83 |
 | Repositories with build-time execution (`EXEC`) | 163 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -85,6 +85,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |
+| [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
