@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Google Cloud specification for
+agent-maintained knowledge as markdown-plus-frontmatter bundles —
+provenance per source, a trust tier derived from who verified a
+document, an absolute staleness instant, and a contract for computations
+a consumer can attest — with a reference agent that writes bundles from
+BigQuery and the web and a viewer that reads them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Open Knowledge
+Format — Agent Memory Atlas">
+    <meta property="og:description" content="A Google Cloud
+specification for agent-maintained knowledge as
+markdown-plus-frontmatter bundles — provenance per source, a trust tier
+derived from who verified a document, an absolute staleness instant, and
+a contract for computations a consumer can attest — with a reference
+agent that writes bundles from BigQuery and the web and a viewer that
+reads them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Open Knowledge
+Format — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Google Cloud
+specification for agent-maintained knowledge as
+markdown-plus-frontmatter bundles — provenance per source, a trust tier
+derived from who verified a document, an absolute staleness instant, and
+a contract for computations a consumer can attest — with a reference
+agent that writes bundles from BigQuery and the web and a viewer that
+reads them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Open Knowledge Format — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Open Knowledge Format",
+      "description": "A Google Cloud specification for agent-maintained knowledge as markdown-plus-frontmatter bundles \u2014 provenance per source, a trust tier derived from who verified a document, an absolute staleness instant, and a contract for computations a consumer can attest \u2014 with a reference agent that writes bundles from BigQuery and the web and a viewer that reads them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Who confirmed it, and until when</p>
+          <h1>Open Knowledge Format</h1>
+          <p class="document-deck">A Google Cloud specification for
+agent-maintained knowledge as markdown-plus-frontmatter bundles —
+provenance per source, a trust tier derived from who verified a
+document, an absolute staleness instant, and a contract for computations
+a consumer can attest — with a reference agent that writes bundles from
+BigQuery and the web and a viewer that reads them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GoogleCloudPlatform/open-knowledge-format">
+              <span>Source</span>
+              <strong>GoogleCloudPlatform/open-knowledge-format</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f" title="ad30107c31c06aec8a7d5636e0d1058118604e6f">
+              <span>Analyzed revision</span>
+              <code>ad30107c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-05</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Open Knowledge Format (OKF) is a <strong>specification for knowledge
+that agents write and people sign off on</strong>, Apache-2.0, from
+Google Cloud Platform: 1,006 lines of spec (<code>SPEC.md</code>,
+version 0.2), a reference agent of 2,181 lines of Python under 1,037
+lines of tests, a self-contained HTML viewer, four committed bundles and
+a connector note for Dataplex Knowledge Catalog. Six commits by one
+author between 14 and 21 August 2026. The README is unambiguous about
+what the contribution is: <em>"The format itself is the contribution;
+this agent and the visualizer exist to make the format tangible at both
+ends."</em></p>
+<p>The format is a directory of markdown files with YAML frontmatter,
+<code>type</code> the only required key, and its reason to exist is four
+questions the spec says a plain markdown convention cannot answer once
+<em>"most concepts are machine-generated"</em>: what was this created
+from, how much should I trust it, is it still true, is it the current
+version. The answers are five frontmatter families. <code>sources</code>
+records provenance with per-source credibility signals
+(<code>author</code>, <code>usage_count</code>,
+<code>last_modified</code>) and refuses to store a score — <em>"a score
+is subjective, unportable across consumers, and goes stale."</em>
+<code>generated</code> records who wrote the content and when;
+<code>verified</code> is a list of <code>{by, at}</code> events
+recording who confirmed it, kept separate <em>"because who wrote a
+concept need not be who confirmed it."</em> <code>status</code> is
+<code>draft</code>, <code>stable</code> or <code>deprecated</code>.
+<code>stale_after</code> is an absolute instant, deliberately not a TTL,
+so staleness is <em>"a plain comparison with no reference to when the
+concept was read."</em> And an <code>Attested Computation</code> is a
+concept whose body carries the sanctioned SQL, whose frontmatter names
+an executor and a deterministic attester, and whose consumer <em>"can
+confirm the agent ran the blessed computation instead of improvising its
+own."</em></p>
+<p><strong>Every one of those families is advisory, and the code
+confirms it.</strong> The spec says so of the trust tier in as many
+words — <em>"Trust tiers are advisory signals, not access control"</em>
+— and the tree has exactly one consumer of the fields: the viewer.
+<code>trust_tier()</code> and <code>is_stale()</code> in
+<code>src/reference_agent/bundle/document.py</code> derive a tier and a
+boolean, the viewer puts them on a badge
+(<code>viewer/static/viz.js:211-223</code>), and nothing in the package
+filters, ranks, withholds or warns on any of them. A
+<code>deprecated</code> concept, an <code>unverified</code> one and one
+past its <code>stale_after</code> are listed in the index, drawn in the
+graph and served to a reader exactly like the rest. That is why this
+report carries no capability mark: the states the atlas asks for are all
+defined here, and none of them is used for what the mark is for.</p>
+<p><strong>The gap that matters most is the one between
+<code>generated</code> and <code>verified</code>.</strong> The write
+tool refreshes <code>generated</code> on every write
+(<code>tools/bundle_tools.py:131-136</code>) and copies whatever
+<code>verified</code> the agent passed back in. The spec states the
+independence as a feature — <em>"content can change without
+re-confirmation"</em> — and the consumer derives the tier from
+<code>verified</code> alone, never comparing its <code>at</code> to
+<code>generated.at</code>. So an agent that regenerates a human-reviewed
+document keeps the human-reviewed badge on text the human never saw. The
+hand-authored sample shows what disciplined use looks like — eight of
+ten <code>acme_retail</code> documents carry a <code>human:</code>
+verifier dated after the generation — and the three agent-produced
+bundles show the default: 44 documents, zero <code>verified</code>, one
+<code>status</code>, zero <code>stale_after</code>.</p>
+<p><strong>Attestation is the most original idea here, and the shipped
+attester does not do what the spec's consumer walkthrough says it
+does.</strong> §10.5 describes fidelity as the displayed value matching
+<em>"the receipt's authoritative source, re-read by job id rather than
+taken from the agent's text."</em>
+<code>bundles/acme_retail/attesters/sql_equality.py</code> — the only
+attester in the tree, 129 lines, no test, no caller — canonicalises the
+executed SQL against the sanctioned SQL and compares the claimed value
+to <code>receipt["result"][0]</code>, passing the <code>job_id</code>
+through into the verdict's details untouched (<code>:108-128</code>).
+Its header says why: <em>"Never uses an LLM. Never makes network
+calls."</em> The receipt it checks is assembled by the executor, and the
+executor named in the sample is <code>skills/run-on-bq.md</code>, a
+markdown instruction sheet an agent follows. The deterministic half of
+the loop therefore verifies that the agent's own account of what it ran
+matches the canon; whether the account is true is not checked anywhere
+in this repository.</p>
+<p><strong>And the spec and its own tooling disagree three
+times.</strong> §3.1 reserves <code>index.md</code> and
+<code>log.md</code>; the index generator and the viewer reserve only
+<code>index.md</code> (<code>bundle/index.py:24</code>,
+<code>viewer/generator.py:31</code>), and the sample bundle's
+<code>log.md</code> carries <code>type: Log</code> frontmatter, so the
+shipped <code>acme_retail/viz.html</code> renders a <code>log</code>
+node with an <em>unverified</em> badge. §6.1 recommends the absolute
+<code>/</code>-prefixed link form as <em>"stable when documents are
+moved"</em>; the viewer's edge extractor skips exactly that form
+(<code>generator.py:88</code>), and the reference prompt forbids it —
+<em>"Never start a link with <code>/</code> (that breaks GitHub
+rendering)"</em>. The sample policies use eight absolute links in their
+<em>Cited by</em> sections and the committed visualization has no edge
+from either policy. The spec is minimal on purpose; its minimalism is
+what leaves those three readings open.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A concept becomes knowledge by being written, and becomes
+<em>trusted</em> knowledge by a separate act. <code>generated</code>
+names the writer — <code>reference_agent/&lt;model&gt;</code>,
+<code>human:&lt;id&gt;</code> or <code>process:&lt;id&gt;</code> — and
+<code>verified</code> accumulates confirmations. The tier is a pure
+function of the verifiers' prefixes: no <code>verified</code> key is
+<em>unverified</em>; verifiers without a <code>human:</code> prefix are
+<em>machine-confirmed</em>; any <code>human:</code> verifier is
+<em>human-reviewed</em>. Freshness is a second, independent function:
+<code>now &gt;= stale_after</code> is <em>stale</em>. Lifecycle is a
+third: <code>status</code>. The three never combine, and nothing
+consumes them together.</p>
+<p>Provenance is a list of sources with signals rather than a verdict,
+and attribution is a footnote whose label is a <code>sources[].id</code>
+— keyed, the spec says, because <em>"agents constantly rewrite these
+documents: a positional index misattributes silently the moment the list
+is reordered."</em> That sentence is the design's clearest statement of
+its threat model: the writer is a model, the document will be rewritten,
+and every field has to survive that.</p>
+<p>A concept stops being current by <code>status: deprecated</code> on
+its own file, kept <em>"for links and history"</em>, with a successor
+linked from the body. The sample shows the pattern:
+<code>metrics/gross-margin-legacy.md</code> is retired, names its
+replacement, keeps the old formula <em>"for reproducibility only"</em>,
+and records that its sanctioned SQL was deleted so <em>"anyone
+re-running historical reports must reconstruct the SQL from this
+narrative and clearly label the result as legacy."</em> The successor
+carries a <code>not:</code> block — the rejected definition, why it was
+wrong, what to use instead — which is the shape of a rejected-value
+record and appears nowhere in the spec or the code.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three independent derivations from frontmatter, every one of which ends at a badge — nothing in the tree filters a deprecated, unverified or stale concept out of a listing, a graph or a read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three independent derivations from frontmatter, every one of which ends at a badge — nothing in the tree filters a deprecated, unverified or stale concept out of a listing, a graph or a read
+flowchart TD
+    W[&quot;write_concept_doc&lt;br/&gt;full replacement, stamps generated&quot;] --&gt; D[&quot;concept.md&lt;br/&gt;frontmatter + body&quot;]
+    H[&quot;a person edits frontmatter&lt;br/&gt;verified: [{by: human:id, at}]&quot;] --&gt; D
+    D --&gt; T{&quot;verified?&quot;}
+    T --&gt;|&quot;no key&quot;| U[&quot;unverified&quot;]
+    T --&gt;|&quot;process: only&quot;| M[&quot;machine-confirmed&quot;]
+    T --&gt;|&quot;any human:&quot;| R[&quot;human-reviewed&quot;]
+    D --&gt; S{&quot;now &gt;= stale_after?&quot;}
+    S --&gt;|yes| ST[&quot;stale&quot;]
+    S --&gt;|no| F[&quot;fresh&quot;]
+    D --&gt; L[&quot;status: draft | stable | deprecated&quot;]
+    U --&gt; B[&quot;viewer badge&quot;]
+    M --&gt; B
+    R --&gt; B
+    ST --&gt; B
+    F --&gt; B
+    L --&gt; B
+    D --&gt; I[&quot;index.md listing&quot;]
+    D --&gt; G[&quot;graph node and edges&quot;]
+    B -.-&gt;|&quot;no filter, no rank,&lt;br/&gt;no refusal&quot;| G
+    W -.-&gt;|&quot;verified copied through,&lt;br/&gt;never compared to generated.at&quot;| R
+
+    style B fill:#f4e2bd,stroke:#b8860b
+    style R fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The dotted edges are the finding. Every derivation terminates at a
+display, and the one path that could move a document <em>down</em> a
+tier — regeneration — does not.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>The format.</strong> A bundle is a directory tree; every
+non-reserved <code>.md</code> file is a concept whose id is its path
+without the suffix. Conformance (§11) is three rules: parseable
+frontmatter, a non-empty <code>type</code>, reserved files shaped as
+specified. Everything else is soft, and the spec lists what a consumer
+may not reject for — unknown types, unknown keys, broken links, missing
+indexes — which is a real design choice about agent-written corpora: a
+link to a concept that does not exist yet <em>"may simply represent
+not-yet-written knowledge."</em> Versioning is
+<code>&lt;major&gt;.&lt;minor&gt;</code> with an optional
+<code>okf_version</code> in the root index; §13 lists the v0.1 to v0.2
+changes, two of them breaking (<code>timestamp</code> became
+<code>generated.at</code>; the body <code># Citations</code> list became
+<code>sources</code>).</p>
+<p><strong>The producer.</strong> <code>reference_agent</code> is two
+Google ADK agents behind one CLI. The BQ pass
+(<code>agent.py:41-53</code>) runs once per concept the source
+advertises — a <code>BigQuery Dataset</code> and one
+<code>BigQuery Table</code> per table, with date-sharded families
+collapsed to one concept (<code>sources/bigquery.py:89-115</code>) —
+with five tools: list concepts, read raw metadata, sample rows, read the
+existing doc, write the doc. The web pass (<code>agent.py:56-68</code>)
+is <em>"the LLM as its own crawler"</em>: seed URLs, a
+<code>fetch_url</code> tool that enforces host, path-prefix,
+denied-substring, hop-depth and page-budget limits inside the tool
+(<code>tools/web_tools.py:24-115</code>), and the same write tool.
+Sessions are <code>InMemorySessionService</code>
+(<code>runner.py:208</code>) and are created fresh per concept
+(<code>:225-234</code>), so nothing the agent learns enriching one table
+reaches the next except through the bundle on disk. After both passes,
+<code>regenerate_indexes</code> rewrites every <code>index.md</code>
+bottom-up and asks Gemini for a one-sentence description of each
+directory, falling back to a titles list
+(<code>bundle/index.py:63-117</code>,
+<code>bundle/synthesizer.py</code>).</p>
+<p><strong>The consumer.</strong> <code>visualize</code> walks the
+bundle, parses every concept, derives the v0.2 signals, extracts
+relative links as directed edges and writes one HTML file embedding the
+graph as JSON with Cytoscape and marked loaded from a CDN. The README
+calls it <em>"a proof-of-concept consumer"</em>, and it is the only one
+in the tree. The catalog connector
+(<code>connectors/gcp-knowledge-catalog.md</code>) documents a round
+trip through Dataplex with a CLI from a sibling repository; it carries
+seven frontmatter keys, drops everything but <code>.md</code>, stores
+cross-links verbatim so they <em>"resolve to nothing"</em>, and states
+that renames orphan catalog state and <em>"there is no merge
+story."</em></p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A Python 3.11+ package with five dependencies, no lockfile, and two
+external services — BigQuery for metadata and row samples, Gemini
+through AI Studio or Vertex AI for the agents and the index synthesizer.
+The README notes the caller's project is billed for query bytes. Nothing
+runs as a service: enrich is a batch command, visualize is a batch
+command, and the bundle is the only state. That is the cheapest possible
+operational footprint for a memory layer, and the cost is on the other
+side: nothing watches the bundle, so a <code>stale_after</code> that
+passes is noticed by whoever next opens the viewer.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Document model:</strong>
+<code>src/reference_agent/bundle/document.py</code> —
+<code>OKFDocument</code> parse and serialize with a loader that keeps
+timestamps as text (<code>:29-43</code>),
+<code>normalize_verified</code> (<code>:97</code>),
+<code>trust_tier</code> (<code>:113</code>), <code>is_stale</code>
+(<code>:130</code>).</li>
+<li><strong>Write path:</strong>
+<code>src/reference_agent/tools/bundle_tools.py</code> —
+<code>write_concept_doc</code> (<code>:104-201</code>):
+<code>generated</code> stamped (<code>:131-136</code>), validation, the
+web-pass augmentation guard (<code>:157-198</code>), full-file
+replacement (<code>:200-201</code>).</li>
+<li><strong>Crawl guard:</strong>
+<code>src/reference_agent/tools/web_tools.py</code> —
+<code>fetch_url</code> (<code>:24-115</code>), every rejection a
+returned <code>error</code> rather than an exception;
+<code>tools/context.py</code> — <code>WebState</code> with visited set,
+depth map and budget.</li>
+<li><strong>Fetching:</strong>
+<code>src/reference_agent/web/fetcher.py</code> — HTML to markdown via
+<code>markdownify</code>, truncated at 40 KB (<code>:25</code>); the
+user agent names a personal repository rather than this one
+(<code>:24</code>).</li>
+<li><strong>Source:</strong>
+<code>src/reference_agent/sources/bigquery.py</code> — shard-family
+detection, schema with nested records, partitioning, clustering, row
+samples.</li>
+<li><strong>Index and description synthesis:</strong>
+<code>src/reference_agent/bundle/index.py</code>,
+<code>synthesizer.py</code>.</li>
+<li><strong>Viewer:</strong>
+<code>src/reference_agent/viewer/generator.py</code> —
+<code>_walk_concepts</code> (<code>:103-142</code>),
+<code>_extract_links</code> (<code>:82-99</code>), the graph payload;
+<code>static/viz.js</code> — badges (<code>:211-223</code>).</li>
+<li><strong>Attestation contract:</strong> <code>SPEC.md</code> §10; the
+only attester,
+<code>bundles/acme_retail/attesters/sql_equality.py</code>
+(<code>attest</code> at <code>:68</code>); the only executor,
+<code>bundles/acme_retail/skills/run-on-bq.md</code>, a markdown
+skill.</li>
+<li><strong>Specification:</strong> <code>SPEC.md</code> — §3.1 reserved
+filenames, §5 the five families, §5.3 tiers, §5.5
+<code>stale_after</code>, §6.1 link forms, §9 log files, §10 attested
+computations, §12 <em>Considered and deferred</em>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A concept's frontmatter is a YAML mapping with one required key,
+<code>type</code>, four recommended keys (<code>title</code>,
+<code>description</code>, <code>resource</code>, <code>tags</code>), and
+the families:</p>
+<ul>
+<li><code>sources</code>: entries of <code>resource</code> (required — a
+URL, a bundle path, or a <em>scope descriptor</em> such as <em>"all
+queries in BigQuery project X"</em>), <code>id</code>,
+<code>title</code>, <code>author</code>, <code>usage_count</code>,
+<code>last_modified</code>; a sibling <code>usage_window</code> frames
+the counts. Lineage is <em>"expressed through links, not a dedicated
+field"</em>: a source that is another concept is an edge, and a consumer
+<em>may</em> recurse into that concept's own sources.</li>
+<li><code>generated: {by, at}</code> — who produced the current content
+and when.</li>
+<li><code>verified: [{by, at}, …]</code> — who confirmed it; a bare
+mapping is a one-element list.</li>
+<li><code>status</code>: <code>draft | stable | deprecated</code>,
+absent meaning <code>stable</code>.</li>
+<li><code>stale_after</code>: an ISO 8601 instant with an explicit
+offset; <code>is_stale</code> returns false for a date-only value on
+purpose, because <em>"a date-only <code>2026-12-31</code> names a
+different instant in every timezone, so it is ignored rather than
+guessed at."</em></li>
+<li>For <code>type: Attested Computation</code>: <code>runtime</code>,
+<code>parameters</code> of <code>{name, type, required}</code>, an
+optional <code>computation</code> file path, <code>executor</code> with
+a <code>resource</code> and a <code>receipt</code> field list,
+<code>attester</code> with a <code>resource</code>.</li>
+</ul>
+<p><strong>Two clocks, one axis.</strong> <code>generated.at</code> is
+record time. <code>stale_after</code> is the instant after which the
+content should no longer be served, and
+<code>sources[].last_modified</code> is when a source changed. There is
+no <code>valid_from</code>, no interval, and no as-of read: a consumer
+can ask <em>is this stale now</em> and cannot ask <em>what did this
+bundle say in June</em>. The spec's <code>stale_after</code> is a
+freshness deadline, chosen absolute so the test is a comparison, and
+that is what it is.</p>
+<p><strong>The body is where the knowledge is, and the spec keeps it
+free.</strong> Three headings have conventional meaning —
+<code># Schema</code>, <code># Examples</code>,
+<code># Computation</code> — and the reference prompt adds
+<code># Common query patterns</code>, <code># Metrics</code>,
+<code># Joins</code> and <code># Dimensions</code> for the bundles it
+writes. The sample's metric documents show the spec's intent for
+correction: the retired definition stays as its own file with
+<code>status: deprecated</code>, the current one links back to it, and
+the policy that authorised the change links forward to both. The
+<code>not:</code> block on <code>metrics/gross-margin.md:11-14</code> —
+<code>term</code>, <code>why</code>, <code>instead</code> — is a
+producer extension the spec permits (§4.1 <em>"Producers MAY include any
+additional keys"</em>) and no consumer reads.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The format prescribes no retrieval. Its answer to <em>how does an
+agent find things</em> is <code>index.md</code>: every directory may
+carry a listing of its children with descriptions, so <em>"a human or
+agent see what is available before opening individual documents"</em> —
+progressive disclosure, one level at a time, instead of loading the
+bundle. The reference agent regenerates those listings from frontmatter
+after every run and groups entries by <code>type</code>. Links are the
+graph: <em>"a link from concept A to concept B asserts a
+relationship"</em> of a kind conveyed by the surrounding prose, and a
+consumer that wants a graph <em>"treats all links as directed edges of
+an untyped relationship."</em></p>
+<p>The viewer is that consumer. Its search box matches title, concept id
+and tags; its edges come from <code>_extract_links</code>, which
+resolves relative targets against the document's directory and skips any
+target containing <code>://</code> or beginning with <code>/</code>
+(<code>generator.py:88</code>). The spec's recommended link form is the
+one skipped. In the committed <code>acme_retail/viz.html</code> the two
+policy documents, whose <em>Cited by</em> sections carry eight absolute
+links, have no outgoing edge, while the metrics, which link relatively,
+do.</p>
+<p>Nothing on any read path consults <code>status</code>, the tier or
+the staleness flag. The index lists a deprecated concept beside the
+current one — the sample's hand-written <code>metrics/index.md</code>
+does so deliberately, labelling it <em>legacy</em> — and the graph draws
+it with a badge. A consumer that wants to exclude stale or deprecated
+material writes that itself, which the spec's informative §10.5 step 6
+asks of it: <em>"warn or refuse when
+<code>now &gt;= stale_after</code>."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>A write is a whole file.</strong>
+<code>write_concept_doc</code> takes a concept id, a frontmatter mapping
+and a body, fills <code>generated.by</code> with
+<code>reference_agent/&lt;model&gt;</code> and <code>generated.at</code>
+with now unless the caller supplied them, reorders keys into a preferred
+order, validates that <code>type</code> is present, and overwrites the
+file (<code>bundle_tools.py:104-201</code>). It is synchronous; the
+document is on disk and readable by the next
+<code>read_existing_doc</code> before the tool returns. There is no
+patch, no merge and no lock: the prompt tells the agent that
+<em>"<code>write_concept_doc</code> does a full replacement, not a patch
+— the <code>frontmatter</code> argument must include every key the
+existing doc had"</em>, and that dropping a key drops it.</p>
+<p><strong>One guard, on one pass, for one type.</strong> During the web
+pass, and only then, a write to an existing <code>BigQuery Table</code>
+document is refused if its <code># Schema</code> section names fewer
+fields than the file on disk or its <code>sources</code> list is shorter
+(<code>:157-198</code>). The error is a teaching error — it names the
+missing fields and tells the agent to re-read and retry — and the prompt
+makes retry mandatory: <em>"A rejected write did not happen — fix it and
+retry, do not give up."</em> Both directions are tested, and so is the
+deliberate hole: the BQ pass may shrink a schema, because the table may
+have lost a column
+(<code>test_bq_pass_can_shrink_schema_when_no_web_state</code>). Outside
+that guard, an agent may replace a human-verified body wholesale, and
+the only thing that records the replacement is
+<code>generated.at</code>.</p>
+<p><strong>Provenance is prompt-enforced.</strong> The instruction is
+<em>"Record in <code>sources</code> only URLs you actually fetched … Do
+not invent URLs"</em>; the guard checks the list's length, not its
+contents, and the crawl tool's visited set is not consulted at write
+time. A fabricated source survives the write.</p>
+<p><strong>The crawl is tool-enforced, and that part holds.</strong>
+<code>fetch_url</code> rejects a scheme other than http or https, a host
+outside the allowed set, a path outside the prefixes or matching a
+denied substring, a URL already fetched, a spent budget, a depth past
+the cap, and — the interesting one — any URL that no fetched page
+returned as a link, so an agent cannot type an address into the crawl
+(<code>web_tools.py:80-86</code>, <em>"the agent invented a URL not
+surfaced via a parent page"</em>). Five tests cover it. A page is
+truncated to 40 KB of markdown before the model sees it.</p>
+<p><strong>Deletion is not a verb.</strong> The spec has
+<code>deprecated</code>; the tools have no delete; the sample retires by
+editing and records the retirement in <code>log.md</code>. The log is
+prose a person writes — the spec's format is date headings over bullets
+whose leading bold word is <em>"a convention, not a requirement"</em> —
+and nothing in the code appends to it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The producer side is two ADK agents with function tools and markdown
+instructions of 107 and 270 lines. The prompts carry the design's real
+rules: one write per invocation; refine an existing document rather than
+rewrite it; relative links only; four gates before minting a
+<code>references/</code> concept from a web page (referenceable by name,
+not bundle-level meta, passes a citation test, passes a reuse test) and
+a rule that metrics and joins bypass the gates because they <em>"are
+inherently concept-shaped"</em>; and a closing check that no minted
+reference is orphaned. That last rule is the format's linking convention
+turned into an agent obligation, and it is the reason the generated
+bundles have <code># Metrics</code> and <code># Joins</code> sections
+pointing at <code>references/</code>.</p>
+<p>The consumer side is whatever reads markdown. The README's list is
+honest about that — Obsidian, MkDocs, an LLM loading files into context,
+a search index — and the repository ships one, the viewer. There is no
+MCP server, no retrieval tool and no agent that <em>reads</em> a bundle
+to answer a question; the agent that exists writes them. What an
+assistant may do with a bundle is therefore unconstrained by this
+repository, and the trust and staleness signals reach it only if it
+parses frontmatter itself.</p>
+<p>The attestation loop is specified as an agent contract — <em>"The
+agent MAY only supply values for the declared <code>parameters</code>;
+it MUST NOT author or edit the computation"</em> — and the sample's
+executor is a skill document telling an agent to bind parameters as
+named query parameters, never string-interpolate, label the job with the
+concept path, and return a receipt with <code>job_id</code>,
+<code>executed_sql</code> and <code>result</code>. Whether the agent did
+those things is what the attester checks from the receipt the same agent
+returns.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>trust_state</code> — withheld, on the clause that
+matters.</strong> The format has the states the mark asks for:
+<code>status</code> is <code>draft | stable | deprecated</code>, and the
+tier derived from <code>verified</code> is
+<code>unverified | machine-confirmed | human-reviewed</code>, computed
+by <code>trust_tier()</code> and asserted by
+<code>test_trust_tier</code>. What it lacks is any read that acts on
+them. The spec calls the tiers <em>"advisory signals, not access
+control"</em>; the one consumer in the tree renders a badge; the index
+generator and the graph walker list every concept regardless. A state
+that answers <em>may this be acted on</em> and is never used to withhold
+anything is the shape of the mark without its function. The nearest
+thing to a gate is a sentence in the informative §10.5.</p>
+<p><strong><code>bitemporal</code> — withheld.</strong>
+<code>generated.at</code> is record time and <code>stale_after</code> is
+a validity end; there is no start, no interval and no as-of read, and
+<code>is_stale</code> is the only computation over the pair. A freshness
+deadline is not a second axis.</p>
+<p><strong><code>audit_log</code> — withheld.</strong>
+<code>log.md</code> is a hand-written prose history with no producer in
+the code; git is the recommended distribution and carries the diffs,
+which the README counts as the point — <em>"knowledge curation becomes a
+normal software-engineering activity"</em> — and which is a different
+mechanism.</p>
+<p><strong><code>human_review</code> — withheld, and the near-miss is
+the spec's own model.</strong> A <code>human:</code> verifier is a
+recorded act of review and it moves the tier; the surface for performing
+it is a text editor and a pull request, neither of which is in this
+repository. The viewer displays and does not approve.</p>
+<p><strong><code>tombstone</code> — withheld.</strong> The
+<code>not:</code> block on the sample's gross-margin metric holds a
+rejected definition, why it was wrong and the replacement — the record
+the mark asks for — as an undocumented extension key that no code reads
+and no spec section names. <code>status: deprecated</code> is
+supersession.</p>
+<p><strong><code>scope_enforced</code>, <code>negative_eval</code> — not
+found.</strong> No scope key exists, and the tests assert write
+refusals, not retrieval exclusions.</p>
+<p>Other observations:</p>
+<ul>
+<li><strong>The tier cannot go down.</strong> Nothing in the tree
+removes or invalidates a <code>verified</code> entry: the agent copies
+frontmatter through, the tool refreshes only <code>generated</code>, and
+the consumer never compares the two timestamps. The spec's §5.2 states
+the independence; the consequence is that a regenerated document keeps a
+human's signature on content the human did not read.</li>
+<li><strong>The attester verifies the agent's account, not the
+run.</strong> <code>attest()</code> compares canonicalised SQL and the
+first result cell against a receipt dictionary and returns the
+<code>job_id</code> it was handed. §10.5's <em>"re-read by job id"</em>
+is not implemented, and the header rules out the network call that would
+implement it. The check is real and useful — a rewritten query, a
+swapped table or a dropped join fails it — against an honest
+executor.</li>
+<li><strong>Reserved filenames are reserved in the spec and not in the
+code.</strong> Both walkers skip only <code>index.md</code>; a
+<code>log.md</code> with frontmatter is a concept to them, and the
+shipped sample visualization proves it with a <code>log</code>
+node.</li>
+<li><strong>The recommended link form is the one the tools
+drop.</strong> §6.1 recommends <code>/</code>-prefixed paths;
+<code>_extract_links</code> skips them; the reference prompt forbids
+them for GitHub rendering. A bundle written to the spec loses its edges
+in the spec's own viewer.</li>
+<li><strong>Credibility signals are stored and not computed on.</strong>
+<code>usage_count</code>, <code>author</code> and
+<code>last_modified</code> are read into the viewer's source list and
+displayed. The spec's position that a score is unportable is a good one;
+it also means the format ships the inputs to a trust judgement and no
+worked example of making one.</li>
+<li><strong>The crawl cannot be steered off its seeds by the
+model</strong>, which is the right place for that limit — in the tool,
+with the model told it is there.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Seven test files, 39 test functions, 1,037 lines, run with pytest and
+no network: BigQuery is a fake client, fetching is monkeypatched. What
+they cover is the mechanism this report credits: frontmatter round-trip
+with timestamps kept as text, <code>type</code> required, the
+bare-mapping <code>verified</code> form, the tier derivation for all
+three tiers, <code>is_stale</code> including the date-only and
+offset-less refusals, both augmentation refusals and the deliberate
+BQ-pass exemption, every crawl rejection, the index grouping and
+description reuse, and the viewer payload carrying status, tier,
+staleness, verified events and sources
+(<code>test_v02_signals_appear_in_graph_payload</code>).</p>
+<p>What is not tested: <code>sql_equality.py</code> has no test and no
+caller in the package; <code>log.md</code> handling has no test in
+either walker; and there is no test that a deprecated, stale or
+unverified concept is treated differently by any reader, because no
+reader treats it differently.</p>
+<p>No benchmark, no evaluation and no paper. The four bundles are the
+evidence of what the producer does: three generated from public BigQuery
+datasets with recipes (<code>samples/&lt;name&gt;/README.md</code> with
+the seed URLs and the exact command), and one hand-authored to exercise
+every v0.2 family. The recipes make the generated bundles reproducible
+in kind, not in content — the model is <code>gemini-flash-latest</code>,
+unpinned.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate <code>generated</code> from
+<code>verified</code>.</strong> Who wrote a memory and who confirmed it
+are different facts with different timestamps, and one field cannot hold
+both. Most systems in this atlas that record trust record it as one
+number on the row.</li>
+<li><strong>Store credibility signals, not a credibility score.</strong>
+<code>author</code>, <code>usage_count</code> over a stated window,
+<code>last_modified</code> — objective, portable and comparable over
+time. The score is the consumer's to compute.</li>
+<li><strong>Key attributions to a stable id, not a position.</strong>
+Footnotes joined to <code>sources[].id</code> survive the reordering
+that model rewrites cause.</li>
+<li><strong>Make staleness an absolute instant.</strong>
+<code>now &gt;= stale_after</code> needs nothing about when the row was
+read, and a date without an offset is refused rather than guessed.</li>
+<li><strong>Put a computation in the memory and check the run against
+it.</strong> The attested-computation contract — parameters the agent
+may fill, a body it may not edit, a canonicalised-SQL equality — turns
+<em>did it run the sanctioned thing</em> into a comparison. Then close
+the loop the sample leaves open: re-read the result by job id.</li>
+<li><strong>Refuse a rewrite that loses information, with a teaching
+error.</strong> The schema and sources guard names what went missing and
+tells the agent how to retry.</li>
+<li><strong>Put crawl limits in the tool.</strong> Host, path, depth,
+budget and <em>only URLs a fetched page returned</em> are enforced where
+the model cannot argue.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Trust states that nothing reads.</strong> Three derivations
+that all end at a badge are a display, not a trust model. Decide what a
+consumer refuses, warns on or ranks down, and ship one that does
+it.</li>
+<li><strong>A verification that survives regeneration.</strong> If a
+write can replace the body, it has to clear or date-check
+<code>verified</code>, or the human-reviewed tier means
+<em>once</em>.</li>
+<li><strong>A deterministic attester over an agent-assembled
+receipt.</strong> The comparison is only as honest as the executor;
+without re-reading the run from the system that executed it, the check
+certifies the agent's story.</li>
+<li><strong>A spec whose reference tools implement a different
+spec.</strong> Reserved filenames and link forms are both places where
+the code and the sample contradict the document they exist to
+demonstrate.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants <strong>catalog knowledge in
+git</strong> — table descriptions, metric definitions, policies —
+written by an agent from metadata and reviewed by people in pull
+requests, and consumed by any tool that reads markdown. The format is
+genuinely small: a producer needs YAML frontmatter and a directory, and
+a consumer needs a markdown parser. The Dataplex connector shows the
+intended enterprise path and is honest that it carries seven keys and no
+merge.</p>
+<p>It is not a memory system for an agent to write into at runtime.
+There is no retrieval, no scope, no runtime, and every trust signal is a
+suggestion to a consumer this repository does not ship. A team adopting
+it inherits the job the spec declines — deciding what a stale,
+deprecated or unverified concept is not allowed to do — and the design's
+value depends entirely on doing it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What does a consumer do with the tier?</strong> §10.5 is
+informative and the only consumer renders it. Whether Google's own
+consumers — the Knowledge Catalog side of the connector, or an agent
+reading bundles — filter or rank on it is not observable from this
+tree.</li>
+<li><strong>Will <code>verified</code> be invalidated by
+regeneration?</strong> The spec states the independence; nothing states
+the policy for a human-reviewed document an agent rewrites.</li>
+<li><strong>Where does the receipt come from?</strong> §12 defers
+<em>"the full runtime protocol: receipt and verdict wire formats, and
+the attestation lifecycle around a run"</em>, and the sample executor is
+a skill an agent follows.</li>
+<li><strong>Which link form is canonical?</strong> The spec recommends
+absolute; the prompt and the viewer assume relative; the sample uses
+both.</li>
+<li><strong>Is <code>log.md</code> a concept?</strong> The spec says no;
+the sample and both walkers say yes.</li>
+<li><strong>Does the <code>not:</code> block become a spec
+family?</strong> It is the one place the sample records a rejected
+value, and it is invisible to everything else.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Specification</strong></p>
+<ul>
+<li><code>SPEC.md</code> — v0.2, 1,006 lines; §1 motivation, §3 bundle
+structure and reserved filenames, §5 provenance/trust/lifecycle
+families, §6 links, §7 actor convention, §8 index files, §9 log files,
+§10 attested computations, §11 conformance, §12 versioning and
+deferrals, §13 changes from v0.1, Appendix A worked example</li>
+<li><code>README.md</code>,
+<code>connectors/gcp-knowledge-catalog.md</code></li>
+</ul>
+<p><strong>Reference agent</strong></p>
+<ul>
+<li><code>src/reference_agent/agent.py</code>, <code>runner.py</code>,
+<code>cli.py</code> — the two ADK agents, the per-concept sessions, the
+CLI</li>
+<li><code>src/reference_agent/bundle/document.py</code>,
+<code>index.py</code>, <code>paths.py</code>,
+<code>synthesizer.py</code></li>
+<li><code>src/reference_agent/tools/bundle_tools.py</code>,
+<code>context.py</code>, <code>source_tools.py</code>,
+<code>web_tools.py</code>; <code>web/fetcher.py</code></li>
+<li><code>src/reference_agent/sources/base.py</code>,
+<code>bigquery.py</code></li>
+<li><code>src/reference_agent/prompts/reference_instruction.md</code>,
+<code>web_ingestion_instruction.md</code></li>
+</ul>
+<p><strong>Viewer</strong></p>
+<ul>
+<li><code>src/reference_agent/viewer/generator.py</code>,
+<code>static/viz.js</code>, <code>static/viz.css</code>,
+<code>templates/viz.html</code></li>
+</ul>
+<p><strong>Bundles</strong></p>
+<ul>
+<li><code>bundles/acme_retail/</code> — hand-authored, every v0.2
+family: <code>metrics/</code>, <code>computations/</code>,
+<code>policies/</code>, <code>attesters/sql_equality.py</code>,
+<code>skills/run-on-bq.md</code>, <code>tables/orders.md</code>,
+<code>log.md</code></li>
+<li><code>bundles/ga4/</code>, <code>bundles/stackoverflow/</code>,
+<code>bundles/crypto_bitcoin/</code> — agent-generated, with recipes
+under <code>samples/</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_document.py</code>,
+<code>test_bundle_tools.py</code>, <code>test_web_tools.py</code>,
+<code>test_web_fetcher.py</code>, <code>test_index.py</code>,
+<code>test_viewer.py</code>, <code>test_bigquery_source.py</code></li>
+</ul>
+<p><strong>Searches that ground the absence claims above</strong> (run
+at the pinned commit):</p>
+<ul>
+<li><code>rg -n 'trust_tier|is_stale|normalize_verified' src/ tests/</code>
+— definitions in <code>bundle/document.py</code>, reads in
+<code>viewer/generator.py:134-138</code> and the tests; no read in
+<code>index.py</code>, <code>bundle_tools.py</code> or the prompts.</li>
+<li><code>rg -n 'status|deprecated' src/reference_agent/bundle/index.py src/reference_agent/tools/</code>
+— no filter on lifecycle anywhere on a read path.</li>
+<li><code>rg -n 'log\.md|"Log"|reserved' src/</code> — empty; only
+<code>index.md</code> is reserved in code.</li>
+<li><code>rg -n '^\s*not:' SPEC.md src/</code> — empty; the key exists
+only in <code>bundles/acme_retail/metrics/gross-margin.md</code>.</li>
+<li><code>rg -n 'attest\(|sql_equality' src/ tests/</code> — empty; the
+attester has no caller and no test.</li>
+<li><code>grep -l '^verified:' bundles/{ga4,stackoverflow,crypto_bitcoin} -r</code>
+— zero of 44 generated documents.</li>
+<li><code>rg -n -i 'arxiv|bibtex|doi\.org' README.md SPEC.md</code> — no
+paper.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-05</strong> — <a
+href="https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f"><code class="commit-id" title="ad30107c31c06aec8a7d5636e0d1058118604e6f">ad30107c…</code></a>
+— first reading, six commits in, at the merge of the ISO-datetime pull
+request. Screened first: no auto-run surface, no build-time execution,
+one unpinned dependency surface (<code>pyproject.toml</code> with no
+lockfile), nothing inside the seven-day cooldown. Nothing was installed
+or run; the tests were read, not executed, and the committed
+<code>viz.html</code> payloads were parsed from the checked-in files. No
+capability mark: every trust, lifecycle and freshness state the spec
+defines is derived and displayed by the one consumer in the tree and
+enforced by nothing. The recorded findings are the regeneration path
+that keeps a human-reviewed tier, the attester that checks an
+agent-assembled receipt, and three places the sample and the tools
+contradict the spec they demonstrate.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

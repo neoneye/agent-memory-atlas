@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 357 reports.**
+**This page covers all 358 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3191,3 +3191,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 34,897 lines of Python outside tests and 594 test functions across 69 files run on Python 3.10 and 3.12 in CI with no model key, 32 commits from two authors since 30 June 2026 with fourteen of them on 2 and 3 September. Four of seven capability marks. The per-agent scoping landed on 2 September 2026 and its seams show: the nightly fade is wired to `agent.memory` only, `VectorMemory.forget` and `MemoryManager.forget` have no caller, `memory_consolidate` is named in seven lists and registered nowhere, and `pyproject.toml` still describes *"a personal AI agent that is born, grows with you"* that the README says was removed.
 - Study when: you want a small, readable instance of correction-as-regression-test, a promotion gate with a written provenance line, or a scope carried as a context variable rather than an attribute.
 - Do not copy when: you need forgetting that reaches every store or a correction that reaches the agent it was given to. Fading and lesson expiry run on the platform's directory alone, `cleanup()` deletes lesson files older than 90 days by mtime with no archive, and in `auto` mode the promotion gate is pre-approved for every caller, the heartbeat included.
+
+### [`open-knowledge-format`](../systems/open-knowledge-format/)
+- Best idea: **`generated` and `verified` as separate frontmatter families** — who wrote a concept, and a list of who confirmed it and when, so a consumer derives a trust tier from the verifiers rather than trusting the writer's own stamp; and an attested-computation contract that keeps the sanctioned SQL in the memory and reduces *did the sanctioned thing run* to a canonicalised-text comparison.
+- Biggest risk: **every trust, lifecycle and freshness state is advisory and nothing enforces one.** The spec says the tiers are *"advisory signals, not access control"*; the one consumer in the tree renders badges; no read path filters a deprecated, unverified or stale concept, and a regeneration keeps a human-reviewed tier on text the human never saw because nothing compares `verified.at` to `generated.at`.
+- Most reusable component: the web pass's `fetch_url` tool, which enforces host, path, depth, budget and *only URLs a fetched page returned* inside the tool, with five tests — and the augmentation guard that refuses a rewrite whose schema or source list shrank, with a teaching error and both directions tested.
+- Maturity impression: Apache-2.0, six commits by one author between 14 and 21 August 2026, a 1,006-line specification at v0.2, 2,181 lines of Python under 1,037 lines of tests that run without a network, four committed bundles, and an attester with no caller and no test.
+- Study when: you are designing the frontmatter for an agent-written knowledge base and want the provenance, verification and staleness fields worked out — or you want the smallest statement of an attestation contract between a memory and the computation it sanctions.
+- Do not copy when: you need the store to refuse, rank or warn on its own trust state, or a runtime an agent reads from. Both are the consumer's job here, and this repository ships no consumer that does either.
