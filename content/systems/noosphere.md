@@ -6,13 +6,18 @@ root: ../..
 page_kind: system
 source_name: "sweetsophia/noosphere"
 source_url: https://github.com/sweetsophia/noosphere
-revision: 8bb93ee67d46e661f47ab16a23d03c84a0bb08de
-revision_url: https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de
-analyzed_at: 2026-08-09
+revision: feb04e0d07a48ae988095bd9631307f6fcfd47bc
+revision_url: https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc
+analyzed_at: 2026-09-05
 capabilities: "tombstone, scope_enforced, human_review, audit_log"
+capability_evidence:
+  tombstone: "the capture write path | src/lib/memory/capture/repository.ts:244-254, src/lib/memory/capture/crypto.ts, src/lib/memory/capture/lifecycle.ts:398-412 | inside a serializable transaction, after the lineage rows are locked, `memoryTombstone.findFirst` is queried on `kind: CAPTURE` and the whole set of HMAC digests `digestWithAllKeys` computed under every retained key version, and a hit throws `MemoryCaptureError(\"Capture was previously revoked\", 409)`; the tombstone is upserted on `(lineageStateId, generation)` with the key version, a reason code and a ninety-day `expiresAt`, so the refusal survives key rotation and lapses by design after the TTL | src/__tests__/memory/capture-race-integration.test.ts asserts a capture racing a principal revocation fails once the revocation wins serialization, that no capture row exists and that exactly one PRINCIPAL tombstone does; no committed case asserts the 409 on a plain re-capture of a revoked value"
+  scope_enforced: "every candidate, capture and admin read | prisma/schema.prisma:231,:339-360, src/lib/memory/capture/admin-list.ts:35-45 | `privateScopeTag` sits on the principal and on every derived row and leads the composite index `(agentPrincipalId, privateScopeTag, status, expiresAt)`; `RestrictedScope` is a table with its own revocation reason; the admin lists resolve an API key's `allowedScopes` into the exact private scopes it may inspect and an empty list authorises no rows | src/__tests__/memory/capture-race-integration.test.ts `scope deletion cannot be undone by a queued unbound key create` and `…queued key scope update`"
+  human_review: "revocations that touch an article | src/lib/memory/capture/lifecycle.ts:378-396, prisma/schema.prisma:560, src/app/api/memory/privacy-reviews/route.ts | every revocation upserts a `MemoryPrivacyReview` row with `status: OPEN`, a reason code and `resolvedBy`/`resolvedAt`, unique on `(articleId, lineageStateId, generation)`, listed through an admin route that requires `Permissions.ADMIN` and filters by the key's allowed scopes; nothing forces resolution | src/__tests__/memory/capture-integration.test.ts"
+  audit_log: "revocation and cleanup, in the system's own tables | prisma/schema.prisma:507,:527, src/lib/memory/capture/lifecycle.ts:398-425 | `MemoryTombstone` is written by upsert on a unique `(lineageStateId, generation)` and carries `reasonCode`, `hmacKeyVersion` and `createdAt`, so each revocation of a lineage is its own row; `MemoryDurableJob` records every cleanup attempt under the idempotency key `memory-cleanup:{lineage}:{generation}`; no path updates or deletes either record outside TTL expiry | src/__tests__/memory/capture-race-integration.test.ts counts tombstone rows; src/__tests__/memory/backfill.test.ts covers the durable job"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A capture, promoted to a candidate, promoted to a wiki article with topics, revisions and scopes"
   storage: "Postgres through Prisma, with an optional hybrid embedding tier behind consent state"
@@ -20,19 +25,39 @@ matrix:
   write: "A serializable transaction that locks the lineage, refuses a revoked digest, then creates the capture"
   update_delete: "Revocation writes a tombstone keyed on an HMAC subject hash and enqueues a durable cleanup job"
   scoping: "privateScopeTag on the principal and on every row, plus a RestrictedScope table and restricted tags"
-  integration: "Plugins for OpenClaw, OpenCode, Kilo Code and Hermes, plus an injected-memory package and a web wiki"
+  integration: "Plugins for OpenClaw, OpenCode, Kilo Code and Hermes, a five-tool stdio MCP server installed into Codex, an injected-memory package, an installer that pins its backend script and Hermes bundle by SHA-256, and a web wiki"
   background: "Durable jobs with idempotency keys for cleanup, embedding and backfill, plus TTL expiry"
-  trust: "A candidate status ladder from ephemeral upward, with occurrence and retrieval counters driving promotion"
+  trust: "A candidate status enum — ephemeral, pending review, rejected, promoted, expired, quarantined — of which only quarantined has a writer, set by lineage revocation; the promotion review is an in-memory type nothing persists, and recall reads articles, never candidates"
   strengths: "The tombstone is checked across every retained HMAC key version, so rotating the key cannot resurrect a revocation"
-  risks: "The tombstone expires after ninety days by design, so the refusal is durable for a bounded window"
+  risks: "The tombstone expires after ninety days by design, so the refusal is durable for a bounded window; the candidate tier and its five usage counters are schema with one writer, so the promotion ladder the enum describes is not a mechanism the code runs"
 ---
 
 ## 1. Executive Summary
 
 Noosphere is a self-hosted knowledge and memory layer where the same data is an
 agent's memory and a human's browsable Markdown wiki — topics, revisions and
-scopes. Apache-2.0, roughly 68,000 lines of TypeScript on Next.js and Postgres
-through Prisma, with plugins for OpenClaw, OpenCode, Kilo Code and Hermes.
+scopes. Apache-2.0 at release 1.13.3; 55,367 lines of TypeScript under `src/` and
+76,788 of TypeScript and JavaScript across the repository with its six sibling
+packages, on Next.js and Postgres through Prisma, with plugins for OpenClaw,
+OpenCode, Kilo Code and Hermes and an MCP server for Codex.
+
+**What is not a mechanism is the candidate tier.** `MemoryCandidate`
+(`prisma/schema.prisma:323`) declares a status enum — `EPHEMERAL`,
+`PENDING_REVIEW`, `REJECTED`, `PROMOTED`, `EXPIRED`, `QUARANTINED` — and five
+usage counters. In `src/`, the table is read by the admin list route, set to
+`QUARANTINED` by lineage revocation (`lifecycle.ts:346`), deleted by
+maintenance when no source group survives (`maintenance.ts:276`), and created
+by nothing: `rg -n 'memoryCandidate\.create'` returns no line, and the one
+`INSERT INTO "MemoryCandidate"` in the repository is a Docker rehearsal
+fixture. `PROMOTED`, `PENDING_REVIEW`, `REJECTED` and `EXPIRED` have no writer;
+`retrievedCount`, `injectedCount`, `explicitGetCount` and
+`distinctSessionCount` are selected and never incremented — only
+`occurrenceCount` is, on a capture (`repository.ts:165`). The promotion module
+(`src/lib/memory/promotion.ts`) computes candidates over recall statistics
+with a `PromotionStatus` of `pending`, `approved` or `rejected` that no table
+holds. And recall reads `article` (`noosphere.ts:510`), never a candidate. The
+ladder from capture through candidate to article is therefore a schema and a
+design; what runs is capture, article, and revocation over both.
 
 **It carries a rejected-value tombstone of the *consulted* kind, and it is the
 most rigorous one in this atlas.**
@@ -87,11 +112,12 @@ Memory is promoted through three tiers, and only the last is the wiki.
 
 A **capture** is a raw exchange with `userText` and `assistantText`, an HMAC
 `dedupeKey`, `sourceSessionHash`, `sourceRunHash`, `restrictedTags` and a TTL. A
-**candidate** is a distilled memory with a title, content, a recall summary,
-search terms, a confidence and a status starting at `EPHEMERAL`, carrying
-`occurrenceCount`, `retrievedCount`, `injectedCount`, `explicitGetCount`,
-`relevanceSum` and `distinctSessionCount`. An **article** is the wiki page a
-person reads.
+**candidate** is, in the schema, a distilled memory with a title, content, a
+recall summary, search terms, a confidence and a status starting at
+`EPHEMERAL`, carrying `occurrenceCount`, `retrievedCount`, `injectedCount`,
+`explicitGetCount`, `relevanceSum` and `distinctSessionCount` — and in the
+code a row nothing creates or promotes, as section 1 sets out. An **article**
+is the wiki page a person reads, and the thing recall returns.
 
 Alongside runs a lineage system: `MemoryLineageState` per subject kind
 (capture, session, scope, principal), `MemoryProvenanceEdge` linking them, and
@@ -107,8 +133,8 @@ flowchart TD
     RV --> TB{"tombstone matching ANY retained key version,<br/>not yet expired?"}
     TB -->|yes| E2["409 — capture was previously revoked"]
     TB -->|no| OK["capture created, TTL set"]
-    OK --> CAND["candidate, status EPHEMERAL, counters accumulate"]
-    CAND --> ART["article — the human-readable wiki page"]
+    OK -.->|"declared: no writer creates or promotes a candidate"| CAND["candidate, status EPHEMERAL"]
+    OK --> ART["article — the wiki page a person reads and recall returns"]
     REV["revocation: capture_deleted, principal_revoked,<br/>session_deleted, scope_deleted, consent_revoked, expired"] --> TS["tombstone: subjectHash, hmacKeyVersion,<br/>generation, reasonCode, expiresAt"]
     REV --> PR["privacy review row, status OPEN"]
     REV --> JOB["durable cleanup job, idempotency key"]
@@ -127,11 +153,20 @@ hybrid storage tier in separate schemas (`noosphere_hybrid`,
 cache epoch and — notably — an `embedding_consent` table. Embedding is treated
 as a consent-bearing operation rather than an implementation detail.
 
-Four editor plugins ship as sibling packages, plus an `noosphere-injected-memory`
-package and an OpenClaw install script.
+Four editor plugins ship as sibling packages, plus a `noosphere-injected-memory`
+package, a stdio MCP server (`noosphere-mcp/`, 43 files, with a Codex
+installer that writes only the `npx` launcher and approved variable names into
+Codex's config and never an API key), and `install.sh`, a guided installer that
+downloads a backend script and a Hermes bundle pinned by URL and SHA-256
+(`install.sh:5-8`), refuses symlinked credential and integration parents, and
+scrubs secrets from OpenClaw subprocesses.
 
-An operator needs Postgres and a Node runtime; Docker Compose files are
-provided.
+An operator needs Postgres, Docker and a Node runtime; Docker Compose files and
+the installer are provided. Hybrid retrieval is off unless
+`NOOSPHERE_HYBRID_RETRIEVAL_ENABLED` is exactly `true`
+(`src/lib/memory/hybrid-retrieval.ts:116-124`), and the documented local
+embedding path is a llama.cpp server behind
+`scripts/activate-hybrid-retrieval-stack.sh`.
 
 ## 4. Essential Implementation Paths
 
@@ -175,17 +210,20 @@ scan.
 `(articleId, lineageStateId, generation)` and indexed on `(status, createdAt)`.
 Every revocation that touches an article opens one.
 
-`MemoryCandidate` carries five separate usage counters —
+`MemoryCandidate` declares five separate usage counters —
 `occurrenceCount`, `retrievedCount`, `injectedCount`, `explicitGetCount` and
 `distinctSessionCount`. Separating *injected* from *explicitly fetched* is the
 same distinction [Token Savior](../token-savior/) draws with `was_visible`, and
-`distinctSessionCount` is the one that stops a single enthusiastic session
-promoting a memory on its own.
+`distinctSessionCount` is the one that would stop a single enthusiastic session
+promoting a memory on its own. Only `occurrenceCount` has a writer; the other
+four are read by the admin list and incremented by no path in `src/`.
 
 ## 6. Retrieval Mechanics
 
-Postgres full-text search with an optional embedding tier, gated by
-`restrictedTags` and `privateScopeTag`. `MemoryCandidate` is indexed on
+Postgres full-text search over articles (`noosphere.ts:510`, `tx.article.findMany`)
+with an optional embedding tier, gated by `restrictedTags` and `privateScopeTag`.
+The MCP `recall_memory` tool is bounded to the auto mode and its response is
+serialised on an isolated boundary after two fixes on 2 September 2026. `MemoryCandidate` is indexed on
 `(agentPrincipalId, privateScopeTag, status, expiresAt)` — the composite that
 says the read path always filters by principal *and* scope *and* status *and*
 liveness.
@@ -217,9 +255,15 @@ whether or not the job has run.
 
 ## 8. Agent Integration
 
-Four plugin packages (OpenClaw, OpenCode, Kilo Code, Hermes), an injected-memory
-package, an install script, and the web wiki. The agent and the human read the
-same store through different surfaces, which is the product.
+Four plugin packages (OpenClaw, OpenCode, Kilo Code, Hermes), a stdio MCP
+server with five tools — `search_articles`, `get_article`, `create_article`,
+`save_memory`, which files a draft for later review, and `recall_memory` — an
+injected-memory package, the checksum-pinned installer, and the web wiki. The
+agent and the human read the same store through different surfaces, which is
+the product. Between 30 August and 2 September 2026 the OpenClaw plugin's
+credentials were bound to a trusted origin with native redirects rejected, and
+`SecretRef` resolution was delegated to OpenClaw rather than performed in the
+plugin.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -249,21 +293,38 @@ revocations with reason codes and generations, and `MemoryDurableJob` records
 every cleanup attempt under an idempotency key. Between them a reader can
 reconstruct what was revoked, why, and whether the cleanup ran.
 
-**Trust state — withheld.** `MemoryCandidateStatus` starts at `EPHEMERAL` and
-promotes on usage; that is a lifecycle ladder, not an epistemic vocabulary.
+**Trust state — withheld, on a producer test.** `MemoryCandidateStatus` names
+`PENDING_REVIEW`, `REJECTED` and `QUARANTINED`, which is an epistemic
+vocabulary in shape; `QUARANTINED` is the one value with a writer and it is set
+by revocation, not by a judgement, and nothing creates the candidate row it
+would sit on. On captures the same status is a hard filter — `repository.ts:155`
+refuses a quarantined or expired lineage with a 409 and the capture route
+(`captures/[id]/route.ts:121`) hides them — which is revocation reaching the
+write path, which the tombstone paragraph above credits.
 
-**Bitemporal, negative eval — no** on what was inspected, though the integration
-tests around capture races come close in spirit.
+**Bitemporal — no**; every timestamp is record time. **Negative eval — no.** The
+race suite asserts a revoked principal's capture fails and leaves no row, which
+is a write-path refusal; the recall tests that assert an empty result
+(`api-recall.test.ts:236,:259`) cover a failing provider and a timeout, not
+material withheld. The admin routes answer an open question of the first
+reading: `authorizeMemoryAdminList` requires `Permissions.ADMIN` after a rate
+limit and narrows to the key's `allowedScopes`, so a privacy review is resolved
+by an admin key, not a named person.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper.** 84 test files, including `capture-integration.test.ts` and
-`capture-race-integration.test.ts` — the second of which exists because the
-tombstone check and the capture creation must be correct under concurrency, and
-it is the right test to have written.
+**No paper.** 87 files under `src/__tests__`, including
+`capture-integration.test.ts` and `capture-race-integration.test.ts` — the
+second of which exists because the tombstone check and the capture creation must
+be correct under concurrency, and it is the right test to have written. Its five
+cases hold a lock, race a revocation or a scope deletion against a capture, a
+key create or a recall hydration, and assert which side wins and what rows
+remain; what none of them asserts is the plain 409 on re-capturing a revoked
+value outside a race. Two files arrived since the previous pin, both security:
+`openclaw-secret-ref-boundary.test.ts` and `yaml-resource-limits.test.ts`.
 
 **I ran nothing.** The screen flagged `.github/copilot-instructions.md` as an
-auto-run surface and ten dependency manifests inside the seven-day cooldown.
+auto-run surface and twelve dependency manifests inside the seven-day cooldown.
 
 No retrieval benchmark is committed and none is claimed. For a system whose
 distinguishing work is revocation correctness rather than ranking, the tests
@@ -325,8 +386,9 @@ this atlas to "how do I make a deletion stick".
 - **What happens on day ninety-one?** The tombstone expires and the same content
   can be captured again. Whether that is reachable in practice depends on the
   source TTLs, and the interaction was not traced end to end.
-- **Who resolves a privacy review?** `resolvedBy` is a string; whether the admin
-  API requires an authenticated person was not established.
+- **Will the candidate tier get a writer?** The schema, the counters and the
+  promotion module are all there; a capture that becomes a candidate that
+  becomes an article is the design the wiki side implies, and no path runs it.
 - **Does the candidate promotion ladder consult the tombstone?** The capture
   path does; whether a candidate distilled before a revocation is cleaned up by
   the job or blocked at promotion was not traced.
@@ -360,11 +422,29 @@ vocabulary), the privacy-review and durable-job upserts `:385-425`
 
 **Integration** — `openclaw-noosphere-memory/`, `opencode-noosphere-memory/`,
 `kilocode-noosphere-memory/`, `hermes-noosphere-memory/`,
-`noosphere-injected-memory/`
+`noosphere-injected-memory/`, `noosphere-mcp/` (`src/server.ts` for the five
+tools), `install.sh`, `scripts/activate-hybrid-retrieval-stack.sh`
+
+**Candidates** — `prisma/schema.prisma:323` (`MemoryCandidate`),
+`src/lib/memory/promotion.ts` (the unpersisted review flow),
+`src/app/api/memory/candidates/route.ts` (the one reader)
+
+Searches behind the absence claims above, run from the repository root:
+
+```sh
+rg -n 'memoryCandidate\.(create|update|upsert|updateMany)' src   # lifecycle.ts:346 only
+rg -n 'INSERT INTO "MemoryCandidate"' . -g '!node_modules'          # docker rehearsal fixture only
+rg -n 'PROMOTED|PENDING_REVIEW|REJECTED' src/lib src/app -g '!__tests__'   # no producer
+rg -n 'retrievedCount|injectedCount|distinctSessionCount' src -g '!__tests__'   # selects only
+rg -n 'validFrom|validUntil|observedAt' prisma/schema.prisma        # none
+rg -n -i 'arxiv|bibtex|citation|doi' README.md docs                  # no paper
+```
 
 **Tests** — `src/__tests__/memory/capture-integration.test.ts`,
 `capture-race-integration.test.ts`
 
 ## History
+
+**2026-09-05** — [`feb04e0d07a48ae988095bd9631307f6fcfd47bc`](https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc) — re-pinned at release 1.13.3, 207 commits on, on top of [neoneye/agent-memory-atlas#21](https://github.com/neoneye/agent-memory-atlas/pull/21) from the repository's maintainer, whose reading is confirmed on every point it made: the capture tombstone, the keyring and the schema are byte-for-byte unchanged since the previous pin (`git diff --stat` over `src/lib/memory` and `prisma` is empty), the cited lines hold, the marks hold, and the new surface is the Codex MCP server and a checksum-pinned installer. Screened again: one auto-run surface (`.github/copilot-instructions.md`), no build-time execution, eight unpinned surfaces behind lockfiles, twelve manifests inside the seven-day cooldown. Nothing was installed or run. **One thing the first reading published was wrong, and it was wrong at that pin too:** the candidate tier. The body described a status ladder promoted by usage counters; in `src/` nothing creates a `MemoryCandidate`, nothing sets `PROMOTED`, `PENDING_REVIEW` or `REJECTED`, four of the five counters are never incremented, and recall reads articles. The mechanism is schema plus an unpersisted promotion module, and the report now says so; `trust_state` was withheld before and stays withheld, on a producer test rather than a vocabulary test. Also corrected: the previous size figure, and the open question on who resolves a privacy review, which the admin routes answer. The evidence block was written from the tree rather than taken from the pull request, whose records listed no covering tests.
 
 **2026-08-09** — [`8bb93ee67d46e661f47ab16a23d03c84a0bb08de`](https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de) — first reading. Screened before reading: one auto-run surface (`.github/copilot-instructions.md`), no build-time execution, ten dependency manifests inside the seven-day cooldown. The tree was read, never installed, and no test was run.
