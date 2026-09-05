@@ -300,7 +300,7 @@ by revocation, not by a judgement, and nothing creates the candidate row it
 would sit on. On captures the same status is a hard filter — `repository.ts:155`
 refuses a quarantined or expired lineage with a 409 and the capture route
 (`captures/[id]/route.ts:121`) hides them — which is revocation reaching the
-write path, already credited under the tombstone.
+write path, which the tombstone paragraph above credits.
 
 **Bitemporal — no**; every timestamp is record time. **Negative eval — no.** The
 race suite asserts a revoked principal's capture fails and leaves no row, which
