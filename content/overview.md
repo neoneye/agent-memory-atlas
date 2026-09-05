@@ -236,7 +236,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Three hundred and fifty-seven systems do not fall into one hundred and seventy categories. They cluster around
+Three hundred and fifty-eight systems do not fall into one hundred and seventy categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -6557,8 +6557,8 @@ Privacy/deletion:
 - [`agent-memory-doctrine`](../systems/agent-memory-doctrine/)
 - [`ods`](../systems/ods/)
 - [`neurakeep`](../systems/neurakeep/)
-
 - [`open-knowledge-format`](../systems/open-knowledge-format/)
+
 ### Repos Inspected
 
 - [mem0ai/mem0](https://github.com/mem0ai/mem0) at [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150)
