@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 362 reports.</strong></p>
+<p><strong>This page covers all 363 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -12685,6 +12685,48 @@ wrote down as the gate for adding search.</li>
 <li>Do not copy when: you need memory that ranks, expires, audits what
 its extractors wrote, or can be exported; the export here has never
 returned a row of it.</li>
+</ul>
+<h3 id="elai"><a href="../systems/elai/"><code>elai</code></a></h3>
+<ul>
+<li>Best idea: <strong>a compile-time allowlist deciding which roles may
+see a user's memory.</strong> <code>agent_role_gets_user_memory</code>
+and <code>consensus_role_gets_user_memory</code> are exhaustive matches
+with no wildcard arm — <code>Executor</code> and <code>Worker</code>
+receive facts, every auditor, critic, verifier, adversary and reflector
+receives none, and a new role variant fails the build until someone
+writes its arm. The retrieval site checks it before opening the store,
+and a denied role journals a <code>FirewallBlocked</code> event.</li>
+<li>Biggest risk: <strong>the crate is wired to almost nothing.</strong>
+The one path that writes a fact from a conversation,
+<code>/remember</code>, sits behind an experiment flag whose registered
+expiry is four days before the archive was created; the
+every-fourth-turn extractor returns a count and stores nothing; the
+safety-critical tier ceiling that the prompt-injection fixture defends
+is set <code>true</code> by no non-test code; the write quarantine, the
+raw-evidence escalation, the LLM extractor, the promotion gate, the
+decay scheduler and the two MemGPT tools each exist and reach no live
+call. The archive's own README says no claim has been revalidated.</li>
+<li>Most reusable component: the fact schema with its enforcement — a
+bi-temporal row with a non-empty evidence list refused at insert and
+again at read, per-type decay rates written as half-lives, a supersede
+that closes at the event time and links, and the contract tests that pin
+the schema version and the journal's action-type bijection — plus the
+staleness runner with its committed control arm.</li>
+<li>Maturity impression: an abandoned, unsupported research archive:
+MIT, 889 commits under one normalised author after a privacy rewrite
+that changed every hash and sanitised source bytes, 936,482 lines of
+Rust across twenty-four crates, a 10,933-line memory crate with 211
+inline and 71 integration and contract tests, and a postmortem that says
+the project grew into too much machinery. Four of seven capability
+marks. Every mechanism is cited to the paper it came from, and the seams
+between the papers and the product are where it stopped.</li>
+<li>Study when: you are designing a trust-tiered or bi-temporal fact
+store and want a complete, tested schema and dispatcher to read, or you
+want the cleanest statement of <em>who may see personal memory</em> in
+this corpus.</li>
+<li>Do not copy when: you need anything to run. Nobody maintains it, the
+flag that turns capture on has expired, and the forgetting is a soft
+close that the next same-key write overrides.</li>
 </ul>
         </article>
       </div>

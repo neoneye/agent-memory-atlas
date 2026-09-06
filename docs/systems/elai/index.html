@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An abandoned, privacy-filtered
+archive of a Rust agent harness whose memory crate is a bi-temporal
+SQLite fact table with per-type trust decay, a compile-time role
+firewall on injection, tier-driven and NLI-judged contradiction closure
+and a two-stage write guard — where the only writer of a fact on a live
+path is a person typing /remember behind a flag that expired before the
+archive was published, the automatic extractor counts candidates and
+never stores one, and the trust tiers that the tests defend filter
+nothing that any live query asks for.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ELAI — Agent Memory Atlas">
+    <meta property="og:description" content="An abandoned,
+privacy-filtered archive of a Rust agent harness whose memory crate is a
+bi-temporal SQLite fact table with per-type trust decay, a compile-time
+role firewall on injection, tier-driven and NLI-judged contradiction
+closure and a two-stage write guard — where the only writer of a fact on
+a live path is a person typing /remember behind a flag that expired
+before the archive was published, the automatic extractor counts
+candidates and never stores one, and the trust tiers that the tests
+defend filter nothing that any live query asks for.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ELAI — Agent Memory Atlas">
+    <meta name="twitter:description" content="An abandoned,
+privacy-filtered archive of a Rust agent harness whose memory crate is a
+bi-temporal SQLite fact table with per-type trust decay, a compile-time
+role firewall on injection, tier-driven and NLI-judged contradiction
+closure and a two-stage write guard — where the only writer of a fact on
+a live path is a person typing /remember behind a flag that expired
+before the archive was published, the automatic extractor counts
+candidates and never stores one, and the trust tiers that the tests
+defend filter nothing that any live query asks for.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ELAI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ELAI",
+      "description": "An abandoned, privacy-filtered archive of a Rust agent harness whose memory crate is a bi-temporal SQLite fact table with per-type trust decay, a compile-time role firewall on injection, tier-driven and NLI-judged contradiction closure and a two-stage write guard \u2014 where the only writer of a fact on a live path is a person typing /remember behind a flag that expired before the archive was published, the automatic extractor counts candidates and never stores one, and the trust tiers that the tests defend filter nothing that any live query asks for.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Wire-dark bi-temporal facts in an abandoned
+harness</p>
+          <h1>ELAI</h1>
+          <p class="document-deck">An abandoned, privacy-filtered
+archive of a Rust agent harness whose memory crate is a bi-temporal
+SQLite fact table with per-type trust decay, a compile-time role
+firewall on injection, tier-driven and NLI-judged contradiction closure
+and a two-stage write guard — where the only writer of a fact on a live
+path is a person typing /remember behind a flag that expired before the
+archive was published, the automatic extractor counts candidates and
+never stores one, and the trust tiers that the tests defend filter
+nothing that any live query asks for.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/DITlieD/ELAI-archive">
+              <span>Source</span>
+              <strong>DITlieD/ELAI-archive</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/DITlieD/ELAI-archive/commit/26bf2bc72d030a2d5ec022f04e1f9603bb285ae1" title="26bf2bc72d030a2d5ec022f04e1f9603bb285ae1">
+              <span>Analyzed revision</span>
+              <code>26bf2bc7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ELAI is an <strong>abandoned agent harness</strong> published as a
+research archive on 5 September 2026: a Rust workspace of twenty-four
+crates — orchestrator, reasoning engine, code-retrieval graph,
+sandboxing, a Svelte and Tauri dashboard, a REPL — beside a Python
+inference sidecar and a 659-entry plan catalogue. MIT, 889 commits
+between 5 April and 6 September 2026 under one normalised author,
+<em>ELAI contributors</em>, because the maintainer rewrote the history
+for privacy before publishing: identities and trailers removed, source
+bytes sanitised, every hash changed, 433 of 6,889 historical paths
+omitted. The README opens with a warning that this is not a working
+product and that no claim in it has been revalidated; the postmortem's
+lesson is <em>"build software you want to use that solves your problems,
+not all the problems you know about."</em> 2,221 Rust files and 936,482
+lines under <code>.elai_cc/crates</code>, the largest of them a
+25,612-line task runner and a 22,384-line journal payload enum.</p>
+<p>Its memory is <code>crates/memory</code>, 10,933 lines of Rust with
+1,148 lines of integration tests, written between 20 May and 12 August
+2026 as plan E-5 and extended by plans C-48, E-1, F-5, F-12, H-31, H-32,
+H-33, I-13, J-21, J-59 and J-93. The centre is one SQLite table,
+<code>memory_facts</code> (<code>store.rs:22-51</code>): a fact is a
+typed key–value pair with an extractor confidence, a
+<code>trust_score</code> that decays exponentially at a per-type rate, a
+bi-temporal
+<code>valid_from</code>/<code>valid_to</code>/<code>ingested_at</code>
+triple, a non-empty list of evidence pointers enforced at insert
+(<code>fact.rs:240-244</code>), a <code>superseded_by</code> link, a
+provenance tier T0–T3 and a last-validated stamp. Around it: a regex
+blocklist and credential skip-list that run before any write
+(<code>defense.rs</code>), an ADD/UPDATE/DELETE/NOOP dispatcher keyed on
+<code>(user, scope, type, key)</code>
+(<code>mem0_dispatcher.rs:151-222</code>), a tier-driven and NLI-judged
+contradiction pass, a staleness quarantine that broadcasts to the code
+graph, a citation validator that re-resolves a code-grounded fact's
+symbol before injection and excludes it when the index is missing, and a
+compile-time role firewall (<code>user_memory_firewall.rs:50-103</code>)
+under which only the executor and worker roles ever receive a fact — an
+auditor, critic or adversary gets none, and a new role variant fails the
+build until someone decides.</p>
+<p><strong>What reaches a prompt is narrower than the crate.</strong>
+Facts are written on exactly two live paths.
+<code>/remember &lt;text&gt;</code> and <code>elai remember</code>
+(<code>user_memory_capture.rs</code>) run the guards, build one
+<code>Preference</code> fact at trust 1.0 with T0 provenance, and call
+<code>dispatch_one</code> — its only production caller
+(<code>:274</code>) — but only when
+<code>ELAI_USER_MEMORY_ENABLE=1</code>, a flag registered as an
+experiment with an expiry of 1 September 2026
+(<code>wire-dark-allowlist.toml:163-168</code>), four days before the
+archive was created. <code>elai memory insert</code>
+(<code>memory_cmd.rs:255-326</code>) writes a T0 fact through the same
+guards with no flag at all. Everything else is declared and reaches
+nothing: the reflection that runs every fourth user turn extracts fact
+candidates and returns their count without storing one
+(<code>chat_memory_reflect.rs:129-132</code>); the LLM-backed extractor,
+the project-to-global promotion gate and the adjudication drawer were
+deferred on 23 May 2026 and never landed; the tokio decay scheduler has
+no caller; the safety-critical tier ceiling that the prompt-injection
+test defends is set by no code outside tests; the write quarantine is an
+in-memory vector nobody constructs; the raw-evidence tier is built empty
+on each read; and the two MemGPT tools are schema definitions registered
+nowhere.</p>
+<p>Four marks: <code>scope_enforced</code>, <code>bitemporal</code>,
+<code>audit_log</code>, <code>negative_eval</code>.
+<code>trust_state</code>, <code>tombstone</code> and
+<code>human_review</code> withheld, each for a stated reason in section
+9. No paper of its own; the crate cites fourteen.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a fact a person stated or a heuristic matched: eight
+types — voice style, expertise, risk tolerance, opinion, preference,
+domain knowledge, session pattern, mistake — each with a stable key and
+a JSON value. It becomes one by passing two gates (a regex blocklist for
+shell-shaped payloads and a skip-list for credentials, then an optional
+scan for invisible Unicode and confusable command names) and one
+decision by the dispatcher: no current row for the key is ADD; a current
+row with a different value and no lower confidence is UPDATE, which
+closes the old row and links it; the same value or a lower confidence is
+NOOP; a <code>{"tombstone": true}</code> candidate is DELETE, which
+closes without replacement. Trust starts where the writer sets it — 1.0
+for a typed <code>/remember</code> — and falls exponentially from the
+last time the fact was read, at a rate the type fixes: a mistake halves
+in 138 days, a session pattern in 69, a preference in 1.9 years, an
+opinion or risk tolerance in 3.8, voice and expertise in 19
+(<code>decay.rs:29-40</code>). Reading a fact resets its clock
+(<code>retrieval.rs:253-260</code>).</p>
+<p>It stops being believed four ways. It falls below its type's
+retrieval floor — 0.7 for an opinion, 0.4 for a mistake, 0.5 for the
+rest (<code>fact.rs:81-92</code>) — and is skipped, not closed. It is
+superseded: by a same-key write, by a same-key row of a strictly higher
+tier when the audit runs with that option, or by a cross-key row a
+deterministic lexical judge calls a contradiction at 0.85 confidence, in
+which case the older row closes at the newer row's start time
+(<code>semantic_contradiction.rs:379-391</code>). It is forgotten —
+<code>elai memory delete</code>, the dashboard button — which closes it
+and journals a <code>Forgotten</code> event. Or, for a code-grounded
+fact, its cited symbol no longer resolves in the code graph, and it is
+excluded at read and reported; when the index is missing every such fact
+is excluded, because the design treats absent evidence as failure. A
+closed row stays forever and is listed under <code>superseded</code>;
+nothing consults it when the same key arrives again.</p>
+<p>Whether a fact reaches a prompt is decided before any query. The role
+assembling the prompt must be the executor (agent dispatch) or the
+worker (consensus pass) — the match is exhaustive and has no wildcard —
+and the capture flag must be on. Then the eight newest-observed facts of
+the preference class are listed under <em># User decisions
+(remembered)</em> with the instruction <em>"Honour them; do not
+re-ask,"</em> and domain knowledge and mistakes follow only if their
+citations still resolve.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two live writers behind two guards feed one bi-temporal table; the every-fourth-turn tick decays, quarantines and closes contradicted rows; a compile-time role firewall and a flag stand between the table and the prompt; the dotted mechanisms are declared in the crate and reach no live path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two live writers behind two guards feed one bi-temporal table; the every-fourth-turn tick decays, quarantines and closes contradicted rows; a compile-time role firewall and a flag stand between the table and the prompt; the dotted mechanisms are declared in the crate and reach no live path
+flowchart TB
+    R[&quot;/remember · elai remember&lt;br/&gt;ELAI_USER_MEMORY_ENABLE=1 (expired 2026-09-01)&quot;] --&gt; G1[&quot;classify: regex blocklist&lt;br/&gt;+ credential skip-list&quot;]
+    I[&quot;elai memory insert (no flag)&quot;] --&gt; G1
+    G1 --&gt; G2[&quot;MemoryWriteScanner&lt;br/&gt;ELAI_MEMORY_GUARD_ENABLE (off)&quot;]
+    G2 --&gt; D{&quot;dispatch_one&lt;br/&gt;(user, scope, type, key)&quot;}
+    D --&gt;|&quot;ADD&quot;| F[(&quot;memory_facts&lt;br/&gt;valid_from · valid_to · ingested_at&lt;br/&gt;trust_score · tier T0–T3 · evidence[]&quot;)]
+    D --&gt;|&quot;UPDATE: supersede&quot;| F
+    D --&gt;|&quot;NOOP: same value / lower confidence&quot;| N[&quot;nothing written&quot;]
+    T[&quot;REPL tick — every 4th user turn&quot;] --&gt;|&quot;decay_tick per-type half-lives&quot;| F
+    T --&gt;|&quot;staleness ratio ≥ 1.5 → quarantine queue (256)&quot;| Q[&quot;DKG concept_stale&quot;]
+    T --&gt;|&quot;audit_conflicts (surface only)&lt;br/&gt;+ NLI judge ≥ 0.85 → close older at newer.valid_from&quot;| F
+    T --&gt;|&quot;note + core block append&lt;br/&gt;extract_facts → count only&quot;| NS[(&quot;memory_notes · core_blocks&quot;)]
+    F --&gt; FW{&quot;role firewall&lt;br/&gt;Executor / Worker only&quot;}
+    FW --&gt;|&quot;flag on&quot;| RD[&quot;get_relevant_facts&lt;br/&gt;current · seat · project · trust floor · evidence ≠ ∅&lt;br/&gt;citation re-resolve for code facts · newest 8&quot;]
+    RD --&gt; P[&quot;# User decisions (remembered)&lt;br/&gt;in the system prompt&quot;]
+    FW -.-&gt;|&quot;auditor, critic, adversary&quot;| Z[&quot;no memory&quot;]
+    DEL[&quot;elai memory delete · dashboard forget&quot;] --&gt;|&quot;soft_close + Forgotten&quot;| F
+    F &amp; DEL &amp; R --&gt;|&quot;MemoryFact* · UserDecisionSuperseded · MemoryGovernanceEvent&quot;| J[(&quot;ssb.db — append-only journal&quot;)]
+    X1[&quot;safety-critical T0/T1 ceiling&quot;] -.-&gt;|&quot;set true nowhere live&quot;| RD
+    X2[&quot;write quarantine · raw-evidence tier&lt;br/&gt;LLM extractor · promotion gate&lt;br/&gt;decay scheduler · MemGPT tools&quot;] -.-&gt;|&quot;no caller&quot;| F</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The archive keeps the code under <code>.elai_cc/</code>: a Cargo
+workspace at version <code>0.1.0</code> with crates <code>agent</code>,
+<code>arch_gate</code>, <code>cli</code>, <code>contracts</code>,
+<code>core</code>, <code>dashboard-v2</code>, <code>eval-corpus</code>,
+<code>ipc-types</code>, <code>knowledge</code>, <code>memory</code>,
+<code>orchestrator</code>, <code>plugins</code>, <code>providers</code>,
+<code>reasoning</code>, <code>rules</code>, <code>safety</code>,
+<code>sarif_ingest</code>, <code>scaffold</code>,
+<code>ssb-otel-export</code>, <code>tools</code>,
+<code>web_search</code> and <code>web_validator</code>, a
+<code>python/</code> inference and optimiser sidecar,
+<code>benchmarks/</code> with committed artifacts, and 611 contract test
+files under <code>crates/contracts/tests</code>. The archive's own
+guides say no application build and no historical benchmark was rerun
+for publication, and that sanitisation changed source bytes, so line
+offsets and hashes recorded in the historical documents describe the
+private originals; the citations in this report are to the published
+tree.</p>
+<p>The memory crate depends on <code>core</code>, <code>rusqlite</code>,
+<code>blake3</code>, <code>tokio</code> and <code>rustc-hash</code>, and
+optionally on <code>ort</code> and <code>tokenizers</code> behind a
+default-off <code>nli-onnx</code> feature that no model on disk
+exercises (<code>Cargo.toml</code>). Its consumers are the CLI, the
+orchestrator, the reasoning crate, the contracts crate and the
+dashboard's Tauri backend.</p>
+<ul>
+<li><code>crates/memory/src/fact.rs</code> (384 lines) —
+<code>FactType</code>, <code>Scope</code>, <code>MemoryFact</code>,
+<code>validate</code>.</li>
+<li><code>store.rs</code> (550) — <code>FactStore</code>: create, get,
+<code>list_current</code>, <code>list_including_closed</code>
+(benchmark-only by its own comment), <code>supersede</code>,
+<code>update_trust</code>, <code>soft_close</code>,
+<code>update_validated_at</code>, <code>iter_current</code>, and the
+<code>memory_fact_g1_taint</code> side table.</li>
+<li><code>trust.rs</code> (155), <code>view.rs</code> (108) — the T0–T3
+tier, <code>Provenance</code>, the safety-critical query types and the
+tier ceiling.</li>
+<li><code>decay.rs</code> (135), <code>decay_scheduler.rs</code> (248),
+<code>activation_decay.rs</code> (834) — the curve, the batch tick, an
+unspawned tokio loop, and an activation score that demotes fixed TTL to
+a 180-day guardrail.</li>
+<li><code>defense.rs</code> (380) — the two write gates.</li>
+<li><code>extractor.rs</code> (307), <code>mem0_dispatcher.rs</code>
+(396) — the heuristic candidate builder and the four-way
+dispatcher.</li>
+<li><code>contradiction.rs</code> (296),
+<code>semantic_contradiction.rs</code> (519),
+<code>binary_grounding_judge.rs</code> (94), <code>nli_onnx.rs</code>
+(238, feature-gated) — same-key audit, cross-key lexical judge, and the
+ONNX judge that needs a model the tree does not carry.</li>
+<li><code>retrieval.rs</code> (348), <code>citation_validity.rs</code>
+(494), <code>semantic_validation.rs</code> (646),
+<code>retrieval_authorization.rs</code> (916),
+<code>raw_evidence/</code> (1,080) — the read chain from the plain
+filter to the J-21 authorisation facade.</li>
+<li><code>quarantine_broadcast.rs</code> (230),
+<code>persist_provenance.rs</code> (137), <code>notes.rs</code> (383),
+<code>hippo_rag.rs</code> (363), <code>evolution.rs</code> (339),
+<code>core_block.rs</code> (285), <code>tools.rs</code> (158).</li>
+<li>Outside the crate: <code>cli/src/user_memory_capture.rs</code>
+(944), <code>cli/src/user_memory_admission.rs</code>,
+<code>cli/src/memory_cmd.rs</code> (535),
+<code>cli/src/report_fns.rs:1290-1470</code>,
+<code>cli/src/live_cli.rs:2066-2460</code>,
+<code>orchestrator/src/user_memory_firewall.rs</code>,
+<code>orchestrator/src/memory_guard.rs</code>,
+<code>orchestrator/src/handoff_digest/memory_taint.rs</code>,
+<code>orchestrator/src/benchmarks/staleness_runner.rs</code>,
+<code>reasoning/src/chat_memory_reflect.rs</code>,
+<code>dashboard-v2/src-tauri/src/commands_e5.rs</code> and
+<code>dashboard-v2/src/lib/drawers/MemoryFactsDrawer.svelte</code>
+(588).</li>
+</ul>
+<p>The journal the memory writes to is the orchestrator's <em>session
+state board</em>: one SQLite file per project under the sessions
+directory, a typed <code>SsbPayload</code> enum with a schema version
+and a variant count the contract tests pin, and a writer connection that
+installs an update hook panicking on any UPDATE or DELETE to the
+<code>ssb</code> table (<code>ssb/store.rs:339-351</code>) — under
+<code>#[cfg(debug_assertions)]</code>, so a release binary relies on
+discipline rather than the hook.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing beyond the binary and a writable project directory: three
+SQLite files appear under the project's memory directory on first use,
+the journal under its sessions directory. No embedding model, no
+service, no network. The flags an operator would set are environment
+variables listed in <code>wire-dark-allowlist.toml</code> with an owner,
+a type, an expiry date, a promotion plan and a named smoke test:
+<code>ELAI_USER_MEMORY_ENABLE</code> (experiment, expired 2026-09-01),
+<code>ELAI_MEMORY_GUARD_ENABLE</code> (experiment, 2026-12-01),
+<code>ELAI_MEMORY_PIN_ENABLE</code> (experiment, 2026-12-07),
+<code>ELAI_FACT_VALIDATION_KILL</code> (kill switch, 2026-12-07) and
+<code>ELAI_MEMORY_TAINT_PERSIST_ENABLE</code>. Two more kill switches
+the tick reads, <code>ELAI_STALENESS_CASCADE_KILL</code> and
+<code>ELAI_SEMANTIC_CONTRADICTION_KILL</code>, are not registered in
+that file. The whole design is the maintainer's <em>wire-dark</em>
+discipline: a substrate ships with tests before any production path
+calls it, and a later plan <em>activates</em> it behind a default-off
+flag with a smoke test named in the allowlist.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>capture_remember</code>
+(<code>user_memory_capture.rs</code>): empty text is an error;
+<code>classify</code> returns <code>Block</code> or
+<code>SkipSensitive</code> for a shell-shaped or credential-shaped
+payload and the text is never stored
+(<code>CaptureError::SecretRejected</code>);
+<code>MemoryWriteScanner::scan</code> runs the aho-corasick pass when
+<code>ELAI_MEMORY_GUARD_ENABLE</code> is set and a
+<code>PoisonBlocked</code> verdict is a hard error
+(<code>memory_guard.rs:31-40</code> draws the composition);
+<code>extract_facts</code> is tried for a stable <code>prefers_X</code>
+key and free text falls back to <code>remembered_&lt;blake3&gt;</code>;
+<code>dispatch_one</code> runs against <code>memory_facts.sqlite</code>
+with <code>user_id "default"</code>, <code>scope global</code>,
+<code>seat_id</code> from <code>ELAI_SEAT_IDENTITY</code> or
+<code>"local"</code>, trust 1.0, T0; the <code>DispatchOp</code> becomes
+a <code>UserDecisionSuperseded</code> journal row carrying the fact-id
+pair, type and key and never the value (<code>:401-442</code>). DELETE
+is refused on this path by design.</li>
+<li><strong>Admin write.</strong>
+<code>elai memory insert --fact-type … --key … --value …</code>
+(<code>memory_cmd.rs:255-326</code>): the same two guards
+(<code>classify</code> at <code>:302</code>, the scanner at
+<code>:311-318</code>), then <code>store.insert</code> with
+<code>Provenance::user_direct("cli")</code>, T0,
+<code>valid_from = now</code>. No flag.</li>
+<li><strong>Dispatch.</strong> <code>dispatch_one</code>
+(<code>mem0_dispatcher.rs:151-222</code>):
+<code>find_matching_current</code> over rows with
+<code>valid_to IS NULL</code>; the four arms above;
+<code>build_fact_from_candidate</code> (<code>:265-287</code>) sets
+<code>ingested_at</code>, <code>valid_from</code> and
+<code>last_observed_at</code> all to <code>now</code> and the decay rate
+from the type.</li>
+<li><strong>Reflection tick.</strong>
+<code>dispatch_chat_memory_reflect</code>
+(<code>live_cli.rs:2078</code>), called on every REPL input
+(<code>:1969</code>) and firing when the turn count is a multiple of
+four: <code>reflect</code> (<code>chat_memory_reflect.rs:111-153</code>)
+summarises the one-turn window by head-truncation, runs
+<code>extract_facts</code> and keeps only the count, inserts a
+<code>memory_notes</code> row, appends to the core block and runs
+<code>decay_tick</code>; the tick then runs <code>decay_tick</code>
+again with the pin set when <code>ELAI_MEMORY_PIN_ENABLE</code> is set
+(<code>:2175-2181</code>), collects rows past the 1.5 staleness ratio
+into a 256-slot queue drained by the code-graph rebuild
+(<code>:2222-2260</code>), runs <code>audit_conflicts</code> with
+<code>auto_supersede_by_tier = false</code> (<code>:2330</code>), and
+feeds cross-key pairs to <code>adjudicate_semantic</code> with the
+deterministic judge at 0.85 (<code>:2371-2376</code>), journaling one
+<code>MemoryConflictDetected</code> per outcome.</li>
+<li><strong>Read into the prompt.</strong>
+<code>report_fns.rs:1290-1470</code>: firewall first
+(<code>agent_role_gets_user_memory</code>, <code>:1318</code>), then the
+flag (<code>:1322</code>), then <code>FactStore::open</code>; Tier-B
+preferences through <code>get_authorized_facts</code> with a
+<code>NullValidator</code> and <code>NullSemanticValidator</code> that
+its own comment says never run for this class, <code>k = 8</code>,
+seat-scoped; Tier-A domain knowledge and mistakes through
+<code>DkgCitationValidator::open</code> or, when the index is absent,
+<code>NullValidator</code>, which excludes every Tier-A fact; an
+in-memory <code>RawEvidenceStore::new()</code> per read; rendered under
+<code># User decisions (remembered)</code> (<code>:1109</code>).</li>
+<li><strong>Retrieval.</strong> <code>get_relevant_facts</code>
+(<code>retrieval.rs:104-263</code>): candidates <code>k × 4</code> (at
+least 64) from <code>list_current</code>; the safety-critical partition
+when the filter asks (<code>:120-126</code>); seat, project, trust
+floor, non-empty evidence and readout-verdict filters
+(<code>:154-185</code>); sort by <code>last_observed_at</code> and
+truncate (<code>:190-191</code>); the citation gate on the slice with
+<code>last_validated_at</code> stamped on success
+(<code>:199-248</code>); <code>update_trust</code> to bump
+<code>last_observed_at</code> (<code>:253-260</code>).</li>
+<li><strong>Forget, pin.</strong>
+<code>elai memory delete --fact-id</code> → <code>soft_close</code> and
+a <code>Forgotten</code> beacon (<code>memory_cmd.rs:225-252</code>);
+dashboard <code>memory_forget</code>
+(<code>commands_e5.rs:350-390</code>) does the same;
+<code>pin</code>/<code>unpin</code> and <code>memory_pin</code> write
+only a beacon — no column exists, and the decay path rebuilds the pin
+set from the journal when its flag is on.</li>
+<li><strong>Agent tasks.</strong>
+<code>emit_memory_note_constraints</code>
+(<code>task_runner.rs:20196-20300</code>): personalised PageRank over
+<code>memory_notes</code> seeded with the step id, notes of four types,
+a 600-byte block journaled as a finding for the step.</li>
+<li><strong>Handoff taint.</strong> <code>memory_taint.rs</code>: when
+<code>ELAI_MEMORY_TAINT_PERSIST_ENABLE</code> is set, the handoff digest
+lists each journaled fact id with its persisted label,
+<code>untrusted</code> when none.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS memory_facts (
+    fact_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, seat_id TEXT NOT NULL DEFAULT &#39;local&#39;,
+    project_id TEXT, scope TEXT NOT NULL, fact_type TEXT NOT NULL, key TEXT NOT NULL,
+    value TEXT NOT NULL, confidence REAL NOT NULL, trust_score REAL NOT NULL,
+    ingested_at_ms INTEGER NOT NULL, valid_from_ms INTEGER NOT NULL, valid_to_ms INTEGER,
+    decay_rate_per_day REAL NOT NULL, last_observed_at_ms INTEGER NOT NULL,
+    evidence_pointers TEXT NOT NULL, superseded_by TEXT,
+    trust_tier TEXT NOT NULL DEFAULT &#39;T3&#39;, provenance TEXT NOT NULL DEFAULT &#39;&#39;,
+    last_validated_at_ms INTEGER
+);</code></pre>
+<p>with indexes on <code>(user_id, scope, fact_type)</code>, on
+<code>user_id</code> where <code>valid_to_ms IS NULL</code>, and on
+<code>(seat_id, user_id)</code> where current
+(<code>store.rs:45-50</code>); two <code>ALTER TABLE</code> statements
+whose errors are ignored migrate older files (<code>:79-87</code>); and
+<code>memory_fact_g1_taint (fact_id, g1_trust)</code> beside it
+(<code>:88</code>). The tier defaults to T3, the most pessimistic, so a
+row written before the tier existed is treated as model-emitted.
+<code>Scope</code> is <code>project</code> or <code>global</code>; a
+project row without a <code>project_id</code> fails validation.
+<code>evidence_pointers</code> is a JSON list of session, message,
+artifact or <code>dkg:&lt;name&gt;@&lt;file&gt;:&lt;line&gt;</code>
+pointers, and the comment on it names the paper the rule comes from.
+<code>last_validated_at_ms</code> is the validity axis for code-grounded
+facts — distinct from <code>last_observed_at_ms</code>, which is recency
+— and the 28-day unused TTL counts from whichever is later.</p>
+<p><code>memory_notes</code> (<code>notes.rs</code>) holds free-text
+bodies with <code>tags</code>, <code>links</code>, a type and a trust
+score and a single <code>valid_to_ms</code> flag;
+<code>core_blocks</code> (<code>core_block.rs</code>) holds one mutable,
+head-truncated block per user and scope, capped at 6,000 bytes
+(<code>:24</code>), edited in place with no history. The journal's
+memory rows are <code>MemoryFactExtracted</code>,
+<code>MemoryFactSuperseded</code>, <code>MemoryEvolutionRun</code>,
+<code>MemoryNoteInserted</code>, <code>MemoryNoteEvolved</code>,
+<code>MemoryConflictDetected</code>, <code>MemoryGovernanceEvent</code>,
+<code>UserDecisionSuperseded</code>, <code>MemoryTierAssigned</code> and
+<code>MemoryQueryFiltered</code>; the last two have no producer outside
+the journal's own tests.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search over facts. Retrieval is a filter chain over the
+current rows of one user, and the ranking is recency of observation. The
+chain, in order: <code>valid_to IS NULL</code>; the seat, as a
+structural exclusion when the caller passes one; project rows only for
+the caller's project, global rows always; <code>trust_score</code> at or
+above the type's floor or the caller's override; non-empty evidence; a
+<code>staleness_verdict:</code> marker in the evidence list of
+<code>STALE</code> or <code>UNKNOWN</code> excludes the row — a marker
+that no code in the tree writes, so the branch is inert; then the newest
+eight. For domain knowledge and mistakes a second gate runs on those
+eight: the <code>dkg:</code> pointer is re-resolved against the code
+graph's name index, <code>Valid</code> stamps
+<code>last_validated_at</code>, <code>Stale</code> or
+<code>Unknown</code> drops the row and reports it, and an unavailable
+index is <code>Unknown</code> for every row. The read then writes: each
+returned row's <code>last_observed_at</code> becomes now, which is what
+slows its decay.</p>
+<p>The J-21 facade on top of this —
+<code>authorize_for_injection</code>, a
+<code>Claim</code>/<code>Evidence</code> split,
+<code>ClaimAuthorization</code> with <code>Authorized</code>,
+<code>ExistenceStale</code>, <code>SemanticStale</code> and
+<code>Unknown</code> (<code>retrieval_authorization.rs:117-129</code>),
+sufficiency-gated escalation to a raw-evidence tier, and an activation
+score with 14-day use and 30-day validation half-lives and a 180-day
+guardrail (<code>activation_decay.rs:80-101</code>) — is what the live
+assembler calls, and its own comment records what that buys on the live
+path: for preferences the validators are nulls that short-circuit, so
+<em>"the authorized set equals the H-32 candidate set and the exclusions
+list is always empty here"</em>; for Tier-A the semantic validator is a
+null and the raw-evidence store is constructed empty on each read
+(<code>report_fns.rs:1421-1428</code>), so escalation can never return a
+record. Notes are retrieved differently: a single personalised PageRank
+pass at damping 0.5 over link edges and tag-Jaccard edges
+(<code>hippo_rag.rs</code>), seeded with lower-cased tokens of the task
+id, eight notes, four types, 600 bytes.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write is synchronous and blocks the REPL turn:
+<code>/remember</code> opens the store, runs both guards and the
+dispatcher and writes the journal row before returning its one-line
+outcome to the person. A fact is retrievable on the next prompt
+assembly; there is no queue and no embedding. The reflection tick is
+also inline — every fourth user turn pays for a note insert, a
+core-block append, two decay passes over every current row, the
+staleness scan, the same-key audit for three types and the lexical judge
+over every cross-key pair of those types — and its errors are logged and
+swallowed so the turn continues. The background scheduler that would
+take this off the turn exists in <code>decay_scheduler.rs</code> with a
+one-hour default and a one-second minimum, and a comment in the tick
+says it is <em>"wired into the orchestrator task_runner
+separately"</em>; <code>rg spawn_decay_scheduler</code> outside the
+crate finds that comment and nothing else.</p>
+<p>Two passes rewrite the store. <code>decay_tick</code>
+(<code>decay.rs:95-135</code>) updates every current row whose score
+moved by more than a millionth, skipping pinned ids, and deliberately
+does not touch <code>last_observed_at</code> — decay is not an
+observation. The contradiction passes close rows: the same-key audit
+only surfaces pairs on the live path, because the tick passes
+<code>false</code> for tier supersession; the cross-key judge closes the
+older row of any pair it calls a contradiction at 0.85 or above, with
+<code>valid_to</code> set to the newer row's <code>valid_from</code>,
+and surfaces everything else, including a judge error — <em>"a judge
+failure NEVER auto-closes."</em> The judge is a lexical opposition
+heuristic; the cross-encoder that would replace it is behind a feature
+with no model.</p>
+<p>Provenance is enforced twice: <code>validate</code> refuses an empty
+evidence list at insert, and retrieval refuses an empty one again. The
+defence against a poisoned write is the regex set — force-push
+directives, shell evaluation, <code>curl | sh</code>,
+<code>rm -rf /</code>, <code>.env</code> content, SSH keys — a
+credential and JWT skip-list that is policy rather than an attack
+signal, and the optional homoglyph scan; the module's own comment says
+the small-model classifier that was to confirm the regex decision was
+deferred and <em>"Stage 1 is load-bearing on its own."</em></p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing runs unless a person types into the REPL. A
+<code>/remember</code> is a handful of SQLite statements and one journal
+row; a reflection tick is proportional to the number of current facts
+squared for the cross-key pass over three types, bounded by the 512-row
+candidate limit the audit reads. The store is three files a person can
+open with any SQLite client, and <code>elai memory list --json</code>
+prints the rows with their superseded flags.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The person's surfaces are the REPL (<code>/remember</code>), the CLI
+(<code>elai remember</code>,
+<code>elai memory list | inspect | insert | delete | pin | unpin | provenance</code>)
+and the dashboard's facts drawer: rows grouped by type with a trust
+band, a <em>show history</em> toggle for superseded rows, a pin and a
+forget button per row (<code>MemoryFactsDrawer.svelte:301-310</code>),
+and a contradictions list read from the journal's
+<code>MemoryConflictDetected</code> rows
+(<code>commands_e5.rs:262-295</code>). The model's surface is the prompt
+section, and only in two roles. The <code>core_memory_replace</code> and
+<code>archival_search</code> tool schemas (<code>tools.rs:24-27</code>)
+that would give a model a hand on the core block and the note graph are
+defined and registered by nothing; the core block is written by the
+reflection tick and shown in the dashboard's chat-memory state.</p>
+<p>The firewall is the design's centre and its best idea.
+Personalisation in an evaluative role is treated as a bias, so user
+memory is allowed to <code>AgentRole::Executor</code> and
+<code>ConsensusRole::Worker</code> and denied to every auditor, critic,
+injection classifier, verifier, adversary and reflector by name, in a
+match with no wildcard arm; the retrieval site checks it before opening
+the store, and a denied role journals a <code>FirewallBlocked</code>
+event under a seat. The comment grounds the choice in one paper and
+records two citations it rejected while writing it, including a number
+it calls fabricated.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> <code>user_id</code> in SQL, seat
+and project as hard filters in Rust, seat passed by the live assembler,
+and a role allowlist in front of all of it; the cross-seat contract test
+reads back an empty set from a populated store.</p>
+<p><strong>Bitemporal — awarded, narrowly.</strong> Three timestamps,
+one of them immutable; supersession and the judged close write
+<code>valid_to</code> as an event time, and the judged close uses the
+newer row's start rather than the tick's clock. No live writer sets
+<code>valid_from</code> to anything but the write time, so validity
+start and record time never differ, and the closed row's record of
+<em>when it was closed</em> is the journal's, not the table's.</p>
+<p><strong>Audit — awarded, with the hook's scope stated.</strong> Every
+live mutation journals a typed row in the session state board, including
+the ones that do nothing to the table (pin, unpin); the append-only
+guard is a debug-build update hook, and the two tier beacons have no
+producer.</p>
+<p><strong>Negative evaluation — awarded, with the caveat that
+matters.</strong> The prompt-injection fixture is the shape this atlas
+asks for: a malicious T2 row and a legitimate T0 row in one store, the
+T2 row absent from the safety-critical result and present in the open
+one, the T0 row present in both. The <code>safety_critical</code> filter
+it exercises is <code>true</code> in no non-test code. The
+superseded-value and cross-seat cases are on paths the live assembler
+does take.</p>
+<p><strong>Trust state — withheld.</strong> The tier is a provenance
+class fixed at write and the one read that would withhold on it has no
+live caller. <code>ClaimAuthorization</code> is derived at read and
+stored nowhere. The persisted
+<code>trusted</code>/<code>recallable</code>/<code>untrusted</code>
+label is read back only to register taint on the injected text and
+filters nothing — <code>capability_gate_on_retrieved_taint</code>
+returns its argument (<code>persist_provenance.rs:81-83</code>). The
+<code>staleness_verdict</code> readout that would block a row as a
+premise has no writer. Closing a row is supersession, not a state.</p>
+<p><strong>Tombstone — withheld.</strong> <code>TOMBSTONE_MARKER</code>
+names a delete operation: a candidate carrying it soft-closes the
+matching current row. The dispatcher matches on current rows only, so
+the next candidate with the same key is an ADD, and
+<code>elai memory delete</code> followed by the same
+<code>/remember</code> restores the value. Nothing records that a value
+was refused.</p>
+<p><strong>Human review — withheld.</strong> A person can forget and
+pin, and can read the contradiction pairs the tick journaled; the
+same-key audit leaves both rows current <em>"until the user
+resolves,"</em> and resolution is a forget. Nothing marks a row
+reviewed, pending or approved, the adjudicate/promote drawer was
+deferred on 23 May 2026 and never landed, and both rows of a surfaced
+pair are injected meanwhile.</p>
+<p><strong>Fail-closed where it counts, and where it costs.</strong> A
+missing code index excludes every code-grounded fact; a missing seat
+directory does not stop the CLI mutation; a journal failure is a
+warning. The flag that gates capture expired before the archive existed,
+so a reader running the binary as archived gets a memory that reads and
+never writes unless they set an expired experiment flag or use the admin
+insert.</p>
+<p><strong>The archive's own caveats apply.</strong> The README, the
+archive guide and the postmortem say that <em>shipped</em>,
+<em>verified</em> and <em>DONE</em> in the historical documents are
+claims made at the time, that some paths were incomplete, optional or
+disabled, and that no build was rerun. The memory crate is one of the
+better-evidenced corners — the contract tests pin the schema version and
+the action-type bijection — and the gap between what is declared and
+what is wired is the finding this report keeps returning to.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory crate carries 211 inline test functions across its modules
+and 28 integration tests in <code>tests/</code>; five contract files in
+<code>crates/contracts/tests</code> add 43 more, and the reasoning
+crate's smoke test covers <code>reflect</code>. The inline tests are the
+cold-wiring kind — codec round trips, validator rejections, threshold
+constants, the tier ceiling predicate — and the integration and contract
+tests are where behaviour lives:</p>
+<ul>
+<li><code>bi_temporal_round_trip.rs</code> — supersede sets
+<code>valid_to</code> and links, and supersede of a missing row
+errors.</li>
+<li><code>prompt_injection_fixture.rs</code> — the T2/T0 case described
+above.</li>
+<li><code>extract_and_retrieve_smoke.rs</code> — extract, persist, decay
+30 days, retrieve above the floor with <code>last_observed_at</code>
+advanced; empty evidence rejected; project isolation.</li>
+<li><code>semantic_contradiction_smoke.rs</code>,
+<code>trust_tdd.rs</code>, <code>quarantine_broadcast_cascade.rs</code>,
+<code>quarantine_queue_bounded.rs</code> (300 pushes into a 256 cap drop
+the oldest 44), <code>decay_curves.rs</code>.</li>
+<li><code>h31_user_memory_contract.rs</code> — capture adds, a
+contradicting preference supersedes with the soft-close invariant, a
+topic-keyed contradiction supersedes rather than double-adds, retrieval
+surfaces the fresh value and never the superseded one, the firewall
+allows only executor and worker, secrets are rejected and not
+stored.</li>
+<li><code>h33_memory_governance_contract.rs</code> — pinned rows skip
+decay, an empty pin set decays everything,
+<code>list_including_closed</code> returns the superseded row.</li>
+<li><code>i13_memory_guard_contract.rs</code> — guard disabled by
+default, invisible Unicode and confusable shell names blocked at
+chokepoint 1, a clean fact and an emoji fact allowed.</li>
+<li><code>j59_per_seat_memory_contract.rs</code> — two seats, cross-seat
+read empty, dispatch stamps the seat, the firewall under a seat.</li>
+<li><code>untrusted_memory_write_contract.rs</code> — user prompt and
+operator approval are trusted sources for a memory write; an external
+tool, an untrusted file and assistant output are not.</li>
+</ul>
+<p>Each can fail; the negatives sit beside positives in the same store.
+What is not tested is the wiring the tests assume: no case runs the REPL
+tick end to end, no case sets <code>safety_critical</code> from a live
+query type, and the
+<code>live_producer_contradiction_supersedes_with_soft_close_invariant</code>
+test that the allowlist names as the capture flag's smoke test sets the
+flag itself.</p>
+<p><strong>The staleness instrument is committed with its
+results.</strong> <code>staleness_runner.rs</code> drives an isolated
+in-memory store over a labeled supersession fixture and computes two
+rates from the STALE paper's definitions — recognition (the audit closed
+the stale row) and application (retrieval served the replacement and
+never the stale row) — with the invariant that application cannot exceed
+recognition, and a negative-control arm that reads through
+<code>list_including_closed</code>. Seven JSON artifacts under
+<code>.elai_cc/benchmarks/staleness/</code> record four cases each:
+recognition 0.75 and application 0.75 on the real arm, with zero stale
+facts reaching a prompt; recognition 0.75 and application 0.0 on the
+broken arm, with three of four retrievals serving a stale fact. The gap
+on the broken arm is the point of the instrument; the 0.75 recognition
+on both is one fixture case the same-key audit does not recognise, and
+the fixture is four cases, which is a smoke test with a control, not a
+benchmark. The runner's header is unusually careful about numbers it
+does not own: it names a literature figure it declines to present as its
+own and a token percentage it calls fabricated.</p>
+<p>The workspace benchmarks the README lists — code retrieval, routing,
+gate tax, safety delta — do not measure memory. The crate cites fourteen
+papers and is the subject of none; the E-5 plan records nine citations
+it removed as stale.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the injection allowlist a closed match.</strong> A role
+gets memory only if a line of code says so, and a new role variant
+breaks the build until it has one; leak by omission becomes a compile
+error.</li>
+<li><strong>Refuse an empty evidence list at insert and again at
+read.</strong> Two cheap checks that make provenance a schema invariant
+rather than a convention.</li>
+<li><strong>Close at the event time, not the tick.</strong> A
+contradicted row's validity ends when the contradicting row began, which
+is what a later as-of query needs.</li>
+<li><strong>Fail closed on a missing index.</strong> A code-grounded
+fact whose citation cannot be checked is excluded, and the exclusion is
+reported; <em>unknown</em> is not <em>valid</em>.</li>
+<li><strong>Commit the instrument with a control arm.</strong> The
+staleness runner's broken arm is the same pipeline minus one filter, and
+the two result files sit next to each other.</li>
+<li><strong>Register every flag with an owner, an expiry and a smoke
+test.</strong> The allowlist is a governance surface most projects keep
+in their heads.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A substrate whose only live writer is behind an expired
+flag.</strong> Wire-dark discipline is defensible; a memory that reads
+and never writes unless a reader sets an experiment flag past its expiry
+is a demo.</li>
+<li><strong>An extractor that counts.</strong>
+<code>facts_extracted</code> in a telemetry row is not a memory, and a
+comment saying the caller stores them is not a caller.</li>
+<li><strong>A quarantine that is a <code>Vec</code>.</strong> A
+hold-back store that no production path constructs holds nothing
+back.</li>
+<li><strong>Tests that defend a filter nothing sets.</strong> The
+prompt-injection fixture proves the T0/T1 ceiling; the ceiling has no
+live caller, so the injection it blocks is not blocked.</li>
+<li><strong>A delete that forgets it deleted.</strong> With current-row
+matching, a forgotten key returns on the next write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Nobody should deploy this: the maintainer says so on the first line
+of the README, the history is filtered, the bytes are sanitised, and the
+capture flag expired before publication. It is worth reading for two
+things. The role firewall is the cleanest answer in this atlas to
+<em>who may see a user's preferences</em>, and it costs one exhaustive
+match. And the crate as a whole is a worked example of a memory designed
+from the literature — fourteen papers, each cited at the line it shaped
+— with the wiring between design and product left unfinished at nearly
+every seam, and a maintainer honest enough to say so in the postmortem.
+A team building a trust-tiered, bi-temporal fact store will find the
+schema, the decay table, the dispatcher and the contract tests reusable
+under MIT, and should expect to write the callers.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was <code>ELAI_USER_MEMORY_ENABLE</code> ever promoted, or set, in
+the private original? The allowlist says experiment, expiry 2026-09-01,
+and the filtered history cannot show configuration.</li>
+<li>Which live query type was meant to set <code>safety_critical</code>?
+Four are named in <code>view.rs</code>; nothing maps a turn to one of
+them.</li>
+<li>Does the semantic judge's lexical opposition ever fire on real
+preferences at 0.85, or only on the fixture's antonym pairs? No artifact
+records a live outcome.</li>
+<li>What happens to a <code>memory_facts.sqlite</code> written before
+the C-48 and J-59 migrations? The <code>ALTER TABLE</code> errors are
+ignored, and a row from before the tier column reads as T3.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.elai_cc/crates/memory/src/retrieval_authorization.rs</code></td>
+<td>916</td>
+<td>Claim/evidence split, <code>ClaimAuthorization</code>, in-memory
+<code>QuarantineStore</code></td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/activation_decay.rs</code></td>
+<td>834</td>
+<td>Activation score, TTL as a 180-day guardrail</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/semantic_validation.rs</code></td>
+<td>646</td>
+<td>Commit-aware symbol identity check</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/store.rs</code></td>
+<td>550</td>
+<td><code>memory_facts</code> DDL and the <code>FactStore</code>
+queries</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/semantic_contradiction.rs</code></td>
+<td>519</td>
+<td>Cross-key candidates, <code>DeterministicNliJudge</code>,
+<code>adjudicate_semantic</code></td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/citation_validity.rs</code></td>
+<td>494</td>
+<td><code>dkg:</code> pointer re-resolution, 28-day unused TTL</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/mem0_dispatcher.rs</code></td>
+<td>396</td>
+<td>ADD/UPDATE/DELETE/NOOP on <code>(user, scope, type, key)</code></td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/fact.rs</code></td>
+<td>384</td>
+<td><code>FactType</code>, <code>Scope</code>, <code>MemoryFact</code>,
+<code>validate</code></td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/defense.rs</code></td>
+<td>380</td>
+<td>Regex blocklist and credential skip-list</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/retrieval.rs</code></td>
+<td>348</td>
+<td>The filter chain and the citation gate</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/contradiction.rs</code></td>
+<td>296</td>
+<td>Same-key audit, tier supersession</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/decay.rs</code>,
+<code>decay_scheduler.rs</code></td>
+<td>135, 248</td>
+<td>Per-type half-lives, the batch tick, the unspawned loop</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/trust.rs</code>,
+<code>view.rs</code></td>
+<td>155, 108</td>
+<td>T0–T3, <code>Provenance</code>, the tier ceiling</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/quarantine_broadcast.rs</code></td>
+<td>230</td>
+<td>Staleness ratio and the 256-slot queue</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/persist_provenance.rs</code></td>
+<td>137</td>
+<td>Persisted taint labels behind a flag</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/memory/src/notes.rs</code>,
+<code>hippo_rag.rs</code>, <code>core_block.rs</code>,
+<code>tools.rs</code></td>
+<td>383, 363, 285, 158</td>
+<td>Notes, PageRank, the core block, two unregistered tool schemas</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/cli/src/user_memory_capture.rs</code></td>
+<td>944</td>
+<td><code>/remember</code>: guards, dispatch, journal row, the flag</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/cli/src/memory_cmd.rs</code></td>
+<td>535</td>
+<td><code>elai memory</code> list, inspect, insert, delete, pin, unpin,
+provenance</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/cli/src/report_fns.rs:1290-1470</code></td>
+<td>—</td>
+<td>Firewall, flag, Tier-B and Tier-A assembly into the prompt</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/cli/src/live_cli.rs:2066-2460</code></td>
+<td>—</td>
+<td>The every-fourth-turn tick</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/orchestrator/src/user_memory_firewall.rs</code></td>
+<td>—</td>
+<td>The closed role allowlist</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/orchestrator/src/memory_guard.rs</code></td>
+<td>—</td>
+<td>Stage-2 invisible-Unicode and confusable scan</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/orchestrator/src/benchmarks/staleness_runner.rs</code></td>
+<td>—</td>
+<td>Recognition and application rates with a control arm</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/reasoning/src/chat_memory_reflect.rs</code></td>
+<td>—</td>
+<td><code>reflect</code>: note, core block, decay, and the count that is
+not a write</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/dashboard-v2/src-tauri/src/commands_e5.rs</code></td>
+<td>—</td>
+<td>Facts, trust score, contradictions, forget, pin, history</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/dashboard-v2/src/lib/drawers/MemoryFactsDrawer.svelte</code></td>
+<td>588</td>
+<td>The drawer with forget and pin buttons</td>
+</tr>
+<tr>
+<td><code>.elai_cc/crates/contracts/tests/{h31_user_memory,h33_memory_governance,i13_memory_guard,j59_per_seat_memory,untrusted_memory_write}_contract.rs</code></td>
+<td>401, 385, 381, 328, 119</td>
+<td>The contract suites</td>
+</tr>
+<tr>
+<td><code>.elai_cc/wire-dark-allowlist.toml:153-168,:1509-1515,:1751-1760,:2439</code></td>
+<td>—</td>
+<td>The memory flags, their expiries and smoke tests</td>
+</tr>
+<tr>
+<td><code>.elai_cc/benchmarks/staleness/*.json</code></td>
+<td>7 files</td>
+<td>The committed instrument results</td>
+</tr>
+<tr>
+<td><code>docs/thefinalglance/E-plan/E-5_user_modeling_and_memory.md</code>,
+<code>workflow/reasoning/E-5-decisions.md</code>,
+<code>workflow/reasoning/H-31-decisions.md</code></td>
+<td>—</td>
+<td>The plan, its 23 May 2026 status, the 6 June activation record</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from
+<code>.elai_cc/crates</code>:</p>
+<pre class="sh"><code>rg -n &#39;dispatch_one\(|dispatch_batch\(&#39; --glob &#39;*.rs&#39; --glob &#39;!memory/**&#39; --glob &#39;!**/tests/**&#39;      # one caller: user_memory_capture.rs:274
+rg -n &#39;safety_critical: true|safety_critical = |TierCeiling::T0T1Only|is_safety_critical\(&#39; --glob &#39;*.rs&#39; --glob &#39;!memory/**&#39; --glob &#39;!**/tests/**&#39; --glob &#39;!**/benchmarks/**&#39;   # none
+rg -n &#39;spawn_decay_scheduler&#39; --glob &#39;*.rs&#39; --glob &#39;!memory/**&#39; --glob &#39;!**/tests/**&#39;               # one comment in live_cli.rs, no call
+rg -n &#39;staleness_verdict&#39; --glob &#39;*.rs&#39; | rg -v &#39;memory/src/retrieval.rs&#39;                             # no writer
+rg -n &#39;core_memory_replace|archival_search&#39; --glob &#39;*.rs&#39; --glob &#39;!memory/**&#39; --glob &#39;!**/tests/**&#39;  # none
+rg -n &#39;QuarantineStore::new|RawEvidenceStore::new&#39; --glob &#39;*.rs&#39; --glob &#39;!memory/**&#39; --glob &#39;!**/tests/**&#39;  # RawEvidenceStore::new() once, empty, per read
+rg -n &#39;MemoryTierAssigned|MemoryQueryFiltered&#39; --glob &#39;*.rs&#39; --glob &#39;!**/tests/**&#39; | rg -v &#39;action_type.rs|payloads.rs|schema.rs|ssb.rs&#39;  # none
+rg -n -i &#39;promot&#39; memory/src/*.rs                                                                     # no promotion gate
+rg -n -i &#39;arxiv|bibtex|citation|doi&#39; ../../README.md ../../BENCHMARKS.md                              # no paper of its own</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/DITlieD/ELAI-archive/commit/26bf2bc72d030a2d5ec022f04e1f9603bb285ae1"><code class="commit-id" title="26bf2bc72d030a2d5ec022f04e1f9603bb285ae1">26bf2bc7…</code></a>
+— first reading, at the head of <code>main</code>, one day after the
+archive was created. Screened first: no auto-run surface; four
+build-time execution paths (a fixture <code>Makefile</code>, the Tauri
+<code>build.rs</code>, a <code>setup.py</code>, a pytest
+<code>conftest.py</code>); six unpinned surfaces (four Python manifests
+without lockfiles, unpinned transformer requirements, twenty-two
+floating ranges behind the dashboard's lockfile); two agent-instruction
+files treated as data; the Cargo lockfile unchanged for 27 days and the
+npm lockfile for 69, so nothing was inside the seven-day cooldown;
+nothing installed, built or run. Four marks awarded and three withheld
+on the producer test: the safety-critical tier ceiling, the write
+quarantine, the raw-evidence escalation, the readout verdicts, the LLM
+extractor, the promotion gate, the decay scheduler and the MemGPT tools
+are each present in the crate and reach no live path, and the capture
+flag that gates the one fact-writing path had expired four days before
+the archive existed. The archive's history is privacy-filtered with
+every hash changed, so the pin is to the published tree and the commit
+count is the archive's.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

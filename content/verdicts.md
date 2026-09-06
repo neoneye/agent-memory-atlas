@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 362 reports.**
+**This page covers all 363 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3231,3 +3231,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 2,118 commits by nine authors since February 2026 at `1.45.2`, a 112,605-line API under 343 test files, and a 657-line memory whose migrations record a predecessor dropped with six rows of user data and reintroduced a week later as *"explicit only, zero vLLM load"*. Three of seven capability marks. The toggle, the tombstone, the audit rows, the corrected `source` labels and 36 tests arrived in five commits on 6 September 2026, the first of which names this atlas's reading of the previous pin as its source; the export defect predates all of them.
 - Study when: you want the smallest defensible cross-conversation memory for a chat product — a capped table, a numbered list behind a cacheable prefix, a stored toggle, a remembered delete — and want to see what it costs to leave extraction off, and what numbers the maintainers wrote down as the gate for adding search.
 - Do not copy when: you need memory that ranks, expires, audits what its extractors wrote, or can be exported; the export here has never returned a row of it.
+
+### [`elai`](../systems/elai/)
+- Best idea: **a compile-time allowlist deciding which roles may see a user's memory.** `agent_role_gets_user_memory` and `consensus_role_gets_user_memory` are exhaustive matches with no wildcard arm — `Executor` and `Worker` receive facts, every auditor, critic, verifier, adversary and reflector receives none, and a new role variant fails the build until someone writes its arm. The retrieval site checks it before opening the store, and a denied role journals a `FirewallBlocked` event.
+- Biggest risk: **the crate is wired to almost nothing.** The one path that writes a fact from a conversation, `/remember`, sits behind an experiment flag whose registered expiry is four days before the archive was created; the every-fourth-turn extractor returns a count and stores nothing; the safety-critical tier ceiling that the prompt-injection fixture defends is set `true` by no non-test code; the write quarantine, the raw-evidence escalation, the LLM extractor, the promotion gate, the decay scheduler and the two MemGPT tools each exist and reach no live call. The archive's own README says no claim has been revalidated.
+- Most reusable component: the fact schema with its enforcement — a bi-temporal row with a non-empty evidence list refused at insert and again at read, per-type decay rates written as half-lives, a supersede that closes at the event time and links, and the contract tests that pin the schema version and the journal's action-type bijection — plus the staleness runner with its committed control arm.
+- Maturity impression: an abandoned, unsupported research archive: MIT, 889 commits under one normalised author after a privacy rewrite that changed every hash and sanitised source bytes, 936,482 lines of Rust across twenty-four crates, a 10,933-line memory crate with 211 inline and 71 integration and contract tests, and a postmortem that says the project grew into too much machinery. Four of seven capability marks. Every mechanism is cited to the paper it came from, and the seams between the papers and the product are where it stopped.
+- Study when: you are designing a trust-tiered or bi-temporal fact store and want a complete, tested schema and dispatcher to read, or you want the cleanest statement of *who may see personal memory* in this corpus.
+- Do not copy when: you need anything to run. Nobody maintains it, the flag that turns capture on has expired, and the forgetting is a soft close that the next same-key write overrides.

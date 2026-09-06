@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **362 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **363 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -129,6 +129,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/ean-agentos/"><span class="az-id">EAN AgentOS</span><span class="az-what">A fix that failed, ranked not removed</span><code class="az-repo">eanai-ro/ean-agentos</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/ecc/"><span class="az-id">ECC</span><span class="az-what">A vault that stays unreviewed</span><code class="az-repo">affaan-m/ECC</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/echo-agent/"><span class="az-id">Echo Agent</span><span class="az-what">Provenance-ranked contradiction memory</span><code class="az-repo">fuyuxiang/echo-agent</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
+<li><a class="az-row" href="../systems/elai/"><span class="az-id">ELAI</span><span class="az-what">Wire-dark bi-temporal facts in an abandoned harness</span><code class="az-repo">DITlieD/ELAI-archive</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/elastic-atlas/"><span class="az-id">Elastic Atlas</span><span class="az-what">Evaluated demo</span><code class="az-repo">noamschwartz/atlas-memory-demo</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/empirica/"><span class="az-id">Empirica</span><span class="az-what">A vocabulary argued from its own data</span><code class="az-repo">nubaeon/empirica</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/empryo/"><span class="az-id">Empryo</span><span class="az-what">Retrieval that reads the repo</span><code class="az-repo">proxysoul/Empryo</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
