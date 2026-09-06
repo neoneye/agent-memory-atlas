@@ -124,9 +124,9 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong>
-Twenty-eight systems of three hundred and sixty-three carry it, and
-almost no two arrived the same way: one invented it under adversarial
-pressure, one adopted it from the first, one arrived at a weaker form
+Twenty-nine systems of three hundred and sixty-four carry it, and almost
+no two arrived the same way: one invented it under adversarial pressure,
+one adopted it from the first, one arrived at a weaker form
 independently, one was driven to it by a regulation, several built it
 only after their report named its absence — one of them adding it in the
 same release that closed a scope hole the same report found —
@@ -272,7 +272,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Twenty-eight systems of 363 in the atlas have this.</strong>
+<p><strong>Twenty-nine systems of 364 in the atlas have this.</strong>
 That is still the most striking negative result in the atlas, and it is
 the reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -394,8 +394,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-three hundred and sixty-three would suggest a hard idea that a few teams
-reach independently. One of three hundred and sixty-three, plus one
+three hundred and sixty-four would suggest a hard idea that a few teams
+reach independently. One of three hundred and sixty-four, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -680,6 +680,28 @@ so the case cannot pass vacuously — the same worry this page raises
 about Nova AI, written down as a test fixture. The reach is 500 rows and
 the match is the dedup's, so a paraphrase below the threshold is a new
 sentence.</p>
+<p><strong><a href="../../systems/argos/">Argos</a> keeps two of them
+and checks both on both write paths.</strong> A hard delete writes
+<code>deletion_tombstones</code>, keyed on a case- and
+whitespace-insensitive hash of the content with the category and user
+scope; a review decision of <em>rejected</em>, and every conflict
+resolution that keeps the old value, writes
+<code>rejection_ledger</code>, keyed on the claim slot
+<code>(subject, predicate, user_scope)</code> so a paraphrase of a
+rejected claim is caught where a content hash would miss it.
+<code>remember</code>, the direct <code>memory_save</code> path, and
+<code>save_candidate</code>, the proposal path, each call
+<code>tombstone_check</code> and <code>rejection_check</code> before
+writing and return nothing on a hit, so a re-fed fact neither lands as
+memory nor reaches the reviewer; a purge is explicit and scoped. The
+schema comment records where the mechanism came from — the resurrection
+its own observational test found when it ran this atlas's deletion
+sequence — and the suite that pins it asserts the re-feed is blocked,
+the block is case-insensitive, other content and other categories pass,
+a purge lets the value back, and one user's tombstone does not bind
+another. The one softness is <code>INSERT OR REPLACE</code>: a second
+deletion of the same value overwrites the first row's reason and
+time.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>Counting holders of the mark conflates four different mechanisms.
@@ -720,7 +742,8 @@ href="../../systems/fireweed-mcp/">fireweed-mcp</a>, <a
 href="../../systems/nexusmem/">NexusMem</a>, <a
 href="../../systems/rck/">RCK</a>, <a
 href="../../systems/veracium/">Veracium</a>, <a
-href="../../systems/openmake-llm/">OpenMake LLM</a></td>
+href="../../systems/openmake-llm/">OpenMake LLM</a>, <a
+href="../../systems/argos/">Argos</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
@@ -749,7 +772,7 @@ every read, consulted by one emitter</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Twenty-two of the twenty-eight, then, implement the strong
+<p><strong>Twenty-three of the twenty-nine, then, implement the strong
 form</strong> — value-keyed, normalized, consulted before the write,
 refusing activation. The collided form is the rarer one, and Nova AI
 shows why the distinction is worth drawing: its refusal held by a

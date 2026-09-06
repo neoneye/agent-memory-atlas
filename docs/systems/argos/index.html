@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Hermes plugin and standalone
+service — DuckDB records, a Kùzu entity graph, local BGE embeddings —
+where every extracted fact is a proposal on a status ladder whose top
+rung an automatic reviewer cannot write, deletion leaves a content-hash
+tombstone and rejection a claim-slot ledger that both write paths
+consult, versions are chained with as-of queries, scopes are enforced
+from tenant to document class, and the benchmark numbers recompute from
+the committed judged files — with the project's own audit noting that
+those runs never exercised the version chains.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Argos — Agent Memory Atlas">
+    <meta property="og:description" content="A Hermes plugin and
+standalone service — DuckDB records, a Kùzu entity graph, local BGE
+embeddings — where every extracted fact is a proposal on a status ladder
+whose top rung an automatic reviewer cannot write, deletion leaves a
+content-hash tombstone and rejection a claim-slot ledger that both write
+paths consult, versions are chained with as-of queries, scopes are
+enforced from tenant to document class, and the benchmark numbers
+recompute from the committed judged files — with the project's own audit
+noting that those runs never exercised the version chains.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Argos — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Hermes plugin and
+standalone service — DuckDB records, a Kùzu entity graph, local BGE
+embeddings — where every extracted fact is a proposal on a status ladder
+whose top rung an automatic reviewer cannot write, deletion leaves a
+content-hash tombstone and rejection a claim-slot ledger that both write
+paths consult, versions are chained with as-of queries, scopes are
+enforced from tenant to document class, and the benchmark numbers
+recompute from the committed judged files — with the project's own audit
+noting that those runs never exercised the version chains.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Argos — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Argos",
+      "description": "A Hermes plugin and standalone service \u2014 DuckDB records, a K\u00f9zu entity graph, local BGE embeddings \u2014 where every extracted fact is a proposal on a status ladder whose top rung an automatic reviewer cannot write, deletion leaves a content-hash tombstone and rejection a claim-slot ledger that both write paths consult, versions are chained with as-of queries, scopes are enforced from tenant to document class, and the benchmark numbers recompute from the committed judged files \u2014 with the project's own audit noting that those runs never exercised the version chains.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A ladder every proposal must climb</p>
+          <h1>Argos</h1>
+          <p class="document-deck">A Hermes plugin and standalone
+service — DuckDB records, a Kùzu entity graph, local BGE embeddings —
+where every extracted fact is a proposal on a status ladder whose top
+rung an automatic reviewer cannot write, deletion leaves a content-hash
+tombstone and rejection a claim-slot ledger that both write paths
+consult, versions are chained with as-of queries, scopes are enforced
+from tenant to document class, and the benchmark numbers recompute from
+the committed judged files — with the project's own audit noting that
+those runs never exercised the version chains.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/bobaba76/Argos">
+              <span>Source</span>
+              <strong>bobaba76/Argos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124" title="f292996d9eb8f422a282be3850667f3471835124">
+              <span>Analyzed revision</span>
+              <code>f292996d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Argos is <strong>persistent memory for a Hermes agent</strong> — a
+plugin for Nous Research's Hermes host with a standalone service behind
+it — and it is also a standalone memory server, because the same store
+answers an MCP stdio server, a REST server and a local admin console
+through one facade. Business Source License 1.1, production use licensed
+separately, converting to Apache 2.0 on 21 August 2030; 402 commits
+between 2 August and 6 September 2026, 397 by the maintainer and five by
+a coding agent that signs its pull requests; 220 issues and 123 pull
+requests in those five weeks; 46,635 lines of Python in
+<code>argos_plugin/</code> beside 148 test files carrying 2,750 test
+functions and 53,981 lines. The store is DuckDB 1.5.5 for records and a
+Kùzu 0.11.3 graph for entities, with <code>bge-small-en-v1.5</code>
+embeddings computed locally and an optional
+<code>bge-reranker-base</code> cross-encoder.</p>
+<p>The unit is a <code>memory_records</code> row with forty-odd columns
+(<code>store_core.py:96-133</code>): a category from eight, content, an
+embedding, a <code>status</code>, a <code>source</code>, a
+<code>confidence</code>, a <code>durability</code>, five scope columns,
+a <code>provenance_origin</code> of <code>internal</code> or
+<code>external</code>, a <code>grounding</code> of
+<code>observed</code>, <code>extracted</code>, <code>inferred</code> or
+<code>speculative</code>, a validity interval with a
+<code>superseded_by</code> link, a lifecycle <code>tier</code>, and the
+document and embedder that produced it. Nothing an extractor finds
+becomes one of these directly. Every turn is mined by regex with an LLM
+fallback into <code>memory_candidates</code>
+(<code>provider_session.py:526-680</code>), and a candidate climbs a
+ladder — <code>pending</code>, <code>reviewed_approved</code>,
+<code>pending_user_confirmation</code>, <code>approved</code>,
+<code>rejected</code>, <code>quarantined</code>,
+<code>deduplicated</code> — whose top rung the automatic reviewer cannot
+write: <code>review_candidate</code> raises if
+<code>review_source="auto_review"</code> asks for <code>approved</code>
+(<code>store_write.py:1339-1349</code>), downgrades an external-origin
+approval to confirmation, and caps promotion at what the record's
+grounding allows. The one bypass is <code>memory_save</code>, the
+explicit tool, which the README and the project's own claims audit both
+name as the exception.</p>
+<p><strong>What makes it unusual is that forgetting is remembered on
+both write paths.</strong> A hard delete writes a
+<code>deletion_tombstones</code> row keyed on a normalised hash of the
+content (<code>store_write.py:3120-3160</code>); a rejection, and every
+conflict resolution that keeps the old value, writes a
+<code>rejection_ledger</code> row keyed on the claim slot —
+<code>(subject, predicate, user_scope)</code> — so a paraphrase is
+caught too (<code>:3213-3260</code>); and both <code>remember</code>
+(<code>:247-266</code>) and <code>save_candidate</code>
+(<code>:1108-1130</code>) consult both tables and return
+<code>None</code> on a hit, so a re-fed fact neither lands nor reaches
+the reviewer. Both are reversible only by an explicit purge. Updates
+chain versions rather than overwrite, with <code>valid_from</code> set
+to the in-world time and a backdating parameter for the new version
+(<code>:2391-2430</code>), and retrieval defaults to
+<code>valid_to IS NULL</code> with <code>as_of</code> and
+<code>include_closed</code> to widen it
+(<code>store_retrieval.py:98-107</code>). An erase request writes a
+<code>deletion_receipts</code> row in the same transaction as the
+tombstone and the delete, carrying the hash and not the content
+(<code>store_maintenance.py:1420-1460</code>).</p>
+<p>The numbers are unusual too, in how they are kept. A
+<code>CLAIMS-AUDIT.md</code> maps every README figure to a committed
+judged artifact under <code>eval/repro/</code> and a script that
+re-derives each one, and records its own corrections: that <em>"nothing
+becomes a memory silently"</em> had to be scoped around
+<code>memory_save</code>, and — the entry that matters most here — that
+across every LongMemEval run database <em>"store-level version chains
+are absent … 0 of 2,424 records with
+<code>valid_to</code>/<code>superseded_by</code>; ingest is
+<code>remember(dedup=False)</code>, so supersession never fires and
+chain-unfold has nothing to walk."</em> The headline 89.8 % and baseline
+70.4 % recompute from the committed files (449 and 352 <code>True</code>
+labels in 500 rows each), and they measure retrieval plus an answerer,
+not the machinery this report is about.</p>
+<p>Seven marks. The repository names this atlas as the reference design
+for its trust model, implements the atlas's contradiction test as a
+parametrised suite with a control against vacuous passes, and closed its
+tombstone gap against the atlas's deletion canary; those are facts about
+the repository, and every mark below is earned by a line of code and the
+test beside it. No paper.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory begins as a proposal. The turn is scanned by regex patterns
+and, when they miss, by an auxiliary model; each hit becomes a candidate
+row with the evidence sentence, the session, a confidence and a
+<code>grounding</code> label — <code>extracted</code> for anything a
+model or a pattern produced, <code>observed</code> only for what a
+person stated. A candidate cannot be injected. It becomes a belief when
+a person, or the agent-facing confirmation tool acting for one, approves
+it; the automatic reviewer may only mark it
+<code>reviewed_approved</code>, and if the candidate came from outside
+the conversation, or conflicts in value with a current fact, or is
+grounded below what approval requires, the storage layer turns the
+automatic verdict into <code>pending_user_confirmation</code> whatever
+the model said. Approval with a named predecessor chains the new fact
+behind the old one; the old one closes with <code>valid_to</code> and
+points forward.</p>
+<p>A belief is current while <code>status = 'active'</code> and
+<code>valid_to IS NULL</code>. It stops being current four ways. It is
+superseded by an update or a confirmed replacement, and stays readable
+at <code>as_of</code>. It is quarantined — by maintenance for staleness
+or duplication, by the forgetting pass after a year without a retrieval,
+by <code>memory_feedback</code> marking it incorrect — and can be
+restored. It expires, when a category has a TTL. Or it is deleted: the
+head of a chain hands current back to its predecessor, a middle version
+is quarantined so the arc is not severed, and a lone version is removed
+and its content fingerprinted so that no later turn, no re-fed
+transcript and no import can bring it back without someone purging the
+tombstone. A rejected proposal leaves the same kind of mark on its claim
+slot.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — proposals climb a ladder whose top rung only a person can write; two ledgers remember what was deleted and what was rejected, and both write paths consult them before anything lands; the current view is one filter over a chained history</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: proposals climb a ladder whose top rung only a person can write; two ledgers remember what was deleted and what was rejected, and both write paths consult them before anything lands; the current view is one filter over a chained history
+flowchart TB
+    T[&quot;turn text · regex → LLM fallback&quot;] --&gt; C[(&quot;memory_candidates&lt;br/&gt;pending&quot;)]
+    S[&quot;structured ingest · document watcher&quot;] --&gt; C
+    C --&gt;|&quot;auto_review (ceiling)&quot;| RA[&quot;reviewed_approved&quot;]
+    C --&gt;|&quot;external origin · value conflict · grounding ceiling&quot;| PU[&quot;pending_user_confirmation&quot;]
+    RA --&gt; PU
+    C --&gt;|&quot;junk&quot;| Q1[&quot;quarantined&quot;]
+    PU --&gt;|&quot;memory_candidate_review · console&lt;br/&gt;review_source = tool&quot;| AP[&quot;approved&quot;]
+    RA --&gt;|&quot;person confirms&quot;| AP
+    PU --&gt;|&quot;person rejects&quot;| RJ[&quot;rejected&quot;]
+    RJ --&gt;|&quot;record_rejection(subject, predicate, scope)&quot;| RL[(&quot;rejection_ledger&quot;)]
+    AP --&gt;|&quot;remember()&quot;| R[(&quot;memory_records&lt;br/&gt;status · valid_from · valid_to · superseded_by&quot;)]
+    MS[&quot;memory_save (explicit tool)&quot;] --&gt;|&quot;remember()&quot;| R
+    R --&gt;|&quot;memory_update · confirmed supersession&quot;| R
+    R --&gt;|&quot;memory_delete: head → promote predecessor;&lt;br/&gt;middle → quarantine; single → hard delete&quot;| DT[(&quot;deletion_tombstones&lt;br/&gt;hash(content), category, scope&quot;)]
+    R --&gt;|&quot;erase request: receipt + tombstone + delete,&lt;br/&gt;one transaction&quot;| DR[(&quot;deletion_receipts&quot;)]
+    DT -.-&gt;|&quot;tombstone_check&quot;| G{&quot;gates on remember()&lt;br/&gt;and save_candidate()&quot;}
+    RL -.-&gt;|&quot;rejection_check&quot;| G
+    G -.-&gt;|&quot;hit → None, nothing lands&quot;| X[&quot;refused&quot;]
+    R --&gt;|&quot;status = active · valid_to IS NULL · scope · ACL&quot;| RD[&quot;text + vector → RRF → rerank → graph&quot;]
+    RD --&gt;|&quot;≤ 20 items · (previously) on closed versions&quot;| P[&quot;prompt&quot;]
+    R --&gt;|&quot;as_of · include_closed&quot;| H[&quot;history view&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>argos_plugin/</code> is one package with the store split into
+mixins — <code>store_core.py</code> (schema and migrations),
+<code>store_write.py</code> (3,304 lines: <code>remember</code>,
+candidates, review, update, delete, tombstones, ledgers),
+<code>store_retrieval.py</code> (the filter builder, hybrid search,
+access audit, listings), <code>store_maintenance.py</code>
+(consolidation, quarantine, expiry, erase, receipts, portable export and
+import, <code>explain_retrieval</code>) — a <code>graph.py</code> over
+Kùzu, <code>embeddings.py</code>, <code>extractor.py</code> with a
+patterns directory, <code>reviewer.py</code>,
+<code>distillation.py</code>, <code>rollup.py</code>,
+<code>compaction.py</code>, <code>watcher.py</code> for documents,
+<code>structured_ingest.py</code>, <code>provenance.py</code>,
+<code>access_scoping.py</code>, <code>namespace_partition.py</code>,
+<code>inbound_security.py</code>, <code>egress.py</code>, and the
+provider in three files (<code>provider_core.py</code>,
+<code>provider_session.py</code>, <code>provider_retrieval.py</code>).
+<code>memory_service.py</code> is the shared RPC service that owns the
+DuckDB writer so several Hermes processes share one store;
+<code>service_client.py</code> is its client. <code>api_facade.py</code>
+(2,220 lines) is the trust boundary the external surfaces share:
+<code>mcp_server.py</code>, <code>rest_server.py</code> and
+<code>admin_console.py</code> all pass through its auth → ACL →
+validation → audit chain and its allowlisted operation set.
+<code>schema_migrations.py</code> runs ordered migrations after an
+additive <code>ALTER TABLE … IF NOT EXISTS</code> layer, with a
+<code>schema_meta</code> version.</p>
+<p>Tables (<code>store_core.py:96-268,:491-535</code>;
+<code>schema_migrations.py:145-158</code>): <code>memory_records</code>,
+<code>memory_candidates</code>, <code>memory_evidence</code> (one row
+per memory linking it to the exact statement and the reviewer's
+decision), <code>file_catalog</code> and <code>file_aliases</code> for
+the document tier, <code>entity_aliases</code>,
+<code>deletion_tombstones</code>, <code>rejection_ledger</code>,
+<code>access_audit</code>, <code>system_state</code>,
+<code>deletion_receipts</code>, <code>schema_meta</code>. The graph has
+<code>Entity(id, entity_type, attributes, user_scope)</code> nodes and
+<code>RelatesTo(relation_type, attributes, user_scope, memory_ids[])</code>
+edges (<code>graph.py:932-945</code>), with validity intervals stamped
+on nodes (<code>:1052-1134</code>).</p>
+<p><code>tool_compression/</code> and <code>ambient_context/</code> are
+reference copies of patched Hermes core files, marked as not runtime
+code; the plugin uses the host's provider, pre-call hook and
+user-context injection APIs. The README says a stock upstream Hermes
+build has not been verified.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Python 3.11 with pinned dependencies, no service beyond the plugin's
+own RPC process; the embedder is a 130 MB local model and the reranker
+an optional 420 MB one that the docs say needs CUDA to be usable. The
+store is two directories a person can open, one
+<code>hybrid_memory.json</code> configures everything (a Pydantic model
+with <code>extra="forbid"</code>), and the external servers bind to
+loopback with a bearer token. Tenants are provisioned as separate stores
+behind the one service. <code>deploy.py</code> syncs the repository to a
+live plugin directory and reports drift by hash. Backups, a reindex of
+the graph, a re-embed on model change and a portable JSONL export exist
+as commands.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Propose.</strong> <code>sync_turn</code>
+(<code>provider_session.py:526</code>) runs <code>extract_facts</code>
+with the regex patterns and, when configured, the LLM fallback, and
+calls <code>save_candidate</code> (<code>:658</code>) per hit.
+<code>save_candidate</code> (<code>store_write.py:994-1140</code>)
+sanitises for instruction injection (a hit is stored
+<code>quarantined</code>, not dropped), dedups against pending
+candidates by exact and substring match, then applies the tombstone and
+rejection checks (<code>:1108-1130</code>) and returns <code>None</code>
+on either. Auto-review (<code>provider_session.py:425-495</code>) maps
+the model's verdict through
+<code>{"approve": "reviewed_approved", "reject": "rejected", "quarantine": "quarantined"}</code>
+and forces a value-conflicting proposal to
+<code>pending_user_confirmation</code> with
+<code>supersedes_memory_id</code> pre-filled.</li>
+<li><strong>Review.</strong> <code>review_candidate</code>
+(<code>store_write.py:1306-1480</code>): the allowed decisions; the
+approval invariant raise; the injection scan on approval; the
+external-origin downgrade (<code>:1370-1392</code>); the grounding
+ceiling (<code>:1400-1420</code>); then, in one transaction,
+<code>remember(...)</code>, the optional chaining behind
+<code>supersedes_memory_id</code>, the candidate status, the evidence
+row, and on <code>rejected</code> a <code>record_rejection</code>
+(<code>:1540-1546</code>).</li>
+<li><strong>Write.</strong> <code>remember</code>
+(<code>:70-350</code>): sanitise, the inbound-security scan for
+external-origin content, dedup by exact and substring against active
+rows, <code>tombstone_check</code> and <code>rejection_check</code>
+(<code>:247-266</code>), TTL by category when enabled, embed with the
+embedder's identity stamped, insert with
+<code>valid_from = created_ts</code> (<code>:340</code>), then
+opportunistic re-embedding of rows written during an embedder
+outage.</li>
+<li><strong>Read.</strong> <code>_build_domain_filters</code>
+(<code>store_retrieval.py:51-135</code>):
+<code>COALESCE(status,'active') = 'active'</code>, the temporal
+fragment, expiry relative to <code>as_of</code> or now,
+<code>user_scope IS NULL OR = ?</code>, project, namespace,
+<code>client_scope IS NULL OR = ?</code>, category exclusions,
+<code>tier</code>. <code>_hybrid_search</code>: text and vector legs,
+RRF, optional rerank, phrase lift, feedback and recency; the provider
+then expands the query when the top hit is weak, expands aliases, boosts
+by graph, and annotates chains; <code>explain_retrieval</code>
+(<code>store_maintenance.py:699</code>) reports why a record did not
+surface.</li>
+<li><strong>Inject.</strong> <code>on_turn_start</code>
+(<code>provider_retrieval.py:1155</code>) prefetches in a thread; up to
+twenty items (<code>provider_core.py:56</code>) are rendered with an id,
+<em>(previously)</em> on a closed version (<code>:1392</code>), a
+freshness marker when configured, and <code>[negative]</code> on an
+exclusion; chain unfolding runs only in the <code>memory_search</code>
+tool path under a 150-token cap.</li>
+<li><strong>Update, delete, restore.</strong> <code>update_memory</code>
+(<code>store_write.py:2391</code>) creates the new version, optionally
+backdated, and closes the old row; <code>delete_memory</code>
+(<code>:3001</code>) is chain-aware and tombstones a hard delete
+(<code>:3059,:3100</code>); <code>restore_memory</code>
+(<code>:2307</code>) clears a quarantine and warns when the row is also
+closed.</li>
+<li><strong>Erase.</strong> The POPIA workflow
+(<code>store_maintenance.py:1400-1460</code>): preview first, strict
+confirm, then per record a receipt, a tombstone and the delete in one
+transaction; <code>verify</code> (<code>:1575-1600</code>) later proves
+a receipt's record is gone and its tombstone present.</li>
+<li><strong>External writes.</strong> The facade's class A
+(<code>memory_propose</code>, a proposal), class B (candidate approval,
+denied to model principals even as <code>tool</code>), class C
+(<code>memory_save</code>, <code>memory_update</code>,
+<code>memory_delete</code> for loopback callers with server-derived
+identity), with idempotency keys and compare-and-swap on
+<code>expected_version</code>; <code>facade_delete_memory</code>
+requires the version (<code>memory_service.py:841-895</code>).</li>
+<li><strong>Background.</strong> Session-end consolidation quarantines
+duplicates and stale temporaries; archival, forgetting and rollups are
+off by default (<code>config_model.py:148-152</code>); distillation
+clusters new records at cosine 0.75 to a seed
+(<code>distillation.py:38</code>) and emits proposals only, behind
+novelty, cooldown and budget gates.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two record shapes and two ledgers carry the design.
+<code>memory_records</code> and <code>memory_candidates</code> share the
+provenance columns — <code>source</code>, <code>confidence</code>,
+<code>durability</code>, <code>scope</code>, <code>user_scope</code>,
+<code>namespace</code>, <code>client_scope</code>,
+<code>doc_class</code>, <code>provenance_origin</code>,
+<code>grounding</code> — and the candidate adds
+<code>evidence_text</code>, <code>evidence_role</code>,
+<code>source_timestamp</code>, <code>review_confidence</code>,
+<code>review_model</code>, <code>review_reason</code>,
+<code>reviewed_at</code>. The backfill for older stores derives
+<code>grounding</code> from <code>source</code>
+(<code>store_core.py:395-420</code>): explicit is <code>observed</code>,
+extraction is <code>extracted</code>, distillation is
+<code>inferred</code>, and anything else is <code>speculative</code>,
+the strictest — and an unknown <code>provenance_origin</code> normalises
+to <code>external</code>, the stricter class. Document-sourced facts add
+<code>source_doc_id</code> (a content hash, never a path),
+<code>source_loc</code>, <code>extraction_method</code>,
+<code>verified_state</code> and <code>verified_at</code>.</p>
+<p><code>deletion_tombstones (content_hash, category, user_scope, reason, created_at)</code>
+and
+<code>rejection_ledger (subject, predicate, user_scope, reason, created_at)</code>
+are written with <code>INSERT OR REPLACE</code>, so a repeated deletion
+refreshes the row rather than appending. <code>deletion_receipts</code>
+is append-only by design and carries <code>request_id</code>,
+<code>subject</code>, <code>memory_id</code>, <code>content_hash</code>,
+<code>outcome</code> and who asked. <code>access_audit</code> stores a
+sixteen-hex prefix of the query's SHA-256, never the query, with granted
+and denied counts and the denied scopes.</p>
+<p>The graph is indexed at save time: entities and typed relations
+extracted from the content, alias mappings resolved both ways, and
+<code>memory_ids</code> on each edge so a delete or an
+<em>incorrect</em> feedback can detach a memory; a purge at session end
+removes orphaned junk entities. The version chain lives only in the
+records table; the graph carries validity on nodes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The store's search is a fixed pipeline: an ILIKE text leg and a
+cosine leg over the stored vectors, fused by reciprocal rank, an
+optional cross-encoder rerank blended 20/80 with similarity, a phrase
+lift that is a no-op at its default, then feedback and recency. The
+provider adds a second pass when the top similarity is below a floor —
+the LLM rewrites the query into sub-queries, cached for an hour — and
+alias and graph expansion. The 2026-09-02 A/B recorded in the claims
+audit found graph traversal <em>flat</em> on every metric over a
+1,201-record corpus and 300 queries, and the audit's verdict is that the
+graph is a boost signal, not a traversal engine.</p>
+<p>The current view is the default and the history is opt-in. A closed
+version is invisible to a plain search, visible under <code>as_of</code>
+for the interval it was current, and visible under
+<code>include_closed</code>; when a historical query surfaces one it is
+labelled. The contradiction matrix test records the consequence as a
+prediction it confirms: a plain current-time question about an old value
+fails, because <code>valid_to IS NULL</code> hides closed versions
+entirely, while the as-of form passes. <code>memory_why_not</code> and
+the facade's <code>explain_retrieval</code> answer the question the
+filter chain otherwise swallows — which fragment excluded a record.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The explicit path blocks on one insert plus an embedding; the
+proposal path is a background worker per turn, and a proposal is
+retrievable only after review, so the lag from a turn to an injectable
+memory is the reviewer's — the auto-reviewer's model call when enabled,
+or a person's next visit to the queue. Prefetch runs recall for the
+incoming message before the model is called.</p>
+<p>Three passes rewrite the store. Consolidation at session end merges
+near-duplicates by embedding similarity, newest wins and the older is
+chained or quarantined, and quarantines stale temporaries — never a
+delete. The forgetting pass, off by default, quarantines
+<code>context_note</code>, <code>event</code> and <code>goal</code>
+records older than a year with no retrievals. Distillation, off by
+default, clusters and asks a model for insights, contradictions and
+guardrails, honours contradiction ids only for records it showed the
+model, and saves proposals with their grounding — nothing it produces is
+active until reviewed. The <code>system_state</code> table advances the
+run marker only on a completed run.</p>
+<p>Every write is scanned for instruction-injection patterns; external-
+origin content is scanned by the inbound security module and a scanner
+import failure refuses the write rather than allowing it — a fix the
+claims audit records as issue 23, closed 28 August 2026. The egress gate
+returns <code>False</code> for an unknown call kind, issue 24, closed
+the next day. The document watcher extracts only from files its policy
+marks hot, and a fact inherits access from its source document's
+folder.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A turn costs one regex pass and, when the fallback is on, one model
+call for extraction and one for review; a search costs one text query,
+one vector scan over the user's active rows and, when enabled, a
+cross-encoder pass the docs price at eight seconds per query on CPU. The
+access log grows one row per facade query and is trimmed to the newest
+100,000 at startup. Nothing external is required; the model calls go to
+whatever the host has configured, behind an egress gate that can be set
+to local-only.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Hermes agent sees sixteen tools in five groups — store and
+search, version chains, graph, review and restore, feedback and
+maintenance, diagnostics — three slash commands (<code>/ilog</code>,
+<code>/revisit</code>, <code>/neg</code>), and a
+<code>pre_llm_call</code> hook that injects time, location, weather and
+recent file activity. Any other MCP client sees
+<code>memory_search</code>, <code>memory_fetch</code>,
+<code>memory_fetch_history</code>, <code>memory_explain</code>,
+<code>memory_why_not</code>, <code>memory_propose</code> and
+<code>memory_capabilities</code> over stdio; REST exposes the same read
+set. A person has the review queue in the tool and in the console, where
+every mutation carries <code>review_source="tool"</code> and an audit
+row, and a <code>Cache-Control</code> header and a server-derived
+identity keep the console from trusting the browser.</p>
+<p>The trust model as the spec states it: <em>"the question that matters
+when the store is an injection surface is 'what may this memory be
+allowed to do?', and the labels are permanent from ingest."</em> The
+labels are <code>provenance_origin</code> and <code>grounding</code>; a
+person's confirmation lifts the grounding, recall counts never do.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — awarded, the strong form.</strong> Two ledgers,
+one keyed on the normalised value and one on the claim slot, consulted
+before the write on both the direct and the proposal path, with a hit
+refusing the write outright. The <code>INSERT OR REPLACE</code> means a
+second deletion of the same content overwrites the first row's reason
+and time; the purge is explicit and scoped.</p>
+<p><strong>Trust state — awarded.</strong> A seven-state candidate
+ladder and a record status, both read as filters: a candidate is never
+injected, a quarantined record is excluded by the first fragment of
+every query, and the transitions that matter are enforced in
+<code>review_candidate</code> rather than in a prompt.</p>
+<p><strong>Bitemporal — awarded.</strong> <code>valid_from</code> is an
+in-world time that an update can backdate independently of
+<code>updated_at</code>; <code>as_of</code> reads the interval. The
+claims audit's own finding stands beside it: in the benchmark runs no
+chain was ever formed, so the machinery is tested by the unit and
+contradiction suites and not by the headline numbers.</p>
+<p><strong>Scope — awarded.</strong> Tenant, user, project, namespace,
+client scope and document class, applied in SQL and to graph nodes
+before ranking, with the facade's scope invariant tested under
+concurrency.</p>
+<p><strong>Audit — awarded, narrowly.</strong> Erasure receipts are an
+append-only record of a mutation, written in the same transaction as the
+mutation, and the two ledgers record every delete and rejection with a
+reason. No row records a create, an approval or an update; the access
+log is a log of reads and denials and rotates. A reader who wants
+<em>who approved this and when</em> has the candidate's
+<code>reviewed_at</code> and <code>review_reason</code> and the evidence
+row's <code>reviewer_decision</code>, which are state.</p>
+<p><strong>Human review — awarded.</strong> The confirmation tool and
+the console are the only sources that can write <code>approved</code>; a
+model caller on the external API cannot approve at all.</p>
+<p><strong>Negative evaluation — awarded.</strong> The contradiction
+matrix asserts the stale value stays out while the current one comes
+back, and controls for the empty store; the scope suites assert zero
+records across a populated boundary.</p>
+<p><strong>What the audit says about itself.</strong> The README's
+trust-model sentence <em>"every feature is gated by a measurement"</em>
+is listed under <em>aspirational</em>; the test-count row has been
+refreshed five times and is guarded by a parity test that fails when the
+quoted counts drift more than 5 % from disk; the README's 2,350 tests
+over 131 modules and the audit's 2,493 over 137 were both behind the
+tree's 2,750 over 148 at this commit. The audit records two fail-open
+defects it found and fixed, and a facade docstring that claimed deny-all
+on an invalid ACL while the code warned and opened.</p>
+<p><strong>The bypass and the rotation.</strong>
+<code>memory_save</code> is a direct write with no review — the agent's
+explicit act, by design, and the one path where a model's judgement
+lands as active memory. The access log's rotation means a denial older
+than 100,000 rows is gone.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>148 test files, 2,750 test functions, 53,981 lines — more test than
+implementation — run hermetically with <code>HF_HUB_OFFLINE=1</code>.
+The suites that carry the marks:
+<code>test_deletion_tombstones.py</code> (nine cases, the re-feed
+blocked, case-insensitive, category-scoped, user-scoped, purgeable),
+<code>test_rejection_scope.py</code>,
+<code>test_approval_invariant.py</code> (the automatic reviewer cannot
+write <code>approved</code>; the tool path can),
+<code>test_candidate_review_integration.py</code>,
+<code>test_ingest_versioning.py</code>,
+<code>test_facade_scope_invariant.py</code> (a second principal gets
+zero records, scope resets after an exception, concurrent threads do not
+cross-contaminate), <code>test_multitenant_cells.py</code> (text, fetch,
+count, candidate, alias, tombstone and graph isolation between tenants),
+<code>test_facade_durable_audit.py</code> (a denial survives reopening
+the store; an allowed search writes no denial row),
+<code>test_spec10_writes.py</code> (869 lines on the write classes,
+idempotency and CAS), and thirty files named <code>*_audit.py</code>
+that pin the findings of the project's per-module reviews.</p>
+<p><code>test_contradiction_matrix.py</code> is the atlas's
+contradiction test as a parametrised suite: five cases — replacement,
+polarity, retraction, partial, bounded — each scored on answer, prompt
+hygiene, durability after a forced no-LLM background pass, history at
+<code>as_of</code> and at current time, and derived reach;
+<code>test_empty_store_control_no_vacuous_pass</code> asserts the search
+returns nothing on an empty store first, and the predicted failures —
+retraction, and current-time history — are <code>xfail</code> with the
+reason written. The tombstone suite's search assertion after a blocked
+re-feed can pass on an empty result; the <code>is None</code> on the
+write beside it is the assertion that carries the case.</p>
+<p><strong>Benchmarks.</strong> Seven judged JSONL files under
+<code>eval/repro/</code>, each 500 rows with an
+<code>autoeval_label</code>, recompute exactly: 449 <code>True</code> in
+<code>judged_glm500_final.jsonl</code> (89.8 %, a GLM answerer with a
+gpt-4o judge), 352 in <code>judged_capexp_c1500_k96_gpt4o.jsonl</code>
+(70.4 %, the baseline), 411 and 383 in the gpt-4o pair (82.2 % without
+and 76.6 % with the distilled store), 240 and 433 in the flash pair
+(48.0 % and 86.6 %). The dataset is LongMemEval_S, 500 questions,
+SHA-256 recorded; per-category denominators are listed;
+<code>verify_repro.sh</code> re-derives each figure and exits non-zero
+on drift, given the external run artifacts it expects in a sibling
+checkout. The protocol ingests each question's sessions per turn into a
+fresh store with <code>dedup=False</code>, and the claims audit's 30
+August correction records what that means: no version chain formed in
+any run, the update-order gains come from the answerer's reasoning over
+a chronologically rendered list, and the store-level supersession claim
+<em>"remains unproven."</em> Chain unfold (93 % precision and recall on
+eight cases), phrase lift and the reranker A/B have their own committed
+harnesses and result files. The README calls the numbers self-measured
+and answerer-conditional, and lists what is measured internally and not
+yet claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Consult the tombstone on every write path, not just the one
+that deletes.</strong> Two tables, two keys — the value and the claim
+slot — and two gates that return <code>None</code>; the reviewer never
+sees a ghost.</li>
+<li><strong>Put the approval invariant in storage.</strong> A
+<code>ValueError</code> when <code>auto_review</code> asks for
+<code>approved</code> is a stronger guarantee than a system prompt, and
+the downgrade rules — external origin, value conflict, grounding ceiling
+— live next to it.</li>
+<li><strong>Write the receipt in the same transaction as the
+erasure.</strong> Hash, not content; proof that survives the thing it
+proves.</li>
+<li><strong>Keep a claims audit that records its own
+corrections.</strong> The 0-of-2,424 finding is the kind of sentence a
+README never volunteers, and here it is dated and linked.</li>
+<li><strong>Give <code>why_not</code> an endpoint.</strong> A filter
+chain that can explain a miss is one a person can tune.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A benchmark whose protocol switches off the
+mechanism.</strong> With <code>dedup=False</code> into a fresh store per
+question, the supersession machinery is idle while the number is quoted;
+say so as the audit does, or run the protocol that exercises it.</li>
+<li><strong>A read log that rotates and a write log that does not
+exist.</strong> A create or an approval leaves state, not an event; a
+denial older than the cap is gone.</li>
+<li><strong>An explicit-save tool that skips the ladder.</strong>
+Reasonable for a person's own agent, and the one place a model's
+judgement becomes active memory with no second look.</li>
+<li><strong>Replacing the ledger row on repeat.</strong>
+<code>INSERT OR REPLACE</code> keeps one reason per deleted value; the
+first reason is lost.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a single person running Hermes who wants memory that forgets on
+purpose and never lets an extractor decide alone, this is the most
+complete implementation of the review-then-remember shape in this
+corpus, and it is also usable from any MCP client as a read tier and,
+from loopback, a write tier. The maintenance budget is the caveat: five
+weeks, four hundred commits, a Business Source licence, and a claims
+audit that has to be refreshed every few days because the code moves
+faster than its README. A team should read the audit before the README,
+and should expect to run the benchmark protocol that the audit says was
+never run.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the LongMemEval score become under a protocol that ingests
+with <code>dedup=True</code> and lets supersession fire? The audit filed
+it as issue 74; no artifact answers it.</li>
+<li>How much of the 89.8 % is the answerer? The 2×2 matrix shows the
+same store moving gpt-4o down and flash up with distillation, which is a
+statement about the answerer as much as the memory.</li>
+<li>When two values for one claim slot are both rejected at different
+times, which reason survives the <code>INSERT OR REPLACE</code>?</li>
+<li>Is a <code>reviewed_approved</code> candidate that is never
+confirmed ever swept? The stale-review sweep re-reviews pending
+proposals; the audit's own history says the sweep was
+configured-but-unimplemented until 1 September 2026.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>argos_plugin/store_write.py</code></td>
+<td>3,304</td>
+<td><code>remember</code>, <code>save_candidate</code>,
+<code>review_candidate</code>, <code>update_memory</code>,
+<code>delete_memory</code>, tombstones, rejection ledger</td>
+</tr>
+<tr>
+<td><code>argos_plugin/graph.py</code></td>
+<td>2,649</td>
+<td>Kùzu entities, relations, aliases, validity on nodes, junk
+purge</td>
+</tr>
+<tr>
+<td><code>argos_plugin/store_maintenance.py</code></td>
+<td>2,310</td>
+<td>Consolidation, quarantine, expiry, erase and receipts, export and
+import, <code>explain_retrieval</code></td>
+</tr>
+<tr>
+<td><code>argos_plugin/api_facade.py</code></td>
+<td>2,220</td>
+<td>Auth → ACL → validation → audit, write classes A/B/C, idempotency,
+CAS</td>
+</tr>
+<tr>
+<td><code>argos_plugin/store_retrieval.py</code></td>
+<td>1,976</td>
+<td>The filter builder, hybrid search, access audit</td>
+</tr>
+<tr>
+<td><code>argos_plugin/provider_session.py</code></td>
+<td>1,924</td>
+<td><code>sync_turn</code>, auto-review, tool handlers</td>
+</tr>
+<tr>
+<td><code>argos_plugin/memory_service.py</code></td>
+<td>1,734</td>
+<td>The shared RPC service, tenants, strict CAS delete</td>
+</tr>
+<tr>
+<td><code>argos_plugin/extractor.py</code></td>
+<td>1,661</td>
+<td>Regex and LLM extraction</td>
+</tr>
+<tr>
+<td><code>argos_plugin/provider_retrieval.py</code></td>
+<td>1,471</td>
+<td>Prefetch, injection rendering, chain unfold</td>
+</tr>
+<tr>
+<td><code>argos_plugin/provider_core.py</code></td>
+<td>1,103</td>
+<td>Provider init and config</td>
+</tr>
+<tr>
+<td><code>argos_plugin/store_core.py</code></td>
+<td>702</td>
+<td>Schema, additive migrations, backfills, indexes</td>
+</tr>
+<tr>
+<td><code>argos_plugin/schema_migrations.py</code></td>
+<td>684</td>
+<td>Ordered migrations, <code>deletion_receipts</code>,
+<code>schema_meta</code></td>
+</tr>
+<tr>
+<td><code>argos_plugin/admin_console.py</code>,
+<code>mcp_server.py</code>, <code>rest_server.py</code></td>
+<td>880, 829, 550</td>
+<td>The three external surfaces</td>
+</tr>
+<tr>
+<td><code>argos_plugin/distillation.py</code>, <code>rollup.py</code>,
+<code>compaction.py</code>, <code>watcher.py</code>,
+<code>structured_ingest.py</code></td>
+<td>754, 365, 333, 781, 375</td>
+<td>The passes and the ingest tiers</td>
+</tr>
+<tr>
+<td><code>argos_plugin/access_scoping.py</code>,
+<code>inbound_security.py</code>, <code>egress.py</code>,
+<code>reviewer.py</code></td>
+<td>340, 290, 472, 454</td>
+<td>ACL, inbound scan, egress gate, LLM review</td>
+</tr>
+<tr>
+<td><code>argos_plugin/tests/</code></td>
+<td>148 files</td>
+<td>2,750 test functions</td>
+</tr>
+<tr>
+<td><code>eval/repro/</code></td>
+<td>7 judged files</td>
+<td>LongMemEval_S artifacts, <code>verify_repro.sh</code>, results
+notes</td>
+</tr>
+<tr>
+<td><code>CLAIMS-AUDIT.md</code>, <code>MEMORY_SYSTEM.md</code>,
+<code>feature-specs/spec-04-trust-model.md</code></td>
+<td>—</td>
+<td>The claims map, the design document, the trust spec</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;tombstone_check\(|rejection_check\(&#39; argos_plugin --glob &#39;*.py&#39; --glob &#39;!*/tests/*&#39;   # remember() and save_candidate(), nothing else — both paths gated
+rg -n -o &#39;INSERT (OR REPLACE )?INTO [a-z_]+&#39; argos_plugin --glob &#39;*.py&#39; --glob &#39;!*/tests/*&#39; | sort -u   # no event table for creates or approvals
+rg -n &#39;DELETE FROM&#39; argos_plugin --glob &#39;*.py&#39; --glob &#39;!*/tests/*&#39;                          # access_audit rotation, records, evidence, tombstones, ledger, aliases
+rg -n &#39;safety|approved.*auto_review&#39; argos_plugin/store_write.py | rg -n &#39;raise&#39;          # the approval invariant raises
+rg -n -i &#39;arxiv|bibtex|citation|doi\.org&#39; README.md docs MEMORY_SYSTEM.md CLAIMS-AUDIT.md  # no paper
+rg -n -i &#39;agent-memory-atlas|neoneye|perseus&#39; --glob &#39;!*.jsonl&#39; .                         # spec-04, the contradiction matrix, the claims audit
+python3 -c &quot;import json;print(sum(json.loads(l)[&#39;autoeval_label&#39;][&#39;label&#39;] for l in open(&#39;eval/repro/judged_glm500_final.jsonl&#39;)))&quot;   # 449</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124"><code class="commit-id" title="f292996d9eb8f422a282be3850667f3471835124">f292996d…</code></a>
+— first reading, at the head of <code>master</code>, the twelfth commit
+of that day. Screened first: no auto-run surface, one build-time
+execution path (a pytest <code>conftest.py</code>),
+<code>requirements.txt</code> inside the seven-day cooldown, an
+<code>AGENTS.md</code> treated as data; nothing installed or run. Seven
+marks, each with a producer on a reachable path and a test beside it.
+The headline benchmark figures were recomputed from the committed judged
+files and match; the project's own claims audit records that those runs
+formed no version chain, and the report carries that as its main caveat.
+The repository cites this atlas as the reference design for its trust
+model and implements the atlas's contradiction test; the marks are read
+from the code.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

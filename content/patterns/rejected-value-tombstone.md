@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-eight systems of three hundred and sixty-three
+> **This is not an established best practice.** Twenty-nine systems of three hundred and sixty-four
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-eight systems of 363 in the atlas have this.** That is still the most
+**Twenty-nine systems of 364 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -220,8 +220,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of three hundred and sixty-three
-would suggest a hard idea that a few teams reach independently. One of three hundred and sixty-three, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of three hundred and sixty-four
+would suggest a hard idea that a few teams reach independently. One of three hundred and sixty-four, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -482,6 +482,25 @@ runnable so the case cannot pass vacuously — the same worry this page raises
 about Nova AI, written down as a test fixture. The reach is 500 rows and the
 match is the dedup's, so a paraphrase below the threshold is a new sentence.
 
+**[Argos](../../systems/argos/) keeps two of them and checks both on both
+write paths.** A hard delete writes `deletion_tombstones`, keyed on a
+case- and whitespace-insensitive hash of the content with the category and
+user scope; a review decision of *rejected*, and every conflict resolution
+that keeps the old value, writes `rejection_ledger`, keyed on the claim slot
+`(subject, predicate, user_scope)` so a paraphrase of a rejected claim is
+caught where a content hash would miss it. `remember`, the direct
+`memory_save` path, and `save_candidate`, the proposal path, each call
+`tombstone_check` and `rejection_check` before writing and return nothing on
+a hit, so a re-fed fact neither lands as memory nor reaches the reviewer;
+a purge is explicit and scoped. The schema comment records where the
+mechanism came from — the resurrection its own observational test found
+when it ran this atlas's deletion sequence — and the suite that pins it
+asserts the re-feed is blocked, the block is case-insensitive, other
+content and other categories pass, a purge lets the value back, and one
+user's tombstone does not bind another. The one softness is
+`INSERT OR REPLACE`: a second deletion of the same value overwrites the
+first row's reason and time.
+
 ### Sorted by what actually stops the value
 
 Counting holders of the mark conflates four different mechanisms. Sorted by the
@@ -491,12 +510,12 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 abandonment |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
-**Twenty-two of the twenty-eight, then, implement the strong form** — value-keyed,
+**Twenty-three of the twenty-nine, then, implement the strong form** — value-keyed,
 normalized, consulted before the write, refusing activation. The collided form
 is the rarer one, and Nova AI shows why the distinction is worth drawing:
 its refusal held by a missing filter, which its author then replaced with an

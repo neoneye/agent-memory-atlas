@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 363 reports.**
+**This page covers all 364 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3239,3 +3239,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: an abandoned, unsupported research archive: MIT, 889 commits under one normalised author after a privacy rewrite that changed every hash and sanitised source bytes, 936,482 lines of Rust across twenty-four crates, a 10,933-line memory crate with 211 inline and 71 integration and contract tests, and a postmortem that says the project grew into too much machinery. Four of seven capability marks. Every mechanism is cited to the paper it came from, and the seams between the papers and the product are where it stopped.
 - Study when: you are designing a trust-tiered or bi-temporal fact store and want a complete, tested schema and dispatcher to read, or you want the cleanest statement of *who may see personal memory* in this corpus.
 - Do not copy when: you need anything to run. Nobody maintains it, the flag that turns capture on has expired, and the forgetting is a soft close that the next same-key write overrides.
+
+### [`argos`](../systems/argos/)
+- Best idea: **a tombstone and a rejection ledger that both write paths consult.** A hard delete fingerprints the normalised content; a rejection or a kept-old conflict resolution records the claim slot `(subject, predicate, scope)` so a paraphrase is caught; `remember` and `save_candidate` both check both tables and return nothing on a hit, so a re-fed fact neither lands nor reaches the reviewer, and only an explicit purge lets it back.
+- Biggest risk: **the headline benchmarks never exercised the machinery the marks are for.** The project's own claims audit records that every LongMemEval run ingested with dedup off into a fresh store per question and formed no version chain — 0 of 2,424 records with `valid_to` or `superseded_by` — so the 89.8 % and 70.4 % measure retrieval plus an answerer. Beside that: no event is recorded for a create or an approval, the read log rotates at 100,000 rows, `memory_save` bypasses the ladder by design, and the licence is BSL 1.1 until 2030.
+- Most reusable component: the approval invariant at the storage boundary — `review_candidate` raises when automatic review asks for `approved`, downgrades external origin and value conflicts to confirmation, and caps promotion at the grounding ceiling — together with the contradiction matrix, five cases scored on five criteria with an empty-store control against vacuous passes.
+- Maturity impression: BSL 1.1, 402 commits in five weeks by one maintainer and a signing coding agent, 46,635 lines of Python under 148 test files and 2,750 test functions, 220 issues and 123 pull requests, a claims audit refreshed every few days that records its own overstatements and two fail-open defects it fixed. Seven of seven capability marks. Built against this atlas's rubric, and read here from the code.
+- Study when: you want the most complete worked example of *nothing becomes a memory silently* — proposal, ladder, human rung, tombstone, ledger, receipt — in one local store, or a claims audit worth copying.
+- Do not copy when: you need an append-only history of every mutation, a benchmark that measured the supersession path, or a licence that permits production use without a conversation.
