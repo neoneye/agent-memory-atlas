@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 224 of 372 screened at the report's current pin.**
+**Progress: 226 of 374 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 85 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 91 |
-| Repositories with build-time execution (`EXEC`) | 169 |
+| Repositories with an auto-run surface (`RUNS`) | 86 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 94 |
+| Repositories with build-time execution (`EXEC`) | 170 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -109,6 +109,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
+| [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |

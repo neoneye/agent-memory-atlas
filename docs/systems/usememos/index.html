@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted note service whose
+memos carry a creator, a visibility and a space, filtered by one
+database predicate before pagination on every list, and handed to agents
+through a stateless MCP catalog of twenty operations that reuse the REST
+policy.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memos — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted note service
+whose memos carry a creator, a visibility and a space, filtered by one
+database predicate before pagination on every list, and handed to agents
+through a stateless MCP catalog of twenty operations that reuse the REST
+policy.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memos — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted note service
+whose memos carry a creator, a visibility and a space, filtered by one
+database predicate before pagination on every list, and handed to agents
+through a stateless MCP catalog of twenty operations that reuse the REST
+policy.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memos — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memos",
+      "description": "A self-hosted note service whose memos carry a creator, a visibility and a space, filtered by one database predicate before pagination on every list, and handed to agents through a stateless MCP catalog of twenty operations that reuse the REST policy.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Visibility-scoped notes with an MCP
+surface</p>
+          <h1>Memos</h1>
+          <p class="document-deck">A self-hosted note service whose
+memos carry a creator, a visibility and a space, filtered by one
+database predicate before pagination on every list, and handed to agents
+through a stateless MCP catalog of twenty operations that reuse the REST
+policy.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/usememos/memos">
+              <span>Source</span>
+              <strong>usememos/memos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/usememos/memos/commit/3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f" title="3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f">
+              <span>Analyzed revision</span>
+              <code>3d97b39f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memos is a self-hosted note service — one text box, Markdown, tags, a
+timeline — that has been in development since December 2021 under the
+MIT licence and, at this commit, exposes its memo API to agents through
+a Model Context Protocol server. It is in this atlas as a <strong>store
+an agent can be pointed at</strong>, in the family of <a
+href="../joplin/">Joplin</a> and <a href="../logseq/">Logseq</a>, not as
+a memory system in its own right: nothing here extracts, consolidates,
+decays or scores. A memo says what someone typed.</p>
+<p>What earns it a report rather than a bullet is the <strong>access
+predicate</strong>. Every memo carries a creator, a visibility of
+<code>PRIVATE</code>, <code>PROTECTED</code>, <code>PUBLIC</code> or
+<code>SPACE</code>, and an optional space. The service resolves the
+caller into a <code>MemoAccessScope</code> and the storage driver
+renders that scope as one SQL <code>WHERE</code> clause, appended before
+<code>LIMIT</code> and <code>OFFSET</code>, so a memo the caller may not
+read is neither returned nor counted nor paginated over
+(<code>store/db/sqlite/memo_access.go:12-40</code>). The same predicate
+guards point reads, comment listings, attachments and reactions, and the
+design note that introduced spaces states the rule in a form a reader
+can check: an unknown visibility denies, a missing placement denies, and
+a filter can only narrow
+(<code>docs/design/multi-spaces.md:160-185</code>). The store tests seed
+two users and assert that the viewer's list holds exactly the public
+rows (<code>store/test/memo_access_test.go:13-68</code>). That is
+<code>scope_enforced</code> and <code>negative_eval</code> by the
+atlas's definitions, both earned on the read path.</p>
+<p>The MCP surface is deliberately thin.
+<code>server/router/mcp/catalog.go:12-36</code> is an allowlist of
+twenty REST operations — fourteen on memos, four on attachments, memo
+views, and a read-only <em>whoami</em> — each wrapped as a tool from the
+embedded OpenAPI document. The server is stateless streamable HTTP,
+rejects session methods, and forwards the caller's
+<code>Authorization</code> header to the REST handler unchanged
+(<code>server/router/mcp/service.go:146</code>,
+<code>adapter.go:89</code>), so an agent has exactly the rights of the
+token it holds and no separate policy to audit.</p>
+<p>The limits follow from the unit. A memo has no trust state, no
+provenance beyond its creator, no validity interval and no tombstone:
+<code>DeleteMemo</code> is a row delete by the creator only, and nothing
+remembers that the memo existed. Retrieval is a CEL filter compiled to
+SQL with <code>content.contains()</code> as its only text operator — no
+full-text index, no embeddings, no ranking beyond pin and time. An agent
+that uses Memos as memory gets a scoped, durable, human- readable log of
+notes and must bring every other mechanism itself.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>memo</strong>: one Markdown document with an
+author, an audience, a lifecycle flag and a bag of derived properties.
+The audience is the model's whole vocabulary of trust — not <em>how
+sure</em> but <em>who may see</em>:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memo is created private by default, may be widened to protected, public or a space, archived by its author, and hard-deleted; every read passes the audience predicate first</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memo is created private by default, may be widened to protected, public or a space, archived by its author, and hard-deleted; every read passes the audience predicate first
+flowchart TB
+    C[&quot;create (person or agent)&quot;] --&gt; P[&quot;PRIVATE · creator only&quot;]
+    P --&gt;|&quot;visibility update&quot;| R[&quot;PROTECTED · every logged-in user&quot;]
+    P --&gt;|&quot;visibility update&quot;| U[&quot;PUBLIC · anyone the instance allows&quot;]
+    P --&gt;|&quot;placement + visibility&quot;| S[&quot;SPACE · accepted members of one space&quot;]
+    R --&gt; A[&quot;ARCHIVED · creator only, hidden from feeds&quot;]
+    U --&gt; A
+    S --&gt; A
+    P --&gt; A
+    A --&gt;|&quot;restore&quot;| P
+    P --&gt;|&quot;DeleteMemo, creator only&quot;| D[&quot;row gone, attachments and relations with it&quot;]
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The state machine is short because it is a permissions model, not an
+epistemic one. <code>PRIVATE</code>, <code>PROTECTED</code>,
+<code>PUBLIC</code> and <code>SPACE</code> are set by the author and say
+nothing about whether the content is right; <code>ARCHIVED</code> hides
+a memo from feeds and keeps it readable by its creator. There is no
+candidate, no verified, no superseded, no rejected. What the model buys
+is one guarantee the atlas rarely sees stated so plainly: <em>a read
+never widens</em>. A CEL filter, a share link, a comment relation or a
+space membership can restrict or, in the share case, admit one memo;
+none can leak a row the predicate would hide.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Go, MIT, 4,759 commits since 2021-12-08, release v0.30.0 dated
+2026-07-26. 86,894 lines of Go with 881 test functions in 153 files, a
+React client, and a protobuf API served over gRPC and a REST gateway.
+The parts this report reads:</p>
+<ul>
+<li><code>store/</code> — the <code>Memo</code> model, the driver
+interface and three dialect implementations under
+<code>store/db/{sqlite,mysql,postgres}/</code>, with the memo DDL in
+<code>store/migration/sqlite/LATEST.sql:51-64</code>.</li>
+<li><code>server/access/</code> — the memo-local read decision,
+<code>CheckMemoReadContext</code>, and the audience matrix it
+encodes.</li>
+<li><code>server/router/api/v1/</code> — the gRPC services;
+<code>memo_access.go</code> resolves the caller into a scope,
+<code>memo_service.go</code> lists, creates, updates and deletes.</li>
+<li><code>internal/filter/</code> — a CEL parser, an intermediate
+representation and a per-dialect renderer that turns
+<code>content.contains("x") &amp;&amp; tag in ["a"]</code> into
+SQL.</li>
+<li><code>server/router/mcp/</code> — 3,107 lines: the catalog
+allowlist, a service that builds tools from the embedded OpenAPI
+document, an adapter that replays a tool call as an HTTP request against
+the gateway, and an evaluation file.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent's MCP tool call is replayed as an HTTP request with its own bearer token against the REST gateway, which resolves the caller into an access scope that the storage driver renders as a WHERE predicate before pagination</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent&#39;s MCP tool call is replayed as an HTTP request with its own bearer token against the REST gateway, which resolves the caller into an access scope that the storage driver renders as a WHERE predicate before pagination
+flowchart LR
+    AG[&quot;agent over MCP&quot;] --&gt;|&quot;tool call + Authorization&quot;| MCP[&quot;mcp/service.go: catalog allowlist, stateless HTTP&quot;]
+    MCP --&gt;|&quot;adapter.go replays as HTTP&quot;| GW[&quot;gRPC gateway REST&quot;]
+    W[&quot;web client&quot;] --&gt; GW
+    GW --&gt; API[&quot;api/v1 MemoService&quot;]
+    API --&gt;|&quot;resolveMemoAccessScope&quot;| SC[&quot;MemoAccessScope: user, allow public, allow protected&quot;]
+    API --&gt;|&quot;CEL filter&quot;| F[&quot;internal/filter → SQL&quot;]
+    SC --&gt; DRV[&quot;store driver&quot;]
+    F --&gt; DRV
+    DRV --&gt;|&quot;WHERE audience AND filter, then LIMIT&quot;| DB[(&quot;memo · memo_relation · attachment · reaction&quot;)]</code></pre></details></figure>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> one Go binary with an embedded
+client, and a database — SQLite by default in a data directory, MySQL or
+Postgres by flag. No model, no API key, no worker.</li>
+<li><strong>Fully local and offline:</strong> yes. The only model in the
+codebase is a transcription service
+(<code>proto/api/v1/ai_service.proto:13</code>, one RPC), and memos
+never touch it.</li>
+<li><strong>Hand-repairable:</strong> yes. The store is one table of
+Markdown with a JSON payload; a person can read and edit it with the
+database's own client.</li>
+<li><strong>Install:</strong> a Docker image or a binary. The bar is
+low, which is the point of the product.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Resolve the caller.</strong>
+<code>server/router/api/v1/memo_access.go:67-84</code>.
+<code>newMemoAccessScope</code> builds
+<code>{AllowPublic, AllowProtected: user != nil, UserID}</code>; for an
+anonymous caller the instance setting decides whether
+<code>PUBLIC</code> is readable at all. The comment above it is the
+contract: <em>drivers apply it as a database predicate before
+LIMIT/OFFSET so inaccessible rows can neither leak nor skew counts and
+pagination.</em></p>
+<p><strong>List.</strong> <code>memo_service.go:77-99</code>. The scope
+goes into <code>memoFind.Access</code>, the caller's CEL filter is
+parsed and rendered, and an explicit <code>creator</code> filter narrows
+to one user. <code>store/db/sqlite/memo.go:166-167</code> appends the
+rendered predicate to the <code>WHERE</code> list; ordering is pinned
+first, then created or updated time, then id.</p>
+<p><strong>The predicate.</strong>
+<code>store/db/sqlite/memo_access.go:12-40</code>. <code>PUBLIC</code>
+when allowed; for an authenticated caller,
+<code>PRIVATE AND creator_id = ?</code>, <code>PROTECTED</code> when
+allowed, and <code>SPACE AND EXISTS (accepted membership)</code>; the
+whole thing wrapped in a check that the creator row exists and that a
+<code>SPACE</code> memo has a space that exists, and that
+<code>row_status = 'NORMAL'</code> unless the caller is the creator.
+When no clause applies the predicate is the literal <code>1 = 0</code>.
+The Postgres and MySQL renderers are the same function in their own
+dialect (<code>store/db/postgres/memo_access.go:13</code>).</p>
+<p><strong>Point read.</strong> <code>server/access/memo.go</code> —
+<code>CheckMemoReadContext</code> takes the memo, the viewer, whether
+anonymous access is allowed, whether the creator and the space are
+valid, and an optional share id, and returns a decision class or a
+denial. <code>memo_access.go:51-62</code> maps the denial to <em>not
+found</em>, <em>unauthenticated</em> or <em>permission denied</em>.</p>
+<p><strong>Create.</strong> <code>memo_service.go</code>
+<code>CreateMemo</code> — the creator is the caller, the visibility is
+validated, the payload properties (<code>has_link</code>,
+<code>has_task_list</code>, <code>has_code</code>,
+<code>has_incomplete_tasks</code>, <code>title</code> from the first
+heading) are derived from the Markdown
+(<code>proto/store/memo.proto:15-23</code>).</p>
+<p><strong>Delete.</strong> <code>memo_service.go:484-520</code>. The
+caller must be the creator (line 508);
+<code>store/memo_delete_policy.go:41-47</code> deletes the memo, its
+owned attachments and every relation it is an endpoint of, atomically.
+No row is left behind.</p>
+<p><strong>MCP.</strong> <code>server/router/mcp/catalog.go:12-36</code>
+names the operations; <code>service.go:133-146</code> wraps each as a
+tool handler that reads the request's <code>Authorization</code> header;
+<code>adapter.go:89</code> sets it on the replayed HTTP request.
+<code>validation.go</code> checks arguments against the OpenAPI schema
+before the call.</p>
+<p><strong>Filter.</strong>
+<code>internal/filter/schema.go:93-100</code> declares
+<code>content</code> with <code>SupportsContains</code>;
+<code>render.go:426-492</code> handles <code>tag</code> and
+<code>tags in [...]</code> against the JSON payload with string literals
+only.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memo</code> table
+(<code>store/migration/sqlite/LATEST.sql:51-64</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning for an agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uid</code></td>
+<td>the public identifier, <code>memos/{uid}</code> in the API</td>
+</tr>
+<tr>
+<td><code>creator_id</code></td>
+<td>the only provenance; set by the server from the caller</td>
+</tr>
+<tr>
+<td><code>row_status</code></td>
+<td><code>NORMAL</code> or <code>ARCHIVED</code>; archived rows are
+creator-only</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>Markdown, whole</td>
+</tr>
+<tr>
+<td><code>visibility</code></td>
+<td><code>PUBLIC</code>, <code>PROTECTED</code>, <code>PRIVATE</code>
+(default) or <code>SPACE</code></td>
+</tr>
+<tr>
+<td><code>pinned</code></td>
+<td>ordering hint</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td>JSON: <code>tags[]</code>, <code>location</code>, derived
+<code>property</code></td>
+</tr>
+<tr>
+<td><code>space_id</code></td>
+<td>required when visibility is <code>SPACE</code>, otherwise null</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Relations.</strong> <code>memo_relation</code> links two
+memos as <code>REFERENCE</code> or <code>COMMENT</code>. A comment is
+itself a memo with its own visibility; the access test's central
+assertion is that <em>"COMMENT relations must neither grant nor restrict
+memo-local read access"</em> — a readable comment on an unreadable
+context is returned, an unreadable comment on a readable context is
+not.</p>
+<p><strong>Temporal:</strong> <code>created_ts</code> and
+<code>updated_ts</code>, both settable by the author on create
+(<code>store/test/memo_test.go:390-448</code>). There is no validity
+interval and no history; an update overwrites <code>content</code>.
+<code>bitemporal</code> is withheld.</p>
+<p><strong>Trust:</strong> none on content. Visibility is an audience,
+<code>row_status</code> is a lifecycle flag, and both are chosen by the
+author rather than derived by the system or applied to withhold a
+doubtful memory from a reader who is allowed to see it.
+<code>trust_state</code> is withheld on the same reasoning the atlas
+applies to Joplin's trash.</p>
+<p><strong>Scoping:</strong> the creator, the visibility and the space,
+all stored on the row and all applied by the predicate. This is the mark
+the system earns.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retriever in the atlas's sense. A list is a filter:</p>
+<ol type="1">
+<li>The CEL expression —
+<code>content.contains("deploy") &amp;&amp; "work" in tags &amp;&amp; created_ts &gt; now() - 86400</code>
+— is parsed (<code>internal/filter/parser.go</code>), lowered to an IR
+and rendered to the dialect's SQL. <code>content</code> supports
+<code>contains</code> only; <code>creator</code> compares for equality
+against <code>users/{name}</code>; <code>tag</code> and
+<code>tags</code> take string literals.</li>
+<li>The access predicate is appended.</li>
+<li>Ordering is <code>pinned DESC</code>, then <code>created_ts</code>
+or <code>updated_ts</code> in the requested direction, then
+<code>id DESC</code>; a page size and a token paginate.</li>
+</ol>
+<p>No full-text index exists in any dialect, no embedding is computed,
+and no score is returned
+(<code>rg -n 'FTS|fts5|embedding|vector' -g '*.go'</code> finds no memo
+code). For an agent this means retrieval is <em>recall by tag or
+substring</em>, which is exact and cheap and does not degrade with
+corpus size until <code>LIKE</code> over <code>content</code> does.</p>
+<p><strong>Failure modes:</strong> a <code>contains</code> on a long
+memo matches on any substring, so a query for a short term returns every
+memo that mentions it anywhere; without ranking, the newest or pinned
+memo wins regardless of fit; and <code>PROTECTED</code> is every
+logged-in user, so an agent listing with a shared token reads its
+colleagues' protected notes as readily as its own.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Literal and synchronous.</strong> <code>CreateMemo</code>
+stores the Markdown as sent, stamps the caller as creator, defaults the
+visibility to <code>PRIVATE</code>, and derives the payload properties.
+Nothing is extracted, merged or deduplicated: two memos with the same
+text are two rows.</p>
+<p><strong>Update</strong> is a field-mask update in place —
+<code>content</code>, <code>visibility</code>, <code>pinned</code>,
+<code>row_status</code>, <code>space</code>, tags through the payload —
+with no version kept. The MCP layer lets the gateway infer the mask when
+the agent omits it (<code>service_test.go:182</code>).</p>
+<p><strong>Delete</strong> is final and creator-only. There is no soft
+delete other than <code>ARCHIVED</code>, no tombstone and no record of
+what was removed; <code>tombstone</code> and <code>audit_log</code> are
+withheld.</p>
+<p><strong>Conflicts:</strong> last write wins. There is no
+<code>If-Match</code>, no version field and no detection that a person
+edited the memo between an agent's read and its write.</p>
+<p><strong>Malicious input:</strong> stored and returned as written. The
+Markdown is rendered by the client; the server validates the visibility
+and the space, not the text.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>One insert plus the payload derivation; no model call on any
+path.</li>
+<li>A new memo is listable in the same transaction; there is no index
+lag because there is no index.</li>
+<li>One background runner,
+<code>server/runner/memopayload/runner.go:27</code>, rebuilds the
+derived payload properties of every memo from its Markdown; a webhook is
+dispatched on create (<code>memo_service.go:65-67</code>), update and
+delete.</li>
+<li>Nothing is injected into a prompt by the system. The agent lists,
+reads and decides.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server (<code>server/router/mcp/README.md</code>) is an
+allowlist over the REST API rather than a second API. Its properties,
+each with a test:</p>
+<ul>
+<li><strong>Curated tools only.</strong>
+<code>TestMCPProtocolListsCuratedToolsOnly</code>
+(<code>service_test.go:114</code>) asserts the tool list equals the
+catalog; the catalog marks each operation idempotent or destructive
+(<code>catalog.go:63-101</code>) so a client can gate the destructive
+ones.</li>
+<li><strong>Authorization passthrough.</strong>
+<code>TestMCPToolHandlerForwardsArgumentsAndAuthorization</code>
+(<code>service_test.go:77</code>): the bearer token on the MCP request
+is the bearer token on the replayed REST call. An agent's scope is its
+token's scope.</li>
+<li><strong>Stateless.</strong>
+<code>TestMCPStatelessProtocol2026</code> and
+<code>TestMCPStatelessRejectsSessionMethods</code>
+(<code>service_test.go:480-564</code>): no session id, no server-side
+state per agent.</li>
+<li><strong>Argument validation</strong> against the OpenAPI schema
+before the call (<code>TestMCPToolCallRejectsInvalidArguments</code>,
+<code>service_test.go:318</code>), with the memo bound from the path for
+body-star operations.</li>
+<li><strong>Loopback and origin checks</strong> for a server behind a
+reverse proxy (<code>origin.go</code>,
+<code>service_test.go:397</code>).</li>
+<li><strong>Whoami.</strong> <code>AuthService_GetCurrentUser</code> is
+the only identity operation exposed, so an agent can learn which
+<code>users/{id}</code> its token is before it filters by creator.</li>
+</ul>
+<p>The design note is explicit that <em>MCP memo operations reuse the
+same memo policy; Space management is not exposed through MCP</em>
+(<code>docs/design/multi-spaces.md:169</code>). There is no prompt, no
+injection and no session memory: Memos does not know an agent is talking
+to it, and the integration is as loosely coupled as an HTTP API can be.
+<code>CONTEXT.md</code> and <code>AGENTS.md</code> at the repository
+root are a glossary for coding agents working on the codebase, not
+runtime configuration.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The predicate is the safety model, and it is tested where it
+matters.</strong> <code>store/test/memo_access_test.go</code> seeds two
+users and asserts the viewer's list, the comment cases, the
+archived-rows-remain-author-only case (line 133) and the
+no-author-bypass case for <code>SPACE</code> (line 96): the author of a
+space memo who leaves the space loses the read.
+<code>server/access/memo_test.go</code> covers the decision function's
+matrix including the fail-closed branch for an invalid state (line 82).
+The API-level tests under <code>server/router/api/v1/test/</code>
+exercise relations, attachments and views against the same scope.</p>
+<p><strong>What the model does not do.</strong> It does not mark a memo
+as doubtful, superseded or agent-written beyond <code>creator_id</code>;
+an agent with a person's token writes as that person. It does not keep
+history: an edit replaces, a delete removes. It does not separate an
+agent's memos from the person's except by a tag the agent chooses to
+add. And the <code>PROTECTED</code> audience — every authenticated user
+— is the one an agent should treat as public.</p>
+<p><strong>Human review:</strong> a person can read and edit every memo
+in the web client, which is display and edit of live rows rather than
+adjudication of a pending one. <code>human_review</code> is
+withheld.</p>
+<p><strong>Concurrency:</strong> the delete is one transaction under a
+policy check; the update is a plain row update with no version. Two
+agents editing one memo interleave silently.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>881 test functions in 153 files. The ones that bear on this
+report:</p>
+<ul>
+<li><code>store/test/memo_access_test.go</code> — five tests, two users,
+lists asserted by exact id sets.</li>
+<li><code>server/access/memo_test.go</code> — five tests over the
+decision matrix.</li>
+<li><code>store/test/memo_test.go:184-247</code> —
+<code>TestMemoListByVisibility</code>, one user listing by visibility
+filter.</li>
+<li><code>server/router/mcp/*_test.go</code> — 59 tests across adapter,
+catalog, OpenAPI, service and validation.</li>
+<li><code>server/router/mcp/evals/memos_eval.xml</code> — ten
+question-and-answer pairs over a seed dump, the file a hosted evaluator
+reads; no scorer and no results are committed.</li>
+</ul>
+<p>The <code>negative_eval</code> mark rests on
+<code>TestMemoAccessScopeUsesEachMemoAudience</code>: four memos seeded,
+a populated result of two for the viewer, four for the owner, and the
+private rows named as the material that must not appear.</p>
+<p>No memory benchmark exists and none would apply; there is nothing to
+extract or rank.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Render the scope as a predicate, not a post-filter.</strong>
+Building the audience clause once and appending it before
+<code>LIMIT</code> is what makes counts, pages and lists agree; the
+comment in <code>memo_access.go</code> says why in one sentence, and the
+two-user test proves it.</li>
+<li><strong>Fail closed on unknown state.</strong> An unrecognised
+visibility or a missing space denies. The alternative — treating an
+unknown value as public — is how a migration leaks.</li>
+<li><strong>An MCP server as an allowlist over the API you already
+authorise.</strong> No second policy, no second bug surface, and the
+agent's rights are exactly the token's.</li>
+<li><strong>Say which tools are destructive</strong> in the catalog so
+the client can gate them; it costs one map.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating a note service as a fact store.</strong> No dedupe,
+no state, no provenance beyond creator, no history: an agent that writes
+memories here must carry all of that itself or accept a log.</li>
+<li><strong>A default audience of "everyone logged in."</strong>
+<code>PROTECTED</code> is a reasonable default for a team wiki and a
+leak for a personal agent whose token is shared with a colleague's.</li>
+<li><strong>Hard delete as the only forget.</strong> Once the row is
+gone nothing prevents the same memo being written again, and nothing
+tells an auditor it was there.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Memos fits an agent that needs a durable, scoped, human-readable
+place to put notes a person will read — a daily log, a running list, a
+shared scratchpad — and that brings its own retrieval and its own
+judgement about what to keep. The scope predicate is better than most
+purpose-built memory stores in this atlas manage, and the MCP surface is
+the cleanest way to hand an agent exactly one user's rights.</p>
+<p>It does not fit a system that needs trust states, supersession,
+provenance, tombstones or semantic recall. For those, keep Memos as the
+human-facing surface and put the memory layer in front of it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does the Postgres <code>LIKE</code> on <code>content</code>
+become the bottleneck</strong>, and at what corpus size? No index is
+declared on <code>content</code> in any dialect.</li>
+<li><strong>Will the evaluation file grow a scorer?</strong>
+<code>memos_eval.xml</code> holds questions and answers with nothing
+that runs them.</li>
+<li><strong>Is <code>PROTECTED</code> the default in any deployment
+path?</strong> The DDL default is <code>PRIVATE</code>; the client's
+default was not traced.</li>
+<li><strong>Will spaces reach the MCP catalog?</strong> The design note
+excludes space management from the initial version and does not say when
+that changes.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Model and storage</strong></p>
+<ul>
+<li><code>store/migration/sqlite/LATEST.sql</code> — <code>memo</code>
+DDL (lines 51–64)</li>
+<li><code>proto/store/memo.proto</code> — payload <code>Property</code>,
+<code>Location</code>, <code>tags</code> (lines 8–23)</li>
+<li><code>store/db/sqlite/memo_access.go</code> —
+<code>sqliteMemoAccessPredicate</code> (lines 12–40);
+<code>store/db/postgres/memo_access.go:13</code> and the MySQL twin</li>
+<li><code>store/db/sqlite/memo.go</code> — the predicate appended to the
+list query (lines 166–167)</li>
+<li><code>store/memo_delete_policy.go</code> —
+<code>DeleteMemoWithPolicy</code> (lines 9–47)</li>
+</ul>
+<p><strong>Access</strong></p>
+<ul>
+<li><code>server/access/memo.go</code> —
+<code>CheckMemoReadContext</code></li>
+<li><code>server/router/api/v1/memo_access.go</code> —
+<code>buildMemoReadContext</code> (line 17),
+<code>memoAccessDecisionError</code> (line 51),
+<code>newMemoAccessScope</code> (line 67),
+<code>resolveMemoAccessScope</code> (line 79)</li>
+<li><code>server/router/api/v1/memo_service.go</code> —
+<code>CreateMemo</code> (line 23), <code>ListMemos</code> (lines 77–99),
+<code>DeleteMemo</code> (lines 484–520)</li>
+<li><code>docs/design/multi-spaces.md</code> — the policy predicate and
+the MCP sentence (lines 160–185)</li>
+</ul>
+<p><strong>Filter</strong></p>
+<ul>
+<li><code>internal/filter/schema.go</code> — <code>content</code> with
+<code>SupportsContains</code> (lines 93–100); <code>render.go</code> —
+tags (lines 426–492)</li>
+</ul>
+<p><strong>MCP</strong></p>
+<ul>
+<li><code>server/router/mcp/catalog.go</code> — the allowlist (lines
+12–36), idempotent and destructive sets (lines 63–101)</li>
+<li><code>server/router/mcp/service.go</code> — tool handler and
+<code>Authorization</code> (lines 133–146); <code>adapter.go:89</code>;
+<code>validation.go</code>; <code>origin.go</code>;
+<code>README.md</code></li>
+<li><code>server/router/mcp/evals/memos_eval.xml</code> — ten QA
+pairs</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>store/test/memo_access_test.go</code> — five tests (lines
+13–217)</li>
+<li><code>server/access/memo_test.go</code> — five tests (lines
+11–146)</li>
+<li><code>store/test/memo_test.go</code> —
+<code>TestMemoListByVisibility</code> (line 184), custom timestamps
+(line 390)</li>
+<li><code>server/router/mcp/service_test.go</code> — fourteen tests
+(lines 22–565)</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>rg -n 'FTS|fts5|embedding|vector' -g '*.go' .</code> — no memo
+code; the only model is <code>Transcribe</code> in
+<code>proto/api/v1/ai_service.proto:13</code>.</li>
+<li><code>rg -n 'If-Match|version|etag' server/router/api/v1/memo_service.go</code>
+— no concurrency check on update.</li>
+<li><code>rg -n 'tombstone|soft.?delete|deleted_ts' store/</code> —
+none; <code>row_status</code> is <code>NORMAL</code> or
+<code>ARCHIVED</code> only.</li>
+<li><code>rg -n 'SpaceService' server/router/mcp/catalog.go</code> — no
+hit; spaces are not in the catalog.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/usememos/memos/commit/3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f"><code class="commit-id" title="3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f">3d97b39f…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

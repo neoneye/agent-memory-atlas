@@ -107,14 +107,14 @@ that lets an agent create and edit but never delete.</p>
               <strong>logseq/logseq</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38" title="9a11243d50b23afeb10bda5a2ca6cc77357eea38">
+            <a class="meta-pill revision-pill" href="https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae" title="d2ab7726ab74402c14fdbc33041a89ac55c899ae">
               <span>Analyzed revision</span>
-              <code>9a11243d…</code>
+              <code>d2ab7726…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -134,13 +134,13 @@ that lets an agent create and edit but never delete.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Logseq is a local-first outliner and knowledge base — a human tool,
-twelve years of it — that ships an agent interface: an MCP server
-exposing six tools over the graph, and a local embedding sidecar feeding
-a vector index. That combination is what brings it into this atlas, on
-the same footing as <a href="../basic-memory/">Basic Memory</a> and <a
-href="../llm-wiki-memory/">llm-wiki-memory</a>: a durable store a person
-authors, which an agent can now read and write, and which outlives every
-session by a wide margin.</p>
+in development since December 2019 — that ships an agent interface: an
+MCP server exposing six tools over the graph, and a local embedding
+sidecar feeding a vector index. That combination is what brings it into
+this atlas, on the same footing as <a href="../basic-memory/">Basic
+Memory</a> and <a href="../llm-wiki-memory/">llm-wiki-memory</a>: a
+durable store a person authors, which an agent can read and write, and
+which outlives every session by a wide margin.</p>
 <p>What makes it worth a report rather than a mention is the
 <strong>schema</strong>. Almost every system in this atlas ships a
 memory model its vendor chose — features, observations, facts, episodes.
@@ -213,7 +213,7 @@ delete but cannot author a derived fact — and between them the two
 systems bracket the question of which half of memory you dare hand a
 model.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>ClojureScript, AGPL-3.0, ~871 Clojure source files, plus a
+<p>ClojureScript, AGPL-3.0, 1,011 Clojure source files, plus a
 Rust/Electron desktop shell and a Python sidecar. The relevant modules
 are the <code>deps/</code> workspace: <code>db</code> (schema,
 properties, malli validation), <code>outliner</code> (the block tree and
@@ -258,7 +258,7 @@ product; it is the most restrictive licence in this atlas.</li>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Agent write.</strong> <code>api-upsert-nodes</code> in
-<code>src/electron/electron/mcp_server.cljs:115</code> forwards to
+<code>src/electron/electron/mcp_server.cljs:118</code> forwards to
 <code>logseq.cli.upsertNodes</code> with an <code>operations</code>
 array and a <code>dry-run</code> flag. Each operation carries
 <code>:operation</code> (<code>:add</code>/<code>:edit</code>),
@@ -275,7 +275,7 @@ it.</p>
 <code>-save</code> path with <code>retract-attributes?</code>, the block
 tree operations, and <code>:delete-blocks</code>.</p>
 <p><strong>Retrieval.</strong> <code>search-blocks</code> in
-<code>src/main/frontend/worker/search.cljs:893</code>. Reads in order:
+<code>src/main/frontend/worker/search.cljs:948</code>. Reads in order:
 exact-title query, then FTS5 <code>match</code>, then a
 <code>LIKE</code> arm used only when the query is two characters or
 shorter, then fuzzy, then vector.
@@ -283,24 +283,28 @@ shorter, then fuzzy, then vector.
 short-circuit the expensive arms. The vector arm is behind
 <code>:feature/enable-semantic-search?</code>.</p>
 <p><strong>Index maintenance.</strong>
-<code>create-blocks-fts-table!</code> (line 52) creates the FTS5 virtual
+<code>create-blocks-fts-table!</code> (line 53) creates the FTS5 virtual
 table with <code>tokenize="trigram"</code>;
-<code>add-blocks-fts-triggers!</code> (line 20) keeps it current with
-delete/insert triggers. Vector constants sit at lines 16–18 and 150–154:
-<code>max-vector-search-results 10</code>,
+<code>add-blocks-fts-triggers!</code> (line 21) keeps it current with
+delete/insert triggers. Vector and fusion constants sit at lines 16–18
+and 148–159: <code>max-vector-search-results 10</code>,
 <code>min-vector-search-score 0.5</code>,
 <code>vector-upsert-batch-size 1024</code>,
 <code>vector-embedding-dimension 384</code>,
-<code>vector-context-version 3</code>,
-<code>vector-rrf-weight 1.0</code>.</p>
+<code>vector-context-version 3</code>, <code>rrf-k 60</code>,
+<code>keyword-rrf-weight 1.25</code>,
+<code>vector-rrf-weight 1.0</code>, and title-match boosts of
+<code>0.004</code> and <code>0.002</code> that break ties inside the
+fused order.</p>
 <p><strong>Embeddings.</strong> <code>sidecar/embedding_server.py</code>
 — a threading HTTP server wrapping <code>SentenceTransformer</code>,
 default model <code>all-MiniLM-L6-v2</code>, with a warmup input and a
 model cache.</p>
 <p><strong>Delete.</strong> <code>:db/retractEntity</code> in
-<code>outliner/core.cljs:113</code>, applied to orphaned pages after a
-deletion; <code>:db/retract</code> for individual attributes and tag
-links (lines 198, 208).</p>
+<code>outliner/core.cljs:114</code>, applied to orphaned pages after a
+deletion, and again at line 441 for the blocks themselves;
+<code>:db/retract</code> for individual attributes and tag links (lines
+198, 208).</p>
 <p><strong>Schema.</strong>
 <code>deps/db/src/logseq/db/frontend/property.cljs</code> (property
 types, cardinality, <code>created-by-ref</code> at line 653),
@@ -333,8 +337,12 @@ real boundary but not a scope key applied on a read path, so
 <code>:logseq.property/created-by-ref</code> ("Node created by") exists
 in the property schema and in the malli spec as an optional int. Tracing
 its writers finds <code>db-sync</code> tests, a checksum test, an
-IRC-history import script and the publish renderer — the multi-user
-collaboration path. <strong>The MCP write path never sets it.</strong>
+IRC-history import script, the publish renderer — the multi-user
+collaboration path — and one outliner operation:
+<code>toggle-reaction!</code> in
+<code>deps/outliner/src/logseq/outliner/op.cljs:209</code> stamps an
+emoji reaction with the logged-in account's uuid, and with nothing when
+there is no account. <strong>The MCP write path never sets it.</strong>
 So the one field that could tell a user which nodes an agent created is
 defined and unused where it would matter most.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
@@ -357,8 +365,9 @@ nothing to tokenize.</li>
 <code>:feature/enable-semantic-search?</code>, capped at 10 results with
 a 0.5 minimum score.</li>
 </ol>
-<p>Fusion is reciprocal rank with <code>vector-rrf-weight</code>. The
-interesting part is the <strong>gating</strong>:
+<p>Fusion is reciprocal rank with <code>rrf-k 60</code>, the keyword
+arms weighted <code>1.25</code> against the vector arm's
+<code>1.0</code>. The interesting part is the <strong>gating</strong>:
 <code>enough-exact-title-results?</code> suppresses the FTS arm, and
 <code>skip-fuzzy?</code> suppresses fuzzy when an exact title already
 satisfied the limit or when a multi-term query already matched. This is
@@ -415,12 +424,14 @@ with the result. Token cost is entirely the caller's to manage.</li>
 </ul>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Six MCP tools
-(<code>src/electron/electron/mcp_server.cljs:119</code>):
+(<code>src/electron/electron/mcp_server.cljs:122</code>):
 <code>listPages</code>, <code>getPage</code>, <code>upsertNodes</code>,
 <code>searchBlocks</code>, <code>listTags</code>,
 <code>listProperties</code>. They are thin wrappers over the app's own
 API, registered against an <code>McpServer</code> named "Logseq MCP
-Server", enabled by a <code>:server/mcp-enabled?</code> config flag.</p>
+Server", enabled by a <code>:server/mcp-enabled?</code> config flag, and
+the server object is built afresh for each MCP session rather than
+shared.</p>
 <p><code>listTags</code> and <code>listProperties</code> are the ones
 that make the schema usable by a model: an agent can discover the
 ontology before writing into it, which is what turns a typed schema from
@@ -476,7 +487,7 @@ route so embeddings travel too. Its conflict behaviour was not
 traced.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>245 test files</strong> across the workspace, which is a
+<p><strong>318 test files</strong> across the workspace, which is a
 serious suite, and it is aimed at the things a knowledge base gets
 wrong: schema migration, malli validation of the property system,
 outliner tree operations, and — notably — <code>db-sync</code> has
@@ -572,8 +583,9 @@ found.</li>
 in practice? The flag defaults were not traced through the settings
 UI.</li>
 <li><strong>Does anything populate <code>created-by-ref</code> for local
-single-user graphs?</strong> Only sync, import and publish paths were
-found.</li>
+single-user graphs?</strong> Sync, import, publish and emoji reactions
+set it, the last only when an account is logged in; no block or page
+write path does.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Schema and data model</strong></p>
@@ -581,6 +593,9 @@ found.</li>
 <li><code>deps/db/src/logseq/db/frontend/property.cljs</code> — property
 types, cardinality, <code>:logseq.property/created-by-ref</code> (line
 653)</li>
+<li><code>deps/outliner/src/logseq/outliner/op.cljs</code> —
+<code>toggle-reaction!</code>, the one outliner writer of
+<code>created-by-ref</code> (line 209)</li>
 <li><code>deps/db/src/logseq/db/frontend/schema.cljs</code> — schema
 version 65.33</li>
 <li><code>deps/db/src/logseq/db/frontend/malli_schema.cljs</code> —
@@ -590,22 +605,24 @@ validation</li>
 <ul>
 <li><code>deps/outliner/src/logseq/outliner/core.cljs</code> —
 <code>-save</code>, <code>:delete-blocks</code>,
-<code>:db/retractEntity</code> (line 113)</li>
+<code>:db/retractEntity</code> (lines 114, 441)</li>
 <li><code>src/electron/electron/mcp_server.cljs</code> —
-<code>api-upsert-nodes</code> (line 115)</li>
+<code>api-upsert-nodes</code> (line 118)</li>
 </ul>
 <p><strong>Retrieval</strong></p>
 <ul>
 <li><code>src/main/frontend/worker/search.cljs</code> —
-<code>search-blocks</code> (line 893), FTS5 trigram table (line 52),
-triggers (line 20), vector constants (lines 16–18, 150–154)</li>
+<code>search-blocks</code> (line 948), FTS5 trigram table (line 53),
+triggers (line 21), vector and fusion constants (lines 16–18,
+148–159)</li>
 <li><code>sidecar/embedding_server.py</code> — sentence-transformers
 HTTP sidecar</li>
 </ul>
 <p><strong>MCP/API</strong></p>
 <ul>
 <li><code>src/electron/electron/mcp_server.cljs</code> — the six tools
-(line 119)</li>
+(line 122), the once-per-request instruction (line 140),
+<code>dry-run</code> (line 196)</li>
 <li><code>src/electron/electron/server.cljs</code> —
 <code>initialize-mcp-routes</code> (line 144)</li>
 </ul>
@@ -621,7 +638,33 @@ including <code>semantic.cljs</code>, <code>storage.cljs</code>,
 <li><code>deps/db-sync/test/logseq/db_sync/checksum_test.cljs</code></li>
 <li><code>scripts/test/logseq/tasks/db_graph/create_graph_with_clojure_irc_history_test.cljs</code></li>
 </ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>rg -n 'created-by-ref' src deps --type-add 'clj:*.clj*' -t clj</code>
+— writers are <code>db-sync</code> tests,
+<code>checksum_test.cljs</code>, the IRC import script, the publish
+renderer and <code>outliner/op.cljs:209</code>;
+<code>mcp_server.cljs</code> has no hit.</li>
+<li><code>rg -l 'mcp' -g '*test*'</code> — hits are the CLI
+release-config script and four <code>db-sync</code> worker tests; no
+test exercises the six tools.</li>
+<li><code>rg -n 'delete|retract' src/electron/electron/mcp_server.cljs</code>
+— no hit; the tool map has no delete verb.</li>
+</ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae"><code class="commit-id" title="d2ab7726ab74402c14fdbc33041a89ac55c899ae">d2ab7726…</code></a>
+— re-read after 476 commits and the 2.0.1 release. Nothing moved on the
+memory paths: the same six tools, the same gated retrieval and fusion
+constants, <code>created-by-ref</code> unset by
+<code>upsertNodes</code>, no delete verb, no MCP test. Line references
+and the test-file count follow the pin; the MCP server is built once per
+session (commit <code>71db2e36f</code>, 2026-08-18); the
+<code>db-sync</code> cycle-repair module was removed (commit
+<code>39b43110f</code>, 2026-08-26); a <code>created-by-ref</code>
+writer for emoji reactions is named; the age in the summary was wrong at
+the first reading (the first commit is dated 2019-12-11) and is
+corrected. Every mark stays withheld.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38"><code class="commit-id" title="9a11243d50b23afeb10bda5a2ca6cc77357eea38">9a11243d…</code></a>
 — first reading.</p>

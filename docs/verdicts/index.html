@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 372 reports.</strong></p>
+<p><strong>This page covers all 374 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -2669,7 +2669,7 @@ over a trigram tokenizer, a <code>LIKE</code> arm for two-character
 queries, fuzzy, and a local vector arm fused by reciprocal rank, with
 the expensive arms skipped when the cheap ones already filled the
 limit.</li>
-<li>Maturity impression: 245 test files aimed at what a knowledge base
+<li>Maturity impression: 318 test files aimed at what a knowledge base
 gets wrong — schema migration, malli validation of the property system,
 outliner tree operations, and substantial <code>db-sync</code>
 coverage.</li>
@@ -13042,6 +13042,64 @@ that rides an app's change feed.</li>
 <li>Do not copy when: you need the assistant to learn across sessions, a
 scope that confines rather than filters, or provenance on what a model
 wrote.</li>
+</ul>
+<h3 id="usememos"><a
+href="../systems/usememos/"><code>usememos</code></a></h3>
+<ul>
+<li>Best idea: <strong>the audience is rendered as one SQL predicate and
+appended before the page.</strong> Creator, visibility and space become
+a <code>WHERE</code> clause on every list and count, so a memo the
+caller may not read is neither returned nor counted, and an unknown
+visibility or a missing space denies.</li>
+<li>Biggest risk: <strong>a memo is a note, and <code>PROTECTED</code>
+is everyone logged in.</strong> No state, no provenance beyond the
+creator, no history, a hard delete, and a default audience one shared
+token turns into a leak.</li>
+<li>Most reusable component: <code>server/router/mcp/</code> — an MCP
+server that is an allowlist over the REST API, stateless,
+argument-validated, with the caller's bearer token forwarded unchanged
+so the agent's rights are the token's.</li>
+<li>Maturity impression: MIT, 4,759 commits since December 2021, release
+v0.30.0, 86,894 lines of Go with 881 test functions, a two-user access
+test that asserts list contents by id, and a design note that states the
+read policy in one sentence; 2 of seven capability marks.</li>
+<li>Study when: you want the scope predicate done properly in a small
+codebase, or an MCP surface that inherits an existing authorization
+model instead of adding one.</li>
+<li>Do not copy when: a memory needs a state, a supersession, a
+tombstone or semantic recall; Memos is the human-facing surface, not the
+memory layer.</li>
+</ul>
+<h3 id="silverbullet"><a
+href="../systems/silverbullet/"><code>silverbullet</code></a></h3>
+<ul>
+<li>Best idea: <strong>content is named by its hash and the hash is the
+write precondition.</strong> <code>ETag: "sha256:…"</code> on every
+read, <code>If-Match</code> on every write, <code>412</code> on
+mismatch, fail closed on anything the server cannot evaluate; and beside
+it a reconcile endpoint that merges three ways under a lock or writes
+both sides between markers for a person.</li>
+<li>Biggest risk: <strong>write access is code execution.</strong> A
+page can carry Space Lua that runs in every reader's browser, and the
+security page says to grant <code>write</code> only to people you would
+trust as any member of every space they can reach — an agent
+included.</li>
+<li>Most reusable component: <code>server/src/handlers/fs.rs</code> with
+<code>server-merge/src/diff3.rs</code> — preconditions, per-path lock,
+hash-checked base and proposed text, bounded diff3, conflict markers
+carrying each side's hash, and an expected-write record so the watcher
+can tell the server's writes from a stranger's.</li>
+<li>Maturity impression: MIT, 3,653 commits since February 2022, version
+2.10.0, 755 Rust tests and 430 end-to-end cases, reconcile and
+precondition cases in the handler file, attribution asserted end to end;
+0 of seven capability marks, every one withheld on definitions rather
+than on absence of engineering.</li>
+<li>Study when: a person and a process edit the same store and you need
+the collision to fail or merge rather than clobber, or you want write
+attribution that reaches the history without a database.</li>
+<li>Do not copy when: you need an agent's own memory — no state, no
+supersession, no scope inside a space, and an index that lives in one
+browser.</li>
 </ul>
         </article>
       </div>

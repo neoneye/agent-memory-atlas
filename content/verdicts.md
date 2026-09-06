@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 372 reports.**
+**This page covers all 374 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -934,7 +934,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: the user defines the schema and the agent must write inside it. Properties carry a declared type and cardinality, tags are classes that extend other tags, and `listTags`/`listProperties` let a model discover the ontology before writing in it. Everywhere else the memory model is the vendor's; here it is the user's.
 - Biggest risk: agent writes land live and **unmarked** — the schema defines a `created-by-ref` property the MCP write path never sets — so the store cannot answer "what did the agent change?", and the agent has no delete verb to correct itself.
 - Most reusable component: the retrieval gating — exact title, FTS5 over a trigram tokenizer, a `LIKE` arm for two-character queries, fuzzy, and a local vector arm fused by reciprocal rank, with the expensive arms skipped when the cheap ones already filled the limit.
-- Maturity impression: 245 test files aimed at what a knowledge base gets wrong — schema migration, malli validation of the property system, outliner tree operations, and substantial `db-sync` coverage.
+- Maturity impression: 318 test files aimed at what a knowledge base gets wrong — schema migration, malli validation of the property system, outliner tree operations, and substantial `db-sync` coverage.
 - Study when: you already keep your knowledge in Logseq and want an agent to work in it, or you want the best editing surface in the atlas.
 - Do not copy when: this is the agent's *own* memory. No scope key, no trust state, no authorship, no delete — and the AGPL makes embedding it in a proprietary product a licensing decision rather than a dependency choice.
 
@@ -3310,3 +3310,19 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 15,728 commits since 2017 by the GitHub count, release 3.7.16 the day of the pin, an AI service of 4,250 lines with 130 test cases in sixteen files added over three months, an MCP server with 26; one of seven capability marks.
 - Study when: you want an assistant over a human's notes with the smallest default blast radius, or a worked example of a semantic index that rides an app's change feed.
 - Do not copy when: you need the assistant to learn across sessions, a scope that confines rather than filters, or provenance on what a model wrote.
+
+### [`usememos`](../systems/usememos/)
+- Best idea: **the audience is rendered as one SQL predicate and appended before the page.** Creator, visibility and space become a `WHERE` clause on every list and count, so a memo the caller may not read is neither returned nor counted, and an unknown visibility or a missing space denies.
+- Biggest risk: **a memo is a note, and `PROTECTED` is everyone logged in.** No state, no provenance beyond the creator, no history, a hard delete, and a default audience one shared token turns into a leak.
+- Most reusable component: `server/router/mcp/` — an MCP server that is an allowlist over the REST API, stateless, argument-validated, with the caller's bearer token forwarded unchanged so the agent's rights are the token's.
+- Maturity impression: MIT, 4,759 commits since December 2021, release v0.30.0, 86,894 lines of Go with 881 test functions, a two-user access test that asserts list contents by id, and a design note that states the read policy in one sentence; 2 of seven capability marks.
+- Study when: you want the scope predicate done properly in a small codebase, or an MCP surface that inherits an existing authorization model instead of adding one.
+- Do not copy when: a memory needs a state, a supersession, a tombstone or semantic recall; Memos is the human-facing surface, not the memory layer.
+
+### [`silverbullet`](../systems/silverbullet/)
+- Best idea: **content is named by its hash and the hash is the write precondition.** `ETag: "sha256:…"` on every read, `If-Match` on every write, `412` on mismatch, fail closed on anything the server cannot evaluate; and beside it a reconcile endpoint that merges three ways under a lock or writes both sides between markers for a person.
+- Biggest risk: **write access is code execution.** A page can carry Space Lua that runs in every reader's browser, and the security page says to grant `write` only to people you would trust as any member of every space they can reach — an agent included.
+- Most reusable component: `server/src/handlers/fs.rs` with `server-merge/src/diff3.rs` — preconditions, per-path lock, hash-checked base and proposed text, bounded diff3, conflict markers carrying each side's hash, and an expected-write record so the watcher can tell the server's writes from a stranger's.
+- Maturity impression: MIT, 3,653 commits since February 2022, version 2.10.0, 755 Rust tests and 430 end-to-end cases, reconcile and precondition cases in the handler file, attribution asserted end to end; 0 of seven capability marks, every one withheld on definitions rather than on absence of engineering.
+- Study when: a person and a process edit the same store and you need the collision to fail or merge rather than clobber, or you want write attribution that reaches the history without a database.
+- Do not copy when: you need an agent's own memory — no state, no supersession, no scope inside a space, and an index that lives in one browser.

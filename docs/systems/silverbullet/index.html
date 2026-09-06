@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Markdown wiki whose HTTP file
+API returns a content hash on every read, demands it back on every
+write, merges three ways on the server when two writers collide, and
+commits each quiet period to git under the account, client or external
+process that made the change.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SilverBullet — Agent Memory Atlas">
+    <meta property="og:description" content="A Markdown wiki whose HTTP
+file API returns a content hash on every read, demands it back on every
+write, merges three ways on the server when two writers collide, and
+commits each quiet period to git under the account, client or external
+process that made the change.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SilverBullet — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Markdown wiki whose HTTP
+file API returns a content hash on every read, demands it back on every
+write, merges three ways on the server when two writers collide, and
+commits each quiet period to git under the account, client or external
+process that made the change.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SilverBullet — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SilverBullet",
+      "description": "A Markdown wiki whose HTTP file API returns a content hash on every read, demands it back on every write, merges three ways on the server when two writers collide, and commits each quiet period to git under the account, client or external process that made the change.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hash-conditioned writes over a Markdown
+space</p>
+          <h1>SilverBullet</h1>
+          <p class="document-deck">A Markdown wiki whose HTTP file API
+returns a content hash on every read, demands it back on every write,
+merges three ways on the server when two writers collide, and commits
+each quiet period to git under the account, client or external process
+that made the change.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/silverbulletmd/silverbullet">
+              <span>Source</span>
+              <strong>silverbulletmd/silverbullet</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c" title="6331add131438431da8ee384949964828c791b2c">
+              <span>Analyzed revision</span>
+              <code>6331add1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SilverBullet is a Markdown wiki — a folder of pages served by a Rust
+binary to a browser client that indexes, links and runs scripts over
+them — in development since February 2022 under the MIT licence, at
+version 2.10.0 at this commit. It has no memory subsystem, no model call
+in its core and no MCP server. It is in this atlas because its
+<strong>file API is the write contract most memory stores in this atlas
+lack</strong>, and because it answers the question the <a
+href="../logseq/">Logseq</a> and <a href="../joplin/">Joplin</a> reports
+leave open: what happens when a person and a process edit the same note
+at the same time.</p>
+<p>Every read of <code>/.fs/{path}</code> returns an <code>ETag</code>
+of the form <code>"sha256:&lt;hash&gt;"</code> over the bytes. A write
+may carry <code>If-Match: "sha256:&lt;hash&gt;"</code>, and a create may
+carry <code>If-None-Match: *</code>; a precondition that does not hold
+returns <code>412</code> rather than overwriting
+(<code>docs/HTTP API.md:47-50</code>,
+<code>server/src/handlers/fs.rs:230-262</code>). An ETag list the server
+cannot evaluate fails closed. A client that wants the server to resolve
+the collision sends <code>POST /.fs/{path}</code> with the text it
+started from and the text it proposes, each with its hash; the handler
+takes a per-path lock, fast-forwards when the file is unchanged,
+otherwise runs a three-way line merge and writes back either the clean
+result or the page with Git-style conflict markers between the two
+sides, capped at one hundred conflicting hunks
+(<code>fs.rs:445-640</code>,
+<code>server-merge/src/diff3.rs:12</code>).</p>
+<p>The second mechanism is <strong>attribution that reaches the
+history</strong>. A write carries the acting account from the session,
+an opaque <code>X-Client-Id</code>, and an <code>X-Source</code> of
+<code>editor</code>, <code>sync</code> or <code>external</code> that is
+recorded when declared and ignored when not, because <em>attribution is
+never load-bearing</em> (<code>fs.rs:20-38</code>). The file watcher
+classifies each change as the server's own expected write or as external
+— a script, another editor, a coding agent touching the folder — and the
+revision engine commits each author's dirty paths separately, thirty
+seconds after quiet and at least every five minutes, with the account's
+name and email as git author and <em>SilverBullet</em> as committer
+(<code>server/src/revisions/engine.rs:9-27,316-336</code>,
+<code>store.rs:178-206</code>). An agent that edits the space through
+the API is a named author; one that edits the files directly is
+<em>External</em>.</p>
+<p>Every mark is withheld, on definitions. The history is git, which the
+atlas treats as a different mechanism from an append-only record inside
+the store; the conflict markers are written live into the page, which is
+a surface a person happens to be able to fix rather than one that
+withholds a pending value; access is per space, not a key on a memory.
+What the report is for is the write path. A team building a store an
+agent and a person both edit can take the ETag contract, the fail-closed
+preconditions and the merge-or-mark handler as they stand.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>page</strong>: bytes at a path, named by their
+hash. There is no belief model, no state on content and no lifecycle
+beyond exists, changed, deleted. The machinery is entirely about <em>who
+changed it and against what</em>:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a writer reads a page and its hash, then either writes with the hash as a precondition and gets 412 on mismatch, or posts base and proposed text and receives the applied text, a clean merge, or the page with conflict markers to resolve by hand</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a writer reads a page and its hash, then either writes with the hash as a precondition and gets 412 on mismatch, or posts base and proposed text and receives the applied text, a clean merge, or the page with conflict markers to resolve by hand
+flowchart TB
+    R[&quot;GET /.fs/page.md → bytes + ETag sha256&quot;] --&gt; W{&quot;how to write?&quot;}
+    W --&gt;|&quot;PUT + If-Match&quot;| P{&quot;hash still current?&quot;}
+    P -- yes --&gt; OK[&quot;written; expected write recorded; watcher sees own write&quot;]
+    P -- no --&gt; F[&quot;412 Precondition Failed&quot;]
+    W --&gt;|&quot;POST base+proposed&quot;| L[&quot;per-path lock&quot;]
+    L --&gt; Q{&quot;current hash?&quot;}
+    Q -- &quot;= proposed&quot; --&gt; N[&quot;no-op, hash cache refreshed&quot;]
+    Q -- &quot;= base&quot; --&gt; A[&quot;applied&quot;]
+    Q -- other --&gt; M[&quot;diff3 merge&quot;]
+    M -- clean --&gt; A2[&quot;merged text written&quot;]
+    M -- &quot;≤ 100 hunks&quot; --&gt; C[&quot;page written with SB conflict markers&quot;]
+    M -- &quot;&gt; 100 hunks&quot; --&gt; X[&quot;409, nothing written&quot;]
+    OK --&gt; G[&quot;revision engine: commit per author after 30 s quiet&quot;]
+    A --&gt; G
+    A2 --&gt; G
+    C --&gt; G
+    style C fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The highlighted state is the one to notice. A conflicted merge is not
+rejected and not silently resolved: the page is written with both
+versions between markers and the hash of each side in the marker line,
+and the client is told <code>conflicted</code>. From then on the page is
+a task for a person, and the handler refuses to merge into a page that
+already contains markers. The system's answer to <em>which writer was
+right</em> is <em>neither, and here are both</em>.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Rust for the server (<code>server/</code>,
+<code>server-common/</code>, <code>server-merge/</code>, 30,809 lines in
+the first two), TypeScript for the client and plugs (117,293 lines), Lua
+for user scripting inside the browser. 3,653 commits since 2022-02-16.
+755 Rust tests across the three crates and 430 end-to-end cases in 51
+files.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the browser client and any HTTP caller write through the same file handlers, which record their own writes so the watcher can tell them from external edits; the revision engine folds both kinds into git commits under the right author</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the browser client and any HTTP caller write through the same file handlers, which record their own writes so the watcher can tell them from external edits; the revision engine folds both kinds into git commits under the right author
+flowchart LR
+    B[&quot;browser client: editor, object index in IndexedDB, Space Lua&quot;] --&gt;|&quot;X-Sync-Mode, session&quot;| H[&quot;fs handlers: GET · PUT · DELETE · POST reconcile&quot;]
+    AG[&quot;agent or script: bearer token or account&quot;] --&gt; H
+    H --&gt; FS[(&quot;space folder&quot;)]
+    H --&gt;|&quot;record expected write&quot;| GD[&quot;fs_guard: hash cache, expected writes (30 s TTL), per-path locks&quot;]
+    EXT[&quot;external editor, coding agent on the files&quot;] --&gt; FS
+    FS --&gt; WT[&quot;watcher: own write or external?&quot;]
+    GD --&gt; WT
+    WT --&gt;|&quot;EventOrigin&quot;| EV[&quot;/.events SSE&quot;]
+    WT --&gt;|&quot;dirty path + attribution&quot;| RE[&quot;revision engine: 30 s quiet, 5 min max, hourly sweep&quot;]
+    RE --&gt;|&quot;git commit, author = account | SilverBullet | External&quot;| GIT[(&quot;git repository in the folder&quot;)]
+    GIT --&gt; RV[&quot;/.revisions/ log, diff, content at rev&quot;]</code></pre></details></figure>
+<p><strong>The server owns the files and nothing else.</strong> There is
+no database: the page is the record, the git repository is the history,
+the index is the client's. <code>server/src/fs_guard.rs</code> keeps a
+hash cache and a table of <em>expected writes</em> with a thirty-second
+TTL (line 17) so the watcher can recognise the server's own writes when
+the filesystem reports them; <code>server/src/watcher.rs:89-98</code>
+carries the origin — kind, display name, an email that is never
+serialised to other members, the client id — on each change event.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> one binary over a folder.
+Revisions need <code>git</code> on the same machine; without it the
+views are empty rather than broken
+(<code>docs/Features/Revisions.md</code>).</li>
+<li><strong>Fully local and offline:</strong> yes. The client keeps
+working offline and syncs later; nothing in the core calls a model.</li>
+<li><strong>Hand-repairable:</strong> entirely. The pages are files, the
+history is a git repository a person can open with git, and a conflicted
+page is text.</li>
+<li><strong>Install:</strong> a binary or a Docker image; a desktop app
+wraps the same server.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Read.</strong> <code>handle_fs_get</code>
+(<code>fs.rs:86</code>) serves the bytes with the hash as
+<code>ETag</code>. <code>X-Sync-Mode: true</code> marks a request from
+the client rather than an outside caller
+(<code>docs/HTTP API.md:11</code>).</p>
+<p><strong>Conditional write.</strong> <code>handle_fs_put</code>
+(<code>fs.rs:288</code>) calls <code>evaluate_preconditions</code>
+(<code>fs.rs:230-262</code>): <code>If-None-Match: *</code> passes only
+when the file is absent, any other <code>If-None-Match</code> value
+fails closed, <code>If-Match: *</code> passes only when the file exists,
+and <code>If-Match: "sha256:…"</code> is compared against the current
+hash. A failure returns <code>412</code>. Delete
+(<code>fs.rs:360</code>) takes the same preconditions.</p>
+<p><strong>Reconcile.</strong> <code>handle_fs_reconcile</code>
+(<code>fs.rs:445-517</code>) parses a body of <code>baseHash</code>,
+<code>baseText</code>, <code>proposedHash</code>,
+<code>proposedText</code>, checks that each hash is the SHA-256 of its
+text, refuses input that already holds markers, takes
+<code>fs_guard.path_lock(path)</code> and calls
+<code>reconcile_locked</code> (<code>fs.rs:573</code>), which reads the
+current file and branches on its hash: absent or equal to the base,
+apply; equal to the proposed, no-op; otherwise
+<code>merge(base, proposed, current)</code> from
+<code>server-merge/src/diff3.rs:12</code>, clean or conflicted, with
+<code>CONFLICT_HUNK_LIMIT</code> of 100 (<code>fs.rs:44</code>),
+<code>MERGE_SIZE_LIMIT</code> of one mebibyte on either text
+(<code>server-common/src/space/disk.rs:464</code>) and three attempts
+against a racing writer (<code>fs.rs:49</code>). The write goes through
+<code>write_and_record</code> (<code>fs.rs:547-560</code>), which
+records the hash and the expected write so the watcher attributes the
+change correctly.</p>
+<p><strong>Attribution.</strong>
+<code>WriteAttribution { actor, client_id, source }</code> is built from
+the session's <code>Actor</code>, <code>X-Client-Id</code> and
+<code>X-Source</code> (<code>fs.rs:20-38</code>). The watcher turns it
+into an <code>EventOrigin</code>; <code>attribution_for</code>
+(<code>engine.rs:316-336</code>) maps an origin with no user kind to
+<code>External</code>, a user with a name to <code>Account</code>, a
+user with only an email to an account named from it, and a user with
+neither to <code>LocalUser</code>. <code>identity_for</code>
+(<code>engine.rs:75-77</code>) renders <code>Account</code> as its name
+and email, <code>LocalUser</code> and <code>System</code> as
+<em>SilverBullet</em>, <code>External</code> as <em>External</em>.</p>
+<p><strong>Commit.</strong> <code>RevisionStore::commit_staged</code>
+(<code>store.rs:178-206</code>) stages the paths with
+<code>git add -A -f -- :(literal)…</code> and commits with
+<code>GIT_AUTHOR_NAME</code>/<code>GIT_AUTHOR_EMAIL</code> from the
+attribution and a fixed committer of <em>SilverBullet</em>
+(<code>store.rs:6-7</code>), skipping the commit when the index is
+clean. The engine batches by author: one commit per author per quiet
+period (<code>engine.rs:9-13</code>: quiet 30 s, maximum interval 300 s,
+sweep 3,600 s).</p>
+<p><strong>Identity.</strong>
+<code>server/src/auth/identity.rs:10-14</code> —
+<code>UserProfile { username, full_name, email }</code> resolved from
+the verified username on a request; on a multi-space server an admin or
+the user sets the name and email that become the git author.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The page is the unit and the hash is its identity.</strong> A
+page has a path, a content type, a modification time and a SHA-256;
+nothing else is stored about it on the server. Metadata a person writes
+— frontmatter, <code>#tags</code>, <code>[key: value]</code> attributes,
+tasks — is parsed by the client into <strong>objects</strong> attached
+to the page and kept in the browser's IndexedDB
+(<code>docs/Concepts/Object Index.md</code>). The index is rebuilt from
+scratch on a fresh client and updated in the background after each save,
+and the documentation says plainly that a query immediately after an
+edit may return a stale result.</p>
+<p><strong>Temporal:</strong> the file's modification time and, when
+revisions are managed, the commit timestamps. No validity interval;
+<code>bitemporal</code> is withheld.</p>
+<p><strong>Scoping:</strong> a space is a folder. On a multi-space
+server each account has <code>read</code>, <code>write</code> or no
+access per space, with the maximum of a space-wide <code>access</code>
+and the member's role deciding
+(<code>docs/Features/Space Manager.md:57-60</code>); the check runs
+before the handler. Inside a space there is no principal on a page and
+no key on a read, so <code>scope_enforced</code> is withheld: the
+boundary is the store, as with a Logseq graph or a Joplin profile.</p>
+<p><strong>Trust:</strong> none on content. What the system knows about
+a change is who made it, and that knowledge lives in the event origin
+and the commit author, not on the page. The <code>-- @name</code>
+notation lets a person sign a block
+(<code>docs/Concepts/Authorship.md:13-14</code>); it is a label the
+writer chose, not an authenticated fact, and the documentation says it
+does not cascade. An agent can be given an identity with
+<code>identity.define</code> (<code>docs/API/identity.md:11-16</code>)
+so its blocks and mentions have a name; the name is declared by whoever
+writes the definition.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retriever a memory system would recognise. The client
+offers:</p>
+<ol type="1">
+<li><strong>The search API</strong> — a fuzzy ranker over page names and
+page text, run in the browser against the object index.</li>
+<li><strong>The index API</strong> — objects by tag and attribute,
+<code>index.tag("task")</code>,
+<code>query[[ from index.tag "book" where _.rating &gt; 4 ]]</code> in
+Space Lua.</li>
+<li><strong>Page and meta pickers</strong> built on the same index.</li>
+</ol>
+<p>Nothing is embedded, nothing is ranked by a model and nothing runs on
+the server: an agent that reads over HTTP gets <code>GET /.fs/</code>
+listings and file contents, and must search on its own side.
+<code>rg -n -i 'embedding|vector|mcp' -g '*.rs' server server-common</code>
+finds one SHA-256 test vector and nothing else.</p>
+<p><strong>Failure modes:</strong> the index lags saves by seconds and
+is per browser, so two clients can disagree about what a query returns;
+a caller over HTTP has no index at all; and a page that grows large is
+fetched whole.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Literal.</strong> A write stores the bytes. No extraction, no
+dedupe, no model. What the system adds is the contract around the
+write:</p>
+<ul>
+<li><strong>Precondition or merge, never a blind overwrite from the
+client.</strong> The API document describes the preconditions for
+outside callers (<code>docs/HTTP API.md:47-50</code>); the reconcile
+endpoint is described on the collaboration page and the route table, not
+in the API document.</li>
+<li><strong>The merge is the server's, under a lock.</strong> Two
+clients editing one page cannot interleave, and a merge that fails the
+size or hunk limits returns <code>409</code> with nothing written.</li>
+<li><strong>Conflict markers are content.</strong> The marker line
+carries <code>SB sha256:</code> and the side's hash
+(<code>docs/Features/Collaboration.md:38-41</code>); a page holding
+markers is refused as input to a further merge until a person cleans
+it.</li>
+<li><strong>Idempotence.</strong> Proposing the text the file already
+holds is a no-op that refreshes the hash cache and records no write
+(<code>fs.rs:1676</code>, the test that says so).</li>
+</ul>
+<p><strong>Delete</strong> is a conditional file delete. With revisions
+managed the commit records the removal under the author; without, the
+bytes are gone.</p>
+<p><strong>Malicious input:</strong> the documentation treats write
+access as code execution — a page can carry Space Lua that runs in every
+reader's browser — and says so in bold: <em>grant <code>write</code>
+only to people you'd trust to act as any member of every space they can
+reach</em> (<code>docs/Security.md:11,27</code>). An agent with write
+access is a member with that trust.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A write is a file write plus a hash and a table entry; a reconcile
+adds a line diff bounded by the size limit.</li>
+<li>Retrievable immediately over HTTP; in the client after the index
+catches up.</li>
+<li>Background work is the watcher and the revision engine, whose cost
+is git on the dirty paths every quiet period.</li>
+<li>Nothing is injected anywhere. The system has no prompt.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent surface by design; the file API is the surface.
+What an agent gets:</p>
+<ul>
+<li><strong>Authentication</strong> as a single-space bearer token
+<code>SB_AUTH_TOKEN</code>
+(<code>docs/Install/Configuration.md:32</code>) or as an account on a
+multi-space server, with the account's read or write role per
+space.</li>
+<li><strong>The ETag contract</strong>, the same one the client uses, so
+an agent can hold a page's hash across its reasoning and fail rather
+than clobber if a person edited meanwhile.</li>
+<li><strong>The reconcile endpoint</strong>, so it can send what it
+started from and what it proposes and let the server merge or mark.</li>
+<li><strong><code>/.events</code></strong>, a Server-Sent Events stream
+of change events with origin, so it can watch the space
+(<code>server/src/handlers/events.rs</code>).</li>
+<li><strong><code>/.revisions/</code></strong> to read the log, a file
+at a revision, or a diff (<code>docs/HTTP API.md:57-63</code>).</li>
+<li><strong>An identity</strong> under <code>identity.define</code>, so
+its signed blocks and mentions resolve to a name.</li>
+</ul>
+<p>A coding agent that works on the folder directly bypasses all of this
+and shows up as <em>External</em> in the history, with its changes
+committed on the engine's clock rather than its own. The documentation
+names that case (<code>docs/Features/Revisions.md</code>, the
+<em>External</em> author).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong> Preconditions fail closed on anything
+the server cannot evaluate; the reconcile handler checks each hash
+against its text before trusting either; a per-path lock serialises
+writers; a merge that would produce a marker-laden page beyond a hundred
+hunks is refused; the watcher distinguishes the server's writes from
+external ones by a recorded expectation rather than by timing alone; and
+the revision engine never commits in <em>Unmanaged</em> mode, so an
+existing git repository is read and not written to unless a person turns
+<em>Managed</em> on.</p>
+<p><strong>What is withheld, and why.</strong> <code>audit_log</code>:
+the history is git, attributed and browsable, and the atlas keeps git
+history as a separate mechanism from an append-only record in the store;
+the commit granularity is also the engine's quiet period, not the write.
+<code>human_review</code>: a conflicted page is written live with both
+sides and left for a person, which is the best conflict surface in this
+family, but it is the page itself and not a queue that withholds a
+pending value from readers. <code>trust_state</code>,
+<code>tombstone</code>, <code>bitemporal</code>: nothing on content.
+<code>scope_enforced</code>: per space, not per memory.
+<code>negative_eval</code>: the reconcile and precondition tests assert
+what a write must not do; no retrieval test asserts what a query must
+not return.</p>
+<p><strong>Attribution is honest about itself.</strong>
+<code>X-Source</code> is ignored when unrecognised because nothing
+depends on it; the acting account comes from the session, not from a
+header; the email on an event origin is kept in-process and never sent
+to other members. A self-declared <code>-- @name</code> is documented as
+a label.</p>
+<p><strong>Concurrency:</strong> the lock is per path within one server;
+the documented contract allows a writer that bypasses it, and the
+handler retries three times against one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>755 Rust tests across <code>server</code>, <code>server-common</code>
+and <code>server-merge</code>, and 430 end-to-end cases in 51 files. The
+ones that carry this report:</p>
+<ul>
+<li><code>server/src/handlers/fs.rs</code> — 39 tests in the file,
+including <code>reconcile_fast_forward_applies_proposed</code> (line
+1594),
+<code>reconcile_records_an_expected_write_for_the_applied_revision</code>
+(1638),
+<code>reconcile_idempotent_when_current_already_matches_proposed</code>
+(1676),
+<code>reconcile_clean_merge_combines_non_overlapping_edits</code>
+(1717), and the header cases for a valid, an unrecognised and an
+oversized <code>X-Client-Id</code> and <code>X-Source</code>
+(1167-1221).</li>
+<li><code>server/src/revisions/store.rs</code> —
+<code>commit_batch_commits_writes_and_deletes_with_author</code> (474),
+<code>commit_batch_with_no_effective_change_creates_no_commit</code>
+(516), a pathspec-magic case (557).</li>
+<li><code>e2e/attribution-label.test.ts:106</code> — <em>caret label
+names the account that made the edit</em>, the collaboration cursor
+showing the account behind a remote change.</li>
+<li><code>server-merge</code> — the diff3 walker's own cases.</li>
+</ul>
+<p>No memory benchmark applies. There is nothing to extract or rank;
+what could be measured is merge quality, and the tests measure it by
+example.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Name content by its hash and make the hash the write
+precondition.</strong> <code>ETag: "sha256:…"</code> on every read,
+<code>If-Match</code> on every write, <code>412</code> on mismatch, fail
+closed on anything you cannot evaluate. This is the cheapest fix for the
+<em>agent overwrote the person's edit</em> failure that Logseq and
+Joplin leave open, and it needs no database.</li>
+<li><strong>Offer reconcile beside conditional write.</strong> A client
+that lost the race sends base and proposed; the server merges under a
+lock or writes both sides with markers. Bound it — size, hunk count,
+attempts — and refuse input that already holds markers.</li>
+<li><strong>Record your own writes so the watcher can tell them from
+strangers.</strong> An expected-write table with a TTL turns
+<em>something changed this file</em> into <em>someone else changed this
+file</em>, which is the fact attribution needs.</li>
+<li><strong>Carry attribution to the history, and say which parts are
+trusted.</strong> The account from the session is; the
+<code>X-Source</code> header is a hint; the block signature is a label.
+The documentation draws each line.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Storing facts as pages and calling it memory.</strong> No
+state, no supersession, no dedupe, no scope inside a space; an agent
+that writes memories here writes a wiki.</li>
+<li><strong>Giving an agent write access to a space with Space
+Lua</strong> unless you would give it a shell in every reader's browser.
+The security page is explicit.</li>
+<li><strong>Relying on the object index for an agent's recall.</strong>
+It is per browser, lags saves, and does not exist for an HTTP
+caller.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>SilverBullet fits a person who wants a scriptable Markdown wiki that
+agents and scripts can edit <em>safely alongside them</em> — the write
+contract is the reason to choose it over a plain folder, and the
+<em>External</em> author in the history is the reason to run it over a
+folder a coding agent also touches. It does not fit as an agent's own
+memory, and its authors do not claim it does.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Which writes does the client reconcile and which does it
+guard with <code>If-Match</code> alone?</strong> The browser sync engine
+and the desktop app's Rust sync were not traced.</li>
+<li><strong>How does a multi-space <code>read</code> member's request
+fail</strong> — <code>403</code> or <code>404</code> — and does the
+answer leak the existence of a page?</li>
+<li><strong>Will the engine ever commit on the write rather than the
+quiet period?</strong> Per-write commits would make the history a
+mutation log.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>File API</strong></p>
+<ul>
+<li><code>server/src/router.rs</code> — the <code>/.fs/{*path}</code>
+routes: GET (236), PUT (239), DELETE (240), POST reconcile with an 8 MB
+body limit (241–244)</li>
+<li><code>server/src/handlers/fs.rs</code> —
+<code>VALID_WRITE_SOURCES</code> (22), <code>client_id_header</code>
+(27), <code>source_header</code> (37), <code>CONFLICT_HUNK_LIMIT</code>
+(44), <code>MAX_RECONCILE_ATTEMPTS</code> (49),
+<code>handle_fs_get</code> (86), <code>evaluate_preconditions</code>
+(230–262), <code>handle_fs_put</code> (288),
+<code>handle_fs_delete</code> (360), <code>handle_fs_reconcile</code>
+(445–517), <code>write_and_record</code> (547–560),
+<code>reconcile_locked</code> (573–640)</li>
+<li><code>server-merge/src/diff3.rs</code> — <code>MergeOutcome</code>
+(7), <code>merge</code> (12)</li>
+<li><code>server-common/src/space/disk.rs</code> —
+<code>MERGE_SIZE_LIMIT</code> (464), <code>is_merge_eligible</code>
+(468)</li>
+<li><code>server-common/src/reconcile.rs</code> —
+<code>ReconcileRequest</code> and the response variants</li>
+<li><code>server/src/handlers/events.rs</code> —
+<code>/.events</code></li>
+<li><code>docs/HTTP API.md</code> — <code>X-Sync-Mode</code> (11),
+preconditions (47–50), <code>/.revisions/</code> (57–63)</li>
+</ul>
+<p><strong>Attribution and revisions</strong></p>
+<ul>
+<li><code>server/src/fs_guard.rs</code> —
+<code>EXPECTED_WRITE_TTL</code> (17), <code>record_expected_write</code>
+(142)</li>
+<li><code>server/src/watcher.rs</code> — <code>EventOrigin</code>
+(89–98)</li>
+<li><code>server/src/revisions/engine.rs</code> — timing constants
+(9–17), <code>Attribution</code> (22–27), <code>identity_for</code>
+(75–77), <code>attribution_for</code> (316–336)</li>
+<li><code>server/src/revisions/store.rs</code> — committer constants
+(6–7), <code>discover_repo_root</code> (24), <code>commit_staged</code>
+(178–206)</li>
+<li><code>server/src/auth/identity.rs</code> — <code>UserProfile</code>
+(10–14)</li>
+<li><code>docs/Features/Revisions.md</code>,
+<code>docs/Features/Collaboration.md</code> (31–41),
+<code>docs/Concepts/Authorship.md</code> (13–36),
+<code>docs/API/identity.md</code> (11–16),
+<code>docs/Features/Space Manager.md</code> (57–60),
+<code>docs/Security.md</code> (11, 27),
+<code>docs/Install/Configuration.md</code> (32),
+<code>docs/Concepts/Object Index.md</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>server/src/handlers/fs.rs</code> — 39 tests (1167–2027)</li>
+<li><code>server/src/revisions/store.rs</code> — tests (474–727)</li>
+<li><code>e2e/attribution-label.test.ts</code> (106)</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>rg -n -i 'embedding|vector|mcp' -g '*.rs' server server-common</code>
+— one hit, a SHA-256 test vector; no model and no MCP server in the
+core.</li>
+<li><code>rg -n 'tombstone|soft.?delete' -g '*.rs' server server-common</code>
+— no hit; delete is a conditional file delete.</li>
+<li><code>rg -n 'reconcile|X-Source|X-Client-Id' "docs/HTTP API.md"</code>
+— no hit; the reconcile endpoint and the two attribution headers are
+undocumented in the API page.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c"><code class="commit-id" title="6331add131438431da8ee384949964828c791b2c">6331add1…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -6,13 +6,13 @@ root: ../..
 page_kind: system
 source_name: "logseq/logseq"
 source_url: https://github.com/logseq/logseq
-revision: 9a11243d50b23afeb10bda5a2ca6cc77357eea38
-revision_url: https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38
-analyzed_at: 2026-07-29
+revision: d2ab7726ab74402c14fdbc33041a89ac55c899ae
+revision_url: https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae
+analyzed_at: 2026-09-07
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An outliner block or page in a DataScript graph, typed by user-defined tags (classes) and properties with declared types and cardinality"
   storage: "DataScript over SQLite, local-first; FTS5 trigram index and a 384-dimension vector index alongside; optional multi-device sync"
@@ -22,19 +22,19 @@ matrix:
   scoping: "A graph is a separate database; there is no principal, tenant or agent key inside one"
   integration: "MCP server over the desktop API with six tools, an HTTP API server, and the editor itself"
   background: "Embedding upserts in batches of 1024 and index maintenance; nothing derives or consolidates memory"
-  trust: "None. A `created-by-ref` property exists in the schema and the agent write path never sets it"
+  trust: "None. A `created-by-ref` property exists in the schema, is set by sync, import and emoji reactions, and the agent write path never sets it"
   strengths: "A schema the user defines and the agent must obey; genuinely local hybrid retrieval; the best editing surface in the atlas"
   risks: "Agent writes land live, unmarked and indistinguishable from the user's own; hard retraction with no history"
 ---
 
 ## 1. Executive Summary
 
-Logseq is a local-first outliner and knowledge base — a human tool, twelve years
-of it — that ships an agent interface: an MCP server exposing six
+Logseq is a local-first outliner and knowledge base — a human tool, in
+development since December 2019 — that ships an agent interface: an MCP server exposing six
 tools over the graph, and a local embedding sidecar feeding a vector index. That
 combination is what brings it into this atlas, on the same footing as
 [Basic Memory](../basic-memory/) and [llm-wiki-memory](../llm-wiki-memory/): a
-durable store a person authors, which an agent can now read and write, and which
+durable store a person authors, which an agent can read and write, and which
 outlives every session by a wide margin.
 
 What makes it worth a report rather than a mention is the **schema**. Almost
@@ -108,7 +108,7 @@ systems bracket the question of which half of memory you dare hand a model.
 
 ## 3. Architecture
 
-ClojureScript, AGPL-3.0, ~871 Clojure source files, plus a Rust/Electron desktop
+ClojureScript, AGPL-3.0, 1,011 Clojure source files, plus a Rust/Electron desktop
 shell and a Python sidecar. The relevant modules are the `deps/` workspace:
 `db` (schema, properties, malli validation), `outliner` (the block tree and its
 operations), `graph-parser`, `db-sync` (multi-device), `common`, and `publish`.
@@ -153,7 +153,7 @@ by SQL triggers on the blocks table, the vector index by batched upserts.
 ## 4. Essential Implementation Paths
 
 **Agent write.** `api-upsert-nodes` in
-`src/electron/electron/mcp_server.cljs:115` forwards to
+`src/electron/electron/mcp_server.cljs:118` forwards to
 `logseq.cli.upsertNodes` with an `operations` array and a `dry-run` flag. Each
 operation carries `:operation` (`:add`/`:edit`), `:entityType`
 (`:block`/`:page`/`:tag`/`:property`), an `:id`, and a `:data` map whose keys
@@ -164,25 +164,27 @@ string ids let one batch create a page and put blocks on it.
 **Human write.** `deps/outliner/src/logseq/outliner/core.cljs` — the `-save`
 path with `retract-attributes?`, the block tree operations, and `:delete-blocks`.
 
-**Retrieval.** `search-blocks` in `src/main/frontend/worker/search.cljs:893`.
+**Retrieval.** `search-blocks` in `src/main/frontend/worker/search.cljs:948`.
 Reads in order: exact-title query, then FTS5 `match`, then a `LIKE` arm used
 only when the query is two characters or shorter, then fuzzy, then vector.
 `enough-exact-title-results?` and `skip-fuzzy?` short-circuit the expensive arms.
 The vector arm is behind `:feature/enable-semantic-search?`.
 
-**Index maintenance.** `create-blocks-fts-table!` (line 52) creates the FTS5
-virtual table with `tokenize="trigram"`; `add-blocks-fts-triggers!` (line 20)
-keeps it current with delete/insert triggers. Vector constants sit at lines
-16–18 and 150–154: `max-vector-search-results 10`, `min-vector-search-score 0.5`,
-`vector-upsert-batch-size 1024`, `vector-embedding-dimension 384`,
-`vector-context-version 3`, `vector-rrf-weight 1.0`.
+**Index maintenance.** `create-blocks-fts-table!` (line 53) creates the FTS5
+virtual table with `tokenize="trigram"`; `add-blocks-fts-triggers!` (line 21)
+keeps it current with delete/insert triggers. Vector and fusion constants sit
+at lines 16–18 and 148–159: `max-vector-search-results 10`,
+`min-vector-search-score 0.5`, `vector-upsert-batch-size 1024`,
+`vector-embedding-dimension 384`, `vector-context-version 3`, `rrf-k 60`,
+`keyword-rrf-weight 1.25`, `vector-rrf-weight 1.0`, and title-match boosts of
+`0.004` and `0.002` that break ties inside the fused order.
 
 **Embeddings.** `sidecar/embedding_server.py` — a threading HTTP server wrapping
 `SentenceTransformer`, default model `all-MiniLM-L6-v2`, with a warmup input and
 a model cache.
 
-**Delete.** `:db/retractEntity` in `outliner/core.cljs:113`, applied to orphaned
-pages after a deletion; `:db/retract` for individual attributes and tag links
+**Delete.** `:db/retractEntity` in `outliner/core.cljs:114`, applied to orphaned
+pages after a deletion, and again at line 441 for the blocks themselves; `:db/retract` for individual attributes and tag links
 (lines 198, 208).
 
 **Schema.** `deps/db/src/logseq/db/frontend/property.cljs` (property types,
@@ -215,9 +217,11 @@ which is a real boundary but not a scope key applied on a read path, so
 
 **Provenance:** `:logseq.property/created-by-ref` ("Node created by") exists in
 the property schema and in the malli spec as an optional int. Tracing its
-writers finds `db-sync` tests, a checksum test, an IRC-history import script and
-the publish renderer — the multi-user collaboration path. **The MCP write path
-never sets it.** So the one field that could tell a user which nodes an agent
+writers finds `db-sync` tests, a checksum test, an IRC-history import script,
+the publish renderer — the multi-user collaboration path — and one outliner
+operation: `toggle-reaction!` in `deps/outliner/src/logseq/outliner/op.cljs:209`
+stamps an emoji reaction with the logged-in account's uuid, and with nothing
+when there is no account. **The MCP write path never sets it.** So the one field that could tell a user which nodes an agent
 created is defined and unused where it would matter most.
 
 ## 6. Retrieval Mechanics
@@ -237,7 +241,8 @@ reading even if you never run Logseq.
 5. **Vector search**, behind `:feature/enable-semantic-search?`, capped at 10
    results with a 0.5 minimum score.
 
-Fusion is reciprocal rank with `vector-rrf-weight`. The interesting part is the
+Fusion is reciprocal rank with `rrf-k 60`, the keyword arms weighted `1.25`
+against the vector arm's `1.0`. The interesting part is the
 **gating**: `enough-exact-title-results?` suppresses the FTS arm, and
 `skip-fuzzy?` suppresses fuzzy when an exact title already satisfied the limit or
 when a multi-term query already matched. This is
@@ -294,10 +299,11 @@ content.
 
 ## 8. Agent Integration
 
-Six MCP tools (`src/electron/electron/mcp_server.cljs:119`): `listPages`,
+Six MCP tools (`src/electron/electron/mcp_server.cljs:122`): `listPages`,
 `getPage`, `upsertNodes`, `searchBlocks`, `listTags`, `listProperties`. They are
 thin wrappers over the app's own API, registered against an `McpServer` named
-"Logseq MCP Server", enabled by a `:server/mcp-enabled?` config flag.
+"Logseq MCP Server", enabled by a `:server/mcp-enabled?` config flag, and the
+server object is built afresh for each MCP session rather than shared.
 
 `listTags` and `listProperties` are the ones that make the schema usable by a
 model: an agent can discover the ontology before writing into it, which is what
@@ -355,7 +361,7 @@ behaviour was not traced.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**245 test files** across the workspace, which is a serious suite, and it is
+**318 test files** across the workspace, which is a serious suite, and it is
 aimed at the things a knowledge base gets wrong: schema migration, malli
 validation of the property system, outliner tree operations, and — notably —
 `db-sync` has substantial coverage including `worker_handler_sync_test.cljs` and
@@ -443,8 +449,9 @@ available anywhere else in this atlas.
 - **What is the practical recall of the vector arm** at `min-vector-search-score
   0.5` over `all-MiniLM-L6-v2`, and how often is semantic search enabled in
   practice? The flag defaults were not traced through the settings UI.
-- **Does anything populate `created-by-ref` for local single-user graphs?** Only
-  sync, import and publish paths were found.
+- **Does anything populate `created-by-ref` for local single-user graphs?**
+  Sync, import, publish and emoji reactions set it, the last only when an
+  account is logged in; no block or page write path does.
 
 ## Appendix: File Index
 
@@ -452,25 +459,28 @@ available anywhere else in this atlas.
 
 - `deps/db/src/logseq/db/frontend/property.cljs` — property types, cardinality,
   `:logseq.property/created-by-ref` (line 653)
+- `deps/outliner/src/logseq/outliner/op.cljs` — `toggle-reaction!`, the one
+  outliner writer of `created-by-ref` (line 209)
 - `deps/db/src/logseq/db/frontend/schema.cljs` — schema version 65.33
 - `deps/db/src/logseq/db/frontend/malli_schema.cljs` — validation
 
 **Write path**
 
 - `deps/outliner/src/logseq/outliner/core.cljs` — `-save`, `:delete-blocks`,
-  `:db/retractEntity` (line 113)
-- `src/electron/electron/mcp_server.cljs` — `api-upsert-nodes` (line 115)
+  `:db/retractEntity` (lines 114, 441)
+- `src/electron/electron/mcp_server.cljs` — `api-upsert-nodes` (line 118)
 
 **Retrieval**
 
-- `src/main/frontend/worker/search.cljs` — `search-blocks` (line 893), FTS5
-  trigram table (line 52), triggers (line 20), vector constants (lines 16–18,
-  150–154)
+- `src/main/frontend/worker/search.cljs` — `search-blocks` (line 948), FTS5
+  trigram table (line 53), triggers (line 21), vector and fusion constants
+  (lines 16–18, 148–159)
 - `sidecar/embedding_server.py` — sentence-transformers HTTP sidecar
 
 **MCP/API**
 
-- `src/electron/electron/mcp_server.cljs` — the six tools (line 119)
+- `src/electron/electron/mcp_server.cljs` — the six tools (line 122), the
+  once-per-request instruction (line 140), `dry-run` (line 196)
 - `src/electron/electron/server.cljs` — `initialize-mcp-routes` (line 144)
 
 **Sync**
@@ -484,6 +494,18 @@ available anywhere else in this atlas.
 - `deps/db-sync/test/logseq/db_sync/checksum_test.cljs`
 - `scripts/test/logseq/tasks/db_graph/create_graph_with_clojure_irc_history_test.cljs`
 
+**Searches recorded for the negative claims**
+
+- `rg -n 'created-by-ref' src deps --type-add 'clj:*.clj*' -t clj` — writers
+  are `db-sync` tests, `checksum_test.cljs`, the IRC import script, the publish
+  renderer and `outliner/op.cljs:209`; `mcp_server.cljs` has no hit.
+- `rg -l 'mcp' -g '*test*'` — hits are the CLI release-config script and four
+  `db-sync` worker tests; no test exercises the six tools.
+- `rg -n 'delete|retract' src/electron/electron/mcp_server.cljs` — no hit; the
+  tool map has no delete verb.
+
 ## History
+
+**2026-09-07** — [`d2ab7726ab74402c14fdbc33041a89ac55c899ae`](https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae) — re-read after 476 commits and the 2.0.1 release. Nothing moved on the memory paths: the same six tools, the same gated retrieval and fusion constants, `created-by-ref` unset by `upsertNodes`, no delete verb, no MCP test. Line references and the test-file count follow the pin; the MCP server is built once per session (commit `71db2e36f`, 2026-08-18); the `db-sync` cycle-repair module was removed (commit `39b43110f`, 2026-08-26); a `created-by-ref` writer for emoji reactions is named; the age in the summary was wrong at the first reading (the first commit is dated 2019-12-11) and is corrected. Every mark stays withheld.
 
 **2026-07-29** — [`9a11243d50b23afeb10bda5a2ca6cc77357eea38`](https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38) — first reading.

@@ -1461,7 +1461,7 @@ below</td>
 <tr>
 <td>Negative precision (forbidden hits)</td>
 <td>Whether the <em>wrong</em> memory stayed out</td>
-<td>One hundred and thirty-six of three hundred and seventy-two. <a
+<td>One hundred and thirty-seven of three hundred and seventy-four. <a
 href="../systems/open-cowork/">open-cowork</a>, <a
 href="../systems/verel/">Verel</a>, <a href="../systems/neko/">Project
 N.E.K.O.</a>, <a href="../systems/helm/">Helm</a> and <a
@@ -3587,6 +3587,139 @@ separate <em>deleted now</em> from <em>stays deleted</em> — remain
 uncovered by anything published. The two are complements: AOEP covers
 authority, scope, conflict and rollback that the sequence below does not
 touch, and the sequence covers re-derivation that AOEP does not.</p>
+<p><a id="membench"></a></p>
+<h3
+id="membench--decay-and-expiry-scored-against-a-corpus-that-says-when-a-fact-stopped-being-true">membench
+— decay and expiry scored against a corpus that says when a fact stopped
+being true</h3>
+<p>A benchmark of one author, fourteen commits between 5 and 6 September
+2026, MIT, pinned at <a
+href="https://github.com/polmanas1998-star/membench/commit/f5b361bb33105adf99c1ec8ce1161340004276c4"><code class="commit-id" title="f5b361bb33105adf99c1ec8ce1161340004276c4">f5b361bb…</code></a>.
+It is here because it scores <em>forgetting on a schedule</em> — a fact
+that faded, expired or was superseded on a known day must not be
+returned after it — and because the numbers below are read from the
+artifacts it commits, with the source named on each row.</p>
+<p><strong>The corpus is synthetic and labelled by kind.</strong>
+<code>membench/corpus.py</code> generates 104 facts about a fictional
+architecture practice: twelve subjects, ten relations, each fact tagged
+<code>stable</code>, <code>superseded</code>, <code>faded</code>,
+<code>expired</code>, <code>reinforced</code> or <code>absent</code>,
+with the day on which its truth changed. A question asked after that day
+has a right answer that is <em>not the stored value</em> — silence for a
+faded or expired fact, the newer value for a superseded one — and the
+scorer (<code>membench/scoring.py</code>) credits the arm only for that.
+The <code>absent</code> kind asks about facts never stored, so a memory
+that guesses is penalised. Three witnesses bracket the arms: a silent
+one that never answers, a guessing one that always does, and an oracle.
+Two controls bound the signal: a trivial baseline that returns the most
+frequent object for a relation, and a <em>scrambled</em> control that
+runs the full arm over a corpus with the subject–object pairs shuffled,
+so any score the arm keeps on scrambled data is shortcut, not
+memory.</p>
+<p><strong>The subject is the author's own store.</strong> The arms in
+<code>membench/arms.py</code> wrap
+<code>polmanas1998-star/holomem</code>, an FHRR holographic vector
+memory with a 45-day half-life, a weight floor of 0.18 and a forget
+threshold of 111 days, plus a z-score gate of 4 on retrieval. The
+harness is the evidence the atlas reads; the store is not analysed here,
+and the <code>holomem</code> repository was created on 2 September 2026,
+three days before the harness.</p>
+<p><strong>What the committed results say.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Artifact</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Main, eight seeds</td>
+<td><code>README.md:46-62</code> (no JSON is committed for this
+run)</td>
+<td>832 questions; the gated layer arm scores a median precision of
+1.000 and a pooled 0.995; the scrambled control sits 0.959 below it,
+bootstrap interval 0.939 to 0.977</td>
+</tr>
+<tr>
+<td>Poisoning</td>
+<td><code>results-poisoning.json</code> <code>points</code></td>
+<td>one injected lie against one truth is returned half the time at z
+4.45; two lies, 0.83 at z 5.04; three, always at z 6.11; the
+repeated-truth series is 0.0, 0.0, 0.33, 0.58 as reinforcement
+accumulates</td>
+</tr>
+<tr>
+<td>Ablation, pooled</td>
+<td><code>results-ablation.json</code> <code>variantes</code></td>
+<td>full arm precision 0.995 with hallucination 0.011; without the z
+gate, precision 0.726 and hallucination 1.0; without decay, 0.880 with a
+stale rate of 0.417; the <em>eternal</em> arm that never forgets, 0.901
+and the same 0.417 stale</td>
+</tr>
+<tr>
+<td>Calibration</td>
+<td><code>results-calibration.json</code></td>
+<td>concordance 0.9558 between z-score and correctness, monotone across
+bins</td>
+</tr>
+<tr>
+<td>Capacity</td>
+<td><code>results-capacity-surface.json</code> <code>cells</code></td>
+<td>262,080 questions across the sweep; coverage saturates at 0.654 as
+the corpus grows past the vector's capacity</td>
+</tr>
+<tr>
+<td>Interference</td>
+<td><code>results-interference.json</code> <code>cellules</code></td>
+<td>precision at or above 0.980 across the subject-overlap grid</td>
+</tr>
+<tr>
+<td>Real models</td>
+<td><code>results-cost-seed1.json</code></td>
+<td>on Groq <code>openai/gpt-oss-120b</code>: the gated arm with a model
+answering over retrieved facts answers 53 questions out of the 104 and
+gets every one right at 69,213 tokens, about 1,306 per correct answer; a
+full-context arm answers 84 and gets 81 right at 145,899 tokens, about
+1,801; an arm with no memory gets none right at 133,132 tokens; a
+per-question retrieval arm at 3,481 tokens each never finished inside
+the provider's 200,000-token daily budget</td>
+</tr>
+</tbody>
+</table></div>
+<p>The pattern is the one the section above predicts. <strong>Decay buys
+stale-rate, and the gate buys precision.</strong> Removing decay leaves
+precision at 0.880 but returns the expired value 41.7% of the time;
+removing the gate makes the arm answer every <code>absent</code>
+question. The eternal arm — no forgetting — is the honest comparison for
+every memory system in this atlas that keeps facts until told otherwise,
+and it fails the same 41.7% of the time-sensitive questions. The
+poisoning result is the more useful negative: one lie among truths is
+returned half the time, and reinforcement of the truth needs three to
+four repetitions before it pulls ahead.</p>
+<p><strong>The real-model column is the caveat.</strong> The synthetic
+arms score near one; the model that reads retrieved facts and answers in
+words gets 51%. Some of that is the model, some is the prompt in
+<code>membench/real_arms.py</code>, and the harness does not separate
+them. The full-context arm at 78% with twice the tokens is the number a
+reader should hold against the retrieval arm, and it says retrieval here
+loses accuracy to save tokens rather than gaining it.</p>
+<p><strong>Tests.</strong> 89 test functions under <code>tests/</code>;
+a fresh clone without <code>holomem</code> installed runs 52 and skips
+21, so the scorer, corpus and statistics are tested without the subject,
+and the arms are not. The README's mutation figures (13 mutants killed
+by 40 tests) were not re-run.</p>
+<p><strong>Against the thirteen-step sequence above,</strong> membench
+covers steps 5 to 8 — the ones AOEP leaves open — for <em>scheduled</em>
+forgetting: it re-asks after the day a fact should have gone and scores
+silence. It does not delete on instruction, re-feed a source, or run a
+background job; it never exercises a tombstone, because the store has
+none — a fact fades by weight, and the
+<code>FORGET_THRESHOLD_DAYS</code> floor is the whole of its deletion
+story. It is a decay benchmark, run once, on one store, by that store's
+author, with controls good enough that the numbers mean what they
+say.</p>
 <p><a id="contradiction-test"></a></p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
 <p>Forgetting has no benchmark, only <a
@@ -4040,7 +4173,7 @@ the dataset itself is not in that repository and was not downloaded, so
 its per-type item counts are not stated here.</p></li>
 <li><p>"Measured nowhere" in §5 means <em>not found in the systems this
 atlas has reviewed</em>, at the pinned commits listed in the <a
-href="../compare/">comparative report</a>. It is a statement about 371
+href="../compare/">comparative report</a>. It is a statement about 373
 repositories, not about the whole field. That number read
 <strong>46</strong> until 2026-08-07, having been written when the
 corpus was that size and never revised as it more than tripled — the

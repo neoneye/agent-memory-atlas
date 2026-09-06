@@ -1078,7 +1078,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and thirty-six of three hundred and seventy-two. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and thirty-seven of three hundred and seventy-four. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -2852,6 +2852,82 @@ published. The two are complements: AOEP covers authority, scope, conflict and
 rollback that the sequence below does not touch, and the sequence covers
 re-derivation that AOEP does not.
 
+<a id="membench"></a>
+### membench — decay and expiry scored against a corpus that says when a fact stopped being true
+
+A benchmark of one author, fourteen commits between 5 and 6 September 2026,
+MIT, pinned at
+[`f5b361bb33105adf99c1ec8ce1161340004276c4`](https://github.com/polmanas1998-star/membench/commit/f5b361bb33105adf99c1ec8ce1161340004276c4).
+It is here because it scores *forgetting on a schedule* — a fact that
+faded, expired or was superseded on a known day must not be returned after
+it — and because the numbers below are read from the artifacts it commits,
+with the source named on each row.
+
+**The corpus is synthetic and labelled by kind.** `membench/corpus.py`
+generates 104 facts about a fictional architecture practice: twelve subjects,
+ten relations, each fact tagged `stable`, `superseded`, `faded`, `expired`,
+`reinforced` or `absent`, with the day on which its truth changed. A question
+asked after that day has a right answer that is *not the stored value* —
+silence for a faded or expired fact, the newer value for a superseded one —
+and the scorer (`membench/scoring.py`) credits the arm only for that. The
+`absent` kind asks about facts never stored, so a memory that guesses is
+penalised. Three witnesses bracket the arms: a silent one that never answers,
+a guessing one that always does, and an oracle. Two controls bound the
+signal: a trivial baseline that returns the most frequent object for a
+relation, and a *scrambled* control that runs the full arm over a corpus with
+the subject–object pairs shuffled, so any score the arm keeps on scrambled
+data is shortcut, not memory.
+
+**The subject is the author's own store.** The arms in `membench/arms.py`
+wrap `polmanas1998-star/holomem`, an FHRR holographic vector memory with a
+45-day half-life, a weight floor of 0.18 and a forget threshold of 111 days,
+plus a z-score gate of 4 on retrieval. The harness is the evidence the atlas
+reads; the store is not analysed here, and the `holomem` repository was
+created on 2 September 2026, three days before the harness.
+
+**What the committed results say.**
+
+| Run | Artifact | Result |
+| --- | --- | --- |
+| Main, eight seeds | `README.md:46-62` (no JSON is committed for this run) | 832 questions; the gated layer arm scores a median precision of 1.000 and a pooled 0.995; the scrambled control sits 0.959 below it, bootstrap interval 0.939 to 0.977 |
+| Poisoning | `results-poisoning.json` `points` | one injected lie against one truth is returned half the time at z 4.45; two lies, 0.83 at z 5.04; three, always at z 6.11; the repeated-truth series is 0.0, 0.0, 0.33, 0.58 as reinforcement accumulates |
+| Ablation, pooled | `results-ablation.json` `variantes` | full arm precision 0.995 with hallucination 0.011; without the z gate, precision 0.726 and hallucination 1.0; without decay, 0.880 with a stale rate of 0.417; the *eternal* arm that never forgets, 0.901 and the same 0.417 stale |
+| Calibration | `results-calibration.json` | concordance 0.9558 between z-score and correctness, monotone across bins |
+| Capacity | `results-capacity-surface.json` `cells` | 262,080 questions across the sweep; coverage saturates at 0.654 as the corpus grows past the vector's capacity |
+| Interference | `results-interference.json` `cellules` | precision at or above 0.980 across the subject-overlap grid |
+| Real models | `results-cost-seed1.json` | on Groq `openai/gpt-oss-120b`: the gated arm with a model answering over retrieved facts answers 53 questions out of the 104 and gets every one right at 69,213 tokens, about 1,306 per correct answer; a full-context arm answers 84 and gets 81 right at 145,899 tokens, about 1,801; an arm with no memory gets none right at 133,132 tokens; a per-question retrieval arm at 3,481 tokens each never finished inside the provider's 200,000-token daily budget |
+
+The pattern is the one the section above predicts. **Decay buys stale-rate,
+and the gate buys precision.** Removing decay leaves precision at 0.880 but
+returns the expired value 41.7% of the time; removing the gate makes the arm
+answer every `absent` question. The eternal arm — no forgetting — is the
+honest comparison for every memory system in this atlas that keeps facts
+until told otherwise, and it fails the same 41.7% of the time-sensitive
+questions. The poisoning result is the more useful negative: one lie among
+truths is returned half the time, and reinforcement of the truth needs
+three to four repetitions before it pulls ahead.
+
+**The real-model column is the caveat.** The synthetic arms score near one;
+the model that reads retrieved facts and answers in words gets 51%. Some of
+that is the model, some is the prompt in `membench/real_arms.py`, and the
+harness does not separate them. The full-context arm at 78% with twice the
+tokens is the number a reader should hold against the retrieval arm, and it
+says retrieval here loses accuracy to save tokens rather than gaining it.
+
+**Tests.** 89 test functions under `tests/`; a fresh clone without `holomem`
+installed runs 52 and skips 21, so the scorer, corpus and statistics are
+tested without the subject, and the arms are not. The README's mutation
+figures (13 mutants killed by 40 tests) were not re-run.
+
+**Against the thirteen-step sequence above,** membench covers steps 5 to 8
+— the ones AOEP leaves open — for *scheduled* forgetting: it re-asks after
+the day a fact should have gone and scores silence. It does not delete on
+instruction, re-feed a source, or run a background job; it never exercises a
+tombstone, because the store has none — a fact fades by weight, and the
+`FORGET_THRESHOLD_DAYS` floor is the whole of its deletion story. It is a
+decay benchmark, run once, on one store, by that store's author, with
+controls good enough that the numbers mean what they say.
+
 <a id="contradiction-test"></a>
 
 ## 7. The Contradiction Test
@@ -3192,7 +3268,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 371 repositories,
+  [comparative report](../compare/). It is a statement about 373 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are
