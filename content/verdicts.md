@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 364 reports.**
+**This page covers all 365 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3247,3 +3247,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: BSL 1.1, 402 commits in five weeks by one maintainer and a signing coding agent, 46,635 lines of Python under 148 test files and 2,750 test functions, 220 issues and 123 pull requests, a claims audit refreshed every few days that records its own overstatements and two fail-open defects it fixed. Seven of seven capability marks. Built against this atlas's rubric, and read here from the code.
 - Study when: you want the most complete worked example of *nothing becomes a memory silently* — proposal, ladder, human rung, tombstone, ledger, receipt — in one local store, or a claims audit worth copying.
 - Do not copy when: you need an append-only history of every mutation, a benchmark that measured the supersession path, or a licence that permits production use without a conversation.
+
+### [`reporecall`](../systems/reporecall/)
+- Best idea: **index the agent's own memory directory, read-only, and budget it per class.** Claude Code's frontmatter markdown for the project is discovered by path encoding and ranked into the hook's `## Memories` block beside the project's own writable directory, with 120 tokens for rules that episodes cannot take and a floor that keeps memory below 20 % of the code context — zero tokens spent, no model called.
+- Biggest risk: **lifecycle state lives in the index row and the file wins.** `archive` and `supersede` update `memories.db` only; a re-parse after any edit sets `status` back to `active`, and the read-only Claude Code files can never carry the state at all. Beside that: the promoted fact shares its source's fingerprint and loses compaction's tie-break, the hook ignores `scope`, `forget_memory` leaves no record, and the tree is a copy whose manifest repository returns 404 while the npm package ran on to 0.9.1.
+- Most reusable component: the deterministic memory benchmark suite — a fixture of every class with thresholds for indexing latency, per-class retrieval, freshness ordering, working-memory retrieval, routes and budgets, printed as a scorecard inside the unit tests.
+- Maturity impression: MIT, 40 commits in five days of March 2026 by one developer, 18,810 lines of TypeScript under 54 test files and 646 test functions, a committed code-retrieval benchmark, and a memory layer of 2,711 lines added in the last release here. One of seven capability marks. What happened after 0.3.3 is in a package registry and not in this tree.
+- Study when: you want the cheapest way to get Claude Code's own memory files ranked into a prompt with a budget, or a worked example of a memory layer riding on a code index.
+- Do not copy when: you need archival, supersession, deletion or scope to hold across an edit or a re-index; each is a few lines from working and none works at this commit.

@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code hook daemon and MCP
+server whose memory layer indexes markdown files with YAML frontmatter —
+the agent's own auto-memory directory read-only beside a writable one —
+into SQLite FTS5, ranks them by keyword, recency and access count,
+injects up to 500 tokens per prompt under per-class budgets, and
+compacts by fingerprint: where lifecycle state lives only in the index
+row and not in the file it describes, a promoted fact is a
+same-fingerprint copy the next compaction supersedes, and the source
+repository the package points at no longer resolves.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Reporecall — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code hook daemon
+and MCP server whose memory layer indexes markdown files with YAML
+frontmatter — the agent's own auto-memory directory read-only beside a
+writable one — into SQLite FTS5, ranks them by keyword, recency and
+access count, injects up to 500 tokens per prompt under per-class
+budgets, and compacts by fingerprint: where lifecycle state lives only
+in the index row and not in the file it describes, a promoted fact is a
+same-fingerprint copy the next compaction supersedes, and the source
+repository the package points at no longer resolves.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Reporecall — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code hook daemon
+and MCP server whose memory layer indexes markdown files with YAML
+frontmatter — the agent's own auto-memory directory read-only beside a
+writable one — into SQLite FTS5, ranks them by keyword, recency and
+access count, injects up to 500 tokens per prompt under per-class
+budgets, and compacts by fingerprint: where lifecycle state lives only
+in the index row and not in the file it describes, a promoted fact is a
+same-fingerprint copy the next compaction supersedes, and the source
+repository the package points at no longer resolves.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Reporecall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Reporecall",
+      "description": "A Claude Code hook daemon and MCP server whose memory layer indexes markdown files with YAML frontmatter \u2014 the agent's own auto-memory directory read-only beside a writable one \u2014 into SQLite FTS5, ranks them by keyword, recency and access count, injects up to 500 tokens per prompt under per-class budgets, and compacts by fingerprint: where lifecycle state lives only in the index row and not in the file it describes, a promoted fact is a same-fingerprint copy the next compaction supersedes, and the source repository the package points at no longer resolves.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Markdown memories under a code index</p>
+          <h1>Reporecall</h1>
+          <p class="document-deck">A Claude Code hook daemon and MCP
+server whose memory layer indexes markdown files with YAML frontmatter —
+the agent's own auto-memory directory read-only beside a writable one —
+into SQLite FTS5, ranks them by keyword, recency and access count,
+injects up to 500 tokens per prompt under per-class budgets, and
+compacts by fingerprint: where lifecycle state lives only in the index
+row and not in the file it describes, a promoted fact is a
+same-fingerprint copy the next compaction supersedes, and the source
+repository the package points at no longer resolves.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jags111/reporecall">
+              <span>Source</span>
+              <strong>jags111/reporecall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702" title="0c0a9ff61a99ac428927f99c1c449c04cadd0702">
+              <span>Analyzed revision</span>
+              <code>0c0a9ff6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Reporecall is a <strong>codebase memory for Claude Code</strong>: a
+local daemon that indexes a repository with tree-sitter into chunks, a
+call graph and an import graph, answers a <code>UserPromptSubmit</code>
+hook with pre-assembled code context so the agent stops grepping, and —
+from version 0.3.0 on 21 March 2026 — carries a memory layer beside the
+code index. MIT, 40 commits between 17 and 21 March 2026 under two
+author names sharing one address, 18,810 lines of TypeScript in
+<code>src/</code> and 54 test files with 646 test functions. The tree at
+this URL is a copy: <code>package.json</code> names
+<code>proofofwork-agency/reporecall</code> as the repository and
+<code>@proofofwork-agency/reporecall</code> as the package, the GitHub
+repository returns 404, the npm package has 23 versions with a latest of
+0.9.1 published 4 August 2026, and the copy's owner made none of the
+commits. This report reads version 0.3.3, the last commit here.</p>
+<p>The memory layer is 2,711 lines. A memory is a markdown file with
+YAML frontmatter — <code>name</code>, <code>description</code>,
+<code>type</code>, and from Memory V1 a <code>class</code> of
+<code>rule</code>, <code>fact</code>, <code>episode</code> or
+<code>working</code>, a <code>scope</code>, a <code>status</code>, a
+<code>summary</code>, a <code>sourceKind</code>, a
+<code>fingerprint</code>, <code>pinned</code>, <code>confidence</code>,
+<code>supersedesId</code> and related files and symbols
+(<code>src/memory/types.ts</code>, <code>parser.ts</code>). Two
+directories are indexed: the project's
+<code>.memory/reporecall-memories/</code>, which the tools write, and
+Claude Code's own memory directory for the project,
+<code>~/.claude/projects/&lt;encoded root&gt;/memory/</code>, discovered
+by path encoding and treated as read-only
+(<code>indexer.ts:34-60,:455-460</code>) — so the files the agent writes
+for itself become retrievable through the hook with a default confidence
+of 0.8 (<code>:131</code>). Files are parsed into a SQLite
+<code>memories</code> table with an FTS5 index
+(<code>storage/memory-store.ts:199-230</code>), searched by keyword with
+a synonym map and scored by reciprocal rank plus a 90-day recency decay,
+an access-count boost and a type boost (<code>search.ts:78-140</code>),
+and assembled into a <code>## Memories</code> block under a 500-token
+budget split per class — 120 for rules, 80 for working, 150 for episodes
+— with a code floor of 80 % of the total context
+(<code>context.ts:71-205</code>,
+<code>hooks/prompt-context.ts:83-101</code>).</p>
+<p><strong>Where it is thin is the part that is memory rather than
+index.</strong> The lifecycle state — <code>archived</code> after 30
+days for episodes, <code>superseded</code> for a duplicate fingerprint —
+is written by compaction to the index row only
+(<code>memory-store.ts:633-651</code>); the markdown that the README
+calls the readable, editable source of truth never learns it, and a
+re-index after any edit re-parses <code>status</code> from frontmatter
+and defaults it to <code>active</code> (<code>indexer.ts:260</code>).
+The promotion pass writes a <code>fact</code> file with the source's own
+fingerprint after three retrievals
+(<code>daemon/memory/runtime.ts:321-356</code>); the next compaction
+groups the two by fingerprint and keeps the one with the higher
+confidence, then the higher access count
+(<code>memory-store.ts:675-685</code>) — the original, on every default
+path — and marks the promoted copy <code>superseded</code>. The
+<code>scope</code> column is stored on every row and applied only when
+an MCP caller asks for it; the hook path passes
+<code>statuses: ["active"]</code> and a confidence floor and no scope
+(<code>prompt-context.ts:186-187</code>), so a branch-scoped memory from
+another branch is injected like any other. <code>forget_memory</code>
+deletes the file and the row and records nothing; a Claude Code file
+with the same content is re-imported when it next changes.</p>
+<p>One mark, <code>negative_eval</code>, for a committed case that
+stores an active and an archived copy of the same text and asserts the
+archived one is absent from the default search and present when asked
+for. No paper; the README cites an Amazon Science preprint on keyword
+retrieval as context for the code index, not for the memory.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a file someone wrote: the agent through
+<code>store_memory</code>, the agent's host through its own memory
+feature, the daemon through its two generated kinds, or a person with an
+editor. It becomes retrievable when the watcher or a start-up scan
+parses it, tags it, fingerprints it and upserts the row. It is retrieved
+by keyword — the FTS5 match is the primary signal, and the recency of
+the file's modification time, how often it has been retrieved and its
+type (feedback above user and project above reference) adjust the rank;
+a hit whose score is below 70 % of the top hit is dropped, and on the
+hook path so is anything below confidence 0.55 or not
+<code>active</code>. Every retrieval increments the row's access count,
+which feeds the next ranking and, at three, the promotion pass.</p>
+<p>It stops being retrievable three ways. Compaction marks an episode
+<code>archived</code> after 30 days of index age and marks every
+duplicate fingerprint but one <code>superseded</code>, both in the row;
+the default search sees neither, and <code>recall_memories</code> can
+ask for either. <code>forget_memory</code> removes the file and the row.
+And a working memory is replaced by the next one: each observed prompt
+writes a timestamped <code>working-*</code> file — the query, the code
+route, the branch, the active files, the top symbols, the memory hits —
+and prunes the history to a configured count, one by the README's
+default. A <code>pinned</code> file survives compaction whatever its age
+or fingerprint.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two directories of markdown are parsed into one FTS5 table; keyword rank plus recency and access count picks the block under per-class budgets; compaction and promotion write lifecycle state to the row, not the file, and the file wins on the next re-index</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two directories of markdown are parsed into one FTS5 table; keyword rank plus recency and access count picks the block under per-class budgets; compaction and promotion write lifecycle state to the row, not the file, and the file wins on the next re-index
+flowchart TB
+    CC[&quot;Claude Code&#39;s own memory dir&lt;br/&gt;~/.claude/projects/&amp;lt;root&amp;gt;/memory/ (read-only)&quot;] --&gt;|&quot;parse frontmatter · fingerprint · tag&quot;| DB[(&quot;memories.db&lt;br/&gt;status · access_count · confidence · fingerprint&quot;)]
+    W[&quot;.memory/reporecall-memories/&lt;br/&gt;store_memory · working-* · fact-* · hand edits&quot;] --&gt;|&quot;watcher / start-up scan&quot;| DB
+    DB --&gt;|&quot;FTS5 + synonyms → RRF · 90-day recency · access boost · type boost&quot;| S[&quot;ranked hits&quot;]
+    S --&gt;|&quot;status = active · confidence ≥ 0.55 · ≥ 70 % of top&quot;| A[&quot;assembleMemoryContext&lt;br/&gt;500 tokens · rule 120 · working 80 · episode 150 · code floor 0.8&quot;]
+    A --&gt; P[&quot;## Memories block&lt;br/&gt;prepended to the code context in the hook reply&quot;]
+    S --&gt;|&quot;recordAccess&quot;| DB
+    S --&gt;|&quot;observePrompt&quot;| WM[&quot;working-&amp;lt;branch&amp;gt;-&amp;lt;ts&amp;gt;.md (pruned to N)&quot;]
+    S --&gt;|&quot;access_count + 1 ≥ 3&quot;| PF[&quot;fact-&amp;lt;fingerprint&amp;gt;.md (same fingerprint)&quot;]
+    WM --&gt; W
+    PF --&gt; W
+    T[&quot;compaction every 6 h&quot;] --&gt;|&quot;same fingerprint → keep pinned, active, higher confidence, higher access; rest superseded&lt;br/&gt;episode older than 30 d → archived&quot;| DB
+    W -.-&gt;|&quot;file edited → re-parse: status defaults to active&quot;| DB
+    F[&quot;forget_memory&quot;] --&gt;|&quot;delete file + row&quot;| W</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/</code> is a daemon (<code>daemon/server.ts</code>,
+<code>daemon/mcp-server.ts</code> with 18 tools,
+<code>daemon/scheduler.ts</code>,
+<code>daemon/memory/runtime.ts</code>), an indexer
+(<code>indexer/pipeline.ts</code>, tree-sitter chunking for 22
+languages, a Merkle tree for change detection, an optional embedder), a
+search stack (<code>search/hybrid.ts</code> at 2,310 lines — FTS5 and
+vector fusion, seed resolution, intent routing to R0/R1/R2, call-tree
+building, context assembly), storage over <code>better-sqlite3</code>
+and LanceDB, and the memory layer:
+<code>memory/{types,parser,indexer,search,context,files}.ts</code>,
+<code>storage/memory-store.ts</code> and
+<code>daemon/memory/runtime.ts</code>. The CLI is
+<code>reporecall init | index | serve | search | stats | doctor | mcp</code>,
+also installed as <code>memory</code>. <code>init</code> writes
+<code>.memory/</code>, a <code>.memoryignore</code>, the two hooks into
+Claude Code's settings as <code>curl</code> calls to the daemon, an
+<code>.mcp.json</code> and a <code>CLAUDE.md</code> instruction block
+(<code>cli/init.ts</code>). The repository's own <code>.claude/</code>
+carries 31 agent prompt files for its development and an empty settings
+file.</p>
+<p>Storage under <code>.memory/</code>: <code>metadata.db</code> (files,
+chunks, call edges, imports, targets, conventions), <code>fts.db</code>,
+<code>lance/</code> when the semantic provider is on,
+<code>merkle.json</code>, <code>memories.db</code>, and
+<code>reporecall-memories/</code>. The memory table's schema
+(<code>memory-store.ts:199-230</code>) adds <code>access_count</code>,
+<code>last_accessed</code>, <code>importance</code> and
+<code>tags</code> by migration on older files.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Node, a lockfile, tree-sitter grammars as WebAssembly, and an
+optional local embedding model through
+<code>@huggingface/transformers</code> or Ollama; the daemon binds to
+127.0.0.1:37222 with a bearer token in a file with restrictive
+permissions, rate limits per client, and refuses symlink escapes and
+path traversal. Nothing leaves the machine. The screen found two
+auto-run surfaces — the committed <code>.mcp.json</code> starts
+<code>npx reporecall mcp</code> for any harness that reads it, and a
+<code>.claude/settings.json</code> that is empty — a
+<code>prepublishOnly</code> build, and 22 floating ranges pinned by a
+lockfile 169 days old at this commit.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Discover and index.</strong>
+<code>createMemoryIndexer</code> (<code>indexer.ts:438-483</code>) adds
+the Claude Code directory as read-only and
+<code>.memory/reporecall-memories/</code> as writable;
+<code>indexAll</code> and <code>indexFile</code> (<code>:187-312</code>)
+skip a file whose mtime matches the row, parse frontmatter, infer
+<code>sourceKind</code> from the directory (<code>:123-127</code>),
+default <code>class</code> from <code>type</code> (feedback → rule, the
+rest → fact), <code>scope</code> from <code>type</code>,
+<code>status</code> to <code>active</code>, <code>fingerprint</code> to
+a SHA-256 of name, description and content, and <code>confidence</code>
+by source (<code>:131-135</code>).</li>
+<li><strong>Search.</strong> <code>MemorySearch.search</code>
+(<code>search.ts:78-230</code>): FTS5 with the original query, then with
+synonym expansion when fewer than three hits; scores from rank, recency,
+access count, contextual boosts for active files and top symbols, a
+class boost and a type multiplier; filters for status, class, scope,
+confidence, the 70 % relative cut.</li>
+<li><strong>Assemble.</strong> <code>assembleMemoryContext</code>
+(<code>context.ts:71-205</code>): sort by class priority then score,
+compress a memory below half the top score to its summary, drop on the
+total budget or the class budget, report a route of M0, M1 or M2.</li>
+<li><strong>Inject.</strong> <code>prompt-context.ts:83-160</code>: the
+code context first, the memory budget as the smaller of 500 and what
+remains, the <code>## Memories</code> block prepended to the code text;
+<code>recordAccess</code> on each included hit (<code>:208</code>); the
+daemon then calls <code>observePrompt</code>
+(<code>server.ts:787</code>).</li>
+<li><strong>Generate.</strong> <code>observePrompt</code>
+(<code>runtime.ts:145-156</code>) writes the working file
+(<code>:275-319</code>) and runs <code>promoteFacts</code>
+(<code>:321-356</code>); <code>pruneWorkingHistory</code>
+(<code>:358-370</code>) keeps the newest N.</li>
+<li><strong>Compact.</strong> <code>MemoryStore.compact</code>
+(<code>memory-store.ts:659-712</code>): group by fingerprint, keep one,
+supersede the rest; archive unpinned active episodes older than the
+threshold; <code>MemoryRuntime</code> runs it at start and every
+<code>memoryCompactionHours</code>.</li>
+<li><strong>Tools.</strong> <code>store_memory</code> writes through
+<code>buildMemoryMarkdown</code> (<code>files.ts</code>) into the first
+writable directory, warning on a similar name;
+<code>forget_memory</code> deletes after checking the path is inside an
+indexed directory (<code>mcp-server.ts:1097-1160</code>);
+<code>recall_memories</code> passes every filter through;
+<code>explain_memory</code> reports the route and budgets;
+<code>compact_memories</code> and <code>clear_working_memory</code> do
+what they say; <code>list_memories</code> lists.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The file is the record and the row is its index. <code>type</code> is
+Claude Code's own vocabulary — <code>user</code>, <code>feedback</code>,
+<code>project</code>, <code>reference</code> — and <code>class</code> is
+Reporecall's, derived when absent. <code>status</code> is
+<code>active</code>, <code>archived</code> or <code>superseded</code>;
+<code>scope</code> is <code>global</code>, <code>project</code> or
+<code>branch</code>; <code>sourceKind</code> is
+<code>claude_auto</code>, <code>reporecall_local</code> or
+<code>generated</code>. <code>fingerprint</code> is the dedup key and is
+either declared in the file or computed. <code>confidence</code> is a
+number in [0, 1]. <code>supersedesId</code> and <code>reason</code> are
+written by compaction and by the promotion pass — into the row;
+<code>buildMemoryMarkdown</code> can serialise all of them, and only the
+daemon's generated files carry them. <code>access_count</code> and
+<code>last_accessed</code> exist only in the row.</p>
+<p>The consequence is the report's main finding. <code>archive</code>
+and <code>supersede</code> call <code>updateMetadata</code> on the row
+(<code>memory-store.ts:633-651</code>) and nothing touches the file;
+<code>indexFile</code> re-parses a changed file and sets
+<code>status = parsed.status ?? "active"</code>
+(<code>indexer.ts:260</code>). An archived episode a person edits is
+active again; a superseded duplicate whose file changes is current
+again; and the Claude Code directory is read-only by design, so its
+files can never carry the state the index assigned them. The README's
+<em>"readable, editable, deletable without tooling"</em> is true of the
+content and not of the lifecycle.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword only, by the module's own doc comment: <em>"memories are
+short structured text where FTS5 with auto-tagging and synonym expansion
+outperforms embedding-based retrieval. Benchmarked at 12-50
+memories."</em> The synonym map is sixteen entries
+(<code>search.ts:47-64</code>). The rank is
+<code>0.6 / (60 + rank)</code> plus <code>0.15 × recency</code> over a
+90-day linear decay of the file's mtime plus
+<code>0.25 × min(1, access/10) / 61</code> plus small contextual bumps,
+times a type multiplier of 1.3 for feedback; the recency term dominates
+the reciprocal-rank term for any memory under a few weeks old, which is
+what puts a fresh episode above a stale copy in the benchmark suite.
+Working memories are branch-scoped when a branch is detected and
+project-scoped otherwise, and the hook does not filter on scope, so the
+previous branch's working set is a candidate for the next branch's
+prompt until it is pruned.</p>
+<p>The code index beside it is the larger machine: FTS5 and cosine fused
+by reciprocal rank, seeds from identifier-shaped tokens, a rule-based
+intent classifier that routes to a fast lookup, a call-tree flow, a
+broad architecture bundle or a skip, and a context assembler that
+prefers implementation over tests. The committed
+<code>benchmark-results.json</code> records 54 queries in keyword mode
+at NDCG@10 0.455 and MRR 0.637 with route accuracy of 87 %, matching the
+README.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are files. <code>store_memory</code> blocks on a file write
+and an index update; the watcher picks up hand edits with a debounce;
+Claude Code's own writes arrive the same way. Nothing is extracted from
+a conversation — the daemon's only automatic writes are the working file
+per prompt and the promoted fact — and no model is called anywhere in
+the memory layer. A memory is retrievable as soon as its row exists,
+which is the debounce after the write.</p>
+<p>Two passes rewrite state. Compaction touches rows only, as above. The
+promotion pass writes a new file: for each hit of class
+<code>rule</code> or <code>fact</code> that is not itself generated and
+whose access count will reach three,
+<code>fact-&lt;12 hex of fingerprint&gt;.md</code> with the source's
+fingerprint, <code>confidence = max(0.7, source)</code>,
+<code>sourceKind: generated</code>, and the source's content under a
+<em>Promoted fact from</em> line. At the next compaction the two rows
+share a fingerprint; the sort keeps the pinned one, then the active one,
+then the higher confidence — a tie for a Claude Code source at 0.8 and
+for a local one at 0.7 — then the higher access count, which the source
+has and the copy does not. The promoted file is marked
+<code>superseded</code> and stays on disk. The runtime test asserts the
+promoted file exists after <code>observePrompt</code>; no test runs
+compaction after promotion. Whether promotion was meant to replace the
+source or to duplicate it, the tree does neither for long.</p>
+<p>Deletion is a file and row removal with no record; the store's
+<code>remove</code> and the tool's path check are the whole path.
+Duplicate detection at <code>store_memory</code> is a name match and an
+FTS similarity warning, not a block.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Indexing a memory file is a parse and one upsert; a search is one or
+two FTS5 queries and a scoring loop over at most twenty rows; the hook's
+memory step is bounded by the 500-token budget. The daemon holds the
+SQLite files open and the code index is the memory cost. No tokens are
+spent on the memory layer at all, which is the design's point.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent sees a <code>## Memories</code> block ahead of the code
+context on every routed prompt, with class labels — <em>Guidance</em>
+for a rule, <em>User context</em>, and so on — and a compressed summary
+line for weaker hits, and it sees seven memory tools beside eleven code
+tools over MCP. The session-start hook injects a behaviour instruction
+and a conventions summary; the 0.3.3 changelog records the instruction
+being reworded to <em>"use whichever tool fits"</em> after a version
+that told Claude to prefer the MCP tools, and the
+<code>PreToolUse</code> hook being reverted from a hard deny of
+redundant searches to a nudge, because it had blocked subagents.</p>
+<p>A person has the files. <code>MEMORY.md</code> is regenerated in the
+writable directory as a one-line index, up to 190 entries sorted by
+importance, and never in the Claude Code directory. There is no review
+surface, no approval and no status a person sets other than by editing
+frontmatter, which the index honours only on the next change.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Negative evaluation — awarded.</strong>
+<code>search.test.ts:155-180</code> stores two memories with the same
+text, one archived, and asserts the archived id is absent from a
+populated default result and present when its status is requested. The
+benchmark suite's compaction case pins a stricter fact: the archived
+episode stays out even of the search that asks for archived rows
+(<code>memory-benchmark.test.ts:579-583</code>), which the assertion
+treats as correct; the 70 % relative cut and the class filter are the
+likely reason, and a reader who relies on
+<code>statuses: ["archived"]</code> to audit what was archived should
+know the result can be empty.</p>
+<p><strong>Trust state — withheld.</strong> <code>status</code> is a
+lifecycle label written by compaction, not an epistemic one;
+<code>confidence</code> is a number set by source and used as a floor.
+Nothing marks a memory candidate, verified or rejected, and nothing
+reviews one.</p>
+<p><strong>Tombstone — withheld.</strong> <code>forget_memory</code>
+removes the file and the row and records nothing; a file with the same
+content in the read-only Claude Code directory is re-imported on its
+next change, and a superseded duplicate returns as active if its file is
+edited.</p>
+<p><strong>Scope — withheld.</strong> The <code>scope</code> column is
+stored on every row and is a filter only when an MCP caller passes
+<code>scopes</code>; the hook path does not, and the per-project
+<code>.memory/</code> directory is deployment topology.</p>
+<p><strong>Bitemporal, audit, human review — withheld.</strong> One
+<code>fileMtime</code> and one <code>indexedAt</code> per row; no event
+record; no surface but the files.</p>
+<p><strong>State in the wrong place.</strong> The lifecycle the
+compaction pass maintains lives in <code>memories.db</code> and the
+files are authoritative on every re-parse, so the pass's work is undone
+by an edit, a re-clone, or a rebuild of the index from disk;
+<code>status</code> defaults to <code>active</code> at parse time and
+<code>pinned</code> to <code>false</code>.</p>
+<p><strong>A copy of a moved project.</strong> The manifest's repository
+returns 404; the package it names has released 23 versions to 0.9.1 by 4
+August 2026; this tree is 0.3.3 from 21 March with no commits by the
+account hosting it. Everything above is true of this commit and says
+nothing about the package a user installs.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>54 test files and 646 test functions under vitest; 65 of them in the
+memory layer across
+<code>test/memory/{parser,indexer,memory-store,search,context}.test.ts</code>,
+<code>test/daemon/memory-runtime.test.ts</code> and two benchmark
+suites. The store tests cover upsert, lookup, FTS, migration of an older
+table and one compaction case (duplicate fingerprints superseded, an old
+episode archived); the search tests cover keyword hits, type filters,
+the feedback boost and the archived exclusion; the runtime test covers
+import from both directories, incremental refresh on add, change and
+unlink, and one prompt producing a working file and a promoted fact.
+Each can fail, and the negative case has its positive control.</p>
+<p><code>memory-benchmark.test.ts</code> (666 lines) is a deterministic
+suite over a fixture of every class with thresholds: indexing latency,
+retrieval of expected memories per class, fresher episodes above stale
+copies, class- and file-aware working retrieval, the M0/M1/M2 routes,
+token budgets, and the compaction case above; it prints a scorecard. The
+live wrapper validates a report schema and <em>soft floors</em>. Neither
+runs compaction after promotion, and no test asserts what a file
+re-parse does to a row's status.</p>
+<p>The code benchmark is committed: <code>benchmark-results.json</code>
+with 54 queries, per-route and per-category tables, and latencies,
+recomputable with <code>npm run benchmark</code> in keyword mode; the
+README's DUTO section reports a fleet test on a 1,032-file project by
+eight parallel agents with a per-query table. The
+<code>ROADMAP.md</code> lists <em>memory compaction quality metrics</em>
+— dedup accuracy, promotion precision, recall after compaction — as not
+yet measured. No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Index the agent's own memory directory.</strong> Claude Code
+writes frontmatter markdown for itself; reading it read-only and ranking
+it costs nothing and gives the hook the agent's notes without a second
+store.</li>
+<li><strong>Budget per class, with a code floor.</strong> Rules get 120
+tokens that episodes cannot take, and memory never displaces more than
+20 % of the code context.</li>
+<li><strong>Derive class and scope from the type when absent.</strong>
+Feedback is a rule and global; a project note is a fact and
+project-scoped; the defaults are the sensible ones and the file need not
+say.</li>
+<li><strong>A deterministic benchmark for the memory layer with
+thresholds</strong> — latency, retrieval per class, freshness ordering,
+budgets — that runs in the unit suite.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Lifecycle state in the index when the file is the source of
+truth.</strong> Write <code>status</code>, <code>supersedesId</code> and
+<code>reason</code> back to the frontmatter, or accept that any edit
+resurrects.</li>
+<li><strong>Promoting by copying the fingerprint.</strong> A copy that
+shares its source's dedup key is the row compaction removes; give the
+promoted fact its own identity and supersede the source explicitly, or
+do not write it.</li>
+<li><strong>A scope column the injection path never reads.</strong>
+Branch working sets leak across branches until pruned.</li>
+<li><strong>A test that pins the wrong answer.</strong> An archived row
+absent from a search that asked for archived rows is a defect the suite
+protects.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>As a code index for Claude Code it is a serious piece of work — 22
+languages, a call graph, an intent router, a committed benchmark — and
+the memory layer is a thin, deterministic, honest addition that costs
+nothing and reads the notes the agent already keeps. A single developer
+who wants their Claude Code memories ranked into the prompt with a
+budget gets that. Anyone who needs archival or supersession to hold, a
+delete to stay deleted, or a branch's working set to stay on its branch,
+will find each of those a few lines from working and none of them
+working at this commit — and should first find out where the project
+went after 0.3.3, because it is not here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Where is the source for <code>@proofofwork-agency/reporecall</code>
+0.9.1, and did any of its twenty later releases move lifecycle state
+into the files?</li>
+<li>Is the promoted fact meant to replace its source? The stem, the
+shared fingerprint and the tie-break say three different things.</li>
+<li>What does <code>statuses: ["archived"]</code> return on a real
+store, given the benchmark case where it returns nothing?</li>
+<li>How does the hook behave when the Claude Code memory directory and
+the writable directory hold the same fingerprint — which one does the
+first compaction keep, given both default to <code>active</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/storage/memory-store.ts</code></td>
+<td>809</td>
+<td>The <code>memories</code> table, FTS5, <code>recordAccess</code>,
+<code>archive</code>, <code>supersede</code>, <code>compact</code></td>
+</tr>
+<tr>
+<td><code>src/memory/indexer.ts</code></td>
+<td>483</td>
+<td>Directory discovery, parsing to rows, defaults,
+<code>MEMORY.md</code> regeneration</td>
+</tr>
+<tr>
+<td><code>src/daemon/memory/runtime.ts</code></td>
+<td>396</td>
+<td>Watcher, compaction timer, <code>observePrompt</code>, working
+memory, promotion</td>
+</tr>
+<tr>
+<td><code>src/memory/search.ts</code></td>
+<td>345</td>
+<td>FTS5 with synonyms, RRF plus recency, access and type boosts,
+filters</td>
+</tr>
+<tr>
+<td><code>src/memory/context.ts</code></td>
+<td>257</td>
+<td>Per-class budgets, compression, M0/M1/M2</td>
+</tr>
+<tr>
+<td><code>src/memory/types.ts</code>, <code>parser.ts</code>,
+<code>files.ts</code></td>
+<td>176, 158, —</td>
+<td>The vocabulary, the frontmatter parser, the markdown writer</td>
+</tr>
+<tr>
+<td><code>src/hooks/prompt-context.ts:83-210</code></td>
+<td>—</td>
+<td>Memory budget, injection, <code>recordAccess</code></td>
+</tr>
+<tr>
+<td><code>src/daemon/mcp-server.ts:675-1200</code></td>
+<td>—</td>
+<td>The seven memory tools</td>
+</tr>
+<tr>
+<td><code>src/daemon/server.ts:787</code></td>
+<td>—</td>
+<td>The <code>observePrompt</code> call</td>
+</tr>
+<tr>
+<td><code>src/cli/init.ts</code></td>
+<td>448</td>
+<td>Hooks, <code>.mcp.json</code>, <code>CLAUDE.md</code> block</td>
+</tr>
+<tr>
+<td><code>test/memory/*.test.ts</code>,
+<code>test/daemon/memory-runtime.test.ts</code></td>
+<td>1,298</td>
+<td>47 memory cases</td>
+</tr>
+<tr>
+<td><code>test/benchmark/memory-benchmark.test.ts</code>,
+<code>live-memory-benchmark.test.ts</code></td>
+<td>666, 106</td>
+<td>The deterministic memory scorecard and its live wrapper</td>
+</tr>
+<tr>
+<td><code>benchmark-results.json</code>, <code>benchmark/</code></td>
+<td>—</td>
+<td>The committed code-retrieval benchmark</td>
+</tr>
+<tr>
+<td><code>CHANGELOG.md</code>, <code>ROADMAP.md</code>,
+<code>README.md</code></td>
+<td>—</td>
+<td>Memory V1 entry, unmeasured compaction quality, the DUTO fleet
+test</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;writeFile&#39; src/storage/memory-store.ts                       # none: archive and supersede touch the row only
+rg -n &#39;scopes:&#39; src/hooks/prompt-context.ts                          # none: the hook passes statuses and minConfidence only
+rg -n &#39;tombstone|deleted_|forgotten&#39; src --glob &#39;*.ts&#39;               # none: forget leaves no record
+rg -n &#39;compact\(&#39; test/daemon/memory-runtime.test.ts                 # none: no compaction after promotion is tested
+rg -n -i &#39;arxiv|citation|doi&#39; README.md                              # one Amazon Science link, about keyword code retrieval
+gh api repos/proofofwork-agency/reporecall                           # 404
+curl -s https://registry.npmjs.org/@proofofwork-agency%2Freporecall  # 23 versions, latest 0.9.1, modified 2026-08-04
+git log --format=%an | sort | uniq -c                                # Nillo 38, de-nial-lo 2; none by the hosting account</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702"><code class="commit-id" title="0c0a9ff61a99ac428927f99c1c449c04cadd0702">0c0a9ff6…</code></a>
+— first reading, at the head of <code>main</code>, version 0.3.3 of 21
+March 2026. Screened first: two auto-run surfaces (a committed
+<code>.mcp.json</code> that starts the server under <code>npx</code>,
+and an empty <code>.claude/settings.json</code>), a
+<code>prepublishOnly</code> build, 22 floating ranges behind a lockfile
+169 days old, a <code>CLAUDE.md</code> treated as data; nothing
+installed or run. One mark; the six withheld are each explained in
+section 9. The tree is a copy of a project whose manifest repository no
+longer resolves and whose npm package continued to 0.9.1, recorded in
+section 1 and the appendix so the pin is read as what it is.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
