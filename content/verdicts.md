@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 365 reports.**
+**This page covers all 366 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3255,3 +3255,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 40 commits in five days of March 2026 by one developer, 18,810 lines of TypeScript under 54 test files and 646 test functions, a committed code-retrieval benchmark, and a memory layer of 2,711 lines added in the last release here. One of seven capability marks. What happened after 0.3.3 is in a package registry and not in this tree.
 - Study when: you want the cheapest way to get Claude Code's own memory files ranked into a prompt with a budget, or a worked example of a memory layer riding on a code index.
 - Do not copy when: you need archival, supersession, deletion or scope to hold across an edit or a re-index; each is a few lines from working and none works at this commit.
+
+### [`thoughtdag`](../systems/thoughtdag/)
+- Best idea: **the preview and the request share one compiler, and the request is hashed at dispatch.** `buildContext` walks the wires — materials, references, chain, question — the panel shows its output, the model receives it, and a `commit` event records the SHA-256 of the canonical request with its message count and model in an append-only, metadata-only log that undo cannot touch. *What did the model see* is a lookup.
+- Biggest risk: **stale is a label the model is asked to respect, and archive is exclusion without a record.** An answer whose upstream fingerprint drifted stays in downstream context with a bracketed warning until a person replays it; a pruned node can be re-wired or re-imported and the memory judge is shown the surviving entries, not the refused ones. The event log rotates past 10,000 and sees no memory admissions; the ambient memory rides every canvas with a project label nothing filters on.
+- Most reusable component: the memory constitution — categories, a *stated* gate for identity, a credential pattern, a session cap and duplicate checks in `admissionCheck` rather than in the judge's prompt, with a versioned prompt and a twenty-case golden set run before and after any wording change — and, beside it, a benchmark whose conditions are graph operations, whose traces are immutable, whose scorer re-scores without an API call and whose status file corrects itself in place.
+- Maturity impression: MIT, 620 commits in nine weeks by one author, 30,541 lines of TypeScript, a desktop app and harness plugin at 0.4.6, a CLI with 54 tests and no unit suite for the store, and a nine-endpoint context-repair pilot with 1,215 captured conditions. Three of seven capability marks. A feature-status page separates current, experimental and not promised.
+- Study when: you want a person-legible answer to *what was this model told* — a reviewable retrieval, a request hash, a stale mark — or a worked example of testing a context-editing claim with immutable traces.
+- Do not copy when: you need memory that forms on its own at scale, a refusal that outlives a delete, a validity axis, or scoping across canvases; the design declined each on purpose and says so.

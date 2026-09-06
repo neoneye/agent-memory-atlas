@@ -20,7 +20,7 @@ Six things are worth knowing before reading further.
    *identically* on governance. Its harness is not released. The other exception
    keeps the task and lengthens it instead:
    [MerchantBench](#the-compaction-boundary-measured-in-money-over-a-simulated-year)
-   scores 365 simulated days of running a store on final net assets alone, so a
+   scores 366 simulated days of running a store on final net assets alone, so a
    memory failure is only ever visible as money — and its simulator is released.
 2. **A bad score on one benchmark is weak evidence.** These are end-to-end
    pipelines judged by a language model, and the memory layer is one of six
@@ -1078,7 +1078,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and thirty-one of three hundred and sixty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and thirty-two of three hundred and sixty-six. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1566,7 +1566,7 @@ Read at
 Apache-2.0 — see [MerchantBench](../systems/merchantbench/).
 
 **It is the counterexample to this page's opening complaint.** No question is
-asked about something said earlier. The agent runs a store for 365 simulated
+asked about something said earlier. The agent runs a store for 366 simulated
 days, is activated every twelve simulated hours, and is scored on one number:
 final net assets, taken by `eval/scoring.py` as the last point of the
 `net_assets` series. There is no recall term, no retention term, no memory
@@ -1610,7 +1610,7 @@ mechanism could be explaining.
 
 **What cannot be reproduced.** No run output of any kind is committed. The 98,843
 real product records become a deterministic synthetic catalog of 1,000 products
-and 200 suppliers, and the 365 daily market reports are excluded as
+and 200 suppliers, and the 366 daily market reports are excluded as
 non-redistributable — which the test suite says out loud rather than hiding, with
 `pytest.skip("non-redistributable bundled daily reports are not in the artifact")`.
 That absence also takes the rule-based baseline with it: it selects replacements
@@ -3192,7 +3192,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 364 repositories,
+  [comparative report](../compare/). It is a statement about 365 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

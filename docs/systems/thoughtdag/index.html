@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An editable thought graph on an
+infinite canvas — desktop app, DeepSeek Harness plugin and a read-only
+CLI — where what a model sees next is exactly what wires into the node,
+every generation records a fingerprint of its upstream and a SHA-256 of
+the request it sent, a stale answer is marked and replayable in
+dependency order, an ambient memory of three categories is admitted by a
+judge behind a constitution in code with an undo, and a committed
+benchmark shows that deleting a wrong turn's source does not always
+delete the wrong answer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ThoughtDAG — Agent Memory Atlas">
+    <meta property="og:description" content="An editable thought graph
+on an infinite canvas — desktop app, DeepSeek Harness plugin and a
+read-only CLI — where what a model sees next is exactly what wires into
+the node, every generation records a fingerprint of its upstream and a
+SHA-256 of the request it sent, a stale answer is marked and replayable
+in dependency order, an ambient memory of three categories is admitted
+by a judge behind a constitution in code with an undo, and a committed
+benchmark shows that deleting a wrong turn's source does not always
+delete the wrong answer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ThoughtDAG — Agent Memory Atlas">
+    <meta name="twitter:description" content="An editable thought graph
+on an infinite canvas — desktop app, DeepSeek Harness plugin and a
+read-only CLI — where what a model sees next is exactly what wires into
+the node, every generation records a fingerprint of its upstream and a
+SHA-256 of the request it sent, a stale answer is marked and replayable
+in dependency order, an ambient memory of three categories is admitted
+by a judge behind a constitution in code with an undo, and a committed
+benchmark shows that deleting a wrong turn's source does not always
+delete the wrong answer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ThoughtDAG — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ThoughtDAG",
+      "description": "An editable thought graph on an infinite canvas \u2014 desktop app, DeepSeek Harness plugin and a read-only CLI \u2014 where what a model sees next is exactly what wires into the node, every generation records a fingerprint of its upstream and a SHA-256 of the request it sent, a stale answer is marked and replayable in dependency order, an ambient memory of three categories is admitted by a judge behind a constitution in code with an undo, and a committed benchmark shows that deleting a wrong turn's source does not always delete the wrong answer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Wires are the context</p>
+          <h1>ThoughtDAG</h1>
+          <p class="document-deck">An editable thought graph on an
+infinite canvas — desktop app, DeepSeek Harness plugin and a read-only
+CLI — where what a model sees next is exactly what wires into the node,
+every generation records a fingerprint of its upstream and a SHA-256 of
+the request it sent, a stale answer is marked and replayable in
+dependency order, an ambient memory of three categories is admitted by a
+judge behind a constitution in code with an undo, and a committed
+benchmark shows that deleting a wrong turn's source does not always
+delete the wrong answer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/chenxiachan/thoughtdag">
+              <span>Source</span>
+              <strong>chenxiachan/thoughtdag</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/chenxiachan/thoughtdag/commit/e658c280d39082ec7d6d328bd1dff9af6d49b94e" title="e658c280d39082ec7d6d328bd1dff9af6d49b94e">
+              <span>Analyzed revision</span>
+              <code>e658c280…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ThoughtDAG is <strong>a context graph a person edits</strong>: an
+infinite canvas where each node is a question and its answer versions,
+each wire is context, and <em>"what the model sees is exactly what wires
+into the node."</em> MIT; 620 commits between 3 July and 6 September
+2026, 618 of them by one author; 30,541 lines of TypeScript in
+<code>src/</code>, a 1,154-line Express proxy, an Electron shell, a
+1,226-line CLI, a 1,023-line DeepSeek Harness plugin and a benchmark
+directory of 2,145 files. It ships as a desktop app at 0.4.6, a harness
+plugin at the same version, an npm CLI at 0.1.2 and a browser demo on
+Cloudflare Pages that stores nothing. The screen found no auto-run
+surface; five manifests were inside the seven-day cooldown and nothing
+was installed or run.</p>
+<p>Four things here are memory in the atlas's sense, and they are wired
+together. The canvas persists — one IndexedDB key per canvas with a
+debounced folder backup as a real <code>.thoughtdag.json</code> file —
+and a generation's input is a deterministic walk of the graph
+(<code>store/context-builder.ts:74-221</code>): materials first, dashed
+reference blocks, then the solid chain in order, the question last,
+archived nodes skipped at every layer. Each generation records the
+fingerprint of everything upstream of the node with the node's own
+content blanked (<code>upstreamFingerprint</code>,
+<code>:111-130</code>), and <code>recomputeStaleness</code>
+(<code>slices/nodes.ts:251-260</code>) marks a node
+<strong>stale</strong> when the live fingerprint drifts from the
+recorded one; a stale answer still enters downstream context, prefixed
+<em>"[Stale: this answer was written against an earlier version of its
+upstream]"</em> (<code>:132,:200</code>), and <em>Replay</em>
+regenerates stale nodes in dependency order. Second, an <strong>ambient
+memory</strong> (<code>lib/memory.ts</code>): after an ordinary
+generation a background judge on the cheapest model proposes one
+sentence in one of three categories — preference, identity, project —
+and a constitution written in code, not in the prompt, decides
+admission: identity only when the user <em>stated</em> it, never
+inferred; a credential pattern blocks; three additions per canvas per
+session; duplicates and unknown update targets refused
+(<code>admissionCheck</code>, <code>:100-118</code>); every write shows
+a toast with <strong>Undo</strong>, and project entries stop flowing
+into context after 45 days without being deleted. Third, <strong>Session
+Atlas</strong>: the desktop shell fences the session directories of
+Claude Code, Codex, DeepSeek Harness and Pi
+(<code>desktop/main.js:116-124</code>), reads them and never writes
+them, and mirrors a session onto a canvas turn by turn with tool calls
+as attachments, appending idempotently past a per-session ledger as the
+source grows. Fourth, the <strong>why layer</strong>: a CLI that reduces
+those same session files to an event index of what each turn did to
+which files, papers and URLs, answers <code>why &lt;path&gt;</code>,
+<code>find "&lt;phrase&gt;"</code> and <code>recall</code>, and serves
+the four questions read-only over MCP.</p>
+<p><strong>What it records is unusual: not what the model concluded, but
+what it was shown.</strong> At dispatch the streaming slice writes a
+<code>commit</code> event carrying the SHA-256 of the canonical request
+— messages, image digests, model, tool flags — its message count and
+lane (<code>store/streaming.ts:280-285</code>); the canvas event log
+(<code>slices/events.ts</code>) is append-only, metadata-only, survives
+undo, persists with the canvas and exports as CSV; and the canvas
+adapter projects those commits into canonical
+<code>context.committed</code> events with the manifest's own honesty
+about what it can see (<code>events/manifests.ts</code>: turns exact,
+wires exact, context surface exact from the day commits were logged and
+upstream-only before). The benchmark under <code>benchmark/</code> is
+the same discipline applied to a claim: nine endpoints, 1,215 captured
+conditions, conditions defined as graph operations, traces immutable, a
+scorer that re-scores from traces with no API call, and a
+<code>STATUS.md</code> that records a design flaw a reader caught, a
+withdrawn generalisation and a corrected statistic.</p>
+<p>Three marks: <code>audit_log</code> for the event log,
+<code>human_review</code> for the canvas itself,
+<code>negative_eval</code> for the why layer's hidden-reads case and the
+benchmark's compiler equivalence. <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code> and
+<code>scope_enforced</code> withheld, each a near miss stated in section
+9. No paper; the repository cites itself as software and publishes the
+benchmark as a web report.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief here is a node the graph can reach. It enters three ways: a
+person asks and a model answers on the canvas; a person imports material
+— a PDF passage with its page, a link snapshot with its fetch time, a
+note; or the atlas mirrors a turn another agent held, frozen as a
+<code>source</code> snapshot beside the editable copy. It is
+<em>used</em> when a wire leads from it to the node being asked: solid
+for the full turn, dashed for a quoted reference, and the walk is the
+same whether a person is previewing the request or the model is
+receiving it. Its answer is believed exactly as written until its
+upstream changes, at which point it is stale — still present, labelled
+as written against an older input — until a person replays it or decides
+the difference does not matter.</p>
+<p>It stops being used by exclusion, not erasure. Delete the wire and
+the node stays on the canvas, reconnectable; archive the node and it is
+dimmed and skipped by every walk; delete it and it is gone, with an
+event in the log and no other record. An answer is never overwritten — a
+regeneration is a new version beside the old, each carrying the model
+that wrote it, the time and the hash of what it saw — and a merge or a
+condensation is a new node, not a replacement. The ambient memory is the
+one layer with a judge: a sentence the judge proposes lands only if the
+constitution admits it, announces itself, and can be undone for eight
+seconds at the toast or edited and deleted in the manager afterwards;
+what it holds rides the system layer of every ordinary generation,
+<em>"never recite them, never treat them as part of the
+conversation."</em></p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a person's wires are the retrieval; the same compiler feeds the preview and the request; each generation records what it depended on and what it sent; stale is a mark that stays in context, archive is an exclusion without a record, and the ambient memory has a judge and an undo</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a person&#39;s wires are the retrieval; the same compiler feeds the preview and the request; each generation records what it depended on and what it sent; stale is a mark that stays in context, archive is an exclusion without a record, and the ambient memory has a judge and an undo
+flowchart TB
+    P[&quot;person: ask · wire · disconnect · archive · edit · choose version&quot;] --&gt; G[(&quot;canvas graph&lt;br/&gt;IndexedDB per canvas · folder backup&quot;)]
+    M[&quot;materials: PDF passage p.N · link snapshot · note&quot;] --&gt; G
+    A[&quot;Session Atlas: Claude Code · Codex · DSH · Pi&lt;br/&gt;read-only session files → mirrored turns&quot;] --&gt; G
+    G --&gt;|&quot;buildContext: materials → references → chain → question&lt;br/&gt;archived skipped · stale marked&quot;| C[&quot;compiled request&quot;]
+    C --&gt; V[&quot;will-send preview&quot;]
+    C --&gt;|&quot;commit: sha256(request) · n · model&quot;| E[(&quot;event log&lt;br/&gt;append-only · metadata only · survives undo&quot;)]
+    C --&gt; LLM[&quot;model&quot;]
+    LLM --&gt;|&quot;answer version + lastContextHash + generatedAt&quot;| G
+    G --&gt;|&quot;upstream fingerprint drifted&quot;| S[&quot;stale → replay in dependency order&quot;]
+    LLM --&gt;|&quot;background judge&quot;| J{&quot;constitution in code&lt;br/&gt;stated identity · no credentials · ≤3 per session&quot;}
+    J --&gt;|&quot;admit + toast with Undo&quot;| AM[(&quot;ambient memory&lt;br/&gt;preference · identity · project (45-day decay)&quot;)]
+    AM --&gt;|&quot;[Memory] block on the system layer&quot;| C
+    W[&quot;why layer: ~/.thoughtdag index&lt;br/&gt;why · find · recall · MCP&quot;] -.-&gt;|&quot;reads the same session files&quot;| A</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/</code> is a React 19 and Vite application:
+<code>App.tsx</code> (2,084 lines), the canvas components over
+<code>@xyflow/react</code>, a zustand store split into slices
+(<code>nodes</code>, <code>llm</code>, <code>attachments</code>,
+<code>highlights</code>, <code>history</code>, <code>events</code>,
+<code>evaluator</code>, <code>roles</code>) with
+<code>context-builder.ts</code>, <code>streaming.ts</code> and
+<code>projects.ts</code> beside them, and <code>lib/</code> holding the
+mechanisms: <code>memory.ts</code>, <code>context-bundle.ts</code>,
+<code>graph.ts</code>, <code>condense.ts</code>, <code>export.ts</code>,
+<code>local-backup.ts</code>, <code>persistence.ts</code>, the
+<code>adapters/</code> for each runner's session format,
+<code>atlas/</code> (discover, canonical routing, live mirror,
+watermark, the harness bridge), and <code>events/</code> (the event
+contract, the projection from adapter turns to canonical events, and
+per-adapter manifests). <code>server.mjs</code> is the only backend: an
+Express proxy over the Vercel AI SDK for Zhipu, OpenAI-compatible,
+OpenAI, Anthropic, Google and DeepSeek endpoints, with web and scholarly
+search tools, MCP clients from <code>mcp.config.json</code>, PDF
+extraction and URL fetch. <code>desktop/main.js</code> is the Electron
+shell: fenced session roots under the home directory, a native picker
+for custom roots, backup writes, protocol links. <code>cli/</code> is
+the why layer; <code>dsh/</code> the harness plugin;
+<code>functions/</code> the Cloudflare twin of the proxy with no
+environment and no storage; <code>protocol/</code> the Context Bundle v0
+proposal with schema and fixtures and the adapter documents for Claude
+Code and Codex; <code>benchmark/</code> the cases, gold, suites, tools,
+compiled artifacts, runs and canvases.</p>
+<p>Persistence is object storage into IndexedDB with a one-second
+debounce and a flush on page hide (<code>lib/persistence.ts</code>); the
+project list is a separate key; attachments live in a vault. The folder
+backup writes the active canvas about a minute after the last change and
+restores the watched folder on the next launch. The ambient memory
+library and its switch live in <code>localStorage</code>
+(<code>lib/ui-store.ts:231-246</code>). The why layer keeps
+<code>fact-index.json</code>, <code>interpretation-cache.json</code> and
+a streamed <code>text-index.jsonl</code> under
+<code>~/.thoughtdag/</code> with 0700 and 0600 permissions, and
+refreshes when a source file's size or modification time moved
+(<code>cli/src/lib.ts:16-22,:502-508</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to run for the desktop app beyond the installer; from source,
+<code>npm run server</code> and <code>npm run dev</code>, a
+<code>.env</code> with at least one key or a provider connected inside
+the app, Ollama for a fully offline model. The web demo runs
+browser-direct with the visitor's own keys and no server state. The
+harness plugin mounts the canvas under the existing harness web server
+with no second process. Everything a person made can leave as JSON,
+Markdown, a thought-map image or a read-only share link; the benchmark
+re-scores with <code>node tools/score.mjs</code> and needs a key only to
+capture a new endpoint.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Compile.</strong> <code>partitionContext</code>
+(<code>lib/graph.ts</code>) splits a node's upstream into materials,
+references and the mainline; <code>buildContext</code>
+(<code>context-builder.ts:74-221</code>) walks them in that order,
+dedups attachments by fingerprint, honours excluded and included
+attachment ids, skips <code>archived</code> at every layer
+(<code>:161,:178,:192</code>), prepends the stale mark to a stale chain
+response (<code>:200</code>), resolves the role along the mainline, and
+returns messages with a parallel <code>sources</code> array naming the
+layer, node and part of every message. <code>hashContext</code>
+(<code>:93-100</code>) and <code>upstreamFingerprint</code>
+(<code>:111-130</code>) hash it.</li>
+<li><strong>Dispatch and record.</strong> <code>streaming.ts:213</code>
+adds the ambient <code>[Memory]</code> block for ordinary nodes;
+<code>:280-285</code> computes the SHA-256 of the canonical request and
+logs <code>commit</code>; on completion the response is appended as a
+version with <code>generatedBy</code>, <code>generatedAts</code> and
+<code>lastContextHash</code> (<code>:176-202</code>),
+<code>recomputeStaleness</code> runs, and <code>:359</code> fires
+<code>judgeMemory</code>.</li>
+<li><strong>Judge and admit.</strong> <code>judgeMemory</code>
+(<code>memory.ts:125-165</code>) sends the exchange and up to forty
+existing entries to the default model with a versioned prompt, parses
+one JSON line, applies <code>admissionCheck</code>, then adds or updates
+the entry and shows the toast with Undo; <code>memoryContextBlock</code>
+(<code>:55-70</code>) renders active entries, filtering project entries
+older than 45 days.</li>
+<li><strong>Mirror.</strong> <code>importOrAppendSession</code>
+(<code>atlas/canonical.ts:36-40</code>) routes a session file to a
+subscribed canvas, a mounted branch or a fresh canvas, appending only
+turns past the ledger; the live mirror
+(<code>atlas/live-mirror.ts</code>) watches the active canvas's source
+file; the watermark (<code>atlas/watermark.ts</code>) tracks what a
+person has seen.</li>
+<li><strong>Why.</strong> <code>cli/src/lib.ts</code>: collectors per
+runner reduce session files to facts — turn, question head, and per path
+the op and the first differing line — plus a verbatim text index;
+<code>hitsFor</code> (<code>:630-646</code>) hides read-like ops unless
+<code>--include-read</code> or nothing else happened;
+<code>why --check</code> exits 0 or 1; <code>status</code> reports the
+evidence breakdown by basis; <code>purge</code> deletes the store.</li>
+<li><strong>Bridge.</strong> <code>dsh/lib/index.js</code>: read-only
+listing and logs for disk and live harness sessions, turn boundaries,
+and three writes fenced to the local host — <code>fork</code>,
+<code>inject</code> (model-facing context for the next step) and
+<code>followup</code> (a queued or steering prompt) — plus the harness's
+own models and fetcher for the embedded canvas.</li>
+<li><strong>Bundle.</strong> <code>compileContextBundle</code>
+(<code>lib/context-bundle.ts:170</code>) wraps <code>buildContext</code>
+with an injected clock, a semantic snapshot hash that ignores positions
+and collapse state, per-item provenance and a content hash; three
+fixtures freeze the expected output.</li>
+<li><strong>Backup and export.</strong> <code>local-backup.ts</code>
+writes <code>.thoughtdag.json</code>; <code>export.ts</code> exports the
+canvas, a context chain or a selection as Markdown, the event log as CSV
+(<code>:242</code>), and imports backups and chat exports.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ThoughtData</code> (<code>src/types.ts</code>) is the node:
+<code>question</code>, <code>response</code>, <code>responses[]</code>
+with parallel <code>questions[]</code>, <code>generatedBy[]</code>,
+<code>generatedAts[]</code>, <code>editedAts[]</code>,
+<code>gatewaySearches[]</code>, <code>summaries[]</code> and
+<code>summaryTypes[]</code> (display only, never in fingerprints);
+<code>responseIndex</code>; <code>archived</code> and
+<code>archivedAt</code>; <code>lastContextHash</code> and
+<code>lastGeneratedAt</code>; <code>createdAt</code> and
+<code>askedAt</code>; <code>stepKind</code> for human, prompt, note,
+file, link and frame nodes; <code>importSource</code> with runner,
+session, item ids and <code>cwd</code>, and <code>source</code>, the
+frozen import snapshot; link nodes carry <code>linkUrl</code>,
+<code>linkTitle</code>, <code>linkFetchedAt</code> and the captured
+HTML; attachments carry page images, extracted text with the model that
+extracted it, a digest, and for imported tool calls the
+<code>paths</code> and <code>op</code>. Edges are solid (conversation),
+dashed (summary reference), orange (exploration) or red (sliding
+reviewer).</p>
+<p><code>MemoryEntry</code> (<code>lib/memory.ts:20-28</code>) is
+<code>id</code>, <code>text</code>, <code>kind</code> of auto, manual or
+imported, <code>category</code>, the canvas name it came from, and a
+date. The canvas event (<code>src/types.ts:244-251</code>) is a
+timestamp, an op, an optional object id and light metadata, <em>"NEVER
+text content."</em> The why layer's <code>CanonicalEvent</code>
+(<code>lib/events/types.ts</code>) carries <code>basis</code> —
+observed, reconstructed, inferred — and <code>completeness</code> on
+every event, a <code>SourcePointer</code> back to the runner's own
+record, and artifact ids by scheme (<code>file://</code>,
+<code>https://</code>, <code>arxiv:</code>,
+<code>thoughtdag:attachment/</code>), with locators for pages, lines and
+quotes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search on the canvas; there is a walk. Retrieval is the
+set of nodes reachable by incoming wires, in an order the compiler fixes
+independent of creation history so that <em>"the same graph always
+produces the same prompt,"</em> trimmed by what a person did to the
+nodes — archive, collapse with summary, highlight filter — and never by
+score. A dashed reference contributes its question and answer and the
+trail of upstream questions, or the whole chain when the edge says so.
+The token weight per layer is reported so the preview <em>"shows
+composition honestly,"</em> and the preview is the request: the panel
+calls the function the dispatch calls.</p>
+<p>The why layer is lookup, not ranking: <code>why</code> resolves a
+path, a bare filename inside the workspace, an <code>@</code>-prefixed
+host path, an arXiv id or a URL to the turns whose tool calls touched
+it, newest first, reads hidden unless asked; <code>find</code> matches
+exact words in what was asked or answered, streamed from the text index
+without parsing it whole. The benchmark's equivalence suite is the
+retrieval test for the canvas: a probe graph with marker texts compiled
+through the product yields the node order, compared against an
+independent reference compiler across every condition of every case and
+six synthetic structures, with a cycle refused.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A generation blocks on the model and streams into its node; the
+debounced store write lands a second after the last chunk and the folder
+backup a minute after the last edit. Nothing rewrites the graph in the
+background: the atlas appends turns as the source file grows, the why
+index refreshes on a query when a source moved, and the memory judge is
+fire-and-forget with failures silent by design. Condense, merge and
+weave are new nodes a person asks for; replay is a person's command that
+regenerates stale nodes in dependency order with a token estimate
+first.</p>
+<p>The one automatic writer is the memory judge, and it is fenced twice:
+the judge only observes and classifies, with its prompt version bumped
+and a golden set of twenty exchanges run before and after any wording
+change (<code>scripts/test-memory-judge.mjs</code>,
+<code>scripts/memory-goldens.json</code>), and the rules — category,
+stated identity, credential pattern, duplicate, session cap, unknown
+update id — live in <code>admissionCheck</code> where <em>"a wording
+drift cannot move it."</em> The harness bridge is the other writer, and
+it writes somewhere else: a fork, an injected context or a queued prompt
+into a live DeepSeek Harness session, fenced to the local host.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A generation costs its model call; a memory judgement costs one more
+on the cheapest configured model; the atlas and the why layer cost file
+reads and no tokens. The benchmark pilot ran nine endpoints at no cost
+on free tiers, about 30,000 input and 94,000 output tokens per
+model.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A model sees the compiled messages with a role as system prompt, the
+<code>[Memory]</code> block, materials, references, the chain, and the
+question; it may call web and scholarly search and any MCP tool the
+proxy is configured with. It cannot edit the graph. An external agent
+sees four read-only questions over MCP and, inside DeepSeek Harness, the
+same four as native tools plus a canvas that can send it a real turn
+with the wired context injected first. Claude Code and Codex get adapter
+documents that tell them to run <code>why --check</code> before editing
+a file and to open the current session on the canvas by a protocol link
+or a local bridge that copies the session file and never modifies the
+source.</p>
+<p>The person's surfaces are the whole design: the canvas, the node
+panel with its versions and <em>will send</em> preview, the sliding
+reviewer node, the thought-map export, the memory manager, the atlas
+with its unread watermark, and the folder backup. <em>"The graph is
+acyclic. You are the loop."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Audit — awarded.</strong> The event log is append-only in
+code and in contract, records every semantic mutation with an id and
+metadata, and records at dispatch a hash of what was sent; it survives
+undo, travels in backups and exports. Two limits stated: the cap of
+10,000 drops the oldest thousand, and ambient-memory admissions produce
+a toast and no event.</p>
+<p><strong>Human review — awarded.</strong> Every entry into a model's
+context is a person's wire, and every exit is a person's disconnect or
+archive; the preview is built by the request's compiler; the one
+automatic writer announces itself with an undo and is curated in a
+manager.</p>
+<p><strong>Negative evaluation — awarded.</strong> The why layer's
+committed case asserts read-only turns stay out of a populated result by
+default and come back on request; the equivalence suite asserts the
+product compiler's node order for every pruned condition against a
+reference, with the compiled artifacts committed.</p>
+<p><strong>Trust state — withheld.</strong> Stale is a mark prepended to
+text that still flows — the transcript <em>"never silently contradicts
+itself,"</em> but the model is asked, not prevented. <code>basis</code>
+and <code>completeness</code> on every why event are epistemic labels of
+unusual care, and they are displayed, never filtered. Identity memories
+are gated on <em>stated</em> at admission and carry no state
+afterwards.</p>
+<p><strong>Tombstone — withheld.</strong> Archive keeps the node and
+excludes it; delete removes it and logs the op; nothing records a value
+as refused, so a pruned claim can be re-wired, re-imported from its
+source session, or re-proposed by the judge — which is shown the
+existing entries, not the deleted ones.</p>
+<p><strong>Bitemporal — withheld.</strong> Every version carries the
+time it was generated, the time it was hand-edited and the hash of what
+it saw; a link node carries when it was fetched; no node carries when
+what it says was true.</p>
+<p><strong>Scope — withheld.</strong> A canvas is its own store and the
+wire is the only filter within it; the ambient memory is global to the
+install, labelled with the canvas that produced it and injected into
+every canvas; the why index spans every runner's sessions on the
+machine.</p>
+<p><strong>Read-only where it says so, and where it does not.</strong>
+Source sessions are read and never written, by the shell's primitives
+and by contract; the harness bridge's <code>fork</code>,
+<code>inject</code> and <code>followup</code> write into live harness
+sessions, fenced to the local host, and the feature-status page draws
+the line at <em>"appending a new Harness turn is not rewriting old
+logs."</em> The proxy and the bridge bind to loopback; the web demo
+holds no keys and no content.</p>
+<p><strong>A correction culture.</strong>
+<code>benchmark/STATUS.md</code> records that the wave-2 reasoning
+comparison was two different models and not one with a switch, withdraws
+the generalisations drawn from it, corrects the statistic to a paired
+McNemar test after a reader's audit, and fixes a scorer provenance bug
+that had missed OpenRouter's reasoning fields — dated, in the file the
+numbers live in.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The CLI has 54 tests in seven files under <code>node:test</code> —
+the why layer (22), the canvas adapter (10), the event contract (12), Pi
+sessions (5), setup (3), MCP (2) — covering index construction across
+runners and subagent files, private store permissions, facts without
+interpretation, reads hidden by default, sessions split across files,
+page ranges, path resolution, artifacts by arXiv id and URL, a turn id
+reused after a compaction, exact-word <code>find</code>, JSON output
+with the evidence legend, cache rebuild, stale-index refresh under
+concurrent queries, <code>--check</code>, recall, status, purge and
+<code>npm pack</code>. The app has a Playwright smoke test of
+persistence across a reload and a layout test; there is no unit suite
+for the store. The memory judge has a twenty-case golden set run through
+the live proxy, tolerating three flakes, with the instruction to compare
+pass rates across prompt versions rather than single runs.</p>
+<p>The benchmark is the serious artifact. <code>pilot-v1</code> is nine
+families of arithmetic dependency graphs at three propagation depths,
+five conditions each — clean, polluted, source prune, subgraph prune,
+recompute descendants — 135 conditions per endpoint, conditions
+expressed as graph operations and compiled through the product's own
+<code>buildContext</code> bundled by esbuild, validated, checked for
+node-order equivalence, captured as immutable traces, and scored by a
+declarative scorer that re-scores from traces. Results recompute from
+the committed files: for <code>glm-4.5-flash</code>, 27 of 27 clean
+correct, 9 of 27 polluted, 27 source prune, 27 subgraph prune, 26
+recompute. Across the seven endpoints in <code>STATUS.md</code>, every
+endpoint derails on conflicting claims and never on distractors, and
+pruning the whole contaminated subgraph repairs every derailed case
+while pruning only the source leaves a residue at depth two and three
+that the reasoning ablation, on one endpoint, ties to reasoning being
+on. The report calls itself pilot and reference results and not a
+leaderboard, and the design document states the boundary: the benchmark
+shows that graph-shaped context operations have value, not that this
+interface is the only way to make them.</p>
+<p>No paper; <code>CITATION.cff</code> cites the software and the
+README's one arXiv link is an example query.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One compiler for the preview and the request.</strong> If
+the user can see exactly what will be sent, the retrieval is reviewable
+by construction.</li>
+<li><strong>Hash what you sent, at the moment you sent it.</strong> A
+<code>commit</code> event with the request's SHA-256 and message count
+makes <em>what did the model see</em> a lookup, not a
+reconstruction.</li>
+<li><strong>Put the admission rules in code and version the judge's
+prompt.</strong> A golden set run before and after a wording change is
+how a model-driven memory stops drifting by accident.</li>
+<li><strong>Mark stale in the transcript.</strong> A downstream answer
+that carries its own stale upstream should say so where the model reads
+it.</li>
+<li><strong>Define benchmark conditions as graph operations and keep the
+traces.</strong> A scorer that never needs the API again is one anyone
+can re-run.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A stale label instead of a gate.</strong> The mark asks the
+model to discount an answer it is still shown; a person who has not
+replayed gets a model reasoning over a contradiction it was warned
+about.</li>
+<li><strong>Archive without a record.</strong> Excluding a node is one
+wire away from including it again, and the judge cannot know what was
+refused.</li>
+<li><strong>A global memory with a project label nobody reads.</strong>
+Three categories and a 45-day decay are the whole scoping; a preference
+stated on one canvas rides every canvas.</li>
+<li><strong>An append-only log with a rotation.</strong> Ten thousand
+events is a lot of edits and a finite number of them.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a researcher or a developer who wants to see and shape what a
+model is told — across their own conversations and the sessions their
+coding agents left behind — this is a legible instrument, and the
+benchmark behind its one rule is kept with a rigour its report earns. It
+is a person's tool: no agent maintains the graph, no retrieval ranks it,
+and the memory that forms on its own is three sentences per session
+behind a constitution. A team wanting autonomous memory, cross-canvas
+scoping, a tombstone or a validity axis will find the design has
+declined to build them on purpose, and should read the feature-status
+page, which says what is current, experimental and not promised.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the stale mark change model behaviour? The benchmark's
+<code>recompute_descendants</code> condition regenerates stale nodes; no
+condition leaves them marked and measures the difference.</li>
+<li>What does the judge do with a memory a person undid? The next
+exchange shows it the surviving entries only; the same sentence can be
+proposed again.</li>
+<li>How does the harness bridge's <code>inject</code> interact with the
+event log? The context it injects is the canvas's compiled bundle; the
+harness's own transcript shows it, the canvas records a hand-off
+anchor.</li>
+<li>What is in the tombstone-shaped gap between archive and delete that
+<code>docs/features.md</code> does not name — is exclusion-with-a-record
+a roadmap item?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store/context-builder.ts</code></td>
+<td>357</td>
+<td><code>buildContext</code>, <code>hashContext</code>,
+<code>upstreamFingerprint</code>, the stale mark, role resolution</td>
+</tr>
+<tr>
+<td><code>src/store/streaming.ts</code></td>
+<td>485</td>
+<td>Dispatch, the <code>commit</code> hash, version append, staleness
+recompute, the memory judge call</td>
+</tr>
+<tr>
+<td><code>src/store/slices/nodes.ts</code>, <code>llm.ts</code>,
+<code>events.ts</code>, <code>history.ts</code></td>
+<td>557, 684, 27, —</td>
+<td>Mutations and their events, <code>recomputeStaleness</code>,
+ask/merge/weave/explore</td>
+</tr>
+<tr>
+<td><code>src/lib/memory.ts</code></td>
+<td>240</td>
+<td>Categories, the constitution, <code>admissionCheck</code>, the
+judge, the <code>[Memory]</code> block</td>
+</tr>
+<tr>
+<td><code>src/lib/context-bundle.ts</code>,
+<code>protocol/context-bundle/v0/</code></td>
+<td>—</td>
+<td>The bundle compiler, schema and three fixtures</td>
+</tr>
+<tr>
+<td><code>src/lib/events/{types,project,manifests}.ts</code></td>
+<td>—</td>
+<td>The event contract with <code>basis</code> and
+<code>completeness</code>, the projection, per-adapter honesty</td>
+</tr>
+<tr>
+<td><code>src/lib/adapters/*</code></td>
+<td>—</td>
+<td>Claude Code, Codex, DeepSeek Harness, Pi and canvas readers</td>
+</tr>
+<tr>
+<td><code>src/lib/atlas/{discover,canonical,live-mirror,watermark,dsh-bridge}.ts</code></td>
+<td>544 (canonical)</td>
+<td>Session Atlas</td>
+</tr>
+<tr>
+<td><code>src/lib/{persistence,local-backup,export,ui-store}.ts</code></td>
+<td>—</td>
+<td>IndexedDB, folder backup, exports, the memory library in
+<code>localStorage</code></td>
+</tr>
+<tr>
+<td><code>src/types.ts</code></td>
+<td>—</td>
+<td><code>ThoughtData</code>, <code>CanvasOp</code>,
+<code>CanvasEvent</code></td>
+</tr>
+<tr>
+<td><code>cli/src/lib.ts</code>, <code>cli/src/main.ts</code>,
+<code>cli/test/</code></td>
+<td>1,226, 54 tests</td>
+<td>The why layer and its suite</td>
+</tr>
+<tr>
+<td><code>dsh/lib/index.js</code></td>
+<td>—</td>
+<td>The harness plugin's bridge and writes</td>
+</tr>
+<tr>
+<td><code>desktop/main.js</code></td>
+<td>856</td>
+<td>Fenced session roots, backup, protocol links</td>
+</tr>
+<tr>
+<td><code>server.mjs</code>, <code>functions/api/[[path]].js</code></td>
+<td>1,154, 594</td>
+<td>The proxy and its stateless twin</td>
+</tr>
+<tr>
+<td><code>benchmark/{DESIGN,README,STATUS}.md</code>,
+<code>tools/</code>, <code>runs/</code>,
+<code>runs/compiled/</code></td>
+<td>—</td>
+<td>The design, the pipeline, nine endpoints' traces and results,
+compiled conditions</td>
+</tr>
+<tr>
+<td><code>scripts/test-memory-judge.mjs</code>,
+<code>memory-goldens.json</code>, <code>smoke.mjs</code></td>
+<td>—</td>
+<td>The judge golden set, the persistence smoke test</td>
+</tr>
+<tr>
+<td><code>docs/reference/feature-status.md</code></td>
+<td>—</td>
+<td>Current, experimental, not promised</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;logEvent\(&#39; src/lib/memory.ts                                   # none: memory admissions write no event
+rg -n &#39;tombstone|refused|denylist|rejected&#39; src/lib src/store --glob &#39;*.ts&#39;   # none on the canvas or the memory
+rg -n &#39;valid_from|validFrom|valid_to|validTo&#39; src --glob &#39;*.ts*&#39;      # none: no validity interval
+rg -n &#39;memories\.filter\(&#39; src/lib/memory.ts                          # one filter: the 45-day project decay; no canvas scope
+rg -n &#39;staleSet.has&#39; src/store/context-builder.ts                     # the mark is prepended; the node is not skipped
+rg -n -i &#39;arxiv|doi&#39; CITATION.cff README.md | rg -v &#39;find &quot;arxiv&quot;&#39;    # no paper of its own
+rg -c &#39;^\s*(test|it)\(&#39; cli/test/*.mjs                                # 54</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/chenxiachan/thoughtdag/commit/e658c280d39082ec7d6d328bd1dff9af6d49b94e"><code class="commit-id" title="e658c280d39082ec7d6d328bd1dff9af6d49b94e">e658c280…</code></a>
+— first reading, at the head of <code>main</code>, the sixth commit of
+that day. Screened first: no auto-run surface, no build-time execution,
+three manifests with floating ranges behind lockfiles, five dependency
+files inside the seven-day cooldown (the CLI, desktop and plugin
+manifests changed that day), an <code>AGENTS.md</code> treated as data;
+nothing installed or run. The repository is 177 MB, most of it
+documentation gifs and a video project, and the read was made from a
+full clone. Three marks; four withheld with their near misses. The
+benchmark's per-condition counts were recomputed from a committed
+<code>results.json</code> and match the status file.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

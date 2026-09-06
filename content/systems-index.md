@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **365 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **366 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -451,6 +451,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/telemem/"><span class="az-id">TeleMem</span><span class="az-what">A charter its own published numbers do not yet meet</span><code class="az-repo">TeleAI-UAGI/telemem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/tencentdb-agent-memory/"><span class="az-id">TencentDB Agent Memory</span><span class="az-what">Layered symbolic memory</span><code class="az-repo">TencentCloud/tencentdb-agent-memory</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/terse-memory/"><span class="az-id">TERSE Memory</span><span class="az-what">A linter where the verbs should be</span><code class="az-repo">terse-lang/terse</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
+<li><a class="az-row" href="../systems/thoughtdag/"><span class="az-id">ThoughtDAG</span><span class="az-what">Wires are the context</span><code class="az-repo">chenxiachan/thoughtdag</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/tigrimosr/"><span class="az-id">TigrimOSR</span><span class="az-what">Proposed skills, staged on disk</span><code class="az-repo">Sompote/TigrimOSR</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/token-savior/"><span class="az-id">Token Savior</span><span class="az-what">A learned injection ranker</span><code class="az-repo">Mibayy/token-savior</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/token-optimizer/"><span class="az-id">token-optimizer</span><span class="az-what">Cross-session continuity, fenced as data</span><code class="az-repo">alexgreensh/token-optimizer</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
